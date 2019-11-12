@@ -71,7 +71,7 @@ public class NeuralMapDemo extends VQDemo {
                 e.printStackTrace();
             }
 
-            NeuralMap cortex = new NeuralMap(2, 16, 5, T, learningRate, learningRate/30, dataset[datasetIndex].length);
+            NeuralMap cortex = new NeuralMap(2, T, learningRate, learningRate/30, dataset[datasetIndex].length/4);
 
             for (int i = 0, k = 0; i < epochs; i++) {
                 for (int j : MathEx.permutate(dataset[datasetIndex].length)) {

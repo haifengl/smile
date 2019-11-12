@@ -66,7 +66,7 @@ public class NeuralGasTest {
                 TimeFunction.exp(30, x.length * epochs / 8),
                 x.length * 2);
 
-        for (int i = 0; i < epochs; i++) {
+        for (int i = 1; i <= epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
                 model.update(x[j]);
             }

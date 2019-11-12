@@ -17,27 +17,13 @@
 
 package smile.vq;
 
-import org.apache.commons.csv.CSVFormat;
-import smile.data.DataFrame;
 import smile.data.USPS;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
 import smile.math.MathEx;
-import smile.util.Paths;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -73,12 +59,13 @@ public class NeuralMapTest {
         double[][] x = USPS.x;
         double[][] testx = USPS.testx;
 
-        NeuralMap model = new NeuralMap(x[0].length, 16, 5, 10.0, 0.2, 0.006, x.length);
-        for (int epoch = 1; epoch <= 5; epoch++) {
-            for (int i = 0; i < x.length; i++) {
-                model.update(x[i]);
+        NeuralMap model = new NeuralMap(x[0].length, 8, 0.01, 0.002, x.length/2);
+        for (int i = 1; i <= 5; i++) {
+            for (int j : MathEx.permutate(x.length)) {
+                model.update(x[j]);
             }
-            System.out.format("%d neurons after %d epochs%n", model.neurons().length, epoch);
+            model.clean();
+            System.out.format("%d neurons after %d epochs%n", model.neurons().length, i);
         }
 
         double error = 0.0;
@@ -88,7 +75,7 @@ public class NeuralMapTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.3979, error, 1E-4);
+        assertEquals(4.4347, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -98,6 +85,6 @@ public class NeuralMapTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.5582, error, 1E-4);
+        assertEquals(6.6137, error, 1E-4);
     }
 }
