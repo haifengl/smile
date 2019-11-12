@@ -19,7 +19,6 @@ package smile.vq;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
@@ -289,8 +288,8 @@ public class SOM implements VectorQuantizer {
     }
 
     @Override
-    public Optional<double[]> quantize(double[] x) {
-        return Optional.of(bmu(x).w);
+    public double[] quantize(double[] x) {
+        return bmu(x).w;
     }
 
     /** Returns the best matching unit. */

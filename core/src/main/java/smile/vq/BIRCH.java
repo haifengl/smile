@@ -472,9 +472,9 @@ public class BIRCH implements VectorQuantizer {
     }
 
     @Override
-    public Optional<double[]> quantize(double[] x) {
-        BIRCH.ClusteringFeature cf = root.nearest(x);
-        return Optional.of(cf.centroid());
+    public double[] quantize(double[] x) {
+        ClusteringFeature cluster = root.nearest(x);
+        return cluster.centroid();
     }
 
     /** Returns the cluster centroids of leaf nodes. */

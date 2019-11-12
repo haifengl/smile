@@ -235,9 +235,9 @@ public class GrowingNeuralGas implements VectorQuantizer {
     }
 
     @Override
-    public Optional<double[]> quantize(double[] x) {
+    public double[] quantize(double[] x) {
         neurons.stream().parallel().forEach(node -> node.distance(x));
         Collections.sort(neurons);
-        return Optional.ofNullable(neurons.get(0).w);
+        return neurons.get(0).w;
     }
 }
