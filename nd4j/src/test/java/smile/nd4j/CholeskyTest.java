@@ -72,9 +72,6 @@ public class CholeskyTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of decompose method, of class CholeskyDecomposition.
-     */
     @Test
     public void testDecompose() {
         System.out.println("decompose");
@@ -87,10 +84,7 @@ public class CholeskyTest {
         }
     }
 
-    /**
-     * Test of solve method, of class CholeskyDecomposition.
-     */
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testSolve() {
         System.out.println("solve");
         NDMatrix a = new NDMatrix(A);
@@ -101,10 +95,7 @@ public class CholeskyTest {
         }
     }
 
-    /**
-     * Test of solve method, of class CholeskyDecomposition.
-     */
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testSolveMatrix() {
         System.out.println("solve");
         NDMatrix a = new NDMatrix(A);
