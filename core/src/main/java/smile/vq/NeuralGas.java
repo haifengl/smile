@@ -19,7 +19,6 @@ package smile.vq;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
@@ -199,9 +198,9 @@ public class NeuralGas implements VectorQuantizer {
     }
 
     @Override
-    public Optional<double[]> quantize(double[] x) {
+    public double[] quantize(double[] x) {
         sortNeurons(x);
-        return Optional.of(neurons[MathEx.whichMin(dist)].w);
+        return neurons[MathEx.whichMin(dist)].w;
     }
 
     /** Sorts the neurons by their distances to the input observation. */

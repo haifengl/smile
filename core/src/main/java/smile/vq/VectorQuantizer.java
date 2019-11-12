@@ -18,7 +18,6 @@
 package smile.vq;
 
 import java.io.Serializable;
-import java.util.Optional;
 
 /**
  * Vector quantizer with competitive learning.
@@ -41,5 +40,5 @@ public interface VectorQuantizer extends Serializable {
      * if the observation is noise.
      * @param x a new observation.
      */
-    Optional<double[]> quantize(double[] x);
+    double[] quantize(double[] x);
 }
