@@ -71,7 +71,7 @@ public class NeuralMapDemo extends VQDemo {
                 e.printStackTrace();
             }
 
-            NeuralMap cortex = new NeuralMap(2, T, learningRate, learningRate/30, dataset[datasetIndex].length/4);
+            NeuralMap cortex = new NeuralMap(T, learningRate, learningRate/5, 50, 0.995);
 
             for (int i = 0, k = 0; i < epochs; i++) {
                 for (int j : MathEx.permutate(dataset[datasetIndex].length)) {
@@ -99,7 +99,7 @@ public class NeuralMapDemo extends VQDemo {
                     }
                 }
 
-                cortex.clean();
+                cortex.clear(1E-5);
                 System.out.format("%s epoch finishes%n", smile.util.Strings.ordinal(i+1));
             }
         });

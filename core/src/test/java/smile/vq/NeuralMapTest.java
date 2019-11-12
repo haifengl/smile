@@ -59,12 +59,12 @@ public class NeuralMapTest {
         double[][] x = USPS.x;
         double[][] testx = USPS.testx;
 
-        NeuralMap model = new NeuralMap(x[0].length, 8, 0.01, 0.002, x.length/2);
+        NeuralMap model = new NeuralMap(8, 0.01, 0.002, 50, 0.995);
         for (int i = 1; i <= 5; i++) {
             for (int j : MathEx.permutate(x.length)) {
                 model.update(x[j]);
             }
-            model.clean();
+            model.clear(1E-7);
             System.out.format("%d neurons after %d epochs%n", model.neurons().length, i);
         }
 
@@ -75,7 +75,7 @@ public class NeuralMapTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(4.4347, error, 1E-4);
+        assertEquals(6.0678, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -85,6 +85,6 @@ public class NeuralMapTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.6137, error, 1E-4);
+        assertEquals(6.9454, error, 1E-4);
     }
 }

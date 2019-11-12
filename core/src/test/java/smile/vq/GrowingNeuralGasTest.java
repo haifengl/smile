@@ -74,7 +74,7 @@ public class GrowingNeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(5.5387, error, 1E-4);
+        assertEquals(5.6185, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -84,6 +84,6 @@ public class GrowingNeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.4363, error, 1E-4);
+        assertEquals(6.4506, error, 1E-4);
     }
 }
