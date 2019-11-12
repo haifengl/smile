@@ -85,7 +85,8 @@ public class MutableLSH<E> extends LSH<E> {
     }
 
     /**
-     * Update an entry with new key.
+     * Update an entry with new key. Note that the new key and old key
+     * should not be the same object.
      */
     public void update(double[] key, E value) {
         int n = data.size();

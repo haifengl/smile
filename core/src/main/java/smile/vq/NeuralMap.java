@@ -17,12 +17,10 @@
 
 package smile.vq;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
-import smile.math.MathEx;
 import smile.neighbor.MutableLSH;
 import smile.neighbor.Neighbor;
 import smile.vq.hebb.Neuron;
@@ -89,9 +87,7 @@ public class NeuralMap implements VectorQuantizer {
         this.edgeLifetime = edgeLifetime;
     }
 
-    /**
-     * Update the network with a new signal.
-     */
+    @Override
     public void update(double[] x) {
         t++;
 
@@ -99,14 +95,19 @@ public class NeuralMap implements VectorQuantizer {
         Neighbor<double[], Neuron>[] top2 = lsh.knn(x, 2);
 
         if (top2.length == 0 || top2[0].distance > r) {
-            double[] w = x.clone();
-            Neuron neuron = new Neuron(w);
-            lsh.put(w, neuron);
+            Neuron neuron = new Neuron(x.clone());
+            lsh.put(neuron.w, neuron);
 
             if (top2.length > 0) {
                 Neuron s1 = top2[0].value;
                 s1.addEdge(neuron, t);
                 neuron.addEdge(s1, t);
+            }
+
+            if (top2.length > 1) {
+                Neuron s2 = top2[1].value;
+                s2.addEdge(neuron, t);
+                neuron.addEdge(s2, t);
             }
             return;
         }
@@ -147,7 +148,6 @@ public class NeuralMap implements VectorQuantizer {
         }
 
         // Remove edges with an age larger than the threshold
-        /*
         for (Iterator<Edge> iter = s1.edges.iterator(); iter.hasNext();) {
             Edge edge = iter.next();
             if (t - edge.age > edgeLifetime) {
@@ -161,7 +161,6 @@ public class NeuralMap implements VectorQuantizer {
                 }
             }
         }
-         */
     }
 
     /**
