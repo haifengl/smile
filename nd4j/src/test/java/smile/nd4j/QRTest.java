@@ -68,10 +68,7 @@ public class QRTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of solve method, of class QRDecomposition.
-     */
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testSolve() {
         System.out.println("solve");
         NDMatrix a = new NDMatrix(A);
@@ -82,10 +79,7 @@ public class QRTest {
         }
     }
 
-    /**
-     * Test of solve method, of class QRDecomposition.
-     */
-    @Test
+    @Test(expected = UnsupportedOperationException.class)
     public void testSolveMatrix() {
         System.out.println("solve");
         NDMatrix a = new NDMatrix(A);
