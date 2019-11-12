@@ -17,9 +17,7 @@
 
 package smile.vq;
 
-import java.io.Serializable;
 import java.util.*;
-import smile.math.MathEx;
 import smile.vq.hebb.Edge;
 import smile.vq.hebb.Neuron;
 
@@ -52,46 +50,6 @@ import smile.vq.hebb.Neuron;
  */
 public class GrowingNeuralGas implements VectorQuantizer {
     private static final long serialVersionUID = 2L;
-
-    /**
-     * An utility class for sorting.
-     */
-    private class Node implements Comparable<Node>, Serializable {
-        /**
-         * The id of neuron.
-         */
-        Neuron neuron;
-        /**
-         * The distance between the neuron and an input signal.
-         */
-        double distance = Double.MAX_VALUE;
-
-        /**
-         * Constructor.
-         */
-        public Node(Neuron neuron) {
-            this.neuron = neuron;
-        }
-
-        /**
-         * Constructor.
-         */
-        public Node(double[] w, double error) {
-            this.neuron = new Neuron(w, error);
-        }
-
-        /**
-         * Computes the distance between the neuron and a signal.
-         */
-        public void distance(double[] x) {
-            distance = MathEx.squaredDistance(neuron.w, x);
-        }
-
-        @Override
-        public int compareTo(Node o) {
-            return Double.compare(distance, o.distance);
-        }
-    }
 
     /**
      * The dimensionality of signals.
@@ -130,7 +88,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
     /**
      * Neurons in the neural network.
      */
-    private ArrayList<Node> neurons = new ArrayList<>();
+    private ArrayList<Neuron> neurons = new ArrayList<>();
 
     /**
      * Constructor.
@@ -167,7 +125,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
      * @return the neurons in the network. 
      */
     public Neuron[] neurons() {
-        return neurons.stream().map(node -> node.neuron).toArray(Neuron[]::new);
+        return neurons.toArray(new Neuron[neurons.size()]);
     }
 
     @Override
@@ -175,7 +133,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
         t++;
 
         if (neurons.size() < 2) {
-            neurons.add(new Node(x.clone(), 0.0));
+            neurons.add(new Neuron(x.clone()));
             return;
         }
 
@@ -183,13 +141,13 @@ public class GrowingNeuralGas implements VectorQuantizer {
         neurons.stream().parallel().forEach(node -> node.distance(x));
         Collections.sort(neurons);
 
-        Neuron s1 = neurons.get(0).neuron;
-        Neuron s2 = neurons.get(1).neuron;
+        Neuron s1 = neurons.get(0);
+        Neuron s2 = neurons.get(1);
 
         s1.age();
 
         // update s1
-        s1.error += neurons.get(0).distance;
+        s1.error += s1.distance * s1.distance;
         s1.update(x, epsBest);
         // Increase the edge of all edges emanating from s1.
         s1.age();
@@ -223,7 +181,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
                 edge.neighbor.removeEdge(s1);
                 // Remove a neuron if it has no emanating edges
                 if (edge.neighbor.edges.isEmpty()) {
-                    neurons.removeIf(node -> node.neuron == edge.neighbor);
+                    neurons.removeIf(neuron -> neuron == edge.neighbor);
                 }
             }
         }
@@ -232,10 +190,10 @@ public class GrowingNeuralGas implements VectorQuantizer {
         // is an integer multiple of lambda.
         if (t % lambda == 0) {
             // Determine the neuron with the maximum accumulated error.
-            Neuron q = neurons.get(0).neuron;
-            for (Node node : neurons) {
-                if (node.neuron.error > q.error)
-                    q = node.neuron;
+            Neuron q = neurons.get(0);
+            for (Neuron neuron : neurons) {
+                if (neuron.error > q.error)
+                    q = neuron;
             }
 
             // Find the neighbor of q with the largest error variable.
@@ -256,7 +214,7 @@ public class GrowingNeuralGas implements VectorQuantizer {
             }
 
             Neuron r = new Neuron(w, q.error);
-            neurons.add(new Node(r));
+            neurons.add(r);
 
             // Remove the connection (q, f) and add connections (q, r) and (r, f)
             q.removeEdge(f);
@@ -268,8 +226,8 @@ public class GrowingNeuralGas implements VectorQuantizer {
         }
 
         // Decrease all error variables.
-        for (Node node : neurons) {
-            node.neuron.error *= beta;
+        for (Neuron neuron : neurons) {
+            neuron.error *= beta;
         }
     }
 
@@ -277,6 +235,6 @@ public class GrowingNeuralGas implements VectorQuantizer {
     public Optional<double[]> quantize(double[] x) {
         neurons.stream().parallel().forEach(node -> node.distance(x));
         Collections.sort(neurons);
-        return Optional.ofNullable(neurons.get(0).neuron.w);
+        return Optional.ofNullable(neurons.get(0).w);
     }
 }

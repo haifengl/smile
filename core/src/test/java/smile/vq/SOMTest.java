@@ -99,7 +99,7 @@ public class SOMTest {
                 TimeFunction.constant(0.1),
                 Neighborhood.Gaussian(1, x.length * epochs / 4));
 
-        for (int i = 0; i < epochs; i++) {
+        for (int i = 1; i <= epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {
                 model.update(x[j]);
             }
@@ -110,7 +110,7 @@ public class SOMTest {
                 error += MathEx.distance(xi, yi);
             }
             error /= x.length;
-            System.out.format("Training Quantization Error = %.4f after %d epochs%n", error, (i+1));
+            System.out.format("Training Quantization Error = %.4f after %d epochs%n", error, i);
         }
 
         double error = 0.0;

@@ -17,27 +17,13 @@
 
 package smile.vq;
 
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.DataFrame;
 import smile.data.USPS;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
 import smile.math.MathEx;
-import smile.util.Paths;
-import smile.validation.AdjustedRandIndex;
-import smile.validation.RandIndex;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import static org.junit.Assert.*;
 
 /**
@@ -74,11 +60,11 @@ public class GrowingNeuralGasTest {
         double[][] testx = USPS.testx;
 
         GrowingNeuralGas model = new GrowingNeuralGas(x[0].length);
-        for (int epoch = 1; epoch <= 20; epoch++) {
-            for (int i = 0; i < x.length; i++) {
-                model.update(x[i]);
+        for (int i = 1; i <= 10; i++) {
+            for (int j : MathEx.permutate(x.length)) {
+                model.update(x[j]);
             }
-            System.out.format("%d neurons after %d epochs%n", model.neurons().length, epoch);
+            System.out.format("%d neurons after %d epochs%n", model.neurons().length, i);
         }
 
         double error = 0.0;
@@ -88,7 +74,7 @@ public class GrowingNeuralGasTest {
         }
         error /= x.length;
         System.out.format("Training Quantization Error = %.4f%n", error);
-        assertEquals(4.7692, error, 1E-4);
+        assertEquals(5.5387, error, 1E-4);
 
         error = 0.0;
         for (double[] xi : testx) {
@@ -98,6 +84,6 @@ public class GrowingNeuralGasTest {
         error /= testx.length;
 
         System.out.format("Test Quantization Error = %.4f%n", error);
-        assertEquals(6.2282, error, 1E-4);
+        assertEquals(6.4363, error, 1E-4);
     }
 }

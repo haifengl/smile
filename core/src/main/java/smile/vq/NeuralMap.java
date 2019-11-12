@@ -18,11 +18,9 @@
 package smile.vq;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Optional;
-import smile.neighbor.MutableLSH;
-import smile.neighbor.Neighbor;
 import smile.vq.hebb.Neuron;
 import smile.vq.hebb.Edge;
 
@@ -32,8 +30,7 @@ import smile.vq.hebb.Edge;
  * add and delete neurons with competitive Hebbian learning. Edges exist between
  * neurons close to each other. Such edges are intended place holders for
  * localized data distribution. Such edges also help to locate distinct clusters
- * (those clusters are not connected by edges). NeuralMap employs Locality-Sensitive
- * Hashing to speedup the learning while BIRCH uses balanced CF trees.
+ * (those clusters are not connected by edges).
  *
  * @see NeuralGas
  * @see GrowingNeuralGas
@@ -67,21 +64,17 @@ public class NeuralMap implements VectorQuantizer {
     /**
      * Neurons in the neural network.
      */
-    private MutableLSH<Neuron> lsh;
-
+    private ArrayList<Neuron> neurons = new ArrayList<>();
     /**
      * Constructor.
      * @param d the dimensionality of signals.
-     * @param L the number of hash tables.
-     * @param k the number of random projection hash functions.
      * @param r the distance radius to activate a neuron for a given signal.
      * @param epsBest the learning rate to update activated neuron.
      * @param epsNeighbor the learning rate to update neighbors of activated neuron.
      * @param edgeLifetime the maximum age of edges.
      */
-    public NeuralMap(int d, int L, int k, double r, double epsBest, double epsNeighbor, int edgeLifetime) {
+    public NeuralMap(int d, double r, double epsBest, double epsNeighbor, int edgeLifetime) {
         this.r = r;
-        this.lsh = new MutableLSH<>(d, L, k, 4 * r);
         this.epsBest = epsBest;
         this.epsNeighbor = epsNeighbor;
         this.edgeLifetime = edgeLifetime;
@@ -91,43 +84,38 @@ public class NeuralMap implements VectorQuantizer {
     public void update(double[] x) {
         t++;
 
-        // Find the nearest (s1) and second nearest (s2) neuron to x.
-        Neighbor<double[], Neuron>[] top2 = lsh.knn(x, 2);
-
-        if (top2.length == 0 || top2[0].distance > r) {
-            Neuron neuron = new Neuron(x.clone());
-            lsh.put(neuron.w, neuron);
-
-            if (top2.length > 0) {
-                Neuron s1 = top2[0].value;
-                s1.addEdge(neuron, t);
-                neuron.addEdge(s1, t);
-            }
-
-            if (top2.length > 1) {
-                Neuron s2 = top2[1].value;
-                s2.addEdge(neuron, t);
-                neuron.addEdge(s2, t);
-            }
+        if (neurons.size() < 2) {
+            neurons.add(new Neuron(x.clone()));
             return;
         }
 
         // Find the nearest (s1) and second nearest (s2) neuron to x.
-        Neuron s1 = top2[0].value;
-        Neuron s2 = top2.length == 2 ? top2[1].value : null;
+        neurons.stream().parallel().forEach(neuron -> neuron.distance(x));
+        Collections.sort(neurons);
+
+        Neuron s1 = neurons.get(0);
+        Neuron s2 = neurons.get(1);
+
+        if (s1.distance > r) {
+            Neuron neuron = new Neuron(x.clone());
+            neurons.add(neuron);
+
+            s1.addEdge(neuron, t);
+            neuron.addEdge(s1, t);
+
+            s2.addEdge(neuron, t);
+            neuron.addEdge(s2, t);
+            return;
+        }
 
         // update s1
-        lsh.remove(s1.w, s1);
         s1.update(x, epsBest);
-        lsh.put(s1.w, s1);
 
         boolean addEdge = true;
         for (Edge edge : s1.edges) {
             // Update s1's direct topological neighbors towards x.
             Neuron neighbor = edge.neighbor;
-            lsh.remove(neighbor.w, neighbor);
             neighbor.update(x, epsNeighbor);
-            lsh.put(neighbor.w, neighbor);
 
             // Set the age to zero if s1 and s2 are already connected.
             if (neighbor == s2) {
@@ -138,13 +126,10 @@ public class NeuralMap implements VectorQuantizer {
         }
 
         // Connect s1 and s2 if they are not neighbor yet.
-        if (addEdge && s2 != null) {
+        if (addEdge) {
             s1.addEdge(s2, t);
             s2.addEdge(s1, t);
-
-            lsh.remove(s2.w, s2);
             s2.update(x, epsNeighbor);
-            lsh.put(s2.w, s2);
         }
 
         // Remove edges with an age larger than the threshold
@@ -157,7 +142,7 @@ public class NeuralMap implements VectorQuantizer {
                 neighbor.removeEdge(s1);
                 // Remove a neuron if it has no emanating edges
                 if (neighbor.edges.isEmpty()) {
-                    lsh.remove(neighbor.w, neighbor);
+                    neurons.removeIf(neuron -> neuron == edge.neighbor);
                 }
             }
         }
@@ -167,7 +152,6 @@ public class NeuralMap implements VectorQuantizer {
      * Returns the set of neurons.
      */
     public Neuron[] neurons() {
-        List<Neuron> neurons = lsh.values();
         return neurons.toArray(new Neuron[neurons.size()]);
     }
     
@@ -176,7 +160,7 @@ public class NeuralMap implements VectorQuantizer {
      */
     public void clean() {
         ArrayList<Neuron> noise = new ArrayList<>();
-        for (Neuron neuron : lsh.values()) {
+        for (Neuron neuron : neurons) {
             for (Iterator<Edge> iter = neuron.edges.iterator(); iter.hasNext();) {
                 Edge edge = iter.next();
                 if (t - edge.age > edgeLifetime) {
@@ -189,13 +173,13 @@ public class NeuralMap implements VectorQuantizer {
             }
         }
 
-        for (Neuron neuron : noise) {
-            lsh.remove(neuron.w, neuron);
-        }
+        neurons.removeAll(noise);
     }
 
     @Override
     public Optional<double[]> quantize(double[] x) {
-        return Optional.ofNullable(lsh.nearest(x)).map(neighbor -> neighbor.key);
+        neurons.stream().parallel().forEach(node -> node.distance(x));
+        Collections.sort(neurons);
+        return Optional.ofNullable(neurons.get(0).w);
     }
 }

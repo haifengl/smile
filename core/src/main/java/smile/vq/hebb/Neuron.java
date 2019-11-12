@@ -21,11 +21,12 @@ import java.io.Serializable;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import smile.math.MathEx;
 
 /**
  * The neuron vertex in the growing neural gas network.
  */
-public class Neuron implements Serializable {
+public class Neuron implements Comparable<Neuron>, Serializable {
     private static final long serialVersionUID = 2L;
     /**
      * The reference vector.
@@ -36,7 +37,11 @@ public class Neuron implements Serializable {
      */
     public final List<Edge> edges;
     /**
-     * THe local error measurement.
+     * The distance between the neuron and an input signal.
+     */
+    public double distance = Double.MAX_VALUE;
+    /**
+     * The local error measurement.
      */
     public double error;
 
@@ -104,5 +109,17 @@ public class Neuron implements Serializable {
         for (Edge edge : edges) {
             edge.age++;
         }
+    }
+
+    /**
+     * Computes the distance between the neuron and a signal.
+     */
+    public void distance(double[] x) {
+        distance = MathEx.distance(w, x);
+    }
+
+    @Override
+    public int compareTo(Neuron o) {
+        return Double.compare(distance, o.distance);
     }
 }
