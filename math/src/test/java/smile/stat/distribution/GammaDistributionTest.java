@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,24 +57,25 @@ public class GammaDistributionTest {
     @Test
     public void testGammaDistribution() {
         System.out.println("GammaDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         GammaDistribution instance = new GammaDistribution(3, 2.1);
         double[] data = new double[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
-        GammaDistribution est = new GammaDistribution(data);
-        assertEquals(0.0, (est.getScale() - 2.1) / 2.1, 0.1);
-        assertEquals(0.0, (est.getShape() - 3.0) / 3.0, 0.1);
+        GammaDistribution est = GammaDistribution.fit(data);
+        assertEquals(2.18, est.getScale(), 1E-2);
+        assertEquals(2.95, est.getShape(), 1E-2);
     }
 
     /**
-     * Test of npara method, of class Gamma.
+     * Test of length method, of class Gamma.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         GammaDistribution instance = new GammaDistribution(3, 2.1);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
     /**
@@ -87,14 +90,14 @@ public class GammaDistributionTest {
     }
 
     /**
-     * Test of var method, of class Gamma.
+     * Test of variance method, of class Gamma.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         GammaDistribution instance = new GammaDistribution(3, 2.1);
         instance.rand();
-        assertEquals(13.23, instance.var(), 1E-7);
+        assertEquals(13.23, instance.variance(), 1E-7);
     }
 
     /**

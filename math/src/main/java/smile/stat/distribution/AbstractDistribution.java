@@ -20,7 +20,7 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 
 /**
- * This is the base class of univariate distributions. Both rejection
+ * The base class of univariate distributions. Both rejection
  * and inverse transform sampling methods are implemented to provide some
  * general approaches to generate random samples based on probability density
  * function or quantile function. Besides, a quantile function is also provided
@@ -110,26 +110,5 @@ public abstract class AbstractDistribution implements Distribution {
      */
     protected double quantile(double p, double xmin, double xmax) {
         return quantile(p, xmin, xmax, 1.0E-6);
-    }
-
-    /**
-     * The likelihood given a sample set following the distribution.
-     */
-    @Override
-    public double likelihood(double[] x) {
-        return Math.exp(logLikelihood(x));
-    }
-    
-    /**
-     * The likelihood given a sample set following the distribution.
-     */
-    @Override
-    public double logLikelihood(double[] x) {
-        double L = 0.0;
-        
-        for (double xi : x)
-            L += logp(xi);
-        
-        return L;
     }
 }

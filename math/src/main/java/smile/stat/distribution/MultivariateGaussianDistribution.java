@@ -29,19 +29,23 @@ import smile.math.matrix.DenseMatrix;
  *
  * @author Haifeng Li
  */
-public class MultivariateGaussianDistribution extends AbstractMultivariateDistribution implements MultivariateExponentialFamily {
-    private static final long serialVersionUID = 1L;
+public class MultivariateGaussianDistribution implements MultivariateDistribution, MultivariateExponentialFamily {
+    private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE = Math.log(2 * Math.PI * Math.E);
-    double[] mu;
-    DenseMatrix sigma;
+
+    /** The mean vector. */
+    public final double[] mu;
+    /** The covariance matrix. */
+    public final DenseMatrix sigma;
+
     boolean diagonal;
     private int dim;
     private DenseMatrix sigmaInv;
     private DenseMatrix sigmaL;
     private double sigmaDet;
     private double pdfConstant;
-    private int numParameters;
+    private int length;
 
     /**
      * Constructor. The distribution will have a diagonal covariance matrix of
@@ -63,7 +67,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         diagonal = true;
-        numParameters = mu.length + 1;
+        length = mu.length + 1;
 
         init();
     }
@@ -91,7 +95,7 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
         }
 
         diagonal = true;
-        numParameters = 2 * mu.length;
+        length = 2 * mu.length;
 
         init();
     }
@@ -102,45 +106,46 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
      * @param mean mean vector.
      * @param cov covariance matrix.
      */
-    public MultivariateGaussianDistribution(double[] mean, double[][] cov) {
-        if (mean.length != cov.length) {
+    public MultivariateGaussianDistribution(double[] mean, DenseMatrix cov) {
+        if (mean.length != cov.nrows()) {
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
         mu = new double[mean.length];
-        sigma = Matrix.of(cov);
+        sigma = cov;
         for (int i = 0; i < mu.length; i++) {
             mu[i] = mean[i];
         }
 
         diagonal = false;
-        numParameters = mu.length + mu.length * (mu.length + 1) / 2;
+        length = mu.length + mu.length * (mu.length + 1) / 2;
 
         init();
     }
 
     /**
-     * Constructor. Mean and covariance will be estimated from the data by MLE.
+     * Estimates the mean and diagonal covariance by MLE.
      * @param data the training data.
      */
-    public MultivariateGaussianDistribution(double[][] data) {
-        this(data, false);
+    public static MultivariateGaussianDistribution fit(double[][] data) {
+        return fit(data, false);
     }
 
     /**
-     * Constructor. Mean and covariance will be estimated from the data by MLE.
+     * Estimates the mean and covariance by MLE.
      * @param data the training data.
      * @param diagonal true if covariance matrix is diagonal.
      */
-    public MultivariateGaussianDistribution(double[][] data, boolean diagonal) {
-        this.diagonal = diagonal;
-        mu = MathEx.colMeans(data);
+    public static MultivariateGaussianDistribution fit(double[][] data, boolean diagonal) {
+        double[] mu = MathEx.colMeans(data);
 
+        DenseMatrix sigma;
         if (diagonal) {
             sigma = Matrix.zeros(data[0].length, data[0].length);
             for (int i = 0; i < data.length; i++) {
+                double[] x = data[i];
                 for (int j = 0; j < mu.length; j++) {
-                    sigma.add(j, j, (data[i][j] - mu[j]) * (data[i][j] - mu[j]));
+                    sigma.add(j, j, (x[j] - mu[j]) * (x[j] - mu[j]));
                 }
             }
 
@@ -151,9 +156,9 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
             sigma = Matrix.of(MathEx.cov(data, mu));
         }
 
-        numParameters = mu.length + mu.length * (mu.length + 1) / 2;
-
-        init();
+        MultivariateGaussianDistribution gaussian = new MultivariateGaussianDistribution(mu, sigma);
+        gaussian.diagonal = diagonal;
+        return gaussian;
     }
 
     /**
@@ -177,8 +182,8 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
     }
 
     @Override
-    public int npara() {
-        return numParameters;
+    public int length() {
+        return length;
     }
 
     @Override
@@ -192,8 +197,8 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
     }
 
     @Override
-    public double[][] cov() {
-        return sigma.toArray();
+    public DenseMatrix cov() {
+        return sigma;
     }
 
     /**
@@ -358,13 +363,10 @@ public class MultivariateGaussianDistribution extends AbstractMultivariateDistri
             }
         }
 
-        MultivariateMixture.Component c = new MultivariateMixture.Component();
-        c.priori = alpha;
-        MultivariateGaussianDistribution g = new MultivariateGaussianDistribution(mean, cov);
+        MultivariateGaussianDistribution g = new MultivariateGaussianDistribution(mean, Matrix.of(cov));
         g.diagonal = diagonal;
-        c.distribution = g;
 
-        return c;
+        return new MultivariateMixture.Component(alpha, g);
     }
 
     @Override

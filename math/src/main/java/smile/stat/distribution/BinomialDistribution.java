@@ -57,11 +57,15 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class BinomialDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double p;
-    private int n;
-    private double entropy;
+    /** The probability of success. */
+    public final double p;
+    /** The number of experiments. */
+    public final int n;
+    /** The entropy. */
+    private final double entropy;
+    /** The random number generator. */
     private RandomNumberGenerator rng;
 
     /**
@@ -84,22 +88,8 @@ public class BinomialDistribution extends DiscreteDistribution {
         entropy = log(2 * PI * E * n * p * (1 - p)) / 2;
     }
 
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
-    }
-
-    /**
-     * Returns the parameter n, the number of experiments.
-     */
-    public int getN() {
-        return n;
-    }
-
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -109,7 +99,7 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return n * p * (1 - p);
     }
 

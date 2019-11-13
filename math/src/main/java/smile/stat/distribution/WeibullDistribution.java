@@ -62,46 +62,48 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class WeibullDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double shape;
-    private double scale;
+    /** The shape parameter. */
+    public final double k;
+    /** The scale parameter. */
+    public final double lambda;
     private double mean;
-    private double var;
+    private double variance;
     private double entropy;
 
     /**
      * Constructor. The default scale parameter is 1.0.
-     * @param shape the shape parameter.
+     * @param k the shape parameter.
      */
-    public WeibullDistribution(double shape) {
-        this(shape, 1.0);
+    public WeibullDistribution(double k) {
+        this(k, 1.0);
     }
 
     /**
      * Constructor.
-     * @param shape the shape parameter.
-     * @param scale the scale parameter.
+     * @param k the shape parameter.
+     * @param lambda the scale parameter.
      */
-    public WeibullDistribution(double shape, double scale) {
-        if (shape <= 0) {
-            throw new IllegalArgumentException("Invalid shape: " + shape);
+    public WeibullDistribution(double k, double lambda) {
+        if (k <= 0) {
+            throw new IllegalArgumentException("Invalid shape: " + k);
         }
 
-        if (scale <= 0) {
-            throw new IllegalArgumentException("Invalid scale: " + scale);
+        if (lambda <= 0) {
+            throw new IllegalArgumentException("Invalid scale: " + lambda);
         }
 
-        this.shape = shape;
-        this.scale = scale;
+        this.k = k;
+        this.lambda = lambda;
 
-        mean = scale * Gamma.gamma(1 + 1 / shape);
-        var = scale * scale * Gamma.gamma(1 + 2 / shape) - mean * mean;
-        entropy = 0.5772156649015328606 * (1 - 1 / shape) + Math.log(scale / shape) + 1;
+        mean = lambda * Gamma.gamma(1 + 1 / k);
+        variance = lambda * lambda * Gamma.gamma(1 + 2 / k) - mean * mean;
+        entropy = 0.5772156649015328606 * (1 - 1 / k) + Math.log(lambda / k) + 1;
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -111,13 +113,8 @@ public class WeibullDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
-        return var;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var());
+    public double variance() {
+        return variance;
     }
 
     @Override
@@ -127,13 +124,13 @@ public class WeibullDistribution extends AbstractDistribution {
 
     @Override
     public String toString() {
-        return String.format("Weibull Distribution(%.4f, %.4f)", shape, scale);
+        return String.format("Weibull Distribution(%.4f, %.4f)", k, lambda);
     }
 
     @Override
     public double rand() {
         double r = Math.random();
-        return scale * Math.pow(-Math.log(1 - r), 1 / shape);
+        return lambda * Math.pow(-Math.log(1 - r), 1 / k);
     }
 
     @Override
@@ -141,7 +138,7 @@ public class WeibullDistribution extends AbstractDistribution {
         if (x <= 0) {
             return 0.0;
         } else {
-            return (shape / scale) * Math.pow(x / scale, shape - 1) * Math.exp(-Math.pow(x / scale, shape));
+            return (k / lambda) * Math.pow(x / lambda, k - 1) * Math.exp(-Math.pow(x / lambda, k));
         }
     }
 
@@ -150,7 +147,7 @@ public class WeibullDistribution extends AbstractDistribution {
         if (x <= 0) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Math.log(shape / scale) + (shape - 1) * Math.log(x / scale) - Math.pow(x / scale, shape);
+            return Math.log(k / lambda) + (k - 1) * Math.log(x / lambda) - Math.pow(x / lambda, k);
         }
     }
 
@@ -159,7 +156,7 @@ public class WeibullDistribution extends AbstractDistribution {
         if (x <= 0) {
             return 0.0;
         } else {
-            return 1 - Math.exp(-Math.pow(x / scale, shape));
+            return 1 - Math.exp(-Math.pow(x / lambda, k));
         }
     }
 
@@ -169,7 +166,7 @@ public class WeibullDistribution extends AbstractDistribution {
             throw new IllegalArgumentException("Invalid p: " + p);
         }
 
-        return scale * Math.pow(-Math.log(1 - p), 1 / shape);
+        return lambda * Math.pow(-Math.log(1 - p), 1 / k);
     }
 }
 

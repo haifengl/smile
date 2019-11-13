@@ -968,7 +968,7 @@ public class JMatrix implements DenseMatrix {
 
     /**
      * QR Decomposition is computed by Householder reflections.
-     * @param tol The tolerance for detecting linear dependencies
+     * @param tol the tolerance for detecting linear dependencies
      *            in the column vectors.
      */
     public QR qr(double tol) {

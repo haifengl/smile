@@ -51,10 +51,12 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class GammaDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double theta;
-    private double k;
+    /** The scale parameter. */
+    public final double theta;
+    /** The shape parameter. */
+    public final double k;
     private double logTheta;
     private double thetaGammaK;
     private double logGammaK;
@@ -84,9 +86,9 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by (approximate) MLE.
+     * Estimates the distribution parameters by (approximate) MLE.
      */
-    public GammaDistribution(double[] data) {
+    public static GammaDistribution fit(double[] data) {
         for (int i = 0; i < data.length; i++) {
             if (data[i] <= 0) {
                 throw new IllegalArgumentException("Samples contain non-positive values.");
@@ -103,13 +105,9 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         mu /= data.length;
         s = Math.log(mu) - s / data.length;
 
-        k = (3 - s + Math.sqrt((MathEx.sqr(s - 3) + 24 * s))) / (12 * s);
-        theta = mu / k;
-
-        logTheta = Math.log(theta);
-        thetaGammaK = theta * Gamma.gamma(k);
-        logGammaK = Gamma.lgamma(k);
-        entropy = k + Math.log(theta) + Gamma.lgamma(k) + (1 - k) * Gamma.digamma(k);
+        double shape = (3 - s + Math.sqrt((MathEx.sqr(s - 3) + 24 * s))) / (12 * s);
+        double scale = mu / shape;
+        return new GammaDistribution(shape, scale);
     }
 
     /**
@@ -127,7 +125,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -137,7 +135,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return k * theta * theta;
     }
 
@@ -216,7 +214,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     public Mixture.Component M(double[] x, double[] posteriori) {
         double alpha = 0.0;
         double mean = 0.0;
-        double var = 0.0;
+        double variance = 0.0;
 
         for (int i = 0; i < x.length; i++) {
             alpha += posteriori[i];
@@ -227,16 +225,12 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
         for (int i = 0; i < x.length; i++) {
             double d = x[i] - mean;
-            var += d * d * posteriori[i];
+            variance += d * d * posteriori[i];
         }
 
-        var = var / alpha;
+        variance /= alpha;
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = alpha;
-        c.distribution = new GammaDistribution(mean * mean / var, var / mean);
-
-        return c;
+        return new Mixture.Component(alpha, new GammaDistribution(mean * mean / variance, variance / mean));
     }
 }
 

@@ -35,9 +35,10 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class TDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private int nu;
+    /** The degree of freedom. */
+    public final int nu;
     private double entropy;
     private double np;
     private double fac;
@@ -59,7 +60,7 @@ public class TDistribution extends AbstractDistribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -73,7 +74,7 @@ public class TDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return nu / (nu - 2.0);
     }
 

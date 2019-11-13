@@ -37,8 +37,10 @@ public interface Distribution extends Serializable {
 
     /**
      * The number of parameters of the distribution.
+     * The "length" is in the sense of the minimum description
+     * length principle.
      */
-    int npara();
+    int length();
 
     /**
      * The mean of distribution.
@@ -48,12 +50,14 @@ public interface Distribution extends Serializable {
     /**
      * The variance of distribution.
      */
-    double var();
+    double variance();
     
     /**
      * The standard deviation of distribution.
      */
-    double sd();
+    default double sd() {
+        return Math.sqrt(variance());
+    }
 
     /**
      * Shannon entropy of the distribution.
@@ -90,10 +94,19 @@ public interface Distribution extends Serializable {
     /**
      * The likelihood of the sample set following this distribution.
      */
-    double likelihood(double[] x);
+    default double likelihood(double[] x) {
+        return Math.exp(logLikelihood(x));
+    }
     
     /**
      * The log likelihood of the sample set following this distribution.
      */
-    double logLikelihood(double[] x);
+    default double logLikelihood(double[] x) {
+        double L = 0.0;
+
+        for (double xi : x)
+            L += logp(xi);
+
+        return L;
+    }
 }

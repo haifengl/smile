@@ -56,23 +56,24 @@ public class BernoulliDistributionTest {
     @Test
     public void testBernoulliDistribution() {
         System.out.println("BernoulliDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         BernoulliDistribution instance = new BernoulliDistribution(0.4);
         int[] data = new int[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = (int) instance.rand();
-        BernoulliDistribution est = new BernoulliDistribution(data);
-        assertEquals(0.4, est.getProb(), 5E-2);
+        BernoulliDistribution est = BernoulliDistribution.fit(data);
+        assertEquals(0.4, est.p, 1E-2);
     }
 
     /**
-     * Test of npara method, of class BernoulliDistribution.
+     * Test of length method, of class BernoulliDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         BernoulliDistribution instance = new BernoulliDistribution(0.3);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -87,14 +88,14 @@ public class BernoulliDistributionTest {
     }
 
     /**
-     * Test of var method, of class BernoulliDistribution.
+     * Test of variance method, of class BernoulliDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         BernoulliDistribution instance = new BernoulliDistribution(0.3);
         instance.rand();
-        assertEquals(0.21, instance.var(), 1E-7);
+        assertEquals(0.21, instance.variance(), 1E-7);
     }
 
     /**

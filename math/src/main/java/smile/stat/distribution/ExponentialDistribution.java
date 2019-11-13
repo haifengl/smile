@@ -56,9 +56,10 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class ExponentialDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double lambda;
+    /** The rate parameter. */
+    public final double lambda;
 
     /**
      * Constructor.
@@ -73,9 +74,9 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      */
-    public ExponentialDistribution(double[] data) {
+    public static ExponentialDistribution fit(double[] data) {
         for (int i = 0; i < data.length; i++) {
             if (data[i] < 0) {
                 throw new IllegalArgumentException("Samples contain negative values.");
@@ -87,18 +88,12 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
             throw new IllegalArgumentException("Samples are all zeros.");
         }
 
-        lambda = 1 / mean;
-    }
-
-    /**
-     * Returns the rate parameter.
-     */
-    public double getLambda() {
-        return lambda;
+        double lambda = 1 / mean;
+        return new ExponentialDistribution(lambda);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -108,7 +103,7 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return 1 / (lambda * lambda);
     }
 
@@ -180,10 +175,6 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
 
         mean /= alpha;
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = alpha;
-        c.distribution = new ExponentialDistribution(1 / mean);
-
-        return c;
+        return new Mixture.Component(alpha, new ExponentialDistribution(1 / mean));
     }
 }

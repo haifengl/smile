@@ -17,8 +17,6 @@
 
 package smile.stat.distribution;
 
-import java.util.List;
-import java.util.ArrayList;
 import smile.math.MathEx;
 
 /**
@@ -29,112 +27,110 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class GaussianMixture extends ExponentialFamilyMixture {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GaussianMixture.class);
 
     /**
      * Constructor.
-     * @param mixture a list of multivariate Gaussian distributions.
+     * @param components a list of multivariate Gaussian distributions.
      */
-    public GaussianMixture(List<Component> mixture) {
-        super(mixture);
+    public GaussianMixture(Component... components) {
+        this(0.0, 1, components);
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm.
-     * @param data the training data.
-     * @param k the number of components.
+     * Constructor.
+     * @param components a list of multivariate Gaussian distributions.
+     * @param L the log-likelihood.
+     * @param n the number of samples to fit the distribution.
      */
-    public GaussianMixture(double[] data, int k) {
+    private GaussianMixture(double L, int n, Component... components) {
+        super(L, n, components);
+
+        for (Component component : components) {
+            if (component.distribution instanceof GaussianDistribution == false) {
+                throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
+            }
+        }
+    }
+
+    /**
+     * Fits the Gaussian mixture model with the EM algorithm.
+     * @param k the number of components.
+     * @param x the training data.
+     */
+    public static GaussianMixture fit(int k, double[] x) {
         if (k < 2)
             throw new IllegalArgumentException("Invalid number of components in the mixture.");
 
-        double min = MathEx.min(data);
-        double max = MathEx.max(data);
+        double min = MathEx.min(x);
+        double max = MathEx.max(x);
         double step = (max - min) / (k+1);
-        
+
+        Component[] components = new Component[k];
         for (int i = 0; i < k; i++) {
-            Component c = new Component();
-            c.priori = 1.0 / k;
-            c.distribution = new GaussianDistribution(min+=step, step);
-            components.add(c);
+            components[i] = new Component(1.0/k, new GaussianDistribution(min+=step, step));
         }
 
-        EM(components, data);
+        ExponentialFamilyMixture model = fit(x, components);
+        return new GaussianMixture(model.L, x.length, model.components);
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm. The number of components will be selected by BIC.
-     * @param data the training data.
+     * Fits the Gaussian mixture model with the EM algorithm.
+     * The number of components will be selected by BIC.
+     * @param x the training data.
      */
     @SuppressWarnings("unchecked")
-    public GaussianMixture(double[] data) {
-        if (data.length < 20)
+    public static GaussianMixture fit(double[] x) {
+        if (x.length < 20) {
             throw new IllegalArgumentException("Too few samples.");
-        
-        ArrayList<Component> mixture = new ArrayList<>();
-        Component c = new Component();
-        c.priori = 1.0;
-        c.distribution = new GaussianDistribution(data);
-        mixture.add(c);
-
-        int freedom = 0;
-        for (int i = 0; i < mixture.size(); i++)
-            freedom += mixture.get(i).distribution.npara();
-
-        double bic = 0.0;
-        for (double x : data) {
-            double p = c.distribution.p(x);
-            if (p > 0) bic += Math.log(p);
         }
-        bic -= 0.5 * freedom * Math.log(data.length);
 
-        double b = Double.NEGATIVE_INFINITY;
-        while (bic > b) {
-            b = bic;
-            components = (ArrayList<Component>) mixture.clone();
+        GaussianMixture mixture = new GaussianMixture(new Component(1.0, GaussianDistribution.fit(x)));
+        double bic = mixture.bic(x);
+        logger.info(String.format("The BIC of %s = %.4f", mixture, bic));
 
-            split(mixture);
-            bic = EM(mixture, data);
+        do {
+            Component[] components = split(mixture.components);
+            ExponentialFamilyMixture model = fit(x, components);
+            logger.info(String.format("The BIC of %s = %.4f", model, model.bic));
 
-            freedom = 0;
-            for (int i = 0; i < mixture.size(); i++)
-                freedom += mixture.get(i).distribution.npara();
-
-            bic -= 0.5 * freedom * Math.log(data.length);
-        }
+            if (model.bic > bic) {
+                mixture = new GaussianMixture(model.L, x.length, model.components);
+                bic = model.bic;
+            } else {
+                return mixture;
+            }
+        } while (true);
     }
 
     /**
      * Split the most heterogeneous cluster along its main direction (eigenvector).
      */
-    private void split(List<Component> mixture) {
+    private static Component[] split(Component... components) {
         // Find most dispersive cluster (biggest sigma)
-        Component componentToSplit = null;
-
-        double maxSigma = 0.0;
-        for (Component c : mixture) {
+        int k = components.length;
+        int index = -1;
+        double maxSigma = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
             if (c.distribution.sd() > maxSigma) {
                 maxSigma = c.distribution.sd();
-                componentToSplit = c;
+                index = i;
             }
         }
 
         // Splits the component
-        double delta = componentToSplit.distribution.sd();
-        double mu = componentToSplit.distribution.mean();
+        Component component = components[index];
+        double priori = component.priori / 2;
+        double delta = component.distribution.sd();
+        double mu = component.distribution.mean();
         
-        Component c = new Component();
-        c.priori = componentToSplit.priori / 2;
-        c.distribution = new GaussianDistribution(mu + delta/2, delta);
-        mixture.add(c);
-        
-        c = new Component();
-        c.priori = componentToSplit.priori / 2;
-        c.distribution = new GaussianDistribution(mu - delta/2, delta);
-        mixture.add(c);
-
-        mixture.remove(componentToSplit);
+        Component[] mixture = new Component[k+1];
+        System.arraycopy(components, 0, mixture, 0, k);
+        mixture[index] = new Component(priori, new GaussianDistribution(mu + delta/2, delta));
+        mixture[k] = new Component(priori, new GaussianDistribution(mu - delta/2, delta));
+        return mixture;
     }
 }

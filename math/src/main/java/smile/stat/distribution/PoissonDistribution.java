@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import javafx.geometry.Pos;
 import smile.math.special.Gamma;
 import smile.math.MathEx;
 
@@ -47,14 +48,16 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class PoissonDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double lambda;
+    /** The average number of events per interval. */
+    public final double lambda;
     private double entropy;
     private RandomNumberGenerator rng;
 
     /**
      * Constructor.
+     * @param lambda the average number of events per interval.
      */
     public PoissonDistribution(double lambda) {
         if (lambda < 0.0) {
@@ -66,28 +69,21 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      */
-    public PoissonDistribution(int[] data) {
+    public static PoissonDistribution fit(int[] data) {
         for (int i = 0; i < data.length; i++) {
             if (data[i] < 0) {
                 throw new IllegalArgumentException("Samples contain negative values.");
             }
         }
 
-        lambda = MathEx.mean(data);
-        entropy = (Math.log(2 * Math.PI * Math.E) + Math.log(lambda)) / 2 - 1 / (12 * lambda) - 1 / (24 * lambda * lambda) - 19 / (360 * lambda * lambda * lambda);
-    }
-
-    /**
-     * Returns the rate parameter, the expected number of occurrences in a time unit.
-     */
-    public double getLambda() {
-        return lambda;
+        double lambda = MathEx.mean(data);
+        return new PoissonDistribution(lambda);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -97,7 +93,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return lambda;
     }
 
@@ -195,11 +191,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
         mean /= alpha;
 
-        DiscreteMixture.Component c = new DiscreteMixture.Component();
-        c.priori = alpha;
-        c.distribution = new PoissonDistribution(mean);
-
-        return c;
+        return new DiscreteMixture.Component(alpha, new PoissonDistribution(mean));
     }
 
     /**

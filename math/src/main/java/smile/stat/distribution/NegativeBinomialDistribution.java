@@ -53,16 +53,16 @@ import static smile.math.special.Gamma.lgamma;
  * @author Haifeng Li
  */
 public class NegativeBinomialDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of failures until the experiment is stopped.
      */
-    private double r;
+    public final double r;
     /**
-     * Success probability in each experiment.
+     * The success probability in each experiment.
      */
-    private double p;
+    public final double p;
 
     /**
      * Constructor.
@@ -83,7 +83,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -93,7 +93,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return r * (1 - p) / (p * p);
     }
 

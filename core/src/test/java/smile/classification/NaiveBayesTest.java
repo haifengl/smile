@@ -76,7 +76,7 @@ public class NaiveBayesTest {
                 for (int j = 0; j < p; j++) {
                     final int f = j;
                     double[] xi = IntStream.range(0, n).filter(l -> y[l] == c).mapToDouble(l -> x[l][f]).toArray();
-                    condprob[i][j] = new GaussianMixture(xi, 3);
+                    condprob[i][j] = GaussianMixture.fit(3, xi);
                 }
             }
 

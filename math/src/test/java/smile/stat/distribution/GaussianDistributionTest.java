@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,24 +57,25 @@ public class GaussianDistributionTest {
     @Test
     public void testGaussianDistribution() {
         System.out.println("GaussianDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         GaussianDistribution instance = new GaussianDistribution(3, 2.1);
         double[] data = new double[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
-        GaussianDistribution est = new GaussianDistribution(data);
-        assertEquals(0.0, (est.mean() - 3.0) / 3.0, 0.1);
-        assertEquals(0.0, (est.sd() - 2.1) / 2.1, 0.1);
+        GaussianDistribution est = GaussianDistribution.fit(data);
+        assertEquals(3.05, est.mu, 1E-2);
+        assertEquals(2.13, est.sigma, 1E-2);
     }
 
     /**
-     * Test of npara method, of class Exponential.
+     * Test of length method, of class Exponential.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         GaussianDistribution instance = new GaussianDistribution(3.0, 2.0);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
     /**
@@ -96,23 +99,23 @@ public class GaussianDistributionTest {
     }
 
     /**
-     * Test of var method, of class Exponential.
+     * Test of variance method, of class Exponential.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         GaussianDistribution instance = new GaussianDistribution(0.0, 1.0);
         instance.rand();
-        assertEquals(1.0, instance.var(), 1E-7);
+        assertEquals(1.0, instance.variance(), 1E-7);
         instance = new GaussianDistribution(1.0, 2.0);
         instance.rand();
-        assertEquals(4.0, instance.var(), 1E-7);
+        assertEquals(4.0, instance.variance(), 1E-7);
         instance = new GaussianDistribution(2.0, 0.5);
         instance.rand();
-        assertEquals(0.25, instance.var(), 1E-7);
+        assertEquals(0.25, instance.variance(), 1E-7);
         instance = new GaussianDistribution(3.0, 3.8);
         instance.rand();
-        assertEquals(14.44, instance.var(), 1E-7);
+        assertEquals(14.44, instance.variance(), 1E-7);
     }
 
     /**

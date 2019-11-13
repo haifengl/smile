@@ -50,14 +50,14 @@ public class HyperGeometricDistributionTest {
     }
 
     /**
-     * Test of npara method, of class HyperGeometricDistribution.
+     * Test of length method, of class HyperGeometricDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         HyperGeometricDistribution instance = new HyperGeometricDistribution(100, 30, 70);
         instance.rand();
-        assertEquals(3, instance.npara());
+        assertEquals(3, instance.length());
     }
 
     /**
@@ -78,20 +78,20 @@ public class HyperGeometricDistributionTest {
     }
 
     /**
-     * Test of var method, of class HyperGeometricDistribution.
+     * Test of variance method, of class HyperGeometricDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         HyperGeometricDistribution instance = new HyperGeometricDistribution(100, 30, 70);
         instance.rand();
-        assertEquals(4.454545, instance.var(), 1E-6);
+        assertEquals(4.454545, instance.variance(), 1E-6);
         instance = new HyperGeometricDistribution(100, 30, 80);
         instance.rand();
-        assertEquals(3.393939, instance.var(), 1E-6);
+        assertEquals(3.393939, instance.variance(), 1E-6);
         instance = new HyperGeometricDistribution(100, 30, 60);
         instance.rand();
-        assertEquals(5.090909, instance.var(), 1E-6);
+        assertEquals(5.090909, instance.variance(), 1E-6);
     }
 
     /**

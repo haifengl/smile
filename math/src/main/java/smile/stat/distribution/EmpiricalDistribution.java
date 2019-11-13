@@ -18,6 +18,9 @@
 package smile.stat.distribution;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+
 import smile.math.MathEx;
 
 /**
@@ -31,7 +34,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class EmpiricalDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The possible values of random variable.
@@ -54,7 +57,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
      */
     private double[] cdf;
     private double mean;
-    private double var;
+    private double variance;
     private double sd;
     private double entropy;
     // Walker's alias method to generate random samples.
@@ -97,8 +100,8 @@ public class EmpiricalDistribution extends DiscreteDistribution {
             entropy -= p[i] * MathEx.log2(p[i]);
         }
 
-        var = mean2 - mean * mean;
-        sd = Math.sqrt(var);
+        variance = mean2 - mean * mean;
+        sd = Math.sqrt(variance);
 
         if (Math.abs(cdf[cdf.length - 1] - 1.0) > 1E-7) {
             throw new IllegalArgumentException("The sum of probabilities is not 1.");
@@ -106,7 +109,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Constructor. CDF will be estimated from the data.
+     * Estimates the distribution.
      */
     public EmpiricalDistribution(int[] data) {
         if (data.length == 0) {
@@ -143,12 +146,12 @@ public class EmpiricalDistribution extends DiscreteDistribution {
             entropy -= p[i] * MathEx.log2(p[i]);
         }
 
-        var = mean2 - mean * mean;
-        sd = Math.sqrt(var);
+        variance = mean2 - mean * mean;
+        sd = Math.sqrt(variance);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return p.length;
     }
 
@@ -158,8 +161,8 @@ public class EmpiricalDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
-        return var;
+    public double variance() {
+        return variance;
     }
 
     @Override
@@ -174,13 +177,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("Empirical Distribution(");
-        for (int i = 0; i < p.length; i++) {
-            builder.append(p[i]);
-            builder.append(' ');
-        }
-        builder.setCharAt(builder.length() - 1, ')');
-        return builder.toString();
+        return Arrays.stream(p).mapToObj(pi -> String.format("%.2f", pi)).collect(Collectors.joining(", ", "Empirical Distribution(", ")"));
     }
 
     @Override
