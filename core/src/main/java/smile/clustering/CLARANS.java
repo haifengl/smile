@@ -117,10 +117,10 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
         T[] newMedoids = medoids.clone();
         int[] y = new int[n];
         int[] newY = new int[n];
-        double[] d = new double[n];
         double[] newD = new double[n];
 
-        double distortion = seed(data, medoids, y, d, distance);
+        double[] d = seed(data, medoids, y, distance);
+        double distortion = MathEx.sum(d);
 
         System.arraycopy(medoids, 0, newMedoids, 0, k);
         System.arraycopy(y, 0, newY, 0, n);

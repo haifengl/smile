@@ -145,9 +145,8 @@ public class NeuralGas implements VectorQuantizer {
     public static double[][] seed(int k, double[][] samples) {
         int n = samples.length;
         int[] y = new int[n];
-        double[] dist = new double[n];
         double[][] medoids = new double[k][];
-        CentroidClustering.seed(samples, medoids, y, dist, MathEx::squaredDistance);
+        CentroidClustering.seed(samples, medoids, y, MathEx::squaredDistance);
 
         return medoids;
     }

@@ -84,11 +84,10 @@ public class KModes extends CentroidClustering<int[], int[]> {
         }).toArray(ClassLabel.Result[]::new);
 
         int[] y = new int[n];
-        double[] dist = new double[n];
         int[][] medoids = new int[k][];
         int[][] centroids = new int[k][d];
 
-        double distortion = seed(data, medoids, y, dist, HammingDistance::d);
+        double distortion = MathEx.sum(seed(data, medoids, y, HammingDistance::d));
         logger.info(String.format("Distortion after initialization: %d", (int) distortion));
 
         double diff = Integer.MAX_VALUE;

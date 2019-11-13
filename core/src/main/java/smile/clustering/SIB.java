@@ -97,10 +97,9 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
         int d = 1 + Arrays.stream(data).flatMap(s -> s.stream()).mapToInt(e -> e.i).max().orElse(0);
 
         int[] y = new int[n];
-        double[] dist = new double[n];
         SparseArray[] medoids = new SparseArray[k];
 
-        double distortion = seed(data, medoids, y, dist, MathEx::JensenShannonDivergence);
+        double distortion = MathEx.sum(seed(data, medoids, y, MathEx::JensenShannonDivergence));
         logger.info(String.format("Distortion after initialization: %.4f", distortion));
 
         int[] size = new int[k];

@@ -122,12 +122,12 @@ public abstract class PartitionClustering implements Serializable {
      * @param data data objects array of size n.
      * @param medoids an array of size k to store cluster medoids on output.
      * @param y an array of size n to store cluster labels on output.
-     * @param d an array of size n to store the distance of each observation to nearest medoid.
-     * @return the initial cluster distortion.
+     * @return an array of size n to store the distance of each observation to nearest medoid.
      */
-    public static <T> double seed(T[] data, T[] medoids, int[] y, double[] d, ToDoubleBiFunction<T, T> distance) {
+    public static <T> double[] seed(T[] data, T[] medoids, int[] y, ToDoubleBiFunction<T, T> distance) {
         int n = data.length;
         int k = medoids.length;
+        double[] d = new double[n];
         medoids[0] = data[MathEx.randomInt(n)];
 
         Arrays.fill(d, Double.MAX_VALUE);
@@ -160,12 +160,7 @@ public abstract class PartitionClustering implements Serializable {
             }
         }
 
-        double distortion = 0.0;
-        for (int i = 0; i < n; i++) {
-            distortion += d[i];
-        }
-
-        return distortion;
+        return d;
     }
 
     /**
