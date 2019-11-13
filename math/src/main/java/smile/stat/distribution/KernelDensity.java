@@ -30,7 +30,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class KernelDensity implements Distribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The samples to estimate the density function.
@@ -56,7 +56,7 @@ public class KernelDensity implements Distribution {
     /**
      * The variance.
      */
-    private double var;
+    private double variance;
 
     /**
      * Constructor. The bandwidth of kernel will be estimated by the rule of thumb.
@@ -65,8 +65,8 @@ public class KernelDensity implements Distribution {
     public KernelDensity(double[] x) {
         this.x = x;
         this.mean = MathEx.mean(x);
-        this.var = MathEx.var(x);
-        this.sd = Math.sqrt(var);
+        this.variance = MathEx.var(x);
+        this.sd = Math.sqrt(variance);
 
         Arrays.sort(x);
 
@@ -89,8 +89,8 @@ public class KernelDensity implements Distribution {
         this.x = x;
         this.h = h;
         this.mean = MathEx.mean(x);
-        this.var = MathEx.var(x);
-        this.sd = Math.sqrt(var);
+        this.variance = MathEx.var(x);
+        this.sd = Math.sqrt(variance);
         gaussian = new GaussianDistribution(0, h);
 
         Arrays.sort(x);
@@ -105,7 +105,7 @@ public class KernelDensity implements Distribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 0;
     }
 
@@ -115,8 +115,8 @@ public class KernelDensity implements Distribution {
     }
 
     @Override
-    public double var() {
-        return var;
+    public double variance() {
+        return variance;
     }
 
     @Override

@@ -51,14 +51,14 @@ public class FDistributionTest {
     }
 
     /**
-     * Test of npara method, of class FDistribution.
+     * Test of length method, of class FDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         FDistribution instance = new FDistribution(10, 20);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
     /**
@@ -73,14 +73,14 @@ public class FDistributionTest {
     }
 
     /**
-     * Test of var method, of class FDistribution.
+     * Test of variance method, of class FDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         FDistribution instance = new FDistribution(10, 20);
         instance.rand();
-        assertEquals(0.4320988, instance.var(), 1E-7);
+        assertEquals(0.4320988, instance.variance(), 1E-7);
     }
 
     /**

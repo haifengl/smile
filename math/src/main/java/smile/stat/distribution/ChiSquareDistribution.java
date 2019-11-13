@@ -39,14 +39,16 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class ChiSquareDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
-     * degrees of freedom.
+     * The degrees of freedom.
      */
-    private int nu;
-    private double fac;
-    private double entropy;
+    public final int nu;
+    /** The constant part of log-probability function. */
+    private final double fac;
+    /** The entropy. */
+    private final double entropy;
 
     /**
      * Constructor.
@@ -62,15 +64,8 @@ public class ChiSquareDistribution extends AbstractDistribution implements Expon
         entropy = nu / 2.0 + Math.log(2) + Gamma.lgamma(nu / 2.0) + (1 - nu / 2.0) * Gamma.digamma(nu / 2.0);
     }
 
-    /**
-     * Returns the parameter nu, the degrees of freedom.
-     */
-    public int getNu() {
-        return nu;
-    }
-
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -80,7 +75,7 @@ public class ChiSquareDistribution extends AbstractDistribution implements Expon
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return 2 * nu;
     }
 
@@ -157,10 +152,6 @@ public class ChiSquareDistribution extends AbstractDistribution implements Expon
 
         mean /= alpha;
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = alpha;
-        c.distribution = new ChiSquareDistribution((int) Math.round(mean));
-
-        return c;
+        return new Mixture.Component(alpha, new ChiSquareDistribution((int) Math.round(mean)));
     }
 }

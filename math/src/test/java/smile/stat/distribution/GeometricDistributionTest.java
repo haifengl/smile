@@ -59,19 +59,19 @@ public class GeometricDistributionTest {
         int[] data = new int[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = (int) instance.rand();
-        GeometricDistribution est = new GeometricDistribution(data);
-        assertEquals(0.4, est.getProb(), 5E-2);
+        GeometricDistribution est = GeometricDistribution.fit(data);
+        assertEquals(0.4, est.p, 5E-2);
     }
 
     /**
-     * Test of npara method, of class GeometricDistribution.
+     * Test of length method, of class GeometricDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         GeometricDistribution instance = new GeometricDistribution(0.3);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -86,14 +86,14 @@ public class GeometricDistributionTest {
     }
 
     /**
-     * Test of var method, of class GeometricDistribution.
+     * Test of variance method, of class GeometricDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         GeometricDistribution instance = new GeometricDistribution(0.3);
         instance.rand();
-        assertEquals(0.7/0.09, instance.var(), 1E-7);
+        assertEquals(0.7/0.09, instance.variance(), 1E-7);
     }
 
     /**

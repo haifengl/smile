@@ -59,19 +59,19 @@ public class PoissonDistributionTest {
         int[] data = new int[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = (int) instance.rand();
-        PoissonDistribution est = new PoissonDistribution(data);
-        assertEquals(5.5, est.getLambda(), 1.5E-1);
+        PoissonDistribution est = PoissonDistribution.fit(data);
+        assertEquals(5.5, est.lambda, 1.5E-1);
     }
 
     /**
-     * Test of npara method, of class Poisson.
+     * Test of length method, of class Poisson.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         PoissonDistribution instance = new PoissonDistribution(3.5);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -86,14 +86,14 @@ public class PoissonDistributionTest {
     }
 
     /**
-     * Test of var method, of class Poisson.
+     * Test of variance method, of class Poisson.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         PoissonDistribution instance = new PoissonDistribution(3.5);
         instance.rand();
-        assertEquals(3.5, instance.var(), 1E-7);
+        assertEquals(3.5, instance.variance(), 1E-7);
     }
 
     /**

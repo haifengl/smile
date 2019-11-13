@@ -36,10 +36,19 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class FDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private int nu1;
-    private int nu2;
+    /**
+     * The degrees of freedom of chi-square distribution in numerator.
+     */
+    public final int nu1;
+
+    /**
+     * The degrees of freedom chi-square distribution in denominator.
+     */
+    public final int nu2;
+
+    /** The constant part in the pdf function. */
     private double fac;
 
     /**
@@ -62,22 +71,8 @@ public class FDistribution extends AbstractDistribution {
                 - Gamma.lgamma(0.5 * nu1) - Gamma.lgamma(0.5 * nu2);
     }
 
-    /**
-     * Returns the parameter nu1, the degrees of freedom of chi-square distribution in numerator.
-     */
-    public int getNu1() {
-        return nu1;
-    }
-
-    /**
-     * Returns the parameter nu2, the degrees of freedom chi-square distribution in denominator.
-     */
-    public int getNu2() {
-        return nu2;
-    }
-
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -87,13 +82,8 @@ public class FDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return 2.0 * nu2 * nu2 * (nu1 + nu2 - 2) / (nu1 * (nu2 - 2) * (nu2 - 2) * (nu2 - 4));
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var());
     }
 
     /**

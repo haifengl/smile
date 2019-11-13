@@ -31,20 +31,20 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BernoulliDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Probability of success.
      */
-    private double p;
+    public final double p;
     /**
      * Probability of failure.
      */
-    private double q;
+    public final double q;
     /**
      * Shannon entropy.
      */
-    private double entropy;
+    private final double entropy;
 
     /**
      * Constructor.
@@ -62,10 +62,10 @@ public class BernoulliDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      * @param data data[i] == 1 if the i-<i>th</i> trail is success. Otherwise 0.
      */
-    public BernoulliDistribution(int[] data) {
+    public static BernoulliDistribution fit(int[] data) {
         int k = 0;
         for (int i : data) {
             if (i == 1) {
@@ -75,10 +75,8 @@ public class BernoulliDistribution extends DiscreteDistribution {
             }
         }
 
-        p = (double) k / data.length;
-        q = 1 - p;
-
-        entropy = -p * MathEx.log2(p) - q * MathEx.log2(q);
+        double p = (double) k / data.length;
+        return new BernoulliDistribution(p);
     }
 
     /**
@@ -100,16 +98,8 @@ public class BernoulliDistribution extends DiscreteDistribution {
         entropy = -p * MathEx.log2(p) - q * MathEx.log2(q);
     }
 
-    /**
-     * Returns the probability of success.
-     * @return the probability of success
-     */
-    public double getProb() {
-        return p;
-    }
-
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -119,13 +109,8 @@ public class BernoulliDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return p * q;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(p * q);
     }
 
     @Override

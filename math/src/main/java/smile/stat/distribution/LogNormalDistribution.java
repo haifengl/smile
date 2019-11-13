@@ -34,10 +34,12 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class LogNormalDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double mu;
-    private double sigma;
+    /** The mean of normal distribution. */
+    public final double mu;
+    /** The standard deviation of normal distribution. */
+    public final double sigma;
     private double mean;
     private double var;
     private double entropy;
@@ -45,6 +47,8 @@ public class LogNormalDistribution extends AbstractDistribution {
 
     /**
      * Constructor.
+     * @param mu the mean of normal distribution.
+     * @param sigma the standard deviation of normal distribution.
      */
     public LogNormalDistribution(double mu, double sigma) {
         if (sigma <= 0.0) {
@@ -59,9 +63,9 @@ public class LogNormalDistribution extends AbstractDistribution {
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      */
-    public LogNormalDistribution(double[] data) {
+    public static LogNormalDistribution fit(double[] data) {
         double[] x = new double[data.length];
         for (int i = 0; i < x.length; i++) {
             if (data[i] <= 0.0) {
@@ -71,30 +75,13 @@ public class LogNormalDistribution extends AbstractDistribution {
             x[i] = Math.log(data[i]);
         }
 
-        this.mu = MathEx.mean(x);
-        this.sigma = MathEx.sd(x);
-
-        mean = Math.exp(mu + sigma * sigma / 2);
-        var = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
-        entropy = 0.5 + 0.5 * Math.log(2 * Math.PI * sigma * sigma) + mu;
-    }
-
-    /**
-     * Returns the parameter mu, which is the mean of normal distribution log(X).
-     */
-    public double getMu() {
-        return mu;
-    }
-
-    /**
-     * Returns the parameter sigma, which is the standard deviation of normal distribution log(X).
-     */
-    public double getSigma() {
-        return sigma;
+        double mu = MathEx.mean(x);
+        double sigma = MathEx.sd(x);
+        return new LogNormalDistribution(mu, sigma);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -104,13 +91,8 @@ public class LogNormalDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return var;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var);
     }
 
     @Override

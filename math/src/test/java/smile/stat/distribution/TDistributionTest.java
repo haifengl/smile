@@ -50,14 +50,14 @@ public class TDistributionTest {
     }
 
     /**
-     * Test of npara method, of class TDistribution.
+     * Test of length method, of class TDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         TDistribution instance = new TDistribution(20);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -72,14 +72,14 @@ public class TDistributionTest {
     }
 
     /**
-     * Test of var method, of class TDistribution.
+     * Test of variance method, of class TDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         TDistribution instance = new TDistribution(20);
         instance.rand();
-        assertEquals(10/9.0, instance.var(), 1E-7);
+        assertEquals(10/9.0, instance.variance(), 1E-7);
     }
 
     /**

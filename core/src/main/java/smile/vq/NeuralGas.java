@@ -179,7 +179,7 @@ public class NeuralGas implements VectorQuantizer {
     public void update(double[] x) {
         int k = neurons.length;
         int d = x.length;
-        
+
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
 

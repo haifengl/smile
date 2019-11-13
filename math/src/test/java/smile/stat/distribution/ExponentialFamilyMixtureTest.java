@@ -25,6 +25,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
 
 /**
  *
@@ -58,6 +59,7 @@ public class ExponentialFamilyMixtureTest {
     @Test
     public void testEM() {
         System.out.println("EM");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         // Mixture of Gaussian, Exponential, and Gamma.
         double[] data = new double[2000];
@@ -74,23 +76,11 @@ public class ExponentialFamilyMixtureTest {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        List<Mixture.Component> m = new ArrayList<>();
-        Mixture.Component c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new GaussianDistribution(0.0, 1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new ExponentialDistribution(1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.5;
-        c.distribution = new GammaDistribution(1.0, 2.0);
-        m.add(c);
-
-        ExponentialFamilyMixture mixture = new ExponentialFamilyMixture(m, data);
+        ExponentialFamilyMixture mixture = ExponentialFamilyMixture.fit(data,
+                new Mixture.Component(0.25, new GaussianDistribution(0.0, 1.0)),
+                new Mixture.Component(0.25, new ExponentialDistribution(1.0)),
+                new Mixture.Component(0.5, new GammaDistribution(1.0, 2.0))
+                );
         System.out.println(mixture);
     }
 }

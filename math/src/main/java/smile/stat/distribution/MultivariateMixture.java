@@ -17,66 +17,71 @@
 
 package smile.stat.distribution;
 
-import java.util.List;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * The finite mixture of multivariate distributions.
  *
  * @author Haifeng Li
  */
-public class MultivariateMixture extends AbstractMultivariateDistribution {
-    private static final long serialVersionUID = 1L;
+public class MultivariateMixture implements MultivariateDistribution {
+    private static final long serialVersionUID = 2L;
 
     /**
      * A component in the mixture distribution is defined by a distribution
      * and its weight in the mixture.
      */
     public static class Component {
+        /**
+         * The priori probability of component.
+         */
+        public final double priori;
 
         /**
          * The distribution of component.
          */
-        public MultivariateDistribution distribution;
-        /**
-         * The priori probability of component.
-         */
-        public double priori;
-    }
-    List<Component> components;
+        public final MultivariateDistribution distribution;
 
-    /**
-     * Construct an empty Mixture.
-     */
-    MultivariateMixture() {
-        components = new ArrayList<>();
+        /**
+         * Constructor.
+         * @param priori the priori probability of component.
+         * @param distribution the distribution of component.
+         */
+        public Component(double priori, MultivariateDistribution distribution) {
+            this.priori = priori;
+            this.distribution = distribution;
+        }
     }
+
+    public final Component[] components;
 
     /**
      * Constructor.
-     * @param mixture a list of multivariate distributions.
+     * @param components a list of multivariate distributions.
      */
-    public MultivariateMixture(List<Component> mixture) {
-        components = new ArrayList<>();
-        components.addAll(mixture);
+    public MultivariateMixture(Component... components) {
+        if (components.length == 0) {
+            throw new IllegalStateException("Empty mixture!");
+        }
+
+        this.components = components;
     }
 
     @Override
     public double[] mean() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
-
-        double w = components.get(0).priori;
-        double[] m = components.get(0).distribution.mean();
+        double w = components[0].priori;
+        double[] m = components[0].distribution.mean();
         double[] mu = new double[m.length];
         for (int i = 0; i < m.length; i++) {
             mu[i] = w * m[i];
         }
 
-        for (int k = 1; k < components.size(); k++) {
-            w = components.get(0).priori;
-            m = components.get(0).distribution.mean();
+        for (int k = 1; k < components.length; k++) {
+            w = components[k].priori;
+            m = components[k].distribution.mean();
             for (int i = 0; i < m.length; i++) {
                 mu[i] += w * m[i];
             }
@@ -86,27 +91,26 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
     }
 
     @Override
-    public double[][] cov() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
+    public DenseMatrix cov() {
+        double w = components[0].priori;
+        DenseMatrix v = components[0].distribution.cov();
 
-        double w = components.get(0).priori;
-        double[][] v = components.get(0).distribution.cov();
-        double[][] cov = new double[v.length][v[0].length];
+        int m = v.nrows();
+        int n = v.ncols();
+        DenseMatrix cov = Matrix.zeros(m, n);
 
-        for (int i = 0; i < v.length; i++) {
-            for (int j = 0; j < v[i].length; j++) {
-                cov[i][j] = w * w * v[i][j];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                cov.set(i, j, w * w * v.get(i, j));
             }
         }
 
-        for (int k = 1; k < components.size(); k++) {
-            w = components.get(0).priori;
-            v = components.get(0).distribution.cov();
-            for (int i = 0; i < v.length; i++) {
-                for (int j = 0; j < v[i].length; j++) {
-                    cov[i][j] += w * w * v[i][j];
+        for (int k = 1; k < components.length; k++) {
+            w = components[k].priori;
+            v = components[k].distribution.cov();
+            for (int i = 0; i < m; i++) {
+                for (int j = 0; j < n; j++) {
+                    cov.add(i, j, w * w * v.get(i, j));
                 }
             }
         }
@@ -124,10 +128,6 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
 
     @Override
     public double p(double[] x) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
-
         double p = 0.0;
 
         for (Component c : components) {
@@ -144,10 +144,6 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
 
     @Override
     public double cdf(double[] x) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
-
         double p = 0.0;
 
         for (Component c : components) {
@@ -158,14 +154,10 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
     }
 
     @Override
-    public int npara() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
-
-        int f = components.size() - 1; // independent priori parameters
-        for (int i = 0; i < components.size(); i++) {
-            f += components.get(i).distribution.npara();
+    public int length() {
+        int f = components.length - 1; // independent priori parameters
+        for (Component component : components) {
+            f += component.distribution.length();
         }
 
         return f;
@@ -175,17 +167,13 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
      * Returns the number of components in the mixture.
      */
     public int size() {
-        return components.size();
+        return components.length;
     }
 
     /**
      * BIC score of the mixture for given data.
      */
     public double bic(double[][] data) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("MultivariateMixture is empty!");
-        }
-
         int n = data.length;
 
         double logLikelihood = 0.0;
@@ -196,30 +184,13 @@ public class MultivariateMixture extends AbstractMultivariateDistribution {
             }
         }
 
-        return logLikelihood - 0.5 * npara() * Math.log(n);
-    }
-
-    /**
-     * Returns the list of components in the mixture.
-     */
-    public List<Component> getComponents() {
-        return components;
+        return logLikelihood - 0.5 * length() * Math.log(n);
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("MultivariateMixture[");
-        builder.append(components.size());
-        builder.append("]:{");
-        for (Component c : components) {
-            builder.append(" (");
-            builder.append(c.distribution);
-            builder.append(':');
-            builder.append(String.format("%.4f", c.priori));
-            builder.append(')');
-        }
-        builder.append("}");
-        return builder.toString();
+        return Arrays.stream(components)
+                .map(component -> String.format("%.2f x %s", component.priori, component.distribution))
+                .collect(Collectors.joining(" + ", String.format("MultivariateMixture(%d)[", components.length), "]"));
     }
 }

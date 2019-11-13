@@ -249,6 +249,11 @@ public class MathEx {
         return log(x) / LOG2;
     }
 
+    /** Returns true if x is an integer. */
+    public static boolean isInt(double x) {
+        return (x == Math.floor(x)) && !Double.isInfinite(x);
+    }
+
     /**
      * Returns true if two double values equals to each other in the system precision.
      * @param a a double value.

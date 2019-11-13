@@ -59,20 +59,20 @@ public class LogNormalDistributionTest {
         double[] data = new double[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = instance.rand();
-        LogNormalDistribution est = new LogNormalDistribution(data);
-        assertEquals(0.0, (est.getMu() - 3.0) / 3.0, 0.1);
-        assertEquals(0.0, (est.getSigma() - 2.1) / 2.1, 0.1);
+        LogNormalDistribution est = LogNormalDistribution.fit(data);
+        assertEquals(0.0, (est.mu - 3.0) / 3.0, 0.1);
+        assertEquals(0.0, (est.sigma - 2.1) / 2.1, 0.1);
     }
 
     /**
-     * Test of npara method, of class LogNormalDistribution.
+     * Test of length method, of class LogNormalDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         LogNormalDistribution instance = new LogNormalDistribution(1.0, 1.0);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
     /**
@@ -87,14 +87,14 @@ public class LogNormalDistributionTest {
     }
 
     /**
-     * Test of var method, of class LogNormalDistribution.
+     * Test of variance method, of class LogNormalDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         LogNormalDistribution instance = new LogNormalDistribution(1.0, 1.0);
         instance.rand();
-        assertEquals(34.51261, instance.var(), 1E-5);
+        assertEquals(34.51261, instance.variance(), 1E-5);
     }
 
     /**

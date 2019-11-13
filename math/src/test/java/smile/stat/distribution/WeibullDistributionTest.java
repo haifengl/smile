@@ -51,14 +51,14 @@ public class WeibullDistributionTest {
     }
 
     /**
-     * Test of npara method, of class WeibullDistribution.
+     * Test of length method, of class WeibullDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         WeibullDistribution instance = new WeibullDistribution(1.5, 1.0);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
     /**
@@ -73,14 +73,14 @@ public class WeibullDistributionTest {
     }
 
     /**
-     * Test of var method, of class WeibullDistribution.
+     * Test of variance method, of class WeibullDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         WeibullDistribution instance = new WeibullDistribution(1.5, 1.0);
         instance.rand();
-        assertEquals(0.37569028, instance.var(), 1E-7);
+        assertEquals(0.37569028, instance.variance(), 1E-7);
     }
 
     /**

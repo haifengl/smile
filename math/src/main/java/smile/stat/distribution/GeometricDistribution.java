@@ -45,17 +45,17 @@ package smile.stat.distribution;
  * @author Haifeng Li
  */
 public class GeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Probability of success on each trial.
      */
-    private double p;
+    public final double p;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.
      */
-    ExponentialDistribution expDist;
+    private ExponentialDistribution expDist;
 
     /**
      * Constructor.
@@ -70,9 +70,9 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      */
-    public GeometricDistribution(int[] data) {
+    public static GeometricDistribution fit(int[] data) {
         double sum = 0.0;
         for (int x : data) {
             if (x <= 0) {
@@ -82,18 +82,12 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
             sum += x;
         }
 
-        p = data.length / sum;
-    }
-
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
+        double p = data.length / sum;
+        return new GeometricDistribution(p);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -103,7 +97,7 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return (1 - p) / (p * p);
     }
 
@@ -202,10 +196,6 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
 
         mean /= alpha;
 
-        DiscreteMixture.Component c = new DiscreteMixture.Component();
-        c.priori = alpha;
-        c.distribution = new GeometricDistribution(1 / mean);
-
-        return c;
+        return new DiscreteMixture.Component(alpha, new GeometricDistribution(1 / mean));
     }
 }

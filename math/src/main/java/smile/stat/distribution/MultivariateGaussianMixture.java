@@ -17,100 +17,93 @@
 
 package smile.stat.distribution;
 
-import java.util.List;
 import java.util.ArrayList;
 import smile.math.MathEx;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * Finite multivariate Gaussian mixture. The EM algorithm is provide to learned
- * the mixture model from data. BIC score is employed to estimate the number
+ * the mixture model from data. The BIC score is employed to estimate the number
  * of components.
  *
  * @author Haifeng Li
  */
 public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMixture {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MultivariateGaussianMixture.class);
 
     /**
      * Constructor.
-     * @param mixture a list of multivariate Gaussian distributions.
+     * @param components a list of multivariate Gaussian distributions.
      */
-    public MultivariateGaussianMixture(List<Component> mixture) {
-        super(mixture);
+    public MultivariateGaussianMixture(Component... components) {
+        this(0.0, 1, components);
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm.
+     * Constructor.
+     * @param components a list of multivariate Gaussian distributions.
+     * @param L the log-likelihood.
+     * @param n the number of samples to fit the distribution.
+     */
+    private MultivariateGaussianMixture(double L, int n, Component... components) {
+        super(L, n, components);
+
+        for (Component component : components) {
+            if (component.distribution instanceof MultivariateGaussianDistribution == false) {
+                throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
+            }
+        }
+    }
+
+    /**
+     * Fits the Gaussian mixture model with the EM algorithm.
      * @param data the training data.
      * @param k the number of components.
      */
-    public MultivariateGaussianMixture(double[][] data, int k) {
-        this(data, k, false);
+    public static MultivariateGaussianMixture fit(int k, double[][] data) {
+        return fit(k, data, false);
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm.
+     * Fits the Gaussian mixture model with the EM algorithm.
      * @param data the training data.
      * @param k the number of components.
      * @param diagonal true if the components have diagonal covariance matrix.
      */
-    public MultivariateGaussianMixture(double[][] data, int k, boolean diagonal) {
+    public static MultivariateGaussianMixture fit(int k, double[][] data, boolean diagonal) {
         if (k < 2)
             throw new IllegalArgumentException("Invalid number of components in the mixture.");
 
         int n = data.length;
         int d = data[0].length;
-        double[] mu = new double[d];
-        double[][] sigma = new double[d][d];
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                mu[j] += data[i][j];
-            }
-        }
-
-        for (int j = 0; j < d; j++) {
-            mu[j] /= n;
-        }
+        double[] mu = MathEx.colMeans(data);
+        DenseMatrix sigma;
 
         if (diagonal) {
+            sigma = Matrix.zeros(d, d);
             for (int i = 0; i < n; i++) {
+                double[] x = data[i];
                 for (int j = 0; j < d; j++) {
-                    sigma[j][j] += (data[i][j] - mu[j]) * (data[i][j] - mu[j]);
+                    sigma.add(j, j, (x[j] - mu[j]) * (x[j] - mu[j]));
                 }
             }
 
             for (int j = 0; j < d; j++) {
-                sigma[j][j] /= (n - 1);
+                sigma.div(j, j, n - 1);
             }
         } else {
-            for (int i = 0; i < n; i++) {
-                for (int j = 0; j < d; j++) {
-                    for (int l = 0; l <= j; l++) {
-                        sigma[j][l] += (data[i][j] - mu[j]) * (data[i][l] - mu[l]);
-                    }
-                }
-            }
-
-            for (int j = 0; j < d; j++) {
-                for (int l = 0; l <= j; l++) {
-                    sigma[j][l] /= (n - 1);
-                    sigma[l][j] = sigma[j][l];
-                }
-            }
+            sigma = Matrix.of(MathEx.cov(data, mu));
         }
 
         double[] centroid = data[MathEx.randomInt(n)];
-        Component c = new Component();
-        c.priori = 1.0 / k;
         MultivariateGaussianDistribution gaussian = new MultivariateGaussianDistribution(centroid, sigma);
         gaussian.diagonal = diagonal;
-        c.distribution = gaussian;
-        components.add(c);
+        Component[] components = new Component[k];
+        components[0] = new Component(1.0 / k, gaussian);
 
-        // We use a the kmeans++ algorithm to find the initial centers.
+        // We use the kmeans++ algorithm to find the initial centers.
         // Initially, all components have same covariance matrix.
         double[] D = new double[n];
         for (int i = 0; i < n; i++) {
@@ -139,106 +132,89 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
 
             centroid = data[index];
-            c = new Component();
-            c.priori = 1.0 / k;
             gaussian = new MultivariateGaussianDistribution(centroid, sigma);
             gaussian.diagonal = diagonal;
-            c.distribution = gaussian;
-            components.add(c);
+            components[i] = new Component(1.0 / k, gaussian);
         }
 
-        EM(components, data);
+        MultivariateExponentialFamilyMixture model = fit(data, components);
+        return new MultivariateGaussianMixture(model.L, data.length, model.components);
+
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm. The number of components will be selected by BIC.
+     * Fits the Gaussian mixture model with the EM algorithm.
+     * The number of components will be selected by BIC.
      * @param data the training data.
      */
-    public MultivariateGaussianMixture(double[][] data) {
-        this(data, false);
+    public static MultivariateGaussianMixture fit(double[][] data) {
+        return fit(data, false);
     }
 
     /**
-     * Constructor. The Gaussian mixture model will be learned from the given data
-     * with the EM algorithm. The number of components will be selected by BIC.
+     * Fits the Gaussian mixture model with the EM algorithm.
+     * The number of components will be selected by BIC.
      * @param data the training data.
      * @param diagonal true if the components have diagonal covariance matrix.
      */
     @SuppressWarnings("unchecked")
-    public MultivariateGaussianMixture(double[][] data, boolean diagonal) {
+    public static MultivariateGaussianMixture fit(double[][] data, boolean diagonal) {
         if (data.length < 20)
             throw new IllegalArgumentException("Too few samples.");
 
-        ArrayList<Component> mixture = new ArrayList<>();
-        Component c = new Component();
-        c.priori = 1.0;
-        c.distribution = new MultivariateGaussianDistribution(data, diagonal);
-        mixture.add(c);
+        MultivariateGaussianMixture mixture = new MultivariateGaussianMixture(new Component(1.0, MultivariateGaussianDistribution.fit(data, diagonal)));
+        double bic = mixture.bic(data);
+        logger.info(String.format("The BIC of %s = %.4f", mixture, bic));
 
-        int freedom = 0;
-        for (int i = 0; i < mixture.size(); i++)
-            freedom += mixture.get(i).distribution.npara();
+        do {
+            Component[] components = split(mixture.components);
+            MultivariateExponentialFamilyMixture model = fit(data, components);
+            logger.info(String.format("The BIC of %s = %.4f", model, model.bic));
 
-        double bic = 0.0;
-        for (double[] x : data) {
-            double p = c.distribution.p(x);
-            if (p > 0) bic += Math.log(p);
-        }
-        bic -= 0.5 * freedom * Math.log(data.length);
-
-        double b = Double.NEGATIVE_INFINITY;
-        while (bic > b) {
-            b = bic;
-            components = (ArrayList<Component>) mixture.clone();
-
-            split(mixture);
-            bic = EM(mixture, data);
-
-            freedom = 0;
-            for (int i = 0; i < mixture.size(); i++)
-                freedom += mixture.get(i).distribution.npara();
-
-            bic -= 0.5 * freedom * Math.log(data.length);
-        }
+            if (model.bic > bic) {
+                mixture = new MultivariateGaussianMixture(model.L, data.length, model.components);
+                bic = model.bic;
+            } else {
+                return mixture;
+            }
+        } while (true);
     }
 
     /**
      * Split the most heterogeneous cluster along its main direction (eigenvector).
      */
-    private void split(List<Component> mixture) {
+    private static Component[] split(Component[] components) {
         // Find most dispersive cluster (biggest sigma)
-        Component componentToSplit = null;
-
-        double maxSigma = 0.0;
-        for (Component c : mixture) {
+        int k = components.length;
+        int index = -1;
+        double maxSigma = Double.NEGATIVE_INFINITY;
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
             double sigma = ((MultivariateGaussianDistribution) c.distribution).scatter();
             if (sigma > maxSigma) {
                 maxSigma = sigma;
-                componentToSplit = c;
+                index = i;
             }
         }
 
         // Splits the component
-        double[][] delta = ((MultivariateGaussianDistribution) componentToSplit.distribution).cov();
-        double[] mu = ((MultivariateGaussianDistribution) componentToSplit.distribution).mean();
+        Component component = components[index];
+        double priori = component.priori / 2;
+        DenseMatrix delta = component.distribution.cov();
+        double[] mu = component.distribution.mean();
 
-        Component c = new Component();
-        c.priori = componentToSplit.priori / 2;
+        Component[] mixture = new Component[k+1];
+        System.arraycopy(components, 0, mixture, 0, k);
+
         double[] mu1 = new double[mu.length];
-        for (int i = 0; i < mu.length; i++)
-            mu1[i] = mu[i] + Math.sqrt(delta[i][i])/2;
-        c.distribution = new MultivariateGaussianDistribution(mu1, delta);
-        mixture.add(c);
-
-        c = new Component();
-        c.priori = componentToSplit.priori / 2;
         double[] mu2 = new double[mu.length];
-        for (int i = 0; i < mu.length; i++)
-            mu2[i] = mu[i] - Math.sqrt(delta[i][i])/2;
-        c.distribution = new MultivariateGaussianDistribution(mu2, delta);
-        mixture.add(c);
+        for (int i = 0; i < mu.length; i++) {
+            mu1[i] = mu[i] + Math.sqrt(delta.get(i, i))/2;
+            mu2[i] = mu[i] - Math.sqrt(delta.get(i, i)) / 2;
+        }
 
-        mixture.remove(componentToSplit);
+        mixture[index] = new Component(priori, new MultivariateGaussianDistribution(mu1, delta));
+        mixture[k] = new Component(priori, new MultivariateGaussianDistribution(mu2, delta));
+        return mixture;
     }
 }

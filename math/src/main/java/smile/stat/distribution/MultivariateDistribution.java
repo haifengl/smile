@@ -17,6 +17,8 @@
 
 package smile.stat.distribution;
 
+import smile.math.matrix.DenseMatrix;
+
 import java.io.Serializable;
 
 /**
@@ -29,8 +31,10 @@ import java.io.Serializable;
 public interface MultivariateDistribution extends Serializable {
     /**
      * The number of parameters of the distribution.
+     * The "length" is in the sense of the minimum description
+     * length principle.
      */
-    int npara();
+    int length();
 
     /**
      * Shannon entropy of the distribution.
@@ -45,7 +49,7 @@ public interface MultivariateDistribution extends Serializable {
     /**
      * The covariance matrix of distribution.
      */
-    double[][] cov();
+    DenseMatrix cov();
     
     /**
      * The probability density function for continuous distribution
@@ -68,12 +72,21 @@ public interface MultivariateDistribution extends Serializable {
      *
      * @param x sample set. Each row is a sample.
      */
-    double likelihood(double[][] x);
+    default double likelihood(double[][] x) {
+        return Math.exp(logLikelihood(x));
+    }
 
     /**
      * The log likelihood of the sample set following this distribution.
      *
      * @param x sample set. Each row is a sample.
      */
-    double logLikelihood(double[][] x);
+    default double logLikelihood(double[][] x) {
+        double L = 0.0;
+
+        for (double[] xi : x)
+            L += logp(xi);
+
+        return L;
+    }
 }

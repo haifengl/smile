@@ -41,11 +41,15 @@ import static smile.math.MathEx.lfactorial;
  * @author Haifeng Li
  */
 public class HyperGeometricDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private int N;
-    private int m;
-    private int n;
+    /** The number of total samples. */
+    public final int N;
+    /** The number of defects. */
+    public final int m;
+    /** The number of draws. */
+    public final int n;
+
     private RandomNumberGenerator rng;
 
     /**
@@ -73,7 +77,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 3;
     }
 
@@ -83,14 +87,9 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         double r = (double) m / N;
         return n * (N - n) * r * (1 - r) / (N - 1);
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var());
     }
 
     @Override

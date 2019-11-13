@@ -17,6 +17,8 @@
 
 package smile.stat.distribution;
 
+import smile.math.MathEx;
+
 /**
  * This is the base class of univariate discrete distributions. Basically,
  * this class adds common distribution methods that accept integer argument
@@ -34,10 +36,11 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
 
     @Override
     public double p(double x) {
-        if (x - Math.floor(x) != 0)
-            return 0.0;
-        else
-            return p((int)x);
+        if (!MathEx.isInt(x)) {
+            throw new IllegalArgumentException("x is not an integer");
+        }
+
+        return p((int)x);
     }
 
     /**
@@ -47,10 +50,11 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
     
     @Override
     public double logp(double x) {
-        if (x - Math.floor(x) != 0)
-            return Double.NaN;
-        else
-            return logp((int)x);
+        if (!MathEx.isInt(x)) {
+            throw new IllegalArgumentException("x is not an integer");
+        }
+
+        return logp((int)x);
     }
     
     /**

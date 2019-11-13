@@ -37,13 +37,19 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class BetaDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double alpha;
-    private double beta;
-    private double mean;
-    private double var;
-    private double entropy;
+    /** The shape parameter. */
+    public final double alpha;
+    /** The shape parameter. */
+    public final double beta;
+    /** The mean. */
+    private final double mean;
+    /** The variance. */
+    private final double variance;
+    /** The entropy. */
+    private final double entropy;
+    /** The random number generator. */
     private RejectionLogLogistic rng;
 
     /**
@@ -64,33 +70,30 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         this.beta = beta;
 
         mean = alpha / (alpha + beta);
-        var = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
+        variance = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
         entropy = Math.log(Beta.beta(alpha, beta)) - (alpha - 1) * Gamma.digamma(alpha) - (beta - 1) * Gamma.digamma(beta) + (alpha + beta - 2) * Gamma.digamma(alpha + beta);
     }
 
     /**
-     * Construct an Beta from the given samples. Parameter
-     * will be estimated from the data by the moment method.
+     * Estimates the distribution parameters by the moment method.
      */
-    public BetaDistribution(double[] data) {
+    public static BetaDistribution fit(double[] data) {
         for (int i = 0; i < data.length; i++) {
             if (data[i] < 0 || data[i] > 1) {
                 throw new IllegalArgumentException("Samples are not in range [0, 1].");
             }
         }
 
-        mean = MathEx.mean(data);
-        var = MathEx.var(data);
+        double mean = MathEx.mean(data);
+        double var = MathEx.var(data);
 
-        alpha = mean * (mean * (1 - mean) / var - 1);
-        beta = (1 - mean) * (mean * (1 - mean) / var - 1);
+        double alpha = mean * (mean * (1 - mean) / var - 1);
+        double beta = (1 - mean) * (mean * (1 - mean) / var - 1);
         if (alpha <= 0 || beta <= 0) {
             throw new IllegalArgumentException("Samples don't follow Beta Distribution.");
         }
 
-        mean = alpha / (alpha + beta);
-        var = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
-        entropy = Math.log(Beta.beta(alpha, beta)) - (alpha - 1) * Gamma.digamma(alpha) - (beta - 1) * Gamma.digamma(beta) + (alpha + beta - 2) * Gamma.digamma(alpha + beta);
+        return new BetaDistribution(alpha, beta);
     }
 
     /**
@@ -110,7 +113,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -120,13 +123,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
     }
 
     @Override
-    public double var() {
-        return var;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var);
+    public double variance() {
+        return variance;
     }
 
     @Override
@@ -200,11 +198,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         double a = mu * (mu * (1 - mu) / v - 1);
         double b = (1 - mu) * (mu * (1 - mu) / v - 1);
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = weight;
-        c.distribution = new BetaDistribution(a, b);
-
-        return c;
+        return new Mixture.Component(weight, new BetaDistribution(a, b));
     }
 
     @Override

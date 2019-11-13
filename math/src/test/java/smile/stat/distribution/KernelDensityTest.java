@@ -102,14 +102,14 @@ public class KernelDensityTest {
     }
 
     /**
-     * Test of var method, of class KernelDensity.
+     * Test of variance method, of class KernelDensity.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         KernelDensity instance = new KernelDensity(x);
         double expResult = 9.404966;
-        double result = instance.var();
+        double result = instance.variance();
         assertEquals(expResult, result, 1E-6);
     }
 

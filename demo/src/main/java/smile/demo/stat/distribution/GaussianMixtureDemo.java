@@ -51,7 +51,7 @@ public class GaussianMixtureDemo extends JPanel {
             17.0, 21.0, 21.0, 15.0, 14.0
         };
 
-        ExponentialFamilyMixture mixture = new GaussianMixture(data);
+        ExponentialFamilyMixture mixture = GaussianMixture.fit(data);
 
         PlotCanvas canvas = Histogram.plot(data, 24);
         canvas.setTitle("Gaussian Mixture with Singular Component");
@@ -93,7 +93,7 @@ public class GaussianMixtureDemo extends JPanel {
         for (int i = 2500; i < 3000; i++)
             data[i] = g5.rand();
 
-        mixture = new GaussianMixture(data, 5);
+        mixture = GaussianMixture.fit(5, data);
 
         canvas = Histogram.plot(data, 50);
         canvas.setTitle("Gaussian Mixture of Five Components");

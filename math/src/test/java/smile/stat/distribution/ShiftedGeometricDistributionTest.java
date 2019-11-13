@@ -59,19 +59,19 @@ public class ShiftedGeometricDistributionTest {
         int[] data = new int[1000];
         for (int i = 0; i < data.length; i++)
             data[i] = (int) instance.rand();
-        ShiftedGeometricDistribution est = new ShiftedGeometricDistribution(data);
+        ShiftedGeometricDistribution est = ShiftedGeometricDistribution.fit(data);
         assertEquals(0.0, (0.4 - est.getProb()) / 0.4, 0.1);
     }
 
     /**
-     * Test of npara method, of class ShiftedGeometricDistribution.
+     * Test of length method, of class ShiftedGeometricDistribution.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         ShiftedGeometricDistribution instance = new ShiftedGeometricDistribution(0.3);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -86,14 +86,14 @@ public class ShiftedGeometricDistributionTest {
     }
 
     /**
-     * Test of var method, of class ShiftedGeometricDistribution.
+     * Test of variance method, of class ShiftedGeometricDistribution.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         ShiftedGeometricDistribution instance = new ShiftedGeometricDistribution(0.3);
         instance.rand();
-        assertEquals(0.7/0.09, instance.var(), 1E-7);
+        assertEquals(0.7/0.09, instance.variance(), 1E-7);
     }
 
     /**

@@ -63,14 +63,16 @@ import smile.math.special.Erf;
  * @author Haifeng Li
  */
 public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE_2 = Math.log(2 * Math.PI * Math.E) / 2;
     private static final double LOG2PI_2 = Math.log(2 * Math.PI) / 2;
     private static final GaussianDistribution singleton = new GaussianDistribution(0.0, 1.0);
 
-    private double mu;
-    private double sigma;
+    /** The mean. */
+    public final double mu;
+    /** The standard deviation. */
+    public final double sigma;
     private double variance;
 
     private double entropy;
@@ -91,15 +93,12 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     /**
-     * Constructor. Mean and standard deviation will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
      */
-    public GaussianDistribution(double[] data) {
-        mu = MathEx.mean(data);
-        sigma = MathEx.sd(data);
-        variance = sigma * sigma;
-
-        entropy = Math.log(sigma) + LOG2PIE_2;
-        pdfConstant = Math.log(sigma) + LOG2PI_2;
+    public static GaussianDistribution fit(double[] data) {
+        double mu = MathEx.mean(data);
+        double sigma = MathEx.sd(data);
+        return new GaussianDistribution(mu, sigma);
     }
 
     public static GaussianDistribution getInstance() {
@@ -107,7 +106,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -117,7 +116,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return variance;
     }
 
@@ -301,10 +300,6 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
         sd = Math.sqrt(sd / alpha);
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = alpha;
-        c.distribution = new GaussianDistribution(mean, sd);
-
-        return c;
+        return new Mixture.Component(alpha, new GaussianDistribution(mean, sd));
     }
 }

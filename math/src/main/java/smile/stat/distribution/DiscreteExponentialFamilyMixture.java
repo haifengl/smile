@@ -28,102 +28,81 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteExponentialFamilyMixture.class);
+
+    /** The log-likelihood when the distribution is fit on a sample data. */
+    public final double L;
+    /** The BIC score when the distribution is fit on a sample data. */
+    public final double bic;
 
     /**
      * Constructor.
      * @param mixture a list of discrete exponential family distributions.
      */
-    public DiscreteExponentialFamilyMixture(List<Component> mixture) {
-        super(mixture);
+    public DiscreteExponentialFamilyMixture(Component... mixture) {
+        this(0.0, 1, mixture);
+    }
 
-        for (Component component : mixture) {
-            if (component.distribution instanceof DiscreteExponentialFamily == false)
+    /**
+     * Constructor.
+     * @param components a list of discrete exponential family distributions.
+     * @param L the log-likelihood.
+     * @param n the number of samples to fit the distribution.
+     */
+    private DiscreteExponentialFamilyMixture(double L, int n, Component... components) {
+        super(components);
+
+        for (Component component : components) {
+            if (component.distribution instanceof DiscreteExponentialFamily == false) {
                 throw new IllegalArgumentException("Component " + component + " is not of discrete exponential family.");
+            }
         }
+
+        this.L = L;
+        this.bic = L - 0.5 * length() * Math.log(n);
     }
 
     /**
-     * Constructor. The mixture model will be learned from the given data with the
-     * EM algorithm.
-     * @param mixture the initial guess of mixture. Components may have
-     * different distribution form.
-     * @param data the training data.
+     * Fits the mixture model with the EM algorithm.
+     * @param components the initial configuration of mixture. Components may have
+     *                   different distribution form.
+     * @param x the training data.
      */
-    public DiscreteExponentialFamilyMixture(List<Component> mixture, int[] data) {
-        this(mixture);
-
-        EM(components, data);
+    public static DiscreteExponentialFamilyMixture fit(int[] x, Component... components) {
+        return fit(x, components, 0.0, 500, 1E-4);
     }
 
     /**
-     * Standard EM algorithm which iteratively alternates
-     * Expectation and Maximization steps until convergence.
-     *
-     * @param mixture the initial configuration.
-     * @param x the input data.
-     * @return log Likelihood
-     */
-    double EM(List<Component> mixture, int[] x) {
-        return EM(mixture, x, 0.2);
-    }
-
-    /**
-     * Standard EM algorithm which iteratively alternates
-     * Expectation and Maximization steps until convergence.
-     *
-     * @param mixture the initial configuration.
-     * @param x the input data.
-     * @param gamma the regularization parameter.
-     * @return log Likelihood
-     */
-    double EM(List<Component> mixture, int[] x, double gamma) {
-        return EM(mixture, x, gamma, Integer.MAX_VALUE);
-    }
-
-    /**
-     * Standard EM algorithm which iteratively alternates
-     * Expectation and Maximization steps until convergence.
+     * Fits the mixture model with the EM algorithm.
      *
      * @param components the initial configuration.
-     * @param x the input data.
+     * @param x the training data.
      * @param gamma the regularization parameter.
-     * @param maxIter the maximum number of iterations. If maxIter &le; 0, then the
-     * algorithm iterates until converge.
-     * @return log Likelihood
+     * @param maxIter the maximum number of iterations.
+     * @param tol the tolerance of convergence test.
      */
-    double EM(List<Component> components, int[] x , double gamma, int maxIter) {
-        if (x.length < components.size() / 2)
+    public static DiscreteExponentialFamilyMixture fit(int[] x , Component[] components, double gamma, int maxIter, double tol) {
+        if (x.length < components.length / 2)
                 throw new IllegalArgumentException("Too many components");
 
         if (gamma < 0.0 || gamma > 0.2)
             throw new IllegalArgumentException("Invalid regularization factor gamma.");
 
-        if (maxIter <= 0)
-            maxIter = Integer.MAX_VALUE;
-
         int n = x.length;
-        int m = components.size();
+        int k = components.length;
 
-        double[][] posteriori = new double[m][n];
+        double[][] posteriori = new double[k][n];
 
         // Log Likelihood
         double L = 0.0;
-        for (double xi : x) {
-            double p = 0.0;
-            for (Component c : components)
-                p += c.priori * c.distribution.p(xi);
-            if (p > 0) L += Math.log(p);
-        }
 
         // EM loop until convergence
-        int iter = 0;
-        for (; iter < maxIter; iter++) {
-
+        double diff = Double.MAX_VALUE;
+        for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
             // Expectation step
-            for (int i = 0; i < m; i++) {
-                Component c = components.get(i);
-
+            for (int i = 0; i < k; i++) {
+                Component c = components[i];
                 for (int j = 0; j < n; j++) {
                     posteriori[i][j] = c.priori * c.distribution.p(x[j]);
                 }
@@ -133,17 +112,17 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
             for (int j = 0; j < n; j++) {
                 double p = 0.0;
 
-                for (int i = 0; i < m; i++) {
+                for (int i = 0; i < k; i++) {
                     p += posteriori[i][j];
                 }
 
-                for (int i = 0; i < m; i++) {
+                for (int i = 0; i < k; i++) {
                     posteriori[i][j] /= p;
                 }
 
                 // Adjust posterior probabilites based on Regularized EM algorithm.
                 if (gamma > 0) {
-                    for (int i = 0; i < m; i++) {
+                    for (int i = 0; i < k; i++) {
                         posteriori[i][j] *= (1 + gamma * MathEx.log2(posteriori[i][j]));
                         if (Double.isNaN(posteriori[i][j]) || posteriori[i][j] < 0.0) {
                             posteriori[i][j] = 0.0;
@@ -153,35 +132,33 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
             }
 
             // Maximization step
-            List<Component> newConfig = new ArrayList<>();
-            for (int i = 0; i < m; i++)
-                newConfig.add(((DiscreteExponentialFamily) components.get(i).distribution).M(x, posteriori[i]));
-
-            double sumAlpha = 0.0;
-            for (int i = 0; i < m; i++)
-                sumAlpha += newConfig.get(i).priori;
-
-            for (int i = 0; i < m; i++)
-                newConfig.get(i).priori /= sumAlpha;
-
-            double newL = 0.0;
-            for (double xi : x) {
-                double p = 0.0;
-                for (Component c : newConfig) {
-                    p += c.priori * c.distribution.p(xi);
-                }
-                if (p > 0) newL += Math.log(p);
+            double Z = 0.0;
+            for (int i = 0; i < k; i++) {
+                components[i] = ((DiscreteExponentialFamily) components[i].distribution).M(x, posteriori[i]);
+                Z += components[i].priori;
             }
 
-            if (newL > L) {
-                L = newL;
-                components.clear();
-                components.addAll(newConfig);
-            } else {
-                break;
+            for (int i = 0; i < k; i++) {
+                components[i] = new Component(components[i].priori / Z, components[i].distribution);
+            }
+
+            double loglikelihood = 0.0;
+            for (double xi : x) {
+                double p = 0.0;
+                for (Component c : components) {
+                    p += c.priori * c.distribution.p(xi);
+                }
+                if (p > 0) loglikelihood += Math.log(p);
+            }
+
+            diff = loglikelihood - L;
+            L = loglikelihood;
+
+            if (iter % 10 == 0) {
+                logger.info(String.format("The log-likelihood after %d iterations: %.4f", iter, L));
             }
         }
 
-        return L;
+        return new DiscreteExponentialFamilyMixture(L, x.length, components);
     }
 }

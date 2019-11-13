@@ -71,7 +71,6 @@ import smile.math.MathEx;
  * @see SIB
  * @see smile.vq.SOM
  * @see smile.vq.NeuralGas
- * @see BIRCH
  * @see BBDTree
  * 
  * @author Haifeng Li
