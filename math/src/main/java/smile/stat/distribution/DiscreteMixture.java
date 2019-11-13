@@ -17,10 +17,9 @@
 
 package smile.stat.distribution;
 
-import smile.math.MathEx;
-
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import smile.math.MathEx;
 
 /**
  * The finite mixture of discrete distributions.
@@ -56,6 +55,7 @@ public class DiscreteMixture extends DiscreteDistribution {
         }
     }
 
+    /** The components of finite mixture model. */
     public final Component[] components;
 
     /**
@@ -80,6 +80,34 @@ public class DiscreteMixture extends DiscreteDistribution {
         if (Math.abs(sum - 1.0) > 1E-3) {
             throw new IllegalArgumentException("The sum of priori is not equal to 1.");
         }
+    }
+
+    /** Returns the posteriori probabilities. */
+    public double[] posteriori(int x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
+        }
+
+        double p = MathEx.sum(prob);
+        for (int i = 0; i < k; i++) {
+            prob[i] /= p;
+        }
+        return prob;
+    }
+
+    /** Returns the index of component with maximum a posteriori probability. */
+    public int map(int x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
+        }
+
+        return MathEx.whichMax(prob);
     }
 
     @Override

@@ -19,6 +19,8 @@ package smile.stat.distribution;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
+
+import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
@@ -56,6 +58,7 @@ public class MultivariateMixture implements MultivariateDistribution {
         }
     }
 
+    /** The components of finite mixture model. */
     public final Component[] components;
 
     /**
@@ -68,6 +71,34 @@ public class MultivariateMixture implements MultivariateDistribution {
         }
 
         this.components = components;
+    }
+
+    /** Returns the posteriori probabilities. */
+    public double[] posteriori(double[] x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
+        }
+
+        double p = MathEx.sum(prob);
+        for (int i = 0; i < k; i++) {
+            prob[i] /= p;
+        }
+        return prob;
+    }
+
+    /** Returns the index of component with maximum a posteriori probability. */
+    public int map(double[] x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
+        }
+
+        return MathEx.whichMax(prob);
     }
 
     @Override
