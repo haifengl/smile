@@ -26,6 +26,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
+import smile.util.IntSet;
 
 /**
  * Logistic regression. Logistic regression (logit model) is a generalized
@@ -116,7 +117,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     /**
      * The class label encoder.
      */
-    private final ClassLabel labels;
+    private final IntSet labels;
 
     /**
      * Constructor of binary logistic regression.
@@ -127,7 +128,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * when the dimensionality is high.
      */
     public LogisticRegression(double[] w, double L, double lambda) {
-        this(L, w, lambda, ClassLabel.of(2));
+        this(L, w, lambda, IntSet.of(2));
     }
 
     /**
@@ -139,7 +140,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * when the dimensionality is high.
      * @param labels class labels
      */
-    public LogisticRegression(double L, double[] w, double lambda, ClassLabel labels) {
+    public LogisticRegression(double L, double[] w, double lambda, IntSet labels) {
         this.p = w.length - 1;
         this.k = 2;
         this.L = L;
@@ -157,7 +158,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * when the dimensionality is high.
      */
     public LogisticRegression(double L, double[][] W, double lambda) {
-        this(L, W, lambda, ClassLabel.of(W.length+1));
+        this(L, W, lambda, IntSet.of(W.length+1));
     }
 
     /**
@@ -169,7 +170,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * when the dimensionality is high.
      * @param labels class labels
      */
-    public LogisticRegression(double L, double[][] W, double lambda, ClassLabel labels) {
+    public LogisticRegression(double L, double[][] W, double lambda, IntSet labels) {
         this.p = W[0].length - 1;
         this.k = W.length + 1;
         this.L = L;
@@ -254,7 +255,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         }
 
         int p = x[0].length;
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         y = codec.y;
 
@@ -599,7 +600,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             throw new IllegalArgumentException("Invalid input vector size: " + x.length);
         }
 
-        y = labels.id(y);
+        y = labels.indexOf(y);
         if (k == 2) {
             // calculate gradient for incoming data
             double wx = dot(x, w);
@@ -678,7 +679,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     public int predict(double[] x) {
         if (k == 2) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.label(f < 0.5 ? 0 : 1);
+            return labels.valueOf(f < 0.5 ? 0 : 1);
         } else {
             return predict(x, new double[k]);
         }
@@ -700,7 +701,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             posteriori[0] = 1.0 - f;
             posteriori[1] = f;
 
-            return labels.label(f < 0.5 ? 0 : 1);
+            return labels.valueOf(f < 0.5 ? 0 : 1);
         } else {
             posteriori[k-1] = 0.0;
             for (int i = 0; i < k-1; i++) {
@@ -708,7 +709,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
             }
 
             MathEx.softmax(posteriori);
-            return labels.label(MathEx.whichMax(posteriori));
+            return labels.valueOf(MathEx.whichMax(posteriori));
         }
     }
 }

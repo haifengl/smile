@@ -20,6 +20,7 @@ package smile.classification;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
+import smile.util.IntSet;
 
 /** Common functions for various discriminant analysis. */
 class DiscriminantAnalysis {
@@ -28,7 +29,7 @@ class DiscriminantAnalysis {
     /** The class labels in [0, k). */
     int[] y;
     /** The original class labels. */
-    ClassLabel labels;
+    IntSet labels;
     /** The number of instances in each class. */
     int[] ni;
     /** The priori probabilities. */
@@ -44,7 +45,7 @@ class DiscriminantAnalysis {
      * @param mean the mean vector of all samples.
      * @param mu the mean vectors of each class.
      */
-    public DiscriminantAnalysis(ClassLabel.Result codec, double[] priori, double[] mean, double[][] mu) {
+    public DiscriminantAnalysis(ClassLabels codec, double[] priori, double[] mean, double[][] mu) {
         this.k = codec.k;
         this.ni = codec.ni;
         this.y = codec.y;
@@ -75,7 +76,7 @@ class DiscriminantAnalysis {
         int n = x.length;
 
         // class label set.
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         y = codec.y;
         int[] ni = codec.ni;

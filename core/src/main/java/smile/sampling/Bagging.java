@@ -19,7 +19,7 @@ package smile.sampling;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import smile.classification.ClassLabel;
+import smile.classification.ClassLabels;
 import smile.math.MathEx;
 
 /**
@@ -77,7 +77,7 @@ public class Bagging {
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
     public static Bagging strateify(int[] strata, double subsample) {
-        ClassLabel.Result codec = ClassLabel.fit(strata);
+        ClassLabels codec = ClassLabels.fit(strata);
         int k = codec.k;
         int[] y = codec.y;
 

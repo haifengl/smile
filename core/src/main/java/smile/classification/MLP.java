@@ -21,6 +21,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import smile.base.mlp.*;
 import smile.math.MathEx;
+import smile.util.IntSet;
 
 /**
  * Fully connected multilayer perceptron neural network for classification.
@@ -113,7 +114,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -126,7 +127,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
 
         k = output.getOutputSize();
         if (k == 1) k = 2;
-        labels = ClassLabel.of(k);
+        labels = IntSet.of(k);
     }
 
     /**
@@ -135,7 +136,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
      * @param p the number of variables in input layer.
      * @param builders the builders of layers from bottom to top.
      */
-    public MLP(ClassLabel labels, int p, LayerBuilder... builders) {
+    public MLP(IntSet labels, int p, LayerBuilder... builders) {
         super(net(p, builders));
 
         k = output.getOutputSize();
@@ -168,7 +169,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
             System.arraycopy(output.output(), 0, posteriori, 0, n);
         }
 
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 
     @Override
@@ -177,16 +178,16 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
-            return labels.label(output.output()[0] > 0.5 ? 1 : 0);
+            return labels.valueOf(output.output()[0] > 0.5 ? 1 : 0);
         } else {
-            return labels.label(MathEx.whichMax(output.output()));
+            return labels.valueOf(MathEx.whichMax(output.output()));
         }
     }
 
     @Override
     public void update(double[] x, int y) {
         propagate(x);
-        setTarget(labels.id(y));
+        setTarget(labels.indexOf(y));
         backpropagate();
         update();
     }
@@ -200,7 +201,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
 
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
-            setTarget(labels.id(y[i]));
+            setTarget(labels.indexOf(y[i]));
             backpropagate();
         }
 

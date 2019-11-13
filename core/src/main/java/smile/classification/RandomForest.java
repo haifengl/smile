@@ -31,6 +31,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -128,7 +129,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -140,7 +141,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param importance variable importance
      */
     public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance) {
-        this(formula, k, trees, error, importance, ClassLabel.of(k));
+        this(formula, k, trees, error, importance, IntSet.of(k));
     }
 
     /**
@@ -153,7 +154,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param importance variable importance
      * @param labels class labels
      */
-    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance, ClassLabel labels) {
+    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = k;
         this.trees = trees;
@@ -302,7 +303,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         final int k = codec.k;
         final int n = x.nrows();
 
@@ -508,7 +509,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
             y[tree.tree.predict(xt)]++;
         }
         
-        return labels.label(MathEx.whichMax(y));
+        return labels.valueOf(MathEx.whichMax(y));
     }
     
     @Override
@@ -529,7 +530,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         }
 
         MathEx.unitize1(posteriori);
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 
     /** Predict and estimate the probability by voting. */
@@ -545,7 +546,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         }
 
         MathEx.unitize1(posteriori);
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**

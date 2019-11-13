@@ -20,6 +20,7 @@ package smile.classification;
 import smile.data.Iris;
 import smile.data.WeatherNominal;
 import smile.stat.distribution.EmpiricalDistribution;
+import smile.util.IntSet;
 import smile.validation.Error;
 import smile.validation.LOOCV;
 import java.util.stream.IntStream;
@@ -84,7 +85,7 @@ public class NaiveBayesTest {
         });
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(8, error);
+        assertEquals(7, error);
     }
 
     @Test
@@ -103,8 +104,10 @@ public class NaiveBayesTest {
                 final int c = i;
                 for (int j = 0; j < p; j++) {
                     final int f = j;
-                    int[] xi = IntStream.range(0, n).filter(l -> y[l] == c).map(l -> (int) x[l][f]).toArray();
-                    condprob[i][j] = new EmpiricalDistribution(xi);
+                    int[] xij = IntStream.range(0, n).filter(l -> y[l] == c).map(l -> (int) x[l][f]).toArray();
+                    int[] xj = IntStream.range(0, n).map(l -> (int) x[l][f]).toArray();
+                    // xij may miss some valid values after filtering. Use xj to capture all the values.
+                    condprob[i][j] = EmpiricalDistribution.fit(xij, IntSet.of(xj));
                 }
             }
 

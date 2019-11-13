@@ -22,6 +22,7 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -52,7 +53,7 @@ public class RDA extends QDA {
      * @param scaling the eigen vectors of each covariance matrix.
      */
     public RDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
-        super(priori, mu, eigen, scaling, ClassLabel.of(priori.length));
+        super(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
     /**
@@ -63,7 +64,7 @@ public class RDA extends QDA {
      * @param scaling the eigen vectors of each covariance matrix.
      * @param labels class labels
      */
-    public RDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, ClassLabel labels) {
+    public RDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, IntSet labels) {
         super(priori, mu, eigen, scaling, labels);
     }
 

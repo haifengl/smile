@@ -26,6 +26,7 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.math.matrix.SVD;
 import smile.projection.Projection;
+import smile.util.IntSet;
 
 /**
  * Fisher's linear discriminant. Fisher defined the separation between two
@@ -90,7 +91,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
     /**
      * The class label encoder.
      */
-    private final ClassLabel labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -99,7 +100,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param scaling the projection matrix.
      */
     public FLD(double[] mean, double[][] mu, DenseMatrix scaling) {
-        this(mean, mu, scaling, ClassLabel.of(mu.length));
+        this(mean, mu, scaling, IntSet.of(mu.length));
     }
 
     /**
@@ -109,7 +110,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param scaling the projection matrix.
      * @param labels class labels
      */
-    public FLD(double[] mean, double[][] mu, DenseMatrix scaling, ClassLabel labels) {
+    public FLD(double[] mean, double[][] mu, DenseMatrix scaling, IntSet labels) {
         this.k = mu.length;
         this.p = mean.length;
         this.scaling = scaling;
@@ -345,7 +346,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        return labels.label(y);
+        return labels.valueOf(y);
     }
 
     @Override

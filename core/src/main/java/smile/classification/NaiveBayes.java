@@ -19,6 +19,7 @@ package smile.classification;
 
 import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
+import smile.util.IntSet;
 
 /**
  * Naive Bayes classifier. A naive Bayes classifier is a simple probabilistic
@@ -71,7 +72,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor of general naive Bayes classifier.
@@ -82,7 +83,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * distribution P(x<sub>j</sub> | class i).
      */
     public NaiveBayes(double[] priori, Distribution[][] condprob) {
-        this(priori, condprob, ClassLabel.of(priori.length));
+        this(priori, condprob, IntSet.of(priori.length));
     }
 
     /**
@@ -94,7 +95,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * distribution P(x<sub>j</sub> | class i).
      * @param labels class labels
      */
-    public NaiveBayes(double[] priori, Distribution[][] condprob, ClassLabel labels) {
+    public NaiveBayes(double[] priori, Distribution[][] condprob, IntSet labels) {
         if (priori.length != condprob.length) {
             throw new IllegalArgumentException("The number of priori probabilities and that of the classes are not same.");
         }
@@ -170,6 +171,6 @@ public class NaiveBayes implements SoftClassifier<double[]> {
             posteriori[i] /= Z;
         }
 
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 }

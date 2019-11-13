@@ -23,6 +23,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -94,7 +95,7 @@ public class LDA implements SoftClassifier<double[]> {
     /**
      * The class label encoder.
      */
-    private final ClassLabel labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -104,7 +105,7 @@ public class LDA implements SoftClassifier<double[]> {
      * @param scaling the eigen vectors of common covariance matrix.
      */
     public LDA(double[] priori, double[][] mu, double[] eigen, DenseMatrix scaling) {
-        this(priori, mu, eigen, scaling, ClassLabel.of(priori.length));
+        this(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
     /**
@@ -115,7 +116,7 @@ public class LDA implements SoftClassifier<double[]> {
      * @param scaling the eigen vectors of common covariance matrix.
      * @param labels class labels
      */
-    public LDA(double[] priori, double[][] mu, double[] eigen, DenseMatrix scaling, ClassLabel labels) {
+    public LDA(double[] priori, double[][] mu, double[] eigen, DenseMatrix scaling, IntSet labels) {
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
@@ -235,6 +236,6 @@ public class LDA implements SoftClassifier<double[]> {
             posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        return labels.label(MathEx.softmax(posteriori));
+        return labels.valueOf(MathEx.softmax(posteriori));
     }
 }
