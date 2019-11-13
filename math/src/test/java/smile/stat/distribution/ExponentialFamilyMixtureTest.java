@@ -17,15 +17,13 @@
 
 package smile.stat.distribution;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -82,5 +80,9 @@ public class ExponentialFamilyMixtureTest {
                 new Mixture.Component(0.5, new GammaDistribution(1.0, 2.0))
                 );
         System.out.println(mixture);
+
+        assertEquals(0.30, mixture.components[0].priori, 1E-2);
+        assertEquals(0.13, mixture.components[1].priori, 1E-2);
+        assertEquals(0.57, mixture.components[2].priori, 1E-2);
     }
 }

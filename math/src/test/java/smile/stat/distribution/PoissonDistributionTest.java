@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,12 +57,11 @@ public class PoissonDistributionTest {
     @Test
     public void testPoissonDistribution() {
         System.out.println("PoissonDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         PoissonDistribution instance = new PoissonDistribution(5.5);
-        int[] data = new int[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = (int) instance.rand();
+        int[] data = instance.randi(1000);
         PoissonDistribution est = PoissonDistribution.fit(data);
-        assertEquals(5.5, est.lambda, 1.5E-1);
+        assertEquals(5.52, est.lambda, 1E-2);
     }
 
     /**

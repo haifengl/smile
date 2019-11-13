@@ -159,6 +159,7 @@ public class NegativeBinomialDistributionDemo extends JPanel implements ChangeLi
 
             histogram.clear();
             histogram.histogram(data, 20, Color.BLUE);
+            canvas.repaint();
         }
     }
 

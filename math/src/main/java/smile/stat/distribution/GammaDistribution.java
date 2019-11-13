@@ -110,20 +110,6 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         return new GammaDistribution(shape, scale);
     }
 
-    /**
-     * Returns the scale parameter.
-     */
-    public double getScale() {
-        return theta;
-    }
-
-    /**
-     * Returns the shape parameter.
-     */
-    public double getShape() {
-        return k;
-    }
-
     @Override
     public int length() {
         return 2;
@@ -166,7 +152,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         double r = 0.0;
 
         for (int i = 0; i < k; i++) {
-            r += Math.log(Math.random());
+            r += Math.log(MathEx.random());
         }
 
         r *= -theta;

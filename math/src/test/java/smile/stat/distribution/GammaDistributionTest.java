@@ -59,12 +59,10 @@ public class GammaDistributionTest {
         System.out.println("GammaDistribution");
         MathEx.setSeed(19650218); // to get repeatable results.
         GammaDistribution instance = new GammaDistribution(3, 2.1);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
+        double[] data = instance.rand(1000);
         GammaDistribution est = GammaDistribution.fit(data);
-        assertEquals(2.18, est.getScale(), 1E-2);
-        assertEquals(2.95, est.getShape(), 1E-2);
+        assertEquals(2.09, est.theta, 1E-2);
+        assertEquals(2.95, est.k, 1E-2);
     }
 
     /**

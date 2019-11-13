@@ -236,12 +236,11 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
         return rng.rand();
     }
 
-    interface RandomNumberGenerator {
-
-        public int rand();
+    private interface RandomNumberGenerator {
+        int rand();
     }
 
-    class ModeSearch implements RandomNumberGenerator {
+    private class ModeSearch implements RandomNumberGenerator {
 
         /**
          * value at x=0 or at mode
@@ -279,7 +278,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
             mode = (int) lambda;
 
             while (true) {
-                r = Math.random();
+                r = MathEx.random();
                 if ((r -= f0Mode) <= 0) {
                     return mode;
                 }
@@ -316,8 +315,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
         }
     }
 
-    class Patchwork implements RandomNumberGenerator {
-
+    private class Patchwork implements RandomNumberGenerator {
         private int k1,  k2,  k4,  k5;
         private double dl,  dr,  r1,  r2,  r4,  r5,  ll,  rr,  l_my,  c_pm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
 
@@ -399,7 +397,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
             for (;;) {
                 // generate uniform number U -- U(0, p6)
                 // case distinction corresponding to U
-                if ((U = Math.random() * p6) < p2) {              // centre left
+                if ((U = MathEx.random() * p6) < p2) {              // centre left
 
                     // immediate acceptance region R2 = [k2, mode) *[0, f2),  X = k2, ... mode -1
                     if ((V = U - p1) < 0.0) {
@@ -412,7 +410,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
                     // computation of candidate X < k2, and its counterpart Y > k2
                     // either squeeze-acceptance of X or acceptance-rejection of Y
-                    Dk = (int) (dl * Math.random()) + 1;
+                    Dk = (int) (dl * MathEx.random()) + 1;
                     if (W <= f2 - Dk * (f2 - f2 / r2)) {           // quick accept of
                         return (k2 - Dk);                                // X = k2 - Dk
                     }
@@ -439,7 +437,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
                     // computation of candidate X > k4, and its counterpart Y < k4
                     // either squeeze-acceptance of X or acceptance-rejection of Y
-                    Dk = (int) (dr * Math.random()) + 1;
+                    Dk = (int) (dr * MathEx.random()) + 1;
                     if (W <= f4 - Dk * (f4 - f4 * r4)) {           // quick accept of
                         return (k4 + Dk);                                // X = k4 + Dk
                     }
@@ -454,7 +452,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
                     }
                     X = k4 + Dk;
                 } else {
-                    W = Math.random();
+                    W = MathEx.random();
                     if (U < p5) {                                      // expon. tail left
                         Dk = (int) (1.0 - Math.log(W) / ll);
                         if ((X = k1 - Dk) < 0L) {
@@ -502,11 +500,11 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     static int tinyLambdaRand(double lambda) {
         double d, r;
         d = Math.sqrt(lambda);
-        if (Math.random() >= d) {
+        if (MathEx.random() >= d) {
             return 0;
         }
 
-        r = Math.random() * d;
+        r = MathEx.random() * d;
         if (r > lambda * (1.0 - lambda)) {
             return 0;
         }

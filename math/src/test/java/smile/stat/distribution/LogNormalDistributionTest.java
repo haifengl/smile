@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,13 +57,12 @@ public class LogNormalDistributionTest {
     @Test
     public void testLogNormalDistribution() {
         System.out.println("LogNormalDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         LogNormalDistribution instance = new LogNormalDistribution(3, 2.1);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
+        double[] data = instance.rand(1000);
         LogNormalDistribution est = LogNormalDistribution.fit(data);
-        assertEquals(0.0, (est.mu - 3.0) / 3.0, 0.1);
-        assertEquals(0.0, (est.sigma - 2.1) / 2.1, 0.1);
+        assertEquals(3.04, est.mu, 1E-2);
+        assertEquals(2.12, est.sigma, 1E-2);
     }
 
     /**

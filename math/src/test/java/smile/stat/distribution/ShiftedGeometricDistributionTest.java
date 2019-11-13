@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,12 +57,11 @@ public class ShiftedGeometricDistributionTest {
     @Test
     public void testShiftedGeometricDistribution() {
         System.out.println("ShiftedGeometricDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         ShiftedGeometricDistribution instance = new ShiftedGeometricDistribution(0.4);
-        int[] data = new int[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = (int) instance.rand();
+        int[] data = instance.randi(1000);
         ShiftedGeometricDistribution est = ShiftedGeometricDistribution.fit(data);
-        assertEquals(0.0, (0.4 - est.getProb()) / 0.4, 0.1);
+        assertEquals(0.4, est.p, 1E-2);
     }
 
     /**

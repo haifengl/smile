@@ -139,6 +139,7 @@ public class PoissonDistributionDemo extends JPanel implements ChangeListener {
 
             histogram.clear();
             histogram.histogram(data, 10, Color.BLUE);
+            canvas.repaint();
         }
     }
 

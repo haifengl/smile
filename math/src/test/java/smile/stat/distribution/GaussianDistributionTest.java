@@ -59,9 +59,7 @@ public class GaussianDistributionTest {
         System.out.println("GaussianDistribution");
         MathEx.setSeed(19650218); // to get repeatable results.
         GaussianDistribution instance = new GaussianDistribution(3, 2.1);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
+        double[] data = instance.rand(1000);
         GaussianDistribution est = GaussianDistribution.fit(data);
         assertEquals(3.05, est.mu, 1E-2);
         assertEquals(2.13, est.sigma, 1E-2);

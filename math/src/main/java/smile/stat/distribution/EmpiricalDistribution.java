@@ -182,7 +182,6 @@ public class EmpiricalDistribution extends DiscreteDistribution {
 
     @Override
     public double rand() {
-
         if (a == null) {
             initRand();
         }
@@ -200,8 +199,8 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         }
     }
 
-    public int[] rand(int n) {
-
+    @Override
+    public int[] randi(int n) {
         if (a == null) {
             initRand();
         }
@@ -224,6 +223,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         return ans;
     }
 
+    /** Initializes the random number generator. */
     private synchronized void initRand() {
         // set up alias table
         q = new double[p.length];

@@ -17,7 +17,6 @@
 
 package smile.stat.distribution;
 
-import java.util.ArrayList;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
@@ -79,27 +78,30 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         int n = data.length;
         int d = data[0].length;
         double[] mu = MathEx.colMeans(data);
-        DenseMatrix sigma;
 
+        double[] centroid = data[MathEx.randomInt(n)];
+        double[] variance = null;
+        DenseMatrix cov = null;
+        MultivariateGaussianDistribution gaussian;
         if (diagonal) {
-            sigma = Matrix.zeros(d, d);
+            variance = new double[d];
             for (int i = 0; i < n; i++) {
                 double[] x = data[i];
                 for (int j = 0; j < d; j++) {
-                    sigma.add(j, j, (x[j] - mu[j]) * (x[j] - mu[j]));
+                    variance[j] += (x[j] - mu[j]) * (x[j] - mu[j]);
                 }
             }
 
+            int n1 = n - 1;
             for (int j = 0; j < d; j++) {
-                sigma.div(j, j, n - 1);
+                variance[j] /= n1;
             }
+            gaussian = new MultivariateGaussianDistribution(centroid, variance);
         } else {
-            sigma = Matrix.of(MathEx.cov(data, mu));
+            cov = Matrix.of(MathEx.cov(data, mu));
+            gaussian = new MultivariateGaussianDistribution(centroid, cov);
         }
 
-        double[] centroid = data[MathEx.randomInt(n)];
-        MultivariateGaussianDistribution gaussian = new MultivariateGaussianDistribution(centroid, sigma);
-        gaussian.diagonal = diagonal;
         Component[] components = new Component[k];
         components[0] = new Component(1.0 / k, gaussian);
 
@@ -127,13 +129,11 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             int index = 0;
             for (; index < n; index++) {
                 cost += D[index];
-                if (cost >= cutoff)
-                    break;
+                if (cost >= cutoff) break;
             }
 
             centroid = data[index];
-            gaussian = new MultivariateGaussianDistribution(centroid, sigma);
-            gaussian.diagonal = diagonal;
+            gaussian = diagonal ? new MultivariateGaussianDistribution(centroid, variance) : new MultivariateGaussianDistribution(centroid, cov);
             components[i] = new Component(1.0 / k, gaussian);
         }
 
