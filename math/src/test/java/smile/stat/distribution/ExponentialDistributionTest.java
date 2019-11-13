@@ -59,9 +59,7 @@ public class ExponentialDistributionTest {
         System.out.println("ExponentialDistribution");
         MathEx.setSeed(19650218); // to get repeatable results.
         ExponentialDistribution instance = new ExponentialDistribution(3);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
+        double[] data = instance.rand(1000);
         ExponentialDistribution est = ExponentialDistribution.fit(data);
         assertEquals(3.08, est.lambda, 1E-2);
     }

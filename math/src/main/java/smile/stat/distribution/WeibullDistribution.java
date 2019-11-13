@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import smile.math.MathEx;
 import smile.math.special.Gamma;
 
 /**
@@ -129,7 +130,7 @@ public class WeibullDistribution extends AbstractDistribution {
 
     @Override
     public double rand() {
-        double r = Math.random();
+        double r = MathEx.random();
         return lambda * Math.pow(-Math.log(1 - r), 1 / k);
     }
 

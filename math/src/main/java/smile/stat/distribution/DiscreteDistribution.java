@@ -28,6 +28,23 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public abstract class DiscreteDistribution extends AbstractDistribution {
+    /**
+     * Generates an integer random numbers following this discrete distribution.
+     */
+    public int randi() {
+        return (int) rand();
+    }
+
+    /**
+     * Generates a set of integer random numbers following this discrete distribution.
+     */
+    public int[] randi(int n) {
+        int[] data = new int[n];
+        for (int i = 0; i < n; i++) {
+            data[i] = randi();
+        }
+        return data;
+    }
 
     /**
      * The probability mass function.

@@ -58,9 +58,7 @@ public class BernoulliDistributionTest {
         System.out.println("BernoulliDistribution");
         MathEx.setSeed(19650218); // to get repeatable results.
         BernoulliDistribution instance = new BernoulliDistribution(0.4);
-        int[] data = new int[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = (int) instance.rand();
+        int[] data = instance.randi(1000);
         BernoulliDistribution est = BernoulliDistribution.fit(data);
         assertEquals(0.4, est.p, 1E-2);
     }

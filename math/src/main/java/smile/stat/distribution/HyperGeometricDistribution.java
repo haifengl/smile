@@ -17,6 +17,7 @@
 
 package smile.stat.distribution;
 
+import smile.math.MathEx;
 import static smile.math.MathEx.lchoose;
 import static smile.math.MathEx.lfactorial;
 
@@ -360,7 +361,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
             while (true) {
                 // generate uniform number U -- U(0, p6)
                 // case distinction corresponding to U
-                if ((U = Math.random() * p6) < p2) {                  // centre left
+                if ((U = MathEx.random() * p6) < p2) {                  // centre left
 
                     // immediate acceptance region R2 = [k2, mode) *[0, f2),  X = k2, ... mode -1
                     if ((W = U - p1) < 0.) {
@@ -373,7 +374,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
                     // computation of candidate X < k2, and its reflected counterpart V > k2
                     // either squeeze-acceptance of X or acceptance-rejection of V
-                    Dk = (int) (dl * Math.random()) + 1;
+                    Dk = (int) (dl * MathEx.random()) + 1;
                     if (Y <= f2 - Dk * (f2 - f2 / r2)) {         // quick accept of
                         return (k2 - Dk);
                     }                              // X = k2 - Dk
@@ -402,7 +403,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
                     // computation of candidate X > k4, and its reflected counterpart V < k4
                     // either squeeze-acceptance of X or acceptance-rejection of V
-                    Dk = (int) (dr * Math.random()) + 1;
+                    Dk = (int) (dr * MathEx.random()) + 1;
                     if (Y <= f4 - Dk * (f4 - f4 * r4)) {         // quick accept of
                         return (k4 + Dk);                              // X = k4 + Dk
                     }
@@ -418,7 +419,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
                     }
                     X = k4 + Dk;                                    // go to final accept/reject
                 } else {
-                    Y = Math.random();
+                    Y = MathEx.random();
                     if (U < p5) {                                    // expon. tail left
                         Dk = (int) (1. - Math.log(Y) / ll);
                         if ((X = k1 - Dk) < 0) {
@@ -530,7 +531,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
             // loop until accepted
             while (true) {
-                U = Math.random();                    // uniform random number to be converted
+                U = MathEx.random();                    // uniform random number to be converted
 
                 // start chop-down search at mode
                 if ((U -= fm) <= 0.) {

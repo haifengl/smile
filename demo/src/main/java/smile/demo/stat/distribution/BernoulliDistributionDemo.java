@@ -138,6 +138,7 @@ public class BernoulliDistributionDemo extends JPanel implements ChangeListener 
 
             histogram.clear();
             histogram.histogram(data, 2, Color.BLUE);
+            canvas.repaint();
         }
     }
 

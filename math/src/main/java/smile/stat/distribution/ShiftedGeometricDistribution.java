@@ -73,13 +73,6 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
         return new ShiftedGeometricDistribution(p);
     }
 
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
-    }
-
     @Override
     public int length() {
         return 1;

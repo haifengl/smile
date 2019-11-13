@@ -68,7 +68,18 @@ public interface Distribution extends Serializable {
      * Generates a random number following this distribution.
      */
     double rand();
-    
+
+    /**
+     * Generates a set of random numbers following this distribution.
+     */
+    default double[] rand(int n) {
+        double[] data = new double[n];
+        for (int i = 0; i < n; i++) {
+            data[i] = rand();
+        }
+        return data;
+    }
+
     /**
      * The probability density function for continuous distribution
      * or probability mass function for discrete distribution at x.

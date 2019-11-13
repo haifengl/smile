@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -55,12 +57,11 @@ public class GeometricDistributionTest {
     @Test
     public void testGeometricDistribution() {
         System.out.println("GeometricDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         GeometricDistribution instance = new GeometricDistribution(0.4);
-        int[] data = new int[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = (int) instance.rand();
+        int[] data = instance.randi(1000);
         GeometricDistribution est = GeometricDistribution.fit(data);
-        assertEquals(0.4, est.p, 5E-2);
+        assertEquals(0.4, est.p, 1E-2);
     }
 
     /**

@@ -159,6 +159,7 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
 
             histogram.clear();
             histogram.histogram(data, 20, Color.BLUE);
+            canvas.repaint();
         }
     }
 

@@ -59,9 +59,7 @@ public class BetaDistributionTest {
         System.out.println("BetaDistribution");
         MathEx.setSeed(19650218); // to get repeatable results.
         BetaDistribution instance = new BetaDistribution(3, 2.1);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
+        double[] data = instance.rand(1000);
         BetaDistribution est = BetaDistribution.fit(data);
         assertEquals(3.31, est.getAlpha(), 1E-2);
         assertEquals(2.31, est.getBeta(), 1E-2);

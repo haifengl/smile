@@ -38,8 +38,9 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     public final double[] mu;
     /** The covariance matrix. */
     public final DenseMatrix sigma;
+    /** True if the covariance matrix is diagonal. */
+    public final boolean diagonal;
 
-    boolean diagonal;
     private int dim;
     private DenseMatrix sigmaInv;
     private DenseMatrix sigmaL;
@@ -52,18 +53,18 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * the same variance.
      *
      * @param mean mean vector.
-     * @param var variance.
+     * @param variance variance.
      */
-    public MultivariateGaussianDistribution(double[] mean, double var) {
-        if (var <= 0) {
-            throw new IllegalArgumentException("Variance is not positive: " + var);
+    public MultivariateGaussianDistribution(double[] mean, double variance) {
+        if (variance <= 0) {
+            throw new IllegalArgumentException("Variance is not positive: " + variance);
         }
 
         mu = new double[mean.length];
         sigma = Matrix.zeros(mu.length, mu.length);
         for (int i = 0; i < mu.length; i++) {
             mu[i] = mean[i];
-            sigma.set(i, i, var);
+            sigma.set(i, i, variance);
         }
 
         diagonal = true;
@@ -77,18 +78,18 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * Each element has different variance.
      *
      * @param mean mean vector.
-     * @param var variance vector.
+     * @param variance variance vector.
      */
-    public MultivariateGaussianDistribution(double[] mean, double[] var) {
-        if (mean.length != var.length) {
+    public MultivariateGaussianDistribution(double[] mean, double[] variance) {
+        if (mean.length != variance.length) {
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
         mu = new double[mean.length];
-        sigma = Matrix.diag(var);
+        sigma = Matrix.diag(variance);
         for (int i = 0; i < mu.length; i++) {
-            if (var[i] <= 0) {
-                throw new IllegalArgumentException("Variance is not positive: " + var[i]);
+            if (variance[i] <= 0) {
+                throw new IllegalArgumentException("Variance is not positive: " + variance[i]);
             }
 
             mu[i] = mean[i];
@@ -138,27 +139,27 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      */
     public static MultivariateGaussianDistribution fit(double[][] data, boolean diagonal) {
         double[] mu = MathEx.colMeans(data);
+        int n = data.length;
+        int d = mu.length;
 
-        DenseMatrix sigma;
         if (diagonal) {
-            sigma = Matrix.zeros(data[0].length, data[0].length);
-            for (int i = 0; i < data.length; i++) {
+            double[] variance = new double[d];
+            for (int i = 0; i < n; i++) {
                 double[] x = data[i];
-                for (int j = 0; j < mu.length; j++) {
-                    sigma.add(j, j, (x[j] - mu[j]) * (x[j] - mu[j]));
+                for (int j = 0; j < d; j++) {
+                    variance[j] += (x[j] - mu[j]) * (x[j] - mu[j]);
                 }
             }
 
-            for (int j = 0; j < mu.length; j++) {
-                sigma.div(j, j, (data.length - 1));
+            int n1 = n - 1;
+            for (int j = 0; j < d; j++) {
+                variance[j] /= n1;
             }
-        } else {
-            sigma = Matrix.of(MathEx.cov(data, mu));
-        }
 
-        MultivariateGaussianDistribution gaussian = new MultivariateGaussianDistribution(mu, sigma);
-        gaussian.diagonal = diagonal;
-        return gaussian;
+            return new MultivariateGaussianDistribution(mu, variance);
+        } else {
+            return new MultivariateGaussianDistribution(mu, Matrix.of(MathEx.cov(data, mu)));
+        }
     }
 
     /**
@@ -171,14 +172,6 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
         sigmaDet = cholesky.det();
         sigmaL = cholesky.matrix();
         pdfConstant = (dim * Math.log(2 * Math.PI) + Math.log(sigmaDet)) / 2.0;
-    }
-
-    /**
-     * Returns true if the covariance matrix is diagonal.
-     * @return true if the covariance matrix is diagonal
-     */
-    public boolean isDiagonal() {
-        return diagonal;
     }
 
     @Override
@@ -315,58 +308,76 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
         return pt;
     }
 
+    /**
+     * Generates a set of random numbers following this distribution.
+     */
+    public double[][] rand(int n) {
+        double[][] data = new double[n][];
+        for (int i = 0; i < n; i++) {
+            data[i] = rand();
+        }
+        return data;
+    }
+
     @Override
-    public MultivariateMixture.Component M(double[][] x, double[] posteriori) {
-        int n = x[0].length;
+    public MultivariateMixture.Component M(double[][] data, double[] posteriori) {
+        int n = data.length;
+        int d = data[0].length;
 
         double alpha = 0.0;
-        double[] mean = new double[n];
-        double[][] cov = new double[n][n];
+        double[] mean = new double[d];
 
-        for (int k = 0; k < x.length; k++) {
+        for (int k = 0; k < n; k++) {
             alpha += posteriori[k];
-            for (int i = 0; i < n; i++) {
-                mean[i] += x[k][i] * posteriori[k];
+            double[] x = data[k];
+            for (int i = 0; i < d; i++) {
+                mean[i] += x[i] * posteriori[k];
             }
         }
 
-        for (int i = 0; i < mean.length; i++) {
+        for (int i = 0; i < d; i++) {
             mean[i] /= alpha;
         }
 
+        MultivariateGaussianDistribution gaussian;
         if (diagonal) {
-            for (int k = 0; k < x.length; k++) {
-                for (int i = 0; i < n; i++) {
-                    cov[i][i] += (x[k][i] - mean[i]) * (x[k][i] - mean[i]) * posteriori[k];
+            double[] variance = new double[d];
+            for (int k = 0; k < n; k++) {
+                double[] x = data[k];
+                for (int i = 0; i < d; i++) {
+                    variance[i] += (x[i] - mean[i]) * (x[i] - mean[i]) * posteriori[k];
                 }
             }
 
-            for (int i = 0; i < cov.length; i++) {
-                cov[i][i] /= alpha;
+            for (int i = 0; i < d; i++) {
+                variance[i] /= alpha;
             }
+
+            gaussian = new MultivariateGaussianDistribution(mean, Matrix.of(variance));
         } else {
-            for (int k = 0; k < x.length; k++) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < n; j++) {
-                        cov[i][j] += (x[k][i] - mean[i]) * (x[k][j] - mean[j]) * posteriori[k];
+            DenseMatrix cov = Matrix.zeros(d, d);
+            for (int k = 0; k < n; k++) {
+                double[] x = data[k];
+                for (int i = 0; i < d; i++) {
+                    for (int j = 0; j < d; j++) {
+                        cov.add(i, j, (x[i] - mean[i]) * (x[j] - mean[j]) * posteriori[k]);
                     }
                 }
             }
 
-            for (int i = 0; i < cov.length; i++) {
-                for (int j = 0; j < cov[i].length; j++) {
-                    cov[i][j] /= alpha;
+            for (int i = 0; i < d; i++) {
+                for (int j = 0; j < d; j++) {
+                    cov.div(i, j, alpha);
                 }
 
                 // make sure the covariance matrix is positive definite.
-                cov[i][i] *= 1.00001;
+                cov.mul(i, i, 1.00001);
             }
+
+            gaussian = new MultivariateGaussianDistribution(mean, cov);
         }
 
-        MultivariateGaussianDistribution g = new MultivariateGaussianDistribution(mean, Matrix.of(cov));
-        g.diagonal = diagonal;
-
-        return new MultivariateMixture.Component(alpha, g);
+        return new MultivariateMixture.Component(alpha, gaussian);
     }
 
     @Override
