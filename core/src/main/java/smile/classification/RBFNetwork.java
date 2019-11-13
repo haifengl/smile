@@ -23,6 +23,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.QR;
 import smile.math.rbf.RadialBasisFunction;
+import smile.util.IntSet;
 
 /**
  * Radial basis function networks. A radial basis function network is an
@@ -111,7 +112,7 @@ public class RBFNetwork<T> implements Classifier<T> {
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -121,7 +122,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param normalized True if this is a normalized RBF network.
      */
     public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized) {
-        this(k, rbf, w, normalized, ClassLabel.of(k));
+        this(k, rbf, w, normalized, IntSet.of(k));
     }
 
     /**
@@ -132,7 +133,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param normalized True if this is a normalized RBF network.
      * @param labels class labels
      */
-    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized, ClassLabel labels) {
+    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized, IntSet labels) {
         this.k = k;
         this.rbf = rbf;
         this.w = w;
@@ -164,7 +165,7 @@ public class RBFNetwork<T> implements Classifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         int n = x.length;
         int m = rbf.length;
@@ -211,6 +212,6 @@ public class RBFNetwork<T> implements Classifier<T> {
         double[] sumw = new double[k];
         w.atx(f, sumw);
 
-        return labels.label(MathEx.whichMax(sumw));
+        return labels.valueOf(MathEx.whichMax(sumw));
     }
 }

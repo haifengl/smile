@@ -18,7 +18,7 @@
 package smile.clustering;
 
 import java.util.stream.IntStream;
-import smile.classification.ClassLabel;
+import smile.classification.ClassLabels;
 import smile.math.MathEx;
 import smile.math.distance.HammingDistance;
 
@@ -77,11 +77,11 @@ public class KModes extends CentroidClustering<int[], int[]> {
         int n = data.length;
         int d = data[0].length;
 
-        ClassLabel.Result[] codec = IntStream.range(0, d).parallel().mapToObj(j -> {
+        ClassLabels[] codec = IntStream.range(0, d).parallel().mapToObj(j -> {
             int[] x = new int[n];
             for (int i = 0; i < n; i++) x[i] = data[i][j];
-            return ClassLabel.fit(x);
-        }).toArray(ClassLabel.Result[]::new);
+            return ClassLabels.fit(x);
+        }).toArray(ClassLabels[]::new);
 
         int[] y = new int[n];
         int[][] medoids = new int[k][];
@@ -112,7 +112,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
     /**
      * Calculates the new centroids in the new clusters.
      */
-    private static void updateCentroids(int[][] centroids, int[][] data, int[] y, ClassLabel.Result[] codec) {
+    private static void updateCentroids(int[][] centroids, int[][] data, int[] y, ClassLabels[] codec) {
         int n = data.length;
         int k = centroids.length;
         int d = centroids[0].length;
@@ -127,7 +127,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
                         count[x[i]]++;
                     }
                 }
-                centroid[j] = codec[j].labels.label(MathEx.whichMax(count));
+                centroid[j] = codec[j].labels.valueOf(MathEx.whichMax(count));
             }
         });
     }

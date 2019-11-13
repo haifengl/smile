@@ -30,6 +30,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.util.IntSet;
 
 /**
  * Decision tree for classification. A decision tree can be learned by
@@ -114,7 +115,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     /**
      * The class label encoder.
      */
-    private Optional<ClassLabel> labels = Optional.empty();
+    private Optional<IntSet> labels = Optional.empty();
 
     /** The dependent variable. */
     private transient int[] y;
@@ -333,7 +334,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
 
         DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = Optional.of(formula);
@@ -345,7 +346,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     public int predict(Tuple x) {
         DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
         int y = leaf.output();
-        return labels.map($ -> $.label(y)).orElse(y);
+        return labels.map($ -> $.valueOf(y)).orElse(y);
     }
 
     /**
@@ -359,7 +360,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
         leaf.posteriori(posteriori);
         int y = leaf.output();
-        return labels.map($ -> $.label(y)).orElse(y);
+        return labels.map($ -> $.valueOf(y)).orElse(y);
     }
 
     /** Returns null if the tree is part of ensemble algorithm. */
@@ -374,7 +375,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /** Private constructor. */
-    private DecisionTree(Optional<Formula> formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, Optional<ClassLabel> labels) {
+    private DecisionTree(Optional<Formula> formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, Optional<IntSet> labels) {
         super(formula, schema, response, root, importance);
         this.k = k;
         this.rule = rule;
@@ -395,7 +396,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param test the test data set to evaluate the errors of nodes.
      * @return a new pruned tree.
      */
-    DecisionTree prune(DataFrame test, Formula formula, ClassLabel labels) {
+    DecisionTree prune(DataFrame test, Formula formula, IntSet labels) {
         double[] imp = importance.clone();
         Prune prune = prune(root, test.stream().collect(Collectors.toList()), imp, formula, labels);
         return new DecisionTree(this.formula, schema, response, prune.node, k, rule, imp, this.labels);
@@ -419,14 +420,14 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /** Prunes a subtree. */
-    private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, ClassLabel labels) {
+    private Prune prune(Node node, List<Tuple> test, double[] importance, Formula formula, IntSet labels) {
         if (node instanceof DecisionNode) {
             DecisionNode leaf = (DecisionNode) node;
             int y = leaf.output();
 
             int error = 0;
             for (Tuple t : test) {
-                if (y != labels.id(formula.yint(t))) error++;
+                if (y != labels.indexOf(formula.yint(t))) error++;
             }
 
             return new Prune(node, error, leaf.count());
@@ -453,7 +454,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         int y = MathEx.whichMax(count);
         int error = 0;
         for (Tuple t : test) {
-            if (y != labels.id(formula.yint(t))) error++;
+            if (y != labels.indexOf(formula.yint(t))) error++;
         }
 
         if (error < trueChild.error + falseChild.error) {

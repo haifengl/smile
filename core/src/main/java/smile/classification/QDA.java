@@ -23,6 +23,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -83,7 +84,7 @@ public class QDA implements SoftClassifier<double[]> {
     /**
      * The class label encoder.
      */
-    private final ClassLabel labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -93,7 +94,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param scaling the eigen vectors of each covariance matrix.
      */
     public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
-        this(priori, mu, eigen, scaling, ClassLabel.of(priori.length));
+        this(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
     /**
@@ -104,7 +105,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param scaling the eigen vectors of each covariance matrix.
      * @param labels class labels
      */
-    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, ClassLabel labels) {
+    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, IntSet labels) {
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
@@ -247,6 +248,6 @@ public class QDA implements SoftClassifier<double[]> {
             posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        return labels.label(MathEx.softmax(posteriori));
+        return labels.valueOf(MathEx.softmax(posteriori));
     }
 }

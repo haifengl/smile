@@ -19,6 +19,7 @@ package smile.classification;
 
 import java.util.function.BiFunction;
 import smile.math.MathEx;
+import smile.util.IntSet;
 
 /**
  * One-vs-rest (or one-vs-all) strategy for reducing the problem of
@@ -51,7 +52,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
     /** The probability estimation by Platt scaling. */
     private PlattScaling[] platts;
     /** The class label encoder. */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -61,7 +62,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         this.classifiers = classifiers;
         this.platts = platts;
         k = classifiers.length;
-        labels = ClassLabel.of(k);
+        labels = IntSet.of(k);
     }
 
     /**
@@ -69,7 +70,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param classifiers the binary classifier for each one-vs-rest case.
      * @param labels the class labels.
      */
-    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platts, ClassLabel labels) {
+    public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platts, IntSet labels) {
         this.classifiers = classifiers;
         this.platts = platts;
         this. k = classifiers.length;
@@ -101,7 +102,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
             throw new IllegalArgumentException(String.format("Only %d classes" + k));
@@ -137,7 +138,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
             }
         }
 
-        return labels.label(y);
+        return labels.valueOf(y);
     }
 
     @Override
@@ -147,6 +148,6 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         }
 
         MathEx.unitize1(posteriori);
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 }

@@ -27,6 +27,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -96,7 +97,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -109,7 +110,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
      * @param importance variable importance
      */
     public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance) {
-        this(formula, k, trees, alpha, error, importance, ClassLabel.of(k));
+        this(formula, k, trees, alpha, error, importance, IntSet.of(k));
     }
 
     /**
@@ -123,7 +124,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
      * @param importance variable importance
      * @param labels class labels
      */
-    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, ClassLabel labels) {
+    public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = k;
         this.trees = trees;
@@ -176,7 +177,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int[][] order = CART.order(x);
 
         int k = codec.k;
@@ -327,7 +328,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
             y[trees[i].predict(xt)] += alpha[i];
         }
             
-        return labels.label(MathEx.whichMax(y));
+        return labels.valueOf(MathEx.whichMax(y));
     }
     
     /**
@@ -347,7 +348,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
             posteriori[i] /= sum;
         }
 
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
     
     /**

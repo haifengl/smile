@@ -805,7 +805,7 @@ trait Operators {
   def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {
       val p = x(0).length
       val k = MathEx.max(y) + 1
-      val labels = ClassLabel.fit(y).labels
+      val labels = ClassLabels.fit(y).labels
       val naive = if (priori == null)
         new DiscreteNaiveBayes(model, k, p, sigma, labels)
       else

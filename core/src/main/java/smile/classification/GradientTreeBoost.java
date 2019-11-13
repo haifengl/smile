@@ -31,6 +31,7 @@ import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
+import smile.util.IntSet;
 import smile.util.Strings;
 
 /**
@@ -144,7 +145,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The class label encoder.
      */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor of binary class.
@@ -155,7 +156,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
-        this(formula, trees, b, shrinkage, importance, ClassLabel.of(2));
+        this(formula, trees, b, shrinkage, importance, IntSet.of(2));
     }
 
     /**
@@ -167,7 +168,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param importance variable importance
      * @param labels     class labels
      */
-    public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance, ClassLabel labels) {
+    public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = 2;
         this.trees = trees;
@@ -185,7 +186,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance) {
-        this(formula, forest, shrinkage, importance, ClassLabel.of(forest.length));
+        this(formula, forest, shrinkage, importance, IntSet.of(forest.length));
     }
 
     /**
@@ -196,7 +197,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param importance variable importance
      * @param labels     class labels
      */
-    public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance, ClassLabel labels) {
+    public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = forest.length;
         this.forest = forest;
@@ -261,7 +262,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         BaseVector y = formula.y(data);
 
         int[][] order = CART.order(x);
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
 
         if (codec.k == 2) {
             return train2(formula, x, codec, order, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
@@ -299,7 +300,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Train L2 tree boost.
      */
-    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost train2(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         int n = x.nrows();
         int k = codec.k;
         int[] y = codec.y;
@@ -353,7 +354,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Train L-k tree boost.
      */
-    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabel.Result codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         int n = x.nrows();
         int k = codec.k;
         int[] y = codec.y;
@@ -505,7 +506,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 y += shrinkage * tree.predict(xt);
             }
 
-            return labels.label(y > 0 ? 1 : 0);
+            return labels.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -521,7 +522,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 }
             }
 
-            return labels.label(y);
+            return labels.valueOf(y);
         }
     }
 
@@ -541,7 +542,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             posteriori[0] = 1.0 / (1.0 + Math.exp(2 * y));
             posteriori[1] = 1.0 - posteriori[0];
 
-            return labels.label(y > 0 ? 1 : 0);
+            return labels.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -568,7 +569,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
                 posteriori[i] /= Z;
             }
 
-            return labels.label(y);
+            return labels.valueOf(y);
         }
     }
 

@@ -21,6 +21,7 @@ import java.util.function.BiFunction;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import smile.math.MathEx;
+import smile.util.IntSet;
 
 /**
  * One-vs-one strategy for reducing the problem of
@@ -46,7 +47,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
     /** The binary classifier. */
     private PlattScaling[][] platts;
     /** The class label encoder. */
-    private ClassLabel labels;
+    private IntSet labels;
 
     /**
      * Constructor.
@@ -57,7 +58,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         this.classifiers = classifiers;
         this.platts = platts;
         k = classifiers.length;
-        labels = ClassLabel.of(k);
+        labels = IntSet.of(k);
     }
 
     /**
@@ -66,7 +67,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      *                    Only the lower half is needed.
      * @param labels the class labels.
      */
-    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts, ClassLabel labels) {
+    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts, IntSet labels) {
         this.classifiers = classifiers;
         this.platts = platts;
         this.k = classifiers.length;
@@ -98,7 +99,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
             throw new IllegalArgumentException(String.format("Only %d classes" + k));
@@ -155,7 +156,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
             }
         }
 
-        return labels.label(MathEx.whichMax(count));
+        return labels.valueOf(MathEx.whichMax(count));
     }
 
     /**
@@ -174,7 +175,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         }
 
         coupling(r, posteriori);
-        return labels.label(MathEx.whichMax(posteriori));
+        return labels.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**

@@ -17,7 +17,7 @@
 
 package smile.feature;
 
-import smile.classification.ClassLabel;
+import smile.classification.ClassLabels;
 import smile.math.MathEx;
 
 /**
@@ -59,7 +59,7 @@ public class SumSquaresRatio implements FeatureRanking {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        ClassLabel.Result codec = ClassLabel.fit(y);
+        ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         y = codec.y;
 

@@ -26,6 +26,7 @@ import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
+import smile.util.IntSet;
 
 /**
  * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
@@ -85,7 +86,7 @@ public class KNN<T> implements SoftClassifier<T> {
     /**
      * The class labels.
      */
-    private ClassLabel labels;
+    private IntSet labels;
     /**
      * Constructor.
      * @param knn k-nearest neighbor search data structure of training instances.
@@ -96,7 +97,7 @@ public class KNN<T> implements SoftClassifier<T> {
         this.knn = knn;
         this.k = k;
         this.y = y;
-        labels = ClassLabel.fit(y).labels;
+        labels = ClassLabels.fit(y).labels;
     }
 
     /**
@@ -178,10 +179,10 @@ public class KNN<T> implements SoftClassifier<T> {
 
         int[] count = new int[labels.size()];
         for (int i = 0; i < k; i++) {
-            count[labels.id(y[neighbors[i].index])]++;
+            count[labels.indexOf(y[neighbors[i].index])]++;
         }
 
-        return labels.label(MathEx.whichMax(count));
+        return labels.valueOf(MathEx.whichMax(count));
     }
 
     @Override
@@ -193,13 +194,13 @@ public class KNN<T> implements SoftClassifier<T> {
 
         int[] count = new int[labels.size()];
         for (int i = 0; i < k; i++) {
-            count[labels.id(y[neighbors[i].index])]++;
+            count[labels.indexOf(y[neighbors[i].index])]++;
         }
 
         for (int i = 0; i < count.length; i++) {
             posteriori[i] = (double) count[i] / k;
         }
 
-        return labels.label(MathEx.whichMax(count));
+        return labels.valueOf(MathEx.whichMax(count));
     }
 }
