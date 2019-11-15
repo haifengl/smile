@@ -286,7 +286,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
             // return the negative log-likelihood here.
             double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
                 double wx = dot(x[i], w);
-                return log1pe(wx) - y[i] * wx;
+                return MathEx.log1pe(wx) - y[i] * wx;
             }).sum();
 
             if (lambda > 0.0) {
@@ -316,7 +316,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
                     }
                     gradient[p] -= err;
 
-                    return log1pe(wx) - y[i] * wx;
+                    return MathEx.log1pe(wx) - y[i] * wx;
                 }).sum();
             }).sum();
 
@@ -415,7 +415,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
 
                     MathEx.softmax(posteriori);
 
-                    return -log(posteriori[y[i]]);
+                    return -MathEx.log(posteriori[y[i]]);
                 }).sum();
             }).sum();
 
@@ -462,7 +462,7 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
                         gradient[pos + p] -= err;
                     }
 
-                    return -log(posteriori[y[i]]);
+                    return -MathEx.log(posteriori[y[i]]);
                 }).sum();
             }).sum();
 
@@ -488,29 +488,6 @@ public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
 
             return f;
         }
-    }
-
-    /**
-     * Returns natural log(1+exp(x)) without overflow.
-     */
-    private static double log1pe(double x) {
-        double y = x;
-        if (x <= 15) {
-            y = Math.log1p(Math.exp(x));
-        }
-
-        return y;
-    }
-
-    /**
-     * Returns natural log without underflow.
-     */
-    private static double log(double x) {
-        double y = -690.7755;
-        if (x > 1E-300) {
-            y = Math.log(x);
-        }
-        return y;
     }
 
     /**
