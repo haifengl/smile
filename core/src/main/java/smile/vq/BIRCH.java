@@ -465,9 +465,7 @@ public class BIRCH implements VectorQuantizer {
             root = new Leaf(x);
         } else {
             Optional<Node> sister = root.add(x);
-            if (sister.isPresent()) {
-                root = new InternalNode(root, sister.get());
-            }
+            sister.ifPresent(child -> root = new InternalNode(root, child));
         }
     }
 
