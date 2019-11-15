@@ -24,8 +24,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.function.LongSupplier;
 import smile.base.cart.CART;
-import smile.base.cart.LeastSquaresNodeOutput;
-import smile.base.cart.RegressionNodeOutput;
+import smile.base.cart.Loss;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -223,8 +222,6 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
         final int n = x.nrows();
         double[] prediction = new double[n];
         int[] oob = new int[n];
-
-        final RegressionNodeOutput output = new LeastSquaresNodeOutput(y);
         final int[][] order = CART.order(x);
 
         // generate seeds with sequential stream
@@ -253,7 +250,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
                 }
             }
 
-            RegressionTree tree = new RegressionTree(x, y, field, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order, output);
+            RegressionTree tree = new RegressionTree(x, Loss.ls(y), field, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
 
             IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
                 double pred = tree.predict(x.get(i));

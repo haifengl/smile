@@ -83,9 +83,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     private transient double[] y;
 
     /**
-     * The trait to calculate the leaf node output.
+     * The loss function.
      */
-    private transient RegressionNodeOutput output;
+    private transient Loss loss;
 
     @Override
     protected double impurity(LeafNode node) {
@@ -97,11 +97,11 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         // The output of node may be different from the sample mean.
         // In fact, it may be based on different data from the response
         // in gradient tree boosting.
-        double out = output.calculate(nodeSamples, samples);
+        double out = loss.output(nodeSamples, samples);
 
         // RSS computation should always based on the sample mean in the node.
         double mean = out;
-        if (!(output instanceof LeastSquaresNodeOutput)) {
+        if (!loss.toString().equals("LeastSquares")) {
             int n = 0;
             mean = 0.0;
             for (int i : nodeSamples) {
@@ -230,7 +230,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     /**
      * Constructor. Learns a regression tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
-     * @param y the response variables.
+     * @param loss the loss function.
      * @param response the metadata of response variable.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
@@ -242,13 +242,11 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      *               samples[i] is the number of sampling for instance i.
      * @param order the index of training values in ascending order. Note
      *              that only numeric attributes need be sorted.
-     * @param output a lambda to calculate node output.
      */
-    public RegressionTree(DataFrame x, double[] y, StructField response, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order, RegressionNodeOutput output) {
+    public RegressionTree(DataFrame x, Loss loss, StructField response, int maxDepth, int maxNodes, int nodeSize, int mtry, int[] samples, int[][] order) {
         super(x, response, maxDepth, maxNodes, nodeSize, mtry, samples, order);
-
-        this.y = y;
-        this.output = output == null ? new LeastSquaresNodeOutput(y) : output;
+        this.loss = loss;
+        this.y = loss.response();
 
         LeafNode node = newNode(IntStream.range(0, x.size()).filter(i -> this.samples[i] > 0).toArray());
         this.root = node;
@@ -312,7 +310,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
-        RegressionTree tree = new RegressionTree(x, y.toDoubleArray(), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null, null);
+        RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = Optional.of(formula);
         return tree;
     }

@@ -17,11 +17,10 @@
 
 package smile.regression
 
+import smile.base.cart.Loss
 import smile.data._
 import smile.math._
-import distance._
 import kernel._
-import rbf._
 import smile.base.rbf.RBF
 import smile.data.formula.Formula
 import smile.util.time
