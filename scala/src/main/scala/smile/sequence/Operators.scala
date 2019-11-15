@@ -17,7 +17,7 @@
 
 package smile.sequence
 
-import smile.sequence.CRF.Trainer
+import java.util.function.ToIntFunction
 import smile.util._
 
 /** High level sequence annotation operators.
@@ -42,8 +42,8 @@ trait Operators {
     * @param labels the state labels of observations, of which states take
     *               values in [0, p), where p is the number of hidden states.
     */
-  def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int] = time("Hidden Markov Model") {
-    new HMM[Int](observations, labels)
+  def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM = time("Hidden Markov Model") {
+    HMM.fit(observations, labels)
   }
 
   /** Trains a first-order Hidden Markov Model.
@@ -53,8 +53,8 @@ trait Operators {
     * @param labels the state labels of observations, of which states take
     *               values in [0, p), where p is the number of hidden states.
     */
-  def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]]): HMM[T] = time("Hidden Markov Model") {
-    new HMM[T](observations, labels)
+  def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T] = time("Hidden Markov Model") {
+    HMMLabeler.fit(observations, labels, ordinal)
   }
 
   /** First-order linear conditional random field. A conditional random field is a

@@ -30,12 +30,9 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class HMMPOSTagger implements POSTagger, Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(HMMPOSTagger.class);
 
-    /**
-     * Serialization Version UID.
-     */
-    private static final long serialVersionUID = 6600840654340610562L;
     /**
      * The emission symbols of HMM and corresponding indices.
      */
@@ -146,19 +143,6 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     }
 
     /**
-     * Returns natural log without underflow.
-     */
-    private static double log(double x) {
-        double y = 0.0;
-        if (x < 1E-300) {
-            y = -690.7755;
-        } else {
-            y = java.lang.Math.log(x);
-        }
-        return y;
-    }
-
-    /**
      * Returns the most likely state sequence given the observation sequence by
      * the Viterbi algorithm, which maximizes the probability of
      * <code>P(I | O, HMM)</code>. Note that only s[i] taking value -1 will be
@@ -181,9 +165,9 @@ public class HMMPOSTagger implements POSTagger, Serializable {
 
         for (int i = 0; i < numStates; i++) {
             if (o[0][0] == 0 && o[0][1] >= 0) {
-                delta[0][i] = log(pi[i]) + log(c[i][o[0][1]]);                
+                delta[0][i] = MathEx.log(pi[i]) + MathEx.log(c[i][o[0][1]]);
             } else {
-                delta[0][i] = log(pi[i]) + log(b[i][o[0][0]]);
+                delta[0][i] = MathEx.log(pi[i]) + MathEx.log(b[i][o[0][0]]);
             }
         }
 
@@ -193,7 +177,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 int maxPsy = -1;
 
                 for (int i = 0; i < numStates; i++) {
-                    double thisDelta = delta[t - 1][i] + log(a[i][k]);
+                    double thisDelta = delta[t - 1][i] + MathEx.log(a[i][k]);
 
                     if (maxDelta < thisDelta) {
                         maxDelta = thisDelta;
@@ -202,9 +186,9 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 }
 
                 if (o[t][0] == 0 && o[t][1] >= 0) {
-                    delta[t][k] = maxDelta + log(c[k][o[t][1]]);
+                    delta[t][k] = maxDelta + MathEx.log(c[k][o[t][1]]);
                 } else {
-                    delta[t][k] = maxDelta + log(b[k][o[t][0]]);
+                    delta[t][k] = maxDelta + MathEx.log(b[k][o[t][0]]);
                 }
 
                 psy[t][k] = maxPsy;
