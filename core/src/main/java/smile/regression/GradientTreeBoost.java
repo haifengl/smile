@@ -28,7 +28,6 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.sort.QuickSelect;
 import smile.util.Strings;
 
 /**
@@ -121,7 +120,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     /**
      * The intercept.
      */
-    private double b = 0.0;
+    private double b;
 
     /**
      * Variable importance. Every time a split of a node is made on variable
@@ -217,44 +216,10 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
         
-        double[] residual = new double[n];
-        double[] response = loss.type() == Loss.Type.LeastSquares ? residual : new double[n]; // response variable for regression tree.
         StructField field = new StructField("residual", DataTypes.DoubleType);
 
-        RegressionNodeOutput output = null;
-        double b = 0.0;
-        switch (loss.type()) {
-            case LeastSquares:
-                output = new LeastSquaresNodeOutput(residual);
-                b = MathEx.mean(y);
-                break;
-
-            case Quantile:
-                double q = loss.parameters()[0];
-                output = new QuantileNodeOutput(q, residual);
-                System.arraycopy(y, 0, residual, 0, n);
-                int p = (int) (residual.length * q);
-                b = QuickSelect.select(residual, p);
-                break;
-
-            case LeastAbsoluteDeviation:
-                output = new LeastAbsoluteDeviationNodeOutput(residual);
-                System.arraycopy(y, 0, residual, 0, n);
-                b = QuickSelect.median(residual);
-                break;
-
-            case Huber:
-                System.arraycopy(y, 0, residual, 0, n);
-                b = QuickSelect.median(residual);
-                break;
-
-            default:
-                throw new IllegalArgumentException("Unsupported loss: " + loss);
-        }
-
-        for (int i = 0; i < n; i++) {
-            residual[i] = y[i] - b;
-        }
+        double b = loss.intercept(y);
+        double[] residual = loss.residual();
 
         RegressionTree[] trees = new RegressionTree[ntrees];
 
@@ -264,20 +229,9 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
             for (int i = 0; i < N; i++) {
                 samples[permutation[i]]++;
             }
-            
-            switch (loss.type()) {
-                case Huber:
-                    output = new HuberNodeOutput(residual, response, 0.9);
-                    break;
-
-                case Quantile:
-                case LeastAbsoluteDeviation:
-                    for (int i = 0; i < n; i++) response[i] = Math.signum(residual[i]);
-                    break;
-            }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, response, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            trees[t] = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
 
             for (int i = 0; i < n; i++) {
                 residual[i] -= shrinkage * trees[t].predict(x.get(i));

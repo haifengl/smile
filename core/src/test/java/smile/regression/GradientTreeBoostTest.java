@@ -17,12 +17,11 @@
 
 package smile.regression;
 
+import smile.base.cart.Loss;
 import smile.data.*;
 import smile.data.formula.Formula;
-import smile.sort.QuickSort;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
-import smile.validation.Validation;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
 import org.junit.After;
@@ -142,14 +141,14 @@ public class GradientTreeBoostTest {
 
     @Test
     public void testHuber() {
-        test(Loss.huber(), "CPU", CPU.formula, CPU.data, 85.3103);
-        test(Loss.huber(), "2dplanes", Planes.formula, Planes.data, 1.1080);
-        test(Loss.huber(), "abalone", Abalone.formula, Abalone.train, 2.2262);
-        test(Loss.huber(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(Loss.huber(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
-        test(Loss.huber(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
-        test(Loss.huber(), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
-        test(Loss.huber(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
-        test(Loss.huber(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
+        test(Loss.huber(0.9), "CPU", CPU.formula, CPU.data, 85.3103);
+        test(Loss.huber(0.9), "2dplanes", Planes.formula, Planes.data, 1.1080);
+        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2262);
+        test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
+        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
+        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
+        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
+        test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
     }
 }

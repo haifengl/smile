@@ -308,18 +308,11 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         int[] nc = new int[k];
         for (int i = 0; i < n; i++) nc[y[i]]++;
 
-        int[] y2 = Arrays.stream(y).map(i -> 2 * i - 1).toArray();
-
-        double[] h = new double[n]; // current F(x_i)
-        double[] response = new double[n]; // response variable for regression tree.
+        Loss loss = Loss.logistic(y);
+        double b = loss.intercept(null);
+        double[] h = loss.residual(); // this is actually the output of boost trees.
         StructField field = new StructField("residual", DataTypes.DoubleType);
 
-        double mu = MathEx.mean(y2);
-        double b = 0.5 * Math.log((1 + mu) / (1 - mu));
-
-        Arrays.fill(h, b);
-
-        RegressionNodeOutput output = new BinaryLogisticRegressionNodeOutput(response);
         RegressionTree[] trees = new RegressionTree[ntrees];
 
         int[] permutation = IntStream.range(0, n).toArray();
@@ -328,15 +321,12 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         for (int t = 0; t < ntrees; t++) {
             sampling(samples, permutation, nc, y, subsample);
 
-            for (int i = 0; i < n; i++) {
-                response[i] = 2.0 * y2[i] / (1 + Math.exp(2 * y2[i] * h[i]));
-            }
-
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new RegressionTree(x, response, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output);
+            RegressionTree tree = new RegressionTree(x, loss, field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
+            trees[t] = tree;
 
             for (int i = 0; i < n; i++) {
-                h[i] += shrinkage * trees[t].predict(x.get(i));
+                h[i] += shrinkage * tree.predict(x.get(i));
             }
         }
 
@@ -362,53 +352,38 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         int[] nc = new int[k];
         for (int i = 0; i < n; i++) nc[y[i]]++;
 
-        double[][] h = new double[k][n]; // boost tree output.
-        double[][] p = new double[k][n]; // posteriori probabilities.
-        double[][] response = new double[k][n]; // pseudo response.
         StructField field = new StructField("residual", DataTypes.DoubleType);
-
         RegressionTree[][] forest = new RegressionTree[k][ntrees];
 
-        RegressionNodeOutput[] output = new RegressionNodeOutput[k];
+        double[][] p = new double[n][k]; // posteriori probabilities.
+        double[][] h = new double[k][]; // boost tree output.
+        Loss[] loss = new Loss[k];
         for (int i = 0; i < k; i++) {
-            output[i] = new MultiClassLogisticRegressionNodeOutput(k, response[i]);
+            loss[i] = Loss.logistic(i, k, y, p);
+            h[i] = loss[i].residual();
         }
 
         int[] permutation = IntStream.range(0, n).toArray();
         int[] samples = new int[n];
 
         for (int t = 0; t < ntrees; t++) {
+            logger.info("Training {} tree", Strings.ordinal(t+1));
             for (int i = 0; i < n; i++) {
-                double max = Double.NEGATIVE_INFINITY;
                 for (int j = 0; j < k; j++) {
-                    if (max < h[j][i]) {
-                        max = h[j][i];
-                    }
+                    p[i][j] = h[j][i];
                 }
-
-                double Z = 0.0;
-                for (int j = 0; j < k; j++) {
-                    p[j][i] = Math.exp(h[j][i] - max);
-                    Z += p[j][i];
-                }
-
-                for (int j = 0; j < k; j++) {
-                    p[j][i] /= Z;
-                }
+                MathEx.softmax(p[i]);
             }
 
-            logger.info("Training {} tree", Strings.ordinal(t+1));
             for (int j = 0; j < k; j++) {
-                for (int i = 0; i < n; i++) {
-                    response[j][i] = (y[i] == j ? 1.0 : 0.0) - p[j][i];
-                }
-
                 sampling(samples, permutation, nc, y, subsample);
 
-                forest[j][t] = new RegressionTree(x, response[j], field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order, output[j]);
+                RegressionTree tree = new RegressionTree(x, loss[j], field, maxDepth, maxNodes, nodeSize, x.ncols(), samples, order);
+                forest[j][t] = tree;
 
+                double[] hj = h[j];
                 for (int i = 0; i < n; i++) {
-                    h[j][i] += shrinkage * forest[j][t].predict(x.get(i));
+                    hj[i] += shrinkage * tree.predict(x.get(i));
                 }
             }
         }
