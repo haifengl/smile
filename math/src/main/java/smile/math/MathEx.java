@@ -249,6 +249,29 @@ public class MathEx {
         return log(x) / LOG2;
     }
 
+    /**
+     * Returns natural log without underflow.
+     */
+    public static double log(double x) {
+        double y = -690.7755;
+        if (x > 1E-300) {
+            y = Math.log(x);
+        }
+        return y;
+    }
+
+    /**
+     * Returns natural log(1+exp(x)) without overflow.
+     */
+    public static double log1pe(double x) {
+        double y = x;
+        if (x <= 15) {
+            y = Math.log1p(Math.exp(x));
+        }
+
+        return y;
+    }
+
     /** Returns true if x is an integer. */
     public static boolean isInt(double x) {
         return (x == Math.floor(x)) && !Double.isInfinite(x);
