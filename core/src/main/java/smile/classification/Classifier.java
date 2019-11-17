@@ -18,6 +18,8 @@
 package smile.classification;
 
 import java.io.Serializable;
+import java.util.function.ToDoubleFunction;
+import java.util.function.ToIntFunction;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.
@@ -37,7 +39,7 @@ import java.io.Serializable;
  * 
  * @author Haifeng Li
  */
-public interface Classifier<T> extends Serializable {
+public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Serializable {
     /**
      * Predicts the class label of an instance.
      *
@@ -69,5 +71,15 @@ public interface Classifier<T> extends Serializable {
             y[i] = predict(x[i]);
         }
         return y;
+    }
+
+    @Override
+    default int applyAsInt(T x) {
+        return predict(x);
+    }
+
+    @Override
+    default double applyAsDouble(T x) {
+        return f(x);
     }
 }
