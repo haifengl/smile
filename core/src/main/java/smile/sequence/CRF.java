@@ -114,12 +114,15 @@ public class CRF implements Serializable {
 
         double[][] trellis = new double[n][k];
         int[][] psy = new int[n][k];
+        double[] delta = new double[k];
 
         // forward
         double[] t0 = trellis[0];
         int[] p0 = psy[0];
 
         Tuple x0 = extend(x[0], k);
+        Tuple[] xt = new Tuple[k];
+
         for (int j = 0; j < k; j++) {
             t0[j] = f(potentials[j], x0);
             p0[j] = 0;
@@ -130,38 +133,23 @@ public class CRF implements Serializable {
             double[] tt1 = trellis[t - 1];
             int[] pt = psy[t];
 
-            Tuple[] xt = new Tuple[k];
             for (int j = 0; j < k; j++) {
                 xt[j] = extend(x[t], j);
             }
 
             for (int i = 0; i < k; i++) {
-                double max = Double.NEGATIVE_INFINITY;
-                int maxPsy = 0;
                 RegressionTree[] pi = potentials[i];
                 for (int j = 0; j < k; j++) {
-                    double delta = f(pi, xt[j]) + tt1[j];
-                    if (max < delta) {
-                        max = delta;
-                        maxPsy = j;
-                    }
+                    delta[j] = f(pi, xt[j]) + tt1[j];
                 }
-                tt[i] = max;
-                pt[i] = maxPsy;
+                pt[i] = MathEx.whichMax(delta);
+                tt[i] = delta[pt[i]];
             }
         }
 
         // trace back
         int[] label = new int[n];
-        double[] tn1 = trellis[n - 1];
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < k; i++) {
-            if (max < tn1[i]) {
-                max = tn1[i];
-                label[n - 1] = i;
-            }
-        }
-
+        label[n-1] = MathEx.whichMax(trellis[n - 1]);
         for (int t = n - 1; t-- > 0;) {
             label[t] = psy[t + 1][label[t + 1]];
         }
@@ -207,12 +195,13 @@ public class CRF implements Serializable {
         int k = potentials.length;
 
         Tuple x0 = extend(x[0], k);
+        Tuple[] xt = new Tuple[k];
+
         for (int i = 0; i < k; i++) {
             trellis.table[0][i].expf[0] = f(potentials[i], x0);
         }
 
         for (int t = 1; t < n; t++) {
-            Tuple[] xt = new Tuple[k];
             for (int j = 0; j < k; j++) {
                 xt[j] = extend(x[t], j);
             }
