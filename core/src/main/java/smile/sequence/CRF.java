@@ -19,11 +19,21 @@ package smile.sequence;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
+import java.util.Arrays;
+import java.util.Properties;
+import java.util.stream.IntStream;
+import smile.base.cart.CART;
+import smile.base.cart.Loss;
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.data.vector.IntVector;
+import smile.math.MathEx;
 import smile.regression.RegressionTree;
-import smile.sort.QuickSort;
-import smile.util.MulticoreExecutor;
+import smile.util.Strings;
 
 /**
  * First-order linear conditional random field. A conditional random field is a
@@ -46,306 +56,91 @@ import smile.util.MulticoreExecutor;
  *
  * <h2>References</h2>
  * <ol>
- * <li> J. Lafferty, A. McCallum and F. Pereira.
- * Conditional random fields: Probabilistic models for segmenting and labeling
- * sequence data. ICML, 2001.</li>
- * <li> Thomas G. Dietterich, Guohua Hao, and
- * Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random
- * Fields. JMLR, 2008.</li>
+ * <li> J. Lafferty, A. McCallum and F. Pereira. Conditional random fields: Probabilistic models for segmenting and labeling sequence data. ICML, 2001.</li>
+ * <li> Thomas G. Dietterich, Guohua Hao, and Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random Fields. JMLR, 2008.</li>
  * </ol>
  *
  * @author Haifeng Li
  */
-public class CRF implements SequenceLabeler<double[]>, Serializable {
+public class CRF implements Serializable {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
-    /**
-     * The number of classes.
-     */
-    private int numClasses;
-    /**
-     * The number of sparse binary features.
-     */
-    private int numFeatures = -1;
+    /** The schema of (x, s_j). */
+    private StructType schema;
     /**
      * The potential functions for each class.
      */
-    private TreePotentialFunction[] potentials;
+    private RegressionTree[][] potentials;
     /**
-     * True if using Viterbi algorithm for sequence labeling.
+     * The learning rate.
      */
-    private boolean viterbi = false;
-
-    /**
-     * Returns a feature set with the class label of previous position.
-     *
-     * @param features the indices of the nonzero features.
-     * @param label the class label of previous position as a feature.
-     */
-    public double[] featureset(double[] features, int label) {
-        double[] fs = new double[features.length + 1];
-        System.arraycopy(features, 0, fs, 0, features.length);
-        fs[features.length] = label;
-        return fs;
-    }
-
-    /**
-     * Returns a feature set with the class label of previous position.
-     *
-     * @param features the indices of the nonzero features.
-     * @param label the class label of previous position as a feature.
-     */
-    public int[] featureset(int[] features, int label) {
-        int[] fs = new int[features.length + 1];
-        System.arraycopy(features, 0, fs, 0, features.length);
-        fs[features.length] = numFeatures + label;
-        return fs;
-    }
-
-    /**
-     * Regression tree based potential function.
-     */
-    class TreePotentialFunction implements Serializable {
-
-        /**
-         * Constructor.
-         *
-         * @param eta the learning rate for each tree when calculate potential
-         * function.
-         */
-        public TreePotentialFunction(double eta) {
-            this.eta = eta;
-        }
-
-        /**
-         * Computes potential function score without exp.
-         */
-        public double f(double[] features) {
-            double score = 0.0;
-            for (RegressionTree tree : trees) {
-                //score += eta * tree.predict(features);
-            }
-            return score;
-        }
-
-        /**
-         * Computes potential function score without exp.
-         */
-        public double f(int[] features) {
-            double score = 0.0;
-            for (RegressionTree tree : trees) {
-                //score += eta * tree.predict(features);
-            }
-            return score;
-        }
-
-        /*
-         * Add another tree for the potential function.
-         */
-        public void add(RegressionTree tree) {
-            trees.add(tree);
-        }
-        /**
-         * Scale parameter in boosting.
-         */
-        private double eta;
-        /**
-         * Gradient regression tree boosting.
-         */
-        private List<RegressionTree> trees = new ArrayList<>();
-    }
-
-    /**
-     * Dynamic programming table entry in forward-backward algorithm.
-     */
-    class TrellisNode implements Serializable {
-
-        /**
-         * Forward variable.
-         */
-        double alpha = 1.0;
-        /**
-         * Backward variable.
-         */
-        double beta = 1.0;
-        /**
-         * Conditional samples.
-         */
-        double[][] samples;
-        /**
-         * Conditional samples.
-         */
-        int[][] sparseSamples;
-        /**
-         * Residual of conditional samples as regression tree training target.
-         */
-        double[] target = new double[numClasses];
-        /**
-         * Potential function values scores[k] = F(k, X)
-         */
-        double[] scores = new double[numClasses];
-        /**
-         * Exp of potential function values
-         */
-        double[] expScores = new double[numClasses];
-        /**
-         * The generation of cached score.
-         */
-        int age = 0;
-        
-        TrellisNode(boolean sparse) {
-            if (sparse) {
-                sparseSamples = new int[numClasses][];                
-            } else {
-                samples = new double[numClasses][];
-            }
-        }
-    }
+    private double shrinkage;
 
     /**
      * Constructor.
      *
-     * @param numClasses the number of classes.
-     * @param eta the learning rate of potential function.
+     * @param schema the schema of features.
+     * @param potentials the potential functions.
+     * @param shrinkage the learning rate.
      */
-    private CRF(int numClasses, double eta) {
-        this.numClasses = numClasses;
+    public CRF(StructType schema, RegressionTree[][] potentials, double shrinkage) {
+        this.potentials = potentials;
+        this.shrinkage = shrinkage;
 
-        potentials = new TreePotentialFunction[numClasses];
-        for (int i = 0; i < numClasses; i++) {
-            potentials[i] = new TreePotentialFunction(eta);
-        }
+        int k = potentials.length;
+        NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
+        StructField field = new StructField("s(t-1)", DataTypes.IntegerType, scale);
+
+        int length = schema.length();
+        StructField[] fields = new StructField[length + 1];
+        System.arraycopy(schema.fields(), 0, fields, 0, length);
+        fields[length] = field;
+        this.schema = new StructType(fields);
     }
 
     /**
-     * Constructor.
-     *
-     * @param numFeatures the number of sparse binary features.
-     * @param numClasses the number of classes.
-     * @param eta the learning rate of potential function.
+     * Labels sequence with Viterbi algorithm. Viterbi algorithm
+     * returns the whole sequence label that has the maximum probability,
+     * which makes sense in applications (e.g.part-of-speech tagging) that
+     * require coherent sequential labeling. The forward-backward algorithm
+     * labels a sequence by individual prediction on each position.
+     * This usually produces better accuracy although the results may not
+     * be coherent.
      */
-    private CRF(int numFeatures, int numClasses, double eta) {
-        this.numFeatures = numFeatures;
-        this.numClasses = numClasses;
-
-        potentials = new TreePotentialFunction[numClasses];
-        for (int i = 0; i < numClasses; i++) {
-            potentials[i] = new TreePotentialFunction(eta);
-        }
-    }
-
-    /**
-     * Returns true if using Viterbi algorithm for sequence labeling.
-     */
-    public boolean isViterbi() {
-        return viterbi;
-    }
-
-    /**
-     * Sets if using Viterbi algorithm for sequence labeling. Viterbi algorithm
-     * returns the whole sequence label that has the maximum probability, which
-     * makes sense in applications (e.g.part-of-speech tagging) that require
-     * coherent sequential labeling. The forward-backward algorithm labels a
-     * sequence by individual prediction on each position. This usually produces
-     * better accuracy although the results may not be coherent.
-     */
-    public CRF setViterbi(boolean viterbi) {
-        this.viterbi = viterbi;
-        return this;
-    }
-
-    @Override
-    public int[] predict(double[][] x) {
-        if (viterbi) {
-            return predictViterbi(x);
-        } else {
-            return predictForwardBackward(x);
-        }
-    }
-
-    public int[] predict(int[][] x) {
-        if (viterbi) {
-            return predictViterbi(x);
-        } else {
-            return predictForwardBackward(x);
-        }
-    }
-
-    /**
-     * Returns the most likely label sequence given the feature sequence by the
-     * forward-backward algorithm.
-     *
-     * @param x a sequence of sparse features taking values in [0, p) about each
-     * position of original sequence, where p is the number of features.
-     * @return the most likely label sequence.
-     */
-    private int[] predictForwardBackward(double[][] x) {
-        int n = x.length; // length of sequence
-
-        TrellisNode[][] trellis = getTrellis(x);
-        double[] scaling = new double[n];
-        forward(trellis, scaling);
-        backward(trellis);
-
-        int[] label = new int[n];
-        double[] p = new double[numClasses];
-        for (int i = 0; i < n; i++) {
-            TrellisNode[] ti = trellis[i];
-            for (int j = 0; j < numClasses; j++) {
-                TrellisNode tij = ti[j];
-                p[j] = tij.alpha * tij.beta;
-            }
-
-            double max = Double.NEGATIVE_INFINITY;
-            for (int j = 0; j < numClasses; j++) {
-                if (max < p[j]) {
-                    max = p[j];
-                    label[i] = j;
-                }
-            }
-        }
-
-        return label;
-    }
-
-    /**
-     * Returns the most likely label sequence given the feature sequence by the
-     * Viterbi algorithm.
-     *
-     * @param x a sequence of sparse features taking values in [0, p) about each
-     * position of original sequence, where p is the number of features.
-     * @return the most likely label sequence.
-     */
-    private int[] predictViterbi(double[][] x) {
+    public int[] viterbi(Tuple[] x) {
         int n = x.length;
+        int k = potentials.length;
 
-        double[][] trellis = new double[n][numClasses];
-        int[][] psy = new int[n][numClasses];
-
-        int p = x[0].length; // dimension
+        double[][] trellis = new double[n][k];
+        int[][] psy = new int[n][k];
 
         // forward
-        double[] features = featureset(x[0], numClasses);
         double[] t0 = trellis[0];
         int[] p0 = psy[0];
-        for (int j = 0; j < numClasses; j++) {
-            t0[j] = potentials[j].f(features);
+
+        Tuple x0 = extend(x[0], k);
+        for (int j = 0; j < k; j++) {
+            t0[j] = f(potentials[j], x0);
             p0[j] = 0;
         }
 
         for (int t = 1; t < n; t++) {
-            System.arraycopy(x[t], 0, features, 0, p);
             double[] tt = trellis[t];
             double[] tt1 = trellis[t - 1];
             int[] pt = psy[t];
-            for (int i = 0; i < numClasses; i++) {
+
+            Tuple[] xt = new Tuple[k];
+            for (int j = 0; j < k; j++) {
+                xt[j] = extend(x[t], j);
+            }
+
+            for (int i = 0; i < k; i++) {
                 double max = Double.NEGATIVE_INFINITY;
                 int maxPsy = 0;
-                TreePotentialFunction pi = potentials[i];
-                for (int j = 0; j < numClasses; j++) {
-                    features[p] = j;
-                    double delta = pi.f(features) + tt1[j];
+                RegressionTree[] pi = potentials[i];
+                for (int j = 0; j < k; j++) {
+                    double delta = f(pi, xt[j]) + tt1[j];
                     if (max < delta) {
                         max = delta;
                         maxPsy = j;
@@ -360,7 +155,7 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
         int[] label = new int[n];
         double[] tn1 = trellis[n - 1];
         double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < numClasses; i++) {
+        for (int i = 0; i < k; i++) {
             if (max < tn1[i]) {
                 max = tn1[i];
                 label[n - 1] = i;
@@ -377,589 +172,253 @@ public class CRF implements SequenceLabeler<double[]>, Serializable {
      * Returns the most likely label sequence given the feature sequence by the
      * forward-backward algorithm.
      *
-     * @param x a sequence of sparse features taking values in [0, p) about each
-     * position of original sequence, where p is the number of features.
+     * @param x a sequence.
      * @return the most likely label sequence.
      */
-    private int[] predictForwardBackward(int[][] x) {
-        int n = x.length; // length of sequence
+    public int[] predict(Tuple[] x) {
+        int n = x.length;
+        int k = potentials.length;
 
-        TrellisNode[][] trellis = getTrellis(x);
+        Trellis trellis = new Trellis(n, k);
+        f(x, trellis);
+
         double[] scaling = new double[n];
-        forward(trellis, scaling);
-        backward(trellis);
+        trellis.forward(scaling);
+        trellis.backward();
 
         int[] label = new int[n];
-        double[] p = new double[numClasses];
+        double[] p = new double[k];
         for (int i = 0; i < n; i++) {
-            TrellisNode[] ti = trellis[i];
-            for (int j = 0; j < numClasses; j++) {
-                TrellisNode tij = ti[j];
+            Trellis.Cell[] ti = trellis.table[i];
+            for (int j = 0; j < k; j++) {
+                Trellis.Cell tij = ti[j];
                 p[j] = tij.alpha * tij.beta;
             }
 
-            double max = Double.NEGATIVE_INFINITY;
-            for (int j = 0; j < numClasses; j++) {
-                if (max < p[j]) {
-                    max = p[j];
-                    label[i] = j;
-                }
-            }
+            label[i] = MathEx.whichMax(p);
         }
 
         return label;
     }
 
-    /**
-     * Returns the most likely label sequence given the feature sequence by the
-     * Viterbi algorithm.
-     *
-     * @param x a sequence of sparse features taking values in [0, p) about each
-     * position of original sequence, where p is the number of features.
-     * @return the most likely label sequence.
-     */
-    private int[] predictViterbi(int[][] x) {
+    /** Calculates the potential function values. */
+    private void f(Tuple[] x, Trellis trellis) {
         int n = x.length;
+        int k = potentials.length;
 
-        double[][] trellis = new double[n][numClasses];
-        int[][] psy = new int[n][numClasses];
-
-        int p = x[0].length; // dimension
-
-        // forward
-        double[] t0 = trellis[0];
-        int[] p0 = psy[0];
-        int[] features = featureset(x[0], numClasses);
-        for (int j = 0; j < numClasses; j++) {
-            t0[j] = potentials[j].f(features);
-            p0[j] = 0;
+        Tuple x0 = extend(x[0], k);
+        for (int i = 0; i < k; i++) {
+            trellis.table[0][i].expf[0] = f(potentials[i], x0);
         }
 
         for (int t = 1; t < n; t++) {
-            System.arraycopy(x[t], 0, features, 0, p);
-            double[] tt = trellis[t];
-            double[] tt1 = trellis[t - 1];
-            int[] pt = psy[t];
-            for (int i = 0; i < numClasses; i++) {
-                double max = Double.NEGATIVE_INFINITY;
-                int maxPsy = 0;
-                for (int j = 0; j < numClasses; j++) {
-                    features[p] = numFeatures + j;
-                    double delta = potentials[i].f(features) + tt1[j];
-                    if (max < delta) {
-                        max = delta;
-                        maxPsy = j;
-                    }
+            Tuple[] xt = new Tuple[k];
+            for (int j = 0; j < k; j++) {
+                xt[j] = extend(x[t], j);
+            }
+
+            for (int i = 0; i < k; i++) {
+                for (int j = 0; j < k; j++) {
+                    trellis.table[t][i].expf[j] = f(potentials[i], xt[j]);
                 }
-                tt[i] = max;
-                pt[i] = maxPsy;
             }
         }
+    }
 
-        // trace back
-        int[] label = new int[n];
-        double[] tn1 = trellis[n - 1];
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < numClasses; i++) {
-            if (max < tn1[i]) {
-                max = tn1[i];
-                label[n - 1] = i;
-            }
+    /** Calculates the potential function value. */
+    private double f(RegressionTree[] potential, Tuple x) {
+        double F = 0.0;
+        for (RegressionTree tree : potential) {
+            F += shrinkage * tree.predict(x);
         }
-
-        for (int t = n - 1; t-- > 0;) {
-            label[t] = psy[t + 1][label[t + 1]];
-        }
-        return label;
+        return Math.exp(F);
     }
 
     /**
-     * Trainer for CRF.
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     * @param k the number of classes.
      */
-    public static class Trainer {
+    public static CRF fit(Tuple[][] sequences, int[][] labels, int k) {
+        return fit(sequences, labels, k, new Properties());
+    }
 
-        /**
-         * The number of classes.
-         */
-        private int numClasses;
-        /**
-         * The number of sparse binary features.
-         */
-        private int numFeatures = -1;
-        /**
-         * The maximum number of leaf nodes in the tree.
-         */
-        private int maxLeaves = 100;
-        /**
-         * The learning rate of potential function.
-         */
-        private double eta = 1.0;
-        /**
-         * The number of iterations.
-         */
-        private int iters = 100;
+    /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     * @param k the number of classes.
+     */
+    public static CRF fit(Tuple[][] sequences, int[][] labels, int k, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
+        double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
+        return fit(sequences, labels, k, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+    }
 
-        /**
-         * Constructor.
-         *
-         * @param numFeatures the number of sparse binary features.
-         * @param numClasses the maximum number of classes.
-         */
-        public Trainer(int numFeatures, int numClasses) {
-            if (numFeatures < 2) {
-                throw new IllegalArgumentException("Invalid number of features: " + numClasses);
-            }
-
-            if (numClasses < 2) {
-                throw new IllegalArgumentException("Invalid number of classes: " + numClasses);
-            }
-
-            this.numFeatures = numFeatures;
-            this.numClasses = numClasses;
+    /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     * @param k the number of classes.
+     * @param ntrees    the number of iterations (trees).
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize  the number of instances in a node below which the tree will
+     *                  not split, setting nodeSize = 5 generally gives good results.
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     */
+    public static CRF fit(Tuple[][] sequences, int[][] labels, int k, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        double[][] scaling = new double[sequences.length][];
+        Trellis[] trellis = new Trellis[sequences.length];
+        for (int i = 0; i < sequences.length; i++) {
+            scaling[i] = new double[sequences[i].length];
+            trellis[i] = new Trellis(sequences[i].length, k);
         }
 
-        /**
-         * Sets the maximum number of leaf nodes in the tree.
-         *
-         * @param maxLeaves the maximum number of leaf nodes in the tree.
-         */
-        public Trainer setMaxNodes(int maxLeaves) {
-            if (maxLeaves < 2) {
-                throw new IllegalArgumentException("Invalid number of leaf nodes: " + maxLeaves);
-            }
+        // training data
+        int n = Arrays.stream(sequences).mapToInt(s -> s.length).map(ni -> 1 + (ni - 1) * k).sum();
+        ArrayList<Tuple> x = new ArrayList<>(n);
+        int[] state = new int[n];
 
-            this.maxLeaves = maxLeaves;
-            return this;
-        }
-
-        public Trainer setLearningRate(double eta) {
-            if (eta <= 0.0) {
-                throw new IllegalArgumentException("Invalid learning rate: " + eta);
-            }
-
-            this.eta = eta;
-            return this;
-        }
-
-        public Trainer setNumTrees(int iters) {
-            if (iters < 1) {
-                throw new IllegalArgumentException("Invalid number of iterations: " + iters);
-            }
-
-            this.iters = iters;
-            return this;
-        }
-
-        public CRF train(double[][][] sequences, int[][] labels) {
-            CRF crf = new CRF(numClasses, eta);
-
-            double[][] scaling = new double[sequences.length][];
-            TrellisNode[][][] trellis = new TrellisNode[sequences.length][][];
-            for (int i = 0; i < sequences.length; i++) {
-                scaling[i] = new double[sequences[i].length];
-                trellis[i] = crf.getTrellis(sequences[i]);
-            }
-
-            List<GradientTask> gradientTasks = new ArrayList<>();
-            for (int i = 0; i < sequences.length; i++) {
-                gradientTasks.add(new GradientTask(crf, trellis[i], scaling[i], labels[i]));
-            }
-
-            List<BoostingTask> boostingTasks = new ArrayList<>();
-            for (int i = 0; i < numClasses; i++) {
-                boostingTasks.add(new BoostingTask(crf.potentials[i], trellis, i));
-            }
-
-            for (int iter = 0; iter < iters; iter++) {
-                try {
-                    MulticoreExecutor.run(gradientTasks);
-                    MulticoreExecutor.run(boostingTasks);
-                } catch (Exception e) {
-                    logger.error("Failed to train CRF on multi-core", e);
+        for (int s = 0, l = 0; s < sequences.length; s++) {
+            Tuple[] sequence = sequences[s];
+            x.add(sequence[0]);
+            state[l++] = k;
+            for (int i = 1; i < sequence.length; i++) {
+                for (int j = 0; j < k; j++) {
+                    x.add(sequence[i]);
+                    state[l++] = j;
                 }
             }
-
-            return crf;
         }
 
-        public CRF train(int[][][] sequences, int[][] labels) {
-            CRF crf = new CRF(numFeatures, numClasses, eta);
+        NominalScale scale = new NominalScale(IntStream.range(0, k+1).mapToObj(String::valueOf).toArray(String[]::new));
+        DataFrame data = DataFrame.of(x)
+                .merge(IntVector.of(new StructField("s(t-1)", DataTypes.IntegerType, scale), state));
 
-            double[][] scaling = new double[sequences.length][];
-            TrellisNode[][][] trellis = new TrellisNode[sequences.length][][];
-            for (int i = 0; i < sequences.length; i++) {
-                scaling[i] = new double[sequences[i].length];
-                trellis[i] = crf.getTrellis(sequences[i]);
-            }
+        StructField field = new StructField("residual", DataTypes.DoubleType);
+        RegressionTree[][] potentials = new RegressionTree[k][ntrees];
 
-            List<GradientTask> gradientTasks = new ArrayList<>();
-            for (int i = 0; i < sequences.length; i++) {
-                gradientTasks.add(new GradientTask(crf, trellis[i], scaling[i], labels[i]));
-            }
+        double[][] h = new double[k][n]; // boost tree output.
+        double[][] response = new double[k][n]; // response for boosting tree.
+        Loss[] loss = new Loss[k];
+        for (int i = 0; i < k; i++) {
+            loss[i] = new PotentialLoss(response[i]);
+        }
 
-            List<BoostingTask> boostingTasks = new ArrayList<>();
-            for (int i = 0; i < numClasses; i++) {
-                boostingTasks.add(new BoostingTask(crf.potentials[i], trellis, i));
-            }
+        int[] samples = new int[n];
+        Arrays.fill(samples, 1);
+        int[][] order = CART.order(data);
 
-            for (int iter = 0; iter < iters; iter++) {
-                try {
-                    MulticoreExecutor.run(gradientTasks);
-                    MulticoreExecutor.run(boostingTasks);
-                } catch (Exception e) {
-                    logger.error("Failed to train CRF on multi-core", e);
+        for (int iter = 0; iter < ntrees; iter++) {
+            logger.info("Training {} tree", Strings.ordinal(iter+1));
+
+            // set exp(F) in the trellis
+            IntStream.range(0, k).parallel().forEach(j -> {
+                double[] f = h[j];
+                for (int s = 0, l = 0; s < sequences.length; s++) {
+                    Trellis grid = trellis[s];
+                    grid.table[0][j].expf[0] = Math.exp(f[l++]);
+                    for (int t = 1; t < grid.table.length; t++) {
+                        for (int i = 0; i < k; i++) {
+                            grid.table[t][j].expf[i] = Math.exp(f[l++]);
+                        }
+                    }
+                }
+            });
+
+            // gradient
+            IntStream.range(0, sequences.length).parallel().forEach(s -> {
+                trellis[s].forward(scaling[s]);
+                trellis[s].backward();
+                trellis[s].gradient(scaling[s], labels[s]);
+            });
+
+            // copy gradient back to response
+            IntStream.range(0, k).parallel().forEach(j -> {
+                double[] r = response[j];
+                for (int s = 0, l = 0; s < sequences.length; s++) {
+                    Trellis grid = trellis[s];
+                    r[l++] = grid.table[0][j].residual[0];
+                    for (int t = 1; t < grid.table.length; t++) {
+                        for (int i = 0; i < k; i++) {
+                            r[l++] = grid.table[t][j].residual[i];
+                        }
+                    }
+                }
+            });
+
+            for (int j = 0; j < k; j++) {
+                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncols(), samples, order);
+                potentials[j][iter] = tree;
+
+                double[] hj = h[j];
+                for (int i = 0; i < n; i++) {
+                    hj[i] += shrinkage * tree.predict(data.get(i));
                 }
             }
-
-            return crf;
         }
 
-        /**
-         * Calculate gradients with forward-backward algorithm.
-         */
-        class GradientTask implements Callable<Object> {
+        return new CRF(sequences[0][0].schema(), potentials, shrinkage);
+    }
 
-            CRF crf;
-            TrellisNode[][] trellis;
-            double[] scaling;
-            int[] label;
+    static class PotentialLoss implements Loss {
+        /** The response variable. */
+        double[] response;
 
-            GradientTask(CRF crf, TrellisNode[][] trellis, double[] scaling, int[] label) {
-                this.crf = crf;
-                this.trellis = trellis;
-                this.scaling = scaling;
-                this.label = label;
+        PotentialLoss(double[] response) {
+            this.response = response;
+        }
+
+        @Override
+        public double output(int[] nodeSamples, int[] sampleCount) {
+            int n = 0;
+            double output = 0.0;
+            for (int i : nodeSamples) {
+                n += sampleCount[i];
+                output += response[i] * sampleCount[i];
+            }
+
+            return output / n;
+        }
+
+        @Override
+        public double intercept(double[] $y) {
+            return 0;
+        }
+
+        @Override
+        public double[] response() {
+            return response;
+        }
+
+        @Override
+        public double[] residual() {
+            throw new IllegalStateException();
+        }
+    }
+
+    /** Extends a feature vector with previous element's state. */
+    Tuple extend(Tuple x, int state) {
+        return new Tuple() {
+            @Override
+            public StructType schema() {
+                return schema;
             }
 
             @Override
-            public Object call() {
-                crf.forward(trellis, scaling);
-                crf.backward(trellis);
-                crf.setTargets(trellis, scaling, label);
-                return null;
-            }
-        }
-
-        /**
-         * Boosting potential function.
-         */
-        class BoostingTask implements Callable<Object> {
-
-            int i; // training task for class i
-            TreePotentialFunction potential;
-            TrellisNode[][][] trellis;
-            //RegressionTree.Trainer trainer;
-            int[][] sparseX;
-            double[][] x;
-            double[] y;
-            int[][] order;
-            int[] samples;
-
-            BoostingTask(TreePotentialFunction potential, TrellisNode[][][] trellis, int i) {
-                this.potential = potential;
-                this.trellis = trellis;
-                this.i = i;
-                if (numFeatures <= 0) {
-                    //trainer = new RegressionTree.Trainer(attributes, maxLeaves);
-                } else {
-                    //trainer = new RegressionTree.Trainer(numFeatures + numClasses + 1, maxLeaves);
-                }
-            
-                // Create training datasets for each potential function.
-                int n = 0;
-                for (int l = 0; l < trellis.length; l++) {
-                    n += 1 + (trellis[l].length - 1) * numClasses;
-                }
-
-                //samples = new int[n];
-                y = new double[n];
-                if (numFeatures <= 0) {
-                    x = new double[n][];
-
-                    for (int l = 0, m = 0; l < trellis.length; l++) {
-                        TrellisNode[][] tl = trellis[l];
-                        x[m++] = tl[0][i].samples[0];
-
-                        for (int t = 1; t < trellis[l].length; t++) {
-                            TrellisNode tlti = tl[t][i];
-                            for (int j = 0; j < numClasses; j++) {
-                                x[m++] = tlti.samples[j];
-                            }
-                        }
-                    }
-                    
-                    int p = x[0].length;
-
-                    double[] a = new double[n];
-                    order = new int[p][];
-
-                    for (int j = 0; j < p; j++) {
-                        //if (attributes[j] instanceof NumericAttribute) {
-                            for (int l = 0; l < n; l++) {
-                                a[l] = x[l][j];
-                            }
-                            order[j] = QuickSort.sort(a);
-                        //}
-                    }
-                } else {
-                    sparseX = new int[n][];
-
-                    for (int l = 0, m = 0; l < trellis.length; l++) {
-                        TrellisNode[][] tl = trellis[l];
-                        sparseX[m++] = tl[0][i].sparseSamples[0];
-
-                        for (int t = 1; t < trellis[l].length; t++) {
-                            TrellisNode tlti = tl[t][i];
-                            for (int j = 0; j < numClasses; j++) {
-                                sparseX[m++] = tlti.sparseSamples[j];
-                            }
-                        }
-                    }
-                }
+            public Object get(int j) {
+                return j == x.length() ? state : x.get(j);
             }
 
             @Override
-            public Object call() {
-                for (int l = 0, m = 0; l < trellis.length; l++) {
-                    TrellisNode[][] tl = trellis[l];
-                    y[m++] = tl[0][i].target[0];
-
-                    for (int t = 1; t < trellis[l].length; t++) {
-                        TrellisNode tlti = tl[t][i];
-                        for (int j = 0; j < numClasses; j++) {
-                            y[m++] = tlti.target[j];
-                        }
-                    }
-                }
-                
-                /*
-                int n = y.length;
-                for (int l = 0; l < n; l++) {
-                    if (Math.random() < 0.75) {
-                        samples[l] = 1;
-                    } else {
-                        samples[l] = 0;
-                    }
-                }
-                * 
-                */
-                
-                // Perform training.
-                if (x != null) {
-                    RegressionTree tree = null;//new RegressionTree(attributes, x, y, maxLeaves, 5, attributes.length, order, samples, null);
-                    potential.add(tree);
-                } else {
-                    RegressionTree tree = null;//new RegressionTree(numFeatures + numClasses + 1, sparseX, y, maxLeaves, 5, samples, null);
-                    potential.add(tree);
-                }
-                
-                return null;
+            public int getInt(int j) {
+                return j == x.length() ? state : x.getInt(j);
             }
-        }
-    }
-
-    /**
-     * Performs forward procedure on the trellis.
-     */
-    private void forward(TrellisNode[][] trellis, double[] scaling) {
-        int n = trellis.length; // length of sequence
-
-        TrellisNode[] t0 = trellis[0];
-        for (int i = 0; i < numClasses; i++) {
-            TrellisNode t0i = t0[i];
-            TreePotentialFunction pi = potentials[i];
-            if (numFeatures <= 0) {
-                for (int k = t0i.age; k < pi.trees.size(); k++) {
-                    //t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.samples[0]);
-                }
-            } else {
-                for (int k = t0i.age; k < pi.trees.size(); k++) {
-                    //t0i.scores[0] += pi.eta * pi.trees.get(k).predict(t0i.sparseSamples[0]);
-                }                
-            }
-
-            t0i.expScores[0] = Math.exp(t0i.scores[0]);
-            t0i.alpha = t0i.expScores[0];
-            t0i.age = pi.trees.size();
-        }
-
-        // Normalize alpha values since they increase quickly
-        scaling[0] = 0.0;
-        for (int i = 0; i < numClasses; i++) {
-            scaling[0] += t0[i].alpha;
-        }
-        for (int i = 0; i < numClasses; i++) {
-            t0[i].alpha /= scaling[0];
-        }
-
-        for (int t = 1; t < n; t++) {
-            TrellisNode[] tt = trellis[t];
-            TrellisNode[] tt1 = trellis[t-1];
-            for (int i = 0; i < numClasses; i++) {
-                TrellisNode tti = tt[i];
-                TreePotentialFunction pi = potentials[i];
-                tti.alpha = 0.0;
-                for (int j = 0; j < numClasses; j++) {
-                    if (numFeatures <= 0) {
-                        for (int k = tti.age; k < pi.trees.size(); k++) {
-                            //tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.samples[j]);
-                        }
-                    } else {
-                        for (int k = tti.age; k < pi.trees.size(); k++) {
-                            //tti.scores[j] += pi.eta * pi.trees.get(k).predict(tti.sparseSamples[j]);
-                        }
-                    }
-
-                    tti.expScores[j] = Math.exp(tti.scores[j]);
-                    tti.alpha += tti.expScores[j] * tt1[j].alpha;
-                }
-                tti.age = pi.trees.size();
-            }
-
-            // Normalize alpha values since they increase quickly
-            scaling[t] = 0.0;
-            for (int i = 0; i < numClasses; i++) {
-                scaling[t] += tt[i].alpha;
-            }
-            for (int i = 0; i < numClasses; i++) {
-                tt[i].alpha /= scaling[t];
-            }
-        }
-    }
-
-    /**
-     * Performs backward procedure on the trellis.
-     */
-    private void backward(TrellisNode[][] trellis) {
-        int n = trellis.length - 1;
-        TrellisNode[] tn = trellis[n];
-        for (int i = 0; i < numClasses; i++) {
-            tn[i].beta = 1.0;
-        }
-
-        for (int t = n; t-- > 0;) {
-            TrellisNode[] tt = trellis[t];
-            TrellisNode[] tt1 = trellis[t+1];
-            for (int i = 0; i < numClasses; i++) {
-                TrellisNode tti = tt[i];
-                tti.beta = 0.0;
-                for (int j = 0; j < numClasses; j++) {
-                    tti.beta += tt1[j].expScores[i] * tt1[j].beta;
-                }
-            }
-
-            // Normalize beta values since they increase quickly
-            double sum = 0.0;
-            for (int i = 0; i < numClasses; i++) {
-                sum += tt[i].beta;
-            }
-            for (int i = 0; i < numClasses; i++) {
-                tt[i].beta /= sum;
-            }
-        }
-    }
-
-    /**
-     * Create a trellis of a given sequence for forward-backward algorithm.
-     *
-     * @param sequence the feature sequence.
-     */
-    private TrellisNode[][] getTrellis(double[][] sequence) {
-        TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];
-
-        TrellisNode[] t0 = trellis[0];
-        for (int i = 0; i < numClasses; i++) {
-            t0[i] = new TrellisNode(false);
-            t0[i].samples[0] = featureset(sequence[0], numClasses);
-        }
-
-        for (int t = 1; t < sequence.length; t++) {
-            trellis[t][0] = new TrellisNode(false);
-            TrellisNode tt0 = trellis[t][0];
-            for (int j = 0; j < numClasses; j++) {
-                tt0.samples[j] = featureset(sequence[t], j);
-            }
-
-            for (int i = 1; i < numClasses; i++) {
-                trellis[t][i] = new TrellisNode(false);
-                TrellisNode tti = trellis[t][i];
-                System.arraycopy(tt0.samples, 0, tti.samples, 0, numClasses);
-            }
-        }
-
-        return trellis;
-    }
-
-    /**
-     * Create a trellis of a given sequence for forward-backward algorithm.
-     *
-     * @param sequence the feature sequence.
-     */
-    private TrellisNode[][] getTrellis(int[][] sequence) {
-        TrellisNode[][] trellis = new TrellisNode[sequence.length][numClasses];
-
-        TrellisNode[] t0 = trellis[0];
-        for (int i = 0; i < numClasses; i++) {
-            t0[i] = new TrellisNode(true);
-            t0[i].sparseSamples[0] = featureset(sequence[0], numClasses);
-        }
-
-        for (int t = 1; t < sequence.length; t++) {
-            trellis[t][0] = new TrellisNode(true);
-            TrellisNode tt0 = trellis[t][0];
-            for (int j = 0; j < numClasses; j++) {
-                tt0.sparseSamples[j] = featureset(sequence[t], j);
-            }
-
-            for (int i = 1; i < numClasses; i++) {
-                trellis[t][i] = new TrellisNode(true);
-                TrellisNode tti = trellis[t][i];
-                System.arraycopy(tt0.sparseSamples, 0, tti.sparseSamples, 0, numClasses);
-            }
-        }
-
-        return trellis;
-    }
-
-    /**
-     * Set training targets based on results of forward-backward
-     */
-    private void setTargets(TrellisNode[][] trellis, double[] scaling, int[] label) {
-        TrellisNode[] t0 = trellis[0];
-
-        // Finding the normalizer for our first 'column' in the matrix
-        double normalizer = 0.0;
-        for (int i = 0; i < numClasses; i++) {
-            normalizer += t0[i].expScores[0] * t0[i].beta;
-        }
-
-        for (int i = 0; i < numClasses; i++) {
-            if (label[0] == i) {
-                t0[i].target[0] = 1 - t0[i].expScores[0] * t0[i].beta / normalizer;
-            } else {
-                t0[i].target[0] = -t0[i].expScores[0] * t0[i].beta / normalizer;
-            }
-        }
-
-        for (int t = 1; t < label.length; t++) {
-            normalizer = 0.0;
-            TrellisNode[] tt = trellis[t];
-            TrellisNode[] tt1 = trellis[t-1];
-            for (int i = 0; i < numClasses; i++) {
-                normalizer += tt[i].alpha * tt[i].beta;
-            }
-            normalizer *= scaling[t];
-
-            for (int i = 0; i < numClasses; i++) {
-                TrellisNode tti = tt[i];
-                for (int j = 0; j < numClasses; j++) {
-                    if (label[t] == i && label[t - 1] == j) {
-                        tti.target[j] = 1 - tti.expScores[j] * tt1[j].alpha * tti.beta / normalizer;
-                    } else {
-                        tti.target[j] = -tti.expScores[j] * tt1[j].alpha * tti.beta / normalizer;
-                    }
-                }
-            }
-        }
+        };
     }
 }

@@ -257,7 +257,7 @@ public class HMM implements Serializable {
      */
     public int[] predict(int[] o) {
         int N = a.nrows();
-        // The porbability of the most probable path.
+        // The probability of the most probable path.
         double[][] trellis = new double[o.length][N];
         // Backtrace.
         int[][] psy = new int[o.length][N];

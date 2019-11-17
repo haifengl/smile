@@ -24,8 +24,13 @@ package smile.data;
 public class Protein {
 
     public static int p;
+    public static int k;
+    public static Tuple[][] seq;
+    public static int[][] label;
     public static int[][] x;
     public static int[] y;
+    public static Tuple[][] testSeq;
+    public static int[][] testLabel;
     public static int[][] testx;
     public static int[] testy;
 
@@ -34,10 +39,15 @@ public class Protein {
             Sequence.Dataset train = Sequence.read("sequence/sparse.protein.11.train");
             Sequence.Dataset test = Sequence.read("sequence/sparse.protein.11.test");
             p = train.p;
+            k = train.k;
             x = train.x;
             y = train.y;
+            seq = train.seq;
+            label = train.label;
             testx = test.x;
             testy = test.y;
+            testSeq = test.seq;
+            testLabel = test.label;
         } catch (Exception ex) {
             System.err.println("Failed to load 'protein': " + ex);
             System.exit(-1);
