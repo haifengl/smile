@@ -17,8 +17,9 @@
 
 package smile.math
 
+import scala.reflect.ClassTag
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.matrix.{Matrix, DenseMatrix}
+import smile.math.matrix.{DenseMatrix, Matrix}
 
 /**
  * Vector Expression.
@@ -900,3 +901,143 @@ case class TanhMatrix(A: MatrixExpression) extends MatrixExpression {
   }
 }
 
+private[math] abstract class PimpedArrayLike[T: ClassTag] {
+
+  val a: Array[T]
+
+  /** Get an element */
+  def apply(rows: Int*): Array[T] = rows.map(row => a(row)).toArray
+
+  /** Get a range of array */
+  def apply(rows: Range): Array[T] = rows.map(row => a(row)).toArray
+
+  /** Sampling the data.
+    * @param n the number of samples.
+    * @return samples
+    */
+  def sample(n: Int): Array[T] = {
+    val perm = a.indices.toArray
+    MathEx.permutate(perm)
+    (0 until n).map(i => a(perm(i))).toArray
+  }
+
+  /** Sampling the data.
+    * @param f the fraction of samples.
+    * @return samples
+    */
+  def sample(f: Double): Array[T] = sample(Math.round(a.length * f).toInt)
+}
+
+private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: ClassTag[T]) extends PimpedArrayLike[T]
+
+private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
+
+  def unary_~ = Matrix.of(a)
+
+  def nrows: Int = a.length
+
+  def ncols: Int = a(0).length
+
+  /** Returns a submatrix. */
+  def apply(rows: Range, cols: Range): Array[Array[Double]] = rows.map { row =>
+    val x = a(row)
+    cols.map { col => x(col) }.toArray
+  }.toArray
+
+  /** Returns a column. */
+  def $(col: Int): Array[Double] = a.map(_(col))
+
+  /** Returns multiple rows. */
+  def row(i: Int*): Array[Array[Double]] = apply(i: _*)
+
+  /** Returns a range of rows. */
+  def row(i: Range): Array[Array[Double]] = apply(i)
+
+  /** Returns multiple columns. */
+  def col(j: Int*): Array[Array[Double]] = a.map { x =>
+    j.map { col => x(col) }.toArray
+  }
+
+  /** Returns a range of columns. */
+  def col(j: Range): Array[Array[Double]] = a.map { x =>
+    j.map { col => x(col) }.toArray
+  }
+}
+
+private[math] case class PimpedDouble(a: Double) {
+  def + (b: Array[Double]) = ValueAddVector(a, b)
+  def - (b: Array[Double]) = ValueSubVector(a, b)
+  def * (b: Array[Double]) = ValueMulVector(a, b)
+  def / (b: Array[Double]) = ValueDivVector(a, b)
+
+  def + (b: VectorExpression) = ValueAddVector(a, b)
+  def - (b: VectorExpression) = ValueSubVector(a, b)
+  def * (b: VectorExpression) = ValueMulVector(a, b)
+  def / (b: VectorExpression) = ValueDivVector(a, b)
+
+  def + (b: DenseMatrix) = ValueAddMatrix(a, b)
+  def - (b: DenseMatrix) = ValueSubMatrix(a, b)
+  def * (b: DenseMatrix) = ValueMulMatrix(a, b)
+  def / (b: DenseMatrix) = ValueDivMatrix(a, b)
+
+  def + (b: MatrixExpression) = ValueAddMatrix(a, b)
+  def - (b: MatrixExpression) = ValueSubMatrix(a, b)
+  def * (b: MatrixExpression) = ValueMulMatrix(a, b)
+  def / (b: MatrixExpression) = ValueDivMatrix(a, b)
+}
+
+private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
+  def unary_~ = Matrix.of(a)
+
+  def += (b: Double): Array[Double] = a.mapInPlace(_ + b)
+  def -= (b: Double): Array[Double] = a.mapInPlace(_ - b)
+  def *= (b: Double): Array[Double] = a.mapInPlace(_ * b)
+  def /= (b: Double): Array[Double] = a.mapInPlace(_ / b)
+  def ^= (b: Double): Array[Double] = a.mapInPlace(math.pow(_, b))
+
+  def += (b: VectorExpression): Array[Double] = {
+    for (i <- 0 until a.length) a(i) += b(i)
+    a
+  }
+  def -= (b: VectorExpression): Array[Double] = {
+    for (i <- 0 until a.length) a(i) -= b(i)
+    a
+  }
+  def *= (b: VectorExpression): Array[Double] = {
+    for (i <- 0 until a.length) a(i) *= b(i)
+    a
+  }
+  def /= (b: VectorExpression): Array[Double] = {
+    for (i <- 0 until a.length) a(i) /= b(i)
+    a
+  }
+}
+
+private[math] class PimpedMatrix(a: DenseMatrix) {
+  def += (i: Int, j: Int, x: Double): Double = a.add(i, j, x)
+  def -= (i: Int, j: Int, x: Double): Double = a.sub(i, j, x)
+  def *= (i: Int, j: Int, x: Double): Double = a.mul(i, j, x)
+  def /= (i: Int, j: Int, x: Double): Double = a.div(i, j, x)
+
+  def += (b: Double): DenseMatrix = a.add(b)
+  def -= (b: Double): DenseMatrix = a.sub(b)
+  def *= (b: Double): DenseMatrix = a.mul(b)
+  def /= (b: Double): DenseMatrix = a.div(b)
+
+  def += (b: DenseMatrix): DenseMatrix = a.add(b)
+  def -= (b: DenseMatrix): DenseMatrix = a.sub(b)
+  /** Element-wise multiplication */
+  def *= (b: DenseMatrix): DenseMatrix = a.mul(b)
+  /** Element-wise division */
+  def /= (b: DenseMatrix): DenseMatrix = a.div(b)
+
+  /** Solves A * x = b */
+  def \ (b: Array[Double]): Array[Double] = {
+    val x = b.clone()
+    if (a.nrows == a.ncols)
+      lu(a).solve(x)
+    else
+      qr(a).solve(b, x)
+    x
+  }
+}
