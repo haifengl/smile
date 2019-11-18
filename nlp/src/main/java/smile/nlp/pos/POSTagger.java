@@ -30,5 +30,5 @@ public interface POSTagger {
     /**
      * Tags the sentence in the form of a sequence of words
      */
-    public PennTreebankPOS[] tag(String[] sentence);
+    PennTreebankPOS[] tag(String[] sentence);
 }

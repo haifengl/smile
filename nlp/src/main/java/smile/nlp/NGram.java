@@ -35,9 +35,9 @@ public class NGram implements Comparable<NGram> {
     public final String[] words;
 
     /**
-     * Frequency of n-gram in the corpus.
+     * The frequency of n-gram in the corpus.
      */
-    public int freq;
+    public final int count;
 
     /**
      * Constructor.
@@ -50,11 +50,11 @@ public class NGram implements Comparable<NGram> {
     /**
      * Constructor.
      * @param words the n-gram word sequence.
-     * @param freq the frequency of n-gram in the corpus.
+     * @param count the frequency of n-gram in the corpus.
      */
-    public NGram(String[] words, int freq) {
+    public NGram(String[] words, int count) {
         this.words = words;
-        this.freq = freq;
+        this.count = count;
     }
 
     @Override
@@ -83,6 +83,6 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public int compareTo(NGram o) {
-        return Integer.compare(freq, o.freq);
+        return Integer.compare(count, o.count);
     }
 }

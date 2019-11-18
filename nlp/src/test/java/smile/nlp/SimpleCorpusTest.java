@@ -131,13 +131,16 @@ public class SimpleCorpusTest {
      * Test of search method, of class SimpleCorpus.
      */
     @Test
-    public void testSearch() {
+    public void testSearchRomantic() {
         System.out.println("search 'romantic'");
         Iterator<Relevance> hits = corpus.search(new BM25(), "romantic");
+        int n = 0;
         while (hits.hasNext()) {
+            n++;
             Relevance hit = hits.next();
             System.out.println(hit.text + "\t" + hit.score);
         }
+        assertEquals(27, n);
     }
 
     /**
@@ -155,21 +158,24 @@ public class SimpleCorpusTest {
      * Test of search method, of class SimpleCorpus.
      */
     @Test
-    public void testSearch2() {
+    public void testSearchRomanticComedy() {
         System.out.println("search 'romantic comedy'");
         String[] terms = {"romantic", "comedy"};
         Iterator<Relevance> hits = corpus.search(new BM25(), terms);
+        int n = 0;
         while (hits.hasNext()) {
+            n++;
             Relevance hit = hits.next();
             System.out.println(hit.text + "\t" + hit.score);
         }
+        assertEquals(78, n);
     }
 
     /**
      * Test of search method, of class SimpleCorpus.
      */
     @Test
-    public void testSearch2WithNoHits() {
+    public void testSearchNoHits() {
         System.out.println("search 'no hits'");
         String[] terms = {"thisisnotaword"};
         Iterator<Relevance> hits = corpus.search(new BM25(), terms);
