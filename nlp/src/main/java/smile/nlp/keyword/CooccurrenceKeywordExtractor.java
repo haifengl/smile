@@ -149,7 +149,7 @@ public class CooccurrenceKeywordExtractor {
                     //double mutual = Math.log((double) ntotal * table[i][j] / (freqTerms[i].freq * freqTerms[j].freq));
                     // Here we just use the (squared) geometric average of co-occurrence probability
                     // It works well to clustering things like "digital computer" and "computer" in practice.
-                    double mutual = (double) table[i][j] * table[i][j] / (freqTerms[i].freq * freqTerms[j].freq);
+                    double mutual = (double) table[i][j] * table[i][j] / (freqTerms[i].count * freqTerms[j].count);
                     if (mutual >= 0.25) {
                         cluster[j] = cluster[i];
                     } /*else {

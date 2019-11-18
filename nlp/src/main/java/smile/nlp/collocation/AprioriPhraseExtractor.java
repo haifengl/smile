@@ -29,6 +29,7 @@ import java.util.Set;
 import smile.nlp.NGram;
 import smile.nlp.dictionary.EnglishPunctuations;
 import smile.nlp.dictionary.EnglishStopWords;
+import smile.util.MutableInt;
 
 /**
  * An Apiori-like algorithm to extract n-gram phrases. The algorithm was
@@ -54,7 +55,7 @@ public class AprioriPhraseExtractor {
         ArrayList<Set<NGram>> features = new ArrayList<>(maxNGramSize + 1);
         features.add(new HashSet<>());
         for (int n = 1; n <= maxNGramSize; n++) {
-            Map<NGram, Integer> candidates = new HashMap<>();
+            Map<NGram, MutableInt> candidates = new HashMap<>();
             Set<NGram> feature = new HashSet<>();
             features.add(feature);
             Set<NGram> feature_1 = features.get(n - 1);
@@ -73,24 +74,25 @@ public class AprioriPhraseExtractor {
                     }
                     
                     if (add) {
-                        if (candidates.containsKey(ngram)) {
-                            candidates.put(ngram, candidates.get(ngram) + 1);
+                        MutableInt count = candidates.get(ngram);
+                        if (count == null) {
+                            candidates.put(ngram, new MutableInt(1));
                         } else {
-                            candidates.put(ngram, 1);
+                            count.increment();
                         }
                     }
                 }
             }
             
-            for (Map.Entry<NGram, Integer> entry : candidates.entrySet()) {
-                if (entry.getValue() >= minFrequency) {
+            for (Map.Entry<NGram, MutableInt> entry : candidates.entrySet()) {
+                MutableInt count = entry.getValue();
+                if (count.value >= minFrequency) {
                     NGram ngram = entry.getKey();
                     if (ngram.words.length == 1 && EnglishPunctuations.getInstance().contains(ngram.words[0])) {
                         continue;
                     }
                     
-                    ngram.freq = entry.getValue();
-                    feature.add(ngram);
+                    feature.add(new NGram(ngram.words, count.value));
                 }
             }
         }

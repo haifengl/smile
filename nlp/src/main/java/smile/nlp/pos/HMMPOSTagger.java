@@ -253,9 +253,9 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     }
 
     /**
-     * Learns an HMM POS tagger by maximum likelihood estimation.
+     * Fits an HMM POS tagger by maximum likelihood estimation.
      */
-    public static HMMPOSTagger learn(String[][] sentences, PennTreebankPOS[][] labels) {
+    public static HMMPOSTagger fit(String[][] sentences, PennTreebankPOS[][] labels) {
         int index = 1;
         int suffixIndex = 0;
         Map<String, Integer> symbol = new HashMap<>();
@@ -324,7 +324,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
      * Load training data from a corpora.
      * @param dir a file object defining the top directory
      */
-    public static void load(String dir, List<String[]> sentences, List<PennTreebankPOS[]> labels) {
+    public static void read(String dir, List<String[]> sentences, List<PennTreebankPOS[]> labels) {
         List<File> files = new ArrayList<>();
         walkin(new File(dir), files);
 
@@ -403,13 +403,13 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         List<String[]> sentences = new ArrayList<>();
         List<PennTreebankPOS[]> labels = new ArrayList<>();
         
-        load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\WSJ", sentences, labels);        
-        load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\BROWN", sentences, labels);
+        read("PennTreebank/PennTreebank2/TAGGED/POS/WSJ", sentences, labels);
+        read("PennTreebank/PennTreebank2/TAGGED/POS/BROWN", sentences, labels);
         
         String[][] x = sentences.toArray(new String[sentences.size()][]);
         PennTreebankPOS[][] y = labels.toArray(new PennTreebankPOS[labels.size()][]);
         
-        HMMPOSTagger tagger = HMMPOSTagger.learn(x, y);
+        HMMPOSTagger tagger = HMMPOSTagger.fit(x, y);
 
         try {
             FileOutputStream fos = new FileOutputStream("hmmpostagger.model");

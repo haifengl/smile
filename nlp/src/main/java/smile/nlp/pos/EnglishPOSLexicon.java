@@ -28,12 +28,12 @@ import java.util.HashMap;
  * @author Haifeng Li
  */
 public class EnglishPOSLexicon {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishPOSLexicon.class);
+
     /** Utility classes should not have public constructors. */
     private EnglishPOSLexicon() {
 
     }
-
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishPOSLexicon.class);
 
     /**
      * A list of English words with POS tags.
@@ -77,18 +77,15 @@ public class EnglishPOSLexicon {
      * character 0xBE replaced with a '~'.
      */
     static {
-
         try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishPOSLexicon.class.getResourceAsStream("/smile/nlp/pos/part-of-speech_en.txt")))) {
-
-            String line = null;
-            while ((line = input.readLine()) != null) {
+            input.lines().forEach(line -> {
                 String[] pos = line.trim().split("\t");
                 if (pos.length == 2) {
                     int len = pos[1].length();
                     if (pos[1].indexOf('|') != -1) {
                         len -= 1;
                     }
-                    
+
                     PennTreebankPOS[] tag = new PennTreebankPOS[len];
 
                     for (int i = 0, k = 0; i < pos[1].length(); i++) {
@@ -134,10 +131,10 @@ public class EnglishPOSLexicon {
                                 break;
                         }
                     }
-                    
+
                     dict.put(pos[0], tag);
                 }
-            }
+            });
         } catch (IOException ex) {
             logger.error("Failed to load /smile/nlp/pos/part-of-speech_en.txt", ex);
         }

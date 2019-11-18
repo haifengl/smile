@@ -265,7 +265,7 @@ public class PennTreebankTokenizerTest {
         SimpleTokenizer instance = new SimpleTokenizer();
         String[] result = instance.split(text);
 
-        //assertEquals(expResult.length, result.length);
+        assertEquals(expResult.length, result.length);
         for (int i = 0; i < result.length; i++) {
             assertEquals(expResult[i], result[i]);
         }

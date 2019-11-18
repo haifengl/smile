@@ -30,6 +30,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -46,7 +47,7 @@ public class HMMPOSTaggerTest {
      * Load training data from a corpora.
      * @param dir a file object defining the top directory
      */
-    public void load(String dir) {
+    public void read(String dir) {
         List<File> files = new ArrayList<>();
         walkin(new File(dir), files);
 
@@ -137,7 +138,7 @@ public class HMMPOSTaggerTest {
     @Test
     public void testWSJ() {
         System.out.println("WSJ");
-        load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\WSJ");
+        read("PennTreebank/PennTreebank2/TAGGED/POS/WSJ");
         
         String[][] x = sentences.toArray(new String[sentences.size()][]);
         PennTreebankPOS[][] y = labels.toArray(new PennTreebankPOS[labels.size()][]);
@@ -155,7 +156,7 @@ public class HMMPOSTaggerTest {
             String[][] testx = MathEx.slice(x, cv.test[i]);
             PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
 
-            HMMPOSTagger tagger = HMMPOSTagger.learn(trainx, trainy);
+            HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
             for (int j = 0; j < testx.length; j++) {
                 PennTreebankPOS[] label = tagger.tag(testx[j]);
@@ -169,12 +170,13 @@ public class HMMPOSTaggerTest {
         }
 
         System.out.format("Error rate = %.2f as %d of %d\n", 100.0 * error / total, error, total);
+        assertEquals(51325, error);
     }
 
     @Test
     public void testBrown() {
         System.out.println("BROWN");
-        load("D:\\sourceforge\\corpora\\PennTreebank\\PennTreebank2\\TAGGED\\POS\\BROWN");
+        read("PennTreebank/PennTreebank2/TAGGED/POS/BROWN");
         
         String[][] x = sentences.toArray(new String[sentences.size()][]);
         PennTreebankPOS[][] y = labels.toArray(new PennTreebankPOS[labels.size()][]);
@@ -192,7 +194,7 @@ public class HMMPOSTaggerTest {
             String[][] testx = MathEx.slice(x, cv.test[i]);
             PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
 
-            HMMPOSTagger tagger = HMMPOSTagger.learn(trainx, trainy);
+            HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
             for (int j = 0; j < testx.length; j++) {
                 PennTreebankPOS[] label = tagger.tag(testx[j]);
@@ -206,5 +208,6 @@ public class HMMPOSTaggerTest {
         }
 
         System.out.format("Error rate = %.2f as %d of %d\n", 100.0 * error / total, error, total);
+        assertEquals(55649, error);
     }
 }
