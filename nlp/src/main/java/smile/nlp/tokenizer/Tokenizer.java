@@ -33,7 +33,7 @@ package smile.nlp.tokenizer;
  */
 public interface Tokenizer {
     /**
-     * Divide the given string into a list of substrings.
+     * Splits the string into a list of tokens.
      */
-    public String[] split(String text);
+    String[] split(String text);
 }

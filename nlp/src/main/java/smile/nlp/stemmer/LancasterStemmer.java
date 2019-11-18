@@ -52,24 +52,19 @@ public class LancasterStemmer implements Stemmer {
      */
     private boolean stripPrefix;
 
-    private void readRules(InputStream is) {
+    /** Loads the rules. */
+    private void readRules(InputStream is) throws IOException {
         /**
          * Load rules from Lancaster_rules.txt
          */
         try (BufferedReader input = new BufferedReader(new InputStreamReader(is))) {
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                String rule = line.trim();
-                if (!rule.isEmpty()) {
-                    int j = rule.indexOf(' ');
-                    if (j != -1) {
-                        rule = rule.substring(0, j);
-                    }
-                    rules.add(rule);
+            input.lines().map(line -> line.trim()).filter(line -> !line.isEmpty()).forEach(rule -> {
+                int j = rule.indexOf(' ');
+                if (j != -1) {
+                    rule = rule.substring(0, j);
                 }
-            }
-        } catch (IOException ex) {
-            logger.error("Failed to load /smile/nlp/stemmer/Lancaster_rules.txt", ex);
+                rules.add(rule);
+            });
         }
 
         // Now assign the number of the first rule that starts with each letter
@@ -99,7 +94,11 @@ public class LancasterStemmer implements Stemmer {
      */
     public LancasterStemmer(boolean stripPrefix) {
         this.stripPrefix = stripPrefix;
-        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"));
+        try {
+            readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"));
+        } catch (IOException ex) {
+            logger.error("Failed to load /smile/nlp/stemmer/Lancaster_rules.txt", ex);
+        }
     }
 
 
@@ -107,7 +106,7 @@ public class LancasterStemmer implements Stemmer {
      * Constructor with customized rules. By default, the stemmer will not strip prefix from words.
      * @param customizedRules an input stream to read customized rules.
      */
-    public LancasterStemmer(InputStream customizedRules) {
+    public LancasterStemmer(InputStream customizedRules) throws IOException {
         this(customizedRules, false);
     }
 
@@ -118,7 +117,7 @@ public class LancasterStemmer implements Stemmer {
      * @param stripPrefix true if the stemmer will strip prefix such as kilo,
      * micro, milli, intra, ultra, mega, nano, pico, pseudo.
      */
-    public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) {
+    public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) throws IOException {
         this.stripPrefix = stripPrefix;
         readRules(customizedRules);
     }

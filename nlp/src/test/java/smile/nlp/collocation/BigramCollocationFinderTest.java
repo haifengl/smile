@@ -17,11 +17,7 @@
 
 package smile.nlp.collocation;
 
-import java.io.FileReader;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.util.UUID;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,14 +25,24 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.nlp.SimpleCorpus;
+import smile.nlp.Text;
 
 /**
  *
  * @author Haifeng Li
  */
 public class BigramCollocationFinderTest {
+    SimpleCorpus corpus = new SimpleCorpus();
 
     public BigramCollocationFinderTest() {
+        try {
+            smile.util.Paths.getTestDataLines("text/plot.tok.gt9.5000")
+                    .map(String::trim)
+                    .filter(line -> !line.isEmpty())
+                    .forEach(line -> corpus.add(new Text(line)));
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
     }
 
     @BeforeClass
@@ -61,21 +67,12 @@ public class BigramCollocationFinderTest {
     @Test
     public void testFind_Corpus_int() {
         System.out.println("find");
-        SimpleCorpus corpus = new SimpleCorpus();
-
-        try {
-            smile.util.Paths.getTestDataLines("text/quote.tok.gt9.5000")
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty())
-                    .forEach(line -> corpus.add(UUID.randomUUID().toString(), null, line));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         int k = 10;
         BigramCollocationFinder instance = new BigramCollocationFinder(5);
         BigramCollocation[] result = instance.find(corpus, k);
 
+        assertEquals(10, result.length);
         for (int i = 0; i < result.length; i++) {
             System.out.println(result[i]);
         }
@@ -87,22 +84,12 @@ public class BigramCollocationFinderTest {
     @Test
     public void testFind_Corpus_double() {
         System.out.println("find");
-        SimpleCorpus corpus = new SimpleCorpus();
-
-        try {
-            smile.util.Paths.getTestDataLines("text/quote.tok.gt9.5000")
-                    .map(String::trim)
-                    .filter(line -> !line.isEmpty())
-                    .forEach(line -> corpus.add(UUID.randomUUID().toString(), null, line));
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         double p = 0.0001;
         BigramCollocationFinder instance = new BigramCollocationFinder(5);
         BigramCollocation[] result = instance.find(corpus, p);
 
-        assertEquals(52, result.length);
+        assertEquals(63, result.length);
         for (int i = 0; i < result.length; i++) {
             System.out.println(result[i]);
         }

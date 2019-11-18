@@ -19,6 +19,8 @@ package smile.nlp;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import smile.util.MutableInt;
+import smile.util.Strings;
 
 /**
  * A list-of-words representation of documents.
@@ -38,7 +40,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * The term frequency.
      */
-    private HashMap<String, Integer> freq = new HashMap<>();
+    private HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * The maximum term frequency over all terms in the documents;
      */
@@ -55,17 +57,16 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
         this.words = words;
 
         for (String w : words) {
-            Integer f = freq.get(w);
-            if (f == null) {
-                f = 1;
+            MutableInt count = freq.get(w);
+            if (count == null) {
+                count = new MutableInt(1);
+                freq.put(w, count);
             } else {
-                f = f + 1;
+                count.increment();
             }
 
-            freq.put(w, f);
-
-            if (f > maxtf) {
-                maxtf = f;
+            if (count.value > maxtf) {
+                maxtf = count.value;
             }
         }
     }
@@ -87,13 +88,8 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     
     @Override
     public int tf(String term) {
-        Integer f = freq.get(term);
-        
-        if (f == null) {
-            return 0;
-        }
-        
-        return f;
+        MutableInt count = freq.get(term);
+        return count == null ? 0 : count.value;
     }
 
     @Override
@@ -123,14 +119,14 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
         if (anchor == null) {
             anchor = linkLabel;
         } else {
-            anchor = anchor + " " + linkLabel;
+            anchor = anchor + "\n" + linkLabel;
         }
         return this;
     }
     
     @Override
     public String toString() {
-        return String.format("Document[%s%s]", getID(), getTitle() == null ? "" : " -- "+ getTitle());
+        return String.format("Document[%s]", id, Strings.isNullOrEmpty(title) ? id : title);
     }
 
     @Override
@@ -144,11 +140,11 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
         }
 
         final SimpleText other = (SimpleText) obj;
-        return getID().equals(other.getID());
+        return id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-        return getID().hashCode();
+        return id.hashCode();
     }
 }

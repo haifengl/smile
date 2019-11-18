@@ -49,8 +49,18 @@ public class MutableInt {
         return ++value;
     }
 
+    /** Increment. */
+    public int increment(int x) {
+        return value += x;
+    }
+
     /** Decrement by one. */
     public int decrement() {
         return --value;
+    }
+
+    /** Decrement. */
+    public int decrement(int x) {
+        return value -= x;
     }
 }

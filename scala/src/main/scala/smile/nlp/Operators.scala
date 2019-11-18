@@ -33,10 +33,10 @@ trait Operators {
     *
     * @param text a set of text.
     */
-  def corpus(text: Seq[String]): SimpleCorpus = {
+  def corpus(text: scala.collection.Seq[String]): SimpleCorpus = {
     val corpus = new SimpleCorpus
-    text.zipWithIndex.foreach { case (text, i) =>
-      corpus.add(i.toString, "", text)
+    text.foreach { case text =>
+      corpus.add(new Text(text))
     }
     corpus
   }

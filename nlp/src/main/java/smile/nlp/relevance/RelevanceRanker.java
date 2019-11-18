@@ -34,7 +34,7 @@ public interface RelevanceRanker {
      * @param tf the term frequency in the document.
      * @param n the number of documents containing the given term in the corpus;
      */
-    public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n);
+    double rank(Corpus corpus, TextTerms doc, String term, int tf, int n);
 
     /**
      * Returns a relevance score between a set of terms and a document based on a corpus.
@@ -44,5 +44,5 @@ public interface RelevanceRanker {
      * @param tf the term frequencies in the document.
      * @param n the number of documents containing the given term in the corpus;
      */
-    public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n);
+    double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n);
 }

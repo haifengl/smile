@@ -33,5 +33,5 @@ public interface Normalizer {
     /**
      * Normalize the given string.
      */
-    public String normalize(String text);
+    String normalize(String text);
 }
