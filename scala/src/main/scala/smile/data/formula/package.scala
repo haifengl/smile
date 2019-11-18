@@ -20,6 +20,7 @@ package smile.data
 import scala.language.implicitConversions
 import smile.data.formula.Terms.$
 
+/** Formula DSL. */
 package object formula {
   implicit def buildFormula(x: FormulaBuilder) = x.toFormula
   implicit def buildFactorInteraction(x: FactorInteractionBuilder) = x.toFactorInteraction

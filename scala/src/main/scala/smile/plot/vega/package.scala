@@ -15,12 +15,12 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile
+package smile.plot
 
-/** Data visualization.
+/** Vega-lite based data visualization.
   *
   * @author Haifeng Li
   */
-package object plot extends Operators {
+package object vega {
 
 }

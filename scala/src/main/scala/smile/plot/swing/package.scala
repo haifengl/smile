@@ -29,11 +29,11 @@ import smile.math.matrix.SparseMatrix
 import smile.stat.distribution.{DiscreteDistribution, Distribution}
 import smile.projection.PCA
 
-/** Data visualization operators.
+/** Swing based data visualization.
   *
   * @author Haifeng Li
   */
-trait Operators {
+package object swing {
   /** Scatter plot.
     *
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
@@ -102,9 +102,9 @@ trait Operators {
     Window(canvas)
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data.
+  /** Plot a grid of scatter plots of for all attribute pairs in the data frame.
     *
-    * @param data an attribute frame.
+    * @param data a data frame.
     * @param legend the legend for all classes.
     * @return the window frame.
     */
@@ -130,8 +130,8 @@ trait Operators {
     frame
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
-    * integer.
+  /** Plot a grid of scatter plots of for all attribute pairs in the data frame
+    * of which the response variable is integer.
     *
     * @param data an attribute frame.
     * @param legend the legend for all classes.
@@ -162,8 +162,8 @@ trait Operators {
     frame
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the attribute data of which the response variable is
-    * integer.
+  /** Plot a grid of scatter plots of for all attribute pairs in the data frame
+    * of which the response variable is integer.
     *
     * @param data an attribute frame.
     * @param legend the legend for each class.

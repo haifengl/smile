@@ -15,31 +15,35 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
-package smile.plot
+package smile.plot.swing
 
 import java.awt.{GridLayout, Dimension}
 import java.awt.event.WindowEvent
 import javax.swing.{JFrame, JPanel, WindowConstants}
+import smile.plot.PlotCanvas
 
+/** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
+  /** Closes the window programmatically. */
   def close: Unit = {
     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
   }
 }
 
 object Window {
+  /** The number of created windows, as the default window title. */
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
 
+  /** Create a plot window frame. */
   def apply(canvas: PlotCanvas, title: String = ""): Window = {
     val jframe = frame(title)
     jframe.add(canvas)
 
-    java.awt.EventQueue.invokeLater(new Runnable() {
-      override def run(): Unit = {
+    java.awt.EventQueue.invokeLater(() => {
         jframe.toFront()
         jframe.repaint()
       }
-    })
+    )
 
     Window(jframe, canvas)
   }

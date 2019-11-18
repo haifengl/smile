@@ -17,7 +17,7 @@
  
 package smile.math
 
-/** Distance helper functions.
+/** Distance functions.
 	*
 	* @author Beck Gaël
 	*/
