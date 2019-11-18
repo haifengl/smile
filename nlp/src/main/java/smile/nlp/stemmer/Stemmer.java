@@ -28,5 +28,5 @@ public interface Stemmer {
     /**
      * Transforms a word into its root form.
      */
-    public String stem(String word);
+    String stem(String word);
 }

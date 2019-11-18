@@ -17,13 +17,9 @@
 
 package smile.nlp;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.UUID;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -42,11 +38,12 @@ public class SimpleCorpusTest {
 
     public SimpleCorpusTest() {
         try {
-            smile.util.Paths.getTestDataLines("text/quote.tok.gt9.5000")
+            smile.util.Paths.getTestDataLines("text/plot.tok.gt9.5000")
                     .map(String::trim)
                     .filter(line -> !line.isEmpty())
-                    .forEach(line -> corpus.add(UUID.randomUUID().toString(), null, line));
+                    .forEach(line -> corpus.add(new Text(line)));
         } catch (IOException ex) {
+            ex.printStackTrace();
         }
     }
 
@@ -72,7 +69,7 @@ public class SimpleCorpusTest {
     @Test
     public void testSize() {
         System.out.println("size");
-        assertEquals(51797, corpus.size());
+        assertEquals(58064, corpus.size());
     }
 
     /**
@@ -90,7 +87,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetNumTerms() {
         System.out.println("getNumTerms");
-        assertEquals(14335, corpus.getNumTerms());
+        assertEquals(15077, corpus.getNumTerms());
     }
 
     /**
@@ -99,7 +96,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetNumBigrams() {
         System.out.println("getNumBigrams");
-        assertEquals(17121, corpus.getNumBigrams());
+        assertEquals(18303, corpus.getNumBigrams());
     }
 
     /**
@@ -108,7 +105,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetAverageDocumentSize() {
         System.out.println("getAverageDocumentSize");
-        assertEquals(10, corpus.getAverageDocumentSize());
+        assertEquals(11, corpus.getAverageDocumentSize());
     }
 
     /**
@@ -117,7 +114,7 @@ public class SimpleCorpusTest {
     @Test
     public void testGetTermFrequency() {
         System.out.println("getTermFrequency");
-        assertEquals(50, corpus.getTermFrequency("romantic"));
+        assertEquals(27, corpus.getTermFrequency("romantic"));
     }
 
     /**
@@ -127,7 +124,7 @@ public class SimpleCorpusTest {
     public void testGetBigramFrequency() {
         System.out.println("getBigramFrequency");
         Bigram bigram = new Bigram("romantic", "comedy");
-        assertEquals(29, corpus.getBigramFrequency(bigram));
+        assertEquals(9, corpus.getBigramFrequency(bigram));
     }
 
     /**
@@ -139,7 +136,7 @@ public class SimpleCorpusTest {
         Iterator<Relevance> hits = corpus.search(new BM25(), "romantic");
         while (hits.hasNext()) {
             Relevance hit = hits.next();
-            System.out.println(hit.doc() + "\t" + hit.score());
+            System.out.println(hit.text + "\t" + hit.score);
         }
     }
 
@@ -164,7 +161,7 @@ public class SimpleCorpusTest {
         Iterator<Relevance> hits = corpus.search(new BM25(), terms);
         while (hits.hasNext()) {
             Relevance hit = hits.next();
-            System.out.println(hit.doc() + "\t" + hit.score());
+            System.out.println(hit.text + "\t" + hit.score);
         }
     }
 

@@ -55,7 +55,7 @@ public enum EnglishStopWords implements StopWords {
     /**
      * Constructor.
      */
-    private EnglishStopWords(String resource) {
+    EnglishStopWords(String resource) {
         dict = new HashSet<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {

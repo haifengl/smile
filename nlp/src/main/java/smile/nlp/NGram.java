@@ -18,6 +18,7 @@
 package smile.nlp;
 
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 /**
  * An n-gram is a contiguous sequence of n words from a given sequence of text.
@@ -58,13 +59,7 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append('(')
-          .append(Arrays.toString(words))
-          .append(", ")
-          .append(freq)
-          .append(')');
-        return sb.toString();
+        return Arrays.stream(words).collect(Collectors.joining(", ", "(", ")"));
     }
 
     @Override

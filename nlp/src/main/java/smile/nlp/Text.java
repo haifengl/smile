@@ -17,6 +17,8 @@
 
 package smile.nlp;
 
+import java.util.UUID;
+
 /**
  * A minimal interface of text in the corpus.
  * 
@@ -26,54 +28,30 @@ public class Text {
     /**
      * The id of document in the corpus.
      */
-    private String id;
+    public final String id;
     /**
      * The title of document;
      */
-    private String title;
+    public final String title;
     /**
      * The text body.
      */
-    private String body;
-    
+    public final String body;
+
+    /** Constructor. */
+    public Text(String body) {
+        this("", body);
+    }
+
+    /** Constructor. */
+    public Text(String title, String body) {
+        this(UUID.randomUUID().toString(), title, body);
+    }
+
+    /** Constructor. */
     public Text(String id, String title, String body) {
         this.id = id;
         this.title = title;
         this.body = body;
-    }
-    /**
-     * Returns the id of document in the corpus.
-     */
-    public String getID() {
-        return id;
-    }
-
-    public Text setID(String id) {
-        this.id = id;
-        return this;
-    }
-    
-    /**
-     * Returns the title of text.
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    public Text setTitle(String title) {
-        this.title = title;
-        return this;
-    }
-    
-    /**
-     * Returns the body of text.
-     */
-    public String getBody() {
-        return body;
-    }
-
-    public Text setBody(String body) {
-        this.body = body;
-        return this;
     }
 }

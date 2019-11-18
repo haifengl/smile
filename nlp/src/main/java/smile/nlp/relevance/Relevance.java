@@ -30,35 +30,21 @@ public class Relevance implements Comparable<Relevance> {
     /**
      * The document to rank.
      */
-    private Text doc;
+    public final Text text;
 
     /**
      * The relevance score.
      */
-    private double score;
+    public final double score;
 
     /**
      * Constructor.
-     * @param doc the document to rank.
+     * @param text the document to rank.
      * @param score the relevance score.
      */
-    public Relevance(Text doc, double score) {
-        this.doc = doc;
+    public Relevance(Text text, double score) {
+        this.text = text;
         this.score = score;
-    }
-
-    /**
-     * Returns the document to rank.
-     */
-    public Text doc() {
-        return doc;
-    }
-
-    /**
-     * Returns the relevance score.
-     */
-    public double score() {
-        return score;
     }
 
     @Override

@@ -194,7 +194,8 @@ public class PorterStemmer implements Stemmer {
         return true;
     }
 
-    private final boolean endWith(String s) {
+    /** Returns true if the buffer ends with the given string. */
+    private final boolean endsWith(String s) {
         int l = s.length();
         int o = k - l + 1;
         if (o < 0) {
@@ -261,9 +262,9 @@ public class PorterStemmer implements Stemmer {
      */
     private final void step1(boolean y) {
         if (b[k] == 's') {
-            if (endWith("sses")) {
+            if (endsWith("sses")) {
                 k -= 2;
-            } else if (endWith("ies")) {
+            } else if (endsWith("ies")) {
                 if (y && k-3 >= 0 && isConsonant(k-3)) {
                     setto("y");
                 } else {
@@ -273,19 +274,19 @@ public class PorterStemmer implements Stemmer {
                 k--;
             }
         }
-        if (endWith("eed")) {
+        if (endsWith("eed")) {
             if (m() > 0) {
                 k--;
             }
-        } else if ((endWith("ed") || endWith("ing")) && vowelinstem()) {
+        } else if ((endsWith("ed") || endsWith("ing")) && vowelinstem()) {
             k = j;
-            if (endWith("at")) {
+            if (endsWith("at")) {
                 setto("ate");
-            } else if (endWith("bl")) {
+            } else if (endsWith("bl")) {
                 setto("ble");
-            } else if (endWith("iz")) {
+            } else if (endsWith("iz")) {
                 setto("ize");
-            } else if (y && endWith("i") && k-1 >= 0 && isConsonant(k-1)) {
+            } else if (y && endsWith("i") && k-1 >= 0 && isConsonant(k-1)) {
                 setto("y");
             } else if (doublec(k)) {
                 k--;
@@ -305,7 +306,7 @@ public class PorterStemmer implements Stemmer {
      * step2() turns terminal y to i when there is another vowel in the stem.
      */
     private final void step2() {
-        if (endWith("y") && vowelinstem()) {
+        if (endsWith("y") && vowelinstem()) {
             b[k] = 'i';
         }
     }
@@ -322,101 +323,101 @@ public class PorterStemmer implements Stemmer {
 
         switch (b[k - 1]) {
             case 'a':
-                if (endWith("ational")) {
+                if (endsWith("ational")) {
                     r("ate");
                     break;
                 }
-                if (endWith("tional")) {
+                if (endsWith("tional")) {
                     r("tion");
                     break;
                 }
                 break;
             case 'c':
-                if (endWith("enci")) {
+                if (endsWith("enci")) {
                     r("ence");
                     break;
                 }
-                if (endWith("anci")) {
+                if (endsWith("anci")) {
                     r("ance");
                     break;
                 }
                 break;
             case 'e':
-                if (endWith("izer")) {
+                if (endsWith("izer")) {
                     r("ize");
                     break;
                 }
                 break;
             case 'l':
-                if (endWith("bli")) {
+                if (endsWith("bli")) {
                     r("ble");
                     break;
                 }
-                if (endWith("alli")) {
+                if (endsWith("alli")) {
                     r("al");
                     break;
                 }
-                if (endWith("entli")) {
+                if (endsWith("entli")) {
                     r("ent");
                     break;
                 }
-                if (endWith("eli")) {
+                if (endsWith("eli")) {
                     r("e");
                     break;
                 }
-                if (endWith("ousli")) {
+                if (endsWith("ousli")) {
                     r("ous");
                     break;
                 }
                 break;
             case 'o':
-                if (endWith("ization")) {
+                if (endsWith("ization")) {
                     r("ize");
                     break;
                 }
-                if (endWith("ation")) {
+                if (endsWith("ation")) {
                     r("ate");
                     break;
                 }
-                if (endWith("ator")) {
+                if (endsWith("ator")) {
                     r("ate");
                     break;
                 }
                 break;
             case 's':
-                if (endWith("alism")) {
+                if (endsWith("alism")) {
                     r("al");
                     break;
                 }
-                if (endWith("iveness")) {
+                if (endsWith("iveness")) {
                     r("ive");
                     break;
                 }
-                if (endWith("fulness")) {
+                if (endsWith("fulness")) {
                     r("ful");
                     break;
                 }
-                if (endWith("ousness")) {
+                if (endsWith("ousness")) {
                     r("ous");
                     break;
                 }
                 break;
             case 't':
-                if (endWith("aliti")) {
+                if (endsWith("aliti")) {
                     r("al");
                     break;
                 }
-                if (endWith("iviti")) {
+                if (endsWith("iviti")) {
                     r("ive");
                     break;
                 }
-                if (endWith("biliti")) {
+                if (endsWith("biliti")) {
                     r("ble");
                     break;
                 }
                 break;
             case 'g':
-                if (endWith("logi")) {
+                if (endsWith("logi")) {
                     r("log");
                     break;
                 }
@@ -429,37 +430,37 @@ public class PorterStemmer implements Stemmer {
     private final void step4() {
         switch (b[k]) {
             case 'e':
-                if (endWith("icate")) {
+                if (endsWith("icate")) {
                     r("ic");
                     break;
                 }
-                if (endWith("ative")) {
+                if (endsWith("ative")) {
                     r("");
                     break;
                 }
-                if (endWith("alize")) {
+                if (endsWith("alize")) {
                     r("al");
                     break;
                 }
                 break;
             case 'i':
-                if (endWith("iciti")) {
+                if (endsWith("iciti")) {
                     r("ic");
                     break;
                 }
                 break;
             case 'l':
-                if (endWith("ical")) {
+                if (endsWith("ical")) {
                     r("ic");
                     break;
                 }
-                if (endWith("ful")) {
+                if (endsWith("ful")) {
                     r("");
                     break;
                 }
                 break;
             case 's':
-                if (endWith("ness")) {
+                if (endsWith("ness")) {
                     r("");
                     break;
                 }
@@ -477,85 +478,85 @@ public class PorterStemmer implements Stemmer {
         
         switch (b[k - 1]) {
             case 'a':
-                if (endWith("al")) {
+                if (endsWith("al")) {
                     break;
                 }
                 return;
             case 'c':
-                if (endWith("ance")) {
+                if (endsWith("ance")) {
                     break;
                 }
-                if (endWith("ence")) {
+                if (endsWith("ence")) {
                     break;
                 }
                 return;
             case 'e':
-                if (endWith("er")) {
+                if (endsWith("er")) {
                     break;
                 }
                 return;
             case 'i':
-                if (endWith("ic")) {
+                if (endsWith("ic")) {
                     break;
                 }
                 return;
             case 'l':
-                if (endWith("able")) {
+                if (endsWith("able")) {
                     break;
                 }
-                if (endWith("ible")) {
+                if (endsWith("ible")) {
                     break;
                 }
                 return;
             case 'n':
-                if (endWith("ant")) {
+                if (endsWith("ant")) {
                     break;
                 }
-                if (endWith("ement")) {
+                if (endsWith("ement")) {
                     break;
                 }
-                if (endWith("ment")) {
+                if (endsWith("ment")) {
                     break;
                 }
                 /* element etc. not stripped before the m */
-                if (endWith("ent")) {
+                if (endsWith("ent")) {
                     break;
                 }
                 return;
             case 'o':
-                if (endWith("ion") && j >= 0 && (b[j] == 's' || b[j] == 't')) {
+                if (endsWith("ion") && j >= 0 && (b[j] == 's' || b[j] == 't')) {
                     break;
                 }
-                if (endWith("ou")) {
+                if (endsWith("ou")) {
                     break;
                 }
                 return;
             /* takes care of -ous */
             case 's':
-                if (endWith("ism")) {
+                if (endsWith("ism")) {
                     break;
                 }
                 return;
             case 't':
-                if (endWith("ate")) {
+                if (endsWith("ate")) {
                     break;
                 }
-                if (endWith("iti")) {
+                if (endsWith("iti")) {
                     break;
                 }
                 return;
             case 'u':
-                if (endWith("ous")) {
+                if (endsWith("ous")) {
                     break;
                 }
                 return;
             case 'v':
-                if (endWith("ive")) {
+                if (endsWith("ive")) {
                     break;
                 }
                 return;
             case 'z':
-                if (endWith("ize")) {
+                if (endsWith("ize")) {
                     break;
                 }
                 return;

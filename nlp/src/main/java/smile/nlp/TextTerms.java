@@ -17,32 +17,33 @@
 
 package smile.nlp;
 
+/** The terms in a text. */
 public interface TextTerms {
     
     /**
      * Returns the number of words.
      */
-    public int size();
+    int size();
 
     /**
      * Returns the iterator of the words of the document.
      * The stop words and punctuations may be removed.
      */
-    public Iterable<String> words();
+    Iterable<String> words();
 
     /**
      * Returns the iterator of unique words.
      */
-    public Iterable<String> unique();
+    Iterable<String> unique();
 
     /**
      * Returns the term frequency.
      */
-    public int tf(String term);
+    int tf(String term);
 
     /**
      * Returns the maximum term frequency over all terms in the document.
      */
-    public int maxtf();
+    int maxtf();
 
 }

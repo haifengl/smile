@@ -44,7 +44,7 @@ public enum EnglishDictionary implements Dictionary {
      * @param resource the file name of dictionary. The file should be in plain
      * text, in which each line is a word.
      */
-    private EnglishDictionary(String resource) {
+    EnglishDictionary(String resource) {
         dict = new HashSet<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {

@@ -35,9 +35,10 @@ import smile.nlp.tokenizer.SentenceSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
 import smile.nlp.tokenizer.SimpleTokenizer;
 import smile.nlp.tokenizer.Tokenizer;
+import smile.util.MutableInt;
 
 /**
- * A simple implementation of corpus in main memory for small datasets.
+ * An in-memory text corpus. Useful for text feature engineering.
  *
  * @author Haifeng Li
  */
@@ -54,11 +55,11 @@ public class SimpleCorpus implements Corpus {
     /**
      * Frequency of single tokens.
      */
-    private HashMap<String, Integer> freq = new HashMap<>();
+    private HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * Frequency of bigrams.
      */
-    private HashMap<Bigram, Integer> freq2 = new HashMap<>();
+    private HashMap<Bigram, MutableInt> freq2 = new HashMap<>();
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
@@ -106,10 +107,10 @@ public class SimpleCorpus implements Corpus {
     /**
      * Add a document to the corpus.
      */
-    public Text add(String id, String title, String body) {
+    public Text add(Text text) {
         ArrayList<String> bag = new ArrayList<>();
         
-        for (String sentence : splitter.split(body)) {
+        for (String sentence : splitter.split(text.body)) {
             String[] tokens = tokenizer.split(sentence);
             for (int i = 0; i < tokens.length; i++) {
                 tokens[i] = tokens[i].toLowerCase();
@@ -127,14 +128,12 @@ public class SimpleCorpus implements Corpus {
                     size++;
                     bag.add(w);
                     
-                    Integer f = freq.get(w);
-                    if (f == null) {
-                        f = 1;
+                    MutableInt count = freq.get(w);
+                    if (count == null) {
+                        freq.put(w, new MutableInt(1));
                     } else {
-                        f = f + 1;
+                        count.increment();
                     }
-
-                    freq.put(w, f);
                 }
             }
 
@@ -144,14 +143,12 @@ public class SimpleCorpus implements Corpus {
                 
                 if (freq.containsKey(w1) && freq.containsKey(w2)) {
                     Bigram bigram = new Bigram(w1, w2);
-                    Integer f = freq2.get(bigram);
-                    if (f == null) {
-                        f = 1;
+                    MutableInt count = freq2.get(bigram);
+                    if (count == null) {
+                        freq2.put(bigram, new MutableInt(1));
                     } else {
-                        f = f + 1;
+                        count.increment();
                     }
-
-                    freq2.put(bigram, f);
                 }
             }
         }
@@ -161,7 +158,7 @@ public class SimpleCorpus implements Corpus {
             words[i] = bag.get(i);
         }
 
-        SimpleText doc = new SimpleText(id, title, body, words);
+        SimpleText doc = new SimpleText(text.id, text.title, text.body, words);
         docs.add(doc);
 
         for (String term : doc.unique()) {
@@ -203,24 +200,14 @@ public class SimpleCorpus implements Corpus {
 
     @Override
     public int getTermFrequency(String term) {
-        Integer f = freq.get(term);
-
-        if (f == null) {
-            return 0;
-        }
-
-        return f;
+        MutableInt count = freq.get(term);
+        return count == null ? 0 : count.value;
     }
 
     @Override
     public int getBigramFrequency(Bigram bigram) {
-        Integer f = freq2.get(bigram);
-
-        if (f == null) {
-            return 0;
-        }
-
-        return f;
+        MutableInt count = freq2.get(bigram);
+        return count == null ? 0 : count.value;
     }
 
     @Override

@@ -20,8 +20,10 @@ package smile.nlp.tokenizer;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A concise dictionary of common abbreviations (e.g. Mr., Mrs., etc.) in English.
@@ -29,51 +31,40 @@ import java.util.Iterator;
  *
  * @author Haifeng Li
  */
-class EnglishAbbreviations {
-    /** Utility classes should not have public constructors. */
-    private EnglishAbbreviations() {
-
-    }
-
+interface EnglishAbbreviations {
     /**
      * A list of abbreviations.
      */
-    private static final HashSet<String> DICTIONARY;
+    Set<String> dictionary = dictionary();
 
-    static {
-        DICTIONARY = new HashSet<>();
-
+    static Set<String> dictionary() {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt")))) {
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    DICTIONARY.add(line);
-                }
-            }
+            return input.lines().map(line -> line.trim()).filter(line -> !line.isEmpty()).collect(Collectors.toSet());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        return Collections.emptySet();
     }
 
     /**
      * Returns true if this abbreviation dictionary contains the specified element.
      */
-    public static boolean contains(String s) {
-        return DICTIONARY.contains(s);
+    static boolean contains(String s) {
+        return dictionary.contains(s);
     }
 
     /**
      * Returns the number of elements in this abbreviation dictionary.
      */
-    public static int size() {
-        return DICTIONARY.size();
+    static int size() {
+        return dictionary.size();
     }
 
     /**
      * Returns an iterator over the elements in this abbreviation dictionary.
      */
-    public static Iterator<String> iterator() {
-        return DICTIONARY.iterator();
+    static Iterator<String> iterator() {
+        return dictionary.iterator();
     }
 }

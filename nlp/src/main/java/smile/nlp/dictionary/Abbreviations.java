@@ -28,11 +28,11 @@ public interface Abbreviations extends Dictionary {
      * Returns the full word for a given abbreviation. If the abbreviation
      * doesn't exist in the dictionary return null.
      */
-    public String getFull(String abbr);
+    String getFull(String abbr);
 
     /**
      * Returns the abbreviation for a word. If the word doesn't exist in the
      * dictionary return null.
      */
-    public String getAbbreviation(String full);
+    String getAbbreviation(String full);
 }

@@ -47,6 +47,7 @@ public class Trie<K, V> {
      */
     private int size;
 
+    /** The nodes in the trie. */
     public class Node {
 
         private K key;

@@ -134,9 +134,6 @@ public class HMMPOSTaggerTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class HMMPOSTagger.
-     */
     @Test
     public void testWSJ() {
         System.out.println("WSJ");
@@ -174,9 +171,6 @@ public class HMMPOSTaggerTest {
         System.out.format("Error rate = %.2f as %d of %d\n", 100.0 * error / total, error, total);
     }
 
-    /**
-     * Test of learn method, of class HMMPOSTagger.
-     */
     @Test
     public void testBrown() {
         System.out.println("BROWN");

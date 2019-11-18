@@ -31,16 +31,16 @@ public interface AnchorText {
      * clickable text in a hyperlink. The anchor text is all the
      * anchor text in the corpus pointing to this text.
      */
-    public String getAnchor();    
+    String getAnchor();
     
     /**
      * Sets the anchor text. Note that anchor is all link labels in the corpus
      * pointing to this text. So addAnchor is more appropriate in most cases.
      */
-    public AnchorText setAnchor(String anchor);
+    AnchorText setAnchor(String anchor);
     
     /**
      * Add a link label to the anchor text.
      */
-    public AnchorText addAnchor(String linkLabel);
+    AnchorText addAnchor(String linkLabel);
 }

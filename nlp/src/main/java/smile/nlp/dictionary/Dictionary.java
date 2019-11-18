@@ -29,15 +29,15 @@ public interface Dictionary {
     /**
      * Returns true if this dictionary contains the specified word.
      */
-    public boolean contains(String word);
+    boolean contains(String word);
 
     /**
      * Returns the number of elements in this dictionary.
      */
-    public int size();
+    int size();
 
     /**
      * Returns an iterator over the elements in this dictionary.
      */
-    public Iterator<String> iterator();
+    Iterator<String> iterator();
 }
