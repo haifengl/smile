@@ -227,40 +227,38 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param k the number of classes.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, int k) {
-        return fit(sequences, labels, k, new Properties());
+    public static CRF fit(Tuple[][] sequences, int[][] labels) {
+        return fit(sequences, labels, new Properties());
     }
 
     /**
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param k the number of classes.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, int k, Properties prop) {
+    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
         int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
         double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
-        return fit(sequences, labels, k, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+        return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
     }
 
     /**
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param k the number of classes.
-     * @param ntrees    the number of iterations (trees).
+     * @param ntrees the number of trees/iterations.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, int k, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+    public static CRF fit(Tuple[][] sequences, int[][] labels, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        int k = MathEx.max(labels) + 1;
         double[][] scaling = new double[sequences.length][];
         Trellis[] trellis = new Trellis[sequences.length];
         for (int i = 0; i < sequences.length; i++) {

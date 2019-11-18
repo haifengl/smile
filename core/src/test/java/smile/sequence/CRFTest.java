@@ -58,7 +58,7 @@ public class CRFTest {
     public void testProtein() {
         System.out.println("protein");
 
-        CRF model = CRF.fit(Protein.seq, Protein.label, Protein.k, 100, 20, 100, 5, 0.3);
+        CRF model = CRF.fit(Protein.seq, Protein.label, 100, 20, 100, 5, 0.3);
 
         int error = 0;
         int n = 0;
@@ -95,7 +95,7 @@ public class CRFTest {
     public void testHyphen() {
         System.out.println("hyphen");
 
-        CRF model = CRF.fit(Hyphen.seq, Hyphen.label, Hyphen.k, 100, 20, 100, 5, 0.3);
+        CRF model = CRF.fit(Hyphen.seq, Hyphen.label, 100, 20, 100, 5, 0.3);
 
         int error = 0;
         int n = 0;

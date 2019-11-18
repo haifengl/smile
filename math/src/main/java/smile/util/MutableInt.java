@@ -17,19 +17,40 @@
 
 package smile.util;
 
-import java.util.concurrent.ThreadFactory;
 
 /**
- * Make worker threads as daemon thread. When the main thread exits, the worker
- * threads will exit too. Otherwise, the program will hang when the main
- * thread finishes.
+ * A mutable int wrapper. It is efficient as counter in HashMap.
  *
  * @author Haifeng Li
  */
-class SimpleDeamonThreadFactory implements ThreadFactory {
-  public Thread newThread(Runnable r) {
-    Thread t = new Thread(r);
-    t.setDaemon(true);
-    return t;
-  }
+public class MutableInt {
+
+    /** The integer value. */
+    public int value = 1;
+
+    /**
+     * Constructor. The initial value is 1 since we're counting.
+     */
+    public MutableInt() {
+        this(1);
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param value the initial value.
+     */
+    public MutableInt(int value) {
+        this.value = value;
+    }
+
+    /** Increment by one. */
+    public int increment() {
+        return ++value;
+    }
+
+    /** Decrement by one. */
+    public int decrement() {
+        return --value;
+    }
 }

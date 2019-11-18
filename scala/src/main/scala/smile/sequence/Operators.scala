@@ -17,8 +17,9 @@
 
 package smile.sequence
 
-import java.util.function.ToIntFunction
-import smile.util._
+import java.util.function.{Function, ToIntFunction}
+import smile.data.Tuple
+import smile.util.time
 
 /** High level sequence annotation operators.
   *
@@ -72,19 +73,40 @@ trait Operators {
     *
     * @param sequences the observation attribute sequences.
     * @param labels sequence labels.
-    * @param attributes the feature attributes.
-    * @param k the number of classes.
-    * @param eta the learning rate of potential function.
     * @param ntrees the number of trees/iterations.
+    * @param maxDepth the maximum depth of the tree.
     * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the number of instances in a node below which the tree will
+    * not split, setting nodeSize = 5 generally gives good results.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     */
-  /*
-  def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF = time("First-order linear conditional random field") {
-    val trainer = new Trainer(attributes, k)
-    trainer.setLearningRate(eta)
-      .setMaxNodes(maxNodes)
-      .setNumTrees(ntrees)
-    trainer.train(sequences, labels)
+  def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF = time("CRF") {
+    CRF.fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
   }
-   */
+
+  /** First-order linear conditional random field. A conditional random field is a
+    * type of discriminative undirected probabilistic graphical model. It is most
+    * often used for labeling or parsing of sequential data.
+    *
+    * A CRF is a Markov random field that was trained discriminatively. Therefore it is not necessary
+    * to model the distribution over always observed variables, which makes it
+    * possible to include arbitrarily complicated features of the observed
+    * variables into the model.
+    *
+    * ====References:====
+    *  - J. Lafferty, A. McCallum and F. Pereira. Conditional random fields: Probabilistic models for segmenting and labeling sequence data. ICML, 2001.</li>
+    *  - Thomas G. Dietterich, Guohua Hao, and Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random Fields. JMLR, 2008.
+    *
+    * @param sequences the observation attribute sequences.
+    * @param labels sequence labels.
+    * @param ntrees the number of trees/iterations.
+    * @param maxDepth the maximum depth of the tree.
+    * @param maxNodes the maximum number of leaf nodes in the tree.
+    * @param nodeSize the number of instances in a node below which the tree will
+    * not split, setting nodeSize = 5 generally gives good results.
+    * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+    */
+  def gcrf[T <: Object](sequences: Array[Array[T]], labels: Array[Array[Int]], features: Function[T, Tuple], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRFLabeler[T] = time("CRF") {
+    CRFLabeler.fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
+  }
 }

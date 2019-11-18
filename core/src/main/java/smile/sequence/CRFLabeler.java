@@ -18,9 +18,9 @@
 package smile.sequence;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.function.Function;
 import smile.data.Tuple;
-import smile.math.MathEx;
 
 /**
  * First-order CRF sequence labeler.
@@ -47,24 +47,52 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
     }
 
     /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     */
+    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features) {
+        return fit(sequences, labels, features, new Properties());
+    }
+
+    /**
+     * Fits a CRF model.
+     * @param sequences the training data.
+     * @param labels the training sequence labels.
+     */
+    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, Properties prop) {
+        int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
+        int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
+        int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
+        double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
+        return fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
+    }
+
+    /**
      * Fits a CRF.
      *
-     * @param observations the observation sequences.
+     * @param sequences the observation sequences.
      * @param labels the state labels of observations, of which states take
      *               values in [0, k), where k is the number of hidden states.
      * @param features the feature function.
+     * @param ntrees the number of trees/iterations.
+     * @param maxDepth the maximum depth of the tree.
+     * @param maxNodes the maximum number of leaf nodes in the tree.
+     * @param nodeSize  the number of instances in a node below which the tree will
+     *                  not split, setting nodeSize = 5 generally gives good results.
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    public static <T> CRFLabeler<T> fit(T[][] observations, int[][] labels, Function<T, Tuple> features) {
-        if (observations.length != labels.length) {
+    public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
+        if (sequences.length != labels.length) {
             throw new IllegalArgumentException("The number of observation sequences and that of label sequences are different.");
         }
 
         CRF model = CRF.fit(
-                Arrays.stream(observations)
+                Arrays.stream(sequences)
                         .map(sequence -> Arrays.stream(sequence).map(symbol -> features.apply(symbol)).toArray(Tuple[]::new))
                         .toArray(Tuple[][]::new),
-                labels,
-                MathEx.max(labels) + 1);
+                labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
 
         return new CRFLabeler<>(model, features);
     }
