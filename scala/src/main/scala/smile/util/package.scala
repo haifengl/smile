@@ -59,7 +59,7 @@ package object util extends LazyLogging {
         val time = System.nanoTime - s
         val micron = (time % 1000000000) / 1000
         val seconds = time / 1000000000
-        val duration = String.format("%d:%02d:%02d.%d", seconds / 3600, (seconds % 3600) / 60, (seconds % 60), micron)
+        val duration = String.format("%d:%02d:%02d.%d", Long.box(seconds / 3600), Long.box((seconds % 3600) / 60), Long.box((seconds % 60)), Long.box(micron))
         logger.info("{} runtime: {}", message, duration)
       }
       ret

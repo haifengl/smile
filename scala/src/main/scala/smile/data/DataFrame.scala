@@ -69,6 +69,6 @@ case class DataFrameOps(data: DataFrame) {
     */
   def groupBy[K](f: (Tuple) => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
-    groups.view.mapValues(index => data.of(index: _*)).toMap
+    groups.mapValues(index => data.of(index: _*))
   }
 }
