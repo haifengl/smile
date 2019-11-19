@@ -153,8 +153,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
     /**
      * Returns a default implementation of SparseDataset from a collection.
      *
-     * @data Each row is a data item which are the indices of nonzero elements.
-     * @ncols The number of columns.
+     * @param data sparse arrays.
      */
     static SparseDataset of(Collection<SparseArray> data) {
         return new SparseDatasetImpl(data);
@@ -163,8 +162,8 @@ public interface SparseDataset extends Dataset<SparseArray> {
     /**
      * Returns a default implementation of SparseDataset from a collection.
      *
-     * @data Each row is a data item which are the indices of nonzero elements.
-     * @ncols The number of columns.
+     * @param data sparse arrays.
+     * @param ncols the number of columns.
      */
     static SparseDataset of(Collection<SparseArray> data, int ncols) {
         return new SparseDatasetImpl(data, ncols);
