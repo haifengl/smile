@@ -21,7 +21,7 @@ import smile.math.MathEx
 import smile.nlp.collocation.{AprioriPhraseExtractor, BigramCollocation, BigramCollocationFinder}
 
 import scala.language.implicitConversions
-import scala.jdk.CollectionConverters._
+import scala.collection.JavaConverters._
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
 import smile.util.time
@@ -214,7 +214,6 @@ package object nlp {
     * @return TF-IDF feature vector
     */
   def tfidf(bag: Array[Double], n: Int, df: Array[Int]): Array[Double] = {
-    import Ordering.Double.TotalOrdering
     val maxtf = bag.max
     val features = new Array[Double](bag.length)
 
