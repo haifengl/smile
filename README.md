@@ -107,16 +107,16 @@ Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selec
 BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
 
 * **Association Rule & Frequent Itemset Mining**
-FP-growth mining algorithm
+FP-growth mining algorithm.
 
 * **Manifold learning**
-IsoMap, LLE, Laplacian Eigenmap, t-SNE, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection
+IsoMap, LLE, Laplacian Eigenmap, t-SNE, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA.
 
 * **Multi-Dimensional Scaling**
-Classical MDS, Isotonic MDS, Sammon Mapping
+Classical MDS, Isotonic MDS, Sammon Mapping.
 
 * **Nearest Neighbor Search**
-BK-Tree, Cover Tree, KD-Tree, LSH
+BK-Tree, Cover Tree, KD-Tree, LSH.
 
 * **Sequence Learning**
 Hidden Markov Model, Conditional Random Field.
