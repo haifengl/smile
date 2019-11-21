@@ -119,6 +119,15 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         return new IndexDataFrame(this, idx);
     }
 
+    /**
+     * Copies the specified range into a new data frame.
+     * @param from the initial index of the range to be copied, inclusive
+     * @param to the final index of the range to be copied, exclusive.
+     */
+    default DataFrame slice(int from, int to) {
+        return IntStream.range(from, to).mapToObj(i -> get(i)).collect(collect());
+    }
+
     /** Checks whether the value at position (i, j) is null. */
     default boolean isNullAt(int i, int j) {
         return get(i).isNullAt(j);
