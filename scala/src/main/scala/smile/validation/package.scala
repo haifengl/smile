@@ -20,7 +20,7 @@ package smile
 import smile.classification.{Classifier, DataFrameClassifier, SoftClassifier}
 import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
-import smile.regression.Regression
+import smile.regression.{DataFrameRegression, Regression}
 import smile.util.{time, toJavaBiFunction, toJavaFunction}
 
 /** Model validation.
@@ -330,179 +330,235 @@ package object validation {
     if (measures.isEmpty) Seq(new RMSE) else measures
   }
 
-  /** Leave-one-out cross validation on a generic classifier. LOOCV uses a single observation
-    * from the original sample as the validation data, and the remaining
-    * observations as the training data. This is repeated such that each
-    * observation in the sample is used once as the validation data. This is
-    * the same as a K-fold cross-validation with K being equal to the number of
-    * observations in the original sample. Leave-one-out cross-validation is
-    * usually very expensive from a computational point of view because of the
-    * large number of times the training process is repeated.
-    *
-    * @param x data samples.
-    * @param y sample labels.
-    * @param measures validation measures such as accuracy, specificity, etc.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return measure results.
-    */
-  def loocv[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val prediction = LOOCV.classification(x, y, trainer)
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
+  object loocv {
+    /** Leave-one-out cross validation on a generic classifier. LOOCV uses a single observation
+      * from the original sample as the validation data, and the remaining
+      * observations as the training data. This is repeated such that each
+      * observation in the sample is used once as the validation data. This is
+      * the same as a K-fold cross-validation with K being equal to the number of
+      * observations in the original sample. Leave-one-out cross-validation is
+      * usually very expensive from a computational point of view because of the
+      * large number of times the training process is repeated.
+      *
+      * @param x        data samples.
+      * @param y        sample labels.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a classifier trained on the given data.
+      * @return measure results.
+      */
+    def classification[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+      val prediction = LOOCV.classification(x, y, trainer)
+      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-    measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: ${100*result}%.2f%%")
-      result
-    }.toArray
+      measuresOrAccuracy(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: ${100 * result}%.2f%%")
+        result
+      }.toArray
+    }
+
+    /** Leave-one-out cross validation on a data frame classifier.
+      *
+      * @param formula  model formula.
+      * @param data     data samples.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a classifier trained on the given data.
+      * @return measure results.
+      */
+    def classification(formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+      val prediction = LOOCV.classification(formula, data, trainer)
+      val y = formula.y(data).toIntArray
+      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
+
+      measuresOrAccuracy(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: ${100 * result}%.2f%%")
+        result
+      }.toArray
+    }
+
+    /** Leave-one-out cross validation on a generic regression model.
+      *
+      * @param x        data samples.
+      * @param y        response variable.
+      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return measure results.
+      */
+    def regression[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+      val prediction = LOOCV.regression(x, y, trainer)
+
+      measuresOrRMSE(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: $result%.4f")
+        result
+      }.toArray
+    }
+
+    /** Leave-one-out cross validation on a data frame regression model.
+      *
+      * @param formula  model formula.
+      * @param data     data samples.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return measure results.
+      */
+    def regression(formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+      val prediction = LOOCV.regression(formula, data, trainer)
+      val y = formula.y(data).toDoubleArray
+
+      measuresOrRMSE(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: $result%.4f")
+        result
+      }.toArray
+    }
   }
 
-  /** Leave-one-out cross validation on a data frame classifier.
-    *
-    * @param formula model formula.
-    * @param data data samples.
-    * @param measures validation measures such as accuracy, specificity, etc.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return measure results.
-    */
-  def loocv(formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
-    val prediction = LOOCV.classification(data, trainer)
-    val y = formula.y(data).toIntArray
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
+  object cv {
+    /** Cross validation on a generic classifier.
+      * Cross-validation is a technique for assessing how the results of a
+      * statistical analysis will generalize to an independent data set.
+      * It is mainly used in settings where the goal is prediction, and one
+      * wants to estimate how accurately a predictive model will perform in
+      * practice. One round of cross-validation involves partitioning a sample
+      * of data into complementary subsets, performing the analysis on one subset
+      * (called the training set), and validating the analysis on the other subset
+      * (called the validation set or testing set). To reduce variability, multiple
+      * rounds of cross-validation are performed using different partitions, and the
+      * validation results are averaged over the rounds.
+      *
+      * @param x        data samples.
+      * @param y        sample labels.
+      * @param k        k-fold cross validation.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a classifier trained on the given data.
+      * @return measure results.
+      */
+    def classification[T <: Object](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+      val prediction = CrossValidation.classification(k, x, y, trainer)
+      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-    measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: ${100*result}%.2f%%")
-      result
-    }.toArray
+      measuresOrAccuracy(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: ${100 * result}%.2f%%")
+        result
+      }.toArray
+    }
+
+    /** Cross validation on a data frame classifier.
+      *
+      * @param formula  model formula.
+      * @param data     data samples.
+      * @param k        k-fold cross validation.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a classifier trained on the given data.
+      * @return measure results.
+      */
+    def classification(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+      val prediction = CrossValidation.classification(k, formula, data, trainer)
+      val y = formula.y(data).toIntArray
+      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
+
+      measuresOrAccuracy(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: ${100 * result}%.2f%%")
+        result
+      }.toArray
+    }
+
+    /** Cross validation on a generic regression model.
+      *
+      * @param x        data samples.
+      * @param y        response variable.
+      * @param k        k-fold cross validation.
+      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return measure results.
+      */
+    def regression[T <: Object](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+      val prediction = CrossValidation.regression(k, x, y, trainer)
+
+      measuresOrRMSE(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: $result%.4f")
+        result
+      }.toArray
+    }
+
+    /** Cross validation on a data frame regression model.
+      *
+      * @param formula  model formula.
+      * @param data     data samples.
+      * @param k        k-fold cross validation.
+      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return measure results.
+      */
+    def regression(k: Int, formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+      val prediction = CrossValidation.regression(k, formula, data, trainer)
+      val y = formula.y(data).toDoubleArray
+
+      measuresOrRMSE(measures).map { measure =>
+        val result = measure.measure(y, prediction)
+        println(f"$measure%s: $result%.4f")
+        result
+      }.toArray
+    }
   }
 
-  /** Leave-one-out cross validation on a generic regression model.
-    *
-    * @param x data samples.
-    * @param y response variable.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
-    * @return measure results.
-    */
-  def loocv[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val prediction = LOOCV.regression(x, y, trainer)
+  object bootstrap {
+    /** Bootstrap validation on a generic classifier.
+      * The bootstrap is a general tool for assessing statistical accuracy. The basic
+      * idea is to randomly draw datasets with replacement from the training data,
+      * each sample the same size as the original training set. This is done many
+      * times (say k = 100), producing k bootstrap datasets. Then we refit the model
+      * to each of the bootstrap datasets and examine the behavior of the fits over
+      * the k replications.
+      *
+      * @param x       data samples.
+      * @param y       sample labels.
+      * @param k       k-round bootstrap estimation.
+      * @param trainer a code block to return a classifier trained on the given data.
+      * @return the error rates of each round.
+      */
+    def classification[T <: Object](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+      Bootstrap.classification(k, x, y, trainer)
+    }
 
-    measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: $result%.4f")
-      result
-    }.toArray
-  }
+    /** Bootstrap validation on a data frame classifier.
+      *
+      * @param data    data samples.
+      * @param k       k-round bootstrap estimation.
+      * @param trainer a code block to return a classifier trained on the given data.
+      * @return the error rates of each round.
+      */
+    def classification(k: Int, formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+      Bootstrap.classification(k, formula, data, trainer)
+    }
 
-  /** Cross validation on a generic classifier.
-    * Cross-validation is a technique for assessing how the results of a
-    * statistical analysis will generalize to an independent data set.
-    * It is mainly used in settings where the goal is prediction, and one
-    * wants to estimate how accurately a predictive model will perform in
-    * practice. One round of cross-validation involves partitioning a sample
-    * of data into complementary subsets, performing the analysis on one subset
-    * (called the training set), and validating the analysis on the other subset
-    * (called the validation set or testing set). To reduce variability, multiple
-    * rounds of cross-validation are performed using different partitions, and the
-    * validation results are averaged over the rounds.
-    *
-    * @param x data samples.
-    * @param y sample labels.
-    * @param k k-fold cross validation.
-    * @param measures validation measures such as accuracy, specificity, etc.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return measure results.
-    */
-  def cv[T <: Object](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    val prediction = CrossValidation.classification(k, x, y, trainer)
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
+    /** Bootstrap validation on a generic regression model.
+      *
+      * @param x        data samples.
+      * @param y        response variable.
+      * @param k        k-round bootstrap estimation.
+      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return the root mean squared error of each round.
+      */
+    def regression[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+      Bootstrap.regression(k, x, y, trainer)
+    }
 
-    measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: ${100*result}%.2f%%")
-      result
-    }.toArray
-  }
-
-  /** Cross validation on a data frame classifier.
-    *
-    * @param formula model formula.
-    * @param data data samples.
-    * @param k k-fold cross validation.
-    * @param measures validation measures such as accuracy, specificity, etc.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return measure results.
-    */
-  def cv(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
-    val prediction = CrossValidation.classification(k, data, trainer)
-    val y = formula.y(data).toIntArray
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
-
-    measuresOrAccuracy(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: ${100*result}%.2f%%")
-      result
-    }.toArray
-  }
-
-  /** Cross validation on a generic regression model.
-    *
-    * @param x data samples.
-    * @param y response variable.
-    * @param k k-fold cross validation.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
-    * @return measure results.
-    */
-  def cv[T <: Object](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    val prediction = CrossValidation.regression(k, x, y, trainer)
-
-    measuresOrRMSE(measures).map { measure =>
-      val result = measure.measure(y, prediction)
-      println(f"$measure%s: $result%.4f")
-      result
-    }.toArray
-  }
-
-  /** Bootstrap validation on a generic classifier.
-    * The bootstrap is a general tool for assessing statistical accuracy. The basic
-    * idea is to randomly draw datasets with replacement from the training data,
-    * each sample the same size as the original training set. This is done many
-    * times (say k = 100), producing k bootstrap datasets. Then we refit the model
-    * to each of the bootstrap datasets and examine the behavior of the fits over
-    * the k replications.
-    *
-    * @param x data samples.
-    * @param y sample labels.
-    * @param k k-round bootstrap estimation.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return the error rates of each round.
-    */
-  def bootstrap[T <: Object](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-    Bootstrap.classification(k, x, y, trainer)
-  }
-
-  /** Bootstrap validation on a data frame classifier.
-    *
-    * @param data data samples.
-    * @param k k-round bootstrap estimation.
-    * @param trainer a code block to return a classifier trained on the given data.
-    * @return the error rates of each round.
-    */
-  def bootstrap(k: Int, data: DataFrame)(trainer: DataFrame => DataFrameClassifier): Array[Double] = {
-    Bootstrap.classification(k, data, trainer)
-  }
-
-  /** Bootstrap validation on a generic regression model.
-    *
-    * @param x data samples.
-    * @param y response variable.
-    * @param k k-round bootstrap estimation.
-    * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
-    * @param trainer a code block to return a regression model trained on the given data.
-    * @return the root mean squared error of each round.
-    */
-  def bootstrap[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-    Bootstrap.regression(k, x, y, trainer)
+    /** Bootstrap validation on a data frame regression model.
+      *
+      * @param data    data samples.
+      * @param k       k-round bootstrap estimation.
+      * @param trainer  a code block to return a regression model trained on the given data.
+      * @return the root mean squared error of each round.
+      */
+    def regression(k: Int, formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+      Bootstrap.regression(k, formula, data, trainer)
+    }
   }
 }
