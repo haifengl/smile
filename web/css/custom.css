@@ -523,3 +523,7 @@ input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gs
         font-size: 12px;
     }
 }
+h1 {
+  border-bottom: 2px solid #CCC;
+  padding-bottom: 10px
+}

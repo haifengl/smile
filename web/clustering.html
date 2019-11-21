@@ -57,32 +57,21 @@ permalink: "{{ page.filePathStem }}.html"
         which specifies the dissimilarity of sets as a function of the pairwise
         distances of observations in the sets.</p>
 
+    <pre class="prettyprint lang-scala"><code>
+    def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
+    </code></pre>
+
     <p>Hierarchical clustering has the distinct advantage that any valid measure
-        of distance can be used. In fact, the observations themselves are not
-        required: all that is used is a matrix of distances.</p>
+        of distance can be used.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hclust(proximity: Array[Array[Double]], linkage: String): HierarchicalClustering
+    def hclust[T](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering
     </code></pre>
 
-    <p>The parameter <code>proximity</code> is the proximity matrix to store
-        the distance measure of dissimilarity. To save space, we only need
-        the lower half of matrix. The proximity matrix can be calculated by
-        the helper function:</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def proximity[T](data: Array[T], dist: Distance[T], half: Boolean = true): Array[Array[Double]]
-    </code></pre>
-
-    <p>If the parameter <code>half</code> is true, only the lower half of matrix
-        is allocated to save space. In case of Euclidean distance, one may use</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def distance(data: Array[Array[Double]], half: Boolean = true): Array[Array[Double]]
-    </code></pre>
-
-    <p>The parameter <code>linkage</code> specifies the agglomeration method to merge clusters.
-        This should be one of "single", "complete", "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median", and "ward".</p>
+    <p>The parameter <code>method</code> specifies the agglomeration method to
+        merge clusters. This should be one of "single", "complete",
+        "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median",
+        and "ward".</p>
 
     <p>The single linkage defines the distance between groups as the distance
         between the closest pair of objects, one from each group.
@@ -146,8 +135,8 @@ permalink: "{{ page.filePathStem }}.html"
         distributions, each 300 samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = read.table("data/clustering/gaussian/six.txt").unzip
-    val clusters = hclust(pdist(x), "complete")
+    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val clusters = hclust(x, "complete")
     dendrogram(clusters)
     </code></pre>
 
@@ -208,7 +197,7 @@ permalink: "{{ page.filePathStem }}.html"
         algorithm by Kanungo, et al.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): KMeans
+    def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
     </code></pre>
 
     <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
@@ -219,8 +208,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     val clusters = kmeans(x, 6, runs = 20)
-    val y = clusters.getClusterLabel
-    plot(x, y, '.', Palette.COLORS)
+    plot(x, clusters.y, '.', Palette.COLORS)
     </code></pre>
 
     <p>K-Means works very well on Gaussian mixtures.</p>
@@ -233,10 +221,9 @@ permalink: "{{ page.filePathStem }}.html"
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = read.table("data/clustering/gaussian/elongate.txt").unzip
+    val x = read.csv("data/clustering/gaussian/elongate.txt", header=false, delimiter='\t').toArray
     val clusters = kmeans(x, 2, runs = 20)
-    val y = clusters.getClusterLabel
-    plot(x, y, '.', Palette.COLORS)
+    plot(x, clusters.y, '.', Palette.COLORS)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -280,7 +267,7 @@ permalink: "{{ page.filePathStem }}.html"
         the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def gmeans(data: Array[Array[Double]], k: Int = 100): XMeans
+    def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
     </code></pre>
 
     <p>where the parameter <code>k</code> is the maximum number of clusters</p>
@@ -364,20 +351,20 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     smile> dac(x, 12, 0.9)
-
-    Clusters of 1800 data points:
-    0	  297 (16.5%)
-    1	  449 (24.9%)
-    2	  298 (16.6%)
-    3	  152 ( 8.4%)
-    4	  293 (16.3%)
-    5	  311 (17.3%)
-    6	    0 ( 0.0%)
-    7	    0 ( 0.0%)
-    8	    0 ( 0.0%)
-    9	    0 ( 0.0%)
-    10	    0 ( 0.0%)
-    11	    0 ( 0.0%)
+    res58: DeterministicAnnealing = Cluster distortion: 17904.72351
+    Cluster size of 300 data points:
+    Cluster    1    157 (52.3%)
+    Cluster    2     42 (14.0%)
+    Cluster    3      3 ( 1.0%)
+    Cluster    4      2 ( 0.7%)
+    Cluster    5      3 ( 1.0%)
+    Cluster    6      0 ( 0.0%)
+    Cluster    7      0 ( 0.0%)
+    Cluster    8      0 ( 0.0%)
+    Cluster    9     84 (28.0%)
+    Cluster   10      2 ( 0.7%)
+    Cluster   11      2 ( 0.7%)
+    Cluster   12      5 ( 1.7%)
     </code></pre>
 
     <p>Note that we set <code>k = 12</code> in the example although we know there are 6 clusters.
@@ -431,7 +418,8 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     val data = read.libsvm("data/libsvm/news20.dat")
-    val clusters = sib(train, 20, 100, 8)
+    val sparse = (0 until data.size).map(i => data(i).x).toArray
+    val clusters = sib(sparse, 20, 100, 8)
     </code></pre>
 
     <h2 id="clarans">CLARANS</h2>

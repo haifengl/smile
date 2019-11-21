@@ -168,20 +168,22 @@ permalink: "{{ page.filePathStem }}.html"
         Clearly, features with larger sum squares ratios are better for classification.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def sumSquaresRatio(x: Array[Array[Double]], y: Array[Int]): Array[Double]
+    def ssr(x: Array[Array[Double]], y: Array[Int]): Array[Double]
+
+    def ssr(formula: Formula, data: DataFrame): Array[Double]
     </code></pre>
 
     <p>Applying it to Iris data, we can find that the last two variables have much higher
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = iris.unzipInt
-    sumSquaresRatio(x, y)
+    val iris = read.arff("data/weka/iris.arff")
+    ssr("class" ~, iris)
 
-    val x2 = x.map(_.slice(2,4)) // take last two columns
-    val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
-    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(2,4): _*)
+    val x = iris.select(2,3).toArray // take last two columns
+    val y = iris("class").toIntArray
+    val window = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
+    window.canvas.setAxisLabels(iris.names.slice(2,4): _*)
     </code></pre>
 
     <p>The scatter plot of the last two variables shows clearly that they capture the difference
@@ -207,8 +209,8 @@ permalink: "{{ page.filePathStem }}.html"
         the scores for feature selection (higher is better).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val model = randomForest(x, y)
-    println(model.importance.mkString(", ")
+    val model = smile.classification.randomForest("class" ~, iris)
+    println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
     </code></pre>
 
     <p>For Iris data, random forest also gives much higher importance scores for
@@ -253,18 +255,11 @@ permalink: "{{ page.filePathStem }}.html"
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
     <pre class="prettyprint lang-java"><code>
-    val data = read.arff("data/weka/segment-test.arff", 19)
-    val (x, y) = data.unzipInt
+    val segTrain = read.arff("data/weka/segment-challenge.arff")
+    val segTest = read.arff("data/weka/segment-test.arff")
 
-    val trainer = new GradientTreeBoost.Trainer(100)
-    val measure = new Accuracy
-
-    // Use default settings for Genetic Algorithm.
-    val selector = new GAFeatureSelection
-
-    // The population size is 50, and 20 generation evolution.
-    // Each returned BitString contains the selected feature subset and its fitness.
-    val result = selector.learn(50, 20, trainer, measure, x, y, 5)
+    val selection = new GAFE
+    val result = selection.apply(100, 20, segTrain.ncols()-1, GAFE.fitness("class", segTrain, segTest, new Accuracy, (formula: Formula, data: DataFrame) => smile.classification.cart(formula, data)))
 
     result.foreach { bits =>
         print(f"${100*bits.fitness}%.2f%% ")
@@ -313,8 +308,11 @@ permalink: "{{ page.filePathStem }}.html"
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val pendigits = read.table("data/classification/pendigits.txt", response = Some((new NominalAttribute("class"), 16)))
-    val (x, y) = pendigits.unzipInt
+    val pendigits = read.csv("data/classification/pendigits.txt", delimiter='\t', header = false)
+    val formula: Formula = "V17" ~
+    val x = formula.x(pendigits).toArray
+    val y = formula.y(pendigits).toIntArray
+
     val pc = pca(x)
     screeplot(pc)
 

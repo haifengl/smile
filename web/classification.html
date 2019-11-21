@@ -168,7 +168,7 @@ permalink: "{{ page.filePathStem }}.html"
     val iris = read.arff("data/weka/iris.arff")
     val x = iris.select(0, 1, 2, 3).toArray
     val y = iris("class").toIntArray
-    cv(10, x, y) { case (x, y) => knn(x, y, 3) }
+    cv.classification(10, x, y) { case (x, y) => knn(x, y, 3) }
     </code></pre>
 
     <p>The best choice of k depends upon the data; generally, larger values of
@@ -662,7 +662,7 @@ permalink: "{{ page.filePathStem }}.html"
         the results.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def svm[T](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, strategy: SVM.Multiclass = SVM.Multiclass.ONE_VS_ONE, epoch: Int = 1): SVM[T]
+    def svm[T <](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T]
     </code></pre>
 
     <p>The effectiveness of SVM depends on the selection of kernel, the kernel's
@@ -673,15 +673,23 @@ permalink: "{{ page.filePathStem }}.html"
     <p>The dominant approach for creating multi-class SVMs is to reduce the
         single multi-class problem into multiple binary classification problems.
         Common methods for such reduction is to build binary classifiers which
-        distinguish between (i) one of the labels to the rest (one-versus-all)
-        or (ii) between every pair of classes (one-versus-one). Classification
-        of new instances for one-versus-all case is done by a winner-takes-all
-        strategy, in which the classifier with the highest output function assigns
-        the class. For the one-versus-one approach, classification
+        distinguish between (i) one of the labels to the rest (one-versus-rest or
+        one-versus-all) or (ii) between every pair of classes (one-versus-one).
+        Classification of new instances for one-versus-all case is done by a
+        winner-takes-all strategy, in which the classifier with the highest output
+        function assigns the class. For the one-versus-one approach, classification
         is done by a max-wins voting strategy, in which every classifier assigns
         the instance to one of the two classes, then the vote for the assigned
         class is increased by one vote, and finally the class with most votes
         determines the instance classification.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    // One-vs-one strategy
+    def ovo[T](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusOne[T]
+
+    // One-vs-rest (or one-vs-all) strategy
+    def ovr[T](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T]
+    </code></pre>
 
     <p>With a Gaussian kernel of <code>&gamma; = 1.0</code> and <code>C = 10</code>,
         the decission boundary of SVM on the toy data is shown as following.</p>
@@ -689,18 +697,6 @@ permalink: "{{ page.filePathStem }}.html"
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/svm.png" class="enlarge" style="width: 480px;" />
     </div>
-
-    <p>Most machine learning libraries implement SVM with a batch learning algorithm.
-        Smile employs an advanced online learning algorithm, which is very efficient
-        and can update the model with new data easily.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    // model is an existing SVM model.
-    // update the model with new data.
-    model.learn(x, y)
-    // polish the model
-    model.finish
-    </code></pre>
 
     <p>SVMs with Gaussian kernel have similar structure as RBF networks with
         Gaussian radial basis functions. However, the SVM approach "automatically"
@@ -742,7 +738,7 @@ permalink: "{{ page.filePathStem }}.html"
         of information gain.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def cart(x: Array[Array[Double]], y: Array[Int], maxNodes: Int, attributes: Array[Attribute] = null, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI): DecisionTree
+    def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree
     </code></pre>
 
     <p>where <code>maxNodes</code> is the maximum number of leaf nodes in the tree as
@@ -818,7 +814,7 @@ permalink: "{{ page.filePathStem }}.html"
     </ol>
 
     <pre class="prettyprint lang-scala"><code>
-    def randomForest(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 1, mtry: Int = -1, subsample: Double = 1.0, splitRule: DecisionTree.SplitRule = DecisionTree.SplitRule.GINI, classWeight: Array[Int] = null): RandomForest
+    def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest
     </code></pre>
 
     <p>where <code>ntrees</code> is the number of trees, and <code>mtry</code> is the number
@@ -904,7 +900,7 @@ permalink: "{{ page.filePathStem }}.html"
         prediction: lower learning rate requires more iterations.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def gbm(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+    def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
 
     <p>where <code>ntrees</code> is the number of trees or iterations and <code>shrinkage</code>
@@ -958,7 +954,7 @@ permalink: "{{ page.filePathStem }}.html"
         on those examples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def adaboost(x: Array[Array[Double]], y: Array[Int], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = 2): AdaBoost
+    def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost
     </code></pre>
 
     <p>The following picture is the decision boundary of AdaBoost of 100 trees on the toy data.</p>
