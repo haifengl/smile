@@ -21,7 +21,7 @@ permalink: "{{ page.filePathStem }}.html"
         The user can use <code>plot</code> functions to draw scatter plot easily.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): Window
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = BLACK): Window
 
     def plot(data: Array[Array[Double]], labels: Array[String]): Window
 
@@ -63,7 +63,7 @@ permalink: "{{ page.filePathStem }}.html"
     val iris = read.arff("data/weka/iris.arff", 4)
     val (x, y) = iris.unzipInt
     val x2 = x.map(_.slice(0,2)) // take first two columns
-    val window = plot(x2, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    val window = plot(x2, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
     window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
     </code></pre>
 
@@ -79,7 +79,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     val x3 = x.map(_.slice(0,3)) // take first three columns
-    val window = plot(x3, y, Array('*', '+', 'o'), Array(Color.RED, Color.BLUE, Color.CYAN))
+    val window = plot(x3, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
     window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
     </code></pre>
 
@@ -92,7 +92,7 @@ permalink: "{{ page.filePathStem }}.html"
         whole picture. A general practice is plot all the attribute pairs. For example,</p>
 
     <pre class="prettyprint lang-scala"><code>
-    plot(iris, '*', Array(Color.RED, Color.BLUE, Color.CYAN))
+    plot(iris, '*', Array(RED, BLUE, CYAN))
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -105,7 +105,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A line chart connects points by straight lines.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): Window
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = BLACK, legend: Char = ' '): Window
     </code></pre>
 
     <p>Let's draw a heart with it!</p>
@@ -115,7 +115,7 @@ permalink: "{{ page.filePathStem }}.html"
       val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
       Array(x, y)
     }
-    line(heart.toArray, color = Color.RED)
+    line(heart.toArray, color = RED)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">

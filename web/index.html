@@ -3,30 +3,11 @@ layout: layout.njk
 permalink: "{{ page.filePathStem }}.html"
 ---
 <div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
-  <div id="search">
-    <script>
-      (function() {
-        var cx = '010264411143030149390:ajvee_ckdzs';
-        var gcse = document.createElement('script');
-        gcse.type = 'text/javascript';
-        gcse.async = true;
-        gcse.src = (document.location.protocol == 'https:' ? 'https:' : 'http:') +
-                '//cse.google.com/cse.js?cx=' + cx;
-        var s = document.getElementsByTagName('script')[0];
-        s.parentNode.insertBefore(gcse, s);
-      })();
-    </script>
-    <gcse:searchbox-only></gcse:searchbox-only>
-  </div>
-
   <div class="news" style="margin-bottom: 20px;">
     <h5>Latest News</h5>
     <ul class="list-unstyled">
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.3">Smile 1.5.3 Released!</a>
-        <span class="small">(Jun 1, 2019)</span></li>
-
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.2">Smile 1.5.2 Released!</a>
-        <span class="small">(Oct 15, 2018)</span></li>
+      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.3">Smile 2.0.0 Released!</a>
+        <span class="small">(Nov 22, 2019)</span></li>
 
       <li><a href="https://www.youtube.com/watch?v=aqT_0qFOBUI">Dex Machine Learning with SMILE ML</a>
         <span class="small">(Mar 28, 2018, by Patrick Martin)</span></li>
@@ -34,14 +15,8 @@ permalink: "{{ page.filePathStem }}.html"
       <li><a href="https://issues.apache.org/jira/browse/SOLR-12019">Machine Learning coming to Apache Solr - built on top of Smile! </a>
         <span class="small">(Feb 22, 2018, by Apache Solr)</span></li>
 
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.1">Smile 1.5.1 Released!</a>
-        <span class="small">(Feb 25, 2018)</span></li>
-
       <li><a href="https://activewizards.com/blog/top-15-scala-libraries-for-data-science/">Top 15 Scala Libraries for Data Science in 2018</a>
         <span class="small">(Jan 10, 2018, by ActiveWizards)</span></li>
-
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.0">Smile 1.5.0 Released!</a>
-        <span class="small">(Nov 10, 2017)</span></li>
 
       <li><a href="https://www.infoworld.com/article/3220428/machine-learning/3-projects-lighting-a-fire-under-machine-learning.html">3 projects lighting a fire under machine learning</a>
         <span class="small">(Aug 30, 2017, by InfoWorld)</span></li>
@@ -470,16 +445,34 @@ rf.predict(x(0))
       <p class="lead">
         Hidden gems in Smile.
       </p>
-      <p>Special functions, linear algebra including LU decomposition, Cholesk decomposition, QR decomposition,
+      <p>Special functions, linear algebra including LU decomposition, Cholesky decomposition, QR decomposition,
         eigen value decomposition, singular value decomposition, band matrix, and sparse matrix,
         hypothesis tests including t-test, F-test, chi-square test, correlation test (Pearson, Spearman, and Kendall),
         and Kolmogorov-Smirnov test, a variety of distributions and random number generators, interpolation,
-        sorting, wavelet, plot, etc.
+        sorting, wavelet, etc.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
       <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/math.png" style="width: 100%;" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Data Visualization</h2>
+
+      <p class="lead">
+        Interactive 2D/3D math plot.
+      </p>
+      <p>Scatter plot, line plot, staircase plot, bar plot, box plot, heatmap, hexmap, histogram, qq plot, surface,
+        grid, contour, dendrogram, sparse matrix visualization, wireframe, etc.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="gallery/smile-demo-som.png" style="width: 100%;" />
       </div>
     </div>
   </div>

@@ -24,18 +24,9 @@ permalink: "{{ page.filePathStem }}.html"
 
     <h2 id="functions" class="title">Math Functions</h2>
 
-    <p>All <code>java.lang.Math</code> functions are imported in the Shell.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    smile&gt; log(2)
-    res0: Double = 0.6931471805599453
-
-    smile&gt; max(2, 5)
-    res2: Int = 5
-    </code></pre>
-
-    <p>In addition, Smile provides many other important mathematical functions
-        such as <code>logistic</code>, <code>factorial</code>, <code>choose</code>, etc.</p>
+    <p>Besides <code>java.lang.Math</code> functions, Smile provides many other
+        important mathematical functions such as <code>logistic</code>,
+        <code>factorial</code>, <code>choose</code>, etc.</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; logistic(3.0)
     res7: Double = 0.9525741268224334
@@ -199,7 +190,7 @@ permalink: "{{ page.filePathStem }}.html"
     val c = randn( 150, 1800)
     val d = randn(1800,   30)
 
-    time {(a %*% b %*% c %*% d).toMatrix}
+    time("matrix multiplication") {(a %*% b %*% c %*% d).toMatrix}
     </code></pre>
 
     <p>where <code>randn()</code> creates a matrix of normally distributed

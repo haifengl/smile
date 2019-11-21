@@ -125,7 +125,7 @@ permalink: "{{ page.filePathStem }}.html"
         it back, the method <code>inverse</code> can be applied.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    haar.inverse(sp500)
+    smile&gt; haar.inverse(sp500)
     </code></pre>
 
     <p>In case that you don't want to create the wavelet object
@@ -175,7 +175,7 @@ permalink: "{{ page.filePathStem }}.html"
     val smooth = sp500.clone()
     WaveletShrinkage.denoise(smooth, d4)
     val canvas = LinePlot.plot(sp500)
-    canvas.line(smooth, Color.BLUE)
+    canvas.line(smooth, BLUE)
     Window(canvas)
     </code></pre>
 

@@ -353,7 +353,7 @@ res16: Array[collocation.BigramCollocation] = Array(
 
     <pre class="prettyprint lang-scala"><code>
 smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines().mkString
-smile&gt; phrase = ngram(4, 4, turing)
+smile&gt; val phrase = ngram(4, 4, turing)
 smile&gt; phrase(2)
 res19: Seq[NGram] = Buffer(
   ([digital, computer], 32),
@@ -551,7 +551,7 @@ res2: Array[pos.PennTreebankPOS] = Array(
         selection or else its accuracy will be low.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def naiveBayes(x: Array[Array[Double]], y: Array[Int], model: NaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): NaiveBayes
+    def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes
     </code></pre>
 
     <p>The different generation models imply different estimation strategies and
@@ -630,6 +630,8 @@ res2: Array[pos.PennTreebankPOS] = Array(
 
     <pre class="prettyprint lang-scala"><code>
     def hmm(observations: Array[Array[Int]], labels: Array[Array[Int]]): HMM[Int]
+
+    def hmm[T](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T]
     </code></pre>
 
     <p>where <code>observations</code> is the observation sequences, of which symbols take
@@ -673,7 +675,7 @@ res2: Array[pos.PennTreebankPOS] = Array(
         in previous algorithms based on iterative scaling and gradient descent.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def crf(sequences: Array[Array[Array[Double]]], labels: Array[Array[Int]], attributes: Array[Attribute], k: Int, eta: Double = 1.0, ntrees: Int = 100, maxNodes: Int = 100): CRF
+    def crf(sequences: Array[Array[Tuple]], labels: Array[Array[Int]], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRF
     </code></pre>
 
     <p>where <code>sequences</code> is the observation attribute sequences,

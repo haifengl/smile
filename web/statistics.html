@@ -52,7 +52,7 @@ permalink: "{{ page.filePathStem }}.html"
     smile&gt; e.mean
     res3: Double = 1.0
 
-    smile&gt; e.`var`
+    smile&gt; e.variance
     res4: Double = 1.0
 
     smile&gt; e.sd
@@ -79,7 +79,7 @@ permalink: "{{ page.filePathStem }}.html"
     res12: Double = -4.5
 
     // estimate a distribution from data
-    smile&gt; val e = new ExponentialDistribution(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
+    smile&gt; val e = ExponentialDistribution.fit(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
     e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
     </code></pre>
 
@@ -101,10 +101,8 @@ permalink: "{{ page.filePathStem }}.html"
     smile&gt; val b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
     smile&gt; val c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
 
-    smile&gt; import collection.JavaConverters._
-
     // estimate the model
-    smile&gt; val mixture = new ExponentialFamilyMixture(List(a, b, c).asJava, data)
+    smile&gt; val mixture = ExponentialFamilyMixture.fit(data, a, b, c)
     mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
     </code></pre>
 
