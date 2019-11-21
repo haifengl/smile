@@ -17,15 +17,15 @@
 
 package smile.validation;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
@@ -116,11 +116,11 @@ public class Bootstrap {
      * Runs cross validation tests.
      * @return the error rates of each round.
      */
-    public double[] classification(DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
+    public double[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         double[] error = new double[k];
 
         for (int i = 0; i < k; i++) {
-            DataFrameClassifier model = trainer.apply(data.of(train[i]));
+            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
 
             DataFrame oob = data.of(test[i]);
             int[] prediction = model.predict(oob);
@@ -157,11 +157,11 @@ public class Bootstrap {
      * Runs bootstrap tests.
      * @return the root mean squared error of each round.
      */
-    public double[] regression(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public double[] regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         double[] rmse = new double[k];
 
         for (int i = 0; i < k; i++) {
-            DataFrameRegression model = trainer.apply(data.of(train[i]));
+            DataFrameRegression model = trainer.apply(formula, data.of(train[i]));
             DataFrame oob = data.of(test[i]);
             double[] prediction = model.predict(oob);
             double[] testy = model.formula().y(oob).toDoubleArray();
@@ -185,9 +185,9 @@ public class Bootstrap {
      * Runs cross validation tests.
      * @return the error rates of each round.
      */
-    public static double[] classification(int k, DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
+    public static double[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Bootstrap cv = new Bootstrap(data.size(), k);
-        return cv.classification(data, trainer);
+        return cv.classification(formula, data, trainer);
     }
 
     /**
@@ -203,8 +203,8 @@ public class Bootstrap {
      * Runs bootstrap tests.
      * @return the root mean squared error of each round.
      */
-    public static double[] regression(int k, DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public static double[] regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         Bootstrap cv = new Bootstrap(data.size(), k);
-        return cv.regression(data, trainer);
+        return cv.regression(formula, data, trainer);
     }
 }
