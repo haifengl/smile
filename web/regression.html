@@ -40,11 +40,8 @@ permalink: "{{ page.filePathStem }}.html"
         variances.</p>
         
     <pre class="prettyprint lang-scala"><code>
-    def ols(x: Array[Array[Double]], y: Array[Double]): OLS
+    def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel
     </code></pre>
-
-    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
-        and <code>y</code> is the response values.</p>
 
     <p>There are several different frameworks in which the linear regression
         model can be cast in order to make the OLS technique applicable. Each
@@ -79,18 +76,41 @@ permalink: "{{ page.filePathStem }}.html"
     <p>It is straightforward to fit an OLS model.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val planes = read.arff("data/weka/regression/2dplanes.arff", 10)
-    val (x, y) = planes.unzipDouble
-    val model = ols(x, y)
+    smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
+    smile> val model = ols("y" ~, planes)
+    [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
+    model: regression.LinearModel = Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402
+    x9                  0.0024     0.0145     0.1649     0.8690
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
     </code></pre>
 
     <p>We then can apply the regression model on a new data point.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    smile> model.predict(x(0))
+    smile> model.predict(planes(0))
     res1: Double = 5.073347387304475
-    smile> y(0)
-    res2: Double = 7.73906
     </code></pre>
 
     <p>Once a regression model has been constructed, it may be important to
@@ -101,38 +121,8 @@ permalink: "{{ page.filePathStem }}.html"
         fit, followed by t-tests of individual parameters.</p>
 
     <p>Simply print out the model, we can inspect R-squared, the statistics and p-values of
-        the t-test of parameter significance, and the F-test of goodness-of-fit.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    smile> println(model)
-    Linear Model:
-
-    Residuals:
-        Min	      1Q      Median          3Q         Max
-    -8.5260	 -1.6514     -0.0049      1.6755      7.8116
-
-    Coefficients:
-                Estimate        Std. Error        t value        Pr(>|t|)
-    Intercept    -0.0148            0.0118        -1.2503          0.2112
-    Var 1         2.9730            0.0118       251.7998          0.0000 ***
-    Var 2         1.5344            0.0145       105.8468          0.0000 ***
-    Var 3         1.0357            0.0144        71.7815          0.0000 ***
-    Var 4         0.5281            0.0145        36.4827          0.0000 ***
-    Var 5         1.4766            0.0144       102.2472          0.0000 ***
-    Var 6         1.0044            0.0144        69.5380          0.0000 ***
-    Var 7         0.5238            0.0145        36.1696          0.0000 ***
-    Var 8        -0.0011            0.0145        -0.0750          0.9402
-    Var 9         0.0024            0.0145         0.1649          0.8690
-    Var 10       -0.0278            0.0145        -1.9239          0.0544 .
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-
-    Residual standard error: 2.3838 on 40757 degrees of freedom
-    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
-    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
-    </code></pre>
-
-    <p>Interpretations of these diagnostic tests rest heavily on the model
+        the t-test of parameter significance, and the F-test of goodness-of-fit.
+        Interpretations of these diagnostic tests rest heavily on the model
         assumptions. Although examination of the residuals can be used to
         invalidate a model, the results of a t-test or F-test are sometimes more
         difficult to interpret if the model's assumptions are violated.
@@ -167,7 +157,7 @@ permalink: "{{ page.filePathStem }}.html"
         distribution.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def ridge(x: Array[Array[Double]], y: Array[Double], lambda: Double): RidgeRegression
+    def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
     </code></pre>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
@@ -180,54 +170,26 @@ permalink: "{{ page.filePathStem }}.html"
         collinear regression.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = Array(
-        Array(234.289,      235.6,        159.0,    107.608, 1947,   60.323),
-        Array(259.426,      232.5,        145.6,    108.632, 1948,   61.122),
-        Array(258.054,      368.2,        161.6,    109.773, 1949,   60.171),
-        Array(284.599,      335.1,        165.0,    110.929, 1950,   61.187),
-        Array(328.975,      209.9,        309.9,    112.075, 1951,   63.221),
-        Array(346.999,      193.2,        359.4,    113.270, 1952,   63.639),
-        Array(365.385,      187.0,        354.7,    115.094, 1953,   64.989),
-        Array(363.112,      357.8,        335.0,    116.219, 1954,   63.761),
-        Array(397.469,      290.4,        304.8,    117.388, 1955,   66.019),
-        Array(419.180,      282.2,        285.7,    118.734, 1956,   67.857),
-        Array(442.769,      293.6,        279.8,    120.445, 1957,   68.169),
-        Array(444.546,      468.1,        263.7,    121.950, 1958,   66.513),
-        Array(482.704,      381.3,        255.2,    123.366, 1959,   68.655),
-        Array(502.601,      393.1,        251.4,    125.368, 1960,   69.564),
-        Array(518.173,      480.6,        257.2,    127.852, 1961,   69.331),
-        Array(554.894,      400.7,        282.7,    130.081, 1962,   70.551))
-
-    val y = Array(83.0,  88.5,  88.2,  89.5,  96.2,  98.1,  99.0, 100.0, 101.2,
-                  104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9)
-
-    println(ridge(x, y, 0.0057))
-    </code></pre>
-
-    <p>The summary of model is as following.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    Ridge Regression:
+    smile> val longley = read.arff("data/weka/regression/longley.arff")
+    smile> val model = ridge("employed" ~, longley, 0.0057)
+    model: regression.LinearModel = Linear Model:
 
     Residuals:
-        Min	      1Q      Median          3Q         Max
-    -2.0691	 -0.5736      0.2619      0.4844      1.6328
+               Min	        1Q	    Median	        3Q	       Max
+         -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
 
     Coefficients:
-                Estimate        Std. Error        t value        Pr(>|t|)
-    Intercept  -247.2810                NA             NA              NA
-    Var 1         0.1789            7.8561         0.0228          0.9823
-    Var 2         0.0197            2.0319         0.0097          0.9925
-    Var 3         0.0066            0.8647         0.0076          0.9941
-    Var 4        -1.3433            4.2777        -0.3140          0.7607
-    Var 5         0.2216            9.7525         0.0227          0.9824
-    Var 6        -0.0575            3.7635        -0.0153          0.9881
-    ---------------------------------------------------------------------
-    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
 
-    Residual standard error: 1.2361 on 9 degrees of freedom
-    Multiple R-squared: 0.9921,    Adjusted R-squared: 0.9869
-    F-statistic: 189.0534 on 6 and 9 DF,  p-value: 6.011e-09
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
     </code></pre>
 
     <p>When including an intercept term in the regression, we usually leave
@@ -272,7 +234,7 @@ permalink: "{{ page.filePathStem }}.html"
         as by specific algorithms such as the least angle regression algorithm.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def lasso(x: Array[Array[Double]], y: Array[Double], lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LASSO
+    def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel
     </code></pre>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
@@ -294,11 +256,10 @@ permalink: "{{ page.filePathStem }}.html"
         The data used in the below example has 64 columns that consists of basic
         data plus certain interactions.</p>
     <pre class="prettyprint lang-scala"><code>
-    val diabetes = read.csv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header = true)
-    val (x, y) = diabetes.unzipDouble
-    println(lasso(x, y, 10))
-    println(lasso(x, y, 100))
-    println(lasso(x, y, 500))
+    val diabetes = read.csv("data/regression/diabetes.csv")
+    lasso("y" ~, diabetes, 10)
+    lasso("y" ~, diabetes, 100)
+    lasso("y" ~, diabetes, 500)
     </code></pre>
 
     <p>With large <code>lambda</code> values, we can observe that more and more
@@ -340,13 +301,9 @@ permalink: "{{ page.filePathStem }}.html"
         network's parameters.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
+    def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
 
-    def rbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
-
-    def nrbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
-
-    def nrbfnet[T](x: Array[T], y: Array[Double], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+    def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
     </code></pre>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the so
@@ -361,14 +318,9 @@ permalink: "{{ page.filePathStem }}.html"
         increases).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val diabetes = read.csv("data/regression/diabetes.csv", Some((new NumericAttribute("y"), 0)), header=true)
-    val (data, y) = diabetes.unzipDouble
-    val x = data.map(_.slice(0, 10)) // use only the primary attributes
-    cv(x, y, 10) { case (x, y) =>
-        val centers = new Array[Array[Double]](10)
-        val basis = gaussrbf(x, centers)
-        smile.regression.rbfnet(x, y, new EuclideanDistance, basis, centers)
-    }
+    val y = diabetes("y").toDoubleArray
+    val x = diabetes.select(1 until 11).toArray // use only the primary attributes
+    cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
     </code></pre>
 
     <p>Note that we use the fully qualified name <code>smile.regression.rbfnet</code>
@@ -401,7 +353,7 @@ permalink: "{{ page.filePathStem }}.html"
         the &epsilon; threshold).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, weight: Array[Double] = null, tol: Double = 1E-3): SVR[T]
+    def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T]
     </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
@@ -414,11 +366,7 @@ permalink: "{{ page.filePathStem }}.html"
         and <code>tol</code> the tolerance of convergence test.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    cv(x, y, 10) { case (x, y) =>
-        val centers = new Array[Array[Double]](10)
-        val basis = gaussrbf(x, centers)
-        svr(x, y, new GaussianKernel(0.06), 20, 10)
-    }
+    cv.regression(10, x, y) { case (x, y) => svr(x, y, new GaussianKernel(0.06), 20, 10) }
     </code></pre>
 
     <p>Applying SVR to the diabetes data, we observe a smaller RMSE by 10-fold cross validation
@@ -453,7 +401,7 @@ permalink: "{{ page.filePathStem }}.html"
         of information gain.</p>
         
     <pre class="prettyprint lang-scala"><code>
-    def cart(x: Array[Array[Double]], y: Array[Double], maxNodes: Int, attributes: Array[Attribute] = null): RegressionTree
+    def cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree
     </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
@@ -469,9 +417,7 @@ permalink: "{{ page.filePathStem }}.html"
         with regression trees of 200 nodes.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    cv(x, y, 10) { case (x, y) =>
-        smile.regression.cart(x, y, 200)
-    }
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.cart(formula, data, 200) }
     </code></pre>
 
     <p>Classification and Regression Tree techniques have a number of advantages
@@ -537,7 +483,7 @@ permalink: "{{ page.filePathStem }}.html"
     </ol>
         
     <pre class="prettyprint lang-scala"><code>
-    def randomForest(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, ntrees: Int = 500, maxNodes: Int = -1, nodeSize: Int = 5, mtry: Int = -1, subsample: Double = 1.0): RandomForest
+    def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest
     </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
@@ -563,9 +509,7 @@ permalink: "{{ page.filePathStem }}.html"
         a single regression tree.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    cv(x, y, 10) { case (x, y) =>
-        smile.regression.randomForest(x, y, maxNodes = 200)
-    }
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.randomForest(formula, data, maxNodes = 100) }
     </code></pre>
 
     <p>The advantages of random forest are:</p>
@@ -632,7 +576,7 @@ permalink: "{{ page.filePathStem }}.html"
         prediction: lower learning rate requires more iterations.</p>
         
     <pre class="prettyprint lang-scala"><code>
-    def gbm(x: Array[Array[Double]], y: Array[Double], attributes: Array[Attribute] = null, loss: GradientTreeBoost.Loss = GradientTreeBoost.Loss.LeastAbsoluteDeviation, ntrees: Int = 500, maxNodes: Int = 6, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+    def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
@@ -656,9 +600,7 @@ permalink: "{{ page.filePathStem }}.html"
         uses only 6 nodes for each regression tree.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    cv(x, y, 10) { case (x, y) =>
-        smile.regression.gbm(x, y)
-    }
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.gbm(formula, data) }
     </code></pre>
 
     <p>Soon after the introduction of gradient boosting Friedman proposed a
@@ -727,28 +669,29 @@ permalink: "{{ page.filePathStem }}.html"
     <p>This function fits a regular Gaussian process model.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def gpr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): GaussianProcessRegression[T]
-    </code></pre>
+    object gpr {
+        def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
 
-    <p>while the below function fit an approximate model</p>
+        def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
 
-    <pre class="prettyprint lang-scala"><code>
-    def gpr[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double, nystrom: Boolean = false): GaussianProcessRegression[T]
+        def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+    }
     </code></pre>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
         <code>kernel</code> is the Mercer kernel function,
         and <code>lambda</code> is the shrinkage/regularization parameter.
-        For approximation model, the parameter <code>t</code> is the inducing input,
+        The last two methods fit approximate models.
+        For approximation models, the parameter <code>t</code> is the inducing input,
         which are pre-selected or inducing samples
         acting as active set of regressors. In simple case, these can be chosen
         randomly from the training set or as the centers of k-means clustering.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    cv(x, y, 10) { case (x, y) =>
-        val t = kmeans(x, 300).centroids
-        gpr(x, y, t, new GaussianKernel(0.06), 0.01)
+    cv.regression(10, x, y) { (x, y) =>
+        val t = kmeans(x, 20).centroids
+        gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
     }
     </code></pre>
 
