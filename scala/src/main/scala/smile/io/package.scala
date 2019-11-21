@@ -210,13 +210,13 @@ object read {
   def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = DatasetReader.avro(file, schema)
 
   /** Reads an Apache Parquet file. */
-  def parquet(file: String): DataFrame = parquet(file)
+  def parquet(file: String): DataFrame = parquet(Paths.get(file))
 
   /** Reads an Apache Parquet file. */
   def parquet(file: Path): DataFrame = DatasetReader.parquet(file)
 
   /** Reads a LivSVM file. */
-  def libsvm(file: String): Dataset[Instance[SparseArray]] = libsvm(file)
+  def libsvm(file: String): Dataset[Instance[SparseArray]] = libsvm(Paths.get(file))
 
   /** Reads a LivSVM file. */
   def libsvm(file: Path): Dataset[Instance[SparseArray]] = DatasetReader.libsvm(file)
