@@ -84,7 +84,7 @@ package object regression {
     * @param data the data frame of the explanatory and response variables.
     * @param method qr or svd.
     */
-  def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean, recursive: Boolean): LinearModel = time("Least Squares") {
+  def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel = time("Least Squares") {
     OLS.fit(formula, data, method, stderr, recursive)
   }
 
@@ -381,7 +381,7 @@ package object regression {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, loss: Loss, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
+  def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
     GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
   }
 
