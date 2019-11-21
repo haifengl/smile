@@ -16,20 +16,20 @@ permalink: "{{ page.filePathStem }}.html"
     &lt;dependency&gt;
       &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
       &lt;artifactId&gt;smile-core&lt;/artifactId&gt;
-      &lt;version&gt;1.5.3&lt;/version&gt;
+      &lt;version&gt;2.0.0&lt;/version&gt;
     &lt;/dependency&gt;
     </code></pre>
 
     <p>If you're using SBT, add the following line into your build file:</p>
 
     <pre><code>
-    libraryDependencies += "com.github.haifengl" % "smile-core" % "1.5.3"
+    libraryDependencies += "com.github.haifengl" % "smile-core" % "2.0.0"
     </code></pre>
 
     <p>For Scala API,</p>
 
     <pre><code>
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "1.5.3"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.0.0"
     </code></pre>
 
     <p>To enable machine optimised matrix computation, the users should add
@@ -38,7 +38,7 @@ permalink: "{{ page.filePathStem }}.html"
     &lt;dependency&gt;
       &lt;groupId&gt;com.github.haifengl&lt;/groupId&gt;
       &lt;artifactId&gt;smile-netlib&lt;/artifactId&gt;
-      &lt;version&gt;1.5.3&lt;/version&gt;
+      &lt;version&gt;2.0.0&lt;/version&gt;
     &lt;/dependency&gt;
     </code></pre>
     <p>and also make their machine-optimised libblas3 (CBLAS) and liblapack3 (Fortran)
@@ -103,18 +103,6 @@ permalink: "{{ page.filePathStem }}.html"
         We have moved to SBT to build packages. The maven pom.xml files were deprecated and were removed in v1.2.0.
     </p>
 
-    <h2 class="question" id="sbt-pgp">sbt error "not found: value useGpg"</h2>
-    <p class="answer">
-        Smile uses <a href="http://www.scala-sbt.org/sbt-pgp/">sbt-pgp</a> plugin when
-        publishing to maven central repository. Although you will not publish the project,
-        you still have to set up sbt-pgp in order to build the packages. Fortunately, it is
-        very easy. Simply add the following to your <code>~/.sbt/0.13/plugins/gpg.sbt</code> file:
-    </p>
-
-    <pre class="prettyprint lang-scala"><code>
-    addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
-    </code></pre>
-
     <h2 class="question" id="headless-plot">Headless Plot</h2>
     <p class="answer">
         In case that your environment does not have a display or you need to generate and save
@@ -128,10 +116,11 @@ permalink: "{{ page.filePathStem }}.html"
     <p>The following example shows how to save a plot in the headless mode.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = read.table("data/classification/toy/toy-train.txt",response = Some((new NominalAttribute("class"), 0)))
-    val (x, y) = toy.unzipInt
+    val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
+    val x = toy.select(1, 2).toArray
+    val y = toy.column(0).toIntArray
 
-    val canvas = ScatterPlot.plot(x, y, '*', Array(Color.RED, Color.BLUE))
+    val canvas = ScatterPlot.plot(x, y, '*', Array(RED, BLUE))
 
     val headless = new Headless(canvas);
     headless.pack();
@@ -145,9 +134,8 @@ permalink: "{{ page.filePathStem }}.html"
         This is a common question for stochastic algorithms like random forest.
         In general, this is discouraged because people often choose bad seed due to the lack
         of sufficient knowledge of random number generation. However, one may want the repeatable
-        result for testing purpose. In this case, the short answer is that set
-        <code>-Dsmile.threads=1</code> for JVM and call <code>smile.math.MathEx.setSeed</code> before
-        training the model. Again, if you just want repeatable result, the first step should be sufficient.
+        result for testing purpose. In this case, call <code>smile.math.MathEx.setSeed</code> before
+        training the model.
     </p>
 
     <p>
@@ -160,7 +148,7 @@ permalink: "{{ page.filePathStem }}.html"
     </p>
 
     <p>
-        A method <code>setSeed(double)</code> in the algorithm is also troublesome.
+        A method <code>setSeed()</code> in the algorithm is also troublesome.
         For algorithms like random forest, it is not right to initialize every thread
         with the same seed. Otherwise, same decision trees will be created
         and we lose the randomness of "random" forest. It is also complicated

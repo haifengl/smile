@@ -24,18 +24,8 @@ permalink: "{{ page.filePathStem }}.html"
         the project website. We provide pre-packaged binary for Mac. The universal tarball
         is also available and can be used on Windows and Linux.</p>
 
-    <p>If you would like to build Smile from source, please first install Java 8, Scala 2.12
-        and SBT 0.13+.
-        Smile uses <a href="http://www.scala-sbt.org/sbt-pgp/">sbt-pgp</a> plugin when
-        publishing to maven central repository. Although you will not publish the project,
-        you still have to set up sbt-pgp in order to build the packages. Fortunately, it is
-        very easy. Simply add the following to your <code>~/.sbt/0.13/plugins/gpg.sbt</code> file:</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    addSbtPlugin("com.jsuereth" % "sbt-pgp" % "1.0.0")
-    </code></pre>
-
-    <p>Then clone the repo and build the package:</p>
+    <p>If you would like to build Smile from source, please first install Java 8, Scala 2.13
+        and SBT 1.0+. Then clone the repo and build the package:</p>
 
     <pre class="prettyprint lang-bash"><code>
     git clone https://github.com/haifengl/smile.git
@@ -43,16 +33,10 @@ permalink: "{{ page.filePathStem }}.html"
     sbt package
     </code></pre>
 
-    <p>To build with Scala 2.11, run</p>
+    <p>To build with Scala 2.12, run</p>
 
     <pre class="prettyprint lang-bash"><code>
-    sbt ++2.11.8 scala/package
-    </code></pre>
-
-    <p>To build with Scala 2.10, run</p>
-
-    <pre class="prettyprint lang-bash"><code>
-    sbt ++2.10.6 scala/package
+    sbt ++2.12.10 scala/package
     </code></pre>
 
     <p>To test the latest code, run the following</p>
@@ -64,7 +48,8 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>which will build the system and enter the shell.</p>
 
-    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+    <p>Smile runs on both Windows (requires Windows Subsystem for Linux)
+        and UNIX-like systems (e.g. Linux, Mac OS).
         All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
         or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
@@ -87,12 +72,32 @@ permalink: "{{ page.filePathStem }}.html"
     ./bin/smile -J-Xmx8192M
     </code></pre>
 
-    <p>You can also modify the configuration file <code>./conf/application.ini</code>
-        for the memory and other JVM settings. On Windows, the configuration
-        file is <code>smile_config.txt</code>.</p>
+    <p>You can also modify the configuration file <code>./conf/smile.ini</code>
+        for the memory and other JVM settings.</p>
 
-    <p>To get help information of Smile high-level operators,
-        the <code>help</code> in the shell. You can also get detailed information on
+    <h3 id="basics">Basics</h3>
+
+    <p>When the shell starts, we should see something like the following:</p>
+    <pre class="prettyprint lang-scala"><code>
+                                                       ..::''''::..
+                                                     .;''        ``;.
+     ....                                           ::    ::  ::    ::
+   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                       ``::,,,,::''
+
+  Welcome to Smile Shell; enter 'help&lt;RETURN&gt;' for list of supported commands.
+  Type "exit&lt;RETURN&gt;" to leave the Smile Shell
+  Version 2.0.0, Scala 2.13.1, SBT 1.2.8, Built at 2019-11-20 20:04:41.868
+===============================================================================
+smile&gt;
+    </code></pre>
+    <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
+        To get help information of Smile high-level operators,
+        type <code>help</code>. You can also get detailed information on
         each operator by typing <code>help("command")</code>, e.g.
         <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
 
@@ -104,27 +109,110 @@ permalink: "{{ page.filePathStem }}.html"
         <code>bencharm("test name")</code>, where test name could be "airline",
         "usps", etc.</p>
 
-    <p>In the <code>data</code> directory, we also include many open datasets,
-        which are frequently used in research and benchmark. Now let&#8217;s build
-        a classification model with Smile. It is as easy as</p>
+    <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
+        This is available via tab-completion analogous to the path-completion available in most shells.
+        If you type a partial path, tab will complete as far as it can and show you your options
+        if there is more than one.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val data = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = data.unzipInt
-
-    val rf = randomForest(x, y)
-    println(s"OOB error = ${rf.error}")
-    rf.predict(x(0))
+    smile&gt; smile.classification.r
+    randomDecisionForest   rbfnet   rda
     </code></pre>
 
-    <p>In this example, we use the famous Iris data from R.A. Fisher. The data
-        is in Weka's ARFF format. The second parameter of read.arff is the column index
-        of response variable. With our parsers, the column index starts with 0. The
-        function read.arff returns an object of <code>AttributeDataset</code>.
-        Besides the data itself, an <code>AttributeDataset</code> object also contains many meta data.
-        Then we use the help function <code>unzipInt</code> to get the training
-        data and labels. For regression, you may use <code>unzipDouble</code> as
-        the response variable is real value. Finally, we train a random forest
+    <h3 id="third-party-libraries">Third Party Libraries</h3>
+
+    <p>It is also possible to use third party libraries from Maven Central.
+        For example,</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`com.google.guava:guava:18.0`, com.google.common.collect._
+    </code></pre>
+
+    <p>If the library is not available in local ivy cache, Smile Shell will download
+        it automatically. Note that the format <code>org:library:version</code> is similar
+        with the library dependency in SBT. For Scala library, it is recommended to use
+        the format <code>org::library:version</code>, which will choose the library in the
+        same Scala major version (e.g. 2.13 vs 2.12).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`org.scalaz::scalaz-core:7.2.7`, scalaz._, Scalaz._
+    </code></pre>
+
+    <p>Beyond the default resolvers, we can add third-party or our own repositories:</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; interp.repositories() ++= Seq(coursier.ivy.IvyRepository.fromPattern(
+      "https://ambiata-oss.s3-ap-southeast-2.amazonaws.com/" +:
+      coursier.ivy.Pattern.default
+    ))
+    </code></pre>
+
+    <h3 id="calculator">Calculator</h3>
+
+    <p>Smile Shell is based on <a href="http://ammonite.io">Ammonite REPL</a>. We can run any valid Scala
+        expressions in the shell. In the simplest case, you can use it as a calculator.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; "Hello, World"
+    res0: String = Hello, World
+
+    smile&gt; 2
+    res1: Int = 2
+
+    smile&gt; 2+3
+    res2: Int = 5
+    </code></pre>
+
+    <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val x = 2 + 3
+    x: Int = 5
+
+    smile&gt; print(x)
+    5
+
+    smile&gt; val y = 2 * (x + 1)
+    z: Int = 12
+    </code></pre>
+
+    <p>Functions can be defined too. As Scala is a functional language, functions are
+        first class citizen, just like other values.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; def sq(x: Double) = x * x
+    sq: (x: Double)Double
+
+    smile&gt; sq(y)
+    res4: Double = 441.0
+    </code></pre>
+    <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
+        Although you don't need to know all the bells and whistles of Scala to use Smile, we strongly recommend you to
+        learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
+
+    <h3 id="script">Script</h3>
+
+    <p>We may also run Smile code in a script. The script
+        <code>examples/iris.sc</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = read.arff(Paths.getTestData("weka/iris.arff"))
+    println(data)
+
+    val formula = "class" ~
+    val rf = smile.classification.randomForest(formula, data)
+    println(s"OOB error = %.2f%%" format 100 * rf.error)
+    </code></pre>
+
+    <p>can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ bin/smile examples/iris.sc
+    </code></pre>
+
+    <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+        (including many open data for research purpose). The data
+        is in Weka's ARFF format. The function <code>read.arff</code> returns an object of
+        <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
+        the column "class" will be used as the class label while the rest columns
+        are predictors. Finally, we train a random forest
         with default parameters and print out its OOB (out of bag) error. We can apply
         the model on new data samples with the method <code>predict</code>.</p>
 

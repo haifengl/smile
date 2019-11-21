@@ -25,11 +25,9 @@ permalink: "{{ page.filePathStem }}.html"
         Online learning is a model of induction that learns one instance at a time.
         The method <code>learn</code> updates the model with a new instance.</p>
 
-    <p>The high-level operators are defined in Scala trait
-        <a href="api/scala/index.html#smile.classification.Operators"><code>smile.classification.Operators</code></a>
-        and also in the package object of <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.</p>
-
-    <p>In what follows, we will discuss each algorithm, their high-level
+    <p>The high-level operators are defined in Scala package object of
+        <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.
+        In what follows, we will discuss each algorithm, their high-level
         Scala API, and examples.</p>
 
     <h2 id="introduction">Introduction</h2>
@@ -167,9 +165,10 @@ permalink: "{{ page.filePathStem }}.html"
         Iris datset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = iris.unzipInt
-    cv(x, y, 10) { case (x, y) => knn(x, y, 3) }
+    val iris = read.arff("data/weka/iris.arff")
+    val x = iris.select(0, 1, 2, 3).toArray
+    val y = iris("class").toIntArray
+    cv(10, x, y) { case (x, y) => knn(x, y, 3) }
     </code></pre>
 
     <p>The best choice of k depends upon the data; generally, larger values of
@@ -220,8 +219,9 @@ permalink: "{{ page.filePathStem }}.html"
         <code>k</code>, the smoother the boundary.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val toy = read.table("data/classification/toy/toy-train.txt", response = Some(new NominalAttribute("class"), 0))
-    val (x, y) = toy.unzipInt
+    val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
+    val x = toy.select(1, 2).toArray
+    val y = toy.column(0).toIntArray
     plot(x, y, knn(x, y, 3))
     </code></pre>
 
@@ -479,11 +479,11 @@ permalink: "{{ page.filePathStem }}.html"
         mean 0 and standard deviation 1.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def mlp(x: Array[Array[Double]], y: Array[Int], numUnits: Array[Int], error: NeuralNetwork.ErrorFunction, activation: NeuralNetwork.ActivationFunction, epochs: Int = 25, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): NeuralNetwork
+    def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP
     </code></pre>
 
-    <p>where <code>numUnits</code> is the number of units in each layer, <code>error</code>
-        is the error function, <code>activation</code> is the activation function of output layer,
+    <p>where <code>p</code> is the number of input variables, <code>builders</code>
+        defines the each layer of network,
         <code>epochs</code> is the number of epochs of stochastic learning,
         <code>eta</code> is the learning rate,
         <code>alpha</code> is the momentum factor,
@@ -600,13 +600,7 @@ permalink: "{{ page.filePathStem }}.html"
         network's parameters.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
-
-    def rbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
-
-    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: RadialBasisFunction, centers: Array[T]): RBFNetwork[T]
-
-    def nrbfnet[T](x: Array[T], y: Array[Int], distance: Metric[T], rbf: Array[RadialBasisFunction], centers: Array[T]): RBFNetwork[T]
+    def rbfnet[T](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
     </code></pre>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the so
@@ -621,10 +615,8 @@ permalink: "{{ page.filePathStem }}.html"
         increases).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val centers = new Array[Array[Double]](50)
-    val basis = gaussrbf(x, centers)
-    val classifier = rbfnet(x, y, new EuclideanDistance, basis, centers)
-    plot(x, y, classifier)
+    val rbf = rbfnet(x, y, RBF.fit(x, 50), false)
+    plot(x, y, rbf)
     </code></pre>
 
     <p>After running the above example, you may notice that the decision boundary
