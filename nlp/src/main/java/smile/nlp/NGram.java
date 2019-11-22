@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  *
  * @author Haifeng Li
  */
-public class NGram implements Comparable<NGram> {
+public class NGram {
 
     /**
      * Immutable word sequences.
@@ -35,32 +35,16 @@ public class NGram implements Comparable<NGram> {
     public final String[] words;
 
     /**
-     * The frequency of n-gram in the corpus.
-     */
-    public final int count;
-
-    /**
      * Constructor.
      * @param words the n-gram word sequence.
      */
     public NGram(String[] words) {
-        this(words, 0);
-    }
-
-    /**
-     * Constructor.
-     * @param words the n-gram word sequence.
-     * @param count the frequency of n-gram in the corpus.
-     */
-    public NGram(String[] words, int count) {
         this.words = words;
-        this.count = count;
     }
 
     @Override
     public String toString() {
-        String ngram = Arrays.stream(words).collect(Collectors.joining(", ", "[", "]"));
-        return count > 0 ? String.format("(%s, %d)", ngram, count) : ngram;
+        return Arrays.stream(words).collect(Collectors.joining(", ", "[", "]"));
     }
 
     @Override
@@ -80,10 +64,5 @@ public class NGram implements Comparable<NGram> {
 
         final NGram other = (NGram) obj;
         return Arrays.equals(words, other.words);
-    }
-
-    @Override
-    public int compareTo(NGram o) {
-        return Integer.compare(count, o.count);
     }
 }

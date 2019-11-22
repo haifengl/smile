@@ -23,9 +23,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import smile.nlp.NGram;
 import smile.nlp.Trie;
-import smile.nlp.collocation.AprioriPhraseExtractor;
+import smile.nlp.collocation.NGram;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.tokenizer.SimpleParagraphSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
@@ -49,15 +48,15 @@ import smile.sort.QuickSort;
  * 
  * @author Haifeng Li
  */
-public interface CooccurrenceKeywordExtractor {
+public interface CooccurrenceKeywords {
 
     /**
      * Returns the top 10 keywords.
      * @param text A single document.
      * @return The top 10 keywords.
      */
-    static ArrayList<NGram> extract(String text) {
-        return extract(text, 10);
+    static NGram[] of(String text) {
+        return of(text, 10);
     }
     
     /**
@@ -65,7 +64,7 @@ public interface CooccurrenceKeywordExtractor {
      * @param text A single document.
      * @return The top keywords.
      */
-    static ArrayList<NGram> extract(String text, int maxNumKeywords) {
+    static NGram[] of(String text, int maxNumKeywords) {
         ArrayList<String[]> sentences = new ArrayList<>();
         
         SimpleTokenizer tokenizer = new SimpleTokenizer();
@@ -87,7 +86,7 @@ public interface CooccurrenceKeywordExtractor {
         //  Extract phrases by Apriori-like algorithm.
         int maxNGramSize = 4;
         ArrayList<NGram> terms = new ArrayList<>();
-        for (ArrayList<NGram> ngrams : AprioriPhraseExtractor.extract(sentences, maxNGramSize, 4)) {
+        for (NGram[] ngrams : NGram.of(sentences, maxNGramSize, 4)) {
             for (NGram ngram : ngrams) {
                 terms.add(ngram);
             }
@@ -231,6 +230,6 @@ public interface CooccurrenceKeywordExtractor {
             }
         }
 
-        return keywords;
+        return keywords.toArray(new NGram[keywords.size()]);
     }
 }

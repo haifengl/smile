@@ -19,75 +19,88 @@ package smile.nlp.collocation;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Iterator;
+import smile.nlp.Corpus;
 import smile.sort.HeapSelect;
 import smile.stat.distribution.ChiSquareDistribution;
-import smile.nlp.Bigram;
-import smile.nlp.Corpus;
 
 /**
- * Tools to identify collocations (words that often appear consecutively) within
- * corpora. They may also be used to find other associations between word
- * occurrences.
- * <p>
- * Finding collocations requires first calculating the frequencies of words
- * and their appearance in the context of other words. Often the collection
- * of words will then requiring filtering to only retain useful content terms.
- * Each n-gram of words may then be scored according to some association measure,
- * in order to determine the relative likelihood of each n-gram being a
- * collocation.
- * 
+ * Collocations are expressions of multiple words which commonly co-occur.
+ * A bigram collocation is a pair of words w1 w2 that appear together with
+ * statistically significance.
+ *
  * @author Haifeng Li
  */
-public class BigramCollocationFinder {
+public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
+
+    /**
+     * The frequency of bigram in the corpus.
+     */
+    public final int count;
+    /**
+     * The chi-square statistical score of the collocation.
+     */
+    public final double score;
+
+    /**
+     * Constructor.
+     * @param w1 the first word of bigram.
+     * @param w2 the second word of bigram.
+     * @param count the frequency of bigram in the corpus.
+     * @param score the chi-square statistical score of collocation in a corpus.
+     */
+    public Bigram(String w1, String w2, int count, double score) {
+        super(w1, w2);
+        this.count = count;
+        this.score = score;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("(%s %s, %d, %.2f)", w1, w2, count, score);
+    }
+
+    @Override
+    public int compareTo(Bigram o) {
+        return Double.compare(score, o.score);
+    }
 
     /**
      * Chi-square distribution with 1 degree of freedom.
      */
-    private ChiSquareDistribution chisq = new ChiSquareDistribution(1);
-
-    /**
-     * The minimum frequency of collocation.
-     */
-    private int minFreq;
-
-    /**
-     * Constructor.
-     * @param minFreq the minimum frequency of collocation.
-     */
-    public BigramCollocationFinder(int minFreq) {
-        this.minFreq = minFreq;
-    }
+    private static ChiSquareDistribution chisq = new ChiSquareDistribution(1);
 
     /**
      * Finds top k bigram collocations in the given corpus.
+     * @param minFrequency The minimum frequency of bigram in the corpus.
      * @return the array of significant bigram collocations in descending order
      * of likelihood ratio.
      */
-    public BigramCollocation[] find(Corpus corpus, int k) {
-        BigramCollocation[] bigrams = new BigramCollocation[k];
-        HeapSelect<BigramCollocation> heap = new HeapSelect<>(bigrams);
-        
-        Iterator<Bigram> iterator = corpus.getBigrams();
+    public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
+        Bigram[] bigrams = new Bigram[k];
+        HeapSelect<Bigram> heap = new HeapSelect<>(bigrams);
+
+        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
         while (iterator.hasNext()) {
-            Bigram bigram = iterator.next();
+            smile.nlp.Bigram bigram = iterator.next();
             int c12 = corpus.getBigramFrequency(bigram);
 
-            if (c12 > minFreq) {
+            if (c12 > minFrequency) {
                 int c1 = corpus.getTermFrequency(bigram.w1);
                 int c2 = corpus.getTermFrequency(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
-                heap.add(new BigramCollocation(bigram.w1, bigram.w2, c12, -score));
+                heap.add(new Bigram(bigram.w1, bigram.w2, c12, -score));
             }
         }
 
         heap.sort();
 
-        BigramCollocation[] collocations = new BigramCollocation[k];
+        Bigram[] collocations = new Bigram[k];
         for (int i = 0; i < k; i++) {
-            BigramCollocation bigram = bigrams[k-i-1];
-            collocations[i] = new BigramCollocation(bigram.bigram, bigram.frequency, -bigram.score);
+            Bigram bigram = bigrams[k-i-1];
+            collocations[i] = new Bigram(bigram.w1, bigram.w2, bigram.count, -bigram.score);
         }
 
         return collocations;
@@ -97,47 +110,37 @@ public class BigramCollocationFinder {
      * Finds bigram collocations in the given corpus whose p-value is less than
      * the given threshold.
      * @param p the p-value threshold
-     * @return the array of significant bigram collocations in descending order
-     * of likelihood ratio.
+     * @param minFrequency The minimum frequency of bigram in the corpus.
+     * @return the array of significant bigram collocations in descending
+     * order of likelihood ratio.
      */
-    public BigramCollocation[] find(Corpus corpus, double p) {
+    public static Bigram[] of(Corpus corpus, double p, int minFrequency) {
         if (p <= 0.0 || p >= 1.0) {
             throw new IllegalArgumentException("Invalid p = " + p);
         }
 
         double cutoff = chisq.quantile(p);
-        
-        ArrayList<BigramCollocation> bigrams = new ArrayList<>();
 
-        Iterator<Bigram> iterator = corpus.getBigrams();
+        ArrayList<Bigram> bigrams = new ArrayList<>();
+
+        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
         while (iterator.hasNext()) {
-            Bigram bigram = iterator.next();
+            smile.nlp.Bigram bigram = iterator.next();
             int c12 = corpus.getBigramFrequency(bigram);
 
-            if (c12 > minFreq) {
+            if (c12 > minFrequency) {
                 int c1 = corpus.getTermFrequency(bigram.w1);
                 int c2 = corpus.getTermFrequency(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
                 if (score > cutoff) {
-                    bigrams.add(new BigramCollocation(bigram.w1, bigram.w2, c12, score));
+                    bigrams.add(new Bigram(bigram.w1, bigram.w2, c12, score));
                 }
             }
         }
 
-        int n = bigrams.size();
-        BigramCollocation[] collocations = new BigramCollocation[n];
-        for (int i = 0; i < n; i++) {
-            collocations[i] = bigrams.get(i);
-        }
-
-        Arrays.sort(collocations);
-        // Reverse to descending order
-        for (int i = 0; i < n/2; i++) {
-            BigramCollocation b = collocations[i];
-            collocations[i] = collocations[n-i-1];
-            collocations[n-i-1] = b;
-        }
+        Bigram[] collocations = bigrams.toArray(new Bigram[bigrams.size()]);
+        Arrays.sort(collocations, Collections.reverseOrder());
 
         return collocations;
     }
@@ -149,7 +152,7 @@ public class BigramCollocationFinder {
      * @param c12 the number of occurrences of w1 w2.
      * @param N the number of tokens in the corpus.
      */
-    private double likelihoodRatio(int c1, int c2, int c12, long N) {
+    private static double likelihoodRatio(int c1, int c2, int c12, long N) {
         double p = (double) c2 / N;
         double p1 = (double) c12 / c1;
         double p2 = (double) (c2 - c12) / (N - c1);
@@ -161,7 +164,7 @@ public class BigramCollocationFinder {
     /**
      * Help function for calculating likelihood ratio statistic.
      */
-    private double logL(int k, long n, double x) {
+    private static double logL(int k, long n, double x) {
         if (x == 0.0) x = 0.01;
         if (x == 1.0) x = 0.99;
         return k * Math.log(x) + (n-k) * Math.log(1-x);
