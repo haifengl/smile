@@ -22,7 +22,6 @@ import static org.junit.Assert.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.ArrayList;
-import java.util.Scanner;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -30,7 +29,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.nlp.NGram;
 import smile.nlp.stemmer.PorterStemmer;
 import smile.nlp.tokenizer.SimpleParagraphSplitter;
 import smile.nlp.tokenizer.SimpleSentenceSplitter;
@@ -40,9 +38,9 @@ import smile.nlp.tokenizer.SimpleTokenizer;
  *
  * @author Haifeng Li
  */
-public class AprioriPhraseExtractorTest {
+public class NGramTest {
 
-    public AprioriPhraseExtractorTest() {
+    public NGramTest() {
     }
 
     @BeforeClass
@@ -63,7 +61,7 @@ public class AprioriPhraseExtractorTest {
 
     @Test
     public void testExtract() throws IOException {
-        System.out.println("extract");
+        System.out.println("n-gram extraction");
         String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
 
         PorterStemmer stemmer = new PorterStemmer();
@@ -79,14 +77,20 @@ public class AprioriPhraseExtractorTest {
             }
         }
 
-        ArrayList<ArrayList<NGram>> result = AprioriPhraseExtractor.extract(sentences, 4, 4);
+        NGram[][] result = NGram.of(sentences, 4, 4);
 
-        assertEquals(5, result.size());
-        for (ArrayList<NGram> ngrams : result) {
+        assertEquals(5, result.length);
+        for (NGram[] ngrams : result) {
             for (NGram ngram : ngrams) {
-                System.out.print(ngram);
+                System.out.println(ngram);
             }
             System.out.println();
         }
+
+        assertEquals(0, result[0].length);
+        assertEquals(331, result[1].length);
+        assertEquals(16, result[2].length);
+        assertEquals(7, result[3].length);
+        assertEquals(0, result[4].length);
     }
 }

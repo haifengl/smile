@@ -31,10 +31,10 @@ import smile.nlp.Text;
  *
  * @author Haifeng Li
  */
-public class BigramCollocationFinderTest {
+public class BigramTest {
     SimpleCorpus corpus = new SimpleCorpus();
 
-    public BigramCollocationFinderTest() {
+    public BigramTest() {
         try {
             smile.util.Paths.getTestDataLines("text/plot.tok.gt9.5000")
                     .map(String::trim)
@@ -61,37 +61,39 @@ public class BigramCollocationFinderTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of find method, of class BigramCollocationFinder.
-     */
     @Test
     public void testFind_Corpus_int() {
-        System.out.println("find");
+        System.out.println("k = 10");
 
         int k = 10;
-        BigramCollocationFinder instance = new BigramCollocationFinder(5);
-        BigramCollocation[] result = instance.find(corpus, k);
+        Bigram[] result = Bigram.of(corpus, k, 5);
 
         assertEquals(10, result.length);
         for (int i = 0; i < result.length; i++) {
             System.out.println(result[i]);
         }
+
+        assertEquals(46, result[0].count);
+        assertEquals(545.16, result[0].score, 1E-2);
+        assertEquals(19, result[9].count);
+        assertEquals(186.69, result[9].score, 1E-2);
     }
 
-    /**
-     * Test of find method, of class BigramCollocationFinder.
-     */
     @Test
     public void testFind_Corpus_double() {
-        System.out.println("find");
+        System.out.println("p = 0.0001");
 
         double p = 0.0001;
-        BigramCollocationFinder instance = new BigramCollocationFinder(5);
-        BigramCollocation[] result = instance.find(corpus, p);
+        Bigram[] result = Bigram.of(corpus, p, 5);
 
         assertEquals(63, result.length);
         for (int i = 0; i < result.length; i++) {
             System.out.println(result[i]);
         }
+
+        assertEquals(46, result[0].count);
+        assertEquals(545.16, result[0].score, 1E-2);
+        assertEquals(6, result[62].count);
+        assertEquals(10.84, result[62].score, 1E-2);
     }
 }
