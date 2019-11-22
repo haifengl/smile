@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Optional;
@@ -51,25 +52,25 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class LaplacianEigenmap {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LaplacianEigenmap.class);
+public class LaplacianEigenmap implements Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The width of heat kernel.
      */
-    private double t;
+    public final double width;
     /**
      * The original sample index.
      */
-    private int[] index;
+    public final int[] index;
     /**
      * Coordinate matrix.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
     /**
      * Nearest neighbor graph.
      */
-    private Graph graph;
+    public final Graph graph;
 
     /**
      * Constructor with discrete weights.
@@ -83,13 +84,13 @@ public class LaplacianEigenmap {
 
     /**
      * Constructor with Gaussian kernel.
-     * @param t the width of heat kernel.
+     * @param width the width of heat kernel.
      * @param index the original sample index.
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public LaplacianEigenmap(double t, int[] index, double[][] coordinates, Graph graph) {
-        this.t = t;
+    public LaplacianEigenmap(double width, int[] index, double[][] coordinates, Graph graph) {
+        this.width = width;
         this.index = index;
         this.coordinates = coordinates;
         this.graph = graph;
@@ -175,35 +176,5 @@ public class LaplacianEigenmap {
         }
 
         return new LaplacianEigenmap(t, index, coordinates, graph);
-    }
-
-    /**
-     * Returns the original sample index. Because Laplacian Eigenmap is applied to the largest
-     * connected component of k-nearest neighbor graph, we record the the original
-     * indices of samples in the largest component.
-     */
-    public int[] getIndex() {
-        return index;
-    }
-
-    /**
-     * Returns the coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
-    }
-
-    /**
-     * Returns the nearest neighbor graph.
-     */
-    public Graph getNearestNeighborGraph() {
-        return graph;
-    }
-
-    /**
-     * Returns the width of heat kernel.
-     */
-    public double getHeatKernelWidth() {
-        return t;
     }
 }
