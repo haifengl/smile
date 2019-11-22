@@ -19,3 +19,5 @@ target in Compile in doc := baseDirectory.value / "../docs/2.0/api/scala"
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.11.1"
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
+
+libraryDependencies += "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0"
