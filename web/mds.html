@@ -69,11 +69,11 @@ permalink: "{{ page.filePathStem }}.html"
         representing the objects.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val eurodist = read.table("data/projection/eurodist.txt", delimiter = "\\t+", header = true, rowNames = true)
-    val dist = eurodist.unzip
-    val labels = eurodist.attributes.map(_.getName).toArray
-    val x = mds(dist, 2).getCoordinates
-    plot(x, labels)
+    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = true)
+    val dist = eurodist.drop(0).toArray
+    val citys = eurodist.stringVector(0).toArray
+    val x = mds(dist, 2).coordinates
+    plot(x, citys)
     </code></pre>
 
     <p>In the above example, we apply MDS to a distance matrix of some European cities.</p>

@@ -68,19 +68,12 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A common way to display SOMs is the heat map of U-matrix. The U-matrix value
         of a particular node is the minimum/maximum/average distance between the node
         and its closest neighbors. In a rectangular grid for instance, we might
-        consider the closest 4 or 8 nodes.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def som(data: Array[Array[Double]], width: Int, height: Int): SOM
-    </code></pre>
-
-    <p>It is common to use the U-Matrix to visualize an SOM.
-        The U-Matrix value of a particular node is the average
-        distance between the node's weight vector and that of
-        its closest neighbors. In a square grid, for instance,
-        we might consider the closest 4 or 8 nodes
-        (the Von Neumann and Moore neighborhoods, respectively),
-        or six nodes in a hexagonal grid.</p>
+        consider the closest 4 or 8 nodes. It is common to use the U-Matrix to
+        visualize an SOM. The U-Matrix value of a particular node is the average
+        distance between the node's weight vector and that of its closest neighbors.
+        In a square grid, for instance, we might consider the closest 4 or 8 nodes
+        (the Von Neumann and Moore neighborhoods, respectively), or six nodes in
+        a hexagonal grid.</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/t4.8k.png" class="enlarge" style="width: 480px;" />
@@ -92,9 +85,21 @@ permalink: "{{ page.filePathStem }}.html"
         neurons.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x = read.table("data/clustering/chameleon/t4.8k.txt").unzip
-    val map = som(x, 30, 30)
-    hexmap(map.umatrix, Palette.jet(256))
+    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
+
+    val epochs = 20
+    val lattice = SOM.lattice(20, 20, x);
+    val som = new SOM(lattice,
+                TimeFunction.constant(0.1),
+                Neighborhood.Gaussian(1, x.length * epochs / 4))
+
+    (1 to epochs).foreach { _ =>
+        MathEx.permutate(x.length).foreach { i =>
+            som.update(x(i));
+        }
+    }
+
+    hexmap(som.umatrix, Palette.jet(256))
     </code></pre>
 
     <p>The U-Matrix is visualized with a hexmap, where a dark red coloring between
@@ -118,20 +123,20 @@ permalink: "{{ page.filePathStem }}.html"
         parameters, nearest neighbor range, etc.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val dist = map.umatrix.flatten
+    val dist = som.umatrix.flatten
     val win = hist(dist, 100)
 
-    val mixture = new GaussianMixture(dist)
+    val mixture = GaussianMixture.fit(dist)
 
-    val minDist = min(dist: _*)
-    val w = (max(dist: _*) - minDist) / 50
+    val minDist = MathEx.min(dist)
+    val w = (MathEx.max(dist) - minDist) / 50
     val pdf = (0 to 50).map {i =>
       val x = minDist + i * w
       val y = mixture.p(x) * w
       Array(x, y)
     }.toArray
 
-    win.canvas.line(pdf, Color.RED)
+    win.canvas.line(pdf, RED)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -143,10 +148,10 @@ permalink: "{{ page.filePathStem }}.html"
         codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val nodes = 30
-    val map = som(x, nodes, nodes)
-    val codebook = map.map.flatten
-    val codebook2d = sammon(pdist(codebook, false), 2).getCoordinates
+    val codebook = som.neurons.flatten
+    val codebook2d = sammon(pdist(codebook, false), 2).coordinates
+
+    val nodes = 20
     val neurons = (0 until nodes).map { i => codebook2d.slice(nodes*i, nodes*(i+1)) }.toArray
     grid(neurons)
     </code></pre>
@@ -185,19 +190,20 @@ permalink: "{{ page.filePathStem }}.html"
         algorithm can be achieved.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def neuralgas(data: Array[Array[Double]], k: Int, lambda_i: Double, lambda_f: Double = 0.01, eps_i: Double = 0.5, eps_f: Double = 0.005, steps: Int = 25): NeuralGas
-    </code></pre>
+    val epochs = 20;
+    val gas = new NeuralGas(NeuralGas.seed(400, x),
+                TimeFunction.exp(0.3, x.length * epochs / 2),
+                TimeFunction.exp(30, x.length * epochs / 8),
+                x.length * 2)
 
-    <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
-        If the output of K-Means is used to initialize other algorithms, a small number (says 20)
-        is usually sufficient. In practice, we often run the K-Means multiple times
-        and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
-        (e.g. 10 ~ 20).</p>
+    (1 to epochs).foreach { _ =>
+        MathEx.permutate(x.length).foreach { i =>
+            gas.update(x(i));
+        }
+    }
 
-    <pre class="prettyprint lang-scala"><code>
-    val gas = neuralgas(x, 200, 0.1)
     val win = plot(x, '.')
-    win.canvas.points(gas.neurons, '#', Color.BLUE)
+    win.canvas.points(gas.neurons, '#', BLUE)
     </code></pre>
 
     <p>In the plot, we draw the neurons as big blue dots.</p>
@@ -230,30 +236,22 @@ permalink: "{{ page.filePathStem }}.html"
     </ul>
 
     <pre class="prettyprint lang-scala"><code>
-    def gng(data: Array[Array[Double]], epochs: Int = 25, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, maxEdgeAge: Int = 88, lambda: Int = 300, alpha: Double = 0.5, beta: Double = 0.9995): GrowingNeuralGas
-    </code></pre>
+    val gng = new GrowingNeuralGas(x(0).length)
 
-    <p>where <code>epochs</code> is the number of epochs of learning as GNG is an online
-        learning algorithm. The parameter <code>epsBest</code> is the fraction to update nearest neuron,
-        <code>epsNeighbor</code> is the fraction to update neighbors of nearest neuron,
-        <code>maxEdgeAge</code> is the maximum age of edges.
-        If the number of input signals so far is an integer multiple
-        of <code>lambda</code>, insert a new neuron.
-        When inserting a new neuron, we decrease error variables by multiplying them with <code>alpha</code>.
-        We also decrease all error variables by multiply them with <code>beta</code>.</p>
+    (1 to 10).foreach { _ =>
+        MathEx.permutate(x.length).foreach { i =>
+            gng.update(x(i));
+        }
+    }
 
-    <pre class="prettyprint lang-scala"><code>
-    val gas = gng(x)
-
-    val neurons = gas.neurons
+    val neurons = gng.neurons
     val win = plot(x, '.')
-    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+    win.canvas.points(neurons.map(_.w).toArray, '@', BLUE)
 
-    for (i <- 0 until neurons.length) {
-      val neighbors = neurons(i).neighbors
-      for (j <- 0 until neighbors.length) {
-        val edge = Array(neurons(i).w, neighbors(j).w)
-        win.canvas.line(edge, Color.BLUE)
+    import scala.jdk.CollectionConverters._
+    neurons.foreach { neuron =>
+      neuron.edges.asScala.foreach { edge =>
+        win.canvas.line(Array(neuron.w, edge.neighbor.w), BLUE)
       }
     }
     </code></pre>
@@ -279,37 +277,76 @@ permalink: "{{ page.filePathStem }}.html"
         Hashing to speedup the learning while BIRCH uses balanced CF trees.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def neuralmap(data: Array[Array[Double]], radius: Double, L: Int, k: Int, epsBest: Double = 0.05, epsNeighbor: Double = 0.0006, epochs: Int = 5): NeuralMap
-    </code></pre>
+    val cortex = new NeuralMap(10, 0.01, 0.002, 50, 0.995)
 
-    <p>where <code>radius</code> is the distance radius to activate
-        a neuron for a given signal, <code>L</code> is the number of hash tables,
-        <code>k</code> is the number of random projection hash functions,
-        <code>epsBest</code> is the fraction to update activated neuron,
-        and <code>epsNeighbor</code> is the fraction to update neighbors of activated neuron.
-        </p>
-    <pre class="prettyprint lang-scala"><code>
-    val cortex = neuralmap(x, 10, 5, 3)
-    // neurons will be removed if the number of its points is less than 6.
-    cortex.purge(6)
+    (1 to 5).foreach { _ =>
+        MathEx.permutate(x.length).foreach { i =>
+            cortex.update(x(i));
+        }
 
-    import scala.collection.JavaConverters._
-    val neurons = cortex.neurons.asScala
+        // Removes staled neurons and the edges beyond lifetime.
+        cortex.clear(1E-7);
+    }
+
+    val neurons = cortex.neurons
     val win = plot(x, '.')
-    win.canvas.points(neurons.map(_.w).toArray, '@', Color.BLUE)
+    win.canvas.points(neurons.map(_.w).toArray, '@', BLUE)
 
-    for (i <- 0 until neurons.size) {
-      val neighbors = neurons(i).neighbors.asScala
-      for (j <- 0 until neighbors.size) {
-        val edge = Array(neurons(i).w, neighbors(j).w)
-        win.canvas.line(edge, Color.BLUE)
+    import scala.jdk.CollectionConverters._
+    neurons.foreach { neuron =>
+      neuron.edges.asScala.foreach { edge =>
+        win.canvas.line(Array(neuron.w, edge.neighbor.w), BLUE)
       }
     }
     </code></pre>
 
+    <p>Note that points in orange are outliers labeled by the algorithm.</p>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/neural-map.png" class="enlarge" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">Neural Map</div>
+    </div>
+
+    <h2 id="birch">BIRCH</h2>
+
+    <p>BIRCH (Balanced Iterative Reducing and Clustering using Hierarchies) performs
+        hierarchical clustering over particularly large datasets. An advantage of
+        BIRCH is its ability to incrementally and dynamically cluster incoming,
+        multi-dimensional metric data points in an attempt to produce the high
+        quality clustering for a given set of resources (memory and time constraints).</p>
+
+    <p>BIRCH has several advantages. For example, each clustering decision is made
+        without scanning all data points and currently existing clusters. It
+        exploits the observation that data space is not usually uniformly occupied
+        and not every data point is equally important. It makes full use of
+        available memory to derive the finest possible sub-clusters while minimizing
+        I/O costs. It is also an incremental method that does not require the whole
+        data set in advance.</p>
+
+    <p>This implementation produces a clustering in three steps. First step
+        builds a CF (clustering feature) tree by a single scan of database.
+        The second step clusters the leaves of CF tree by hierarchical clustering.
+        Then the user can use the learned model to cluster input data in the final
+        step. In total, we scan the database twice.</p>
+
+    <p>A CF leaf will be treated as outlier if the number of its
+        points is less than the parameter <code>minPts</code>.
+        The branching factor parameter <code>branch</code> is the
+        maximum number of children nodes and the parameter <code>radius</code>
+        is the maximum radius of a sub-cluster.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val birch = new BIRCH(x(0).length, 6, 3, 10)
+    x.foreach { xi =>
+        birch.update(xi);
+    }
+
+    val win = plot(x, '.')
+    win.canvas.points(birch.centroids, '#', BLUE)
+    </code></pre>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/birch.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">BIRCH</div>
     </div>
 
     <div id="btnv">
