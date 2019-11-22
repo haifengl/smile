@@ -66,7 +66,7 @@ lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
-lazy val nd4j = project.in(file("nd4j")).settings(commonSettings: _*).dependsOn(math)
+lazy val nd4j = project.in(file("nd4j")).settings(nonPubishSettings: _*).dependsOn(math)
 
 lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
 
