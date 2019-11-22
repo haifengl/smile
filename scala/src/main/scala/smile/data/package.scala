@@ -20,7 +20,6 @@ package smile
 import smile.math.MathEx
 
 import scala.language.implicitConversions
-import scala.collection.JavaConverters._
 
 /** Data manipulation functions.
   *

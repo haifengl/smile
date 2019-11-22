@@ -107,11 +107,11 @@ public class RLSTest {
     public void testOnlineLearn(String name, Formula formula, DataFrame data){
         System.out.println(name);
 
-        double[] prediction = CrossValidation.regression(10, data, x -> {
+        double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> {
             int n = x.size();
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());
-            LinearModel model = OLS.fit(formula, batch);
+            LinearModel model = OLS.fit(f, batch);
             model.update(online);
             return model;
         });

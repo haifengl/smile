@@ -71,7 +71,7 @@ public class TotalSupportTreeTest {
     public void test() {
         System.out.println("T-Tree");
 
-        FPTree tree = FPTree.build(3, itemsets);
+        FPTree tree = FPTree.of(3, itemsets);
         TotalSupportTree ttree = new TotalSupportTree(tree);
 
         int[][] items = {
@@ -116,7 +116,7 @@ public class TotalSupportTreeTest {
     public void testPima() throws IOException {
         System.out.println("pima");
 
-        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
         TotalSupportTree ttree = new TotalSupportTree(tree);
         assertEquals(1803, ttree.stream().count());
     }
@@ -125,7 +125,7 @@ public class TotalSupportTreeTest {
     public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        FPTree tree = FPTree.build(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
+        FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
         TotalSupportTree ttree = new TotalSupportTree(tree);
         assertEquals(219725, ttree.stream().count());
     }

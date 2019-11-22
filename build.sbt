@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.0.0-RC3",
+  version := "2.0.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   javaOptions in test += "-Dsmile.threads=1",
@@ -66,7 +66,7 @@ lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
-lazy val nd4j = project.in(file("nd4j")).settings(commonSettings: _*).dependsOn(math)
+lazy val nd4j = project.in(file("nd4j")).settings(nonPubishSettings: _*).dependsOn(math)
 
 lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
 

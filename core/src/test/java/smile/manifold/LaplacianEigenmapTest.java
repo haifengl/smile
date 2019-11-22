@@ -1066,10 +1066,9 @@ public class LaplacianEigenmapTest {
 
         LaplacianEigenmap laplacianEigenmap = LaplacianEigenmap.of(data, 7);
 
-        double[][] coords = laplacianEigenmap.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(laplacianEigenmap.coordinates[i][j]), 1E-4);
             }
         }
     }

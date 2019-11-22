@@ -19,10 +19,10 @@ package smile.validation;
 
 import java.util.function.Function;
 import java.util.function.BiFunction;
-
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
@@ -138,11 +138,11 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public int[] classification(DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
+    public int[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int[] prediction = new int[data.size()];
 
         for (int i = 0; i < k; i++) {
-            DataFrameClassifier model = trainer.apply(data.of(train[i]));
+            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
             for (int j : test[i]) {
                 prediction[j] = model.predict(data.get(j));
             }
@@ -176,11 +176,11 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public double[] regression(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public double[] regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         double[] prediction = new double[data.size()];
 
         for (int i = 0; i < k; i++) {
-            DataFrameRegression model = trainer.apply(data.of(train[i]));
+            DataFrameRegression model = trainer.apply(formula, data.of(train[i]));
 
             for (int j : test[i]) {
                 prediction[j] = model.predict(data.get(j));
@@ -203,9 +203,9 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public static int[] classification(int k, DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
+    public static int[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
-        return cv.classification(data, trainer);
+        return cv.classification(formula, data, trainer);
     }
 
     /**
@@ -221,8 +221,8 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public static double[] regression(int k, DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public static double[] regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
-        return cv.regression(data, trainer);
+        return cv.regression(formula, data, trainer);
     }
 }

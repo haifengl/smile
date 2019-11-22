@@ -55,13 +55,13 @@ public class LLEDemo extends ManifoldDemo {
         LLE lle = LLE.of(data, k);
         System.out.format("Learn LLE from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        double[][] y = lle.getCoordinates();
+        double[][] y = lle.coordinates;
 
         PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         plot.points(y, 'o', Color.RED);
 
         int n = y.length;
-        Graph graph = lle.getNearestNeighborGraph();
+        Graph graph = lle.graph;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 if (graph.hasEdge(i, j)) {

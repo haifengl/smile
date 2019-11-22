@@ -114,7 +114,7 @@ public class OLSTest {
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
 
-        double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> OLS.fit(CPU.formula, x));
+        double[] prediction = CrossValidation.regression(10, CPU.formula, CPU.data, (f, x) -> OLS.fit(f, x));
         double rmse = RMSE.of(CPU.y, prediction);
         System.out.println("CPU 10-CV RMSE = " + rmse);
         assertEquals(55.272997, rmse, 1E-4);

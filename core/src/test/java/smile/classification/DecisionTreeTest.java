@@ -69,7 +69,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> DecisionTree.fit(WeatherNominal.formula, x));
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x));
         int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(5, error);
@@ -87,7 +87,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.data, x -> DecisionTree.fit(Iris.formula, x));
+        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(9, error);
@@ -98,7 +98,7 @@ public class DecisionTreeTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> DecisionTree.fit(PenDigits.formula, x, SplitRule.GINI, 20, 100, 5));
+        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -110,7 +110,7 @@ public class DecisionTreeTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> DecisionTree.fit(BreastCancer.formula, x, SplitRule.GINI, 20, 100, 5));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);

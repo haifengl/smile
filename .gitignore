@@ -4,7 +4,9 @@
 .idea
 
 # javadoc
-shell/src/universal/doc/api/
+docs
+web/node_modules/
+web/_site/
 
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/

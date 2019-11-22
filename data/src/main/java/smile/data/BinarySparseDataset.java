@@ -81,8 +81,9 @@ public interface BinarySparseDataset extends Dataset<int[]> {
     /**
      * Returns a default implementation of BinarySparseDataset from a collection.
      *
-     * @data Each row is a data item which are the indices of nonzero elements.
-     *       Every row will be sorted into ascending order.
+     * @param data Each row is a data item which are the indices of
+     *             nonzero elements. Every row will be sorted into
+     *             ascending order.
      */
     static BinarySparseDataset of(Collection<int[]> data) {
         return new BinarySparseDatasetImpl(data);
@@ -94,9 +95,9 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      *
      * @param path the input file path.
      * @exception IOException if stream to file cannot be read or closed.
-     * @exception ParseException if an entry is not an integer.
+     * @exception NumberFormatException if an entry is not an integer.
      */
-    static BinarySparseDataset from(java.nio.file.Path path) throws IOException, ParseException {
+    static BinarySparseDataset from(java.nio.file.Path path) throws IOException, NumberFormatException {
         try (Stream<String> stream = java.nio.file.Files.lines(path)) {
             List<int[]> rows = stream.map(line -> {
                 String[] s = line.split("\\s+");
