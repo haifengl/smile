@@ -91,7 +91,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
         TSNE tsne = new TSNE(X, 2, perplexity, 200, 1000);
         System.out.format("Learn t-SNE from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        double[][] y = tsne.getCoordinates();
+        double[][] y = tsne.coordinates;
 
         PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
 

@@ -14,7 +14,7 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machine Intelligence and Learning Engine")
 
-target in Compile in doc := baseDirectory.value / "../shell/src/universal/doc/api/scala"
+target in Compile in doc := baseDirectory.value / "../docs/2.0/api/scala"
 
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.11.1"
 

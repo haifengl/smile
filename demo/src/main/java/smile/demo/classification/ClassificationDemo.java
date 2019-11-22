@@ -126,7 +126,6 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
     
     /**
      * Get the class number dependent contour levels, typically we would have k - 1 contour levels for k class
-     * @return
      */
     protected double[] getContourLevels() {
         return new double[]{0.5};

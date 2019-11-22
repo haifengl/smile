@@ -1,0 +1,529 @@
+.tagline {
+  display: inline-block;
+  color: rgb(47, 164, 231);
+  padding-bottom: 5px;
+  font-weight: bold;
+  font-style: italic;
+}
+
+.tagline {
+  font-size: 32px;
+}
+
+@media (min-width: 768px) {
+  .tagline {
+    font-size: 33px;
+  }
+}
+
+.row-padded {
+  margin-top: 30px;
+}
+
+.col-padded-top {
+  margin-top: 30px;
+  margin-bottom: 18px;
+}
+
+.code {
+  font-family: "Menlo", "Lucida Console", Consolas, monospace;
+  font-size: 11px;
+}
+
+@media (min-width: 1200px) {
+  .code {
+    font-size: 13px;
+  }
+}
+
+.code.code-big {
+  font-size: 14px;
+}
+
+@media (min-width: 992px) {
+  .code.code-big {
+    font-size: 16px;
+  }
+}
+
+.code .string {
+  color: #2b8eeb;
+}
+
+.code .sparkop {
+  color: #1663a8;
+}
+
+.code .closure {
+  color: #c1130e;
+}
+
+.code .comment {
+  color: #272;
+}
+
+.code .tgf {
+  color: #f28424;
+}
+
+.code .keyword {
+  font-weight: 600;
+}
+
+.caption {
+  width: 100%;
+  margin-top: 20px;
+  text-align: center;
+  color: #8f8f8f;
+}
+
+ul.nav li.dropdown:hover > ul.dropdown-menu {
+  display: block;
+}
+
+ul.nav > li.dropdown > ul.dropdown-menu > li > a {
+  color: black;
+}
+
+footer {
+  text-align: center;
+  color: #8f8f8f;
+  padding-bottom: 18px;
+}
+
+footer a {
+  color: rgb(41, 132, 181);
+}
+
+.jumbotron {
+  padding: 20px 20px;
+  margin-bottom: 20px;
+  color: rgb(85,85,85);
+  background: #eef6fd;
+  text-align: center;
+  line-height: inherit;
+}
+
+.jumbotron {
+  font-size: 18px;
+}
+
+@media (min-width: 768px) {
+  .jumbotron {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 992px) {
+  .jumbotron {
+    font-size: 21px;
+  }
+}
+
+.navbar {
+  background: #2fa4e7;
+  border: none;
+  box-shadow: none;
+  font-size: 14px;
+  font-weight: bold;
+}
+
+/* Lower height of navbar */
+
+.navbar-nav > li > a {
+  padding-top:12px !important;
+  padding-bottom:12px !important;
+}
+
+.navbar {
+  min-height:44px !important
+}
+
+.news {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.news h1, .news h2, .news h3, .news h4, .news h5 {
+  color: rgb(85, 85, 85);
+}
+
+.news ul li {
+  margin-bottom: 6px;
+}
+
+.news li a, .news li a:hover, .news li a:visited {
+  color: rgb(85, 85, 85);
+}
+
+.news li .small {
+  /*display: inline-block;*/
+  color: #888;
+  font-size: 12px;
+}
+
+.news h5 {
+  font-size: 16px;
+}
+
+.community {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.community h1, .community h2, .community h3, .community h4, .community h5 {
+  color: rgb(85, 85, 85);
+}
+
+.community ul li {
+  margin-bottom: 6px;
+}
+
+.community li .small {
+  /*display: inline-block;*/
+  color: #888;
+  font-size: 12px;
+}
+
+.community h5 {
+  font-size: 16px;
+}
+
+.community ul {
+  list-style: inside;
+  padding-left: 0;
+}
+
+.col-right {
+  text-align: center;
+}
+
+.col-left {
+  text-align: center;
+}
+
+@media (min-width: 992px) {
+  .col-right {
+    text-align: right;
+  }
+}
+
+@media (min-width: 992px) {
+  .col-left {
+    text-align: left;
+  }
+}
+
+.col-center {
+  text-align: center;
+}
+
+.list-narrow {
+  padding-left: 1.5em;
+}
+
+.list-none {
+  list-style: none;
+  padding: 0;
+}
+
+.col-padded {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.subproject {
+  display: inline-block;
+  font-weight: 200;
+  color: #333;
+}
+
+.subproject {
+  font-size: 30px;
+}
+
+@media (min-width: 768px) {
+  .subproject {
+    font-size: 45px;
+  }
+}
+
+.btn-lg .small {
+  font-size: 14px;
+}
+
+.navbar-collapse.in {
+  overflow-y: visible;
+  max-height: none;
+}
+
+.question {
+  font-size: 16px;
+  margin-top: 20px;
+  color: #555;
+  font-weight: 500;
+}
+
+.entry-date {
+  color: #888;
+  font-size: 14px;
+}
+
+.entry-header {
+  margin-top: 30px;
+  margin-bottom: 10px;
+}
+
+code {
+  font-family: "Menlo", "Lucida Console", Consolas, monospace;
+  background: transparent;
+  padding: 0;
+  color: inherit;
+}
+
+/* Designed to be shown under some tabs */
+.code-tab {
+  margin-bottom: 10px;
+  padding: 10px 0px;
+  border-bottom: 1px solid #ddd;
+}
+
+.btn-multiline {
+  width: 280px;
+  padding-top: 11px;
+  padding-bottom: 11px;
+  line-height: 1.25;
+}
+
+.nav.nav-tabs>li>a {
+  padding: 6px 11px;
+  font-size: 14px;
+  border-radius: 0;
+}
+
+.tabs-below > .nav-tabs,
+.tabs-right > .nav-tabs,
+.tabs-left > .nav-tabs {
+  border-bottom: 0;
+}
+
+figure {
+  text-align: center;
+  margin: 10px auto; /* not needed unless you want centered */
+}
+
+.download-btn {
+  min-width: 300px;
+  background-color: #5bb75b;
+  color: #ffffff;
+  text-align: center;
+  line-height: 82px;
+  font-size: 1.4em;
+  cursor: pointer;
+}
+
+.two-sided-pill {
+  border-radius: 3em;
+}
+
+.centered {
+  text-align: center;
+}
+
+.center-block {
+  display: block;
+  margin-right: auto;
+  margin-left: auto
+}
+
+#tag-line-pill-button {
+  height: 54px;
+  line-height: 54px;
+  width: 319px;
+  color: white;
+  font-size: 18px;
+  background-color: #72D6FF;
+  margin-top: 40px;
+  letter-spacing: 3px;
+  transition:All 0.3s ease;
+  -webkit-transition:All 0.3s ease;
+  -moz-transition:All 0.3s ease;
+  -o-transition:All 0.3s ease;
+}
+
+.sidebar-toc {
+  background: #fef4e9;
+  border-radius: 6px;
+  padding: 4px 12px 1px 12px;
+}
+
+.sidebar-toc ul li {
+  margin-bottom: 6px;
+}
+
+.index-h1 {
+  font-size: 16px;
+  line-height: 150%;
+}
+
+.index-h2 {
+  display: block;
+  font-size: 14px;
+  margin-left: 15px;
+  line-height: 150%;
+}
+
+.index-h3 {
+  line-height: 150%;
+  display: block;
+  font-size: 12px;
+  margin-left: 26px;
+}
+
+p.toc-header {
+  margin-left: 15px;
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.enlarge:hover {
+  transform: scale(1.5, 1.5);
+  transform-origin: 50% 50%;
+}
+
+#btnv {
+  padding-top: 2em;
+  padding-bottom: 2.5em;
+  display: table;
+  width: 100%
+}
+
+#btnv .btn-arrow-left, #btnv .btn-arrow-right, #btnv .btn-next-text, #btnv .btn-prev-text {
+  display: table-cell;
+  vertical-align: middle
+}
+
+#btnv .btn-next-text > span, #btnv .btn-prev-text > span {
+  display: inline-block;
+  width: 200px
+}
+
+#btnv .btn-arrow-right, #btnv .btn-prev-text, .align-left, .text-left, div.body td, th {
+  text-align: left
+}
+
+#btnv .btn-arrow-left, #btnv .btn-next-text, .align-right, .modal-footer, .text-right, blockquote.pull-right p, blockquote.pull-right small {
+  text-align: right
+}
+
+/*AM22 - To make google search box appear correct */
+input.gsc-input, .gsc-input-box, .gsc-input-box-hover, .gsc-input-box-focus, .gsc-search-button {
+  box-sizing: content-box;
+  line-height: normal;
+}
+
+/*AM22 - To make google search results tabs appear correct */
+.gsc-tabsArea div {
+  /*By default, Google custom search CSS sets it as AUTO, which shows scroll bars*/
+  overflow: visible;
+}
+
+.testimonial {
+    padding: 0 25px;
+}
+.testimonial-content {
+    background: rgb(47, 164, 231);
+    padding: 20px 39px 10px;
+    border-radius: 20px;
+    position: relative;
+}
+.testimonial-description {
+    text-align: left;
+    margin-bottom: 0;
+    color:#fff;
+    font-size: 19px;
+}
+.testimonial-review {
+    text-align: right;
+}
+.testimonial-review > img {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    margin-right: 12px;
+}
+.testimonial-review .testimonial-title {
+    display: inline-block;
+    font-size: 16px;
+    color:#fff;
+}
+.testimonial-review .testimonial-title > small {
+    font-size: 13px;
+    color:#fff;
+}
+.owl-carousel .owl-wrapper {
+    display: flex !important;
+}
+.owl-carousel .owl-item {
+    height: 100%;
+    align-self: center;
+}
+.owl-theme .owl-controls {
+    position: absolute;
+    top: 97%;
+    width: 100%;
+}
+.owl-theme .owl-controls .owl-buttons div {
+    background: transparent;
+    opacity: 1;
+    border: 2px solid #fff;
+}
+.owl-prev,
+.owl-next {
+    width: 52px;
+    height: 52px;
+    line-height: 45px;
+}
+.owl-prev:before,
+.owl-next:before {
+    content: "\f053";
+    font-family: "Font Awesome 5 Free"; font-weight: 900;
+}
+.owl-next:before {
+    content: "\f054"
+}
+.owl-theme .owl-controls .owl-prev {
+    position: absolute;
+    left: 0;
+}
+.owl-theme .owl-controls .owl-next {
+    position: absolute;
+    right: 0;
+}
+@media only screen and (max-width: 990px) {
+    .testimonial {
+        padding: 0 20px;
+    }
+}
+@media only screen and (max-width: 767px) {
+    .testimonial {
+        padding: 0 15px;
+    }
+}
+@media only screen and (max-width: 480px) {
+    .testimonial-content {
+        padding: 10px;
+    }
+    .testimonial-content:after {
+        left: 44%;
+    }
+    .testimonial-description {
+        font-size: 12px;
+    }
+}
+h1 {
+  border-bottom: 2px solid #CCC;
+  padding-bottom: 10px
+}

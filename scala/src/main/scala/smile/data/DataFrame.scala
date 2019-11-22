@@ -25,6 +25,15 @@ import java.util.stream.IntStream
   * @param data underlying data frame.
   */
 case class DataFrameOps(data: DataFrame) {
+  /** Selects a new DataFrame with given column indices. */
+  def select(range: Range): DataFrame = data.select(range.toArray: _*)
+
+  /** Returns a new DataFrame without given column indices. */
+  def drop(range: Range): DataFrame = data.drop(range.toArray: _*)
+
+  /** Returns a new data frame with row indexing. */
+  def of(range: Range): DataFrame = data.of(range.toArray: _*)
+
   /** Finds the first row satisfying a predicate. */
   def find(p: (Tuple) => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
   /** Tests if a predicate holds for at least one row of data frame. */

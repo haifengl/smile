@@ -104,7 +104,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> RandomForest.fit(WeatherNominal.formula, x, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
@@ -123,7 +123,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.data, x -> RandomForest.fit(Iris.formula, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
@@ -134,7 +134,7 @@ public class RandomForestTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> RandomForest.fit(PenDigits.formula, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -146,7 +146,7 @@ public class RandomForestTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> RandomForest.fit(BreastCancer.formula, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);

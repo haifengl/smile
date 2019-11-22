@@ -17,15 +17,15 @@
 
 package smile.validation;
 
+import java.util.function.BiFunction;
+import java.util.function.Function;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
+import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
-
-import java.util.function.BiFunction;
-import java.util.function.Function;
 
 /**
  * Leave-one-out cross validation. LOOCV uses a single observation
@@ -95,13 +95,13 @@ public class LOOCV {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static int[] classification(DataFrame data, Function<DataFrame, DataFrameClassifier> trainer) {
+    public static int[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         int[] prediction = new int[n];
 
         for (int i = 0; i < n; i++) {
-            DataFrameClassifier model = trainer.apply(data.of(cv.train[i]));
+            DataFrameClassifier model = trainer.apply(formula, data.of(cv.train[i]));
             prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 
@@ -132,13 +132,13 @@ public class LOOCV {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static double[] regression(DataFrame data, Function<DataFrame, DataFrameRegression> trainer) {
+    public static double[] regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         double[] prediction = new double[n];
 
         for (int i = 0; i < n; i++) {
-            DataFrameRegression model = trainer.apply(data.of(cv.train[i]));
+            DataFrameRegression model = trainer.apply(formula, data.of(cv.train[i]));
             prediction[cv.test[i]] = model.predict(data.get(cv.test[i]));
         }
 

@@ -70,7 +70,7 @@ public class ARMTest {
     @Test
     public void test() {
         System.out.println("ARM");
-        FPTree tree = FPTree.build(3, itemsets);
+        FPTree tree = FPTree.of(3, itemsets);
         List<AssociationRule> rules = ARM.apply(0.5, tree).collect(Collectors.toList());
         assertEquals(9, rules.size());
         
@@ -102,7 +102,7 @@ public class ARMTest {
     public void testPima() throws IOException {
         System.out.println("pima");
 
-        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
         Stream<AssociationRule> rules = ARM.apply(0.9, tree);
         assertEquals(6803, rules.count());
     }
@@ -111,7 +111,7 @@ public class ARMTest {
     public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        FPTree tree = FPTree.build(0.003, ()-> ItemSetTestData.read("transaction/kosarak.dat"));
+        FPTree tree = FPTree.of(0.003, ()-> ItemSetTestData.read("transaction/kosarak.dat"));
         Stream<AssociationRule> rules = ARM.apply(0.5, tree);
         assertEquals(17954, rules.count());
     }

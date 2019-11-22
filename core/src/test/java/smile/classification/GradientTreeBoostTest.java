@@ -67,7 +67,7 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.data, x -> GradientTreeBoost.fit(WeatherNominal.formula, x, 100, 20, 6, 5, 0.05, 0.7));
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
@@ -86,7 +86,7 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.data, x -> GradientTreeBoost.fit(Iris.formula, x, 100, 20, 6, 5, 0.05, 0.7));
+        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
@@ -97,7 +97,7 @@ public class GradientTreeBoostTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.data, x -> GradientTreeBoost.fit(PenDigits.formula, x, 100, 20, 6, 5, 0.05, 0.7));
+        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -109,7 +109,7 @@ public class GradientTreeBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.data, x -> GradientTreeBoost.fit(BreastCancer.formula, x, 100, 20, 6, 5, 0.05, 0.7));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
