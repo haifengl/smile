@@ -75,7 +75,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = LOOCV.regression(Longley.data, x -> RegressionTree.fit(Longley.formula, x, 100, 20, 2));
+        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV MSE = " + rmse);
@@ -97,7 +97,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = CrossValidation.regression(10, data, x -> RegressionTree.fit(formula, x));
+        double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> RegressionTree.fit(f, x));
         double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);

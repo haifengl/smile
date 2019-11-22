@@ -120,7 +120,7 @@ public class BootstrapTest {
     public void testIris() {
         System.out.println("Iris");
 
-        double[] error = Bootstrap.classification(100, Iris.data, x -> DecisionTree.fit(Iris.formula, x));
+        double[] error = Bootstrap.classification(100, Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
 
         System.out.println("100-fold bootstrap error rate average = " + MathEx.mean(error));
         System.out.println("100-fold bootstrap error rate std.dev = " + MathEx.sd(error));
@@ -130,7 +130,7 @@ public class BootstrapTest {
     public void testCPU() {
         System.out.println("CPU");
 
-        double[] rmse = Bootstrap.regression(100, CPU.data, x -> RegressionTree.fit(CPU.formula, x));
+        double[] rmse = Bootstrap.regression(100, CPU.formula, CPU.data, (f, x) -> RegressionTree.fit(f, x));
 
         System.out.println("100-fold bootstrap RMSE average = " + MathEx.mean(rmse));
         System.out.println("100-fold bootstrap RMSE std.dev = " + MathEx.sd(rmse));
