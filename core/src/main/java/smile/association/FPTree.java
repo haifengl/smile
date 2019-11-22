@@ -314,7 +314,7 @@ public class FPTree {
      *                 This function will be called twice.
      * @return a full built FP-tree.
      */
-    public static FPTree build(int minSupport, Supplier<Stream<int[]>> supplier) {
+    public static FPTree of(int minSupport, Supplier<Stream<int[]>> supplier) {
         FPTree tree = new FPTree(minSupport, supplier.get());
         tree.add(supplier.get());
         return tree;
@@ -329,7 +329,7 @@ public class FPTree {
      *                 This function will be called twice.
      * @return a full built FP-tree.
      */
-    public static FPTree build(double minSupport, Supplier<Stream<int[]>> supplier) {
+    public static FPTree of(double minSupport, Supplier<Stream<int[]>> supplier) {
         FPTree tree = new FPTree(minSupport, supplier.get());
         tree.add(supplier.get());
         return tree;
@@ -344,7 +344,7 @@ public class FPTree {
      * @param minSupport the required minimum support of item sets in terms
      *                   of frequency.
      */
-    public static FPTree build(int minSupport, int[][] itemsets) {
+    public static FPTree of(int minSupport, int[][] itemsets) {
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
@@ -359,7 +359,7 @@ public class FPTree {
      * @param minSupport the required minimum support of item sets in terms
      *                   of percentage.
      */
-    public static FPTree build(double minSupport, int[][] itemsets) {
+    public static FPTree of(double minSupport, int[][] itemsets) {
         FPTree tree = new FPTree(minSupport, Arrays.stream(itemsets));
         tree.add(Arrays.stream(itemsets));
         return tree;
