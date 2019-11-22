@@ -18,7 +18,7 @@
 package smile
 
 import java.util.function.ToDoubleBiFunction
-
+import scala.compat.java8.FunctionConverters._
 import smile.clustering.linkage.{CompleteLinkage, SingleLinkage, UPGMALinkage, UPGMCLinkage, WPGMALinkage, WPGMCLinkage, WardLinkage}
 import smile.math.distance.{Distance, EuclideanDistance, Metric}
 import smile.math.matrix.DenseMatrix
@@ -153,7 +153,7 @@ package object clustering {
     * a majority vote among element of each cluster.
     */
   def kmodes(data: Array[Array[Int]], k: Int, maxIter: Int = 100, runs: Int = 10): KModes = time("K-Modes") {
-    PartitionClustering.run(runs, () => KModes.fit(data, k, maxIter))
+    PartitionClustering.run(runs, (() => KModes.fit(data, k, maxIter)).asJava)
   }
 
   /** K-Means clustering. The algorithm partitions n observations into k clusters in which
@@ -198,7 +198,7 @@ package object clustering {
     * @param runs the number of runs of K-Means algorithm.
     */
   def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans = time("K-Means") {
-    PartitionClustering.run(runs, () => KMeans.fit(data, k, maxIter, tol))
+    PartitionClustering.run(runs, (() => KMeans.fit(data, k, maxIter, tol)).asJava)
   }
 
   /** X-Means clustering algorithm, an extended K-Means which tries to
@@ -271,7 +271,7 @@ package object clustering {
     * @param runs the number of runs of SIB algorithm.
     */
   def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 8): SIB = time("Sequential information bottleneck") {
-    PartitionClustering.run(runs, () => SIB.fit(data, k, maxIter))
+    PartitionClustering.run(runs, (() => SIB.fit(data, k, maxIter)).asJava)
   }
 
   /** Deterministic annealing clustering. Deterministic annealing extends

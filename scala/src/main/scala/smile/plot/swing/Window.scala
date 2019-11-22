@@ -39,11 +39,12 @@ object Window {
     val jframe = frame(title)
     jframe.add(canvas)
 
-    java.awt.EventQueue.invokeLater(() => {
+    java.awt.EventQueue.invokeLater(new Runnable() {
+      override def run() {
         jframe.toFront()
         jframe.repaint()
       }
-    )
+    })
 
     Window(jframe, canvas)
   }

@@ -19,6 +19,7 @@ package smile.data
 
 import java.util.Optional
 import java.util.stream.IntStream
+import scala.compat.java8.FunctionConverters._
 
 /**
   * Pimped data frame with Scala style operations.
@@ -35,20 +36,20 @@ case class DataFrameOps(data: DataFrame) {
   def of(range: Range): DataFrame = data.of(range.toArray: _*)
 
   /** Finds the first row satisfying a predicate. */
-  def find(p: (Tuple) => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
+  def find(p: (Tuple) => Boolean): Optional[Tuple] = data.stream().filter((t => p(t)).asJava).findAny()
   /** Tests if a predicate holds for at least one row of data frame. */
-  def exists(p: (Tuple) => Boolean): Boolean = data.stream.anyMatch(t => p(t))
+  def exists(p: (Tuple) => Boolean): Boolean = data.stream.anyMatch((t => p(t)).asJava)
   /** Tests if a predicate holds for all rows of data frame. */
-  def forall(p: (Tuple) => Boolean): Boolean = data.stream.allMatch(t => p(t))
+  def forall(p: (Tuple) => Boolean): Boolean = data.stream.allMatch((t => p(t)).asJava)
   /** Applies a function for its side-effect to every row. */
-  def foreach[U](p: (Tuple) => U): Unit = data.stream.forEach(t => p(t))
+  def foreach[U](p: (Tuple) => U): Unit = data.stream.forEach(asJavaConsumer(t => p(t)))
 
   /** Builds a new data collection by applying a function to all rows. */
   def map[U](p: (Tuple) => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
 
   /** Selects all rows which satisfy a predicate. */
   def filter(p: (Tuple) => Boolean): DataFrame = {
-    val index = IntStream.range(0, data.size).filter(i => p(data(i))).toArray
+    val index = IntStream.range(0, data.size).filter(asJavaIntPredicate((i: Int) => p(data(i)))).toArray
     data.of(index: _*)
   }
 
@@ -63,9 +64,9 @@ case class DataFrameOps(data: DataFrame) {
   def partition(p: (Tuple) => Boolean): (DataFrame, DataFrame) = {
     val l = new scala.collection.mutable.ArrayBuffer[Int]
     val r = new scala.collection.mutable.ArrayBuffer[Int]
-    IntStream.range(0, data.size).forEach { i =>
+    IntStream.range(0, data.size).forEach(asJavaIntConsumer((i: Int) =>
       if (p(data(i))) l :+ i else r :+ i
-    }
+    ))
     (data.of(l.toArray: _*), data.of(r.toArray: _*))
   }
 
