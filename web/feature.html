@@ -221,6 +221,7 @@ permalink: "{{ page.filePathStem }}.html"
         levels. Therefore, the variable importance scores from random forest are
         not reliable for this type of data.</p>
 
+    <!-- GAFE deadlock on scala
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
 
     <p>Genetic algorithm (GA) is a search heuristic that mimics the process of
@@ -255,11 +256,17 @@ permalink: "{{ page.filePathStem }}.html"
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
     <pre class="prettyprint lang-java"><code>
-    val segTrain = read.arff("data/weka/segment-challenge.arff")
-    val segTest = read.arff("data/weka/segment-test.arff")
+    val train = read.csv("data/usps/zip.train", header=false, delimiter=' ')
+    val test = read.csv("data/usps/zip.test", header=false, delimiter=' ')
+    val x = train.drop("V1").toArray
+    val y = train("V1").toIntArray
+    val testx = test.drop("V1").toArray
+    val testy = test("V1").toIntArray
 
     val selection = new GAFE
-    val result = selection.apply(100, 20, segTrain.ncols()-1, GAFE.fitness("class", segTrain, segTest, new Accuracy, (formula: Formula, data: DataFrame) => smile.classification.cart(formula, data)))
+    val result = selection.apply(100, 20, 256,
+        GAFE.fitness(x, y, testx, testy, new Accuracy,
+        (x: Array[Array[Double]], y: Array[Int]) => LDA.fit(x, y)))
 
     result.foreach { bits =>
         print(f"${100*bits.fitness}%.2f%% ")
@@ -274,6 +281,7 @@ permalink: "{{ page.filePathStem }}.html"
         sample distinction and are finally used for prediction.</p>
 
     <p>Although GA avoids brute-force search, it is still much slower than univariate feature selection.</p>
+    -->
 
     <h2 id="dimension-reduction">Dimension Reduction</h2>
 

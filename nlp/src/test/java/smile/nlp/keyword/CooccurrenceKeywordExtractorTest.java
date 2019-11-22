@@ -61,8 +61,7 @@ public class CooccurrenceKeywordExtractorTest {
         System.out.println("extract");
         String text = new String(Files.readAllBytes(smile.util.Paths.getTestData("text/turing.txt")));
 
-        CooccurrenceKeywordExtractor instance = new CooccurrenceKeywordExtractor();
-        ArrayList<NGram> result = instance.extract(text);
+        ArrayList<NGram> result = CooccurrenceKeywordExtractor.extract(text);
         
         assertEquals(10, result.size());
         for (NGram ngram : result) {

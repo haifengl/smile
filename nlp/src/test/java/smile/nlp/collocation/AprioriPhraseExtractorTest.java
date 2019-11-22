@@ -79,8 +79,7 @@ public class AprioriPhraseExtractorTest {
             }
         }
 
-        AprioriPhraseExtractor instance = new AprioriPhraseExtractor();
-        ArrayList<ArrayList<NGram>> result = instance.extract(sentences, 4, 4);
+        ArrayList<ArrayList<NGram>> result = AprioriPhraseExtractor.extract(sentences, 4, 4);
 
         assertEquals(5, result.size());
         for (ArrayList<NGram> ngrams : result) {

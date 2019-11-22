@@ -59,7 +59,8 @@ public class NGram implements Comparable<NGram> {
 
     @Override
     public String toString() {
-        return Arrays.stream(words).collect(Collectors.joining(", ", "(", ")"));
+        String ngram = Arrays.stream(words).collect(Collectors.joining(", ", "[", "]"));
+        return count > 0 ? String.format("(%s, %d)", ngram, count) : ngram;
     }
 
     @Override

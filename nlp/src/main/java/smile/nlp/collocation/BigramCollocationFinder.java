@@ -87,7 +87,7 @@ public class BigramCollocationFinder {
         BigramCollocation[] collocations = new BigramCollocation[k];
         for (int i = 0; i < k; i++) {
             BigramCollocation bigram = bigrams[k-i-1];
-            collocations[i] = new BigramCollocation(bigram.w1(), bigram.w2(), bigram.frequency(), -bigram.score());
+            collocations[i] = new BigramCollocation(bigram.bigram, bigram.frequency, -bigram.score);
         }
 
         return collocations;

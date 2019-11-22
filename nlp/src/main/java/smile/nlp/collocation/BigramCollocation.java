@@ -17,7 +17,7 @@
 
 package smile.nlp.collocation;
 
-import java.util.Objects;
+import smile.nlp.Bigram;
 
 /**
  * Collocations are expressions of multiple words which commonly co-occur.
@@ -29,21 +29,17 @@ import java.util.Objects;
 public class BigramCollocation implements Comparable<BigramCollocation> {
 
     /**
-     * The first word of bigram.
+     * The bigram.
      */
-    private String w1;
-    /**
-     * The second word of bigram.
-     */
-    private String w2;
+    public final Bigram bigram;
     /**
      * The frequency of bigram in the corpus.
      */
-    private int frequency;
+    public final int frequency;
     /**
      * The chi-square statistical score of the collocation.
      */
-    private double score;
+    public final double score;
 
     /**
      * Constructor.
@@ -53,51 +49,31 @@ public class BigramCollocation implements Comparable<BigramCollocation> {
      * @param score the chi-square statistical score of collocation in a corpus.
      */
     public BigramCollocation(String w1, String w2, int frequency, double score) {
-        this.w1 = w1;
-        this.w2 = w2;
+        this.bigram = new Bigram(w1, w2);
         this.frequency = frequency;
         this.score = score;
     }
 
     /**
-     * Returns the first word of bigram.
+     * Constructor.
+     * @param bigram the bigram.
+     * @param frequency the frequency of bigram in the corpus.
+     * @param score the chi-square statistical score of collocation in a corpus.
      */
-    public String w1() {
-        return w1;
-    }
-
-    /**
-     * Returns the second word of bigram.
-     */
-    public String w2() {
-        return w2;
-    }
-
-    /**
-     * Returns the frequency of bigram in the corpus.
-     */
-    public int frequency() {
-        return frequency;
-    }
-
-    /**
-     * Returns the chi-square statistical score of the collocation.
-     */
-    public double score() {
-        return score;
+    public BigramCollocation(Bigram bigram, int frequency, double score) {
+        this.bigram = bigram;
+        this.frequency = frequency;
+        this.score = score;
     }
 
     @Override
     public String toString() {
-        return String.format("(%s %s, %d, %.2f)", w1, w2, frequency, score);
+        return String.format("(%s %s, %d, %.2f)", bigram.w1, bigram.w2, frequency, score);
     }
 
     @Override
     public int hashCode() {
-        int hash = 5;
-        hash = 37 * hash + w1.hashCode();
-        hash = 37 * hash + w2.hashCode();
-        return hash;
+        return bigram.hashCode();
     }
 
     @Override
@@ -107,7 +83,7 @@ public class BigramCollocation implements Comparable<BigramCollocation> {
         }
 
         final BigramCollocation other = (BigramCollocation) obj;
-        return Objects.equals(this.w1, other.w1) && Objects.equals(this.w2, other.w2);
+        return bigram.equals(other.bigram);
     }
 
     @Override

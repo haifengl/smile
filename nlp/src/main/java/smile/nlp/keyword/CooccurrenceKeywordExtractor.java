@@ -49,14 +49,14 @@ import smile.sort.QuickSort;
  * 
  * @author Haifeng Li
  */
-public class CooccurrenceKeywordExtractor {
+public interface CooccurrenceKeywordExtractor {
 
     /**
      * Returns the top 10 keywords.
      * @param text A single document.
      * @return The top 10 keywords.
      */
-    public ArrayList<NGram> extract(String text) {
+    static ArrayList<NGram> extract(String text) {
         return extract(text, 10);
     }
     
@@ -65,7 +65,7 @@ public class CooccurrenceKeywordExtractor {
      * @param text A single document.
      * @return The top keywords.
      */
-    public ArrayList<NGram> extract(String text, int maxNumKeywords) {
+    static ArrayList<NGram> extract(String text, int maxNumKeywords) {
         ArrayList<String[]> sentences = new ArrayList<>();
         
         SimpleTokenizer tokenizer = new SimpleTokenizer();
@@ -87,8 +87,7 @@ public class CooccurrenceKeywordExtractor {
         //  Extract phrases by Apriori-like algorithm.
         int maxNGramSize = 4;
         ArrayList<NGram> terms = new ArrayList<>();
-        AprioriPhraseExtractor phraseExtractor = new AprioriPhraseExtractor();
-        for (ArrayList<NGram> ngrams : phraseExtractor.extract(sentences, maxNGramSize, 4)) {
+        for (ArrayList<NGram> ngrams : AprioriPhraseExtractor.extract(sentences, maxNGramSize, 4)) {
             for (NGram ngram : ngrams) {
                 terms.add(ngram);
             }
