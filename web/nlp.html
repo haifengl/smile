@@ -278,12 +278,12 @@ res12: Map[String, Int] = Map(
         frequency-inverse document frequency).</p>
 
     <pre class="prettyprint lang-scala"><code>
-val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines()
-val corpus = lines.map(_.bag()).toArray
+    val lines = scala.io.Source.fromFile("data/text/movie.txt").getLines.toArray
+    val corpus = lines.map(_.bag())
 
-val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
-val bags = corpus.map(vectorize(features, _))
-val data = tfidf(bags)
+    val features = Array("like", "good", "perform", "littl", "love", "bad", "best")
+    val bags = corpus.map(vectorize(features, _))
+    val data = tfidf(bags)
     </code></pre>
 
     <p>In the example, we load a file, of which each line is a document.
@@ -325,7 +325,7 @@ val data = tfidf(bags)
         frequency of collocation in the corpus.</p>
 
     <pre class="prettyprint lang-scala"><code>
-smile&gt; bigram(10, 5, lines.toSeq: _*)
+smile&gt; bigram(10, 5, lines: _*)
 [main] INFO smile.util.package$ - runtime: 255287.678705 ms
 res16: Array[collocation.BigramCollocation] = Array(
   (special effects, 278, 3522.38),
@@ -352,7 +352,7 @@ res16: Array[collocation.BigramCollocation] = Array(
         text.</p>
 
     <pre class="prettyprint lang-scala"><code>
-smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines().mkString
+smile&gt; val turing = scala.io.Source.fromFile("data/text/turing.txt").getLines.mkString
 smile&gt; val phrase = ngram(4, 4, turing)
 smile&gt; phrase(2)
 res19: Seq[NGram] = Buffer(

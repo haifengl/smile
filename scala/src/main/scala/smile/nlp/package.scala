@@ -17,11 +17,10 @@
 
 package smile
 
-import smile.math.MathEx
-import smile.nlp.collocation.{AprioriPhraseExtractor, BigramCollocation, BigramCollocationFinder}
-
 import scala.language.implicitConversions
 import scala.jdk.CollectionConverters._
+import smile.math.MathEx
+import smile.nlp.collocation.{AprioriPhraseExtractor, BigramCollocation, BigramCollocationFinder}
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
 import smile.util.time
@@ -108,8 +107,6 @@ package object nlp {
     finder.find(corpus(text), p)
   }
 
-  private val phrase = new AprioriPhraseExtractor
-
   /** An Apiori-like algorithm to extract n-gram phrases.
     *
     * @param maxNGramSize The maximum length of n-gram
@@ -127,8 +124,8 @@ package object nlp {
     }
 
     println(sentences)
-    val ngrams = phrase.extract(sentences.asJava, maxNGramSize, minFreq)
-    ngrams.toArray(Array.ofDim[Array[NGram]](ngrams.size))
+    val ngrams = AprioriPhraseExtractor.extract(sentences.asJava, maxNGramSize, minFreq)
+    ngrams.asScala.map(ngram => ngram.toArray(new Array[NGram](ngram.size))).toArray
   }
 
   /** Part-of-speech taggers.
@@ -242,7 +239,6 @@ package nlp {
 
   private[nlp] class PimpedString(text: String) {
     val tokenizer = new SimpleTokenizer(true)
-    val keywordExtractor = new CooccurrenceKeywordExtractor
 
     /**
       * Normalize Unicode text:
@@ -385,7 +381,7 @@ package nlp {
       * @return the top keywords.
       */
     def keywords(k: Int = 10): Array[NGram] = {
-      val keywords = keywordExtractor.extract(text, k)
+      val keywords = CooccurrenceKeywordExtractor.extract(text, k)
       keywords.toArray(Array.ofDim[NGram](keywords.size))
     }
   }

@@ -42,7 +42,7 @@ import smile.util.MutableInt;
  * 
  * @author Haifeng Li
  */
-public class AprioriPhraseExtractor {
+public interface AprioriPhraseExtractor {
 
     /** Extracts n-gram phrases.
      * 
@@ -51,7 +51,7 @@ public class AprioriPhraseExtractor {
      * @param minFrequency The minimum frequency of n-gram in the sentences.
      * @return An array list of sets of n-grams. The i-th entry is the set of i-grams.
      */
-    public ArrayList<ArrayList<NGram>> extract(Collection<String[]> sentences, int maxNGramSize, int minFrequency) {
+    static ArrayList<ArrayList<NGram>> extract(Collection<String[]> sentences, int maxNGramSize, int minFrequency) {
         ArrayList<Set<NGram>> features = new ArrayList<>(maxNGramSize + 1);
         features.add(new HashSet<>());
         for (int n = 1; n <= maxNGramSize; n++) {
