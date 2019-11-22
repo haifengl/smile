@@ -92,7 +92,7 @@ public class ElasticNetTest {
         LinearModel model = ElasticNet.fit(Longley.formula, Longley.data, 0.1, 0.1);
         System.out.println(model);
 
-        double[] prediction = LOOCV.regression(Longley.data, (x) -> ElasticNet.fit(Longley.formula, x, 0.1, 0.1));
+        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> ElasticNet.fit(f, x, 0.1, 0.1));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV RMSE = " + rmse);
@@ -108,7 +108,7 @@ public class ElasticNetTest {
         LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
         System.out.println(model);
 
-        double[] prediction = CrossValidation.regression(10, CPU.data, (x) -> ElasticNet.fit(CPU.formula, x, 0.8, 0.2));
+        double[] prediction = CrossValidation.regression(10, CPU.formula, CPU.data, (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
         double rmse = RMSE.of(CPU.y, prediction);
 
         System.out.println("10-CV RMSE = " + rmse);
@@ -150,7 +150,7 @@ public class ElasticNetTest {
         LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
         System.out.println(model);
 
-        double[] prediction = CrossValidation.regression(10, Diabetes.data, (x) -> ElasticNet.fit(Diabetes.formula, x, 0.8, 0.2));
+        double[] prediction = CrossValidation.regression(10, Diabetes.formula, Diabetes.data, (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
         double rmse = RMSE.of(Diabetes.y, prediction);
 
         System.out.println("Diabetes 10-CV RMSE = " + rmse);

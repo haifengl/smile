@@ -16,7 +16,6 @@
  *******************************************************************************/
 package smile.association;
 
-import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.stream.Stream;
 

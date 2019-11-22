@@ -75,7 +75,7 @@ public class FPGrowthTest {
     @Test
     public void test() {
         System.out.println("FP-Growth");
-        FPTree tree = FPTree.build(3, itemsets);
+        FPTree tree = FPTree.of(3, itemsets);
         List<ItemSet> results = FPGrowth.apply(tree).collect(Collectors.toList());
         assertEquals(8, results.size());
 
@@ -101,7 +101,7 @@ public class FPGrowthTest {
     public void testSinglePath() {
         System.out.println("single path");
 
-        FPTree tree = FPTree.build(1, itemsets2);
+        FPTree tree = FPTree.of(1, itemsets2);
         assertEquals(15, FPGrowth.apply(tree).count());
     }
 
@@ -109,7 +109,7 @@ public class FPGrowthTest {
     public void testPima() throws IOException {
         System.out.println("pima");
 
-        FPTree tree = FPTree.build(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
         assertEquals(1803, FPGrowth.apply(tree).count());
     }
     
@@ -117,7 +117,7 @@ public class FPGrowthTest {
     public void testKosarak() throws IOException {
         System.out.println("kosarak");
 
-        FPTree tree = FPTree.build(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
+        FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));
         assertEquals(219725, FPGrowth.apply(tree).count());
     }
 }

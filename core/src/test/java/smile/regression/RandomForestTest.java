@@ -116,7 +116,7 @@ public class RandomForestTest {
             System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
-        double[] prediction = LOOCV.regression(Longley.data, x -> RandomForest.fit(Longley.formula, x, 100, 3, 20, 10, 3, 1.0, Optional.of(Arrays.stream(seeds))));
+        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Optional.of(Arrays.stream(seeds))));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("LOOCV RMSE = " + rmse);
@@ -127,7 +127,7 @@ public class RandomForestTest {
         System.out.println(name);
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        double[] prediction = CrossValidation.regression(3, data, x -> RandomForest.fit(formula, x, 100, 3, 20, 100, 5, 1.0, Optional.of(Arrays.stream(seeds))));
+        double[] prediction = CrossValidation.regression(3, formula, data, (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Optional.of(Arrays.stream(seeds))));
         double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
