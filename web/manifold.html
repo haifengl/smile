@@ -59,7 +59,7 @@ permalink: "{{ page.filePathStem }}.html"
         coordinates in the new <code>n</code>-dimensional Euclidean space.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def isomap(data: Array[Array[Double]], d: Int, k: Int, CIsomap: Boolean = true): IsoMap
+    def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
     </code></pre>
 
     <p>The connectivity of each data point in the neighborhood graph is defined
@@ -92,18 +92,16 @@ permalink: "{{ page.filePathStem }}.html"
         the shortest path for all samples, the example uses only the first 2,000 samples.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val swissroll = read.table("data/manifold/swissroll.txt").unzip
-    plot(swissroll, '.', Color.BLUE)
+    val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter='\t').toArray
+    plot(swissroll, '.', BLUE)
 
-    val map = isomap(swissroll.slice(0, 2000), 2, 7)
+    val map = isomap(swissroll.slice(0, 2000), 7)
+    val x = map.coordinates
+    val window = plot(x, '.', BLUE)
 
-    val x = map.getCoordinates
-    val window = plot(x, '.', Color.BLUE)
-
-    val graph = map.getNearestNeighborGraph
     for (i <- 0 until x.length)
       for (j <- 0 until i)
-        if (graph.hasEdge(i, j))
+        if (map.graph.hasEdge(i, j))
           window.canvas.line(x(i), x(j))
     </code></pre>
 
@@ -133,13 +131,13 @@ permalink: "{{ page.filePathStem }}.html"
         various regions differ in sample densities.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def lle(data: Array[Array[Double]], d: Int, k: Int): LLE
+    def lle(data: Array[Array[Double]], k: Int, d: Int = 2): LLE
     </code></pre>
 
     <p>The LLE using 8 neighbors on the swiss roll data is as follows.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val map = lle(swissroll.slice(0, 2000), 2, 8)
+    val map = lle(swissroll.slice(0, 2000), 8)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -157,7 +155,7 @@ permalink: "{{ page.filePathStem }}.html"
         that naturally arises from the geometry of the manifold.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def laplacian(data: Array[Array[Double]], d: Int, k: Int, t: Double = -1): LaplacianEigenmap
+    def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
     </code></pre>
 
     <p>where <code>t</code> is the smooth/width parameter of heat kernel
@@ -171,7 +169,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>The Laplacian Eigenmap on the swiss roll data is as follows.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val map = laplacian(swissroll.slice(0, 1000), 2, 10, 25.0)
+    val map = laplacian(swissroll.slice(0, 1000), 10, 2, 25.0)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -190,7 +188,7 @@ permalink: "{{ page.filePathStem }}.html"
         and dissimilar objects are modeled by distant points.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 500.0, iterations: Int = 1000): TSNE
+    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE
     </code></pre>
 
     <p>where <code>X</code> is input data, <code>perplexity</code> is the perplexity
@@ -202,16 +200,13 @@ permalink: "{{ page.filePathStem }}.html"
         using PCA to reduce the dimensionality to 50 before t-SNE is performed.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val mnist = read.table("data/mnist/mnist2500_X.txt")
-    val label = read.table("data/mnist/mnist2500_labels.txt")
-    val x = mnist.unzip
-    val y = label.unzip.map(_(0).toInt)
-    val legend = label.unzip.map(_(0).toString)
+    val x = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray
+    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray
     val pc = pca(x)
     pc.setProjection(50)
     val x50 = pc.project(x)
     val sne = tsne(x50, 3, 20, 200, 1000)
-    plot(sne.getCoordinates, y, 'o', Palette.COLORS)
+    plot(sne.coordinates, y, 'o', Palette.COLORS)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
