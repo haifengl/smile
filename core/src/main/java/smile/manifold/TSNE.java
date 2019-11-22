@@ -58,7 +58,7 @@ public class TSNE {
     /**
      * Coordinate matrix.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
 
     private double eta             = 500;
     private double momentum        = 0.5;
@@ -297,12 +297,5 @@ public class TSNE {
         });
 
         return P;
-    }
-
-    /**
-     * Returns the coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
     }
 }
