@@ -2538,12 +2538,12 @@ public class MathEx {
     /**
      * Returns the dot product between two vectors.
      */
-    public static double dot(int[] x, int[] y) {
+    public static int dot(int[] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        double p = 0.0;
+        int p = 0;
         for (int i = 0; i < x.length; i++) {
             p += x[i] * y[i];
         }
@@ -2554,12 +2554,12 @@ public class MathEx {
     /**
      * Returns the dot product between two vectors.
      */
-    public static double dot(float[] x, float[] y) {
+    public static float dot(float[] x, float[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        double p = 0.0;
+        float p = 0.0F;
         for (int i = 0; i < x.length; i++) {
             p += x[i] * y[i];
         }
@@ -3053,12 +3053,40 @@ public class MathEx {
     /**
      * L1 vector norm.
      */
+    public static float norm1(float[] x) {
+        float norm = 0.0F;
+
+        for (float n : x) {
+            norm += abs(n);
+        }
+
+        return norm;
+    }
+
+    /**
+     * L1 vector norm.
+     */
     public static double norm1(double[] x) {
         double norm = 0.0;
 
         for (double n : x) {
             norm += abs(n);
         }
+
+        return norm;
+    }
+
+    /**
+     * L2 vector norm.
+     */
+    public static float norm2(float[] x) {
+        float norm = 0.0F;
+
+        for (float n : x) {
+            norm += n * n;
+        }
+
+        norm = (float) sqrt(norm);
 
         return norm;
     }
@@ -3081,6 +3109,20 @@ public class MathEx {
     /**
      * L-infinity vector norm. Maximum absolute value.
      */
+    public static float normInf(float[] x) {
+        int n = x.length;
+
+        float f = abs(x[0]);
+        for (int i = 1; i < n; i++) {
+            f = Math.max(f, abs(x[i]));
+        }
+
+        return f;
+    }
+
+    /**
+     * L-infinity vector norm. Maximum absolute value.
+     */
     public static double normInf(double[] x) {
         int n = x.length;
 
@@ -3095,8 +3137,25 @@ public class MathEx {
     /**
      * L2 vector norm.
      */
+    public static float norm(float[] x) {
+        return norm2(x);
+    }
+
+    /**
+     * L2 vector norm.
+     */
     public static double norm(double[] x) {
         return norm2(x);
+    }
+
+    /** Returns the cosine similarity. */
+    public static float cos(float[] x, float[] y) {
+        return dot(x, y) / (norm2(x) * norm2(y));
+    }
+
+    /** Returns the cosine similarity. */
+    public static double cos(double[] x, double[] y) {
+        return dot(x, y) / (norm2(x) * norm2(y));
     }
 
     /**
@@ -3120,15 +3179,6 @@ public class MathEx {
      * Scales each column of a matrix to range [0, 1].
      */
     public static void scale(double[][] x) {
-        scale(x, 0.0, 1.0);
-    }
-
-    /**
-     * Scales each column of a matrix to range [lo, hi].
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     */
-    public static void scale(double[][] x, double lo, double hi) {
         int n = x.length;
         int p = x[0].length;
 
