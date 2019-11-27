@@ -19,7 +19,7 @@ package smile.demo.manifold;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.io.DatasetReader;
+import smile.io.Read;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -126,7 +126,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
             if (dataset[datasetIndex] == null) {
                 try {
                     CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
-                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);

@@ -33,11 +33,11 @@ import smile.data.type.StructType;
 import smile.util.SparseArray;
 
 /**
- * Interface to load a Dataset from external storage systems.
+ * Interface to read data from external storage systems.
  * 
  * @author Haifeng Li
  */
-public interface DatasetReader {
+public interface Read {
     /** Reads a CSV file. */
     static DataFrame csv(Path path) throws IOException {
         return csv(path, CSVFormat.DEFAULT);
