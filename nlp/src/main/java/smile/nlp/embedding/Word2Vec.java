@@ -22,10 +22,14 @@ import java.io.IOException;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.nio.MappedByteBuffer;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import smile.data.DataFrame;
 import smile.data.vector.FloatVector;
 
@@ -83,7 +87,7 @@ public class Word2Vec {
     }
 
     /** Returns the dimension of vector space. */
-    public int dim() {
+    public int dimension() {
         return vectors.ncols();
     }
 
@@ -108,14 +112,14 @@ public class Word2Vec {
     }
 
     /**
-     * Loads a model from the file of word2vec binary format with ByteOrder.LITTLE_ENDIAN.
+     * Loads a word2vec model from binary file of ByteOrder.LITTLE_ENDIAN.
      */
     public static Word2Vec of(Path file) throws IOException {
         return of(file, ByteOrder.LITTLE_ENDIAN);
     }
 
     /**
-     * Loads a model from the file of word2vec binary format.
+     * Loads a word2vec model from binary file.
      */
     public static Word2Vec of(Path file, ByteOrder order) throws IOException {
         final long GB = 1024 * 1024 * 1024;
@@ -180,6 +184,37 @@ public class Word2Vec {
             }
 
             return new Word2Vec(words, vectors);
+        }
+    }
+
+    /**
+     * Loads a GloVe model from text file.
+     */
+    public static Word2Vec text(Path file) throws IOException {
+        try (Stream<String> stream = Files.lines(file)) {
+            List<String> words = new ArrayList<>(1000000);
+            List<float[]> vectors = new ArrayList<>(1000000);
+            stream.forEach(line -> {
+                String[] tokens = line.split("\\s+");
+                words.add(tokens[0]);
+                float[] vector = new float[tokens.length-1];
+                for (int i = 0; i < vector.length; i++) {
+                    vector[i] = Float.valueOf(tokens[i+1]);
+                }
+                vectors.add(vector);
+            });
+
+            int n = vectors.size();
+            int d = vectors.get(0).length;
+            float[][] pivot = new float[d][n];
+            for (int i = 0; i < n; i++) {
+                float[] vector = vectors.get(i);
+                for (int j = 0; j < d; j++) {
+                    pivot[j][i] = vector[j];
+                }
+            }
+
+            return new Word2Vec(words.toArray(new String[n]), pivot);
         }
     }
 }
