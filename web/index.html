@@ -6,7 +6,7 @@ permalink: "{{ page.filePathStem }}.html"
   <div class="news" style="margin-bottom: 20px;">
     <h5>Latest News</h5>
     <ul class="list-unstyled">
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v1.5.3">Smile 2.0.0 Released!</a>
+      <li><a href="https://github.com/haifengl/smile/releases/tag/v2.0.0">Smile 2.0.0 Released!</a>
         <span class="small">(Nov 22, 2019)</span></li>
 
       <li><a href="https://www.youtube.com/watch?v=aqT_0qFOBUI">Dex Machine Learning with SMILE ML</a>
@@ -386,18 +386,34 @@ permalink: "{{ page.filePathStem }}.html"
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <div class="code" style="text-align: left;">
-        <pre class="prettyprint lang-scala"><code>
-val data = read.arff("iris.arff", 4)
-val (x, y) = data.unzipInt
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val iris = read.arff("iris.arff")
 
-val rf = randomForest(x, y)
+val rf = randomForest("class" ~, iris)
 
 println(s"OOB error = ${rf.error}")
-rf.predict(x(0))
-        </code></pre>
+          </code></pre>
+          </div>
+          <div class="caption">Random Forest</div>
+        </div>
+        <div class="tab-pane" id="java_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+DataFrame iris = Read.arff("iris.arff");
+RandomForest rf = RandomForest.fit(Formula.lhs("class"), iris);
+System.out.format("OOB error = %.2f\n", rf.error);
+          </code></pre>
+          </div>
+          <div class="caption">Random Forest</div>
+        </div>
       </div>
-      <div class="caption">Random Forest in Smile's Scala API</div>
     </div>
   </div>
 
