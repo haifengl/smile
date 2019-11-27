@@ -23,7 +23,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -38,8 +37,8 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.mds.MDS;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public class MDSDemo extends JPanel implements Runnable, ActionListener {

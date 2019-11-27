@@ -27,9 +27,8 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.data.DataFrame;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 import smile.projection.KPCA;
 import smile.projection.PCA;
 import smile.math.MathEx;

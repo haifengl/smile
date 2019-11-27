@@ -18,14 +18,13 @@
 package smile.demo.clustering;
 
 import java.awt.Dimension;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 import smile.clustering.KMeans;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

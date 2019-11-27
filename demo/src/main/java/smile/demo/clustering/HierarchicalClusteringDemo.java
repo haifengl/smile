@@ -19,7 +19,6 @@ package smile.demo.clustering;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
-
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
@@ -28,11 +27,10 @@ import javax.swing.JPanel;
 
 import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.*;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.math.MathEx;
-import smile.plot.Dendrogram;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Dendrogram;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

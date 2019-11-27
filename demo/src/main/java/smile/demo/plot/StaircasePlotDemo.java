@@ -22,8 +22,8 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.PlotCanvas;
-import smile.plot.StaircasePlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.StaircasePlot;
 
 /**
  *

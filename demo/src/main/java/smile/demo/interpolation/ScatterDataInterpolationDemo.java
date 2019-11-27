@@ -24,14 +24,14 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.RBFInterpolation;
 import smile.interpolation.ShepardInterpolation;
 import smile.math.rbf.GaussianRadialBasis;
-import smile.plot.Heatmap;
+import smile.plot.swing.Heatmap;
 
 /**
  *

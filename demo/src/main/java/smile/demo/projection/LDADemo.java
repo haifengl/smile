@@ -35,8 +35,8 @@ import smile.classification.FLD;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 import smile.math.MathEx;
 
 @SuppressWarnings("serial")
