@@ -52,6 +52,26 @@ package object vega {
     """.stripMargin
   }
 
+  /** Returns the HTML wrapped in an iframe to render in notebooks.
+    * @param id the iframe HTML id.
+    */
+  def iframe(spec: JsObject, id: String = java.util.UUID.randomUUID.toString): String = {
+    val src = xml.Utility.escape(embed(spec))
+    s"""
+       |  <iframe id="${id}" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="${src}"></iframe>
+       |  <script>
+       |    (function() {
+       |      function resizeIFrame(el, k) {
+       |        var height = el.contentWindow.document.body.scrollHeight || '400'; // Fallback in case of no scroll height
+       |        el.style.height = height + 'px';
+       |        if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 1000 + (k * 250)) };
+       |      }
+       |      resizeIFrame(document.querySelector('#${id}'), 1);
+       |    })(); // IIFE
+       |  </script>
+    """.stripMargin
+  }
+
   /** Scatter plot.
     *
     * @param data a n-by-2 matrix
