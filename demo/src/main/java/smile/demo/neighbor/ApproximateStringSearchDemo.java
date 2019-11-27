@@ -24,12 +24,8 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -38,14 +34,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.plot.PlotCanvas;
 import smile.math.MathEx;
 import smile.math.distance.EditDistance;
 import smile.neighbor.BKTree;
 import smile.neighbor.CoverTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
-import smile.plot.BarPlot;
+import smile.plot.swing.BarPlot;
+import smile.plot.swing.PlotCanvas;
 
 /**
  *

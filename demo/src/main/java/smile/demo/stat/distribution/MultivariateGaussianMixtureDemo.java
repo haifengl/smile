@@ -22,9 +22,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.Surface;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.stat.distribution.MultivariateGaussianMixture;
 

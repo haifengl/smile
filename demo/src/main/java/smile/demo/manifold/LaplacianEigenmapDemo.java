@@ -29,7 +29,7 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.graph.Graph;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.PlotCanvas;
 import smile.manifold.LaplacianEigenmap;
 import smile.math.MathEx;
 

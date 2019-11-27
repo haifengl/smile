@@ -38,8 +38,8 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.mds.SammonMapping;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public class SammonMappingDemo extends JPanel implements Runnable, ActionListener {

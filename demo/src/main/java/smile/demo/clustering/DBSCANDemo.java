@@ -19,7 +19,6 @@ package smile.demo.clustering;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
-
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -27,11 +26,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 import smile.clustering.DBSCAN;
 import smile.math.distance.EuclideanDistance;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

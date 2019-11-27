@@ -36,7 +36,7 @@ import javax.swing.event.AncestorListener;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public abstract class ClusteringDemo extends JPanel implements Runnable, ActionListener, AncestorListener {

@@ -20,7 +20,6 @@ package smile.plot.swing
 import java.awt.{GridLayout, Dimension}
 import java.awt.event.WindowEvent
 import javax.swing.{JFrame, JPanel, WindowConstants}
-import smile.plot.PlotCanvas
 
 /** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
