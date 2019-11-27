@@ -23,11 +23,11 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 
 /**
- * Interface to write a Dataset to external storage systems.
+ * Interface to write data to external storage systems.
  *
  * @author Haifeng Li
  */
-public interface DatasetWriter {
+public interface Write {
     /** Writes a CSV file. */
     static void csv(DataFrame df, Path path) throws IOException {
         csv(df, path, CSVFormat.DEFAULT);

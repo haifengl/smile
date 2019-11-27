@@ -36,7 +36,7 @@ import javax.swing.JPanel;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.mds.SammonMapping;
 import smile.plot.PlotCanvas;
 import smile.plot.ScatterPlot;
@@ -149,7 +149,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
                 CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
 
                 try {
-                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                     if (datasetIndex != 2 && datasetIndex != 3) {
                         dataset[datasetIndex] = dataset[datasetIndex].drop(0); // row names
                     }

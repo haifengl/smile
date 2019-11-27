@@ -24,7 +24,7 @@ import javax.swing.*;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.plot.Palette;
 import smile.plot.PlotCanvas;
 import smile.manifold.TSNE;
@@ -135,10 +135,10 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
 
             try {
                 CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ').withIgnoreSurroundingSpaces(true);
-                DataFrame dataset = DatasetReader.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"), format);
+                DataFrame dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"), format);
                 data = dataset.toArray();
 
-                dataset = DatasetReader.csv(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
+                dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
                 labels = dataset.column(0).toIntArray();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
