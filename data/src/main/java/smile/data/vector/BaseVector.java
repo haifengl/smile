@@ -91,6 +91,25 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     }
 
     /**
+     * Returns a string array of this vector.
+     */
+    default String[] toStringArray() {
+        return toStringArray(new String[size()]);
+    }
+
+    /**
+     * Copies the vector value as string to the given array.
+     * @return the input array <code>a</code>.
+     */
+    default String[] toStringArray(String[] a) {
+        int n = a.length;
+        for (int i = 0; i < n; i++) {
+            a[i] = field().toString(get(i));
+        }
+        return a;
+    }
+
+    /**
      * Returns the value at position i, which may be null.
      */
     T get(int i);
