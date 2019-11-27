@@ -17,7 +17,6 @@
 
 package smile.json
 
-import scala.collection.immutable.ListMap
 import org.specs2.mutable._
 
 class PrettyPrinterSpec extends Specification {

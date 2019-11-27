@@ -23,11 +23,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-
 import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
 import smile.data.type.StructType;
 
 /**

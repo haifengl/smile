@@ -33,6 +33,7 @@ package object json {
   val JsTrue = new JsBoolean(true)
   val JsFalse = new JsBoolean(false)
 
+  /** Enable json''' '''. */
   implicit class JsonHelper(private val sc: StringContext) extends AnyVal {
     def json(args: Any*): JsObject = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsObject]
@@ -58,11 +59,11 @@ package object json {
   implicit def objectId2JsValue(x: ObjectId) = JsObjectId(x)
   implicit def byteArray2JsValue(x: Array[Byte]) = JsBinary(x)
 
-  implicit def array2JsValue(x: Array[JsValue]): JsArray = seq2JsValue(ArraySeq.unsafeWrapArray(x))
-  implicit def seq2JsValue(x: Seq[JsValue]): JsArray = JsArray(x: _*)
-  implicit def map2JsValue(x: Seq[(String, JsValue)]): JsObject = JsObject(x: _*)
+  implicit def array2JsValue[T <: JsValue](x: Array[T]): JsArray = seq2JsValue(ArraySeq.unsafeWrapArray(x))
+  implicit def seq2JsValue[T <: JsValue](x: Seq[T]): JsArray = JsArray(x: _*)
+  implicit def map2JsValue[T <: JsValue](x: Seq[(String, T)]): JsObject = JsObject(x: _*)
   implicit def map2JsValue(x: collection.mutable.Map[String, JsValue]): JsObject = JsObject(x)
-  implicit def map2JsValue(x: collection.immutable.Map[String, JsValue]): JsObject = JsObject(x)
+  implicit def map2JsValue[T <: JsValue](x: collection.immutable.Map[String, T]): JsObject = JsObject(x)
 
   implicit def pimpBooleanSeq(x: Seq[Boolean]) = new PimpedBooleanSeq(x)
   implicit def pimpIntSeq(x: Seq[Int]) = new PimpedIntSeq(x)
