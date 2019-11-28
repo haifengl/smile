@@ -38,8 +38,7 @@ import smile.projection.PCA
   * @author Haifeng Li
   */
 package object swing {
-  /** Returns the HTML img tag with the canvas is embedded with BASE64 encoding.
-    */
+  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
   def img(canvas: JComponent): String = {
     val headless = new Headless(canvas)
     headless.pack
