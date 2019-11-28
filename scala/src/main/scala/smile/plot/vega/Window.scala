@@ -18,7 +18,6 @@
 package smile.plot.vega
 
 import java.util.concurrent.{Callable, FutureTask}
-
 import javafx.application.Platform
 import javafx.embed.swing.JFXPanel
 import javafx.scene.web.WebView
