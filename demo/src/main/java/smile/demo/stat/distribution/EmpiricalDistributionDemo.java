@@ -61,7 +61,7 @@ public class EmpiricalDistributionDemo extends JPanel {
         p = new double[11][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = i;
-            p[i][1] = emp.cdf(p[i][0]);
+            p[i][1] = emp.cdf(i);
         }
 
         canvas = StaircasePlot.plot(p);
