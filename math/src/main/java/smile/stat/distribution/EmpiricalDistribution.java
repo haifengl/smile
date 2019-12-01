@@ -184,9 +184,9 @@ public class EmpiricalDistribution extends DiscreteDistribution {
         rU -= k;  /* rU becomes rU-[rU] */
 
         if (rU < q[k]) {
-            return k;
+            return x.valueOf(k);
         } else {
-            return a[k];
+            return x.valueOf(a[k]);
         }
     }
 
@@ -205,9 +205,9 @@ public class EmpiricalDistribution extends DiscreteDistribution {
             rU -= k;  /* rU becomes rU-[rU] */
 
             if (rU < q[k]) {
-                ans[i] = k;
+                ans[i] = x.valueOf(k);
             } else {
-                ans[i] = a[k];
+                ans[i] = x.valueOf(a[k]);
             }
         }
 
@@ -256,23 +256,30 @@ public class EmpiricalDistribution extends DiscreteDistribution {
 
     @Override
     public double p(int k) {
-        return p[x.indexOf(k)];
+        if (k < x.min || k > x.max) {
+            return 0.0;
+        } else {
+            return p[x.indexOf(k)];
+        }
     }
 
     @Override
     public double logp(int k) {
-        return Math.log(p[x.indexOf(k)]);
+        if (k < x.min || k > x.max) {
+            return Double.NEGATIVE_INFINITY;
+        } else {
+            return Math.log(p[x.indexOf(k)]);
+        }
     }
 
     @Override
     public double cdf(double k) {
-        int index = x.indexOf((int) Math.floor(k));
-        if (index < 0) {
+        if (k < x.min) {
             return 0.0;
-        } else if (k >= x.size()) {
+        } else if (k >= x.max) {
             return 1.0;
         } else {
-            return cdf[index];
+            return cdf[x.indexOf((int) Math.floor(k))];
         }
     }
 

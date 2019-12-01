@@ -33,9 +33,13 @@ public class IntSet implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** Map of index to original values. */
-    protected final int[] values;
+    public final int[] values;
     /** Map of values to index. */
     protected final Map<Integer, Integer> index;
+    /** The minimum of values. */
+    public final int min;
+    /** The maximum of values. */
+    public final int max;
 
     /**
      * Constructor.
@@ -43,6 +47,8 @@ public class IntSet implements Serializable {
      */
     public IntSet(int[] values) {
         this.values = values;
+        this.min = MathEx.min(values);
+        this.max = MathEx.max(values);
         this.index = new HashMap<>();
         for (int i = 0; i < values.length; i++) {
             index.put(values[i], i);
