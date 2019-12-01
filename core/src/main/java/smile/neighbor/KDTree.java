@@ -142,7 +142,11 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     }
 
     /**
-     * Build a k-d tree from the given set of dataset.
+     * Builds a sub-tree.
+     * @param begin the beginning index of samples for the subtree (inclusive).
+     * @param end the ending index of samples for the subtree (exclusive).
+     * @param lowerBound the work space of lower bound of each dimension of samples.
+     * @param upperBound the work space of upper bound of each dimension of samples.
      */
     private Node buildNode(int begin, int end, double[] lowerBound, double[] upperBound) {
         int d = keys[0].length;
@@ -155,14 +159,14 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         node.index = begin;
 
         // Calculate the bounding box
-        for (int i = 0; i < d; i++) {
-            lowerBound[i] = keys[index[begin]][i];
-            upperBound[i] = keys[index[begin]][i];
-        }
+        double[] key = keys[index[begin]];
+        System.arraycopy(key, 0, lowerBound, 0, d);
+        System.arraycopy(key, 0, upperBound, 0, d);
 
         for (int i = begin + 1; i < end; i++) {
+            key = keys[index[i]];
             for (int j = 0; j < d; j++) {
-                double c = keys[index[i]][j];
+                double c = key[j];
                 if (lowerBound[j] > c) {
                     lowerBound[j] = c;
                 }
@@ -189,9 +193,9 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             return node;
         }
 
-        // Partition the dataset around the midpoint in this dimension. The
+        // Partition the data around the midpoint in this dimension. The
         // partitioning is done in-place by iterating from left-to-right and
-        // right-to-left in the same way that partioning is done in quicksort.
+        // right-to-left in the same way as quicksort.
         int i1 = begin, i2 = end - 1, size = 0;
         while (i1 <= i2) {
             boolean i1Good = (keys[index[i1]][node.split] < node.cutoff);
