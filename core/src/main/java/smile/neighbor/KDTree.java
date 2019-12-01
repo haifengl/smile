@@ -130,7 +130,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         }
 
         // Build the tree
-        root = buildNode(0, n);
+        int d = keys[0].length;
+        double[] lowerBound = new double[d];
+        double[] upperBound = new double[d];
+        root = buildNode(0, n, lowerBound, upperBound);
     }
 
     @Override
@@ -141,7 +144,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     /**
      * Build a k-d tree from the given set of dataset.
      */
-    private Node buildNode(int begin, int end) {
+    private Node buildNode(int begin, int end, double[] lowerBound, double[] upperBound) {
         int d = keys[0].length;
 
         // Allocate the node
@@ -152,9 +155,6 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         node.index = begin;
 
         // Calculate the bounding box
-        double[] lowerBound = new double[d];
-        double[] upperBound = new double[d];
-
         for (int i = 0; i < d; i++) {
             lowerBound[i] = keys[index[begin]][i];
             upperBound[i] = keys[index[begin]][i];
@@ -215,8 +215,8 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         }
 
         // Create the child nodes
-        node.lower = buildNode(begin, begin + size);
-        node.upper = buildNode(begin + size, end);
+        node.lower = buildNode(begin, begin + size, lowerBound, upperBound);
+        node.upper = buildNode(begin + size, end, lowerBound, upperBound);
 
         return node;
     }
