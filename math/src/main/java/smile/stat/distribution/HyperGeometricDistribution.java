@@ -18,6 +18,7 @@
 package smile.stat.distribution;
 
 import smile.math.MathEx;
+
 import static smile.math.MathEx.lchoose;
 import static smile.math.MathEx.lfactorial;
 

@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-
 /**
  * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,
  * where &gamma; is the scale of the used inner product, &lambda; the offset of

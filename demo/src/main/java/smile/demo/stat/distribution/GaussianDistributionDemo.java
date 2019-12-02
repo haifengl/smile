@@ -31,7 +31,6 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.math.MathEx;
 import smile.plot.Histogram;
 import smile.plot.PlotCanvas;
 import smile.plot.Line;

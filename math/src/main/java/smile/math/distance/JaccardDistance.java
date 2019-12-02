@@ -17,8 +17,8 @@
 
 package smile.math.distance;
 
-import java.util.Set;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The Jaccard index, also known as the Jaccard similarity coefficient is a
