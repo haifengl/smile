@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-
 /**
  * The Pearson Mercer Kernel.
 

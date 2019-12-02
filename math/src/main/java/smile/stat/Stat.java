@@ -19,11 +19,7 @@ package smile.stat;
 
 import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
-import smile.stat.hypothesis.ChiSqTest;
-import smile.stat.hypothesis.CorTest;
-import smile.stat.hypothesis.FTest;
-import smile.stat.hypothesis.KSTest;
-import smile.stat.hypothesis.TTest;
+import smile.stat.hypothesis.*;
 
 /**
  * Statistical functions or tests.

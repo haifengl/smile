@@ -17,10 +17,10 @@
 
 package smile.stat.distribution;
 
-import smile.math.matrix.Cholesky;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.math.matrix.Cholesky;
 import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * Multivariate Gaussian distribution.
