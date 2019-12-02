@@ -18,12 +18,8 @@
 package smile.math;
 
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -36,7 +32,6 @@ import smile.util.SparseArray;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.floor;
-import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
 /**
@@ -240,13 +235,13 @@ public class MathEx {
     /**
      * log(2), used in log2().
      */
-    private static final double LOG2 = log(2);
+    private static final double LOG2 = Math.log(2);
 
     /**
      * Log of base 2.
      */
     public static double log2(double x) {
-        return log(x) / LOG2;
+        return Math.log(x) / LOG2;
     }
 
     /**
@@ -441,7 +436,7 @@ public class MathEx {
 
         double f = 0.0;
         for (int i = 2; i <= n; i++) {
-            f += log(i);
+            f += Math.log(i);
         }
 
         return f;
@@ -2275,7 +2270,7 @@ public class MathEx {
         double h = 0.0;
         for (double pi : p) {
             if (pi > 0) {
-                h -= pi * log(pi);
+                h -= pi * Math.log(pi);
             }
         }
         return h;
@@ -2303,7 +2298,7 @@ public class MathEx {
         for (int i = 0; i < x.length; i++) {
             if (x[i] != 0.0 && y[i] != 0.0) {
                 intersection = true;
-                kl += x[i] * log(x[i] / y[i]);
+                kl += x[i] * Math.log(x[i] / y[i]);
             }
         }
 
@@ -2354,7 +2349,7 @@ public class MathEx {
                 b = iterY.hasNext() ? iterY.next() : null;
             } else {
                 intersection = true;
-                kl += a.x * log(a.x / b.x);
+                kl += a.x * Math.log(a.x / b.x);
 
                 a = iterX.hasNext() ? iterX.next() : null;
                 b = iterY.hasNext() ? iterY.next() : null;
@@ -2416,7 +2411,7 @@ public class MathEx {
             int i = b.i;
             if (y[i] > 0) {
                 intersection = true;
-                kl += b.x * log(b.x / y[i]);
+                kl += b.x * Math.log(b.x / y[i]);
             }
         }
 
@@ -2474,15 +2469,15 @@ public class MathEx {
         while (a != null && b != null) {
             if (a.i < b.i) {
                 double mi = a.x / 2;
-                js += a.x * log(a.x / mi);
+                js += a.x * Math.log(a.x / mi);
                 a = iterX.hasNext() ? iterX.next() : null;
             } else if (a.i > b.i) {
                 double mi = b.x / 2;
-                js += b.x * log(b.x / mi);
+                js += b.x * Math.log(b.x / mi);
                 b = iterY.hasNext() ? iterY.next() : null;
             } else {
                 double mi = (a.x + b.x) / 2;
-                js += a.x * log(a.x / mi) + b.x * log(b.x / mi);
+                js += a.x * Math.log(a.x / mi) + b.x * Math.log(b.x / mi);
 
                 a = iterX.hasNext() ? iterX.next() : null;
                 b = iterY.hasNext() ? iterY.next() : null;
@@ -2526,9 +2521,9 @@ public class MathEx {
             SparseArray.Entry b = iter.next();
             int i = b.i;
             double mi = (b.x + y[i]) / 2;
-            js += b.x * log(b.x / mi);
+            js += b.x * Math.log(b.x / mi);
             if (y[i] > 0) {
-                js += y[i] * log(y[i] / mi);
+                js += y[i] * Math.log(y[i] / mi);
             }
         }
 

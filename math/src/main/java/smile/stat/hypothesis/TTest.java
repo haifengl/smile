@@ -17,8 +17,8 @@
 
 package smile.stat.hypothesis;
 
-import smile.math.special.Beta;
 import smile.math.MathEx;
+import smile.math.special.Beta;
 
 /**
  * Student's t test. A t-test is any statistical hypothesis test in which the test statistic has

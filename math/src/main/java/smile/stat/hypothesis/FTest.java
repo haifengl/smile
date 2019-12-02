@@ -17,8 +17,8 @@
 
 package smile.stat.hypothesis;
 
-import smile.math.special.Beta;
 import smile.math.MathEx;
+import smile.math.special.Beta;
 
 /**
  * F test of the hypothesis that two independent samples come from normal
