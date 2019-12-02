@@ -17,8 +17,8 @@
 
 package smile.stat.distribution;
 
-import smile.math.special.Erf;
 import smile.math.MathEx;
+import smile.math.special.Erf;
 
 /**
  * A log-normal distribution is a probability distribution of a random variable
