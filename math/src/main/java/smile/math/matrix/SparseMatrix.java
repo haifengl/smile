@@ -17,18 +17,18 @@
 
 package smile.math.matrix;
 
-import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
-import static java.util.Spliterator.*;
+
 import smile.math.MathEx;
-import smile.util.SparseArray;
 import smile.util.Strings;
+
+import static java.util.Spliterator.*;
 
 /**
  * A sparse matrix is a matrix populated primarily with zeros. Conceptually,
