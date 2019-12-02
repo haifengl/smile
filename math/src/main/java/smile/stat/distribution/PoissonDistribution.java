@@ -17,7 +17,7 @@
 
 package smile.stat.distribution;
 
-import javafx.geometry.Pos;
+//import javafx.geometry.Pos;
 import smile.math.special.Gamma;
 import smile.math.MathEx;
 
