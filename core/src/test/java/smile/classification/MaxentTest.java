@@ -20,7 +20,6 @@ package smile.classification;
 import java.io.IOException;
 import smile.data.Hyphen;
 import smile.data.Protein;
-import smile.math.MathEx;
 import smile.validation.Error;
 import smile.validation.Validation;
 import org.junit.After;

@@ -18,15 +18,11 @@
 package smile.util;
 
 import java.io.Serializable;
-import java.text.DecimalFormat;
 import java.util.Iterator;
 import java.util.List;
-import java.util.OptionalInt;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
-
 import smile.sort.QuickSort;
 
 /**

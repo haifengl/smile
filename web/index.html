@@ -54,43 +54,50 @@ permalink: "{{ page.filePathStem }}.html"
     <dl>
       <dt><a href="api/scala/index.html#smile.classification.package">Classification</a></dt>
       <dd><p>
-        <a href="api/java/smile/classification/SVM.html">Support Vector Machines</a>,
         <a href="api/java/smile/classification/DecisionTree.html">Decision Trees</a>,
         <a href="api/java/smile/classification/AdaBoost.html">AdaBoost</a>,
         <a href="api/java/smile/classification/GradientTreeBoost.html">Gradient Boosting</a>,
         <a href="api/java/smile/classification/RandomForest.html">Random Forest</a>,
         <a href="api/java/smile/classification/LogisticRegression.html">Logistic Regression</a>,
         <a href="api/java/smile/classification/NeuralNetwork.html">Neural Networks</a>,
+        <a href="api/java/smile/classification/SVM.html">Support Vector Machines</a>,
         <a href="api/java/smile/classification/RBFNetwork.html">RBF Networks</a>,
         <a href="api/java/smile/classification/Maxent.html">Maximum Entropy Classifier</a>,
-        <a href="api/java/smile/classification/NaiveBayes.html">Naïve Bayesian</a>,
+        <a href="api/java/smile/classification/NaiveBayes.html">Generic Naïve Bayes Classifier</a>,
+        <a href="api/java/smile/classification/DiscreteNaiveBayes.html">Naïve Bayes Document Classfier</a>,
         <a href="api/java/smile/classification/FLD.html">Fisher</a> /
         <a href="api/java/smile/classification/LDA.html">Linear</a> /
         <a href="api/java/smile/classification/QDA.html">Quadratic</a> /
-        <a href="api/java/smile/classification/RDA.html">Regularized Discriminant Analysis</a>
+        <a href="api/java/smile/classification/RDA.html">Regularized Discriminant Analysis</a>,
+        <a href="api/java/smile/classification/PlattScaling.html">Platt Scaling</a>,
+        <a href="api/java/smile/classification/IsotonicRegressionScaling.html">Isotonic Regression Scaling</a>,
+        <a href="api/java/smile/classification/OneVersusOne.html">One vs. One</a>,
+        <a href="api/java/smile/classification/OneVersusRest.html">One vs. Rest</a>
       </p></dd>
 
       <dt><dt><a href="api/scala/index.html#smile.regression.package">Regression</a></dt>
       <dd><p>
-        <a href="api/java/smile/regression/SVR.html">Support Vector Regression</a>,
-        <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>,
+        <a href="api/java/smile/regression/OLS.html">Linear Regression</a>,
+        <a href="api/java/smile/regression/LASSO.html">LASSO</a>,
+        <a href="api/java/smile/regression/RidgeRegression.html">Ridge Regression</a>,
         <a href="api/java/smile/regression/RegressionTree.html">Regression Trees</a>,
         <a href="api/java/smile/regression/GradientTreeBoost.html">Gradient Boosting</a>,
         <a href="api/java/smile/regression/RandomForest.html">Random Forest</a>,
         <a href="api/java/smile/regression/RBFNetwork.html">RBF Networks</a>,
-        <a href="api/java/smile/regression/OLS.html">Linear Regression</a>,
-        <a href="api/java/smile/regression/LASSO.html">LASSO</a>,
-        <a href="api/java/smile/regression/RidgeRegression.html">Ridge Regression</a>
+        <a href="api/java/smile/regression/SVR.html">Support Vector Regression</a>,
+        <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>
       </p></dd>
 
       <dt><a href="api/java/smile/feature/package-summary.html">Feature Engineering and Selection</a></dt>
       <dd><p>
         <a href="api/java/smile/feature/Bag.html">Bag of Words</a>,
-        <a href="api/java/smile/feature/DateFeature.html">Date Features</a>,
-        <a href="api/java/smile/feature/Nominal2Binary.html">One Hot Encoding</a>,
-        <a href="api/java/smile/feature/Nominal2SparseBinary.html">Sparse One Hot Encoding</a>,
-        <a href="api/java/smile/feature/NumericAttributeFeature.html">Numeric Feature Standardization</a>,
-        <a href="api/java/smile/feature/GAFeatureSelection.html">Genetic Algorithm based Feature Selection</a>,
+        <a href="api/java/smile/feature/SparseOneHotEncoder.html">Sparse One Hot Encoding</a>,
+        <a href="api/java/smile/feature/Standardizer.html">Standardizer</a>,
+        <a href="api/java/smile/feature/RobustStandardizer.html">Robust Standardizer</a>,
+        <a href="api/java/smile/feature/MaxAbsScaler.html">Maximum Absolute Value Scaler</a>,
+        <a href="api/java/smile/feature/WinsorScaler.html">Winsor Scaler</a>,
+        <a href="api/java/smile/feature/Normalizer.html">Normalizer</a>,
+        <a href="api/java/smile/feature/GAFE.html">Genetic Algorithm based Feature Selection</a>,
         <a href="api/java/smile/classification/RandomForest.html">Ensemble Learning based Feature Selection</a>,
         <a href="api/java/smile/feature/SignalNoiseRatio.html">Signal Noise ratio</a>,
         <a href="api/java/smile/feature/SumSquaresRatio.html">Sum Squares ratio</a>
@@ -102,7 +109,8 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/projection/KPCA.html">Kernel PCA</a>,
         <a href="api/java/smile/projection/PPCA.html">Probabilistic PCA</a>,
         <a href="api/java/smile/projection/GHA.html">Generalized Hebbian Algorithm</a>,
-        <a href="api/java/smile/projection/RandomProjection.html">Random Project</a>
+        <a href="api/java/smile/projection/RandomProjection.html">Random Project</a>,
+        <a href="api/java/smile/projection/ICA.html">ICA</a>
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.validation.package">Model Validation</a></dt>
@@ -130,21 +138,26 @@ permalink: "{{ page.filePathStem }}.html"
 
       <dt><a href="api/scala/index.html#smile.clustering.package">Clustering</a></dt>
       <dd><p>
-        <a href="api/java/smile/clustering/BIRCH.html">BIRCH</a>,
+        <a href="api/java/smile/clustering/HierarchicalClustering.html">Hierarchical Clustering</a>,
         <a href="api/java/smile/clustering/CLARANS.html">CLARANS</a>,
         <a href="api/java/smile/clustering/DBSCAN.html">DBSCAN</a>,
         <a href="api/java/smile/clustering/DENCLUE.html">DENCLUE</a>,
-        <a href="api/java/smile/clustering/DeterministicAnnealing.html">Deterministic Annealing</a>,
         <a href="api/java/smile/clustering/KMeans.html">K-Means</a>,
         <a href="api/java/smile/clustering/XMeans.html">X-Means</a>,
         <a href="api/java/smile/clustering/GMeans.html">G-Means</a>,
-        <a href="api/java/smile/clustering/NeuralGas.html">Neural Gas</a>,
-        <a href="api/java/smile/clustering/GrowingNeuralGas.html">Growing Neural Gas</a>,
-        <a href="api/java/smile/clustering/HierarchicalClustering.html">Hierarchical Clustering</a>,
+        <a href="api/java/smile/clustering/DeterministicAnnealing.html">Deterministic Annealing</a>,
         <a href="api/java/smile/clustering/SIB.html">Sequential Information Bottleneck</a>,
-        <a href="api/java/smile/clustering/SOM.html">Self-Organizing Maps</a>,
         <a href="api/java/smile/clustering/SpectralClustering.html">Spectral Clustering</a>,
         <a href="api/java/smile/clustering/MEC.html">Minimum Entropy Clustering</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/vq/package-summary.html">Vector Quantization</a></dt>
+      <dd><p>
+        <a href="api/java/smile/vq/BIRCH.html">BIRCH</a>,
+        <a href="api/java/smile/vq/SOM.html">Self-Organizing Maps</a>,
+        <a href="api/java/smile/vq/NeuralGas.html">Neural Gas</a>,
+        <a href="api/java/smile/vq/GrowingNeuralGas.html">Growing Neural Gas</a>,
+        <a href="api/java/smile/vq/NeuralMap.html">Neural Map</a>,
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.association.package">Association Rules</a></dt>
@@ -170,10 +183,13 @@ permalink: "{{ page.filePathStem }}.html"
 
       <dt><a href="api/java/smile/neighbor/package-summary.html">Nearest Neighbor Search</a></dt>
       <dd><p>
+        <a href="api/java/smile/neighbor/LinearSearch.html">Linear Search</a>,
         <a href="api/java/smile/neighbor/BKTree.html">BK-Tree</a>,
         <a href="api/java/smile/neighbor/CoverTree.html">Cover Tree</a>,
         <a href="api/java/smile/neighbor/KDTree.html">KD-Tree</a>,
-        <a href="api/java/smile/neighbor/LSH.html">Locality-Sensitive Hashing</a>
+        <a href="api/java/smile/neighbor/LSH.html">LSH</a>,
+        <a href="api/java/smile/neighbor/MPLSH.html">Multi-Probe LSH</a>,
+        <a href="api/java/smile/neighbor/SNLSH.html">SimHash</a>
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.sequence.package">Sequence Learning</a></dt>

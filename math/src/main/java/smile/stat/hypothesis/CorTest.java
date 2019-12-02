@@ -17,10 +17,9 @@
 
 package smile.stat.hypothesis;
 
+import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.math.special.Erf;
-import smile.math.special.Gamma;
-import smile.math.MathEx;
 import smile.sort.QuickSort;
 
 /**
