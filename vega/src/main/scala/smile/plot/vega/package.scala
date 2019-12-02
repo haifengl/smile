@@ -314,7 +314,7 @@ package object vega {
 
 package vega {
 
-  import smile.data.measure.{DiscreteMeasure, NominalScale, OrdinalScale}
+  import smile.data.measure.DiscreteMeasure
 
   private[vega] case class DataFrame2JSON(data: DataFrame) {
     def toJSON: JsArray = {
