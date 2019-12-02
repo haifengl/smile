@@ -75,12 +75,12 @@ package object plot {
 
   /** Swing component renderer in Jupyter-scala (Almond) Notebook. */
   implicit def almond(canvas: JComponent): Unit = {
-    publish(swing.img(canvas))
+    publish.html(swing.img(canvas))
   }
 
   /** Vega plot renderer in Jupyter-scala (Almond) Notebook. */
   implicit def almond(spec: JsObject): Unit = {
-    publish(iframe(spec))
+    publish.html(iframe(spec))
   }
  */
 }
