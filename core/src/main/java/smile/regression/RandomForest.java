@@ -133,7 +133,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      */
     public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "-1"));
+        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "0"));
         int maxDepth = Integer.valueOf(prop.getProperty("smile.random.forest.max.depth", "20"));
         int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
         int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
@@ -147,15 +147,15 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the decision
-     * at a node of the tree. p/3 seems to give generally good performance,
-     * where p is the number of variables.
+     * @param mtry the number of input variables to be used to determine the
+     *             decision at a node of the tree. p/3 generally give good
+     *             performance, where p is the number of variables.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     *                 not split, nodeSize = 5 generally gives good results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with
+     *                  replacement. < 1.0 means sampling without replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, Optional.empty());
@@ -167,15 +167,15 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the decision
-     * at a node of the tree. p/3 seems to give generally good performance,
-     * where p is the number of variables.
+     * @param mtry the number of input variables to be used to determine the
+     *             decision at a node of the tree. p/3 generally give good
+     *             performance, where p is the number of variables.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     *                 not split, nodeSize = 5 generally gives good results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with
+     *                  replacement. < 1.0 means sampling without replacement.
      * @param seedGenerator RNG seed generator.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongSupplier seedGenerator) {
@@ -188,15 +188,15 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the decision
-     * at a node of the tree. p/3 seems to give generally good performance,
-     * where p is the number of variables.
+     * @param mtry the number of input variables to be used to determine the
+     *             decision at a node of the tree. p/3 generally give good
+     *             performance, where p is the number of variables.
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
-     * not split, setting nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     *                 not split, nodeSize = 5 generally gives good results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling with
+     *                  replacement. < 1.0 means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<LongStream> seeds) {
@@ -217,7 +217,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        final int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
+        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
 
         final int n = x.nrows();
         double[] prediction = new double[n];
@@ -261,7 +261,6 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
             return tree;
         }).toArray(RegressionTree[]::new);
 
-       // System.out.println();
         int m = 0;
         double error = 0.0;
         for (int i = 0; i < n; i++) {
