@@ -299,7 +299,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 
-        if (mtry < 1 || mtry > x.ncols()) {
+        if (mtry > x.ncols()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
