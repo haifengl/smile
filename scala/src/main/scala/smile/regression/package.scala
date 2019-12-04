@@ -295,13 +295,13 @@ package object regression {
     * @param maxDepth the maximum depth of the tree.
     * @param maxNodes the maximum number of leaf nodes in the tree.
     * @param nodeSize the minimum size of leaf nodes.
-    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-    *                  sampling without replacement.
+    * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement.
+    *                  < 1.0 means sampling without replacement.
     *
     * @return Random forest regression model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize, subsample)
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest = time("Random Forest") {
+    RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
   }
 
   /** Gradient boosted regression trees.
