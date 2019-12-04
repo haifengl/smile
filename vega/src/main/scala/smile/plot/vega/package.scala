@@ -165,7 +165,6 @@ package object vega {
       |}
     """.stripMargin)
 
-    println(spec)
     spec.asInstanceOf[JsObject] ++= properties
   }
 

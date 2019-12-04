@@ -193,7 +193,7 @@ public interface Matrix extends Serializable {
      * @param n the number of columns to print.
      */
     default String toString(int m, int n) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(nrows() + " x " + ncols() + "\n");
         m = Math.min(m, nrows());
         n = Math.min(n, ncols());
 
