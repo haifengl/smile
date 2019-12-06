@@ -73,8 +73,8 @@ public class XMeansTest {
         double r = RandIndex.of(y, model.y);
         double r2 = AdjustedRandIndex.of(y, model.y);
         System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9095, r, 1E-4);
-        assertEquals(0.5407, r2, 1E-4);
+        assertEquals(0.8965, r, 1E-4);
+        assertEquals(0.4564, r2, 1E-4);
 
         System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
         System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
@@ -91,7 +91,7 @@ public class XMeansTest {
         r = RandIndex.of(testy, p);
         r2 = AdjustedRandIndex.of(testy, p);
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertEquals(0.9005, r, 1E-4);
-        assertEquals(0.4880, r2, 1E-4);
+        assertEquals(0.8872, r, 1E-4);
+        assertEquals(0.4076, r2, 1E-4);
     }
 }
