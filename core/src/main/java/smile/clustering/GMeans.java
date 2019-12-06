@@ -157,6 +157,12 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                 }
             }
 
+            // no more split.
+            if (centers.size() == k) {
+                logger.info("No more split. Finish with {} clusters", k);
+                break;
+            }
+
             k = centers.size();
             centroids = centers.toArray(new double[k][]);
 
