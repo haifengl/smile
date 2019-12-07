@@ -10,6 +10,8 @@ mainClass in Compile := Some("smile.shell.Main")
 
 // native packager
 enablePlugins(JavaAppPackaging)
+// dealing with long classpaths
+scriptClasspath := Seq("*")
 
 maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
 
