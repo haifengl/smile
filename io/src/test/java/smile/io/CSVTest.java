@@ -17,6 +17,7 @@
 
 package smile.io;
 
+import java.io.StringReader;
 import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -282,5 +283,40 @@ public class CSVTest {
         assertEquals(49756.53, df.getDouble(0, 10), 1E-10);
         assertEquals("Internal Auditor", df.getString(0, 11));
         assertEquals("1E+02", df.getString(0, 12));
+    }
+
+    /**
+     * Test of read method, of class CSV.
+     */
+    @Test(expected = Test.None.class)
+    public void testFromString() throws Exception {
+        String csvString = "id,type,number\n"
+            + "1,101,11\n"
+            + "2,102,12\n"
+            + "3,103,13\n";
+
+        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+        CSV csv = new CSV(format);
+        DataFrame data = csv.read(new StringReader(csvString));
+
+        assertEquals(3, data.nrows());
+        assertEquals(3, data.ncols());
+
+        StructField[] fields = data.schema().fields();
+        for (int i = 0; i < fields.length; i++) {
+            assertEquals(DataTypes.IntegerType, fields[i].type);
+        }
+
+        assertEquals(1, data.getInt(0, 0));
+        assertEquals(2, data.getInt(1, 0));
+        assertEquals(3, data.getInt(2, 0));
+
+        assertEquals(101, data.getInt(0, 1));
+        assertEquals(102, data.getInt(1, 1));
+        assertEquals(103, data.getInt(2, 1));
+
+        assertEquals(11, data.getInt(0, 2));
+        assertEquals(12, data.getInt(1, 2));
+        assertEquals(13, data.getInt(2, 2));
     }
 }
