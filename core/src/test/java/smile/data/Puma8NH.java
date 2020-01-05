@@ -35,7 +35,7 @@ public class Puma8NH {
 
     static {
         try {
-            data = DatasetReader.arff(Paths.getTestData("weka/regression/puma8nh.arff"));
+            data = DatasetReader.arff(Paths.getTestData("weka/regression/puma8NH.arff"));
 
             x = formula.x(data).toArray();
             y = formula.y(data).toDoubleArray();
