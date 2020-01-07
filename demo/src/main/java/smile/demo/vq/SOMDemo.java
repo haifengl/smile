@@ -27,14 +27,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.plot.Palette;
 import smile.math.TimeFunction;
 import smile.vq.Neighborhood;
 import smile.vq.SOM;
 import smile.math.MathEx;
-import smile.plot.Hexmap;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.Hexmap;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

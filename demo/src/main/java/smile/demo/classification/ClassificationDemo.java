@@ -36,11 +36,11 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 import smile.data.type.StructField;
-import smile.io.DatasetReader;
-import smile.plot.Contour;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.io.Read;
+import smile.plot.swing.Contour;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public abstract class ClassificationDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
@@ -274,7 +274,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
 
         CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withIgnoreSurroundingSpaces(true);
         try {
-            dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format, schema);
+            dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format, schema);
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
             System.err.println(e);

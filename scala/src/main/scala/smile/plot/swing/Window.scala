@@ -17,10 +17,10 @@
 
 package smile.plot.swing
 
-import java.awt.{GridLayout, Dimension}
+import java.awt.{Dimension, GridLayout}
 import java.awt.event.WindowEvent
-import javax.swing.{JFrame, JPanel, WindowConstants}
-import smile.plot.PlotCanvas
+
+import javax.swing.{JComponent, JFrame, JPanel, WindowConstants}
 
 /** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
@@ -34,24 +34,37 @@ object Window {
   /** The number of created windows, as the default window title. */
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
 
+  /** Create a window frame. */
+  def apply(canvas: JComponent): JFrame = {
+    val jframe = frame()
+    jframe.add(canvas)
+
+    java.awt.EventQueue.invokeLater(() => {
+      jframe.toFront()
+      jframe.repaint()
+    })
+
+    jframe
+  }
+
   /** Create a plot window frame. */
-  def apply(canvas: PlotCanvas, title: String = ""): Window = {
+  def apply(canvas: PlotCanvas): Window = {
+    val title = Option(canvas.getTitle)
     val jframe = frame(title)
     jframe.add(canvas)
 
     java.awt.EventQueue.invokeLater(() => {
-        jframe.toFront()
-        jframe.repaint()
-      }
-    )
+      jframe.toFront()
+      jframe.repaint()
+      canvas.reset()
+    })
 
     Window(jframe, canvas)
   }
 
   /** Create a plot window frame. */
-  def frame(title: String = ""): JFrame = {
-    val frameTitle = if (title.isEmpty) "Smile Plot " + windowCount.addAndGet(1) else title
-    val frame = new JFrame(frameTitle)
+  def frame(title: Option[String] = None): JFrame = {
+    val frame = new JFrame(title.getOrElse("Smile Plot " + windowCount.addAndGet(1)))
     frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
     frame.getContentPane.add(new JPanel(new GridLayout(4, 4)))
     frame.setSize(new Dimension(1000, 1000))

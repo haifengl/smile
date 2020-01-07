@@ -23,7 +23,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -74,7 +74,7 @@ public class BreastCancer {
         );
 
         try {
-            data = DatasetReader.csv(Paths.getTestData("classification/breastcancer.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader(), schema);
+            data = Read.csv(Paths.getTestData("classification/breastcancer.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader(), schema);
             data = data.drop("id");
             x = formula.x(data).toArray();
             y = formula.y(data).toIntArray();

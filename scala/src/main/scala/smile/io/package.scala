@@ -26,7 +26,7 @@ import com.thoughtworks.xstream.XStream
 import org.apache.commons.csv.CSVFormat
 import smile.data.{DataFrame, Dataset, Instance}
 import smile.data.`type`.StructType
-import smile.io.{DatasetReader, DatasetWriter, JSON}
+import smile.io.{Read, Write, JSON}
 import smile.util.SparseArray
 
 /** Output operators. */
@@ -76,13 +76,13 @@ object write {
   def arrow(data: DataFrame, file: String): Unit = arrow(data, Paths.get(file))
 
   /** Writes a data frame to an Apache Arrow file. */
-  def arrow(data: DataFrame, file: Path): Unit = DatasetWriter.arrow(data, file)
+  def arrow(data: DataFrame, file: Path): Unit = Write.arrow(data, file)
 
   /** Writes a data frame to an ARFF file. */
   def arff(data: DataFrame, file: String, relation: String): Unit = arff(data, Paths.get(file), relation)
 
   /** Writes a data frame to an ARFF file. */
-  def arff(data: DataFrame, file: Path, relation: String): Unit = DatasetWriter.arff(data, file, relation)
+  def arff(data: DataFrame, file: Path, relation: String): Unit = Write.arff(data, file, relation)
 
   /** Writes an AttributeDataset to a delimited text file.
     *
@@ -98,7 +98,7 @@ object write {
     */
   def csv(data: DataFrame, file: Path, delimiter: Char): Unit = {
     val format = CSVFormat.DEFAULT.withDelimiter(delimiter)
-    DatasetWriter.csv(data, file, format)
+    Write.csv(data, file, format)
   }
 
   /** Writes a two-dimensional array to a delimited text file.
@@ -164,62 +164,62 @@ object read {
   def csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
     var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
     if (header) format = format.withFirstRecordAsHeader
-    DatasetReader.csv(file, format, schema)
+    Read.csv(file, format, schema)
   }
 
   /** Reads a CSV file. */
   def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = csv(Paths.get(file), format, schema)
 
   /** Reads a CSV file. */
-  def csv(file: Path, format: CSVFormat, schema: StructType): DataFrame = DatasetReader.csv(file, format, schema)
+  def csv(file: Path, format: CSVFormat, schema: StructType): DataFrame = Read.csv(file, format, schema)
 
   /** Reads a JSON file. */
   def json(file: String): DataFrame = json(Paths.get(file))
 
   /** Reads a JSON file. */
-  def json(file: Path): DataFrame = DatasetReader.json(file)
+  def json(file: Path): DataFrame = Read.json(file)
 
   /** Reads a JSON file. */
   def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = json(Paths.get(file), mode, schema)
 
   /** Reads a JSON file. */
-  def json(file: Path, mode: JSON.Mode, schema: StructType): DataFrame = DatasetReader.json(file, mode, schema)
+  def json(file: Path, mode: JSON.Mode, schema: StructType): DataFrame = Read.json(file, mode, schema)
 
   /** Reads an ARFF file. */
   def arff(file: String): DataFrame = arff(Paths.get(file))
 
   /** Reads an ARFF file. */
-  def arff(file: Path): DataFrame = DatasetReader.arff(file)
+  def arff(file: Path): DataFrame = Read.arff(file)
 
   /** Reads a SAS7BDAT file. */
   def sas(file: String): DataFrame = sas(Paths.get(file))
 
   /** Reads a SAS7BDAT file. */
-  def sas(file: Path): DataFrame = DatasetReader.sas(file)
+  def sas(file: Path): DataFrame = Read.sas(file)
 
   /** Reads an Apache Arrow file. */
   def arrow(file: String): DataFrame = arrow(Paths.get(file))
 
   /** Reads an Apache Arrow file. */
-  def arrow(file: Path): DataFrame = DatasetReader.arrow(file)
+  def arrow(file: Path): DataFrame = Read.arrow(file)
 
   /** Reads an Apache Avro file. */
   def avro(file: String, schema: org.apache.avro.Schema): DataFrame = avro(Paths.get(file), schema)
 
   /** Reads an Apache Avro file. */
-  def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = DatasetReader.avro(file, schema)
+  def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = Read.avro(file, schema)
 
   /** Reads an Apache Parquet file. */
   def parquet(file: String): DataFrame = parquet(Paths.get(file))
 
   /** Reads an Apache Parquet file. */
-  def parquet(file: Path): DataFrame = DatasetReader.parquet(file)
+  def parquet(file: Path): DataFrame = Read.parquet(file)
 
   /** Reads a LivSVM file. */
   def libsvm(file: String): Dataset[Instance[SparseArray]] = libsvm(Paths.get(file))
 
   /** Reads a LivSVM file. */
-  def libsvm(file: Path): Dataset[Instance[SparseArray]] = DatasetReader.libsvm(file)
+  def libsvm(file: Path): Dataset[Instance[SparseArray]] = Read.libsvm(file)
 
   /** Reads a Wavefront OBJ file. */
   def wavefront(file: String): (Array[Array[Double]], Array[Array[Int]]) = wavefront(Paths.get(file))

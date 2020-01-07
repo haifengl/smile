@@ -26,7 +26,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.graph.Graph;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.PlotCanvas;
 import smile.manifold.LLE;
 import smile.math.MathEx;
 

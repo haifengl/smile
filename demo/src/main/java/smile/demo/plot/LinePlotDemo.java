@@ -19,13 +19,12 @@ package smile.demo.plot;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.Line;
-import smile.plot.LinePlot;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Line;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.PlotCanvas;
 
 /**
  *

@@ -18,7 +18,7 @@
 package smile.data;
 
 import smile.data.formula.Formula;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -38,8 +38,8 @@ public class Segment {
 
     static {
         try {
-            train = DatasetReader.arff(Paths.getTestData("weka/segment-challenge.arff"));
-            test = DatasetReader.arff(Paths.getTestData("weka/segment-test.arff"));
+            train = Read.arff(Paths.getTestData("weka/segment-challenge.arff"));
+            test = Read.arff(Paths.getTestData("weka/segment-test.arff"));
 
             x = formula.x(train).toArray();
             y = formula.y(train).toIntArray();

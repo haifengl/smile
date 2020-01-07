@@ -18,7 +18,7 @@
 package smile.data;
 
 import smile.data.formula.Formula;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -35,7 +35,7 @@ public class Iris {
 
     static {
         try {
-            data = DatasetReader.arff(Paths.getTestData("weka/iris.arff"));
+            data = Read.arff(Paths.getTestData("weka/iris.arff"));
 
             x = formula.x(data).toArray();
             y = formula.y(data).toIntArray();

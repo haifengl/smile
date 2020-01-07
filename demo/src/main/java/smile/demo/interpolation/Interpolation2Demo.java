@@ -18,16 +18,14 @@
 package smile.demo.interpolation;
 
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
 import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.BilinearInterpolation;
 import smile.interpolation.CubicSplineInterpolation2D;
-import smile.plot.Heatmap;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Heatmap;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 
 /**
  *

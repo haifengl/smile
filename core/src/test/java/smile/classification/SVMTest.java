@@ -29,7 +29,7 @@ import smile.data.Instance;
 import smile.data.Segment;
 import smile.data.USPS;
 import smile.feature.Standardizer;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.BinarySparseGaussianKernel;
@@ -68,8 +68,8 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
-        Dataset<Instance<SparseArray>> test  = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
+        Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
 
         int n = train.size();
         double[][] x = new double[n][4];
@@ -108,8 +108,8 @@ public class SVMTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
-        Dataset<Instance<SparseArray>> test  = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
+        Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
 
         int n = train.size();
         int[][] x = new int[n][];
