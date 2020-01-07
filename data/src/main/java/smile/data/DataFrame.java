@@ -336,7 +336,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the string representation of the field value.
      */
     default String toString(int i, String field) {
-        return toString(columnIndex(field));
+        return toString(i, columnIndex(field));
     }
 
     /**
@@ -805,7 +805,9 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @param truncate Whether truncate long strings and align cells right.
      */
     default String toString(final int numRows, final boolean truncate) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(schema().toString());
+        sb.append('\n');
+
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;

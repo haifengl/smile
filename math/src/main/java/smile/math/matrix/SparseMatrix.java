@@ -55,32 +55,7 @@ import static java.util.Spliterator.*;
  * by processing a stream of objects representing each non-zero element.
  * The direct functional API is faster (and is about as fast as writing the
  * low-level loops against the internals of the matrix itself) while the
- * streaming interface is more flexible. Here are some benchmarks that were
- * produced using jmh (and allowing access to internal data structures):
- * <verbatim>
- * Benchmark                                       Mode  Cnt        Score       Error   Units
- * IteratorSpeed.timeDirect                        avgt    5   429888.246 ±  3819.232   ns/op
- * IteratorSpeed.timeDirect:·gc.alloc.rate         avgt    5       ≈ 10⁻⁴              MB/sec
- * IteratorSpeed.timeDirect:·gc.alloc.rate.norm    avgt    5        0.088 ±     0.001    B/op
- * IteratorSpeed.timeDirect:·gc.count              avgt    5          ≈ 0              counts
- * IteratorSpeed.timeDirect:·stack                 avgt               NaN                 ---
- * IteratorSpeed.timeIterator                      avgt    5   430718.537 ±  7831.509   ns/op
- * IteratorSpeed.timeIterator:·gc.alloc.rate       avgt    5        0.028 ±     0.001  MB/sec
- * IteratorSpeed.timeIterator:·gc.alloc.rate.norm  avgt    5       16.089 ±     0.011    B/op
- * IteratorSpeed.timeIterator:·gc.count            avgt    5          ≈ 0              counts
- * IteratorSpeed.timeIterator:·stack               avgt               NaN                 ---
- * IteratorSpeed.timeStream                        avgt    5  1032370.658 ± 55295.704   ns/op
- * IteratorSpeed.timeStream:·gc.alloc.rate         avgt    5        0.077 ±     0.004  MB/sec
- * IteratorSpeed.timeStream:·gc.alloc.rate.norm    avgt    5      104.210 ±     0.011    B/op
- * IteratorSpeed.timeStream:·gc.count              avgt    5          ≈ 0              counts
- * IteratorSpeed.timeStream:·stack                 avgt               NaN                 ---
- * </verbatim>
- * The three cases are timeDirect for a direct loop over internal data structures,
- * timeIterator for #foreachNonZero and timeStream for the streaming equivalent form. The
- * timeIterator case is at most a few percent slower than the direct loops while the stream
- * is about 2-3 times slower. Note that the JVM is clever enough to optimize away the
- * creation of temporary objects in the streaming idiom.
- * </p>
+ * streaming interface is more flexible.
  *
  * @author Haifeng Li
  */
@@ -288,6 +263,33 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     public int length() {
         return colIndex[ncols];
     }
+
+    /*
+     * Benchmarks of iteration and stream using jmh:
+     *
+     * Benchmark                                       Mode  Cnt        Score       Error   Units
+     * IteratorSpeed.timeDirect                        avgt    5   429888.246    3819.232   ns/op
+     * IteratorSpeed.timeDirect: gc.alloc.rate         avgt    5      ~ 10^-4              MB/sec
+     * IteratorSpeed.timeDirect: gc.alloc.rate.norm    avgt    5        0.088       0.001    B/op
+     * IteratorSpeed.timeDirect: gc.count              avgt    5          ~ 0              counts
+     * IteratorSpeed.timeDirect: stack                 avgt               NaN                 ---
+     * IteratorSpeed.timeIterator                      avgt    5   430718.537    7831.509   ns/op
+     * IteratorSpeed.timeIterator: gc.alloc.rate       avgt    5        0.028       0.001  MB/sec
+     * IteratorSpeed.timeIterator: gc.alloc.rate.norm  avgt    5       16.089       0.011    B/op
+     * IteratorSpeed.timeIterator: gc.count            avgt    5          ~ 0              counts
+     * IteratorSpeed.timeIterator: stack               avgt               NaN                 ---
+     * IteratorSpeed.timeStream                        avgt    5  1032370.658   55295.704   ns/op
+     * IteratorSpeed.timeStream: gc.alloc.rate         avgt    5        0.077       0.004  MB/sec
+     * IteratorSpeed.timeStream: gc.alloc.rate.norm    avgt    5      104.210       0.011    B/op
+     * IteratorSpeed.timeStream: gc.count              avgt    5          ~ 0              counts
+     * IteratorSpeed.timeStream: stack                 avgt               NaN                 ---
+     *
+     * The three cases are timeDirect for a direct loop over internal data structures,
+     * timeIterator for #foreachNonZero and timeStream for the streaming equivalent form.
+     * The timeIterator case is at most a few percent slower than the direct loops while
+     * the stream is about 2-3 times slower. Note that the JVM is clever enough to optimize
+     * away the creation of temporary objects in the streaming idiom.
+     */
 
     /**
      * Provides a stream over all of the non-zero elements of a sparse matrix.

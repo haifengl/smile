@@ -18,7 +18,7 @@
 package smile.data;
 
 import smile.data.formula.Formula;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -35,7 +35,7 @@ public class Puma8NH {
 
     static {
         try {
-            data = DatasetReader.arff(Paths.getTestData("weka/regression/puma8NH.arff"));
+            data = Read.arff(Paths.getTestData("weka/regression/puma8NH.arff"));
 
             x = formula.x(data).toArray();
             y = formula.y(data).toDoubleArray();

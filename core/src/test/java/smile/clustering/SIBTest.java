@@ -26,7 +26,7 @@ import static org.junit.Assert.*;
 
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 import smile.validation.*;
@@ -62,8 +62,8 @@ public class SIBTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Dataset<Instance<SparseArray>> train = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
-        Dataset<Instance<SparseArray>> test = DatasetReader.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        Dataset<Instance<SparseArray>> test = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
 
         SparseArray[] trainx = train.stream().map(Instance<SparseArray>::x).toArray(SparseArray[]::new);
         int[] y = train.stream().mapToInt(i -> i.label()).toArray();

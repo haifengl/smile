@@ -10,6 +10,8 @@ mainClass in Compile := Some("smile.shell.Main")
 
 // native packager
 enablePlugins(JavaAppPackaging)
+// dealing with long classpaths
+scriptClasspath := Seq("*")
 
 maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
 
@@ -52,6 +54,6 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "com.lihaoyi" % "ammonite" % "1.7.4" cross CrossVersion.full
+libraryDependencies += "com.lihaoyi" % "ammonite" % "1.8.2" cross CrossVersion.full
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.26"

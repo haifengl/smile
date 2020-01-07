@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.0.0",
+  version := "2.1.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   javaOptions in test += "-Dsmile.threads=1",
@@ -62,7 +62,7 @@ lazy val nonPubishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
-  .aggregate(core, data, io, math, netlib, nd4j, graph, plot, interpolation, nlp, demo, benchmark, scala, shell)
+  .aggregate(core, data, io, math, netlib, nd4j, graph, interpolation, nlp, plot, json, vega, demo, benchmark, scala, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -70,7 +70,7 @@ lazy val nd4j = project.in(file("nd4j")).settings(nonPubishSettings: _*).depends
 
 lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
+lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math, json)
 
 lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
 
@@ -88,6 +88,10 @@ lazy val demo = project.in(file("demo")).settings(nonPubishSettings: _*).depends
 
 lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _*).dependsOn(core, scala)
 
-lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot)
+lazy val json = project.in(file("json")).settings(commonSettings: _*)
+
+lazy val vega = project.in(file("vega")).settings(commonSettings: _*).dependsOn(json, data)
+
+lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json, vega)
 
 lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala, netlib)

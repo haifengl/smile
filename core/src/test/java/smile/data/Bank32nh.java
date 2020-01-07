@@ -18,7 +18,7 @@
 package smile.data;
 
 import smile.data.formula.Formula;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -35,7 +35,7 @@ public class Bank32nh {
 
     static {
         try {
-            data = DatasetReader.arff(Paths.getTestData("weka/regression/bank32nh.arff"));
+            data = Read.arff(Paths.getTestData("weka/regression/bank32nh.arff"));
 
             x = formula.x(data).toArray();
             y = formula.y(data).toDoubleArray();

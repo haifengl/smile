@@ -65,11 +65,11 @@ permalink: "{{ page.filePathStem }}.html"
         In the shell, you can run any valid Scala expressions.
         In the simplest case, you can use it as a calculator.
         Besides, all high-level Smile operators are predefined
-        in the shell. Be default, the shell uses up to 4GB memory. If you need more memory
+        in the shell. If you need more memory
         to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
     <pre class="prettyprint lang-bash"><code>
-    ./bin/smile -J-Xmx8192M
+    ./bin/smile -J-Xmx30G
     </code></pre>
 
     <p>You can also modify the configuration file <code>./conf/smile.ini</code>
@@ -116,7 +116,7 @@ smile&gt;
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; smile.classification.r
-    randomDecisionForest   rbfnet   rda
+    randomForest   rbfnet   rda
     </code></pre>
 
     <h3 id="third-party-libraries">Third Party Libraries</h3>
@@ -217,7 +217,7 @@ smile&gt;
         the model on new data samples with the method <code>predict</code>.</p>
 
     <div id="btnv">
-        <a class="btn-next-text" href="overview.html" title="Next Section: Machine Learning"><span>Machine Learning</span></a>
+        <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
 </div>
