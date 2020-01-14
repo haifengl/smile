@@ -39,7 +39,7 @@ public class Formula implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The left-hand side of formula. */
-    private Optional<Term> response = Optional.empty();
+    private Term response = null;
     /** The right-hand side of formula. */
     private HyperTerm[] predictors;
     /** The formula output schema. */
@@ -64,7 +64,7 @@ public class Formula implements Serializable {
      * @param response the response formula, i.e. dependent variable.
      */
     public Formula(Term response) {
-        this.response = Optional.of(response);
+        this.response = response;
         this.predictors = new HyperTerm[] { new All() };
     }
 
@@ -91,7 +91,7 @@ public class Formula implements Serializable {
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
     public Formula(Term response, HyperTerm[] predictors) {
-        this.response = Optional.of(response);
+        this.response = response;
         this.predictors = predictors;
     }
 
@@ -102,12 +102,12 @@ public class Formula implements Serializable {
 
     /** Returns the response term. */
     public Optional<Term> response() {
-        return response;
+        return Optional.ofNullable(response);
     }
 
     @Override
     public String toString() {
-        String r = response.map(Objects::toString).orElse("");
+        String r = response == null ? "" : response.toString();
         String p = Arrays.stream(predictors).map(predictor -> {
             String s = predictor.toString();
             if (!s.startsWith("- ")) s = "+ " + s;
@@ -216,11 +216,11 @@ public class Formula implements Serializable {
             return schema;
         }
 
-        response.ifPresent(r -> r.bind(inputSchema));
+        if (response != null) response.bind(inputSchema);
         Arrays.stream(predictors).forEach(term -> term.bind(inputSchema));
 
         Set<String> columns = new HashSet<>();
-        response.ifPresent(r -> columns.addAll(r.variables()));
+        if (response != null) columns.addAll(response.variables());
         Arrays.stream(predictors)
                 .filter((predictor -> !(predictor instanceof All)))
                 .flatMap(predictor -> predictor.terms().stream())
@@ -228,7 +228,7 @@ public class Formula implements Serializable {
                 .forEach(term -> columns.add(term.name()));
 
         List<Term> factors = new ArrayList<>();
-        response.ifPresent(r -> factors.add(r));
+        if (response != null) factors.add(response);
 
         factors.addAll(Arrays.stream(predictors)
                 .filter(term -> !(term instanceof Delete))
@@ -258,7 +258,7 @@ public class Formula implements Serializable {
 
         schema = DataTypes.struct(fields);
 
-        if (response.isPresent()) {
+        if (response != null) {
             x = Arrays.copyOfRange(xy, 1, xy.length);
             xschema = DataTypes.struct(Arrays.copyOfRange(fields, 1, fields.length));
         } else {
@@ -462,29 +462,29 @@ public class Formula implements Serializable {
      * @param df The input DataFrame.
      */
     public BaseVector y(DataFrame df) {
-        return response.map(r -> {
-            r.bind(df.schema());
-            return r.apply(df);
-        }).orElse(null);
+        if (response == null) return null;
+
+        response.bind(df.schema());
+        return response.apply(df);
     }
 
     /**
      * Returns the real-valued response value.
      */
     public double y(Tuple t) {
-        return response.map(r -> {
-            r.bind(t.schema());
-            return r.applyAsDouble(t);
-        }).orElse(0.0);
+        if (response == null) return 0.0;
+
+        response.bind(t.schema());
+        return response.applyAsDouble(t);
     }
 
     /**
      * Returns the integer-valued response value.
      */
     public int yint(Tuple t) {
-        return response.map(r -> {
-            r.bind(t.schema());
-            return r.applyAsInt(t);
-        }).orElse(-1);
+        if (response == null) return -1;
+
+        response.bind(t.schema());
+        return response.applyAsInt(t);
     }
 }

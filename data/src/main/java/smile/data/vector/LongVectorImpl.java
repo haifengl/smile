@@ -34,21 +34,21 @@ class LongVectorImpl implements LongVector {
     /** The name of vector. */
     private String name;
     /** Optional measure. */
-    private Optional<Measure> measure;
+    private Measure measure;
     /** The vector data. */
     private long[] vector;
 
     /** Constructor. */
     public LongVectorImpl(String name, long[] vector) {
         this.name = name;
-        this.measure = Optional.empty();
+        this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
     public LongVectorImpl(StructField field, long[] vector) {
-        if (field.measure.isPresent() && field.measure.get() instanceof ContinuousMeasure) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure instanceof ContinuousMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
         this.name = field.name;
@@ -63,7 +63,7 @@ class LongVectorImpl implements LongVector {
 
     @Override
     public Optional<Measure> measure() {
-        return measure;
+        return Optional.ofNullable(measure);
     }
 
     @Override

@@ -144,8 +144,8 @@ public class KNNTest {
         assertEquals(39, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         KNN<double[]> model = KNN.fit(USPS.x, USPS.y);
@@ -155,5 +155,8 @@ public class KNNTest {
 
         System.out.println("Error = " + error);
         assertEquals(113, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

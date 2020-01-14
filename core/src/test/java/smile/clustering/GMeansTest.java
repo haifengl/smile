@@ -89,5 +89,8 @@ public class GMeansTest {
         System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
         assertEquals(0.9012, r, 1E-4);
         assertEquals(0.4822, r2, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

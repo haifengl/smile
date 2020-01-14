@@ -53,8 +53,8 @@ public class DENCLUETest {
     public void tearDown() {
     }
     
-    @Test
-    public void testGaussianMixture() {
+    @Test(expected = Test.None.class)
+    public void testGaussianMixture() throws Exception {
         System.out.println("Gaussian Mixture");
 
         double[][] x = GaussianMixture.x;
@@ -77,5 +77,8 @@ public class DENCLUETest {
         System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
         System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
         System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

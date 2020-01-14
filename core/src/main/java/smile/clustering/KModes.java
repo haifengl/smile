@@ -47,7 +47,12 @@ public class KModes extends CentroidClustering<int[], int[]> {
      * @param y the cluster labels.
      */
     public KModes(double distortion, int[][] centroids, int[] y) {
-        super(distortion, centroids, y, HammingDistance::d);
+        super(distortion, centroids, y);
+    }
+
+    @Override
+    public double distance(int[] x, int[] y) {
+        return HammingDistance.d(x, y);
     }
 
     /**

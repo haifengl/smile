@@ -18,7 +18,6 @@
 package smile.base.mlp;
 
 import java.io.Serializable;
-import java.util.function.Consumer;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.stat.distribution.GaussianDistribution;
@@ -56,10 +55,6 @@ public abstract class Layer implements Serializable {
      * The weight update of mini batch or momentum.
      */
     protected DenseMatrix update;
-    /**
-     * The activation/output function.
-     */
-    protected Consumer<double[]> activation;
 
     /**
      * Constructor.
@@ -111,8 +106,14 @@ public abstract class Layer implements Serializable {
         assert x[p] == 1.0 : "bias/intercept is not 1";
 
         weight.ax(x, output);
-        activation.accept(output);
+        f(output);
     }
+
+    /**
+     * The activation or output function.
+     * @param x the input and output values.
+     */
+    public abstract void f(double[] x);
 
     /**
      * Propagates the errors back to a lower layer.

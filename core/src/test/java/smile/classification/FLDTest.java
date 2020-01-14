@@ -98,8 +98,8 @@ public class FLDTest {
         assertEquals(64, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         FLD model = FLD.fit(USPS.x, USPS.y);
@@ -109,6 +109,9 @@ public class FLDTest {
 
         System.out.println("Error = " + error);
         assertEquals(561, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test(expected = Test.None.class)

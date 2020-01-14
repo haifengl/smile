@@ -78,6 +78,9 @@ public class HierarchicalClusteringTest {
         System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, label));
         System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, label));
 
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
+
         model = HierarchicalClustering.fit(CompleteLinkage.of(x));
         label = model.partition(10);
         r = RandIndex.of(y, label);

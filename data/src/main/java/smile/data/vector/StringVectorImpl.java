@@ -47,8 +47,8 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
     public StringVectorImpl(StructField field, String[] vector) {
         super(field.name, field.type, vector);
 
-        if (field.measure.isPresent()) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure != null) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
     }
 
