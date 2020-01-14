@@ -17,6 +17,9 @@
 
 package smile.base.mlp;
 
+import java.io.Serializable;
+import java.util.function.Consumer;
+
 /**
  * A hidden layer in the neural network.
  */
@@ -35,7 +38,6 @@ public class HiddenLayer extends Layer {
     public HiddenLayer(int n, int p, ActivationFunction f) {
         super(n, p);
         this.f = f;
-        activation = f::f;
         output = new double[n + 1];
         gradient = new double[n + 1];
         output[n] = 1.0; // intercept
@@ -44,6 +46,11 @@ public class HiddenLayer extends Layer {
     @Override
     public String toString() {
         return String.format("%s(%d)", f.name(), n);
+    }
+
+    @Override
+    public void f(double[] x) {
+        f.f(x);
     }
 
     @Override

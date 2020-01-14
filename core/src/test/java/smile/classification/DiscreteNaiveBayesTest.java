@@ -56,8 +56,8 @@ public class DiscreteNaiveBayesTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testBatchMultinomial() {
+    @Test(expected = Test.None.class)
+    public void testBatchMultinomial() throws Exception {
         System.out.println("---Batch Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -72,6 +72,11 @@ public class DiscreteNaiveBayesTest {
         int error = Error.of(Movie.y, prediction) - nulls;
         System.out.format("Error = %d out of %d%n", error, Movie.x.length - nulls);
         assertEquals(316, error);
+
+        DiscreteNaiveBayes model = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
+        model.update(Movie.x, Movie.y);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

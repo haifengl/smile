@@ -59,8 +59,8 @@ public class RLSTest {
         
     }
 
-    @Test
-    public void testLongley(){
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         int n = Longley.data.size();
@@ -77,6 +77,9 @@ public class RLSTest {
         rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     /**

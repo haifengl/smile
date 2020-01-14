@@ -19,6 +19,8 @@ package smile.clustering;
 
 import java.util.function.ToDoubleBiFunction;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
+import smile.math.distance.EuclideanDistance;
 
 /**
  * K-Means clustering. The algorithm partitions n observations into k clusters
@@ -86,18 +88,12 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param y the cluster labels.
      */
     public KMeans(double distortion, double[][] centroids, int[] y) {
-        this(distortion, centroids, y, MathEx::squaredDistance);
+        super(distortion, centroids, y);
     }
 
-    /**
-     * Constructor.
-     * @param distortion the total distortion.
-     * @param centroids the centroids of each cluster.
-     * @param y the cluster labels.
-     * @param distance the lambda of distance measure.
-     */
-    public KMeans(double distortion, double[][] centroids, int[] y, ToDoubleBiFunction<double[], double[]> distance) {
-        super(distortion, centroids, y, distance);
+    @Override
+    public double distance(double[] x, double[] y) {
+        return MathEx.squaredDistance(x, y);
     }
 
     /**
@@ -161,7 +157,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
             distortion = wcss;
         }
 
-        return new KMeans(distortion, centroids, y, MathEx::squaredDistance);
+        return new KMeans(distortion, centroids, y);
     }
 
     /**
@@ -222,6 +218,11 @@ public class KMeans extends CentroidClustering<double[], double[]> {
             updateCentroidsWithMissingValues(centroids, data, y, size, notNaN);
         }
 
-        return new KMeans(distortion, centroids, y, MathEx::squaredDistanceWithMissingValues);
+        return new KMeans(distortion, centroids, y) {
+            @Override
+            public double distance(double[] x, double[] y) {
+                return MathEx.squaredDistanceWithMissingValues(x, y);
+            }
+        };
     }
 }

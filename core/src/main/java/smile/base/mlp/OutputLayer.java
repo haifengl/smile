@@ -56,7 +56,6 @@ public class OutputLayer extends Layer {
 
         this.f = f;
         this.cost = cost;
-        activation = f::f;
         output = new double[n];
         gradient = new double[n];
     }
@@ -69,6 +68,11 @@ public class OutputLayer extends Layer {
     /** Returns the cost function of neural network. */
     public Cost cost() {
         return cost;
+    }
+
+    @Override
+    public void f(double[] x) {
+        f.f(x);
     }
 
     @Override

@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Optional;
 import smile.base.cart.SplitRule;
@@ -92,23 +93,26 @@ public class RandomForestTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testWeather() {
+    @Test(expected = Test.None.class)
+    public void testWeather() throws Exception {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
         assertEquals(5, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test
@@ -116,14 +120,14 @@ public class RandomForestTest {
         System.out.println("Iris");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(8, error);
@@ -134,7 +138,7 @@ public class RandomForestTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
@@ -146,7 +150,7 @@ public class RandomForestTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds))));
+        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
@@ -157,7 +161,7 @@ public class RandomForestTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -181,7 +185,7 @@ public class RandomForestTest {
     public void testUSPS() {
         System.out.println("USPS");
 
-        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 200, 5, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 200, 5, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
@@ -206,7 +210,7 @@ public class RandomForestTest {
         System.out.println("USPS");
 
         // Overfitting with very large maxNodes and small nodeSize
-        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 2000, 1, 1.0, Optional.empty(), Optional.of(Arrays.stream(seeds)));
+        RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 2000, 1, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {

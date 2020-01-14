@@ -60,8 +60,8 @@ public class NaiveBayesTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testIris() {
+    @Test(expected = Test.None.class)
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         int p = Iris.x[0].length;
@@ -86,6 +86,21 @@ public class NaiveBayesTest {
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(7, error);
+
+        double[] priori = new double[k];
+        Distribution[][] condprob = new Distribution[k][p];
+        for (int i = 0; i < k; i++) {
+            priori[i] = 1.0 / k;
+            final int c = i;
+            for (int j = 0; j < p; j++) {
+                final int f = j;
+                double[] xi = IntStream.range(0, Iris.x.length).filter(l -> Iris.y[l] == c).mapToDouble(l -> Iris.x[l][f]).toArray();
+                condprob[i][j] = GaussianMixture.fit(3, xi);
+            }
+        }
+        NaiveBayes model = new NaiveBayes(priori, condprob);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

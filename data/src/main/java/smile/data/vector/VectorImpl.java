@@ -46,7 +46,7 @@ class VectorImpl<T> implements Vector<T> {
     /** The data type of vector. */
     private DataType type;
     /** Optional measure. */
-    private Optional<Measure> measure;
+    private Measure measure;
     /** The vector data. */
     private T[] vector;
 
@@ -54,7 +54,7 @@ class VectorImpl<T> implements Vector<T> {
     public VectorImpl(String name, Class clazz, T[] vector) {
         this.name = name;
         this.type = DataTypes.object(clazz);
-        this.measure = Optional.empty();
+        this.measure = null;
         this.vector = vector;
     }
 
@@ -62,17 +62,17 @@ class VectorImpl<T> implements Vector<T> {
     public VectorImpl(String name, DataType type, T[] vector) {
         this.name = name;
         this.type = type;
-        this.measure = Optional.empty();
+        this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
     public VectorImpl(StructField field, T[] vector) {
-        if (field.measure.isPresent()) {
-             if ((field.type.isIntegral() && field.measure.get() instanceof ContinuousMeasure) ||
-                 (field.type.isFloating() && field.measure.get() instanceof DiscreteMeasure) ||
-                 (!field.type.isIntegral() && !field.type.isFloating())) {
-                throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure != null) {
+            if ((field.type.isIntegral() && field.measure instanceof ContinuousMeasure) ||
+                (field.type.isFloating() && field.measure instanceof DiscreteMeasure) ||
+                (!field.type.isIntegral() && !field.type.isFloating())) {
+                throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
             }
         }
 
@@ -94,7 +94,7 @@ class VectorImpl<T> implements Vector<T> {
 
     @Override
     public Optional<Measure> measure() {
-        return measure;
+        return Optional.ofNullable(measure);
     }
 
     @Override

@@ -165,8 +165,8 @@ public class SVMTest {
         assertEquals(33, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -178,5 +178,8 @@ public class SVMTest {
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
         assertEquals(87, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

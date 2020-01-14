@@ -198,8 +198,8 @@ public class MLPTest {
         assertEquals(33, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -234,5 +234,8 @@ public class MLPTest {
         }
 
         assertEquals(146, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

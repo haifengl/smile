@@ -55,7 +55,12 @@ public class XMeans extends CentroidClustering<double[], double[]> {
      * @param y the cluster labels.
      */
     public XMeans(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y, MathEx::squaredDistance);
+        super(distortion, centroids, y);
+    }
+
+    @Override
+    public double distance(double[] x, double[] y) {
+        return MathEx.squaredDistance(x, y);
     }
 
     /**
