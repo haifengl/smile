@@ -327,7 +327,7 @@ package object clustering {
     * @param k the number of clusters.
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
     */
-  def clarans[T <: Object](data: Array[T], k: Int, maxNeighbor: Int, distance: ToDoubleBiFunction[T,T]): CLARANS[T] = time("CLARANS") {
+  def clarans[T <: Object](data: Array[T], k: Int, maxNeighbor: Int, distance: Distance[T]): CLARANS[T] = time("CLARANS") {
     CLARANS.fit(data, k, maxNeighbor, distance)
   }
 
