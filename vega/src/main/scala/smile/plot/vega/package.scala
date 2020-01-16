@@ -330,7 +330,7 @@ package vega {
     private def get(i: Int): JsValue = {
       val schema = data.schema
       val field = schema.field(i)
-      if (field.measure != null && field.measure.isInstanceOf[DiscreteMeasure]) {
+      if (field.measure.isInstanceOf[DiscreteMeasure]) {
         JsString(data.getString(i))
       } else {
         field.`type`.id match {
