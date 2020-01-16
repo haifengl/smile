@@ -650,7 +650,7 @@ package object classification {
     * @return Random forest classification model.
     */
   def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest = time("Random Forest") {
-    RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, Optional.ofNullable(classWeight), Optional.ofNullable(seeds))
+    RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds)
   }
 
   /** Gradient boosted classification trees.
