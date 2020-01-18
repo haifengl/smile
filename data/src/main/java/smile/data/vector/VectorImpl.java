@@ -136,6 +136,38 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
+    public double[] toDoubleArray() {
+        if (!type.isNumeric()) throw new UnsupportedOperationException(name() + ":" + type());
+        return stream().mapToDouble(d -> d == null ? Double.NaN : ((Number) d).doubleValue()).toArray();
+    }
+
+    @Override
+    public double[] toDoubleArray(double[] a) {
+        if (!type.isNumeric()) throw new UnsupportedOperationException(name() + ":" + type());
+        for (int i = 0; i < vector.length; i++) {
+            Number n = (Number) vector[i];
+            a[i] = n == null ? Double.NaN : n.doubleValue();
+        }
+        return a;
+    }
+
+    @Override
+    public int[] toIntArray() {
+        if (!type.isIntegral()) throw new UnsupportedOperationException(name() + ":" + type());
+        return stream().mapToInt(d -> d == null ? Integer.MIN_VALUE : ((Number) d).intValue()).toArray();
+    }
+
+    @Override
+    public int[] toIntArray(int[] a) {
+        if (!type.isIntegral()) throw new UnsupportedOperationException(name() + ":" + type());
+        for (int i = 0; i < vector.length; i++) {
+            Number n = (Number) vector[i];
+            a[i] = n == null ? Integer.MIN_VALUE : n.intValue();
+        }
+        return a;
+    }
+
+    @Override
     public Vector<LocalDate> toDate() {
         LocalDate[] dates = null;
         if (type.id() == DataType.ID.DateTime) {
