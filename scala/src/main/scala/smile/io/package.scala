@@ -157,8 +157,11 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame =
-    csv(Paths.get(file), delimiter, header, quote, escape, schema)
+  def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame = {
+    var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
+    if (header) format = format.withFirstRecordAsHeader
+    Read.csv(file, format, schema)
+  }
 
   /** Reads a CSV file. */
   def csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame = {
@@ -168,55 +171,55 @@ object read {
   }
 
   /** Reads a CSV file. */
-  def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = csv(Paths.get(file), format, schema)
+  def csv(file: String, format: CSVFormat, schema: StructType): DataFrame = Read.csv(file, format, schema)
 
   /** Reads a CSV file. */
   def csv(file: Path, format: CSVFormat, schema: StructType): DataFrame = Read.csv(file, format, schema)
 
   /** Reads a JSON file. */
-  def json(file: String): DataFrame = json(Paths.get(file))
+  def json(file: String): DataFrame = Read.json(file)
 
   /** Reads a JSON file. */
   def json(file: Path): DataFrame = Read.json(file)
 
   /** Reads a JSON file. */
-  def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = json(Paths.get(file), mode, schema)
+  def json(file: String, mode: JSON.Mode, schema: StructType): DataFrame = Read.json(file, mode, schema)
 
   /** Reads a JSON file. */
   def json(file: Path, mode: JSON.Mode, schema: StructType): DataFrame = Read.json(file, mode, schema)
 
   /** Reads an ARFF file. */
-  def arff(file: String): DataFrame = arff(Paths.get(file))
+  def arff(file: String): DataFrame = Read.arff(file)
 
   /** Reads an ARFF file. */
   def arff(file: Path): DataFrame = Read.arff(file)
 
   /** Reads a SAS7BDAT file. */
-  def sas(file: String): DataFrame = sas(Paths.get(file))
+  def sas(file: String): DataFrame = Read.sas(file)
 
   /** Reads a SAS7BDAT file. */
   def sas(file: Path): DataFrame = Read.sas(file)
 
   /** Reads an Apache Arrow file. */
-  def arrow(file: String): DataFrame = arrow(Paths.get(file))
+  def arrow(file: String): DataFrame = Read.arrow(file)
 
   /** Reads an Apache Arrow file. */
   def arrow(file: Path): DataFrame = Read.arrow(file)
 
   /** Reads an Apache Avro file. */
-  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = avro(Paths.get(file), schema)
+  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = Read.avro(file, schema)
 
   /** Reads an Apache Avro file. */
   def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = Read.avro(file, schema)
 
   /** Reads an Apache Parquet file. */
-  def parquet(file: String): DataFrame = parquet(Paths.get(file))
+  def parquet(file: String): DataFrame = Read.parquet(file)
 
   /** Reads an Apache Parquet file. */
   def parquet(file: Path): DataFrame = Read.parquet(file)
 
   /** Reads a LivSVM file. */
-  def libsvm(file: String): Dataset[Instance[SparseArray]] = libsvm(Paths.get(file))
+  def libsvm(file: String): Dataset[Instance[SparseArray]] = Read.libsvm(file)
 
   /** Reads a LivSVM file. */
   def libsvm(file: Path): Dataset[Instance[SparseArray]] = Read.libsvm(file)

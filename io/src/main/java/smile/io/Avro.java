@@ -18,6 +18,8 @@
 package smile.io;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -84,18 +86,27 @@ public class Avro {
      * @param path an Apache Avro file path.
      */
     public DataFrame read(Path path) throws IOException {
-        return read(path, Integer.MAX_VALUE);
+        return read(Files.newInputStream(path), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads an avro file.
+     *
+     * @param path an Apache Avro file path or URI.
+     */
+    public DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(Input.stream(path), Integer.MAX_VALUE);
     }
 
     /**
      * Reads a limited number of records from an avro file.
      *
-     * @param path  an Apache Avro file path.
+     * @param input  an Apache Avro file input stream.
      * @param limit reads a limited number of records.
      */
-    public DataFrame read(Path path, int limit) throws IOException {
+    public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
-        try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(Files.newInputStream(path), datumReader)) {
+        try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
             StructType struct = toSmileSchema(schema);
 
             List<Tuple> rows = new ArrayList<>();

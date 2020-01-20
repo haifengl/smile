@@ -22,6 +22,7 @@ import java.io.OutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
@@ -122,17 +123,41 @@ public class Arrow {
     }
 
     /**
-     * Reads a limited number of records from an arrow file.
+     * Reads an arrow file.
      * @param path an Apache Arrow file path.
-     * @param limit reads a limited number of records.
      */
     public DataFrame read(Path path, int limit) throws IOException {
+        return read(Files.newInputStream(path), limit);
+    }
+
+    /**
+     * Reads a limited number of records from an arrow file.
+     * @param path an Apache Arrow file path or URI.
+     */
+    public DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from an arrow file.
+     * @param path an Apache Arrow file path or URI.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        return read(Input.stream(path), limit);
+    }
+
+    /**
+     * Reads a limited number of records from an arrow file.
+     * @param input an Apache Arrow file input stream.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(InputStream input, int limit) throws IOException {
         if (allocator == null) {
             allocate(Long.MAX_VALUE);
         }
 
-        try (InputStream input = Files.newInputStream(path);
-             ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
+        try (ArrowStreamReader reader = new ArrowStreamReader(input, allocator)) {
 
             // The holder for a set of vectors to be loaded/unloaded.
             VectorSchemaRoot root = reader.getVectorSchemaRoot();
