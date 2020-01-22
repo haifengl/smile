@@ -21,29 +21,29 @@ permalink: "{{ page.filePathStem }}.html"
     <h2 id="download">Download</h2>
 
     <p>Get Smile from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of
-        the project website. We provide pre-packaged binary for Mac. The universal tarball
-        is also available and can be used on Windows and Linux.</p>
+        the project website. The universal tarball
+        is also available and can be used on Mac, Linux and Windows.</p>
 
     <p>If you would like to build Smile from source, please first install Java 8, Scala 2.13
         and SBT 1.0+. Then clone the repo and build the package:</p>
 
     <pre class="prettyprint lang-bash"><code>
-    git clone https://github.com/haifengl/smile.git
-    cd smile
-    sbt package
+    $ git clone https://github.com/haifengl/smile.git
+    $ cd smile
+    $ sbt package
     </code></pre>
 
     <p>To build with Scala 2.12, run</p>
 
     <pre class="prettyprint lang-bash"><code>
-    sbt ++2.12.10 scala/package
+    $ sbt ++2.12.10 scala/package
     </code></pre>
 
     <p>To test the latest code, run the following</p>
 
     <pre class="prettyprint lang-bash"><code>
-    git pull
-    ./smile.sh
+    $ git pull
+    $ ./smile.sh
     </code></pre>
 
     <p>which will build the system and enter the shell.</p>
@@ -58,7 +58,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>Smile comes with an interactive shell. In the home directory of Smile, type</p>
 
     <pre class="prettyprint lang-bash"><code>
-    ./bin/smile
+    $ ./bin/smile
     </code></pre>
 
     <p>to enter the shell, which is based on <a href="http://ammonite.io">Ammonite REPL</a>.
@@ -69,7 +69,7 @@ permalink: "{{ page.filePathStem }}.html"
         to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
     <pre class="prettyprint lang-bash"><code>
-    ./bin/smile -J-Xmx30G
+    $ ./bin/smile -J-Xmx30G
     </code></pre>
 
     <p>You can also modify the configuration file <code>./conf/smile.ini</code>
@@ -91,7 +91,7 @@ permalink: "{{ page.filePathStem }}.html"
 
   Welcome to Smile Shell; enter 'help&lt;RETURN&gt;' for list of supported commands.
   Type "exit&lt;RETURN&gt;" to leave the Smile Shell
-  Version 2.0.0, Scala 2.13.1, SBT 1.2.8, Built at 2019-11-20 20:04:41.868
+  Version 2.1.0, Scala 2.13.1, SBT 1.2.8, Built at 2019-11-20 20:04:41.868
 ===============================================================================
 smile&gt;
     </code></pre>
@@ -220,6 +220,77 @@ smile&gt;
         <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
     </div>
+
+    <h2 id="notebook">Notebooks</h2>
+
+    <p>You can also use Smile in your favorite Notebook.
+        We recommend JupyterLab with Almond kernel for Scala.
+        To use Smile's Scala API, it is helpful to add the following
+        code to the notebook or the <code>predef</code> code block of
+        Almond.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import $ivy.`com.github.haifengl::smile-scala:2.1.0`
+
+    import scala.language.postfixOps
+    import org.apache.commons.csv.CSVFormat
+    import smile._
+    import smile.util._
+    import smile.math._
+    import smile.math.MathEx.{log2, logistic, factorial, lfactorial, choose, lchoose, random, randomInt, permutate, c, cbind, rbind, sum, mean, median, q1, q3, `var` => variance, sd, mad, min, max, whichMin, whichMax, unique, dot, distance, pdist, KullbackLeiblerDivergence => kld, JensenShannonDivergence => jsd, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, standardize, normalize, scale, unitize, unitize1, unitize2, root}
+    import smile.math.distance._
+    import smile.math.kernel._
+    import smile.math.matrix._
+    import smile.math.matrix.Matrix._
+    import smile.math.rbf._
+    import smile.stat.distribution._
+    import smile.data._
+    import smile.data.formula._
+    import smile.data.measure._
+    import smile.data.`type`._
+    import smile.json._
+    import smile.interpolation._
+    import smile.validation._
+    import smile.association._
+    import smile.base.cart.SplitRule
+    import smile.base.mlp._
+    import smile.base.rbf.RBF
+    import smile.classification._
+    import smile.regression.{ols, ridge, lasso, svr, gpr}
+    import smile.feature._
+    import smile.clustering._
+    import smile.vq._
+    import smile.manifold._
+    import smile.mds._
+    import smile.sequence._
+    import smile.projection._
+    import smile.nlp._
+    import smile.wavelet._
+    </code></pre>
+
+    <p>To plot data with Swing based functions in Notebook, run the below code first.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import smile.plot.swing._
+    import smile.plot.show
+
+    System.setProperty("java.awt.headless", "true")
+    implicit def almond(canvas: javax.swing.JComponent): Unit = {
+      publish.html(smile.plot.swing.img(canvas))
+    }
+    </code></pre>
+
+    <p>To use Vega based plot functions in Notebook, run the below code instead.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import smile.plot.vega._
+    import smile.plot.show
+
+    implicit def almond(spec: JsObject): Unit = {
+      publish.html(iframe(spec))
+    }
+    </code></pre>
+
 </div>
 
 <script type="text/javascript">

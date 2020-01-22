@@ -115,7 +115,7 @@ public class Parquet {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();
             StructType struct = toSmileSchema(schema);
-            logger.info("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
+            logger.debug("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
 
             int nrows = (int) Math.min(reader.getRecordCount(), limit);
             List<Tuple> rows = new ArrayList<>(nrows);
