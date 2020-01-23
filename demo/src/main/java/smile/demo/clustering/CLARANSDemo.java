@@ -26,11 +26,10 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.math.MathEx;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 import smile.clustering.CLARANS;
-import smile.math.distance.EuclideanDistance;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

@@ -18,6 +18,8 @@
 package smile.io;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -32,6 +34,7 @@ import org.apache.avro.io.DatumReader;
 import org.apache.avro.util.Utf8;
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -83,18 +86,27 @@ public class Avro {
      * @param path an Apache Avro file path.
      */
     public DataFrame read(Path path) throws IOException {
-        return read(path, Integer.MAX_VALUE);
+        return read(Files.newInputStream(path), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads an avro file.
+     *
+     * @param path an Apache Avro file path or URI.
+     */
+    public DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(Input.stream(path), Integer.MAX_VALUE);
     }
 
     /**
      * Reads a limited number of records from an avro file.
      *
-     * @param path  an Apache Avro file path.
+     * @param input  an Apache Avro file input stream.
      * @param limit reads a limited number of records.
      */
-    public DataFrame read(Path path, int limit) throws IOException {
+    public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);
-        try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(Files.newInputStream(path), datumReader)) {
+        try (DataFileStream<GenericRecord> dataFileReader = new DataFileStream<>(input, datumReader)) {
             StructType struct = toSmileSchema(schema);
 
             List<Tuple> rows = new ArrayList<>();
@@ -107,7 +119,8 @@ public class Avro {
                     row[i] = record.get(struct.field(i).name);
                     if (row[i] instanceof Utf8) {
                         String str = row[i].toString();
-                        row[i] = struct.field(i).measure.map(m -> (Object) m.valueOf(str)).orElse(str);
+                        Measure measure = struct.field(i).measure;
+                        row[i] = measure != null ? measure.valueOf(str) : str;
                     }
                 }
                 rows.add(Tuple.of(row, struct));
@@ -125,7 +138,7 @@ public class Avro {
                 scale = new NominalScale(field.schema().getEnumSymbols());
             }
 
-            fields.add(new StructField(field.name(), typeOf(field.schema()), Optional.ofNullable(scale)));
+            fields.add(new StructField(field.name(), typeOf(field.schema()), scale));
         }
 
         return DataTypes.struct(fields);

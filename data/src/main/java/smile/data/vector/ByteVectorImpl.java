@@ -33,21 +33,21 @@ class ByteVectorImpl implements ByteVector {
     /** The name of vector. */
     private String name;
     /** Optional measure. */
-    private Optional<Measure> measure;
+    private Measure measure;
     /** The vector data. */
     private byte[] vector;
 
     /** Constructor. */
     public ByteVectorImpl(String name, byte[] vector) {
         this.name = name;
-        this.measure = Optional.empty();
+        this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
     public ByteVectorImpl(StructField field, byte[] vector) {
-        if (field.measure.isPresent() && field.measure.get() instanceof ContinuousMeasure) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure instanceof ContinuousMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
         this.name = field.name;
@@ -62,7 +62,7 @@ class ByteVectorImpl implements ByteVector {
 
     @Override
     public Optional<Measure> measure() {
-        return measure;
+        return Optional.ofNullable(measure);
     }
 
     @Override

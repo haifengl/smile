@@ -61,8 +61,8 @@ public class RegressionTreeTest {
     /**
      * Test of predict method, of class RegressionTree.
      */
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 100, 20, 2);
@@ -80,6 +80,9 @@ public class RegressionTreeTest {
 
         System.out.println("LOOCV MSE = " + rmse);
         assertEquals(3.0848729264302333, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     public void test(String name, Formula formula, DataFrame data, double expected) {

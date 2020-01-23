@@ -22,7 +22,6 @@ import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.Hashtable;
-
 import javax.swing.BorderFactory;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -31,11 +30,11 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.Line;
-import smile.plot.LinePlot;
-import smile.plot.QQPlot;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Line;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.TDistribution;
 
 /**

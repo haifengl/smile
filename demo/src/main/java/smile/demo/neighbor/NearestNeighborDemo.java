@@ -25,7 +25,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Hashtable;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -33,7 +32,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 
-import smile.plot.PlotCanvas;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
@@ -42,7 +40,8 @@ import smile.neighbor.LSH;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.MPLSH;
 import smile.neighbor.Neighbor;
-import smile.plot.BarPlot;
+import smile.plot.swing.BarPlot;
+import smile.plot.swing.PlotCanvas;
 
 /**
  *

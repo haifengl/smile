@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-
 /**
  * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
  * where &sigma; &gt; 0 is the scale parameter of the kernel. The kernel works

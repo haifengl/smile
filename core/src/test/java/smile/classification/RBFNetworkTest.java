@@ -135,8 +135,8 @@ public class RBFNetworkTest {
         assertEquals(110, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -156,5 +156,8 @@ public class RBFNetworkTest {
         error = Error.of(USPS.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(143, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

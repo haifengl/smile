@@ -62,8 +62,8 @@ public class GaussianProcessRegressionTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -79,6 +79,9 @@ public class GaussianProcessRegressionTest {
 
         System.out.println("RMSE = " + rmse);
         assertEquals(3.978109808216234, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

@@ -19,12 +19,10 @@ package smile.demo.classification;
 
 import java.awt.Dimension;
 import javax.swing.JFrame;
-
 import org.apache.commons.csv.CSVFormat;
-import smile.classification.NaiveBayes;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 /**
  * Use iris data set for demo and visualization purpose. 

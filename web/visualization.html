@@ -21,13 +21,13 @@ permalink: "{{ page.filePathStem }}.html"
         The user can use <code>plot</code> functions to draw scatter plot easily.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = BLACK): Window
+    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = BLACK): PlotCanvas
 
-    def plot(data: Array[Array[Double]], labels: Array[String]): Window
+    def plot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas
 
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): Window
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): PlotCanvas
 
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): Window
+    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): PlotCanvas
     </code></pre>
 
     <p>The legends are as follows.</p>
@@ -49,10 +49,11 @@ permalink: "{{ page.filePathStem }}.html"
     </ul>
     <p>For any other char, the data point will be drawn as a dot.</p>
 
-    <p>The functions return a Window object consisting of
-        a JFrame and a PlotCanvas. The PlotCanvas object can be used to control the plot programmatically.
-        The user can also use the popup context menu by right mouse click to print, change the title, axis labels,
-        and font, etc.</p>
+    <p>The functions return a PlotCanvas, which can be used to control the plot
+        programmatically. The user can also use the popup context menu by right
+        mouse click to print, change the title, axis labels, and font, etc. To
+        display the canvas on desktop, call <code>show(canvas)</code>, which
+        will render the plot properly with an implicit renderer engine.</p>
 
     <p>For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
         the user can shift the coordinates by moving mouse after double click. The
@@ -60,11 +61,13 @@ permalink: "{{ page.filePathStem }}.html"
         can rotate the view by dragging mouse.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = iris.unzipInt
-    val x2 = x.map(_.slice(0,2)) // take first two columns
-    val window = plot(x2, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,2): _*)
+    val iris = read.arff("data/weka/iris.arff")
+    val x = iris.select(0, 1).toArray
+    val y = iris("class").toIntArray
+    val canvas = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
+    val names = iris.names
+    canvas.setAxisLabels(names(0), names(1))
+    show(canvas)
     </code></pre>
 
     <p>In this example, we plot the first two columns of Iris data. We use the class
@@ -78,9 +81,10 @@ permalink: "{{ page.filePathStem }}.html"
     <p>It is also easy to draw a 3D plot.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val x3 = x.map(_.slice(0,3)) // take first three columns
-    val window = plot(x3, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    window.canvas.setAxisLabels(iris.attributes.map(_.getName).slice(0,3): _*)
+    val x = iris.select(0, 1, 2).toArray // take first three columns
+    val canvas = plot(x3, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
+    canvas.setAxisLabels(names(0), names(1), names(2))
+    show(canvas)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -115,7 +119,7 @@ permalink: "{{ page.filePathStem }}.html"
       val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
       Array(x, y)
     }
-    line(heart.toArray, color = RED)
+    show(line(heart.toArray, color = RED))
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">

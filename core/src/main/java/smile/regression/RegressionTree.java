@@ -135,10 +135,10 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         int splitTrueCount = 0;
         int splitFalseCount = 0;
 
-        Optional<Measure> measure = schema.field(j).measure;
-        if (measure.isPresent() && measure.get() instanceof NominalScale) {
+        Measure measure = schema.field(j).measure;
+        if (measure instanceof NominalScale) {
             int splitValue = -1;
-            NominalScale scale = (NominalScale) measure.get();
+            NominalScale scale = (NominalScale) measure;
             int m = scale.size();
             int[] trueCount = new int[m];
             double[] trueSum = new double[m];
@@ -311,20 +311,20 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
-        tree.formula = Optional.of(formula);
+        tree.formula = formula;
         return tree;
     }
 
     @Override
     public double predict(Tuple x) {
-        RegressionNode leaf = (RegressionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
+        RegressionNode leaf = (RegressionNode) root.predict(predictors(x));
         return leaf.output();
     }
 
     /** Returns null if the tree is part of ensemble algorithm. */
     @Override
     public Formula formula() {
-        return formula.orElse(null);
+        return formula;
     }
 
     @Override

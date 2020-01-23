@@ -21,9 +21,9 @@ import java.awt.Color;
 
 import javax.swing.JFrame;
 
-import smile.plot.LinePlot;
-import smile.plot.PlotCanvas;
-import smile.plot.PlotPanel;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.PlotPanel;
 import smile.wavelet.DaubechiesWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;

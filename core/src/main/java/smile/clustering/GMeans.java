@@ -52,7 +52,12 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * @param y the cluster labels.
      */
     public GMeans(double distortion, double[][] centroids, int[] y) {
-        super(distortion, centroids, y, MathEx::squaredDistance);
+        super(distortion, centroids, y);
+    }
+
+    @Override
+    public double distance(double[] x, double[] y) {
+        return MathEx.squaredDistance(x, y);
     }
 
     /**
@@ -155,6 +160,12 @@ public class GMeans extends CentroidClustering<double[], double[]> {
                         centers.add(centroids[index[i]]);
                     }
                 }
+            }
+
+            // no more split.
+            if (centers.size() == k) {
+                logger.info("No more split. Finish with {} clusters", k);
+                break;
             }
 
             k = centers.size();

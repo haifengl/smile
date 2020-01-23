@@ -17,8 +17,6 @@
 
 package smile.stat.distribution;
 
-import java.util.ArrayList;
-import java.util.List;
 import smile.math.MathEx;
 
 /**

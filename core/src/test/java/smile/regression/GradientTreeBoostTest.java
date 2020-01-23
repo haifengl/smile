@@ -57,8 +57,8 @@ public class GradientTreeBoostTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -80,6 +80,9 @@ public class GradientTreeBoostTest {
         double rmse = RMSE.of(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(3.545378550497016, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     public void test(Loss loss, String name, Formula formula, DataFrame data, double expected) {

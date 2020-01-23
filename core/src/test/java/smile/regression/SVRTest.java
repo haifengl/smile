@@ -58,8 +58,8 @@ public class SVRTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         double[] prediction = LOOCV.regression(Longley.x, Longley.y, (x, y) -> SVR.fit(x, y, 2.0, 10.0, 1E-3));
@@ -67,6 +67,10 @@ public class SVRTest {
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.6140026106705365, rmse, 1E-4);
+
+        Regression<double[]> model = SVR.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

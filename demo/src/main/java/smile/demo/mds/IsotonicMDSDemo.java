@@ -23,7 +23,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -36,10 +35,10 @@ import javax.swing.JPanel;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.mds.IsotonicMDS;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener {
@@ -149,7 +148,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
                 CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
 
                 try {
-                    dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+                    dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                     if (datasetIndex != 2 && datasetIndex != 3) {
                         dataset[datasetIndex] = dataset[datasetIndex].drop(0); // row names
                     }

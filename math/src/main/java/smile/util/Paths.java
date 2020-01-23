@@ -36,12 +36,12 @@ public interface Paths {
         return java.nio.file.Paths.get(home + "/data", path);
     }
 
-    /** Returns a reader of test data. */
+    /** Returns the reader of a test data. */
     static BufferedReader getTestDataReader(String... path) throws IOException {
         return java.nio.file.Files.newBufferedReader(getTestData(path));
     }
 
-    /** Returns a reader of test data. */
+    /** Returns the reader of a test data. */
     static Stream<String> getTestDataLines(String... path) throws IOException {
         return java.nio.file.Files.lines(getTestData(path));
     }

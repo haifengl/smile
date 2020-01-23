@@ -47,7 +47,7 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
 
     /** Returns a struct field corresponding to this vector. */
     default StructField field() {
-        return new StructField(name(), type(), measure());
+        return new StructField(name(), type(), measure().orElse(null));
     }
 
     /** Number of elements in the vector. */
@@ -88,6 +88,25 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
      */
     default int[] toIntArray(int[] a) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Returns a string array of this vector.
+     */
+    default String[] toStringArray() {
+        return toStringArray(new String[size()]);
+    }
+
+    /**
+     * Copies the vector value as string to the given array.
+     * @return the input array <code>a</code>.
+     */
+    default String[] toStringArray(String[] a) {
+        int n = a.length;
+        for (int i = 0; i < n; i++) {
+            a[i] = field().toString(get(i));
+        }
+        return a;
     }
 
     /**
