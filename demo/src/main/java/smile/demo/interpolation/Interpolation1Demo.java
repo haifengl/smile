@@ -19,18 +19,17 @@ package smile.demo.interpolation;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.PlotCanvas;
+import smile.plot.swing.PlotCanvas;
 import smile.interpolation.CubicSplineInterpolation1D;
 import smile.interpolation.KrigingInterpolation1D;
 import smile.interpolation.LinearInterpolation;
 import smile.interpolation.RBFInterpolation1D;
 import smile.interpolation.ShepardInterpolation1D;
 import smile.math.rbf.GaussianRadialBasis;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

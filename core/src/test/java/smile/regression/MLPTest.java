@@ -53,6 +53,28 @@ public class MLPTest {
     @After
     public void tearDown() {
     }
+
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
+        System.out.println("longley");
+
+        int p = Longley.x[0].length;
+        MLP model = new MLP(p, Layer.rectifier(30), Layer.sigmoid(30));
+        // small learning rate and weight decay to counter exploding gradient
+        model.setLearningRate(0.01);
+        model.setWeightDecay(0.1);
+
+        for (int epoch = 0; epoch < 5; epoch++) {
+            int[] permutation = MathEx.permutate(Longley.x.length);
+            for (int i : permutation) {
+                model.update(Longley.x[i], Longley.y[i]);
+            }
+        }
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
+    }
+
     public void test(String dataset, double[][] x, double[] y, double expected, LayerBuilder... builders) {
         System.out.println(dataset);
 

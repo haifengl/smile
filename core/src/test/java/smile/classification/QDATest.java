@@ -56,14 +56,18 @@ public class QDATest {
     public void tearDown() {
     }
 
-    @Test
-    public void testIris() {
+    @Test(expected = Test.None.class)
+    public void testIris() throws Exception {
         System.out.println("Iris");
 
         int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> QDA.fit(x, y));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(4, error);
+
+        QDA model = QDA.fit(Iris.x, Iris.y);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

@@ -18,8 +18,11 @@
 package smile.io;
 
 import java.io.IOException;
+import java.io.Reader;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -88,6 +91,28 @@ public class CSV {
 
     /**
      * Reads a CSV file.
+     * @param path a CSV file path or URI.
+     */
+    public DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a CSV file.
+     * @param path a CSV file path or URI.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        if (schema == null) {
+            // infer the schema from top 1000 rows.
+            schema = inferSchema(Input.reader(path, charset), Math.min(1000, limit));
+        }
+
+        return read(Input.reader(path, charset), limit);
+    }
+
+    /**
+     * Reads a CSV file.
      * @param path a CSV file path.
      */
     public DataFrame read(Path path) throws IOException {
@@ -102,15 +127,24 @@ public class CSV {
     public DataFrame read(Path path, int limit) throws IOException {
         if (schema == null) {
             // infer the schema from top 1000 rows.
-            schema = inferSchema(path, Math.min(1000, limit));
+            schema = inferSchema(Files.newBufferedReader(path, charset), Math.min(1000, limit));
+        }
+
+        return read(Files.newBufferedReader(path, charset), limit);
+    }
+
+    private DataFrame read(Reader reader, int limit) throws IOException {
+        if (schema == null) {
+            // infer the schema from top 1000 rows.
+            throw new IllegalStateException("The schema is not set or inferred.");
         }
 
         StructField[] fields = schema.fields();
         List<Function<String, Object>> parser = schema.parser();
 
-        try (CSVParser reader = CSVParser.parse(path, charset, format)) {
+        try (CSVParser csv = CSVParser.parse(reader, format)) {
             List<Tuple> rows = new ArrayList<>();
-            for (CSVRecord record : reader) {
+            for (CSVRecord record : csv) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
                     String s = record.get(i).trim();
@@ -133,8 +167,8 @@ public class CSV {
      *  - Merge row types to find common type
      *  - String type by default.
      */
-    public StructType inferSchema(Path path, int limit) throws IOException {
-        try (CSVParser parser = CSVParser.parse(path, charset, format)) {
+    public StructType inferSchema(Reader reader, int limit) throws IOException {
+        try (CSVParser parser = CSVParser.parse(reader, format)) {
             String[] names;
             DataType[] types;
 

@@ -40,7 +40,7 @@ final class Variable implements Term {
     /** Data type of variable. Only available after calling bind(). */
     private DataType type;
     /** The level of measurements. */
-    private Optional<Measure> measure;
+    private Measure measure;
     /** Column index after binding to a schema. */
     private int index = -1;
 
@@ -121,7 +121,7 @@ final class Variable implements Term {
 
     @Override
     public Optional<Measure> measure() {
-        return measure;
+        return Optional.ofNullable(measure);
     }
 
     @Override

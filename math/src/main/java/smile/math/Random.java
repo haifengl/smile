@@ -18,8 +18,8 @@
 package smile.math;
 
 import java.util.stream.IntStream;
-import smile.math.random.UniversalGenerator;
 import smile.math.random.MersenneTwister;
+import smile.math.random.UniversalGenerator;
 
 /**
  * This is a high quality random number generator as a replacement of

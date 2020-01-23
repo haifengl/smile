@@ -37,7 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 
-import smile.plot.PlotCanvas;
+import smile.plot.swing.PlotCanvas;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
@@ -46,7 +46,7 @@ import smile.neighbor.LSH;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.MPLSH;
 import smile.neighbor.Neighbor;
-import smile.plot.BarPlot;
+import smile.plot.swing.BarPlot;
 
 /**
  *

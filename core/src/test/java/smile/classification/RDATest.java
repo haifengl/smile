@@ -96,8 +96,8 @@ public class RDATest {
         assertEquals(31, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         RDA model = RDA.fit(USPS.x, USPS.y, 0.7);
@@ -107,5 +107,8 @@ public class RDATest {
 
         System.out.println("Error = " + error);
         assertEquals(235, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

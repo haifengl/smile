@@ -32,6 +32,7 @@ import org.apache.parquet.example.data.Group;
 import org.apache.parquet.example.data.simple.convert.GroupRecordConverter;
 import org.apache.parquet.hadoop.ParquetFileReader;
 import org.apache.parquet.hadoop.metadata.ParquetMetadata;
+import org.apache.parquet.hadoop.util.HadoopInputFile;
 import org.apache.parquet.io.ColumnIOFactory;
 import org.apache.parquet.io.InputFile;
 import org.apache.parquet.io.MessageColumnIO;
@@ -78,6 +79,23 @@ public class Parquet {
     }
 
     /**
+     * Reads a HDFS parquet file.
+     * @param path an Apache Parquet file path.
+     */
+    public static DataFrame read(String path) throws IOException {
+        return read(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a HDFS parquet file.
+     * @param path an Apache Parquet file path.
+     * @param limit reads a limited number of records.
+     */
+    public static DataFrame read(String path, int limit) throws IOException {
+        return read(HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration()), limit);
+    }
+
+    /**
      * Reads a parquet file.
      * @param file an interface with the methods needed by Parquet
      *             to read data files. See HadoopInputFile for example.
@@ -97,7 +115,7 @@ public class Parquet {
             ParquetMetadata footer = reader.getFooter();
             MessageType schema = footer.getFileMetaData().getSchema();
             StructType struct = toSmileSchema(schema);
-            logger.info("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
+            logger.debug("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
 
             int nrows = (int) Math.min(reader.getRecordCount(), limit);
             List<Tuple> rows = new ArrayList<>(nrows);

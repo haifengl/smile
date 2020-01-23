@@ -17,14 +17,8 @@
 
 package smile.data.vector;
 
-import java.util.Optional;
-
-import smile.data.measure.ContinuousMeasure;
-import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
-import smile.data.type.StructField;
-
 import java.util.stream.IntStream;
+import smile.data.type.StructField;
 
 /**
  * An immutable boolean vector.
@@ -45,8 +39,8 @@ class BooleanVectorImpl implements BooleanVector {
 
     /** Constructor. */
     public BooleanVectorImpl(StructField field, boolean[] vector) {
-        if (field.measure.isPresent()) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure != null) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
         this.name = field.name;

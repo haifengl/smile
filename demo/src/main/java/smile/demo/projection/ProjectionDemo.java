@@ -20,7 +20,7 @@ package smile.demo.projection;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.io.DatasetReader;
+import smile.io.Read;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -166,7 +166,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
         }
 
         try {
-            dataset[datasetIndex] = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+            dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
         } catch (Exception ex) {
             JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
             System.out.println(ex);

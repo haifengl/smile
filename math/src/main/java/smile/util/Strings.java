@@ -20,6 +20,7 @@ package smile.util;
 import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * String utility functions.
@@ -102,6 +103,11 @@ public interface Strings {
     /** Returns the string representation of array in format '[1, 2, 3]'." */
     static String toString(int[] a) {
         return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+    }
+
+    /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
+    static String toString(float[] a) {
+        return IntStream.range(0, a.length).mapToObj(i -> String.valueOf(a[i])).collect(Collectors.joining(", ", "[", "]"));
     }
 
     /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */

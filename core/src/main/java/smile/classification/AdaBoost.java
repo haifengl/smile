@@ -209,7 +209,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new DecisionTree(x, codec.y, codec.field.get(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, codec.field, k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x.get(i)) != y.getInt(i);

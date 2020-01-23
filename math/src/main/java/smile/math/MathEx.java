@@ -18,12 +18,8 @@
 package smile.math;
 
 import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ForkJoinPool;
+import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
@@ -36,7 +32,6 @@ import smile.util.SparseArray;
 import static java.lang.Math.abs;
 import static java.lang.Math.exp;
 import static java.lang.Math.floor;
-import static java.lang.Math.log;
 import static java.lang.Math.sqrt;
 
 /**
@@ -240,13 +235,13 @@ public class MathEx {
     /**
      * log(2), used in log2().
      */
-    private static final double LOG2 = log(2);
+    private static final double LOG2 = Math.log(2);
 
     /**
      * Log of base 2.
      */
     public static double log2(double x) {
-        return log(x) / LOG2;
+        return Math.log(x) / LOG2;
     }
 
     /**
@@ -441,7 +436,7 @@ public class MathEx {
 
         double f = 0.0;
         for (int i = 2; i <= n; i++) {
-            f += log(i);
+            f += Math.log(i);
         }
 
         return f;
@@ -2275,7 +2270,7 @@ public class MathEx {
         double h = 0.0;
         for (double pi : p) {
             if (pi > 0) {
-                h -= pi * log(pi);
+                h -= pi * Math.log(pi);
             }
         }
         return h;
@@ -2303,7 +2298,7 @@ public class MathEx {
         for (int i = 0; i < x.length; i++) {
             if (x[i] != 0.0 && y[i] != 0.0) {
                 intersection = true;
-                kl += x[i] * log(x[i] / y[i]);
+                kl += x[i] * Math.log(x[i] / y[i]);
             }
         }
 
@@ -2354,7 +2349,7 @@ public class MathEx {
                 b = iterY.hasNext() ? iterY.next() : null;
             } else {
                 intersection = true;
-                kl += a.x * log(a.x / b.x);
+                kl += a.x * Math.log(a.x / b.x);
 
                 a = iterX.hasNext() ? iterX.next() : null;
                 b = iterY.hasNext() ? iterY.next() : null;
@@ -2416,7 +2411,7 @@ public class MathEx {
             int i = b.i;
             if (y[i] > 0) {
                 intersection = true;
-                kl += b.x * log(b.x / y[i]);
+                kl += b.x * Math.log(b.x / y[i]);
             }
         }
 
@@ -2474,15 +2469,15 @@ public class MathEx {
         while (a != null && b != null) {
             if (a.i < b.i) {
                 double mi = a.x / 2;
-                js += a.x * log(a.x / mi);
+                js += a.x * Math.log(a.x / mi);
                 a = iterX.hasNext() ? iterX.next() : null;
             } else if (a.i > b.i) {
                 double mi = b.x / 2;
-                js += b.x * log(b.x / mi);
+                js += b.x * Math.log(b.x / mi);
                 b = iterY.hasNext() ? iterY.next() : null;
             } else {
                 double mi = (a.x + b.x) / 2;
-                js += a.x * log(a.x / mi) + b.x * log(b.x / mi);
+                js += a.x * Math.log(a.x / mi) + b.x * Math.log(b.x / mi);
 
                 a = iterX.hasNext() ? iterX.next() : null;
                 b = iterY.hasNext() ? iterY.next() : null;
@@ -2526,9 +2521,9 @@ public class MathEx {
             SparseArray.Entry b = iter.next();
             int i = b.i;
             double mi = (b.x + y[i]) / 2;
-            js += b.x * log(b.x / mi);
+            js += b.x * Math.log(b.x / mi);
             if (y[i] > 0) {
-                js += y[i] * log(y[i] / mi);
+                js += y[i] * Math.log(y[i] / mi);
             }
         }
 
@@ -2538,12 +2533,12 @@ public class MathEx {
     /**
      * Returns the dot product between two vectors.
      */
-    public static double dot(int[] x, int[] y) {
+    public static int dot(int[] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        double p = 0.0;
+        int p = 0;
         for (int i = 0; i < x.length; i++) {
             p += x[i] * y[i];
         }
@@ -2554,12 +2549,12 @@ public class MathEx {
     /**
      * Returns the dot product between two vectors.
      */
-    public static double dot(float[] x, float[] y) {
+    public static float dot(float[] x, float[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        double p = 0.0;
+        float p = 0.0F;
         for (int i = 0; i < x.length; i++) {
             p += x[i] * y[i];
         }
@@ -3053,12 +3048,40 @@ public class MathEx {
     /**
      * L1 vector norm.
      */
+    public static float norm1(float[] x) {
+        float norm = 0.0F;
+
+        for (float n : x) {
+            norm += abs(n);
+        }
+
+        return norm;
+    }
+
+    /**
+     * L1 vector norm.
+     */
     public static double norm1(double[] x) {
         double norm = 0.0;
 
         for (double n : x) {
             norm += abs(n);
         }
+
+        return norm;
+    }
+
+    /**
+     * L2 vector norm.
+     */
+    public static float norm2(float[] x) {
+        float norm = 0.0F;
+
+        for (float n : x) {
+            norm += n * n;
+        }
+
+        norm = (float) sqrt(norm);
 
         return norm;
     }
@@ -3081,6 +3104,20 @@ public class MathEx {
     /**
      * L-infinity vector norm. Maximum absolute value.
      */
+    public static float normInf(float[] x) {
+        int n = x.length;
+
+        float f = abs(x[0]);
+        for (int i = 1; i < n; i++) {
+            f = Math.max(f, abs(x[i]));
+        }
+
+        return f;
+    }
+
+    /**
+     * L-infinity vector norm. Maximum absolute value.
+     */
     public static double normInf(double[] x) {
         int n = x.length;
 
@@ -3095,8 +3132,25 @@ public class MathEx {
     /**
      * L2 vector norm.
      */
+    public static float norm(float[] x) {
+        return norm2(x);
+    }
+
+    /**
+     * L2 vector norm.
+     */
     public static double norm(double[] x) {
         return norm2(x);
+    }
+
+    /** Returns the cosine similarity. */
+    public static float cos(float[] x, float[] y) {
+        return dot(x, y) / (norm2(x) * norm2(y));
+    }
+
+    /** Returns the cosine similarity. */
+    public static double cos(double[] x, double[] y) {
+        return dot(x, y) / (norm2(x) * norm2(y));
     }
 
     /**
@@ -3120,15 +3174,6 @@ public class MathEx {
      * Scales each column of a matrix to range [0, 1].
      */
     public static void scale(double[][] x) {
-        scale(x, 0.0, 1.0);
-    }
-
-    /**
-     * Scales each column of a matrix to range [lo, hi].
-     * @param lo lower limit of range
-     * @param hi upper limit of range
-     */
-    public static void scale(double[][] x, double lo, double hi) {
         int n = x.length;
         int p = x[0].length;
 

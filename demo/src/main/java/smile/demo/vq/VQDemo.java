@@ -35,8 +35,8 @@ import javax.swing.event.AncestorListener;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
-import smile.io.DatasetReader;
-import smile.plot.ScatterPlot;
+import smile.io.Read;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public abstract class VQDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
@@ -259,7 +259,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
 
         CSVFormat format = CSVFormat.DEFAULT.withDelimiter(delimiter[datasetIndex]).withIgnoreSurroundingSpaces(true);
         try {
-            DataFrame data = DatasetReader.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+            DataFrame data = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
             dataset[datasetIndex] = data.toArray();
         } catch (Exception e) {
             JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);

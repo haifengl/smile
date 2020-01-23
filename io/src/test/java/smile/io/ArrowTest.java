@@ -26,7 +26,6 @@ import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.SparseMatrix;
 import smile.util.Paths;
 
 import java.io.File;

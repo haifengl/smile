@@ -31,12 +31,11 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.math.MathEx;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.Line;
-import smile.plot.LinePlot;
-import smile.plot.QQPlot;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Line;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.ExponentialDistribution;
 
 /**
