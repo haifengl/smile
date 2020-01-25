@@ -20,7 +20,6 @@ package smile.classification;
 import java.io.IOException;
 import smile.data.Hyphen;
 import smile.data.Protein;
-import smile.math.MathEx;
 import smile.validation.Error;
 import smile.validation.Validation;
 import org.junit.After;
@@ -57,7 +56,7 @@ public class MaxentTest {
     }
 
     @Test(expected = Test.None.class)
-    public void testProtein() throws IOException {
+    public void testProtein() throws Exception {
         System.out.println("protein");
 
         Maxent model = Maxent.fit(Protein.p, Protein.x, Protein.y);
@@ -67,6 +66,9 @@ public class MaxentTest {
 
         System.out.format("The error is %d of %d%n", error, Protein.testx.length);
         assertEquals(1339, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test(expected = Test.None.class)

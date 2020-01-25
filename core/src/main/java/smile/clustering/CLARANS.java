@@ -20,6 +20,7 @@ package smile.clustering;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
 
 /**
  * Clustering Large Applications based upon RANdomized Search. CLARANS is an
@@ -53,6 +54,10 @@ import smile.math.MathEx;
 public class CLARANS<T> extends CentroidClustering<T, T> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CLARANS.class);
+    /**
+     * The lambda of distance measure.
+     */
+    private final Distance<T> distance;
 
     /**
      * Constructor.
@@ -62,8 +67,14 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param y          the cluster labels.
      * @param distance   the lambda of distance measure.
      */
-    public CLARANS(double distortion, T[] medoids, int[] y, ToDoubleBiFunction<T, T> distance) {
-        super(distortion, medoids, y, distance);
+    public CLARANS(double distortion, T[] medoids, int[] y, Distance<T> distance) {
+        super(distortion, medoids, y);
+        this.distance = distance;
+    }
+
+    @Override
+    public double distance(T x, T y) {
+        return distance.d(x, y);
     }
 
     /**
@@ -75,7 +86,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param k        the number of clusters.
      * @param distance the lambda of distance measure.
      */
-    public static <T> CLARANS<T> fit(T[] data, int k, ToDoubleBiFunction<T, T> distance) {
+    public static <T> CLARANS<T> fit(T[] data, int k, Distance<T> distance) {
         return fit(data, k, (int) Math.round(0.0125 * k * (data.length - k)), distance);
     }
 
@@ -88,7 +99,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      *                    the random search of local minima.
      * @param distance    the lambda of distance measure.
      */
-    public static <T> CLARANS<T> fit(T[] data, int k, int maxNeighbor, ToDoubleBiFunction<T, T> distance) {
+    public static <T> CLARANS<T> fit(T[] data, int k, int maxNeighbor, Distance<T> distance) {
         if (maxNeighbor <= 0) {
             throw new IllegalArgumentException("Invalid maxNeighbors: " + maxNeighbor);
         }

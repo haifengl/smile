@@ -81,9 +81,9 @@ public class DateFeatureTest {
         for (int i = 0; i < output.ncols(); i++) {
             assertEquals(DataTypes.IntegerType, schema.field(i).type);
             if (i == 1 || i == 3) {
-                assertTrue(schema.field(i).measure.get() instanceof NominalScale);
+                assertTrue(schema.field(i).measure instanceof NominalScale);
             } else {
-                assertEquals(Optional.empty(), schema.field(i).measure);
+                assertEquals(null, schema.field(i).measure);
             }
         }
 

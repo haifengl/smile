@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-
 /**
  * The hyperbolic tangent kernel.
  * k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;), where &gamma; is the scale

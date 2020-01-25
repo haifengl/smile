@@ -57,8 +57,8 @@ public class DecisionTreeTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testWeather() {
+    @Test(expected = Test.None.class)
+    public void testWeather() throws Exception {
         System.out.println("Weather");
 
         DecisionTree model = DecisionTree.fit(WeatherNominal.formula, WeatherNominal.data);
@@ -73,6 +73,9 @@ public class DecisionTreeTest {
         int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
         assertEquals(5, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

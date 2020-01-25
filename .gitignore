@@ -3,6 +3,9 @@
 # Intellij
 .idea
 
+# jupyter
+.ipynb_checkpoints
+
 # javadoc
 docs
 web/node_modules/

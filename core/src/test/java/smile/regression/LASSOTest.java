@@ -87,8 +87,8 @@ public class LASSOTest {
         }
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         LinearModel model = LASSO.fit(Longley.formula, Longley.data, 0.1);
@@ -98,6 +98,9 @@ public class LASSOTest {
         double rmse = RMSE.of(Longley.y, prediction);
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.4146564289679233, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

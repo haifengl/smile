@@ -31,9 +31,9 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.PlotCanvas;
-import smile.plot.BarPlot;
-import smile.plot.Histogram;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.BarPlot;
+import smile.plot.swing.Histogram;
 import smile.stat.distribution.HyperGeometricDistribution;
 
 /**

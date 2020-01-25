@@ -19,12 +19,8 @@ package smile.data.formula;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
 /**
@@ -80,7 +76,7 @@ class OneHot implements HyperTerm {
     public void bind(StructType schema) {
         if (variables == null || variables.length == 0) {
             variables = Arrays.stream(schema.fields())
-                    .filter(field -> field.measure.isPresent() && field.measure.get() instanceof NominalScale)
+                    .filter(field -> field.measure instanceof NominalScale)
                     .map(field -> field.name)
                     .toArray(String[]::new);
         }
@@ -89,12 +85,12 @@ class OneHot implements HyperTerm {
         for (String name : variables) {
             int column = schema.fieldIndex(name);
 
-            Optional<Measure> measure = schema.field(column).measure;
-            if (!measure.isPresent() || !(measure.get() instanceof NominalScale)) {
+            Measure measure = schema.field(column).measure;
+            if (measure instanceof NominalScale == false) {
                 throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
             }
 
-            NominalScale scale = (NominalScale) measure.get();
+            NominalScale scale = (NominalScale) measure;
             for (int value : scale.values()) {
                 terms.add(new OneHotEncoder(name, column, value, scale.level(value)));
             }

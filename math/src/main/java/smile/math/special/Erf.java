@@ -17,10 +17,7 @@
 
 package smile.math.special;
 
-import static java.lang.Math.abs;
-import static java.lang.Math.exp;
-import static java.lang.Math.log;
-import static java.lang.Math.sqrt;
+import static java.lang.Math.*;
 
 /**
  * The error function (also called the Gauss error function) is a special

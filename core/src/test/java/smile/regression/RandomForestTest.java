@@ -90,8 +90,8 @@ public class RandomForestTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
@@ -121,6 +121,9 @@ public class RandomForestTest {
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(2.710121445970332, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     public void test(String name, Formula formula, DataFrame data, double expected) {

@@ -19,6 +19,7 @@ package smile.io;
 
 import java.io.InputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -52,17 +53,26 @@ public interface SAS {
      * @param path a SAS7BDAT file path.
      */
     static DataFrame read(Path path) throws IOException {
-        return read(path, Integer.MAX_VALUE);
+        return read(Files.newInputStream(path), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a SAS7BDAT file.
+     *
+     * @param path a SAS7BDAT file path or URI.
+     */
+    static DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(Input.stream(path), Integer.MAX_VALUE);
     }
 
     /**
      * Reads a limited number of records from a SAS7BDAT file.
      *
-     * @param path a SAS7BDAT file path.
+     * @param input a SAS7BDAT file input stream.
      * @param limit reads a limited number of records.
      */
-    static DataFrame read(Path path, int limit) throws IOException {
-        try (InputStream input = Files.newInputStream(path)) {
+    static DataFrame read(InputStream input, int limit) throws IOException {
+        try {
             SasFileReader reader = new SasFileReaderImpl(input);
             SasFileProperties properties = reader.getSasFileProperties();
             List<Column> columns = reader.getColumns();
@@ -93,6 +103,8 @@ public interface SAS {
             }
 
             return DataFrame.of(vectors);
+        } finally {
+            input.close();
         }
     }
 }

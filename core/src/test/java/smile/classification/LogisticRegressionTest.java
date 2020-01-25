@@ -127,8 +127,8 @@ public class LogisticRegressionTest {
         assertEquals(39, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         LogisticRegression model = LogisticRegression.fit(USPS.x, USPS.y, 0.3, 1E-3, 1000);
@@ -154,5 +154,8 @@ public class LogisticRegressionTest {
         error = Error.of(USPS.testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

@@ -19,12 +19,11 @@ package smile.demo.wavelet;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.LinePlot;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.PlotCanvas;
 import smile.wavelet.CoifletWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;

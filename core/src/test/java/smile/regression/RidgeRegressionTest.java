@@ -56,8 +56,8 @@ public class RidgeRegressionTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
         LinearModel model = RidgeRegression.fit(Longley.formula, Longley.data, 0.1);
         System.out.println(model);
@@ -75,6 +75,9 @@ public class RidgeRegressionTest {
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(1.7288188, rmse, 1E-7);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

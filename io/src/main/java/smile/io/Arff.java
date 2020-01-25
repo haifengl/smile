@@ -18,6 +18,8 @@
 package smile.io;
 
 import java.io.*;
+import java.net.URISyntaxException;
+import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.text.ParseException;
@@ -28,7 +30,6 @@ import java.util.stream.IntStream;
 
 import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 
@@ -100,8 +101,36 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      */
+    public Arff(String path) throws IOException, ParseException, URISyntaxException {
+        this(Input.reader(path));
+    }
+
+    /**
+     * Constructor.
+     */
+    public Arff(String path, Charset charset) throws IOException, ParseException, URISyntaxException {
+        this(Input.reader(path, charset));
+    }
+
+    /**
+     * Constructor.
+     */
     public Arff(Path path) throws IOException, ParseException {
-        reader = Files.newBufferedReader(path);
+        this(Files.newBufferedReader(path));
+    }
+
+    /**
+     * Constructor.
+     */
+    public Arff(Path path, Charset charset) throws IOException, ParseException {
+        this(Files.newBufferedReader(path, charset));
+    }
+
+    /**
+     * Constructor.
+     */
+    public Arff(Reader reader) throws IOException, ParseException {
+        this.reader = reader;
 
         tokenizer = new StreamTokenizer(reader);
         tokenizer.resetSyntax();
@@ -313,7 +342,7 @@ public class Arff implements AutoCloseable {
             }
 
             NominalScale scale = new NominalScale(attributeValues);
-            attribute = new StructField(name, scale.type(), Optional.of(scale));
+            attribute = new StructField(name, scale.type(), scale);
         }
 
         getLastToken(false);
@@ -485,9 +514,8 @@ public class Arff implements AutoCloseable {
         else if (field.type.isString()) writer.println(" STRING");
         else if (field.type.id() == DataType.ID.DateTime) writer.println(" DATE \"yyyy-MM-dd HH:mm:ss\"");
         else if (field.type.isIntegral()) {
-            Optional<Measure> measure = field.measure;
-            if (measure.isPresent() && measure.get() instanceof NominalScale) {
-                NominalScale scale = (NominalScale) measure.get();
+            if (field.measure instanceof NominalScale) {
+                NominalScale scale = (NominalScale) field.measure;
                 String levels = Arrays.stream(scale.levels()).collect(Collectors.joining(",", " {", "}"));
                 writer.println(levels);
             } else {

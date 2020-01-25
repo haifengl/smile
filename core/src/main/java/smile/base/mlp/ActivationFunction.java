@@ -19,12 +19,14 @@ package smile.base.mlp;
 
 import smile.math.MathEx;
 
+import java.io.Serializable;
+
 /**
  * The activation function in hidden layers.
  *
  * @author Haifeng Li
  */
-public interface ActivationFunction {
+public interface ActivationFunction extends Serializable {
 
     /** Returns the name of activation function. */
     String name();

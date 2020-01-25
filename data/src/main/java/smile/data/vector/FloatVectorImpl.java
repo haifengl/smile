@@ -34,21 +34,21 @@ class FloatVectorImpl implements FloatVector {
     /** The name of vector. */
     private String name;
     /** Optional measure. */
-    private Optional<Measure> measure;
+    private Measure measure;
     /** The vector data. */
     private float[] vector;
 
     /** Constructor. */
     public FloatVectorImpl(String name, float[] vector) {
         this.name = name;
-        this.measure = Optional.empty();
+        this.measure = null;
         this.vector = vector;
     }
 
     /** Constructor. */
     public FloatVectorImpl(StructField field, float[] vector) {
-        if (field.measure.isPresent() && field.measure.get() instanceof DiscreteMeasure) {
-            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure.get(), type()));
+        if (field.measure instanceof DiscreteMeasure) {
+            throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
         this.name = field.name;
@@ -63,7 +63,7 @@ class FloatVectorImpl implements FloatVector {
 
     @Override
     public Optional<Measure> measure() {
-        return measure;
+        return Optional.ofNullable(measure);
     }
 
     @Override

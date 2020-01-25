@@ -119,7 +119,10 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).map(i -> measure().map(m -> m.toString(i)).orElseGet(() -> i.toString())).collect(Collectors.joining(", ", "[", suffix));
+        Measure m = measure().orElse(null);
+        Stream<T> stream = stream().limit(n);
+        Stream<String> s = m != null ? stream.map(i -> m.toString(i)) : stream.map(Objects::toString);
+        return s.collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**

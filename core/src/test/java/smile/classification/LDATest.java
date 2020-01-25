@@ -88,8 +88,8 @@ public class LDATest {
         assertEquals(42, error);
     }
 
-    @Test
-    public void testUSPS() {
+    @Test(expected = Test.None.class)
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
 
         LDA model = LDA.fit(USPS.x, USPS.y);
@@ -99,5 +99,8 @@ public class LDATest {
 
         System.out.println("Error = " + error);
         assertEquals(256, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

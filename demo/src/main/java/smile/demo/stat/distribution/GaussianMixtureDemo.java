@@ -24,9 +24,9 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.math.MathEx;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.QQPlot;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.ExponentialFamilyMixture;
 import smile.stat.distribution.GaussianDistribution;
 import smile.stat.distribution.GaussianMixture;

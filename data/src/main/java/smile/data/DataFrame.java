@@ -66,7 +66,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     default Measure[] measures() {
         StructField[] fields = schema().fields();
         return Arrays.stream(fields)
-                .map(field -> field.measure.orElse(null))
+                .map(field -> field.measure)
                 .toArray(Measure[]::new);
     }
 
@@ -336,7 +336,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the string representation of the field value.
      */
     default String toString(int i, String field) {
-        return toString(columnIndex(field));
+        return toString(i, columnIndex(field));
     }
 
     /**
@@ -418,7 +418,8 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      */
     default String getScale(int i, int j) {
         int x = getInt(i, j);
-        return schema().field(j).measure.map(m -> ((DiscreteMeasure) m).toString(x)).orElseGet(() -> String.valueOf(x));
+        Measure measure = schema().field(j).measure;
+        return (measure instanceof DiscreteMeasure) ? ((DiscreteMeasure) measure).toString(x) : String.valueOf(x);
     }
 
     /**
@@ -805,7 +806,9 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @param truncate Whether truncate long strings and align cells right.
      */
     default String toString(final int numRows, final boolean truncate) {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb = new StringBuilder(schema().toString());
+        sb.append('\n');
+
         boolean hasMoreData = size() > numRows;
         String[] names = names();
         int numCols = names.length;
@@ -889,6 +892,49 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         }
 
         return sb.toString();
+    }
+
+    /**
+     * Returns the string representation of top rows.
+     * @param numRows Number of rows to show
+     */
+    default String[][] toStrings(int numRows) {
+        return toStrings(numRows, true);
+    }
+
+    /**
+     * Returns the string representation of top rows.
+     * @param numRows Number of rows to show
+     * @param truncate Whether truncate long strings.
+     */
+    default String[][] toStrings(final int numRows, final boolean truncate) {
+        String[] names = names();
+        int numCols = names.length;
+        int maxColWidth = 20;
+        switch (numCols) {
+            case 1: maxColWidth = 78; break;
+            case 2: maxColWidth = 38; break;
+            default: maxColWidth = 20;
+        }
+        // To be used in lambda.
+        final int maxColumnWidth = maxColWidth;
+
+        // Initialize the width of each column to a minimum value of '3'
+        int[] colWidths = new int[numCols];
+        for (int i = 0; i < numCols; i++) {
+            colWidths[i] = Math.max(names[i].length(), 3);
+        }
+
+        // For array values, replace Seq and Array with square brackets
+        // For cells that are beyond maxColumnWidth characters, truncate it with "..."
+        return stream().limit(numRows).map( row -> {
+            String[] cells = new String[numCols];
+            for (int i = 0; i < numCols; i++) {
+                String str = row.toString(i);
+                cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
+            }
+            return cells;
+        }).toArray(String[][]::new);
     }
 
     /**

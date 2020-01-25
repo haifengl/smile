@@ -47,15 +47,15 @@ public class ClassLabels implements Serializable {
     /** The estimated priori probabilities. */
     public final double[] priori;
     /** The optional meta data of response variable. */
-    public final Optional<StructField> field;
+    public final StructField field;
 
     /** Constructor. */
     public ClassLabels(int k, int[] y, IntSet labels) {
-        this(k, y, labels, Optional.empty());
+        this(k, y, labels, null);
     }
 
     /** Constructor. */
-    public ClassLabels(int k, int[] y, IntSet labels, Optional<StructField> field) {
+    public ClassLabels(int k, int[] y, IntSet labels, StructField field) {
         this.k = k;
         this.y = y;
         this.labels = labels;
@@ -91,13 +91,13 @@ public class ClassLabels implements Serializable {
      * Learns the class label mapping from samples.
      */
     public static ClassLabels fit(int[] y) {
-        return fit(y, Optional.empty());
+        return fit(y, null);
     }
 
     /**
      * Learns the class label mapping from samples.
      */
-    public static ClassLabels fit(int[] y, Optional<StructField> field) {
+    public static ClassLabels fit(int[] y, StructField field) {
         int[] labels = MathEx.unique(y);
         Arrays.sort(labels);
         int k = labels.length;
@@ -128,10 +128,10 @@ public class ClassLabels implements Serializable {
             int k = scale.size();
             int[] labels = IntStream.range(0, k).toArray();
             IntSet encoder = new IntSet(labels);
-            return new ClassLabels(k, y, encoder, Optional.of(field));
+            return new ClassLabels(k, y, encoder, field);
         }
 
-        return fit(y, Optional.of(field));
+        return fit(y, field);
     }
 
     /**

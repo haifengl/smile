@@ -17,7 +17,9 @@
 
 package smile.io;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -100,14 +102,50 @@ public class JSON {
     }
 
     /**
-     * Reads a limited number of records from a JSON file.
+     * Reads a JSON file.
      * @param path a JSON file path.
      * @param limit reads a limited number of records.
      */
     public DataFrame read(Path path, int limit) throws IOException {
         if (schema == null) {
             // infer the schema from top 1000 objects.
-            schema = inferSchema(path, Math.min(1000, limit));
+            schema = inferSchema(Files.newBufferedReader(path, charset), Math.min(1000, limit));
+        }
+
+        return read(Files.newBufferedReader(path, charset), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a JSON file.
+     * @param path a JSON file path or URI.
+     */
+    public DataFrame read(String path) throws IOException, URISyntaxException {
+        return read(path, Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a JSON file.
+     * @param path a JSON file path or URI.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        if (schema == null) {
+            // infer the schema from top 1000 objects.
+            schema = inferSchema(Input.reader(path, charset), Math.min(1000, limit));
+        }
+
+        return read(Input.reader(path, charset), Integer.MAX_VALUE);
+    }
+
+    /**
+     * Reads a limited number of records from a JSON file.
+     * @param reader a JSON file reader.
+     * @param limit reads a limited number of records.
+     */
+    public DataFrame read(BufferedReader reader, int limit) throws IOException {
+        if (schema == null) {
+            // infer the schema from top 1000 rows.
+            throw new IllegalStateException("The schema is not set or inferred.");
         }
 
         List<Function<String, Object>> parser = schema.parser();
@@ -115,20 +153,22 @@ public class JSON {
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(Files.newBufferedReader(path), new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
             for (Map<String, String> map : maps) {
                 rows.add(toTuple(map, parser));
                 if (rows.size() >= limit) break;
             }
         } else {
-            Files.lines(path, charset).limit(limit).forEach(line -> {
+            String line = reader.readLine();
+            while (rows.size() < limit && line != null) {
                 try {
                     Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
                     rows.add(toTuple(map, parser));
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
-            });
+                line = reader.readLine();
+            }
         }
 
         schema = schema.boxed(rows);
@@ -154,25 +194,27 @@ public class JSON {
      *  - Merge row types to find common type
      *  - String type by default.
      */
-    public StructType inferSchema(Path path, int limit) throws IOException {
+    public StructType inferSchema(BufferedReader reader, int limit) throws IOException {
         List<Map<String, String>> rows = new ArrayList<>();
         ObjectMapper objectMapper = new ObjectMapper();
 
         if (mode == Mode.MULTI_LINE) {
-            List<Map<String, String>> maps = objectMapper.readValue(Files.newBufferedReader(path), new TypeReference<List<Map<String, String>>>(){});
+            List<Map<String, String>> maps = objectMapper.readValue(reader, new TypeReference<List<Map<String, String>>>(){});
             for (Map<String, String> map : maps) {
                 rows.add(map);
                 if (rows.size() >= limit) break;
             }
         } else {
-            Files.lines(path, charset).limit(limit).forEach(line -> {
+            String line = reader.readLine();
+            while (rows.size() < limit && line != null) {
                 try {
                     Map<String, String> map = objectMapper.readValue(line, new TypeReference<Map<String, String>>() {});
                     rows.add(map);
                 } catch (Exception ex) {
                     throw new RuntimeException(ex);
                 }
-            });
+                line = reader.readLine();
+            }
         }
 
         if (rows.isEmpty()) {

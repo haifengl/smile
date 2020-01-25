@@ -57,6 +57,7 @@ public class ElasticNetTest {
     @After
     public void tearDown() {
     }
+
     @Test
     public void testToy() {
         double[][] A = {
@@ -85,8 +86,8 @@ public class ElasticNetTest {
         }
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         LinearModel model = ElasticNet.fit(Longley.formula, Longley.data, 0.1, 0.1);
@@ -97,6 +98,9 @@ public class ElasticNetTest {
 
         System.out.println("LOOCV RMSE = " + rmse);
         assertEquals(4.2299495472273, rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test
