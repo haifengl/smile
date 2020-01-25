@@ -232,7 +232,7 @@ public interface Read {
      *
      * @param path the input file path.
      */
-    static DataFrame parquet(String path) throws IOException {
+    static DataFrame parquet(String path) throws IOException, URISyntaxException {
         return Parquet.read(path);
     }
 

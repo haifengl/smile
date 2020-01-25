@@ -20,12 +20,18 @@ package smile.io;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.*;
 import java.util.List;
 import java.util.ArrayList;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.parquet.column.ColumnDescriptor;
 import org.apache.parquet.column.page.PageReadStore;
 import org.apache.parquet.example.data.Group;
@@ -82,7 +88,7 @@ public class Parquet {
      * Reads a HDFS parquet file.
      * @param path an Apache Parquet file path.
      */
-    public static DataFrame read(String path) throws IOException {
+    public static DataFrame read(String path) throws IOException, URISyntaxException {
         return read(path, Integer.MAX_VALUE);
     }
 
@@ -91,8 +97,8 @@ public class Parquet {
      * @param path an Apache Parquet file path.
      * @param limit reads a limited number of records.
      */
-    public static DataFrame read(String path, int limit) throws IOException {
-        return read(HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration()), limit);
+    public static DataFrame read(String path, int limit) throws IOException, URISyntaxException {
+        return read(input(path), limit);
     }
 
     /**
@@ -131,6 +137,28 @@ public class Parquet {
             }
 
             return DataFrame.of(rows);
+        }
+    }
+
+    /** Returns the Parquet's InputFile instance of a file path or URI. */
+    private static InputFile input(String path) throws IOException, URISyntaxException {
+        URI uri = new URI(path);
+        if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));
+
+        switch (uri.getScheme().toLowerCase()) {
+            case "file":
+                return new LocalInputFile(Paths.get(path));
+
+            case "s3":
+            case "s3a":
+            case "s3n":
+            case "hdfs":
+                Configuration conf = new Configuration();
+                FileSystem fs = FileSystem.get(conf);
+                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration());
+
+            default: // http, ftp, ...
+                throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);
         }
     }
 
