@@ -283,7 +283,7 @@ package object vega {
       "mark" -> mark,
       "encoding" -> JsObject(
         "x" -> x,
-        "y" -> y,
+        "y" -> y
       )
     )
 

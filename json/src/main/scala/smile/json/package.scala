@@ -22,7 +22,6 @@ import java.time.{LocalDate, LocalTime, LocalDateTime}
 import java.sql.Timestamp
 import java.util.{Date, UUID}
 import scala.language.implicitConversions
-import scala.collection.immutable.ArraySeq
 
 /**
  * @author Haifeng Li
@@ -59,7 +58,7 @@ package object json {
   implicit def objectId2JsValue(x: ObjectId) = JsObjectId(x)
   implicit def byteArray2JsValue(x: Array[Byte]) = JsBinary(x)
 
-  implicit def array2JsValue[T <: JsValue](x: Array[T]): JsArray = seq2JsValue(ArraySeq.unsafeWrapArray(x))
+  implicit def array2JsValue[T <: JsValue](x: Array[T]): JsArray = seq2JsValue(x)
   implicit def seq2JsValue[T <: JsValue](x: Seq[T]): JsArray = JsArray(x: _*)
   implicit def map2JsValue[T <: JsValue](x: Seq[(String, T)]): JsObject = JsObject(x: _*)
   implicit def map2JsValue(x: collection.mutable.Map[String, JsValue]): JsObject = JsObject(x)
@@ -77,17 +76,17 @@ package object json {
   implicit def pimpDateArray(x: Seq[Date]) = new PimpedDateSeq(x)
   implicit def pimpTimestampArray(x: Seq[Timestamp]) = new PimpedTimestampSeq(x)
 
-  implicit def pimpBooleanArray(x: Array[Boolean]) = new PimpedBooleanSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpIntArray(x: Array[Int]) = new PimpedIntSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpLongArray(x: Array[Long]) = new PimpedLongSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpDoubleArray(x: Array[Double]) = new PimpedDoubleSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpBigDecimalArray(x: Array[BigDecimal]) = new PimpedBigDecimalSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpStringArray(x: Array[String]) = new PimpedStringSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpLocalDateArray(x: Array[LocalDate]) = new PimpedLocalDateSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpLocalTimeArray(x: Array[LocalTime]) = new PimpedLocalTimeSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpLocalDateTimeArray(x: Array[LocalDateTime]) = new PimpedLocalDateTimeSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpDateArray(x: Array[Date]) = new PimpedDateSeq(ArraySeq.unsafeWrapArray(x))
-  implicit def pimpTimestampArray(x: Array[Timestamp]) = new PimpedTimestampSeq(ArraySeq.unsafeWrapArray(x))
+  implicit def pimpBooleanArray(x: Array[Boolean]) = new PimpedBooleanSeq(x)
+  implicit def pimpIntArray(x: Array[Int]) = new PimpedIntSeq(x)
+  implicit def pimpLongArray(x: Array[Long]) = new PimpedLongSeq(x)
+  implicit def pimpDoubleArray(x: Array[Double]) = new PimpedDoubleSeq(x)
+  implicit def pimpBigDecimalArray(x: Array[BigDecimal]) = new PimpedBigDecimalSeq(x)
+  implicit def pimpStringArray(x: Array[String]) = new PimpedStringSeq(x)
+  implicit def pimpLocalDateArray(x: Array[LocalDate]) = new PimpedLocalDateSeq(x)
+  implicit def pimpLocalTimeArray(x: Array[LocalTime]) = new PimpedLocalTimeSeq(x)
+  implicit def pimpLocalDateTimeArray(x: Array[LocalDateTime]) = new PimpedLocalDateTimeSeq(x)
+  implicit def pimpDateArray(x: Array[Date]) = new PimpedDateSeq(x)
+  implicit def pimpTimestampArray(x: Array[Timestamp]) = new PimpedTimestampSeq(x)
 
   implicit def pimpBooleanMap(x: Map[String, Boolean]) = new PimpedBooleanMap(x)
   implicit def pimpIntMap(x: Map[String, Int]) = new PimpedIntMap(x)

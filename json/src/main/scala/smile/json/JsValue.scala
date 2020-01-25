@@ -609,14 +609,17 @@ object JsObject {
   def apply(map: Map[String, JsValue]) = new JsObject(collection.mutable.Map() ++ map)
 }
 
-case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends JsValue with Iterable[JsValue] {
-  override def iterator: Iterator[JsValue] = elements.iterator
+case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends JsValue with Traversable[JsValue] {
+  override def copyToArray[B >: JsValue](xs: Array[B], start: Int, len: Int): Unit = elements.copyToArray(xs, start, len)
   override def find(p: (JsValue) => Boolean): Option[JsValue] = elements.find(p)
   override def exists(p: (JsValue) => Boolean): Boolean = elements.exists(p)
   override def forall(p: (JsValue) => Boolean): Boolean = elements.forall(p)
   override def foreach[U](p: (JsValue) => U): Unit = elements.foreach(p)
-  override def knownSize: Int = elements.knownSize
+  override def hasDefiniteSize: Boolean = elements.hasDefiniteSize
   override def isEmpty: Boolean = elements.isEmpty
+  override def seq: Traversable[JsValue] = elements.seq
+  override def toIterator: Iterator[JsValue] = elements.toIterator
+  override def toStream: Stream[JsValue] = elements.toStream
 
   // Traversable.toString overloads JsValue.toString.
   // Get it back.
@@ -677,7 +680,7 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
    *  @param xs    the iterable object.
    *  @return      the updated buffer.
    */
-  def ++=(xs: IterableOnce[JsValue]): JsValue = {
+  def ++=(xs: TraversableOnce[JsValue]): JsValue = {
     elements ++= xs
     this
   }
@@ -700,7 +703,7 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
    *  @param xs    the iterable object.
    *  @return      the updated array.
    */
-  def ++=:(xs: IterableOnce[JsValue]): JsValue = {
+  def ++=:(xs: TraversableOnce[JsValue]): JsValue = {
     xs ++=: elements
     this
   }
