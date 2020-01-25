@@ -46,6 +46,10 @@ SCALA_VERSION=2.11.12 ALMOND_VERSION=0.6.0
   --metabrowse
 rm -f almond-scala-2.11
 
+# Clean up the directory. Keep only the notebooks and data.
+mv shell/src/universal/data notebook/
+rm -v !("notebook")
+
 # Install required Jupyter/JupyterLab extensions
 jupyter labextension install @jupyterlab/plotly-extension
 

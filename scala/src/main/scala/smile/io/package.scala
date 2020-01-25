@@ -84,14 +84,14 @@ object write {
   /** Writes a data frame to an ARFF file. */
   def arff(data: DataFrame, file: Path, relation: String): Unit = Write.arff(data, file, relation)
 
-  /** Writes an AttributeDataset to a delimited text file.
+  /** Writes a DataFrame to a delimited text file.
     *
     * @param data an attribute dataset.
     * @param file the file path
     */
   def csv(data: DataFrame, file: String, delimiter: Char = ','): Unit = csv(data, Paths.get(file), delimiter)
 
-  /** Writes an AttributeDataset to a delimited text file.
+  /** Writes a DataFrame to a delimited text file.
     *
     * @param data an attribute dataset.
     * @param file the file path

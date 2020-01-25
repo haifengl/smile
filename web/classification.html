@@ -14,16 +14,12 @@ permalink: "{{ page.filePathStem }}.html"
         that has a method <code>predict</code> to predict the class label of an instance.
         An overloaded version in <a href="api/java/smile/classification/SoftClassifier.html"><code>SoftClassifier</code></a>
         can also calculate the <i>a posteriori</i>
-        probabilities besides the class label.
-        For all algorithms, the model can be trained through
-        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
-        class that can hold model hyper-parameters and be applied to multiple training
-        datasets.</p>
+        probabilities besides the class label.</p>
 
     <p>Some algorithms with online learning capability also implement the interface
         <a href="api/java/smile/classification/OnlineClassifier.html"><code>OnlineClassifier</code></a>.
         Online learning is a model of induction that learns one instance at a time.
-        The method <code>learn</code> updates the model with a new instance.</p>
+        The method <code>update</code> updates the model with a new instance.</p>
 
     <p>The high-level operators are defined in Scala package object of
         <a href="api/scala/index.html#smile.classification.package"><code>smile.classification</code></a>.
