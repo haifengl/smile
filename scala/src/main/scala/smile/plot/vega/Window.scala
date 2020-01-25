@@ -35,7 +35,9 @@ case class Window(stage: Stage) {
     Window.onUIThread { stage.close }
   }
 
-  Platform.runLater { () => stage.showAndWait }
+  Platform.runLater(new Runnable() {
+    override def run(): Unit = stage.showAndWait
+  })
 }
 
 object Window extends LazyLogging {
@@ -49,9 +51,11 @@ object Window extends LazyLogging {
   Platform.setImplicitExit(false)
 
   // log error
-  WebConsoleListener.setDefaultListener((webView: javafx.scene.web.WebView, message: String, lineNumber: Int, sourceId: String) => {
+  WebConsoleListener.setDefaultListener(new WebConsoleListener {
+    override def messageAdded(webView: WebView, message: String, lineNumber: Int, sourceId: String): Unit = {
       if (message.contains("Error")) logger.error(s"${sourceId} (line ${lineNumber}): ${message}")
       else logger.info(s"${sourceId} (line ${lineNumber}): ${message}")
+    }
   })
 
   /** Creates a plot window/stage. */

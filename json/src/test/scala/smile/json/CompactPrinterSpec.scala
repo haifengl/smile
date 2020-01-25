@@ -66,7 +66,7 @@ class CompactPrinterSpec extends Specification {
     }
     "properly print a simple JsObject" in (
       CompactPrinter(JsObject("key" -> JsInt(42), "key2" -> JsString("value")))
-        mustEqual """{"key2":"value","key":42}"""
+        mustEqual """{"key":42,"key2":"value"}"""
       )
     "properly print a simple JsArray" in (
       CompactPrinter(JsArray(JsNull, JsDouble(1.23), JsObject("key" -> JsBoolean(true))))

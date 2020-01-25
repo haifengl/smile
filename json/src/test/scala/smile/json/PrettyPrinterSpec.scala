@@ -43,22 +43,22 @@ class PrettyPrinterSpec extends Specification {
       
       PrettyPrinter(json) mustEqual {
         """{
+          |  "simpleKey": "some value",
+          |  "Boolean yes": true,
+          |  "key with \"quotes\"": "string",
           |  "sub object": {
+          |    "sub key": 26.5,
           |    "a": "b",
           |    "array": [1, 2, {
           |      "no": 0,
           |      "yes": 1
-          |    }, ["a", "b", null], false],
-          |    "sub key": 26.5
+          |    }, ["a", "b", null], false]
           |  },
-          |  "zero": 0,
-          |  "number": -1.2323424E-5,
-          |  "key with \"quotes\"": "string",
-          |  "key with spaces": null,
           |  "Boolean no": false,
-          |  "Unicøde": "Long string with newline\nescape",
-          |  "Boolean yes": true,
-          |  "simpleKey": "some value"
+          |  "key with spaces": null,
+          |  "number": -1.2323424E-5,
+          |  "Unic\u00f8de": "Long string with newline\nescape",
+          |  "zero": 0
           |}""".stripMargin
       }
     }
