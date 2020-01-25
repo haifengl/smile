@@ -895,6 +895,49 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
+     * Returns the string representation of top rows.
+     * @param numRows Number of rows to show
+     */
+    default String[][] toStrings(int numRows) {
+        return toStrings(numRows, true);
+    }
+
+    /**
+     * Returns the string representation of top rows.
+     * @param numRows Number of rows to show
+     * @param truncate Whether truncate long strings.
+     */
+    default String[][] toStrings(final int numRows, final boolean truncate) {
+        String[] names = names();
+        int numCols = names.length;
+        int maxColWidth = 20;
+        switch (numCols) {
+            case 1: maxColWidth = 78; break;
+            case 2: maxColWidth = 38; break;
+            default: maxColWidth = 20;
+        }
+        // To be used in lambda.
+        final int maxColumnWidth = maxColWidth;
+
+        // Initialize the width of each column to a minimum value of '3'
+        int[] colWidths = new int[numCols];
+        for (int i = 0; i < numCols; i++) {
+            colWidths[i] = Math.max(names[i].length(), 3);
+        }
+
+        // For array values, replace Seq and Array with square brackets
+        // For cells that are beyond maxColumnWidth characters, truncate it with "..."
+        return stream().limit(numRows).map( row -> {
+            String[] cells = new String[numCols];
+            for (int i = 0; i < numCols; i++) {
+                String str = row.toString(i);
+                cells[i] = (truncate && str.length() > maxColumnWidth) ? str.substring(0, maxColumnWidth - 3) + "..." : str;
+            }
+            return cells;
+        }).toArray(String[][]::new);
+    }
+
+    /**
      * Creates a DataFrame from a set of vectors.
      * @param vectors The column vectors.
      */
