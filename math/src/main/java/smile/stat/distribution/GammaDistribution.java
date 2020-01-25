@@ -17,8 +17,8 @@
 
 package smile.stat.distribution;
 
-import smile.math.special.Gamma;
 import smile.math.MathEx;
+import smile.math.special.Gamma;
 
 /**
  * The Gamma distribution is a continuous probability distributions with

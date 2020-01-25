@@ -22,8 +22,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.io.CSV;
-import smile.io.DatasetReader;
+import smile.io.Read;
 import smile.util.Paths;
 
 import java.util.ArrayList;
@@ -47,7 +46,7 @@ public class PenDigits {
         StructType schema = DataTypes.struct(fields);
 
         try {
-            data = DatasetReader.csv(Paths.getTestData("classification/pendigits.txt"), CSVFormat.DEFAULT.withDelimiter('\t'), schema);
+            data = Read.csv(Paths.getTestData("classification/pendigits.txt"), CSVFormat.DEFAULT.withDelimiter('\t'), schema);
             x = formula.x(data).toArray();
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {

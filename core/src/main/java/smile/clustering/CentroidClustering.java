@@ -59,29 +59,26 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
      * The centroids of each cluster.
      */
     public final T[] centroids;
-    /**
-     * The lambda of distance measure.
-     */
-    public final ToDoubleBiFunction<T, U> distance;
 
     /**
      * Constructor.
      * @param distortion the total distortion.
      * @param centroids the centroids of each cluster.
      * @param y the cluster labels.
-     * @param distance the lambda of distance measure.
      */
-    public CentroidClustering(double distortion, T[] centroids, int[] y, ToDoubleBiFunction<T, U> distance) {
+    public CentroidClustering(double distortion, T[] centroids, int[] y) {
         super(centroids.length, y);
         this.distortion = distortion;
         this.centroids = centroids;
-        this.distance = distance;
     }
 
     @Override
     public int compareTo(CentroidClustering<T, U> o) {
         return Double.compare(distortion, o.distortion);
     }
+
+    /** The distance function. */
+    public abstract double distance(T x, U y);
 
     /**
      * Classifies a new observation.
@@ -93,7 +90,7 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
         int label = 0;
 
         for (int i = 0; i < k; i++) {
-            double dist = distance.applyAsDouble(centroids[i], x);
+            double dist = distance(centroids[i], x);
             if (dist < nearest) {
                 nearest = dist;
                 label = i;

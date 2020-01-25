@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import java.lang.Math;
-
 /**
  * The Thin Plate Spline Kernel. k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;),
  * where &sigma; &gt; 0 is the scale parameter of the kernel.

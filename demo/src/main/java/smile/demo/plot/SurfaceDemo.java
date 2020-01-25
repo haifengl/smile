@@ -18,13 +18,11 @@
 package smile.demo.plot;
 
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.plot.Surface;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Surface;
 
 /**
  *

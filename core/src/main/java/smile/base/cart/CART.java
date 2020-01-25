@@ -18,22 +18,24 @@
 package smile.base.cart;
 
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.sort.QuickSort;
 
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.IntStream;
 import java.util.AbstractMap.SimpleEntry;
 
 /** Classification and regression tree. */
-public abstract class CART {
+public abstract class CART implements Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
 
     /** The schema of data. */
@@ -43,7 +45,7 @@ public abstract class CART {
     protected StructField response;
 
     /** Design matrix formula */
-    protected Optional<Formula> formula = Optional.empty();
+    protected Formula formula = null;
 
     /** The root of decision tree. */
     protected Node root;
@@ -105,8 +107,13 @@ public abstract class CART {
      */
     private transient int[] buffer;
 
+    /** Private constructor for deserialization. */
+    private CART() {
+
+    }
+
     /** Constructor. */
-    public CART(Optional<Formula> formula, StructType schema, StructField response, Node root, double[] importance) {
+    public CART(Formula formula, StructType schema, StructField response, Node root, double[] importance) {
         this.formula = formula;
         this.schema = schema;
         this.response = response;
@@ -206,14 +213,22 @@ public abstract class CART {
         int[][] order = new int[p][];
 
         for (int j = 0; j < p; j++) {
-            Optional<Measure> measure = schema.field(j).measure;
-            if (!measure.isPresent() || !(measure.get() instanceof NominalScale)) {
+            Measure measure = schema.field(j).measure;
+            if (measure == null || !(measure instanceof NominalScale)) {
                 x.column(j).toDoubleArray(a);
                 order[j] = QuickSort.sort(a);
             }
         }
 
         return order;
+    }
+
+    /**
+     * Returns the predictors by the model formula if it is not null.
+     * Otherwise return the input tuple.
+     */
+    protected Tuple predictors(Tuple x) {
+        return formula == null ? x : formula.x(x);
     }
 
     /** Clear the workspace of building tree. */

@@ -29,8 +29,8 @@ import smile.math.MathEx;
 import smile.vq.hebb.Edge;
 import smile.vq.hebb.Neuron;
 import smile.vq.NeuralMap;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.ScatterPlot;
 
 /**
  *

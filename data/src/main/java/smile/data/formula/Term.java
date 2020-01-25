@@ -53,7 +53,7 @@ public interface Term extends HyperTerm {
 
     /** Returns the field meta data of output variable. */
     default StructField field() {
-        return new StructField(name(), type(), measure());
+        return new StructField(name(), type(), measure().orElse(null));
     }
 
     /** Applies the term on a data object. */

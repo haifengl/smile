@@ -76,8 +76,8 @@ public class NominalNode extends InternalNode {
         if (trueBranch) {
             values = field.toString(value);
         } else {
-            if (field.measure.isPresent() && field.measure.get() instanceof NominalScale) {
-                NominalScale scale = (NominalScale) field.measure.get();
+            if (field.measure instanceof NominalScale) {
+                NominalScale scale = (NominalScale) field.measure;
                 values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(v -> scale.level(v)).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;

@@ -19,24 +19,12 @@ package smile.demo.plot;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
-
-import org.apache.commons.csv.CSVFormat;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
-import smile.plot.Contour;
-import smile.plot.Heatmap;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
-import smile.util.Paths;
+import smile.plot.swing.Contour;
+import smile.plot.swing.Heatmap;
+import smile.plot.swing.Palette;
+import smile.plot.swing.PlotCanvas;
 
 /**
  *

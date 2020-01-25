@@ -28,9 +28,9 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.PlotCanvas;
+import smile.plot.swing.PlotCanvas;
 import smile.math.MathEx;
-import smile.plot.Surface;
+import smile.plot.swing.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**

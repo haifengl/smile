@@ -23,8 +23,8 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.Contour;
-import smile.plot.Palette;
+import smile.plot.swing.Contour;
+import smile.plot.swing.Palette;
 
 /**
  *

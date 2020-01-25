@@ -56,8 +56,8 @@ public class RBFNetworkTest {
     public void tearDown() {
     }
 
-    @Test
-    public void testLongley() {
+    @Test(expected = Test.None.class)
+    public void testLongley() throws Exception {
         System.out.println("longley");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -68,6 +68,10 @@ public class RBFNetworkTest {
         double rmse = RMSE.of(Longley.y, prediction);
         System.out.println("RMSE = " + rmse);
         assertEquals(4.922188709128203, rmse, 1E-4);
+
+        RBFNetwork<double[]> model = RBFNetwork.fit(Longley.x, Longley.y, RBF.fit(Longley.x, 10, 5.0));
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
     @Test

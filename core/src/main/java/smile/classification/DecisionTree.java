@@ -115,7 +115,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     /**
      * The class label encoder.
      */
-    private Optional<IntSet> labels = Optional.empty();
+    private IntSet labels = null;
 
     /** The dependent variable. */
     private transient int[] y;
@@ -145,11 +145,11 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         int splitTrueCount = 0;
         int splitFalseCount = 0;
 
-        Optional<Measure> measure = schema.field(j).measure;
-        if (measure.isPresent() && measure.get() instanceof NominalScale) {
+        Measure measure = schema.field(j).measure;
+        if (measure instanceof NominalScale) {
             int splitValue = -1;
 
-            NominalScale scale = (NominalScale) measure.get();
+            NominalScale scale = (NominalScale) measure;
             int m = scale.size();
             int[][] trueCount = new int[m][k];
 
@@ -336,17 +336,17 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         BaseVector y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
-        DecisionTree tree = new DecisionTree(x, codec.y, codec.field.get(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
-        tree.formula = Optional.of(formula);
-        tree.labels = Optional.of(codec.labels);
+        DecisionTree tree = new DecisionTree(x, codec.y, codec.field, codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
+        tree.formula = formula;
+        tree.labels = codec.labels;
         return tree;
     }
 
     @Override
     public int predict(Tuple x) {
-        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
+        DecisionNode leaf = (DecisionNode) root.predict(predictors(x));
         int y = leaf.output();
-        return labels.map($ -> $.valueOf(y)).orElse(y);
+        return labels == null ? y : labels.valueOf(y);
     }
 
     /**
@@ -357,16 +357,16 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
-        DecisionNode leaf = (DecisionNode) root.predict(formula.map(f -> f.x(x)).orElse(x));
+        DecisionNode leaf = (DecisionNode) root.predict(predictors(x));
         leaf.posteriori(posteriori);
         int y = leaf.output();
-        return labels.map($ -> $.valueOf(y)).orElse(y);
+        return labels == null ? y : labels.valueOf(y);
     }
 
     /** Returns null if the tree is part of ensemble algorithm. */
     @Override
     public Formula formula() {
-        return formula.orElse(null);
+        return formula;
     }
 
     @Override
@@ -375,7 +375,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     /** Private constructor. */
-    private DecisionTree(Optional<Formula> formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, Optional<IntSet> labels) {
+    private DecisionTree(Formula formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, IntSet labels) {
         super(formula, schema, response, root, importance);
         this.k = k;
         this.rule = rule;
@@ -388,7 +388,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @return a new pruned tree.
      */
     public DecisionTree prune(DataFrame test) {
-        return prune(test, formula.get(), labels.get());
+        return prune(test, formula, labels);
     }
 
     /**

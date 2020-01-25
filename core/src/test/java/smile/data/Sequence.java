@@ -30,7 +30,7 @@ import java.util.stream.IntStream;
 
 /**
  *
- * @author Haifeng
+ * @author Haifeng Li
  */
 public interface Sequence {
 

@@ -17,6 +17,7 @@
 
 package smile.base.mlp;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
@@ -34,7 +35,8 @@ import java.util.stream.Collectors;
  *
  * @author Haifeng Li
  */
-public abstract class MultilayerPerceptron {
+public abstract class MultilayerPerceptron implements Serializable {
+    private static final long serialVersionUID = 2L;
     /**
      * The dimensionality of input data.
      */
