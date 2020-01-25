@@ -56,15 +56,15 @@ package object shell {
         |
         |  Writes an object/model to a file.
       """.stripMargin)
-    case "readArff" => println(
+    case "read.arff" => println(
       """
-        |  def readArff(file: String): AttributeDataset
+        |  def read.arff(file: String): DataFrame
         |
         |  Reads an ARFF file.
       """.stripMargin)
-    case "readLibsvm" => println(
+    case "read.libsvm" => println(
       """
-        |  def readLibsvm(file: String): SparseDataset
+        |  def read.libsvm(file: String): SparseDataset
         |
         |  Reads a LivSVM file.
       """.stripMargin)
@@ -120,8 +120,7 @@ package object shell {
       """.stripMargin)
     case "readTable" | "readCsv" => println(
       """
-        |  def readTable(file: String, response: Option[(Attribute, Int)], delimiter: String = "\\s+", comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
-        |  def readCsv(file: String, response: Option[(Attribute, Int)], comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): AttributeDataset
+        |  def read.csv(file: String, response: Option[(Attribute, Int)], comment: String = "%", missing: String = "?", header: Boolean = false, rowNames: Boolean = false): DataFrame
         |
         |  Reads a delimited text file with response variable. By default, the parser expects a
         |  white-space-separated-values file. Each line in the file corresponds
@@ -139,37 +138,6 @@ package object shell {
         |  @param missing the missing value placeholder
         |  @param header true if the first row is header/column names
         |  @param rowNames true if the first column is row id/names
-      """.stripMargin)
-    case "readGct" | "readPcl" | "readRes" | "readRes" => println(
-      """
-        |  def readGct(file: String): AttributeDataset
-        |  def readPcl(file: String): AttributeDataset
-        |  def readRes(file: String): AttributeDataset
-        |  def readRes(file: String): AttributeDataset
-        |
-        |  Reads microarray gene expression file.
-        |
-        |   The TXT format is a tab delimited file
-        |   format that describes an expression dataset. It is organized as follows:
-        |
-        |   The first line contains the labels Name and Description followed by the
-        |   identifiers for each sample in the dataset. The Description is optional.
-        |
-        |     Line format: Name(tab)Description(tab)(sample 1 name)(tab)(sample 2 name) (tab) ... (sample N name)
-        |
-        |     Example: Name Description DLBC1_1 DLBC2_1 ... DLBC58_0
-        |
-        |   The remainder of the file contains data for each of the genes. There is one
-        |   line for each gene. Each line contains the gene name, gene description, and
-        |   a value for each sample in the dataset. If the first line contains the
-        |   Description label, include a description for each gene. If the first line
-        |   does not contain the Description label, do not include descriptions for
-        |   any gene. Gene names and descriptions can contain spaces since fields are
-        |   separated by tabs.
-        |
-        |     Line format: (gene name) (tab) (gene description) (tab) (col 1 data) (tab) (col 2 data) (tab) ... (col N data)
-        |
-        |     Example: AFFX-BioB-5_at AFFX-BioB-5_at (endogenous control) -104 -152 -158 ... -44
       """.stripMargin)
     case "window" => println(
       """

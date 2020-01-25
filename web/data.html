@@ -328,7 +328,7 @@ permalink: "{{ page.filePathStem }}.html"
         assembly algorithm described in the Dremel paper.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.parquet("shell/src/universal/dataparquet/userdata1.parquet")
+    smile> val df = read.parquet("shell/src/universal/data/parquet/userdata1.parquet")
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -541,6 +541,19 @@ permalink: "{{ page.filePathStem }}.html"
     199 more rows...
     </code></pre>
 
+    <h3 id="read.csv">Delimited Text and CSV</h3>
+    <p>The delimited text files are widely used in machine learning research community.
+        The comma-separated values (CSV) file is a special case. Smile provides flexible
+        parser for them.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
+    </code></pre>
+    <p>The parser can infer the schema of data.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    </code></pre>
 
     <h3 id="read.libsvm">LibSVM</h3>
     <p>LibSVM is a very fast and popular library for support vector machines.
@@ -577,20 +590,6 @@ permalink: "{{ page.filePathStem }}.html"
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val sparse = glass.toSparseMatrix
     sparse: smile.math.matrix.SparseMatrix = smile.math.matrix.SparseMatrix@73ad7e90
-    </code></pre>
-
-    <h3 id="read.csv">Delimited Text and CSV</h3>
-    <p>The delimited text files are widely used in machine learning research community.
-        The comma-separated values (CSV) file is a special case. Smile provides flexible
-        parser for them.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
-    </code></pre>
-    <p>The parser can infer the schema of data.</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    val zip = read.csv("data/usps/zip.train")
     </code></pre>
 
     <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
@@ -644,7 +643,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>In Harwell-Boeing column-compressed sparse matrix file, nonzero values are stored in an array
         (top-to-bottom, then left-to-right-bottom). The row indices corresponding to
         the values are also stored. Besides, a list of pointers are indexes where
-        each column starts. This class supports two formats for Harwell-Boeing files.
+        each column starts. The class SparseMatrix supports two formats for Harwell-Boeing files.
         The simple one is organized as follows:</p>
 
     <p>The first line contains three integers, which are the number of rows,
@@ -702,7 +701,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>To read the model back, you can use <code>read(file)</code> or <code>read.xstream(file)</code>, correspondingly.</p>
 
-    <p>You can also save an <code>AttributeDataset</code> to an ARFF file with the method
+    <p>You can also save a <code>DataFrame</code> to an ARFF file with the method
         <code>write.arff(data, file)</code>. The ARFF file keeps the data type information.
         If you prefer the plain csv text file, you may use the methods <code>write.csv(data, file)</code> or
         <code>write.table(data, file, "delimiter")</code>, which save a generic two dimensional array
