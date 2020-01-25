@@ -615,7 +615,6 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
   override def exists(p: (JsValue) => Boolean): Boolean = elements.exists(p)
   override def forall(p: (JsValue) => Boolean): Boolean = elements.forall(p)
   override def foreach[U](p: (JsValue) => U): Unit = elements.foreach(p)
-  override def knownSize: Int = elements.knownSize
   override def isEmpty: Boolean = elements.isEmpty
 
   // Traversable.toString overloads JsValue.toString.
@@ -677,7 +676,7 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
    *  @param xs    the iterable object.
    *  @return      the updated buffer.
    */
-  def ++=(xs: IterableOnce[JsValue]): JsValue = {
+  def ++=(xs: Iterable[JsValue]): JsValue = {
     elements ++= xs
     this
   }
@@ -700,7 +699,7 @@ case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends Js
    *  @param xs    the iterable object.
    *  @return      the updated array.
    */
-  def ++=:(xs: IterableOnce[JsValue]): JsValue = {
+  def ++=:(xs: Iterable[JsValue]): JsValue = {
     xs ++=: elements
     this
   }
