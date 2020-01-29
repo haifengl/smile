@@ -109,7 +109,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A line chart connects points by straight lines.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = BLACK, legend: Char = ' '): Window
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = BLACK, legend: Char = ' '): PlotCanvas
     </code></pre>
 
     <p>Let's draw a heart with it!</p>
@@ -139,21 +139,20 @@ permalink: "{{ page.filePathStem }}.html"
         identify outliers.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def boxplot(data: Array[Double]*): Window
-    def boxplot(data: Array[Array[Double]], labels: Array[String]): Window
+    def boxplot(data: Array[Double]*): PlotCanvas
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas
     </code></pre>
 
     <p>Note that the parameter <code>data</code> is a matrix of which each row to
         create a box plot.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val iris = read.arff("data/weka/iris.arff", 4)
-    val (x, y) = iris.unzipInt
-    val groups = (x.map(_(0)) zip y.map("class %d" format _)).groupBy(_._2)
+    val groups = (iris("sepallength").toDoubleArray zip iris("class").toStringArray).groupBy(_._2)
     val labels = groups.keys.toArray
     val data = groups.values.map { a => a.map(_._1) }.toArray
-    val window = boxplot(data, labels)
-    window.canvas.setAxisLabels("", iris.attributes()(0).getName)
+    val canvas = boxplot(data, labels)
+    canvas.setAxisLabels("", "sepallength")
+    show(canvas)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -167,9 +166,9 @@ permalink: "{{ page.filePathStem }}.html"
         The bins must be adjacent, and are usually equal size.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hist(data: Array[Double]): Window
-    def hist(data: Array[Double], k: Int): Window
-    def hist(data: Array[Double], breaks: Array[Double]): Window
+    def hist(data: Array[Double]): PlotCanvas
+    def hist(data: Array[Double], k: Int): PlotCanvas
+    def hist(data: Array[Double], breaks: Array[Double]): PlotCanvas
     </code></pre>
 
     <p>where <code>k</code> is the number of bins (10 by default), or you can
@@ -185,9 +184,10 @@ permalink: "{{ page.filePathStem }}.html"
         of guesses was 1,287 pounds, which is pretty close to Penelope's weight 1,355 pounds. </p>
 
     <pre class="prettyprint lang-scala"><code>
-    val cow = read.table("data/npr/cow.txt").unzip.map(_(0))
-    val window = hist(cow, 50)
-    window.canvas.setAxisLabels("Weight", "Probability")
+    val cow = read.csv("data/npr/cow.txt", header=false)("V1").toDoubleArray
+    val canvas = hist(cow, 50)
+    canvas.setAxisLabels("Weight", "Probability")
+    show(canvas)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -198,8 +198,9 @@ permalink: "{{ page.filePathStem }}.html"
         Filter out the weights over 3500 pounds, the histogram shows more details.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val window = hist(cow.filter(_ <= 3500), 50)
-    window.canvas.setAxisLabels("Weight", "Probability")
+    val canvas = hist(cow.filter(_ <= 3500), 50)
+    canvas.setAxisLabels("Weight", "Probability")
+    show(canvas)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -209,17 +210,17 @@ permalink: "{{ page.filePathStem }}.html"
     <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hist(data: Array[Array[Double]]): Window
-    def hist(data: Array[Array[Double]], k: Int): Window
-    def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): Window
+    def hist(data: Array[Array[Double]]): PlotCanvas
+    def hist(data: Array[Array[Double]], k: Int): PlotCanvas
+    def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): PlotCanvas
     </code></pre>
 
     <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Array(Array(1.0, 0.6), Array(0.6, 2.0)))
+    val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
     val data = (0 until 10000) map { i: Int => gauss.rand }
-    hist(data.toArray, 50)
+    show(hist(data.toArray, 50))
     </code></pre>
 
     <p>The corresponding histogram looks like</p>
@@ -236,11 +237,11 @@ permalink: "{{ page.filePathStem }}.html"
         the first distribution (x-coordinate).</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def qqplot(x: Array[Double], d: Distribution): Window
-    def qqplot(x: Array[Double], y: Array[Double]): Window
+    def qqplot(x: Array[Double], d: Distribution): PlotCanvas
+    def qqplot(x: Array[Double], y: Array[Double]): PlotCanvas
 
-    def qqplot(x: Array[Int], d: DiscreteDistribution): Window
-    def qqplot(x: Array[Int], y: Array[Int]): Window
+    def qqplot(x: Array[Int], d: DiscreteDistribution): PlotCanvas
+    def qqplot(x: Array[Int], y: Array[Int]): PlotCanvas
     </code></pre>
 
     <p>Smile supports the Q-Q plot of samples to a given distribution and also of two sample sets.
@@ -249,9 +250,9 @@ permalink: "{{ page.filePathStem }}.html"
     <p>In what follows, we generate a random sample set from standard Gaussian distribution and draw its Q-Q plot.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val gauss = GaussianDistribution.getInstance
+    val gauss = new GaussianDistribution(0.0, 1.0)
     val data = (0 until 1000) map { i: Int => gauss.rand }
-    qqplot(data.toArray)
+    show(qqplot(data.toArray))
     </code></pre>
 
     <p>In fact, this is also a good visual way to verify the quality of our random number generator.</p>
@@ -267,13 +268,13 @@ permalink: "{{ page.filePathStem }}.html"
         of a matrix to place similar values near each other according to the clustering.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def heatmap(z: Array[Array[Double]]): Window
-    def heatmap(z: Array[Array[Double]], palette: Array[Color]): Window
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
+    def heatmap(z: Array[Array[Double]]): PlotCanvas
+    def heatmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
 
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): Window
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Window
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): PlotCanvas
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
     </code></pre>
 
     <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
@@ -303,7 +304,7 @@ permalink: "{{ page.filePathStem }}.html"
         Z(i)(j) = bicubic.interpolate(i * 0.03, j * 0.03)
     }
 
-    heatmap(Z, Palette.jet(256))
+    show(heatmap(Z, Palette.jet(256)))
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -313,15 +314,16 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def spy(matrix: SparseMatrix): Window
+    def spy(matrix: SparseMatrix): PlotCanvas
     </code></pre>
 
     <p>The structure of sparse matrix is critical in solving linear systems.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val sparse = read.hb("data/matrix/mesh2em5.txt")
-    val window = spy(sparse)
-    window.canvas.setTitle("mesh2em5")
+    val sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"))
+    val canvas = spy(sparse)
+    canvas.setTitle("mesh2em5")
+    show(canvas)
     </code></pre>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -331,10 +333,10 @@ permalink: "{{ page.filePathStem }}.html"
     <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def hexmap(z: Array[Array[Double]]): Window
-    def hexmap(z: Array[Array[Double]], palette: Array[Color]): Window
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): Window
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): Window
+    def hexmap(z: Array[Array[Double]]): PlotCanvas
+    def hexmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): PlotCanvas
+    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
     </code></pre>
 
     <p>In machine learning, the hex map is often used to visualize self-organized map (SOM).
@@ -371,10 +373,10 @@ permalink: "{{ page.filePathStem }}.html"
         <code>(x, y)</code> coordinates where that z value occurs.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def contour(z: Array[Array[Double]]): Window
-    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): Window
+    def contour(z: Array[Array[Double]]): PlotCanvas
+    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas
     </code></pre>
 
     <p>Similar to <code>heatmap</code>, the parameters <code>x</code> and <code>y</code>
@@ -386,8 +388,9 @@ permalink: "{{ page.filePathStem }}.html"
         the previous heat map exampl.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    val window = heatmap(Z, Palette.jet(256))
-    window.canvas.add(new Contour(Z))
+    val canvas = heatmap(Z, Palette.jet(256))
+    canvas.add(new Contour(Z))
+    show(canvas)
     </code></pre>
 
     <p>This example also shows how to mix multiple plots together. Besides using the plot functions directly,
@@ -402,16 +405,16 @@ permalink: "{{ page.filePathStem }}.html"
     <p>Besides heat map and contour, we can also visualize a matrix with the three-dimensional shaded surface.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def surface(z: Array[Array[Double]]): Window
-    def surface(z: Array[Array[Double]], palette: Array[Color]): Window
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Window
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Window
+    def surface(z: Array[Array[Double]]): PlotCanvas
+    def surface(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
     </code></pre>
 
     <p>The usage is similar with <code>heatmap</code> and <code>contour</code> functions.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    surface(Z, Palette.jet(256, 1.0f))
+    show(surface(Z, Palette.jet(256, 1.0f)))
     </code></pre>
 
     <p>The surface of same example data is shown as</p>
@@ -428,7 +431,7 @@ permalink: "{{ page.filePathStem }}.html"
         while each entry of the edge table has two components giving the two incident vertices of that edge.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Window
+    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): PlotCanvas
     </code></pre>
 
     <p>where <code>vertices</code> is an <code>n x 2</code> or <code>n x 3</code> array which are coordinates of
@@ -437,7 +440,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
-    wireframe(vertices, edges)
+    show(wireframe(vertices, edges))
     </code></pre>
 
     <p>The above code draws the wireframe of a teapot.</p>
