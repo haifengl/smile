@@ -43,7 +43,9 @@ package object swing {
     val headless = new Headless(canvas)
     headless.pack
     headless.setVisible(true)
-    SwingUtilities.invokeAndWait(() => {})
+    SwingUtilities.invokeAndWait(new Runnable() {
+      override def run(): Unit = { }
+    })
 
     val bi = new BufferedImage(canvas.getWidth, canvas.getHeight, BufferedImage.TYPE_INT_ARGB)
     val g2d = bi.createGraphics
