@@ -44,6 +44,7 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -1068,6 +1069,13 @@ public class PlotCanvas extends JPanel {
      * @throws IOException if an error occurs during writing.
      */
     public void save(File file) throws IOException {
+        // flush swing event queue
+        try {
+            SwingUtilities.invokeAndWait(() -> {});
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+
         BufferedImage bi = new BufferedImage(canvas.getWidth(), canvas.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
         canvas.print(g2d);
