@@ -20,7 +20,7 @@ package smile.plot.swing
 import java.awt.{Dimension, GridLayout}
 import java.awt.event.WindowEvent
 
-import javax.swing.{JComponent, JFrame, JPanel, WindowConstants}
+import javax.swing.{JComponent, JFrame, JPanel, SwingUtilities, WindowConstants}
 
 /** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
@@ -39,7 +39,7 @@ object Window {
     val jframe = frame()
     jframe.add(canvas)
 
-    java.awt.EventQueue.invokeLater(() => {
+    SwingUtilities.invokeAndWait(() => {
       jframe.toFront()
       jframe.repaint()
     })
@@ -53,10 +53,10 @@ object Window {
     val jframe = frame(title)
     jframe.add(canvas)
 
-    java.awt.EventQueue.invokeLater(() => {
-      jframe.toFront()
-      jframe.repaint()
+    SwingUtilities.invokeAndWait(() => {
       canvas.reset()
+      canvas.repaint()
+      jframe.toFront()
     })
 
     Window(jframe, canvas)
