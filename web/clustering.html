@@ -450,7 +450,7 @@ permalink: "{{ page.filePathStem }}.html"
         entire process is repeated multiple time to find better.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    def clarans[T](data: Array[T], k: Int, maxNeighbor: Int, distance: ToDoubleBiFunction[T,T]): CLARANS[T]
+    def clarans[T](data: Array[T], k: Int, maxNeighbor: Int, distance: Distance[T]): CLARANS[T]
     </code></pre>
 
     <p>The parameter <code>maxNeighbor</code> specifies the maximum number of

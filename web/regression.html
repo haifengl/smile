@@ -486,9 +486,7 @@ permalink: "{{ page.filePathStem }}.html"
     def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest
     </code></pre>
 
-    <p>where the parameter <code>x</code> is the training data,
-        <code>y</code> is the response variable,
-        <code>ntrees</code> is the number of trees,
+    <p>where <code>ntrees</code> is the number of trees,
         <code>nodeSize</code> is the number of instances in a node below which the tree will
         not split, setting nodeSize = 5 generally gives good results,
         and <code>maxNodes</code> is the maximum number of leaf nodes.
@@ -670,10 +668,11 @@ permalink: "{{ page.filePathStem }}.html"
 
     <pre class="prettyprint lang-scala"><code>
     object gpr {
+        // regular Gaussian process model
         def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-
+        // approximate Gaussian process model
         def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
-
+        // Nystrom approximation
         def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
     }
     </code></pre>
