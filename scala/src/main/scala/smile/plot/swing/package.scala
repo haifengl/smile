@@ -23,7 +23,7 @@ import java.io.ByteArrayOutputStream
 import java.util.Base64
 
 import javax.imageio.ImageIO
-import javax.swing.{JComponent, JPanel}
+import javax.swing.{JComponent, JPanel, SwingUtilities}
 import smile.data.DataFrame
 import smile.classification.Classifier
 import smile.regression.Regression
@@ -43,6 +43,7 @@ package object swing {
     val headless = new Headless(canvas)
     headless.pack
     headless.setVisible(true)
+    SwingUtilities.invokeAndWait(() => {})
 
     val bi = new BufferedImage(canvas.getWidth, canvas.getHeight, BufferedImage.TYPE_INT_ARGB)
     val g2d = bi.createGraphics
