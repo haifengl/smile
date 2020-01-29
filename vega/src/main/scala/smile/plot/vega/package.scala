@@ -35,9 +35,9 @@ package object vega {
       |<!DOCTYPE html>
       |<html>
       |<head>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega@5.8.1"></script>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.0.0-beta.12"></script>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.1.0"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega@5.9.0"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.0.2"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.2.1"></script>
       |</head>
       |<body>
       |
@@ -230,7 +230,7 @@ package object vega {
   /** Histogram plot. */
   def hist(x: (String, Array[Double]), k: Int, properties: JsObject = JsObject()): JsObject = {
     spec(valuesOf(x._1, x._2), "bar",
-      x = JsObject("bin" -> JsObject("maxbins" -> JsInt(k)), "field" -> "x", "type" -> "quantitative"),
+      x = JsObject("bin" -> JsObject("maxbins" -> JsInt(k)), "field" -> x._1, "type" -> "quantitative"),
       y = JsObject("aggregate" -> "count", "type" -> "quantitative")
     ) ++= properties
   }
@@ -263,7 +263,7 @@ package object vega {
   private[vega] def valuesOf(data: (String, Array[Double]), group: (String, Array[String])): JsObject = {
     val x = group._2
     val y = data._2
-    val values: JsArray = (0 until x.length).map(i => JsObject(group._1 -> x(i), data._1 -> y(0)))
+    val values: JsArray = (0 until x.length).map(i => JsObject(group._1 -> x(i), data._1 -> y(i)))
     JsObject("values" -> values)
   }
 
@@ -278,7 +278,7 @@ package object vega {
                          text: Option[JsObject] = None
                         ): JsObject = {
     val spec = JsObject(
-      "$schema" -> "https://vega.github.io/schema/vega-lite/v4.0.0-beta.12.json",
+      "$schema" -> "https://vega.github.io/schema/vega-lite/v4.0.2.json",
       "data" -> data,
       "mark" -> mark,
       "encoding" -> JsObject(
