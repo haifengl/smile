@@ -380,7 +380,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         BitVector vector = (BitVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             boolean[] a = new boolean[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i) != 0;
@@ -405,7 +405,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         TinyIntVector vector = (TinyIntVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             byte[] a = new byte[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -430,7 +430,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             char[] a = new char[count];
             for (int i = 0; i < count; i++) {
                 a[i] = (char) vector.get(i);
@@ -455,7 +455,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         SmallIntVector vector = (SmallIntVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             short[] a = new short[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -480,7 +480,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         IntVector vector = (IntVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             int[] a = new int[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -505,7 +505,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         BigIntVector vector = (BigIntVector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             long[] a = new long[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -530,7 +530,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         Float4Vector vector = (Float4Vector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             float[] a = new float[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -555,7 +555,7 @@ public class Arrow {
         int count = fieldVector.getValueCount();
         Float8Vector vector = (Float8Vector) fieldVector;
 
-        if (fieldVector.getField().isNullable()) {
+        if (!fieldVector.getField().isNullable()) {
             double[] a = new double[count];
             for (int i = 0; i < count; i++) {
                 a[i] = vector.get(i);
@@ -1062,7 +1062,7 @@ public class Arrow {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
-        TimeStampMilliVector vector = (TimeStampMilliVector) fieldVector;
+        TimeStampMilliTZVector vector = (TimeStampMilliTZVector) fieldVector;
         smile.data.vector.Vector<LocalDateTime> column = df.vector(fieldVector.getField().getName());
         for (int i = 0, j = from; i < count; i++, j++) {
             LocalDateTime x = column.get(j);
