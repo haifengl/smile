@@ -20,7 +20,7 @@ package smile.plot.swing
 import java.awt.{Dimension, GridLayout}
 import java.awt.event.WindowEvent
 
-import javax.swing.{JComponent, JFrame, JPanel, WindowConstants}
+import javax.swing.{JComponent, JFrame, JPanel, SwingUtilities, WindowConstants}
 
 /** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
@@ -57,8 +57,9 @@ object Window {
 
     java.awt.EventQueue.invokeLater(new Runnable() {
       override def run() {
+        canvas.reset()
+        canvas.repaint()
         jframe.toFront()
-        jframe.repaint()
       }
     })
 
