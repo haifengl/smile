@@ -1,0 +1,709 @@
+/*******************************************************************************
+  * Copyright (c) 2010-2019 Haifeng Li
+  *
+  * Smile is free software: you can redistribute it and/or modify
+  * it under the terms of the GNU Lesser General Public License as
+  * published by the Free Software Foundation, either version 3 of
+  * the License, or (at your option) any later version.
+  *
+  * Smile is distributed in the hope that it will be useful,
+  * but WITHOUT ANY WARRANTY; without even the implied warranty of
+  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  * GNU Lesser General Public License for more details.
+  *
+  * You should have received a copy of the GNU Lesser General Public License
+  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+  *******************************************************************************/
+
+package smile.cas
+
+/** Scalar: rank-0 tensor. */
+trait Scalar extends Tensor {
+  override def rank: Option[Int] = Some(0)
+  /** Returns true if the expression contains the variable dx. */
+  def contains(dx: Var): Boolean
+  /** Returns the derivative. */
+  def d(dx: Var): Scalar
+  /** Applies the expression. */
+  def apply(env: Map[String, Tensor]): Scalar
+  /** Applies the expression. */
+  def apply(env: (String, Tensor)*): Scalar = apply(Map(env: _*))
+  /** Simplify the expression. */
+  def simplify: Scalar = this
+
+  def + (y: Scalar): Scalar = Add(this, y).simplify
+  def - (y: Scalar): Scalar = Sub(this, y).simplify
+  def * (y: Scalar): Scalar = Mul(this, y).simplify
+  def / (y: Scalar): Scalar = Div(this, y).simplify
+  def ** (y: Scalar): Scalar = Power(this, y).simplify
+  def unary_+ : Scalar = simplify
+  def unary_- : Scalar = Neg(this).simplify
+}
+
+/** Scalar: rank-0 tensor. */
+trait IntScalar extends Tensor {
+  override def rank: Option[Int] = Some(0)
+  /** Explicit conversion of int to float. */
+  def toScalar: Scalar = Int2Scalar(this)
+  /** Applies the expression. */
+  def apply(env: Map[String, Tensor]): IntScalar
+  /** Applies the expression. */
+  def apply(env: (String, Tensor)*): IntScalar = apply(Map(env: _*))
+  /** Simplify the expression. */
+  def simplify: IntScalar = this
+
+  def + (y: IntScalar): IntScalar = IntAdd(this, y).simplify
+  def - (y: IntScalar): IntScalar = IntSub(this, y).simplify
+  def * (y: IntScalar): IntScalar = IntMul(this, y).simplify
+  def / (y: IntScalar): IntScalar = IntDiv(this, y).simplify
+  def % (y: IntScalar): IntScalar = Mod(this, y).simplify
+  def ** (y: IntScalar): IntScalar = IntPower(this, y).simplify
+  def unary_+ : IntScalar = simplify
+  def unary_- : IntScalar = IntNeg(this).simplify
+}
+
+/** Explicit conversion of int to float. */
+case class Int2Scalar(x: IntScalar) extends Scalar {
+  override def toString: String = x.toString
+  override def contains(dx: Var): Boolean = false
+  override def d(dx: Var): Scalar = Val(0)
+  override def apply(env: Map[String, Tensor]): Scalar = Int2Scalar(x.apply(env))
+  override def simplify: Scalar = Int2Scalar(x.simplify)
+}
+
+/** Scalar value. */
+case class Val(x: Double) extends Scalar {
+  override def toString: String = x.toString
+  override def contains(dx: Var): Boolean = false
+  override def d(dx: Var): Scalar = Val(0)
+  override def apply(env: Map[String, Tensor]): Val = this
+}
+
+/** Integer scalar value. */
+case class IntVal(x: Int) extends IntScalar {
+  override def toString: String = x.toString
+
+  override def toScalar: Scalar = Val(x)
+
+  override def apply(env: Map[String, Tensor]): IntVal = this
+}
+
+/** Scalar variable */
+case class Var(symbol: String) extends Scalar {
+  override def toString: String = symbol
+
+  override def contains(dx: Var): Boolean = symbol.equals(dx.symbol)
+
+  override def d(dx: Var): Scalar = {
+    if (symbol.equals(dx.symbol)) Val(1) else Val(0)
+  }
+
+  override def apply(env: Map[String, Tensor]): Scalar = env.get(symbol) match {
+    case None => this
+    case Some(x : Scalar) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected Scalar")
+  }
+}
+
+/** Integer scalar variable */
+case class IntVar(symbol: String) extends IntScalar {
+  override def toString: String = symbol
+
+  override def apply(env: Map[String, Tensor]): IntScalar = env.get(symbol) match {
+    case None => this
+    case Some(x : IntScalar) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected IntScalar")
+  }
+}
+
+/** x + y */
+case class Add(x: Scalar, y: Scalar) extends Scalar {
+  override def toString: String = s"$x + $y"
+
+  override def equals(o: Any): Boolean = o match {
+    case Add(a, b) => (x == a && y == b) || (x == b && y == a)
+    case _ => false
+  }
+
+  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = x(env) + y(env)
+
+  override def d(dx: Var): Scalar = {
+    x.d(dx) + y.d(dx)
+  }
+
+  override def simplify: Scalar = (x, y) match {
+    case (Val(a), Val(b)) => Val(a+b)
+    case (Val(0), b) => b
+    case (a, Val(0)) => a
+    case (Neg(a), Neg(b)) => Neg(a + b)
+    case (Neg(a), b) if a == b => Val(0)
+    case (a, Neg(b)) => if (a == b) Val(0) else a - b
+    case (Mul(a, b), Mul(c, d)) if a == c => a * (b + d)
+    case (Mul(a, b), Mul(c, d)) if a == d => a * (b + c)
+    case (Mul(a, b), Mul(c, d)) if b == c => b * (a + d)
+    case (Mul(a, b), Mul(c, d)) if b == d => b * (a + c)
+    case (Power(Sin(a), Val(2)), Power(Cos(b), Val(2))) if a == b => Val(1)
+    case (Power(Cos(a), Val(2)), Power(Sin(b), Val(2))) if a == b => Val(1)
+    case (Log(a), Log(b)) => Log(a * b)
+    case (a, b) => if (a == b) Mul(Val(2), a) else Add(a, b)
+  }
+}
+
+/** x + y */
+case class IntAdd(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs + $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) + y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (IntVal(a), IntVal(b)) => IntVal(a+b)
+    case (IntVal(0), b) => b
+    case (a, IntVal(0)) => a
+    case (IntNeg(a), IntNeg(b)) => IntNeg(a + b)
+    case (IntNeg(a), b) if a == b => IntVal(0)
+    case (a, IntNeg(b)) => if (a == b) IntVal(0) else a - b
+    case (IntMul(a, b), IntMul(c, d)) if a == c => a * (b + d)
+    case (IntMul(a, b), IntMul(c, d)) if a == d => a * (b + c)
+    case (IntMul(a, b), IntMul(c, d)) if b == c => b * (a + d)
+    case (IntMul(a, b), IntMul(c, d)) if b == d => b * (a + c)
+    case (a, b) => if (a == b) IntMul(IntVal(2), a) else IntAdd(a, b)
+  }
+}
+
+/** x - y */
+case class Sub(x: Scalar, y: Scalar) extends Scalar {
+  override def toString: String = s"$x - $y"
+
+  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = x(env) - y(env)
+
+  override def d(dx: Var): Scalar = {
+    x.d(dx) - y.d(dx)
+  }
+
+  override def simplify: Scalar = (x, y) match {
+    case (Val(a), Val(b)) => Val(a-b)
+    case (Val(0), b) => -b
+    case (a, Val(0)) => a
+    case (a, Neg(b)) => a + b
+    case (Neg(a), b) => Neg(a + b)
+    case (Mul(a, b), Mul(c, d)) if a == c => a * (b - d)
+    case (Mul(a, b), Mul(c, d)) if a == d => a * (b - c)
+    case (Mul(a, b), Mul(c, d)) if b == c => b * (a - d)
+    case (Mul(a, b), Mul(c, d)) if b == d => b * (a - c)
+    case (Log(a), Log(b)) => Log(a / b)
+    case (a, b) => if (a == b) Val(0) else Sub(a, b)
+  }
+}
+
+/** x - y */
+case class IntSub(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs - $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) - y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (IntVal(a), IntVal(b)) => IntVal(a-b)
+    case (IntVal(0), b) => -b
+    case (a, IntVal(0)) => a
+    case (a, IntNeg(b)) => a + b
+    case (IntNeg(a), b) => IntNeg(a + b)
+    case (IntMul(a, b), IntMul(c, d)) if a == c => a * (b - d)
+    case (IntMul(a, b), IntMul(c, d)) if a == d => a * (b - c)
+    case (IntMul(a, b), IntMul(c, d)) if b == c => b * (a - d)
+    case (IntMul(a, b), IntMul(c, d)) if b == d => b * (a - c)
+    case (a, b) => if (a == b) IntVal(0) else IntSub(a, b)
+  }
+}
+
+/** -x */
+case class Neg(x: Scalar) extends Scalar {
+  override def toString: String = x match {
+    case Add(_, _) | Sub(_, _) | Power(_, _) => s"-($x)"
+    case _ => s"-$x"
+  }
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = -x(env)
+
+  override def d(dx: Var): Scalar = {
+    -x.d(dx)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(0) => this
+    case Val(a) => Val(-a)
+    case Neg(a) => a
+    case a => Neg(a)
+  }
+}
+
+/** -x */
+case class IntNeg(x: IntScalar) extends IntScalar {
+  override def toString: String = x match {
+    case IntAdd(_, _) | IntSub(_, _) | IntPower(_, _) | Mod(_, _) => s"-($x)"
+    case _ => s"-$x"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = -x(env)
+
+  override def simplify: IntScalar = x match {
+    case IntVal(0) => this
+    case IntVal(a) => IntVal(-a)
+    case IntNeg(a) => a
+    case a => IntNeg(a)
+  }
+}
+
+/** x * y */
+case class Mul(x: Scalar, y: Scalar) extends Scalar {
+  override def toString: String = {
+    val xs = x match {
+      case Add(_, _) | Sub(_, _) | Power(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case Add(_, _) | Sub(_, _) | Power(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs * $ys"
+  }
+
+  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = x(env) * y(env)
+
+  override def d(dx: Var): Scalar = {
+    y * x.d(dx) + x * y.d(dx)
+  }
+
+  override def simplify: Scalar = (x, y) match {
+    case (Val(a), Val(b)) => Val(a*b)
+    case (Val(1), b) => b
+    case (Val(-1), b) => -b
+    case (a, Val(1)) => a
+    case (a, Val(-1)) => -a
+    case (a @ Val(0), _) => a
+    case (_, b @ Val(0)) => b
+    case (Val(a), Mul(Val(b), c)) => Val(a*b) * c
+    case (Val(a), Mul(b, Val(c))) => Val(a*c) * b
+    case (Mul(Val(a), b), Val(c)) => Val(a*c) * b
+    case (Mul(a, Val(b)), Val(c)) => Val(b*c) * a
+    case (Mul(Val(a), b), Mul(Val(c), d)) => Val(a*c) * (b * d)
+    case (Mul(a, Val(b)), Mul(c, Val(d))) => Val(b*d) * (a * c)
+    case (Neg(a), Neg(b)) => a * b
+    case (Neg(a), b) => Neg(a * b)
+    case (a, Neg(b)) => Neg(a * b)
+    case (Div(a, b), Div(c, d)) => (a * c) / (b * d)
+    case (a, Div(b, c)) => (a * b) / c
+    case (Div(a, b), c) => (a * c) / b
+    case (Exp(a), Exp(b)) => Exp(a + b)
+    case (Tan(a), Cot(b)) if a == b => Val(1)
+    case (a, b @ Val(_)) => Mul(b, a)
+    case (a, b) => Mul(a, b)
+  }
+}
+
+/** x * y */
+case class IntMul(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case IntAdd(_, _) | IntSub(_, _) | IntPower(_, _) | Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case IntAdd(_, _) | IntSub(_, _) | IntPower(_, _) | Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs * $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) * y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (IntVal(a), IntVal(b)) => IntVal(a*b)
+    case (IntVal(1), b) => b
+    case (IntVal(-1), b) => -b
+    case (a, IntVal(1)) => a
+    case (a, IntVal(-1)) => -a
+    case (a @ IntVal(0), _) => a
+    case (_, b @ IntVal(0)) => b
+    case (IntVal(a), IntMul(IntVal(b), c)) => IntVal(a*b) * c
+    case (IntVal(a), IntMul(b, IntVal(c))) => IntVal(a*c) * b
+    case (IntMul(IntVal(a), b), IntVal(c)) => IntVal(a*c) * b
+    case (IntMul(a, IntVal(b)), IntVal(c)) => IntVal(b*c) * a
+    case (IntMul(IntVal(a), b), IntMul(IntVal(c), d)) => IntVal(a*c) * (b * d)
+    case (IntMul(a, IntVal(b)), IntMul(c, IntVal(d))) => IntVal(b*d) * (a * c)
+    case (IntNeg(a), IntNeg(b)) => a * b
+    case (IntNeg(a), b) => IntNeg(a * b)
+    case (a, IntNeg(b)) => IntNeg(a * b)
+    case (IntDiv(a, b), IntDiv(c, d)) => (a * c) / (b * d)
+    case (a, IntDiv(b, c)) => (a * b) / c
+    case (IntDiv(a, b), c) => (a * c) / b
+    case (a, b @ IntVal(_)) => IntMul(b, a)
+    case (a, b) => IntMul(a, b)
+  }
+}
+
+/** x / y */
+case class Div(x: Scalar, y: Scalar) extends Scalar {
+  override def toString: String = {
+    val xs = x match {
+      case Add(_, _) | Sub(_, _) | Mul(_, _) | Div(_, _) | Power(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case Add(_, _) | Sub(_, _) | Mul(_, _) | Div(_, _) | Power(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs / $ys"
+  }
+
+  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = x(env) / y(env)
+
+  override def d(dx: Var): Scalar = {
+    (y * x.d(dx) - x * y.d(dx)) / Power(y, Val(2))
+  }
+
+  override def simplify: Scalar = (x, y) match {
+    case (_, Val(0)) => throw new ArithmeticException("/ by zero")
+    case (a @ Val(0), _) => a
+    case (a, Val(1)) => a
+    case (a, Val(-1)) => -a
+    case (Val(a), Val(b)) => Val(a/b)
+    case (Neg(a), Neg(b)) => a / b
+    case (Neg(a), b) => Neg(a / b)
+    case (a, Neg(b)) => Neg(a / b)
+    case (Div(a, b), Div(c, d)) => (a * d) / (b * c)
+    case (a, Div(b, c)) => (a * c) / b
+    case (Div(a, b), c) => a / (b * c)
+    case (Mul(a, b), Mul(c, d)) if a == c => b / d
+    case (Mul(a, b), Mul(c, d)) if a == d => b / c
+    case (Mul(a, b), Mul(c, d)) if b == c => a / d
+    case (Mul(a, b), Mul(c, d)) if b == d => a / c
+    case (a, Mul(b, c)) if a == b => Val(1) / c
+    case (a, Mul(b, c)) if a == c => Val(1) / b
+    case (Mul(a, b), c) if a == c => b
+    case (Mul(a, b), c) if b == c => a
+    case (Exp(a), Exp(b)) => Exp(a - b)
+    case (a, Power(b, c)) => a * Power(b, -c)
+    case (Sin(a), Cos(b)) if a == b => tan(a)
+    case (Cos(a), Sin(b)) if a == b => cot(a)
+    case (a, Tan(b)) => a * cot(b)
+    case (a, Cot(b)) => a * tan(b)
+    case (a, b) => if (a == b) Val(1) else Div(a, b)
+  }
+}
+
+/** x / y */
+case class IntDiv(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs / $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) / y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (_, IntVal(0)) => throw new ArithmeticException("/ by zero")
+    case (a @ IntVal(0), _) => a
+    case (a, IntVal(1)) => a
+    case (a, IntVal(-1)) => -a
+    case (IntVal(a), IntVal(b)) => IntVal(a/b)
+    case (IntNeg(a), IntNeg(b)) => IntDiv(a, b)
+    case (IntNeg(a), b) => IntNeg(IntDiv(a, b))
+    case (a, IntNeg(b)) => IntNeg(IntDiv(a, b))
+    case (IntDiv(a, b), IntDiv(c, d)) => (a * d) / (b * c)
+    case (a, IntDiv(b, c)) => (a * c) / b
+    case (IntDiv(a, b), c) => a / (b * c)
+    case (IntMul(a, b), IntMul(c, d)) if a == c => b / d
+    case (IntMul(a, b), IntMul(c, d)) if a == d => b / c
+    case (IntMul(a, b), IntMul(c, d)) if b == c => a / d
+    case (IntMul(a, b), IntMul(c, d)) if b == d => a / c
+    case (a, IntMul(b, c)) if a == b => IntVal(1) / c
+    case (a, IntMul(b, c)) if a == c => IntVal(1) / b
+    case (IntMul(a, b), c) if a == c => b
+    case (IntMul(a, b), c) if b == c => a
+    case (a, b) => if (a == b) IntVal(1) else IntDiv(a, b)
+  }
+}
+
+/** x ** y */
+case class Power(x: Scalar, y: Scalar) extends Scalar {
+  override def toString: String = {
+    val xs = x match {
+      case Add(_, _) | Sub(_, _) | Mul(_, _) | Div(_, _) | Power(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case Add(_, _) | Sub(_, _) | Mul(_, _) | Div(_, _) | Power(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs ** $ys"
+  }
+
+  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = x(env) ** y(env)
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) {
+      if (y.contains(dx)) {
+        this * (y.d(dx) * log(x) + (y / x) * x.d(dx))
+      } else {
+        y * (x ** (y - Val(1))) * x.d(dx)
+      }
+    } else {
+      if (y.contains(dx)) {
+        this * log(x)
+      } else {
+        Val(0)
+      }
+    }
+  }
+
+  override def simplify: Scalar = (x, y) match {
+    case (Val(0), Val(0)) => throw new ArithmeticException("0 ** 0")
+    case (a @ Val(0), _) => a
+    case (a @ Val(1), _) => a
+    case (_, Val(0)) => Val(1)
+    case (a, Val(1)) => a
+    case (Val(a), Val(b)) => Val(Math.pow(a, b))
+    case (Val(Math.E), b) => exp(b)
+    case (Power(a, b), c) => Power(a, b * c)
+    case (a, b) => Power(a, b)
+  }
+}
+
+/** x ** y */
+case class IntPower(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs ** $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) ** y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (IntVal(0), IntVal(0)) => throw new ArithmeticException("0 ** 0")
+    case (a @ IntVal(0), _) => a
+    case (a @ IntVal(1), _) => a
+    case (_, IntVal(0)) => IntVal(1)
+    case (a, IntVal(1)) => a
+    case (IntVal(a), IntVal(b)) => IntVal(Math.pow(a, b).toInt)
+    case (IntPower(a, b), c) => IntPower(a, b * c)
+    case (a, b) => IntPower(a, b)
+  }
+}
+
+/** x % y */
+case class Mod(x: IntScalar, y: IntScalar) extends IntScalar {
+  override def toString: String = {
+    val xs = x match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($x)"
+      case _ => x.toString
+    }
+
+    val ys = y match {
+      case IntAdd(_, _) | IntSub(_, _) | IntMul(_, _) | IntDiv(_, _) | IntPower(_, _) | Mod(_, _) => s"($y)"
+      case _ => y.toString
+    }
+
+    s"$xs % $ys"
+  }
+
+  override def apply(env: Map[String, Tensor]): IntScalar = x(env) % y(env)
+
+  override def simplify: IntScalar = (x, y) match {
+    case (_, IntVal(0)) => throw new ArithmeticException("% by zero")
+    case (IntVal(0), _) => IntVal(0)
+    case (_, IntVal(1)) => IntVal(0)
+    case (IntVal(a), IntVal(b)) => IntVal(a%b)
+    case (a, b) => if (a == b) IntVal(0) else Mod(a, b)
+  }
+}
+
+/** exp(x) */
+case class Exp(x: Scalar) extends Scalar {
+  override def toString: String = s"exp($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = exp(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) * this else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(Math.exp(x))
+    case Log(x) => x
+    case _ => Exp(x)
+  }
+}
+
+/** log(x) */
+case class Log(x: Scalar) extends Scalar {
+  override def toString: String = s"log($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = log(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) (Val(1) / x) * x.d(dx) else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(Math.log(x))
+    case Exp(x) => x
+    case Power(a, b) => b * log(a)
+    case _ => Log(x)
+  }
+}
+
+/** sin(x) */
+case class Sin(x: Scalar) extends Scalar {
+  override def toString: String = s"sin($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = sin(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) * cos(x) else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(Math.sin(x))
+    case _ => Sin(x)
+  }
+}
+
+/** cos(x) */
+case class Cos(x: Scalar) extends Scalar {
+  override def toString: String = s"cos($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = cos(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) * (-sin(x)) else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(Math.cos(x))
+    case _ => Cos(x)
+  }
+}
+
+/** tan(x) */
+case class Tan(x: Scalar) extends Scalar {
+  override def toString: String = s"tan($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = sin(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) / (cos(x) ** Val(2)) else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(Math.tan(x))
+    case _ => Tan(x)
+  }
+}
+
+/** cot(x) */
+case class Cot(x: Scalar) extends Scalar {
+  override def toString: String = s"cot($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = cos(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) -x.d(dx) / (sin(x) ** Val(2)) else Val(0)
+  }
+
+  override def simplify: Scalar = x match {
+    case Val(x) => Val(1.0 / Math.tan(x))
+    case _ => Cot(x)
+  }
+}
+
+/*
+/** Vector: rank-1 tensor. */
+case class Vector(symbol: String) extends Tensor {
+  override def rank: Int = Some(1)
+
+  def apply(i: Int): Scalar = Scalar(s"${symbol}_$i")
+}
+
+/** Matrix: rank-2 tensor. */
+case class Matrix(symbol: String) extends Tensor(2) {
+  override def rank: Int = Some(2)
+
+  def apply(i: Int): Vector = Vector(s"${symbol}_$i")
+
+  def apply(i: Int, j: Int): Scalar = Scalar(s"${symbol}_$i_$j")
+}
+*/
