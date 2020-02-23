@@ -259,7 +259,7 @@ case class Neg(x: Scalar) extends Scalar {
   }
 
   override def simplify: Scalar = x match {
-    case Val(0) => this
+    case a @ Val(0) => a
     case Val(a) => Val(-a)
     case Neg(a) => a
     case a => Neg(a)
@@ -322,15 +322,15 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
     case (Mul(Val(a), b), Mul(Val(c), d)) => Val(a*c) * (b * d)
     case (Mul(a, Val(b)), Mul(c, Val(d))) => Val(b*d) * (a * c)
     case (Neg(a), Neg(b)) => a * b
-    case (Neg(a), b) => Neg(a * b)
-    case (a, Neg(b)) => Neg(a * b)
+    case (Neg(a), b) => -(a * b)
+    case (a, Neg(b)) => -(a * b)
     case (Div(a, b), Div(c, d)) => (a * c) / (b * d)
     case (a, Div(b, c)) => (a * b) / c
     case (Div(a, b), c) => (a * c) / b
-    case (Exp(a), Exp(b)) => Exp(a + b)
+    case (Exp(a), Exp(b)) => exp(a + b)
     case (Tan(a), Cot(b)) if a == b => Val(1)
     case (a, b @ Val(_)) => Mul(b, a)
-    case (a, b) => Mul(a, b)
+    case (a, b) => if (a == b) a ** 2 else Mul(a, b)
   }
 }
 
