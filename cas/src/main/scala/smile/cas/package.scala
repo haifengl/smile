@@ -30,21 +30,28 @@ package object cas {
 
   def exp(x: Scalar): Scalar = Exp(x).simplify
   def log(x: Scalar): Scalar = Log(x).simplify
+
+  def sqrt(x: Scalar): Scalar = x ** 0.5
+  def logistic(x: Scalar): Scalar = (1 / exp(-x))
+
   def sin(x: Scalar): Scalar = Sin(x).simplify
   def cos(x: Scalar): Scalar = Cos(x).simplify
   def tan(x: Scalar): Scalar = Tan(x).simplify
   def cot(x: Scalar): Scalar = Cot(x).simplify
+
+  def sinh(x: Scalar): Scalar = exp(x) - exp(-x)
+  def cosh(x: Scalar): Scalar = exp(x) + exp(-x)
+  def tanh(x: Scalar): Scalar = sinh(x) / cosh(x)
+
+  def asin(x: Scalar): Scalar = ArcSin(x).simplify
+  def acos(x: Scalar): Scalar = ArcCos(x).simplify
+  def atan(x: Scalar): Scalar = ArcTan(x).simplify
+  def acot(x: Scalar): Scalar = ArcCot(x).simplify
+
+  def ceil(x: Scalar): IntScalar = Ceil(x).simplify
+  def floor(x: Scalar): IntScalar = Floor(x).simplify
+  def round(x: Scalar): IntScalar = Round(x).simplify
 /*
-  def floor(x: Scalar) = Floor(x)
-  def round(x: Scalar) = Round(x)
   def abs(x: Scalar) = Abs(x)
-  def acos(x: Scalar) = Acos(x)
-  def asin(x: Scalar) = Asin(x)
-  def atan(x: Scalar) = Atan(x)
-  def cbrt(x: Scalar) = Cbrt(x)
-  def ceil(x: Scalar) = Ceil(x)
-  def sqrt(x: Scalar) = Sqrt(x)
-  def tan(x: Scalar) = Tan(x)
-  def tanh(x: Scalar) = Tanh(x)
  */
 }

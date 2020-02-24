@@ -25,11 +25,14 @@ class ScalarSpec extends Specification {
     "(3 + 5)" in {
       val e = Val(3) + Val(5)
       e mustEqual Val(8)
+      val x = Var("x")
+      e.d(x) mustEqual Val(0)
     }
     "(x + 0)" in {
       val x = Var("x")
       val e = x + 0
       e mustEqual x
+      e.d(x) mustEqual Val(1)
     }
     "(0 + x)" in {
       val x = Var("x")
@@ -40,6 +43,7 @@ class ScalarSpec extends Specification {
       val x = Var("x")
       val e = x + x
       e mustEqual Mul(2, x)
+      e.d(x) mustEqual Val(2)
     }
     "x + -x" in {
       val x = Var("x")
@@ -51,17 +55,20 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = x + (-y)
       e mustEqual Sub(x, y)
+      e.d(x) mustEqual Val(1)
     }
     "-x + -y" in {
       val x = Var("x")
       val y = Var("y")
       val e = -x + (-y)
       e mustEqual Neg(Add(x, y))
+      e.d(x) mustEqual Val(-1)
     }
     "a * x + b * x" in {
       val x = Var("x")
       val e = x * 2 + 3 * x
       e mustEqual Mul(5, x)
+      e.d(x) mustEqual Val(5)
     }
     "sin2(x) + cos2(x)" in {
       val x = Var("x")
@@ -73,6 +80,7 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = log(x) + log(-y)
       e mustEqual Log(Neg(Mul(x, y)))
+      e.d(x) mustEqual Div(1.0, x)
     }
     "(3 - 5)" in {
       val e = Val(3) - Val(5)
@@ -109,6 +117,8 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = -x - (-y)
       e mustEqual Add(Neg(x), y)
+      e.d(x) mustEqual Val(-1)
+      e.d(y) mustEqual Val(1)
     }
     "a * x - b * x" in {
       val x = Var("x")
@@ -120,6 +130,7 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = log(x) - log(y)
       e mustEqual Log(Div(x, y))
+      e.d(x) mustEqual Div(1, x)
     }
     "-0" in {
       val x = Val(0)
@@ -206,12 +217,16 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = (a / x) * (b / y)
       e mustEqual Div(Mul(a, b), Mul(x, y))
+      e.d(a) mustEqual Div(b, Mul(x, y))
+      e.d(x).toString mustEqual "-a * b * y * ((x * y) ** -2.0)"
     }
     "exp(x) * exp(y)" in {
       val x = Var("x")
       val y = Var("y")
       val e = exp(x) * exp(y)
       e mustEqual Exp(Add(x, y))
+      e.d(x) mustEqual e
+      exp(x * y).d(x) mustEqual y * exp(x * y)
     }
     "tan(x) * cot(x)" in {
       val x = Var("x")
@@ -227,6 +242,7 @@ class ScalarSpec extends Specification {
       val x = Var("x")
       val e = x * x
       e mustEqual Power(x, 2)
+      e.d(x) mustEqual 2 * x
     }
     "x / x" in {
       val x = Var("x")
@@ -252,6 +268,8 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = (5.0 * y) / (x * 5.0)
       e mustEqual Div(y, x)
+      e.d(x) mustEqual Neg(Mul(y, x ** -2))
+      e.d(y) mustEqual 1 / x
     }
     "-x / -y" in {
       val x = Var("x")
@@ -284,6 +302,7 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = exp(x) / exp(y)
       e mustEqual Exp(Sub(x, y))
+      e.d(y) mustEqual Neg(Exp(Sub(x, y)))
     }
     "sin(x) / cos(x)" in {
       val x = Var("x")
@@ -321,11 +340,104 @@ class ScalarSpec extends Specification {
       val b = Var("b")
       val e = (x ** a) ** b
       e mustEqual Power(x, a * b)
+      e.d(x) mustEqual a * b * (x ** (a * b - 1))
+    }
+    "mod" in {
+      val n = IntVar("n")
+      val e = (5 * (n + 1)) % 1
+      e mustEqual IntVal(0)
+      (2 * n) % 2 mustEqual IntVal(0)
+      (3 * n) % n mustEqual IntVal(0)
     }
     "e ** x" in {
       val x = Var("x")
       val e = Math.E ** x
       e mustEqual Exp(x)
+    }
+    "exp" in {
+      val x = Var("x")
+      val e = exp(x)
+      e.d(x) mustEqual e
+      exp(x ** 2).d(x) mustEqual 2 * x * exp(x ** 2)
+      exp(log(x)) mustEqual x
+    }
+    "log" in {
+      val x = Var("x")
+      val e = log(x)
+      e.d(x) mustEqual 1/x
+      log(x ** 2).d(x) mustEqual 2 / x
+      log(exp(x)) mustEqual x
+    }
+    "sin" in {
+      val x = Var("x")
+      val e = sin(x)
+      e.d(x) mustEqual cos(x)
+      sin(x ** 2).d(x) mustEqual 2 * x * cos(x ** 2)
+      sin(asin(x)) mustEqual x
+    }
+    "cos" in {
+      val x = Var("x")
+      val e = cos(x)
+      e.d(x) mustEqual -sin(x)
+      cos(x ** 2).d(x) mustEqual 2 * x * -sin(x ** 2)
+      cos(acos(x)) mustEqual x
+    }
+    "tan" in {
+      val x = Var("x")
+      val e = tan(x)
+      e.d(x) mustEqual Val(1) / (cos(x) ** 2)
+      tan(x ** 2).d(x) mustEqual 2 * x * (cos(x ** 2) ** -2)
+      tan(atan(x)) mustEqual x
+    }
+    "cot" in {
+      val x = Var("x")
+      val e = cot(x)
+      e.d(x) mustEqual Val(-1) / (sin(x) ** 2)
+      cot(x ** 2).d(x) mustEqual -(2 * x * (sin(x ** 2) ** -2))
+      cot(acot(x)) mustEqual x
+    }
+    "asin" in {
+      val x = Var("x")
+      val e = asin(x)
+      e.d(x) mustEqual Val(1) / sqrt(Val(1) - x ** 2)
+      asin(x ** 2).d(x) mustEqual 2 * x / sqrt(Val(1) - x ** 4)
+      asin(sin(x)) mustEqual x
+    }
+    "acos" in {
+      val x = Var("x")
+      val e = acos(x)
+      e.d(x) mustEqual -Val(1) / sqrt(Val(1) - x ** 2)
+      acos(x ** 2).d(x) mustEqual -(2 * x / sqrt(Val(1) - x ** 4))
+      acos(cos(x)) mustEqual x
+    }
+    "atan" in {
+      val x = Var("x")
+      val e = atan(x)
+      e.d(x) mustEqual Val(1) / (Val(1) + x ** 2)
+      atan(x ** 2).d(x) mustEqual 2 * x / (Val(1) + x ** 4)
+      atan(tan(x)) mustEqual x
+    }
+    "acot" in {
+      val x = Var("x")
+      val e = acot(x)
+      e.d(x) mustEqual -Val(1) / (Val(1) + x ** 2)
+      acot(x ** 2).d(x) mustEqual -(2 * x / (Val(1) + x ** 4))
+      acot(cot(x)) mustEqual x
+    }
+    "ceil" in {
+      val x = Var("x")
+      val e = floor(x + 0.5)
+      e.apply("x" -> Val(0.1)) mustEqual IntVal(0)
+    }
+    "floor" in {
+      val x = Var("x")
+      val e = ceil(x + 0.5)
+      e.apply("x" -> Val(0.1)) mustEqual IntVal(1)
+    }
+    "round" in {
+      val x = Var("x")
+      val e = round(x + 0.5)
+      e.apply("x" -> Val(0.1)) mustEqual IntVal(1)
     }
     "sin(x) / 5 * x" in {
       val x = Var("x")
