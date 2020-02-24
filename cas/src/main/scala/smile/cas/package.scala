@@ -48,10 +48,9 @@ package object cas {
   def atan(x: Scalar): Scalar = ArcTan(x).simplify
   def acot(x: Scalar): Scalar = ArcCot(x).simplify
 
+  def abs(x: Scalar): Scalar = Abs(x).simplify
+
   def ceil(x: Scalar): IntScalar = Ceil(x).simplify
   def floor(x: Scalar): IntScalar = Floor(x).simplify
   def round(x: Scalar): IntScalar = Round(x).simplify
-/*
-  def abs(x: Scalar) = Abs(x)
- */
 }

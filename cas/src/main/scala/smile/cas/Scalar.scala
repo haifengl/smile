@@ -819,3 +819,21 @@ case class Round(x: Scalar) extends IntScalar {
     case _ => Round(x)
   }
 }
+
+/** abs(x) */
+case class Abs(x: Scalar) extends Scalar {
+  override def toString: String = s"abs($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = abs(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) * this / x else Val(0)
+  }
+
+  override def simplify: Scalar = x.simplify match {
+    case Val(a) => Val(Math.abs(a))
+    case _ => Abs(x)
+  }
+}
