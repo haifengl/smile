@@ -137,17 +137,22 @@ case class Add(x: Scalar, y: Scalar) extends Scalar {
     case (Val(a), Val(b)) => Val(a+b)
     case (Val(0), b) => b
     case (a, Val(0)) => a
-    case (Neg(a), Neg(b)) => Neg(a + b)
-    case (Neg(a), b) if a == b => Val(0)
-    case (a, Neg(b)) => if (a == b) Val(0) else a - b
+    case (Neg(a), Neg(b)) => -(a + b)
+    case (Neg(a), b) => b - a
+    case (a, Neg(b)) => a - b
     case (Mul(a, b), Mul(c, d)) if a == c => a * (b + d)
     case (Mul(a, b), Mul(c, d)) if a == d => a * (b + c)
     case (Mul(a, b), Mul(c, d)) if b == c => b * (a + d)
     case (Mul(a, b), Mul(c, d)) if b == d => b * (a + c)
+    case (Mul(a, b), c) if a == c => a * (b + 1)
+    case (Mul(a, b), c) if b == c => b * (a + 1)
+    case (a, Mul(b, c)) if a == b => a * (c + 1)
+    case (a, Mul(b, c)) if a == c => a * (b + 1)
     case (Power(Sin(a), Val(2)), Power(Cos(b), Val(2))) if a == b => Val(1)
     case (Power(Cos(a), Val(2)), Power(Sin(b), Val(2))) if a == b => Val(1)
     case (Log(a), Log(b)) => Log(a * b)
-    case (a, b) => if (a == b) Mul(Val(2), a) else Add(a, b)
+    case (a, b) if a == b => 2 * a
+    case (a, b) => Add(a, b)
   }
 }
 
@@ -173,14 +178,19 @@ case class IntAdd(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntVal(a), IntVal(b)) => IntVal(a+b)
     case (IntVal(0), b) => b
     case (a, IntVal(0)) => a
-    case (IntNeg(a), IntNeg(b)) => IntNeg(a + b)
-    case (IntNeg(a), b) if a == b => IntVal(0)
-    case (a, IntNeg(b)) => if (a == b) IntVal(0) else a - b
+    case (IntNeg(a), IntNeg(b)) => -(a + b)
+    case (IntNeg(a), b) => b - a
+    case (a, IntNeg(b)) => a - b
     case (IntMul(a, b), IntMul(c, d)) if a == c => a * (b + d)
     case (IntMul(a, b), IntMul(c, d)) if a == d => a * (b + c)
     case (IntMul(a, b), IntMul(c, d)) if b == c => b * (a + d)
     case (IntMul(a, b), IntMul(c, d)) if b == d => b * (a + c)
-    case (a, b) => if (a == b) IntMul(IntVal(2), a) else IntAdd(a, b)
+    case (IntMul(a, b), c) if a == c => a * (b + 1)
+    case (IntMul(a, b), c) if b == c => b * (a + 1)
+    case (a, IntMul(b, c)) if a == b => a * (c + 1)
+    case (a, IntMul(b, c)) if a == c => a * (b + 1)
+    case (a, b) if a == b => 2 * a
+    case (a, b) => IntAdd(a, b)
   }
 }
 
@@ -200,14 +210,20 @@ case class Sub(x: Scalar, y: Scalar) extends Scalar {
     case (Val(a), Val(b)) => Val(a-b)
     case (Val(0), b) => -b
     case (a, Val(0)) => a
+    case (Neg(a), Neg(b)) => b - a
     case (a, Neg(b)) => a + b
-    case (Neg(a), b) => Neg(a + b)
+    case (Neg(a), b) => -(a + b)
     case (Mul(a, b), Mul(c, d)) if a == c => a * (b - d)
     case (Mul(a, b), Mul(c, d)) if a == d => a * (b - c)
     case (Mul(a, b), Mul(c, d)) if b == c => b * (a - d)
     case (Mul(a, b), Mul(c, d)) if b == d => b * (a - c)
+    case (Mul(a, b), c) if a == c => a * (b - 1)
+    case (Mul(a, b), c) if b == c => b * (a - 1)
+    case (a, Mul(b, c)) if a == b => a * (c - 1)
+    case (a, Mul(b, c)) if a == c => a * (b - 1)
     case (Log(a), Log(b)) => Log(a / b)
-    case (a, b) => if (a == b) Val(0) else Sub(a, b)
+    case (a, b) if a == b => Val(0)
+    case (a, b) => Sub(a, b)
   }
 }
 
@@ -234,12 +250,18 @@ case class IntSub(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntVal(0), b) => -b
     case (a, IntVal(0)) => a
     case (a, IntNeg(b)) => a + b
-    case (IntNeg(a), b) => IntNeg(a + b)
+    case (IntNeg(a), IntNeg(b)) => b - a
+    case (IntNeg(a), b) => -(a + b)
     case (IntMul(a, b), IntMul(c, d)) if a == c => a * (b - d)
     case (IntMul(a, b), IntMul(c, d)) if a == d => a * (b - c)
     case (IntMul(a, b), IntMul(c, d)) if b == c => b * (a - d)
     case (IntMul(a, b), IntMul(c, d)) if b == d => b * (a - c)
-    case (a, b) => if (a == b) IntVal(0) else IntSub(a, b)
+    case (IntMul(a, b), c) if a == c => a * (b - 1)
+    case (IntMul(a, b), c) if b == c => b * (a - 1)
+    case (a, IntMul(b, c)) if a == b => a * (c - 1)
+    case (a, IntMul(b, c)) if a == c => a * (b - 1)
+    case (a, b) if a == b => IntVal(0)
+    case (a, b) => IntSub(a, b)
   }
 }
 
@@ -276,7 +298,7 @@ case class IntNeg(x: IntScalar) extends IntScalar {
   override def apply(env: Map[String, Tensor]): IntScalar = -x(env)
 
   override def simplify: IntScalar = x match {
-    case IntVal(0) => this
+    case a @ IntVal(0) => a
     case IntVal(a) => IntVal(-a)
     case IntNeg(a) => a
     case a => IntNeg(a)
@@ -315,12 +337,6 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
     case (a, Val(-1)) => -a
     case (a @ Val(0), _) => a
     case (_, b @ Val(0)) => b
-    case (Val(a), Mul(Val(b), c)) => Val(a*b) * c
-    case (Val(a), Mul(b, Val(c))) => Val(a*c) * b
-    case (Mul(Val(a), b), Val(c)) => Val(a*c) * b
-    case (Mul(a, Val(b)), Val(c)) => Val(b*c) * a
-    case (Mul(Val(a), b), Mul(Val(c), d)) => Val(a*c) * (b * d)
-    case (Mul(a, Val(b)), Mul(c, Val(d))) => Val(b*d) * (a * c)
     case (Neg(a), Neg(b)) => a * b
     case (Neg(a), b) => -(a * b)
     case (a, Neg(b)) => -(a * b)
@@ -332,12 +348,18 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
     case (Power(a, b), Power(c, d)) if a == c => a ** (b + d)
     case (Exp(a), Exp(b)) => exp(a + b)
     case (Tan(a), Cot(b)) if a == b => Val(1)
-    case (Tan(a), Cos(b)) if a == b => Sin(a)
-    case (Cos(a), Tan(b)) if a == b => Sin(a)
-    case (Cot(a), Sin(b)) if a == b => Cos(a)
-    case (Cot(a), Sin(b)) if a == b => Cos(a)
-    case (a, b @ Val(_)) => Mul(b, a)
-    case (a, b) => if (a == b) a ** 2 else Mul(a, b)
+    case (Cot(a), Tan(b)) if a == b => Val(1)
+    case (Tan(a), Cos(b)) if a == b => sin(a)
+    case (Cos(a), Tan(b)) if a == b => sin(a)
+    case (Cot(a), Sin(b)) if a == b => cos(a)
+    case (Sin(a), Cot(b)) if a == b => cos(a)
+    case (a, Mul(b, c)) if a * b != Mul(a, b) => (a * b) * c
+    case (a, Mul(b, c)) if a * c != Mul(a, c) => (a * c) * b
+    case (Mul(a, b), c) if a * c != Mul(a, c) => (a * c) * b
+    case (Mul(a, b), c) if b * c != Mul(b, c) => a * (b * c)
+    case (a, b @ Val(_)) => b * a
+    case (a, b) if a == b => a ** 2
+    case (a, b) => Mul(a, b)
   }
 }
 
@@ -367,19 +389,21 @@ case class IntMul(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntVal(-1)) => -a
     case (a @ IntVal(0), _) => a
     case (_, b @ IntVal(0)) => b
-    case (IntVal(a), IntMul(IntVal(b), c)) => IntVal(a*b) * c
-    case (IntVal(a), IntMul(b, IntVal(c))) => IntVal(a*c) * b
-    case (IntMul(IntVal(a), b), IntVal(c)) => IntVal(a*c) * b
-    case (IntMul(a, IntVal(b)), IntVal(c)) => IntVal(b*c) * a
-    case (IntMul(IntVal(a), b), IntMul(IntVal(c), d)) => IntVal(a*c) * (b * d)
-    case (IntMul(a, IntVal(b)), IntMul(c, IntVal(d))) => IntVal(b*d) * (a * c)
     case (IntNeg(a), IntNeg(b)) => a * b
-    case (IntNeg(a), b) => IntNeg(a * b)
-    case (a, IntNeg(b)) => IntNeg(a * b)
+    case (IntNeg(a), b) => -(a * b)
+    case (a, IntNeg(b)) => -(a * b)
     case (IntDiv(a, b), IntDiv(c, d)) => (a * c) / (b * d)
     case (a, IntDiv(b, c)) => (a * b) / c
     case (IntDiv(a, b), c) => (a * c) / b
-    case (a, b @ IntVal(_)) => IntMul(b, a)
+    case (a, IntPower(b, c)) if a == b => a ** (c + 1)
+    case (IntPower(b, c), a) if a == b => a ** (c + 1)
+    case (IntPower(a, b), IntPower(c, d)) if a == c => a ** (b + d)
+    case (a, IntMul(b, c)) if a * b != IntMul(a, b) => (a * b) * c
+    case (a, IntMul(b, c)) if a * c != IntMul(a, c) => (a * c) * b
+    case (IntMul(a, b), c) if a * c != IntMul(a, c) => (a * c) * b
+    case (IntMul(a, b), c) if b * c != IntMul(b, c) => a * (b * c)
+    case (a, b @ IntVal(_)) => b * a
+    case (a, b) if a == b => a ** 2
     case (a, b) => IntMul(a, b)
   }
 }
@@ -418,26 +442,23 @@ case class Div(x: Scalar, y: Scalar) extends Scalar {
     case (a, Val(-1)) => -a
     case (Val(a), Val(b)) => Val(a/b)
     case (Neg(a), Neg(b)) => a / b
-    case (Neg(a), b) => Neg(a / b)
-    case (a, Neg(b)) => Neg(a / b)
+    case (Neg(a), b) => -(a / b)
+    case (a, Neg(b)) => -(a / b)
     case (Div(a, b), Div(c, d)) => (a * d) / (b * c)
     case (a, Div(b, c)) => (a * c) / b
     case (Div(a, b), c) => a / (b * c)
-    case (Mul(a, b), Mul(c, d)) if a == c => b / d
-    case (Mul(a, b), Mul(c, d)) if a == d => b / c
-    case (Mul(a, b), Mul(c, d)) if b == c => a / d
-    case (Mul(a, b), Mul(c, d)) if b == d => a / c
-    case (a, Mul(b, c)) if a == b => Val(1) / c
-    case (a, Mul(b, c)) if a == c => Val(1) / b
-    case (Mul(a, b), c) if a == c => b
-    case (Mul(a, b), c) if b == c => a
+    case (a, Mul(b, c)) if a / b != Div(a, b) => (a / b) / c
+    case (a, Mul(b, c)) if a / c != Div(a, c) => (a / c) / b
+    case (Mul(a, b), c) if a / c != Div(a, c) => (a / c) * b
+    case (Mul(a, b), c) if b / c != Div(b, c) => a * (b / c)
     case (Exp(a), Exp(b)) => Exp(a - b)
-    case (a, Power(b, c)) => a * Power(b, -c)
+    case (a, Power(b, c)) if a * Power(b, -c) != Mul(a, Power(b, -c)) => a * Power(b, -c)
     case (Sin(a), Cos(b)) if a == b => tan(a)
     case (Cos(a), Sin(b)) if a == b => cot(a)
     case (a, Tan(b)) => a * cot(b)
     case (a, Cot(b)) => a * tan(b)
-    case (a, b) => if (a == b) Val(1) else Div(a, b)
+    case (a, b) if a == b => Val(1)
+    case (a, b) => Div(a, b)
   }
 }
 
@@ -471,15 +492,12 @@ case class IntDiv(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntDiv(a, b), IntDiv(c, d)) => (a * d) / (b * c)
     case (a, IntDiv(b, c)) => (a * c) / b
     case (IntDiv(a, b), c) => a / (b * c)
-    case (IntMul(a, b), IntMul(c, d)) if a == c => b / d
-    case (IntMul(a, b), IntMul(c, d)) if a == d => b / c
-    case (IntMul(a, b), IntMul(c, d)) if b == c => a / d
-    case (IntMul(a, b), IntMul(c, d)) if b == d => a / c
-    case (a, IntMul(b, c)) if a == b => IntVal(1) / c
-    case (a, IntMul(b, c)) if a == c => IntVal(1) / b
-    case (IntMul(a, b), c) if a == c => b
-    case (IntMul(a, b), c) if b == c => a
-    case (a, b) => if (a == b) IntVal(1) else IntDiv(a, b)
+    case (a, IntMul(b, c)) if a / b != IntDiv(a, b) => (a / b) / c
+    case (a, IntMul(b, c)) if a / c != IntDiv(a, c) => (a / c) / b
+    case (IntMul(a, b), c) if a / c != IntDiv(a, c) => (a / c) * b
+    case (IntMul(a, b), c) if b / c != IntDiv(b, c) => a * (b / c)
+    case (a, b) if (a == b) => IntVal(1)
+    case (a, b) => IntDiv(a, b)
   }
 }
 
@@ -528,7 +546,7 @@ case class Power(x: Scalar, y: Scalar) extends Scalar {
     case (a, Val(-1)) => 1 / a
     case (Val(a), Val(b)) => Val(Math.pow(a, b))
     case (Val(Math.E), b) => exp(b)
-    case (Power(a, b), c) => Power(a, b * c)
+    case (Power(a, b), c) => a ** (b * c)
     case (a, b) => Power(a, b)
   }
 }
@@ -553,12 +571,13 @@ case class IntPower(x: IntScalar, y: IntScalar) extends IntScalar {
 
   override def simplify: IntScalar = (x, y) match {
     case (IntVal(0), IntVal(0)) => throw new ArithmeticException("0 ** 0")
+    case (_, IntVal(b)) if b < 0 => throw new ArithmeticException("Negative exponent is not allowed for IntPower")
     case (a @ IntVal(0), _) => a
     case (a @ IntVal(1), _) => a
     case (_, IntVal(0)) => IntVal(1)
     case (a, IntVal(1)) => a
     case (IntVal(a), IntVal(b)) => IntVal(Math.pow(a, b).toInt)
-    case (IntPower(a, b), c) => IntPower(a, b * c)
+    case (IntPower(a, b), c) => a ** (b * c)
     case (a, b) => IntPower(a, b)
   }
 }
@@ -585,11 +604,10 @@ case class Mod(x: IntScalar, y: IntScalar) extends IntScalar {
     case (_, IntVal(0)) => throw new ArithmeticException("% by zero")
     case (IntVal(0), _) => IntVal(0)
     case (_, IntVal(1)) => IntVal(0)
-    case (IntVal(a), IntVal(b)) => IntVal(a%b)
-    case (IntMul(IntVal(a), b), IntVal(c)) if a % c == 0 => IntVal(0)
-    case (IntMul(a, IntVal(b)), IntVal(c)) if b % c == 0 => IntVal(0)
+    case (IntVal(a), IntVal(b)) => IntVal(a % b)
     case (IntMul(a, b), c) if a % c == IntVal(0) || b % c == IntVal(0) => IntVal(0)
-    case (a, b) => if (a == b) IntVal(0) else Mod(a, b)
+    case (a, b) if a == b => IntVal(0)
+    case (a, b) => Mod(a, b)
   }
 }
 
@@ -784,6 +802,24 @@ case class ArcCot(x: Scalar) extends Scalar {
   }
 }
 
+/** abs(x) */
+case class Abs(x: Scalar) extends Scalar {
+  override def toString: String = s"abs($x)"
+
+  override def contains(dx: Var): Boolean = x.contains(dx)
+
+  override def apply(env: Map[String, Tensor]): Scalar = abs(x(env))
+
+  override def d(dx: Var): Scalar = {
+    if (x.contains(dx)) x.d(dx) * this / x else Val(0)
+  }
+
+  override def simplify: Scalar = x.simplify match {
+    case Val(a) => Val(Math.abs(a))
+    case _ => Abs(x)
+  }
+}
+
 /** ceil(x) */
 case class Ceil(x: Scalar) extends IntScalar {
   override def toString: String = s"ceil($x)"
@@ -817,23 +853,5 @@ case class Round(x: Scalar) extends IntScalar {
   override def simplify: IntScalar = x.simplify match {
     case Val(a) => IntVal(Math.round(a).toInt)
     case _ => Round(x)
-  }
-}
-
-/** abs(x) */
-case class Abs(x: Scalar) extends Scalar {
-  override def toString: String = s"abs($x)"
-
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
-  override def apply(env: Map[String, Tensor]): Scalar = abs(x(env))
-
-  override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) * this / x else Val(0)
-  }
-
-  override def simplify: Scalar = x.simplify match {
-    case Val(a) => Val(Math.abs(a))
-    case _ => Abs(x)
   }
 }

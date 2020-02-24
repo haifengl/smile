@@ -116,7 +116,7 @@ class ScalarSpec extends Specification {
       val x = Var("x")
       val y = Var("y")
       val e = -x - (-y)
-      e mustEqual Add(Neg(x), y)
+      e mustEqual Sub(y, x)
       e.d(x) mustEqual Val(-1)
       e.d(y) mustEqual Val(1)
     }
@@ -190,7 +190,7 @@ class ScalarSpec extends Specification {
       val x = Var("x")
       val y = Var("y")
       val e = (5.0 * y) * (x * 3.0)
-      e mustEqual Mul(Val(15), Mul(y, x))
+      e mustEqual 15 * y * x
     }
     "-x * -y" in {
       val x = Var("x")
@@ -218,7 +218,15 @@ class ScalarSpec extends Specification {
       val e = (a / x) * (b / y)
       e mustEqual Div(Mul(a, b), Mul(x, y))
       e.d(a) mustEqual Div(b, Mul(x, y))
-      e.d(x).toString mustEqual "-a * b * y * ((x * y) ** -2.0)"
+      e.d(x).toString mustEqual "-(a * b * y) / ((x * y) ** 2.0)"
+    }
+    "(2 * (a * y) / x) * ((b * x) / y)" in {
+      val a = Var("a")
+      val b = Var("b")
+      val x = Var("x")
+      val y = Var("y")
+      val e = (2 * (a * y) / x) * ((b * x) / y)
+      e mustEqual 2 * a * b
     }
     "exp(x) * exp(y)" in {
       val x = Var("x")
@@ -268,7 +276,7 @@ class ScalarSpec extends Specification {
       val y = Var("y")
       val e = (5.0 * y) / (x * 5.0)
       e mustEqual Div(y, x)
-      e.d(x) mustEqual Neg(Mul(y, x ** -2))
+      e.d(x) mustEqual Neg(Div(y, x ** 2))
       e.d(y) mustEqual 1 / x
     }
     "-x / -y" in {
@@ -386,14 +394,14 @@ class ScalarSpec extends Specification {
       val x = Var("x")
       val e = tan(x)
       e.d(x) mustEqual Val(1) / (cos(x) ** 2)
-      tan(x ** 2).d(x) mustEqual 2 * x * (cos(x ** 2) ** -2)
+      tan(x ** 2).d(x) mustEqual (2 * x) / (cos(x ** 2) ** 2)
       tan(atan(x)) mustEqual x
     }
     "cot" in {
       val x = Var("x")
       val e = cot(x)
       e.d(x) mustEqual Val(-1) / (sin(x) ** 2)
-      cot(x ** 2).d(x) mustEqual -(2 * x * (sin(x ** 2) ** -2))
+      cot(x ** 2).d(x) mustEqual -(2 * x) / (sin(x ** 2) ** 2)
       cot(acot(x)) mustEqual x
     }
     "asin" in {
@@ -444,7 +452,7 @@ class ScalarSpec extends Specification {
       val e = abs(x)
       val d = e.d(x)
       d mustEqual e / x
-      abs(x ** 2).d(x) mustEqual 2 * x * abs(x ** 2) * (x ** -2)
+      abs(x ** 2).d(x) mustEqual Val(2) * abs(x ** 2) / x
       d.apply("x" -> Val(2)) mustEqual Val(1)
       d.apply("x" -> Val(-2)) mustEqual Val(-1)
     }
@@ -471,9 +479,8 @@ class ScalarSpec extends Specification {
     "0*x**2+4*1*x**(2-1)+1*x**(3-1)*cot(x**3)" in {
       val x = Var("x")
       val e = 0*x**2+4*1*x**(2-1)+1*x**(3-1)*cot(x**3)
-      e.toString mustEqual "4.0 * x + (x ** 2.0) * cot(x ** 3.0)"
-
-      e.d(x).toString mustEqual "4.0 + cot(x ** 3.0) * 2.0 * x - (x ** 2.0) * 3.0 * (x ** 2.0) * (sin(x ** 3.0) ** -2.0)"
+      e mustEqual 4.0 * x + (x ** 2.0) * cot(x ** 3.0)
+      e.d(x).toString mustEqual "4.0 + 2.0 * cot(x ** 3.0) * x - (3.0 * (x ** 4.0)) / (sin(x ** 3.0) ** 2.0)"
     }
     "4*x*5" in {
       val x = Var("x")
