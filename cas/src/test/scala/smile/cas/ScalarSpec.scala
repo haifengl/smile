@@ -439,6 +439,15 @@ class ScalarSpec extends Specification {
       val e = round(x + 0.5)
       e.apply("x" -> Val(0.1)) mustEqual IntVal(1)
     }
+    "abs" in {
+      val x = Var("x")
+      val e = abs(x)
+      val d = e.d(x)
+      d mustEqual e / x
+      abs(x ** 2).d(x) mustEqual 2 * x * abs(x ** 2) * (x ** -2)
+      d.apply("x" -> Val(2)) mustEqual Val(1)
+      d.apply("x" -> Val(-2)) mustEqual Val(-1)
+    }
     "sin(x) / 5 * x" in {
       val x = Var("x")
       val e = sin(x) / 5 * x
