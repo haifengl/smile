@@ -77,11 +77,9 @@ case class VectorVal(x: Array[Double]) extends Vector {
 case class VectorVar(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = symbol
 
-  override def contains(dx: Var): Boolean = symbol.equals(dx.symbol)
+  override def contains(dx: Var): Boolean = false
 
-  override def d(dx: Var): Vector = {
-    if (symbol.equals(dx.symbol)) VectorOne(size) else VectorZero(size)
-  }
+  override def d(dx: Var): Vector = VectorZero(size)
 
   override def apply(env: Map[String, Tensor]): Vector = env.get(symbol) match {
     case None => this

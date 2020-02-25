@@ -24,6 +24,8 @@ trait Scalar extends Tensor {
   def contains(dx: Var): Boolean
   /** Returns the derivative. */
   def d(dx: Var): Scalar
+  /** Returns the gradient vector. */
+  def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Scalar
   /** Applies the expression. */
