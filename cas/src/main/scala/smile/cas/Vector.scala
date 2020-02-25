@@ -73,7 +73,7 @@ case class VectorVal(x: Array[Double]) extends Vector {
   }
 }
 
-/** Vector variable */
+/** Abstract vector variable */
 case class VectorVar(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = symbol
 
@@ -87,6 +87,26 @@ case class VectorVar(symbol: String, size: IntScalar = IntVar("n")) extends Vect
     case None => this
     case Some(x : Vector) => x
     case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected Vector")
+  }
+}
+
+/** Vector variable */
+case class Vars(x: Scalar*) extends Vector {
+  override def toString: String = x.mkString("[", ", ", "]")
+
+  override def size: IntScalar = IntVal(x.length)
+
+  override def contains(dx: Var): Boolean = x.exists(_.contains(dx))
+
+  override def d(dx: Var): Vector = {
+    if (contains(dx)) Vars(x.map(_.d(dx)): _*) else VectorZero(size)
+  }
+
+  override def apply(env: Map[String, Tensor]): Vector = Vars(x.map(_(env)): _*)
+
+  override def simplify: Vector = {
+    if (x.forall(_.isInstanceOf[Val])) VectorVal(x.map(_.asInstanceOf[Val].x).toArray).simplify
+    else this
   }
 }
 
