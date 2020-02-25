@@ -1,19 +1,19 @@
 /*******************************************************************************
-  * Copyright (c) 2010-2019 Haifeng Li
-  *
-  * Smile is free software: you can redistribute it and/or modify
-  * it under the terms of the GNU Lesser General Public License as
-  * published by the Free Software Foundation, either version 3 of
-  * the License, or (at your option) any later version.
-  *
-  * Smile is distributed in the hope that it will be useful,
-  * but WITHOUT ANY WARRANTY; without even the implied warranty of
-  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-  * GNU Lesser General Public License for more details.
-  *
-  * You should have received a copy of the GNU Lesser General Public License
-  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
-  *******************************************************************************/
+ * Copyright (c) 2010-2019 Haifeng Li
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ *******************************************************************************/
 
 package smile.cas
 
@@ -38,6 +38,8 @@ trait Scalar extends Tensor {
   def ** (y: Scalar): Scalar = Power(this, y).simplify
   def unary_+ : Scalar = simplify
   def unary_- : Scalar = Neg(this).simplify
+
+  def * (y: Vector): Vector = ScalarVectorProduct(this, y).simplify
 }
 
 /** Scalar: rank-0 tensor. */
@@ -249,8 +251,8 @@ case class IntSub(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntVal(a), IntVal(b)) => IntVal(a-b)
     case (IntVal(0), b) => -b
     case (a, IntVal(0)) => a
-    case (a, IntNeg(b)) => a + b
     case (IntNeg(a), IntNeg(b)) => b - a
+    case (a, IntNeg(b)) => a + b
     case (IntNeg(a), b) => -(a + b)
     case (IntMul(a, b), IntMul(c, d)) if a == c => a * (b - d)
     case (IntMul(a, b), IntMul(c, d)) if a == d => a * (b - c)
