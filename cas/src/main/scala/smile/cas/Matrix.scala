@@ -57,21 +57,21 @@ trait Matrix extends Tensor {
 }
 
 /** Matrix of all 0's */
-case class ZeroMatrix(size: (IntScalar, IntScalar)) extends Matrix {
+case class ZeroMatrix(size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
   override def toString: String = "0"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
 /** Matrix of all 1's */
-case class OneMatrix(size: (IntScalar, IntScalar)) extends Matrix {
+case class OneMatrix(size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
   override def toString: String = "1"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
 /** Identity matrix */
-case class IdentityMatrix(size: (IntScalar, IntScalar)) extends Matrix {
+case class IdentityMatrix(size: (IntScalar, IntScalar) = (IntVar("n"), IntVar("n"))) extends Matrix {
   override def toString: String = "I"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
@@ -321,7 +321,7 @@ case class MatrixVectorProduct(A: Matrix, x: Vector) extends Vector {
 
 /** Matrix multiplication (A * B) */
 case class MatrixProduct(A: Matrix, B: Matrix) extends Matrix {
-  if (A.size._2 != B.size._1) throw new IllegalArgumentException(s"Matrix sizes mismatch: ${A.size} vs ${B.size}")
+  if (A.size._2 != B.size._1) throw new IllegalArgumentException(s"Matrix multiplication size mismatch: ${A.size} vs ${B.size}")
 
   override def toString: String = {
     val xs = A match {
@@ -350,9 +350,19 @@ case class MatrixProduct(A: Matrix, B: Matrix) extends Matrix {
     case (_, ZeroMatrix(_)) => ZeroMatrix(size)
     case (IdentityMatrix(_), b) => b
     case (a, IdentityMatrix(_)) => a
+    case (NegMatrix(IdentityMatrix(_)), b) => -b
+    case (a, NegMatrix(IdentityMatrix(_))) => a
     case (a, MatrixInverse(b)) if a == b => IdentityMatrix(size)
     case (MatrixInverse(a), b) if a == b => IdentityMatrix(size)
+    case (a, NegMatrix(MatrixInverse(b))) if a == b => -IdentityMatrix(size)
+    case (NegMatrix(MatrixInverse(a)), b) if a == b => -IdentityMatrix(size)
+    case (NegMatrix(a), NegMatrix(b)) => a * b
+    case (a, NegMatrix(b)) => -(a * b)
+    case (NegMatrix(a), b) => -(a * b)
     case (MatrixInverse(a), MatrixInverse(b)) => MatrixInverse(b * a)
+    case (MatrixInverse(a), NegMatrix(MatrixInverse(b))) => -MatrixInverse(b * a)
+    case (NegMatrix(MatrixInverse(a)), MatrixInverse(b)) => -MatrixInverse(b * a)
+    case (NegMatrix(MatrixInverse(a)), NegMatrix(MatrixInverse(b))) => MatrixInverse(b * a)
     case _ => this
   }
 }
