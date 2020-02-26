@@ -20,20 +20,20 @@ package smile.cas
 /** Scalar: rank-0 tensor. */
 trait Scalar extends Tensor {
   override def rank: Option[Int] = Some(0)
-  /** Returns true if the expression contains the variable dx. */
-  def contains(dx: Var): Boolean
-  /** Returns the derivative. */
-  def d(dx: Var): Scalar
-  /** Returns the gradient vector. */
-  def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
-  /** Returns the gradient vector. */
-  def d(dx: VectorVar): Vector
+
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Scalar
   /** Applies the expression. */
   def apply(env: (String, Tensor)*): Scalar = apply(Map(env: _*))
   /** Simplify the expression. */
   def simplify: Scalar = this
+
+  /** Returns the derivative. */
+  def d(dx: Var): Scalar
+  /** Returns the gradient vector. */
+  def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
+  /** Returns the gradient vector. */
+  def d(dx: VectorVar): Vector
 
   def + (y: Scalar): Scalar = Add(this, y).simplify
   def - (y: Scalar): Scalar = Sub(this, y).simplify
@@ -72,20 +72,22 @@ trait IntScalar extends Tensor {
 /** Explicit conversion of int to float. */
 case class Int2Scalar(x: IntScalar) extends Scalar {
   override def toString: String = x.toString
-  override def contains(dx: Var): Boolean = false
-  override def d(dx: Var): Scalar = Val(0)
-  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
+
   override def apply(env: Map[String, Tensor]): Scalar = Int2Scalar(x.apply(env))
   override def simplify: Scalar = Int2Scalar(x.simplify)
+
+  override def d(dx: Var): Scalar = Val(0)
+  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
 }
 
 /** Scalar value. */
 case class Val(x: Double) extends Scalar {
   override def toString: String = x.toString
-  override def contains(dx: Var): Boolean = false
+
+  override def apply(env: Map[String, Tensor]): Val = this
+
   override def d(dx: Var): Scalar = Val(0)
   override def d(dx: VectorVar): Vector = VectorZero(dx.size)
-  override def apply(env: Map[String, Tensor]): Val = this
 }
 
 /** Integer scalar value. */
@@ -100,8 +102,6 @@ case class IntVal(x: Int) extends IntScalar {
 /** Scalar variable */
 case class Var(symbol: String) extends Scalar {
   override def toString: String = symbol
-
-  override def contains(dx: Var): Boolean = symbol.equals(dx.symbol)
 
   override def d(dx: Var): Scalar = {
     if (symbol.equals(dx.symbol)) Val(1) else Val(0)
@@ -135,8 +135,6 @@ case class Add(x: Scalar, y: Scalar) extends Scalar {
     case Add(a, b) => (x == a && y == b) || (x == b && y == a)
     case _ => false
   }
-
-  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
 
   override def apply(env: Map[String, Tensor]): Scalar = x(env) + y(env)
 
@@ -212,8 +210,6 @@ case class IntAdd(x: IntScalar, y: IntScalar) extends IntScalar {
 /** x - y */
 case class Sub(x: Scalar, y: Scalar) extends Scalar {
   override def toString: String = s"$x - $y"
-
-  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
 
   override def apply(env: Map[String, Tensor]): Scalar = x(env) - y(env)
 
@@ -291,8 +287,6 @@ case class Neg(x: Scalar) extends Scalar {
     case _ => s"-$x"
   }
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = -x(env)
 
   override def d(dx: Var): Scalar = {
@@ -343,8 +337,6 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
 
     s"$xs * $ys"
   }
-
-  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
 
   override def apply(env: Map[String, Tensor]): Scalar = x(env) * y(env)
 
@@ -451,15 +443,14 @@ case class Div(x: Scalar, y: Scalar) extends Scalar {
     s"$xs / $ys"
   }
 
-  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = x(env) / y(env)
 
   override def d(dx: Var): Scalar = {
-    if (y.contains(dx))
-      (y * x.d(dx) - x * y.d(dx)) / (y ** 2)
-    else
-      x.d(dx) / y
+    val dy = y.d(dx)
+    dy match {
+      case Val(0) => x.d(dx) / y
+      case _ => (y * x.d(dx) - x * dy) / (y ** 2)
+    }
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -548,23 +539,14 @@ case class Power(x: Scalar, y: Scalar) extends Scalar {
     s"$xs ** $ys"
   }
 
-  override def contains(dx: Var): Boolean = x.contains(dx) || y.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = x(env) ** y(env)
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) {
-      if (y.contains(dx)) {
-        this * (y.d(dx) * log(x) + (y / x) * x.d(dx))
-      } else {
-        y * (x ** (y - Val(1))) * x.d(dx)
-      }
-    } else {
-      if (y.contains(dx)) {
-        this * log(x)
-      } else {
-        Val(0)
-      }
+    (y.d(dx), x.d(dx)) match {
+      case (Val(0), Val(0)) => Val(0)
+      case (_, Val(0)) => this * log(x)
+      case (Val(0), dx) => y * (x ** (y - 1)) * dx
+      case (dy, dx) => this * (dy * log(x) + (y / x) * dx)
     }
   }
 
@@ -650,12 +632,10 @@ case class Mod(x: IntScalar, y: IntScalar) extends IntScalar {
 case class Exp(x: Scalar) extends Scalar {
   override def toString: String = s"exp($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = exp(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) * this else Val(0)
+    x.d(dx) * this
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -673,16 +653,14 @@ case class Exp(x: Scalar) extends Scalar {
 case class Log(x: Scalar) extends Scalar {
   override def toString: String = s"log($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = log(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) (Val(1) / x) * x.d(dx) else Val(0)
+    (1 / x) * x.d(dx)
   }
 
   override def d(dx: VectorVar): Vector = {
-    (Val(1) / x) * x.d(dx)
+    (1 / x) * x.d(dx)
   }
 
   override def simplify: Scalar = x match {
@@ -697,12 +675,10 @@ case class Log(x: Scalar) extends Scalar {
 case class Sin(x: Scalar) extends Scalar {
   override def toString: String = s"sin($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = sin(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) * cos(x) else Val(0)
+    x.d(dx) * cos(x)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -720,12 +696,10 @@ case class Sin(x: Scalar) extends Scalar {
 case class Cos(x: Scalar) extends Scalar {
   override def toString: String = s"cos($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = cos(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) * (-sin(x)) else Val(0)
+    x.d(dx) * (-sin(x))
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -743,12 +717,10 @@ case class Cos(x: Scalar) extends Scalar {
 case class Tan(x: Scalar) extends Scalar {
   override def toString: String = s"tan($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = tan(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) / (cos(x) ** 2) else Val(0)
+    x.d(dx) / (cos(x) ** 2)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -766,12 +738,10 @@ case class Tan(x: Scalar) extends Scalar {
 case class Cot(x: Scalar) extends Scalar {
   override def toString: String = s"cot($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = cot(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) -x.d(dx) / (sin(x) ** 2) else Val(0)
+    -x.d(dx) / (sin(x) ** 2)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -789,12 +759,10 @@ case class Cot(x: Scalar) extends Scalar {
 case class ArcSin(x: Scalar) extends Scalar {
   override def toString: String = s"asin($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = asin(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) / sqrt(1.0 - x ** 2.0) else Val(0)
+    x.d(dx) / sqrt(1.0 - x ** 2.0)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -812,12 +780,10 @@ case class ArcSin(x: Scalar) extends Scalar {
 case class ArcCos(x: Scalar) extends Scalar {
   override def toString: String = s"acos($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = acos(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) -x.d(dx) / sqrt(1.0 - x ** 2.0) else Val(0)
+    -x.d(dx) / sqrt(1.0 - x ** 2.0)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -835,12 +801,10 @@ case class ArcCos(x: Scalar) extends Scalar {
 case class ArcTan(x: Scalar) extends Scalar {
   override def toString: String = s"atan($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = atan(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) / (1.0 + x ** 2.0) else Val(0)
+    x.d(dx) / (1.0 + x ** 2.0)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -858,12 +822,10 @@ case class ArcTan(x: Scalar) extends Scalar {
 case class ArcCot(x: Scalar) extends Scalar {
   override def toString: String = s"acot($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = acot(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) -x.d(dx) / (1.0 + x ** 2.0) else Val(0)
+    -x.d(dx) / (1.0 + x ** 2.0)
   }
 
   override def d(dx: VectorVar): Vector = {
@@ -881,16 +843,14 @@ case class ArcCot(x: Scalar) extends Scalar {
 case class Abs(x: Scalar) extends Scalar {
   override def toString: String = s"abs($x)"
 
-  override def contains(dx: Var): Boolean = x.contains(dx)
-
   override def apply(env: Map[String, Tensor]): Scalar = abs(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) * this / x else Val(0)
+    x.d(dx) * (this / x)
   }
 
   override def d(dx: VectorVar): Vector = {
-    this * x.d(dx)
+    x.d(dx) * (this / x)
   }
 
   override def simplify: Scalar = x.simplify match {
