@@ -77,7 +77,7 @@ case class Int2Scalar(x: IntScalar) extends Scalar {
   override def simplify: Scalar = Int2Scalar(x.simplify)
 
   override def d(dx: Var): Scalar = Val(0)
-  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
+  override def d(dx: VectorVar): Vector = ZeroVector(dx.size)
 }
 
 /** Scalar value. */
@@ -87,7 +87,7 @@ case class Val(x: Double) extends Scalar {
   override def apply(env: Map[String, Tensor]): Val = this
 
   override def d(dx: Var): Scalar = Val(0)
-  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
+  override def d(dx: VectorVar): Vector = ZeroVector(dx.size)
 }
 
 /** Integer scalar value. */
