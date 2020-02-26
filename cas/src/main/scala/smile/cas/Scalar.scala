@@ -26,6 +26,8 @@ trait Scalar extends Tensor {
   def d(dx: Var): Scalar
   /** Returns the gradient vector. */
   def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
+  /** Returns the gradient vector. */
+  def d(dx: VectorVar): Vector
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Scalar
   /** Applies the expression. */
@@ -42,6 +44,7 @@ trait Scalar extends Tensor {
   def unary_- : Scalar = Neg(this).simplify
 
   def * (y: Vector): Vector = ScalarVectorProduct(this, y).simplify
+  def * (y: Matrix): Matrix = ScalarMatrixProduct(this, y).simplify
 }
 
 /** Scalar: rank-0 tensor. */
@@ -71,6 +74,7 @@ case class Int2Scalar(x: IntScalar) extends Scalar {
   override def toString: String = x.toString
   override def contains(dx: Var): Boolean = false
   override def d(dx: Var): Scalar = Val(0)
+  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
   override def apply(env: Map[String, Tensor]): Scalar = Int2Scalar(x.apply(env))
   override def simplify: Scalar = Int2Scalar(x.simplify)
 }
@@ -80,6 +84,7 @@ case class Val(x: Double) extends Scalar {
   override def toString: String = x.toString
   override def contains(dx: Var): Boolean = false
   override def d(dx: Var): Scalar = Val(0)
+  override def d(dx: VectorVar): Vector = VectorZero(dx.size)
   override def apply(env: Map[String, Tensor]): Val = this
 }
 
@@ -101,6 +106,8 @@ case class Var(symbol: String) extends Scalar {
   override def d(dx: Var): Scalar = {
     if (symbol.equals(dx.symbol)) Val(1) else Val(0)
   }
+
+  override def d(dx: VectorVar): Vector = GradientVector(this, dx).simplify
 
   override def apply(env: Map[String, Tensor]): Scalar = env.get(symbol) match {
     case None => this
@@ -137,6 +144,10 @@ case class Add(x: Scalar, y: Scalar) extends Scalar {
     x.d(dx) + y.d(dx)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    x.d(dx) + y.d(dx)
+  }
+
   override def simplify: Scalar = (x, y) match {
     case (Val(a), Val(b)) => Val(a+b)
     case (Val(0), b) => b
@@ -156,7 +167,7 @@ case class Add(x: Scalar, y: Scalar) extends Scalar {
     case (Power(Cos(a), Val(2)), Power(Sin(b), Val(2))) if a == b => Val(1)
     case (Log(a), Log(b)) => Log(a * b)
     case (a, b) if a == b => 2 * a
-    case (a, b) => Add(a, b)
+    case _ => this
   }
 }
 
@@ -194,7 +205,7 @@ case class IntAdd(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntMul(b, c)) if a == b => a * (c + 1)
     case (a, IntMul(b, c)) if a == c => a * (b + 1)
     case (a, b) if a == b => 2 * a
-    case (a, b) => IntAdd(a, b)
+    case _ => this
   }
 }
 
@@ -207,6 +218,10 @@ case class Sub(x: Scalar, y: Scalar) extends Scalar {
   override def apply(env: Map[String, Tensor]): Scalar = x(env) - y(env)
 
   override def d(dx: Var): Scalar = {
+    x.d(dx) - y.d(dx)
+  }
+
+  override def d(dx: VectorVar): Vector = {
     x.d(dx) - y.d(dx)
   }
 
@@ -227,7 +242,7 @@ case class Sub(x: Scalar, y: Scalar) extends Scalar {
     case (a, Mul(b, c)) if a == c => a * (b - 1)
     case (Log(a), Log(b)) => Log(a / b)
     case (a, b) if a == b => Val(0)
-    case (a, b) => Sub(a, b)
+    case _ => this
   }
 }
 
@@ -265,7 +280,7 @@ case class IntSub(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntMul(b, c)) if a == b => a * (c - 1)
     case (a, IntMul(b, c)) if a == c => a * (b - 1)
     case (a, b) if a == b => IntVal(0)
-    case (a, b) => IntSub(a, b)
+    case _ => this
   }
 }
 
@@ -284,11 +299,15 @@ case class Neg(x: Scalar) extends Scalar {
     -x.d(dx)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    -x.d(dx)
+  }
+
   override def simplify: Scalar = x match {
     case a @ Val(0) => a
     case Val(a) => Val(-a)
     case Neg(a) => a
-    case a => Neg(a)
+    case _ => this
   }
 }
 
@@ -305,7 +324,7 @@ case class IntNeg(x: IntScalar) extends IntScalar {
     case a @ IntVal(0) => a
     case IntVal(a) => IntVal(-a)
     case IntNeg(a) => a
-    case a => IntNeg(a)
+    case _ => this
   }
 }
 
@@ -330,6 +349,10 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
   override def apply(env: Map[String, Tensor]): Scalar = x(env) * y(env)
 
   override def d(dx: Var): Scalar = {
+    y * x.d(dx) + x * y.d(dx)
+  }
+
+  override def d(dx: VectorVar): Vector = {
     y * x.d(dx) + x * y.d(dx)
   }
 
@@ -363,7 +386,7 @@ case class Mul(x: Scalar, y: Scalar) extends Scalar {
     case (Mul(a, b), c) if b * c != Mul(b, c) => a * (b * c)
     case (a, b @ Val(_)) => b * a
     case (a, b) if a == b => a ** 2
-    case (a, b) => Mul(a, b)
+    case _ => this
   }
 }
 
@@ -408,7 +431,7 @@ case class IntMul(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntMul(a, b), c) if b * c != IntMul(b, c) => a * (b * c)
     case (a, b @ IntVal(_)) => b * a
     case (a, b) if a == b => a ** 2
-    case (a, b) => IntMul(a, b)
+    case _ => this
   }
 }
 
@@ -439,6 +462,10 @@ case class Div(x: Scalar, y: Scalar) extends Scalar {
       x.d(dx) / y
   }
 
+  override def d(dx: VectorVar): Vector = {
+    (y * x.d(dx) - x * y.d(dx)) / (y ** 2)
+  }
+
   override def simplify: Scalar = (x, y) match {
     case (_, Val(0)) => throw new ArithmeticException("/ by zero")
     case (a @ Val(0), _) => a
@@ -462,7 +489,7 @@ case class Div(x: Scalar, y: Scalar) extends Scalar {
     case (a, Tan(b)) => a * cot(b)
     case (a, Cot(b)) => a * tan(b)
     case (a, b) if a == b => Val(1)
-    case (a, b) => Div(a, b)
+    case _ => this
   }
 }
 
@@ -501,7 +528,7 @@ case class IntDiv(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntMul(a, b), c) if a / c != IntDiv(a, c) => (a / c) * b
     case (IntMul(a, b), c) if b / c != IntDiv(b, c) => a * (b / c)
     case (a, b) if (a == b) => IntVal(1)
-    case (a, b) => IntDiv(a, b)
+    case _ => this
   }
 }
 
@@ -541,6 +568,10 @@ case class Power(x: Scalar, y: Scalar) extends Scalar {
     }
   }
 
+  override def d(dx: VectorVar): Vector = {
+    this * (y.d(dx) * log(x) + (y / x) * x.d(dx))
+  }
+
   override def simplify: Scalar = (x, y) match {
     case (Val(0), Val(0)) => throw new ArithmeticException("0 ** 0")
     case (a @ Val(0), _) => a
@@ -551,7 +582,7 @@ case class Power(x: Scalar, y: Scalar) extends Scalar {
     case (Val(a), Val(b)) => Val(Math.pow(a, b))
     case (Val(Math.E), b) => exp(b)
     case (Power(a, b), c) => a ** (b * c)
-    case (a, b) => Power(a, b)
+    case _ => this
   }
 }
 
@@ -582,7 +613,7 @@ case class IntPower(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntVal(1)) => a
     case (IntVal(a), IntVal(b)) => IntVal(Math.pow(a, b).toInt)
     case (IntPower(a, b), c) => a ** (b * c)
-    case (a, b) => IntPower(a, b)
+    case _ => this
   }
 }
 
@@ -611,7 +642,7 @@ case class Mod(x: IntScalar, y: IntScalar) extends IntScalar {
     case (IntVal(a), IntVal(b)) => IntVal(a % b)
     case (IntMul(a, b), c) if a % c == IntVal(0) || b % c == IntVal(0) => IntVal(0)
     case (a, b) if a == b => IntVal(0)
-    case (a, b) => Mod(a, b)
+    case _ => this
   }
 }
 
@@ -627,10 +658,14 @@ case class Exp(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) * this else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    this * x.d(dx)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.exp(a))
     case Log(a) => a
-    case _ => Exp(x)
+    case _ => this
   }
 }
 
@@ -646,11 +681,15 @@ case class Log(x: Scalar) extends Scalar {
     if (x.contains(dx)) (Val(1) / x) * x.d(dx) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    (Val(1) / x) * x.d(dx)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.log(a))
     case Exp(a) => a
     case Power(a, b) => b * log(a)
-    case _ => Log(x)
+    case _ => this
   }
 }
 
@@ -666,10 +705,14 @@ case class Sin(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) * cos(x) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    cos(x) * x.d(dx)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.sin(a))
     case ArcSin(a) => a
-    case _ => Sin(x)
+    case _ => this
   }
 }
 
@@ -685,10 +728,14 @@ case class Cos(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) * (-sin(x)) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    -sin(x) * x.d(dx)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.cos(a))
     case ArcCos(a) => a
-    case _ => Cos(x)
+    case _ => this
   }
 }
 
@@ -701,13 +748,17 @@ case class Tan(x: Scalar) extends Scalar {
   override def apply(env: Map[String, Tensor]): Scalar = tan(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) x.d(dx) / (cos(x) ** Val(2)) else Val(0)
+    if (x.contains(dx)) x.d(dx) / (cos(x) ** 2) else Val(0)
+  }
+
+  override def d(dx: VectorVar): Vector = {
+    x.d(dx) / (cos(x) ** 2)
   }
 
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.tan(a))
     case ArcTan(a) => a
-    case _ => Tan(x)
+    case _ => this
   }
 }
 
@@ -720,13 +771,17 @@ case class Cot(x: Scalar) extends Scalar {
   override def apply(env: Map[String, Tensor]): Scalar = cot(x(env))
 
   override def d(dx: Var): Scalar = {
-    if (x.contains(dx)) -x.d(dx) / (sin(x) ** Val(2)) else Val(0)
+    if (x.contains(dx)) -x.d(dx) / (sin(x) ** 2) else Val(0)
+  }
+
+  override def d(dx: VectorVar): Vector = {
+    -x.d(dx) / (sin(x) ** 2)
   }
 
   override def simplify: Scalar = x match {
     case Val(a) => Val(1.0 / Math.tan(a))
     case ArcCot(a) => a
-    case _ => Cot(x)
+    case _ => this
   }
 }
 
@@ -742,10 +797,14 @@ case class ArcSin(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) / sqrt(1.0 - x ** 2.0) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    x.d(dx) / sqrt(1.0 - x ** 2.0)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.asin(a))
     case Sin(a) => a
-    case _ => ArcSin(x)
+    case _ => this
   }
 }
 
@@ -761,10 +820,14 @@ case class ArcCos(x: Scalar) extends Scalar {
     if (x.contains(dx)) -x.d(dx) / sqrt(1.0 - x ** 2.0) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    -x.d(dx) / sqrt(1.0 - x ** 2.0)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.acos(a))
     case Cos(a) => a
-    case _ => ArcCos(x)
+    case _ => this
   }
 }
 
@@ -780,10 +843,14 @@ case class ArcTan(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) / (1.0 + x ** 2.0) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    x.d(dx) / (1.0 + x ** 2.0)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.atan(a))
     case Tan(a) => a
-    case _ => ArcTan(x)
+    case _ => this
   }
 }
 
@@ -799,10 +866,14 @@ case class ArcCot(x: Scalar) extends Scalar {
     if (x.contains(dx)) -x.d(dx) / (1.0 + x ** 2.0) else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    -x.d(dx) / (1.0 + x ** 2.0)
+  }
+
   override def simplify: Scalar = x match {
     case Val(a) => Val(Math.PI * 0.5 - Math.atan(a))
     case Cot(a) => a
-    case _ => ArcCot(x)
+    case _ => this
   }
 }
 
@@ -818,9 +889,13 @@ case class Abs(x: Scalar) extends Scalar {
     if (x.contains(dx)) x.d(dx) * this / x else Val(0)
   }
 
+  override def d(dx: VectorVar): Vector = {
+    this * x.d(dx)
+  }
+
   override def simplify: Scalar = x.simplify match {
     case Val(a) => Val(Math.abs(a))
-    case _ => Abs(x)
+    case _ => this
   }
 }
 
@@ -832,7 +907,7 @@ case class Ceil(x: Scalar) extends IntScalar {
 
   override def simplify: IntScalar = x.simplify match {
     case Val(a) => IntVal(Math.ceil(a).toInt)
-    case _ => Ceil(x)
+    case _ => this
   }
 }
 
@@ -844,7 +919,7 @@ case class Floor(x: Scalar) extends IntScalar {
 
   override def simplify: IntScalar = x.simplify match {
     case Val(a) => IntVal(Math.floor(a).toInt)
-    case _ => Floor(x)
+    case _ => this
   }
 }
 
@@ -856,6 +931,6 @@ case class Round(x: Scalar) extends IntScalar {
 
   override def simplify: IntScalar = x.simplify match {
     case Val(a) => IntVal(Math.round(a).toInt)
-    case _ => Round(x)
+    case _ => this
   }
 }
