@@ -148,7 +148,7 @@ class VectorSpec extends Specification {
       e mustEqual x
     }
     "1 * x" in {
-      val x = Var("x")
+      val x = VectorVar("x")
       val e = 1 * x
       e mustEqual x
     }
