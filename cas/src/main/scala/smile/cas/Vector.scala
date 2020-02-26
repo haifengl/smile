@@ -35,8 +35,8 @@ trait Vector extends Tensor {
   /** Returns the Jacobian matrix. */
   //def d(dx: VectorVar): Matrix
 
-  def + (y: Vector): Vector = VectorAdd(this, y).simplify
-  def - (y: Vector): Vector = VectorAdd(this, VectorNeg(y)).simplify
+  def + (y: Vector): Vector = AddVector(this, y).simplify
+  def - (y: Vector): Vector = AddVector(this, NegVector(y)).simplify
   def * (y: Scalar): Vector = ScalarVectorProduct(y, this).simplify
   def / (y: Scalar): Vector = ScalarVectorProduct(1/y, this).simplify
 
@@ -44,26 +44,30 @@ trait Vector extends Tensor {
   def *~ (y: Vector): Matrix = OuterProduct(this, y).simplify
 
   def unary_+ : Vector = simplify
-  def unary_- : Vector = VectorNeg(this).simplify
+  def unary_- : Vector = NegVector(this).simplify
 }
 
 /** 0 */
-case class VectorZero(size: IntScalar) extends Vector {
+case class VectorZero(size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = "0"
   override def d(dx: Var): Vector = this
   override def apply(env: Map[String, Tensor]): Vector = this
 }
 
 /** 1 */
-case class VectorOne(size: IntScalar) extends Vector {
+case class VectorOne(size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = "1"
-  override def d(dx: Var): Vector = this
+  override def d(dx: Var): Vector = VectorZero(size)
   override def apply(env: Map[String, Tensor]): Vector = this
 }
 
 /** Vector value. */
 case class VectorVal(x: Array[Double]) extends Vector {
-  override def toString: String = x.toString
+  override def toString: String = x.mkString("[", ", ", "]")
+  override def equals(that: Any): Boolean = that match {
+    case VectorVal(y) => x.sameElements(y)
+    case _ => false
+  }
   override def size: IntScalar = IntVal(x.length)
   override def d(dx: Var): Vector = VectorZero(size)
   override def apply(env: Map[String, Tensor]): VectorVal = this
@@ -72,6 +76,40 @@ case class VectorVal(x: Array[Double]) extends Vector {
     if (x.forall(_ == 0)) VectorZero(IntVal(x.length))
     else if (x.forall(_ == 1)) VectorOne(IntVal(x.length))
     else this
+  }
+}
+
+/** Constant vector. Different from VectorVal that has concrete values, this is of constant yet abstract value. */
+case class ConstVector(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
+  override def toString: String = symbol
+  override def d(dx: Var): Vector = VectorZero(size)
+  override def apply(env: Map[String, Tensor]): Vector = env.get(symbol) match {
+    case Some(x: VectorZero) => x
+    case Some(x: VectorOne) => x
+    case Some(x: VectorVal) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected 0 | 1 | VectorVal")
+  }
+}
+
+/** Vector variable */
+case class Vars(x: Scalar*) extends Vector {
+  override def toString: String = x.mkString("[", ", ", "]")
+
+  override def size: IntScalar = IntVal(x.length)
+
+  override def d(dx: Var): Vector = {
+    Vars(x.map(_.d(dx)): _*).simplify
+  }
+
+  override def apply(env: Map[String, Tensor]): Vector = {
+    Vars(x.map(_(env)): _*).simplify
+  }
+
+  override def simplify: Vector = {
+    if (x.forall(_.isInstanceOf[Val]))
+      VectorVal(x.map(_.asInstanceOf[Val].x).toArray).simplify
+    else
+      this
   }
 }
 
@@ -94,24 +132,21 @@ case class GradientVector(y: Var, x: VectorVar) extends Vector {
 
   override def size: IntScalar = x.size
 
-  override def d(dx: Var): Vector = VectorZero(size)
+  override def d(dx: Var): Vector = throw new UnsupportedOperationException("derivative of gradient vector")
 
   override def apply(env: Map[String, Tensor]): Vector = {
-    val dy = env.get(y.symbol) match {
-      case None => y
+    val yv = env.get(y.symbol) match {
+      case None | Some(Val(_)) => y
       case Some(y: Scalar) => y
       case a => throw new IllegalArgumentException(s"Invalid type: ${a.getClass}, expected Scalar")
     }
 
     env.get(x.symbol) match {
-      case None => dy.d(x)
-      //case Some(x: Vars) => dy.d(x.x: _*)
+      case None => yv.d(x)
+      case Some(x: VectorVar) => yv.d(x)
+      case Some(Vars(x @ _*)) if x.forall(_.isInstanceOf[Var]) => yv.d(x.map(_.asInstanceOf[Var]): _*)
       case a => throw new IllegalArgumentException(s"Invalid type: ${a.getClass}, expected VectorVar or Vars")
     }
-  }
-
-  override def simplify: Vector = {
-    y.simplify.d(x)
   }
 }
 
@@ -121,59 +156,34 @@ case class TangentVector(y: VectorVar, x: Var) extends Vector {
 
   override def size: IntScalar = y.size
 
-  override def d(dx: Var): Vector = VectorZero(size)
+  override def d(dx: Var): Vector = throw new UnsupportedOperationException("derivative of tangent vector")
 
   override def apply(env: Map[String, Tensor]): Vector = {
-    val dy = env.get(y.symbol) match {
-      case None => y
-      case Some(a: Vector) => a
+    val yv = env.get(y.symbol) match {
+      case None | Some(VectorZero(_)) | Some(VectorOne(_)) | Some(VectorVal(_)) | Some(ConstVector(_, _)) => y
+      case Some(y: Vector) => y
       case a => throw new IllegalArgumentException(s"Invalid type: ${a.getClass}, expected Vector")
     }
 
-    val dx = env.get(x.symbol) match {
-      case None => x
-      case Some(a: Var) => a
+    env.get(x.symbol) match {
+      case None => yv.d(x)
+      case Some(x: Var) => yv.d(x)
       case a => throw new IllegalArgumentException(s"Invalid type: ${a.getClass}, expected Var")
     }
-
-    dy.d(dx)
-  }
-
-  override def simplify: Vector = {
-    y.simplify.d(x)
-  }
-}
-
-/** Vector variable */
-case class Vars(x: Scalar*) extends Vector {
-  override def toString: String = x.mkString("[", ", ", "]")
-
-  override def size: IntScalar = IntVal(x.length)
-
-  override def d(dx: Var): Vector = {
-    val d = x.map(_.d(dx))
-    if (d.forall(_ == Val(0))) VectorZero(size) else Vars(d: _*)
-  }
-
-  override def apply(env: Map[String, Tensor]): Vector = Vars(x.map(_(env)): _*)
-
-  override def simplify: Vector = {
-    if (x.forall(_.isInstanceOf[Val])) VectorVal(x.map(_.asInstanceOf[Val].x).toArray).simplify
-    else this
   }
 }
 
 /** x + y */
-case class VectorAdd(x: Vector, y: Vector) extends Vector {
+case class AddVector(x: Vector, y: Vector) extends Vector {
   if (x.size != y.size) throw new IllegalArgumentException(s"Vector sizes mismatch: ${x.size} vs ${y.size}")
 
   override def toString: String = y match {
-    case VectorNeg(y) => s"$x - $y"
+    case NegVector(y) => s"$x - $y"
     case _ => s"$x + $y"
   }
 
   override def equals(o: Any): Boolean = o match {
-    case VectorAdd(a, b) => (x == a && y == b) || (x == b && y == a)
+    case AddVector(a, b) => (x == a && y == b) || (x == b && y == a)
     case _ => false
   }
 
@@ -189,22 +199,27 @@ case class VectorAdd(x: Vector, y: Vector) extends Vector {
     case (VectorVal(a), VectorVal(b)) => VectorVal(a.zip(b).map { case (x, y) => x + y })
     case (VectorZero(_), b) => b
     case (a, VectorZero(_)) => a
-    case (VectorNeg(a), VectorNeg(b)) => -(a + b)
-    case (VectorNeg(a), b) if a == b => VectorZero(a.size)
-    case (a, VectorNeg(b)) if a == b => VectorZero(a.size)
+    case (a, NegVector(NegVector(b))) => a + b
+    case (NegVector(a), NegVector(b)) => -(a + b)
+    case (NegVector(a), b) if a == b => VectorZero(a.size)
+    case (a, NegVector(b)) if a == b => VectorZero(a.size)
     case (ScalarVectorProduct(a, b), ScalarVectorProduct(c, d)) if b == d => (a + c) * b
     case (ScalarVectorProduct(a, b), ScalarVectorProduct(c, d)) if a == c => a * (b + d)
     case (ScalarVectorProduct(a, b), c) if b == c => (a + 1) * b
     case (a, ScalarVectorProduct(b, c)) if a == c => (b + 1) * a
+    case (ScalarVectorProduct(a, b), NegVector(ScalarVectorProduct(c, d))) if b == d => (a - c) * b
+    case (ScalarVectorProduct(a, b), NegVector(ScalarVectorProduct(c, d))) if a == c => a * (b - d)
+    case (NegVector(ScalarVectorProduct(a, b)), c) if b == c => (1 - a) * b
+    case (a, NegVector(ScalarVectorProduct(b, c))) if a == c => (1 - b) * a
     case (a, b) if a == b => 2 * a
     case _ => this
   }
 }
 
 /** -x */
-case class VectorNeg(x: Vector) extends Vector {
+case class NegVector(x: Vector) extends Vector {
   override def toString: String = x match {
-    case VectorAdd(_, _) => s"-($x)"
+    case AddVector(_, _) => s"-($x)"
     case _ => s"-$x"
   }
 
@@ -219,7 +234,7 @@ case class VectorNeg(x: Vector) extends Vector {
   override def simplify: Vector = x match {
     case a @ VectorZero(_) => a
     case VectorVal(a) => VectorVal(a.map(-_))
-    case VectorNeg(a) => a
+    case NegVector(a) => a
     case _ => this
   }
 }
@@ -228,7 +243,7 @@ case class VectorNeg(x: Vector) extends Vector {
 case class ScalarVectorProduct(a: Scalar, x: Vector) extends Vector {
   override def toString: String = {
     val xs = x match {
-      case VectorAdd(_, _) => s"($x)"
+      case AddVector(_, _) => s"($x)"
       case _ => x.toString
     }
 
@@ -244,16 +259,19 @@ case class ScalarVectorProduct(a: Scalar, x: Vector) extends Vector {
 
   override def apply(env: Map[String, Tensor]): Vector = a(env) * x(env)
 
-  override def d(dx: Var): Vector = a * x.d(dx)
+  override def d(dx: Var): Vector = {
+    a * x.d(dx) + a.d(dx) * x
+  }
 
   override def simplify: Vector = (a, x) match {
-    case (Val(0), _) => VectorZero(x.size)
+    case (Val(0), _) => VectorZero(size)
+    case (_, VectorZero(_)) => VectorZero(size)
     case (Val(1), b) => b
     case (Val(-1), b) => -b
     case (Val(a), VectorVal(b)) => VectorVal(b.map(_ * a))
-    case (Neg(a), VectorNeg(b)) => a * b
+    case (Neg(a), NegVector(b)) => a * b
     case (Neg(a), b) => -(a * b)
-    case (a, VectorNeg(b)) => -(a * b)
+    case (a, NegVector(b)) => -(a * b)
     case (a, ScalarVectorProduct(b, c)) => (a * b) * c
     case _ => this
   }
@@ -261,14 +279,16 @@ case class ScalarVectorProduct(a: Scalar, x: Vector) extends Vector {
 
 /** Inner product (x * y) */
 case class InnerProduct(x: Vector, y: Vector) extends Scalar {
+  if (x.size != y.size) throw new IllegalArgumentException(s"Vector sizes mismatch: ${x.size} vs ${y.size}")
+
   override def toString: String = {
     val xs = x match {
-      case VectorAdd(_, _) | ScalarVectorProduct(_, _) => s"($x)"
+      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($x)"
       case _ => x.toString
     }
 
     val ys = y match {
-      case VectorAdd(_, _) | ScalarVectorProduct(_, _) => s"($y)"
+      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($y)"
       case _ => y.toString
     }
 
@@ -291,20 +311,25 @@ case class InnerProduct(x: Vector, y: Vector) extends Scalar {
     case (VectorZero(_), _) => Val(0)
     case (_, VectorZero(_)) => Val(0)
     case (VectorVal(a), VectorVal(b)) => Val(a.zip(b).map { case (x, y) => x * y }.sum)
+    case (NegVector(a), NegVector(b)) => a * b
+    case (a, NegVector(b)) => -(a * b)
+    case (NegVector(a), b) => -(a * b)
     case _ => this
   }
 }
 
 /** Outer product (x ** y) */
 case class OuterProduct(x: Vector, y: Vector) extends Matrix {
+  if (x.size != y.size) throw new IllegalArgumentException(s"Vector sizes mismatch: ${x.size} vs ${y.size}")
+
   override def toString: String = {
     val xs = x match {
-      case VectorAdd(_, _) | ScalarVectorProduct(_, _) => s"($x)"
+      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($x)"
       case _ => x.toString
     }
 
     val ys = y match {
-      case VectorAdd(_, _) | ScalarVectorProduct(_, _) => s"($y)"
+      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($y)"
       case _ => y.toString
     }
 
@@ -315,9 +340,10 @@ case class OuterProduct(x: Vector, y: Vector) extends Matrix {
 
   override def size: (IntScalar, IntScalar) = (x.size, y.size)
 
-  override def apply(env: Map[String, Tensor]): Matrix = x(env) ** y(env)
+  override def apply(env: Map[String, Tensor]): Matrix = x(env) *~ y(env)
 
   override def d(dx: Var): Matrix = {
+    //TODO
     throw new UnsupportedOperationException
     //(x.d(dx) * y) + (x * y.d(dx))
   }
