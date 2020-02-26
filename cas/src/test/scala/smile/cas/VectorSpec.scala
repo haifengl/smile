@@ -26,17 +26,17 @@ class VectorSpec extends Specification {
       val e = VectorVal(Array(3)) + VectorVal(Array(5))
       e mustEqual VectorVal(Array(8))
       val x = Var("x")
-      e.d(x) mustEqual VectorZero(1)
+      e.d(x) mustEqual ZeroVector(1)
     }
     "(x + 0)" in {
       val x = VectorVar("x")
-      val e = x + VectorZero()
+      val e = x + ZeroVector()
       e mustEqual x
       //e.d(x) mustEqual VectorZero()
     }
     "(0 + x)" in {
       val x = VectorVar("x")
-      val e = VectorZero() + x
+      val e = ZeroVector() + x
       e mustEqual x
     }
     "x + x" in {
@@ -48,12 +48,12 @@ class VectorSpec extends Specification {
     "x - x" in {
       val x = VectorVar("x")
       val e = x - x
-      e mustEqual VectorZero()
+      e mustEqual ZeroVector()
     }
     "x + -x" in {
       val x = VectorVar("x")
       val e = x + (-x)
-      e mustEqual VectorZero()
+      e mustEqual ZeroVector()
     }
     "x - y" in {
       val x = VectorVar("x")
@@ -118,7 +118,7 @@ class VectorSpec extends Specification {
       e mustEqual NegVector(x)
     }
     "-0" in {
-      val x = VectorZero()
+      val x = ZeroVector()
       val e = -x
       e mustEqual x
     }
@@ -135,12 +135,12 @@ class VectorSpec extends Specification {
     "(x * 0)" in {
       val x = VectorVar("x")
       val e = x * 0
-      e mustEqual VectorZero()
+      e mustEqual ZeroVector()
     }
     "(0 * x)" in {
       val x = VectorVar("x")
       val e = 0 * x
-      e mustEqual VectorZero()
+      e mustEqual ZeroVector()
     }
     "x * 1" in {
       val x = VectorVar("x")
