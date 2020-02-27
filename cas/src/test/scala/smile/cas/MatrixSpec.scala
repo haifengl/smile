@@ -144,19 +144,19 @@ class MatrixSpec extends Specification {
     }
     "-x * -y" in {
       val x = MatrixVar("x")
-      val y = MatrixVar("y", (IntVar("n"), IntVar("p")))
+      val y = MatrixVar("y", (IntConst("n"), IntConst("p")))
       val e = -x * -y
       e mustEqual MatrixProduct(x, y)
     }
     "x * -y" in {
       val x = MatrixVar("x")
-      val y = MatrixVar("y", (IntVar("n"), IntVar("p")))
+      val y = MatrixVar("y", (IntConst("n"), IntConst("p")))
       val e = x * -y
       e mustEqual NegMatrix(MatrixProduct(x, y))
     }
     "-x * y" in {
       val x = MatrixVar("x")
-      val y = MatrixVar("y", (IntVar("n"), IntVar("p")))
+      val y = MatrixVar("y", (IntConst("n"), IntConst("p")))
       val e = -x * y
       e mustEqual NegMatrix(MatrixProduct(x, y))
     }

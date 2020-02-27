@@ -99,6 +99,31 @@ case class IntVal(x: Int) extends IntScalar {
   override def apply(env: Map[String, Tensor]): IntVal = this
 }
 
+/** Constant value. */
+case class Const(symbol: String) extends Scalar {
+  override def toString: String = symbol
+
+  override def apply(env: Map[String, Tensor]): Scalar = env.get(symbol) match {
+    case None => this
+    case Some(x : Val) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected Val")
+  }
+
+  override def d(dx: Var): Scalar = Val(0)
+  override def d(dx: VectorVar): Vector = ZeroVector(dx.size)
+}
+
+/** Integer constant value. */
+case class IntConst(symbol: String) extends IntScalar {
+  override def toString: String = symbol
+
+  override def apply(env: Map[String, Tensor]): IntScalar = env.get(symbol) match {
+    case None => this
+    case Some(x : IntVal) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected IntVal")
+  }
+}
+
 /** Scalar variable */
 case class Var(symbol: String) extends Scalar {
   override def toString: String = symbol

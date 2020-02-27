@@ -57,28 +57,28 @@ trait Matrix extends Tensor {
 }
 
 /** Matrix of all 0's */
-case class ZeroMatrix(size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
+case class ZeroMatrix(size: (IntScalar, IntScalar) = (IntConst("m"), IntConst("n"))) extends Matrix {
   override def toString: String = "0"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
 /** Matrix of all 1's */
-case class OneMatrix(size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
+case class OneMatrix(size: (IntScalar, IntScalar) = (IntConst("m"), IntConst("n"))) extends Matrix {
   override def toString: String = "1"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
 /** Identity matrix */
-case class IdentityMatrix(size: (IntScalar, IntScalar) = (IntVar("n"), IntVar("n"))) extends Matrix {
+case class IdentityMatrix(size: (IntScalar, IntScalar) = (IntConst("n"), IntConst("n"))) extends Matrix {
   override def toString: String = "I"
   override def d(dx: Var): Matrix = this
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
 /** Constant matrix. */
-case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
+case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntConst("m"), IntConst("n"))) extends Matrix {
   override def toString: String = symbol
   override def d(dx: Var): Matrix = ZeroMatrix(size)
   override def apply(env: Map[String, Tensor]): Matrix = env.get(symbol) match {
@@ -90,7 +90,7 @@ case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m
 }
 
 /** Abstract matrix variable */
-case class MatrixVar(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
+case class MatrixVar(symbol: String, size: (IntScalar, IntScalar) = (IntConst("m"), IntConst("n"))) extends Matrix {
   override def toString: String = symbol
 
   override def d(dx: Var): Matrix = TangentMatrix(this, dx)
@@ -344,7 +344,7 @@ case class MatrixVectorProduct(A: Matrix, x: Vector) extends Vector {
 
 /** Matrix multiplication (A * B) */
 case class MatrixProduct(A: Matrix, B: Matrix) extends Matrix {
-  if (A.size._2 != B.size._1) throw new IllegalArgumentException(s"Matrix multiplication size mismatch: ${A.size} vs ${B.size}")
+  if (A.size._2 != B.size._1) throw new IllegalArgumentException(s"Matrix multiplication size mismatch: ${A.size} x ${B.size}")
 
   override def toString: String = {
     val xs = A match {
