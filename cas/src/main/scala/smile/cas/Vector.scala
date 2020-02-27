@@ -48,7 +48,7 @@ trait Vector extends Tensor {
 }
 
 /** Vector of all 0's */
-case class ZeroVector(size: IntScalar = IntVar("n")) extends Vector {
+case class ZeroVector(size: IntScalar = IntConst("n")) extends Vector {
   override def toString: String = "0"
   override def d(dx: Var): Vector = this
   override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
@@ -56,7 +56,7 @@ case class ZeroVector(size: IntScalar = IntVar("n")) extends Vector {
 }
 
 /** Vector of all 1's */
-case class OneVector(size: IntScalar = IntVar("n")) extends Vector {
+case class OneVector(size: IntScalar = IntConst("n")) extends Vector {
   override def toString: String = "1"
   override def d(dx: Var): Vector = ZeroVector(size)
   override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
@@ -83,7 +83,7 @@ case class VectorVal(x: Array[Double]) extends Vector {
 }
 
 /** Constant vector. Different from VectorVal that has concrete values, this is of constant yet abstract value. */
-case class ConstVector(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
+case class ConstVector(symbol: String, size: IntScalar = IntConst("n")) extends Vector {
   override def toString: String = symbol
   override def d(dx: Var): Vector = ZeroVector(size)
   override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
@@ -122,7 +122,7 @@ case class Vars(x: Scalar*) extends Vector {
 }
 
 /** Abstract vector variable */
-case class VectorVar(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
+case class VectorVar(symbol: String, size: IntScalar = IntConst("n")) extends Vector {
   override def toString: String = symbol
 
   override def d(dx: Var): Vector = TangentVector(this, dx)
@@ -309,19 +309,7 @@ case class ScalarVectorProduct(a: Scalar, x: Vector) extends Vector {
 case class InnerProduct(x: Vector, y: Vector) extends Scalar {
   if (x.size != y.size) throw new IllegalArgumentException(s"Vector sizes mismatch: ${x.size} vs ${y.size}")
 
-  override def toString: String = {
-    val xs = x match {
-      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($x)"
-      case _ => x.toString
-    }
-
-    val ys = y match {
-      case AddVector(_, _) | ScalarVectorProduct(_, _) => s"($y)"
-      case _ => y.toString
-    }
-
-    s"$xs \u00B7 $ys"
-  }
+  override def toString: String = s"<$x, $y>"
 
   override def apply(env: Map[String, Tensor]): Scalar = x(env) * y(env)
 
@@ -337,6 +325,8 @@ case class InnerProduct(x: Vector, y: Vector) extends Scalar {
     case (ZeroVector(_), _) => Val(0)
     case (_, ZeroVector(_)) => Val(0)
     case (VectorVal(a), VectorVal(b)) => Val(a.zip(b).map { case (x, y) => x * y }.sum)
+    case (ScalarVectorProduct(Val(a), b), c) => a * (b * c)
+    case (a, ScalarVectorProduct(Val(b), c)) => b * (a * c)
     case (NegVector(a), NegVector(b)) => a * b
     case (a, NegVector(b)) => -(a * b)
     case (NegVector(a), b) => -(a * b)
@@ -373,6 +363,11 @@ case class OuterProduct(x: Vector, y: Vector) extends Matrix {
   override def simplify: Matrix = (x, y) match {
     case (ZeroVector(_), _) => ZeroMatrix(size)
     case (_, ZeroVector(_)) => ZeroMatrix(size)
+    case (ScalarVectorProduct(Val(a), b), c) => a * (b *~ c)
+    case (a, ScalarVectorProduct(Val(b), c)) => b * (a *~ c)
+    case (NegVector(a), NegVector(b)) => a *~ b
+    case (a, NegVector(b)) => -(a *~ b)
+    case (NegVector(a), b) => -(a *~ b)
     case _ => this
   }
 }

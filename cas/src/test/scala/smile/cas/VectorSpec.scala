@@ -32,7 +32,7 @@ class VectorSpec extends Specification {
       val x = VectorVar("x")
       val e = x + ZeroVector()
       e mustEqual x
-      //e.d(x) mustEqual VectorZero()
+      e.d(x) mustEqual IdentityMatrix()
     }
     "(0 + x)" in {
       val x = VectorVar("x")
@@ -43,7 +43,7 @@ class VectorSpec extends Specification {
       val x = VectorVar("x")
       val e = x + x
       e mustEqual ScalarVectorProduct(2, x)
-      //e.d(x) mustEqual Val(2)
+      e.d(x) mustEqual ScalarMatrixProduct(2, IdentityMatrix())
     }
     "x - x" in {
       val x = VectorVar("x")
@@ -60,16 +60,16 @@ class VectorSpec extends Specification {
       val y = VectorVar("y")
       val e = x - y
       e mustEqual AddVector(x, NegVector(y))
-      //e.d(x) mustEqual Val(1)
+      e.d(x) mustEqual IdentityMatrix()
+      e.d(y) mustEqual NegMatrix(IdentityMatrix())
     }
     "-x - y" in {
       val x = VectorVar("x")
       val y = VectorVar("y")
       val e = -x - y
       e mustEqual NegVector(AddVector(x, y))
-      //e.d(x) mustEqual Val(-1)
+      e.d(y) mustEqual NegMatrix(IdentityMatrix())
     }
-
     "a * x + b * y" in {
       val a = Var("a")
       val b = Var("b")
@@ -78,6 +78,13 @@ class VectorSpec extends Specification {
       val e = a * x + b * y
       e.d(a) mustEqual x
       e.d(b) mustEqual y
+    }
+    "2 * x + 3 * y" in {
+      val x = VectorVar("x")
+      val y = VectorVar("y")
+      val e = 2 * x + 3 * y
+      e.d(x) mustEqual ScalarMatrixProduct(2, IdentityMatrix())
+      e.d(y) mustEqual ScalarMatrixProduct(3, IdentityMatrix())
     }
     "sin2(x) + cos2(x)" in {
       val x = VectorVar("x")
@@ -91,7 +98,6 @@ class VectorSpec extends Specification {
       val z = Var("z")
       val e = log(x*y) - log(z)
       e mustEqual Log(Div(InnerProduct(x, y), z))
-      //e.d(z) mustEqual -1/z
     }
     "x - -x" in {
       val x = VectorVar("x")
@@ -109,8 +115,6 @@ class VectorSpec extends Specification {
       val y = VectorVar("y")
       val e = -x - (-y)
       e mustEqual AddVector(NegVector(x), y)
-      //e.d(x) mustEqual Val(-1)
-      //e.d(y) mustEqual Val(1)
     }
     "a * x - b * x" in {
       val x = VectorVar("x")
@@ -184,6 +188,14 @@ class VectorSpec extends Specification {
       val y = VectorVar("y")
       val e = -x * y
       e mustEqual Neg(InnerProduct(x, y))
+    }
+    "<x, y>" in {
+      val x = VectorVar("x")
+      val y = VectorVar("y")
+      val e = (2 * x) * (3 * y)
+      e mustEqual 6 * InnerProduct(x, y)
+      e.d(x) mustEqual 6 * y
+      e.d(y) mustEqual 6 * x
     }
   }
 }
