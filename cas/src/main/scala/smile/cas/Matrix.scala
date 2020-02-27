@@ -77,6 +77,18 @@ case class IdentityMatrix(size: (IntScalar, IntScalar) = (IntVar("n"), IntVar("n
   override def apply(env: Map[String, Tensor]): Matrix = this
 }
 
+/** Constant matrix. */
+case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
+  override def toString: String = symbol
+  override def d(dx: Var): Matrix = ZeroMatrix(size)
+  override def apply(env: Map[String, Tensor]): Matrix = env.get(symbol) match {
+    case Some(x: ZeroMatrix) => x
+    case Some(x: OneMatrix) => x
+    case Some(x: IdentityMatrix) => x
+    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected 0 | 1 | I")
+  }
+}
+
 /** Abstract matrix variable */
 case class MatrixVar(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
   override def toString: String = symbol
@@ -109,15 +121,22 @@ case class DiagonalMatrix(x: Scalar*) extends Matrix {
   }
 }
 
-/** Constant matrix. */
-case class ConstMatrix(symbol: String, size: (IntScalar, IntScalar) = (IntVar("m"), IntVar("n"))) extends Matrix {
-  override def toString: String = symbol
-  override def d(dx: Var): Matrix = ZeroMatrix(size)
-  override def apply(env: Map[String, Tensor]): Matrix = env.get(symbol) match {
-    case Some(x: ZeroMatrix) => x
-    case Some(x: OneMatrix) => x
-    case Some(x: IdentityMatrix) => x
-    case x => throw new IllegalArgumentException(s"Invalid type: ${x.getClass}, expected 0 | 1 | I")
+/** Row-wise matrix */
+case class RowMatrix(x: Vector*) extends Matrix {
+  override def toString: String = x.mkString("row[", ", ", "]")
+
+  override def size: (IntScalar, IntScalar) = (IntVal(x.length), IntVal(x.length))
+
+  override def d(dx: Var): Matrix = {
+    RowMatrix(x.map(_.d(dx)): _*).simplify
+  }
+
+  override def apply(env: Map[String, Tensor]): Matrix = RowMatrix(x.map(_(env)): _*).simplify
+
+  override def simplify: Matrix = {
+    if (x.forall(_ == OneVector(x.length))) OneMatrix(size)
+    else if (x.forall(_ == ZeroVector(x.length))) ZeroMatrix(size)
+    else this
   }
 }
 
@@ -308,6 +327,10 @@ case class MatrixVectorProduct(A: Matrix, x: Vector) extends Vector {
     A * x.d(dx) + A.d(dx) * x
   }
 
+  override def d(dx: VectorVar): Matrix = {
+    throw new UnsupportedOperationException
+  }
+
   override def simplify: Vector = (A, x) match {
     case (ZeroMatrix(_), _) => ZeroVector(size)
     case (_, ZeroVector(_)) => ZeroVector(size)
@@ -360,9 +383,6 @@ case class MatrixProduct(A: Matrix, B: Matrix) extends Matrix {
     case (a, NegMatrix(b)) => -(a * b)
     case (NegMatrix(a), b) => -(a * b)
     case (MatrixInverse(a), MatrixInverse(b)) => MatrixInverse(b * a)
-    case (MatrixInverse(a), NegMatrix(MatrixInverse(b))) => -MatrixInverse(b * a)
-    case (NegMatrix(MatrixInverse(a)), MatrixInverse(b)) => -MatrixInverse(b * a)
-    case (NegMatrix(MatrixInverse(a)), NegMatrix(MatrixInverse(b))) => MatrixInverse(b * a)
     case _ => this
   }
 }

@@ -33,7 +33,7 @@ trait Vector extends Tensor {
   /** Returns the partial derivative. */
   def d(dx: Var): Vector
   /** Returns the Jacobian matrix. */
-  //def d(dx: VectorVar): Matrix
+  def d(dx: VectorVar): Matrix
 
   def + (y: Vector): Vector = AddVector(this, y).simplify
   def - (y: Vector): Vector = AddVector(this, NegVector(y)).simplify
@@ -51,6 +51,7 @@ trait Vector extends Tensor {
 case class ZeroVector(size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = "0"
   override def d(dx: Var): Vector = this
+  override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
   override def apply(env: Map[String, Tensor]): Vector = this
 }
 
@@ -58,6 +59,7 @@ case class ZeroVector(size: IntScalar = IntVar("n")) extends Vector {
 case class OneVector(size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = "1"
   override def d(dx: Var): Vector = ZeroVector(size)
+  override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
   override def apply(env: Map[String, Tensor]): Vector = this
 }
 
@@ -70,6 +72,7 @@ case class VectorVal(x: Array[Double]) extends Vector {
   }
   override def size: IntScalar = IntVal(x.length)
   override def d(dx: Var): Vector = ZeroVector(size)
+  override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
   override def apply(env: Map[String, Tensor]): VectorVal = this
 
   override def simplify: Vector = {
@@ -83,6 +86,7 @@ case class VectorVal(x: Array[Double]) extends Vector {
 case class ConstVector(symbol: String, size: IntScalar = IntVar("n")) extends Vector {
   override def toString: String = symbol
   override def d(dx: Var): Vector = ZeroVector(size)
+  override def d(dx: VectorVar): Matrix = ZeroMatrix(size, dx.size)
   override def apply(env: Map[String, Tensor]): Vector = env.get(symbol) match {
     case Some(x: ZeroVector) => x
     case Some(x: OneVector) => x
@@ -99,6 +103,10 @@ case class Vars(x: Scalar*) extends Vector {
 
   override def d(dx: Var): Vector = {
     Vars(x.map(_.d(dx)): _*).simplify
+  }
+
+  override def d(dx: VectorVar): Matrix = {
+    RowMatrix(x.map(_.d(dx).simplify): _*).simplify
   }
 
   override def apply(env: Map[String, Tensor]): Vector = {
@@ -119,6 +127,10 @@ case class VectorVar(symbol: String, size: IntScalar = IntVar("n")) extends Vect
 
   override def d(dx: Var): Vector = TangentVector(this, dx)
 
+  override def d(dx: VectorVar): Matrix = {
+    if (symbol.equals(dx.symbol)) IdentityMatrix(size, size) else ZeroMatrix(size, size)
+  }
+
   override def apply(env: Map[String, Tensor]): Vector = env.get(symbol) match {
     case None => this
     case Some(x : Vector) => x
@@ -133,6 +145,8 @@ case class GradientVector(y: Var, x: VectorVar) extends Vector {
   override def size: IntScalar = x.size
 
   override def d(dx: Var): Vector = throw new UnsupportedOperationException("derivative of gradient vector")
+
+  override def d(dx: VectorVar): Matrix = throw new UnsupportedOperationException("derivative of gradient vector")
 
   override def apply(env: Map[String, Tensor]): Vector = {
     val yv = env.get(y.symbol) match {
@@ -157,6 +171,8 @@ case class TangentVector(y: VectorVar, x: Var) extends Vector {
   override def size: IntScalar = y.size
 
   override def d(dx: Var): Vector = throw new UnsupportedOperationException("derivative of tangent vector")
+
+  override def d(dx: VectorVar): Matrix = throw new UnsupportedOperationException("derivative of tangent vector")
 
   override def apply(env: Map[String, Tensor]): Vector = {
     val yv = env.get(y.symbol) match {
@@ -192,6 +208,10 @@ case class AddVector(x: Vector, y: Vector) extends Vector {
   override def apply(env: Map[String, Tensor]): Vector = x(env) + y(env)
 
   override def d(dx: Var): Vector = {
+    x.d(dx) + y.d(dx)
+  }
+
+  override def d(dx: VectorVar): Matrix = {
     x.d(dx) + y.d(dx)
   }
 
@@ -231,6 +251,10 @@ case class NegVector(x: Vector) extends Vector {
     -x.d(dx)
   }
 
+  override def d(dx: VectorVar): Matrix = {
+    -x.d(dx)
+  }
+
   override def simplify: Vector = x match {
     case a @ ZeroVector(_) => a
     case VectorVal(a) => VectorVal(a.map(-_))
@@ -261,6 +285,10 @@ case class ScalarVectorProduct(a: Scalar, x: Vector) extends Vector {
 
   override def d(dx: Var): Vector = {
     a * x.d(dx) + a.d(dx) * x
+  }
+
+  override def d(dx: VectorVar): Matrix = {
+    a * x.d(dx) + a.d(dx) *~ x
   }
 
   override def simplify: Vector = (a, x) match {
@@ -302,9 +330,7 @@ case class InnerProduct(x: Vector, y: Vector) extends Scalar {
   }
 
   override def d(dx: VectorVar): Vector = {
-    // TODO
-    throw new UnsupportedOperationException
-    //(x.d(dx) * y) + (x * y.d(dx))
+    (x.d(dx) * y) + (y.d(dx) * x)
   }
 
   override def simplify: Scalar = (x, y) match {
@@ -341,9 +367,7 @@ case class OuterProduct(x: Vector, y: Vector) extends Matrix {
   override def apply(env: Map[String, Tensor]): Matrix = x(env) *~ y(env)
 
   override def d(dx: Var): Matrix = {
-    //TODO
-    throw new UnsupportedOperationException
-    //(x.d(dx) * y) + (x * y.d(dx))
+    (x.d(dx) *~ y) + (x *~ y.d(dx))
   }
 
   override def simplify: Matrix = (x, y) match {
