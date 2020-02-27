@@ -197,5 +197,11 @@ class VectorSpec extends Specification {
       e.d(x) mustEqual 6 * y
       e.d(y) mustEqual 6 * x
     }
+    "x \u2297 y" in {
+      val x = VectorVar("x")
+      val y = VectorVar("y")
+      val e = (2 * x) *~ (3 * y)
+      e mustEqual 6 * OuterProduct(x, y)
+    }
   }
 }
