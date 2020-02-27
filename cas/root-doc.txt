@@ -4,15 +4,17 @@ mathematicians and scientists.
 
 The symbolic manipulations supported include:
 
-- simplification to a smaller expression or some standard form,
+  - simplification to a smaller expression or some standard form,
   including automatic simplification with assumptions and
   simplification with constraints
-- substitution of symbols or numeric values for certain expressions
-- change of form of expressions: expanding products and powers, partial
+
+  - substitution of symbols or numeric values for certain expressions
+
+  - change of form of expressions: expanding products and powers, partial
   and full factorization, rewriting as partial fractions, constraint
   satisfaction, rewriting trigonometric functions as exponentials,
   transforming logic expressions, etc.
-- partial and total differentiation
-- matrix operations including products, inverses, etc.
-- statistical computation
-- optimized code generation
+
+  - partial and total differentiation
+
+  - matrix operations including products, inverses, etc.
