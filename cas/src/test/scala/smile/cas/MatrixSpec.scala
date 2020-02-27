@@ -26,7 +26,6 @@ class MatrixSpec extends Specification {
       val x = MatrixVar("x")
       val e = x + ZeroMatrix()
       e mustEqual x
-      //e.d(x) mustEqual VectorZero()
     }
     "(0 + x)" in {
       val x = MatrixVar("x")
@@ -37,7 +36,6 @@ class MatrixSpec extends Specification {
       val x = MatrixVar("x")
       val e = x + x
       e mustEqual ScalarMatrixProduct(2, x)
-      //e.d(x) mustEqual Val(2)
     }
     "x - x" in {
       val x = MatrixVar("x")
@@ -54,16 +52,13 @@ class MatrixSpec extends Specification {
       val y = MatrixVar("y")
       val e = x - y
       e mustEqual AddMatrix(x, NegMatrix(y))
-      //e.d(x) mustEqual Val(1)
     }
     "-x - y" in {
       val x = MatrixVar("x")
       val y = MatrixVar("y")
       val e = -x - y
       e mustEqual NegMatrix(AddMatrix(x, y))
-      //e.d(x) mustEqual Val(-1)
     }
-
     "a * x + b * y" in {
       val a = Var("a")
       val b = Var("b")
@@ -89,8 +84,6 @@ class MatrixSpec extends Specification {
       val y = MatrixVar("y")
       val e = -x - (-y)
       e mustEqual AddMatrix(NegMatrix(x), y)
-      //e.d(x) mustEqual Val(-1)
-      //e.d(y) mustEqual Val(1)
     }
     "a * x - b * x" in {
       val x = MatrixVar("x")
