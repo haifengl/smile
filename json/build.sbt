@@ -8,4 +8,4 @@ autoScalaLibrary := true
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.6.0" % "test",
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.8.3" % "test",
