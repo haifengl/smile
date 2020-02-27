@@ -14,4 +14,4 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machi
 
 target in Compile in doc := baseDirectory.value / "../docs/2.0/api/cas"
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.6.0" % "test",
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.8.3" % "test",
