@@ -10,7 +10,7 @@ scalacOptions in (Compile, doc) ++= Seq("-groups", "-implicits")
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt")
 
-scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machine Intelligence and Learning Engine")
+scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Computer Algebra System")
 
 target in Compile in doc := baseDirectory.value / "../docs/2.0/api/cas"
 
