@@ -29,6 +29,8 @@ package object formula {
   implicit def pimpHyperTerm(x: HyperTerm) = PimpedHyperTerm(x)
   implicit def pimpTerm(x: Term) = PimpedTerm(x)
 
+  def all: HyperTerm = Terms.all()
+  def onehot(factors: String*): HyperTerm = Terms.onehot(factors: _*)
   def abs(x: String): Term = Terms.abs($(x))
   def ceil(x: String): Term = Terms.ceil($(x))
   def floor(x: String): Term = Terms.floor($(x))
