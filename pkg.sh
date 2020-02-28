@@ -38,8 +38,10 @@ check_error "Packaging .tgz"
 #sbt ++2.12.10 scala/publishSigned
 #sbt ++2.12.10 json/publishSigned
 #sbt ++2.12.10 vega/publishSigned
+#sbt ++2.12.10 cas/publishSigned
 
 #git checkout scala-2.11
 #sbt ++2.11.12 scala/publishSigned
 #sbt ++2.11.12 json/publishSigned
 #sbt ++2.11.12 vega/publishSigned
+#sbt ++2.11.12 cas/publishSigned
