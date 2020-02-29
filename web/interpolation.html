@@ -31,7 +31,7 @@ permalink: "{{ page.filePathStem }}.html"
     val x = Array(0.0, 1.0, 2.0, 3.0, 4.0, 5.0, 6.0)
     val y = Array(0.0, 0.8415, 0.9093, 0.1411, -0.7568, -0.9589, -0.2794)
 
-    val linear = new LinearInterpolation(x, y);
+    val linear = new LinearInterpolation(x, y)
 
     val data = (0 to 60).map { i =>
       val x = i * 0.1
