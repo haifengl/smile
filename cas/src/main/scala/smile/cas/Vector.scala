@@ -20,6 +20,8 @@ package smile.cas
 /** Vector: rank-1 tensor. */
 trait Vector extends Tensor {
   override def rank: Option[Int] = Some(1)
+  override def shape: Option[Array[IntScalar]] = Some(Array(size))
+
   /** The size of vector. */
   def size: IntScalar
 
