@@ -1,0 +1,154 @@
+JSON (JavaScript Object Notation) is a lightweight data-interchange format.
+It is easy for humans to read and write. It is easy for machines to parse
+and generate. JSON is a text format that is completely language independent
+but uses conventions that are familiar to programmers of the C-family of
+languages,
+
+JSON has only types of string, number, boolean, object, array, and null.
+This library includes additional types such as date, int, long, double,
+counter, binary, UUID, ObjectId (as in BSON), etc.
+
+It is very easy to parse a JSON object:
+{{{
+val doc =
+  json"""
+  {
+    "store": {
+      "book": [
+        {
+          "category": "reference",
+          "author": "Nigel Rees",
+          "title": "Sayings of the Century",
+          "price": 8.95
+        },
+        {
+          "category": "fiction",
+          "author": "Evelyn Waugh",
+          "title": "Sword of Honour",
+          "price": 12.99
+        },
+        {
+          "category": "fiction",
+          "author": "Herman Melville",
+          "title": "Moby Dick",
+          "isbn": "0-553-21311-3",
+          "price": 8.99
+        },
+        {
+          "category": "fiction",
+          "author": "J. R. R. Tolkien",
+          "title": "The Lord of the Rings",
+          "isbn": "0-395-19395-8",
+          "price": 22.99
+        }
+      ],
+      "bicycle": {
+        "color": "red",
+        "price": 19.95
+      }
+    }
+  }
+  """
+}}}
+The interpolator `json` parse a string to `JsObject`. It is also okay to embed
+variable references directly in processed string literals.
+
+{{{
+val x = 1
+json"""
+  {
+    "x": $x
+  }
+"""
+}}}
+If the string is not a JSON object but any other valid JSON expression,
+one may use parseJson method to convert the string to a `JsValue`.
+{{{
+"1".parseJson
+}}}
+The json interpolator can only be applied to string literals.
+If you want to parse a string variable, the `parseJson` method can
+always be employed. If you know the string contains a JSON object,
+you may also use the method `parseJsObject`.
+
+{{{
+val s = """{"x":1}"""
+s.parseJsObject
+}}}
+To serialize a JSON value (of type JsValue) in compact mode, you can
+just use `toString`. To pretty print, use the method `prettyPrint`.
+
+{{{
+doc.toString
+doc.prettyPrint
+}}}
+With a `JsObject` or `JsArray`, you can refer to the individual
+elements with a variation of array syntax, like this:
+{{{
+doc("store")("bicycle")("color")
+// Use symbol instead of string
+doc('store)('bicycle)('color)
+}}}
+Note that we follow Scala's array access convention by `()` rather than
+`[]` in JavaScript.
+
+Besides, you can use the dot notation to access its fields/elements
+just like in JavaScript:
+{{{
+doc.store.bicycle.color
+doc.store.book(0).author
+}}}
+It is worth noting that we didn't define the type/schema of the document
+while Scala is a strong type language. In other words, we have both the
+type safe features of strong type language and the flexibility of dynamic
+language in this JSON library.
+
+If you try to access a non-exist field, 1JsUndefined` is returned.
+{{{
+scala> doc.book
+res11: unicorn.json.JsValue = undefined
+}}}
+Although there are already several nice JSON libraries for Scala,
+the JSON objects are immutable by design, which is a natural choice
+for a functional language. For database, however, data mutation is necessary.
+Therefore, `JsObject` and `JsArray` are mutable data structures. You can
+set/add a field just like in JavaScript:
+{{{
+json.store.bicycle.color = "green"
+}}}
+To delete a field from `JsObject`, use remove method:
+{{{
+doc.store.book(0) remove "price"
+}}}
+It is same as setting it `JsUndefined`:
+{{{
+doc.store.book(0).price = `JsUndefined`
+}}}
+To delete an element from `JsArray`, the remove method will effectively
+remove it from the array. However, setting an element to undefined
+doesn't reduce the array size.
+{{{
+// delete the first element and array size is smaller
+doc.store.book.remove(0)
+// set the first element to undefined but array size keeps same
+doc.store.book(0) = JsUndefined
+}}}
+It is also possible to append an element or another array to `JsArray`:
+{{{
+val a = JsArray(1, 2, 3, 4)
+a += 5
+
+a ++= JsArray(5, 6)
+}}}
+Common iterative operations such as `foreach`, `map`, `reduce` can be applied
+to `JsArray` too.
+{{{
+doc.store.book.asInstanceOf[JsArray].foreach { book =>
+ println(book.price)
+}
+}}}
+Because Scala is a static language, it is impossible to know
+`doc.store.book` is an array at compile time. So it is typed as
+generic `JsValue`, which is the parent type of specific JSON data types.
+Therefore, we use `asInstanceOf[JsArray]` to convert it to `JsArray`
+in order to use `foreach`.
