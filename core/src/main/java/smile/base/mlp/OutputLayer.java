@@ -56,8 +56,6 @@ public class OutputLayer extends Layer {
 
         this.f = f;
         this.cost = cost;
-        output = new double[n];
-        gradient = new double[n];
     }
 
     @Override
