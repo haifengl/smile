@@ -57,3 +57,5 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies += "com.lihaoyi" % "ammonite" % "2.0.4" cross CrossVersion.full
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
+
+libraryDependencies += "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
