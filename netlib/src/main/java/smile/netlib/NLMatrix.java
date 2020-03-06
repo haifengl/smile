@@ -33,8 +33,17 @@ import org.netlib.util.intW;
  */
 public class NLMatrix extends JMatrix {
     private static final long serialVersionUID = 1L;
-
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NLMatrix.class);
+
+    static {
+        if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+            try {
+                System.loadLibrary("mkl_rt");
+            } catch (Exception ex) {
+                logger.error("Failed log mkl_rt native library: {}", ex);
+            }
+        }
+    }
 
     static String NoTranspose = "N";
     static String Transpose   = "T";
