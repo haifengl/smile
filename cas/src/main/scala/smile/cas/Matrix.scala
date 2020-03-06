@@ -20,6 +20,8 @@ package smile.cas
 /** Matrix: rank-2 tensor. */
 trait Matrix extends Tensor {
   override def rank: Option[Int] = Some(2)
+  override def shape: Option[Array[IntScalar]] = Some(Array(size._1, size._2))
+
   /** The size of matrix (rows x columns). */
   def size: (IntScalar, IntScalar)
   /** Returns the partial derivative. */

@@ -107,13 +107,13 @@ public class MLPTest {
 
     @Test
     public void testReLUSigmoid() {
-        test("CPU", CPU.x, CPU.y, 143.8323, Layer.rectifier(30), Layer.sigmoid(30));
-        test("2dplanes", Planes.x, Planes.y, 4.4913, Layer.rectifier(50), Layer.sigmoid(30));
-        test("abalone", Abalone.x, Abalone.y, 3.3786, Layer.rectifier(40), Layer.sigmoid(30));
+        test("CPU", CPU.x, CPU.y, 152.2285, Layer.rectifier(30), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, 4.4432, Layer.rectifier(50), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, 3.3641, Layer.rectifier(40), Layer.sigmoid(30));
         test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
         test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1220, Layer.rectifier(65), Layer.sigmoid(30));
-        test("cal_housing", CalHousing.x, CalHousing.y, 118020.7335, Layer.rectifier(40), Layer.sigmoid(30));
-        test("puma8nh", Puma8NH.x, Puma8NH.y, 5.6649, Layer.rectifier(40), Layer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 118046.5629, Layer.rectifier(40), Layer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 5.6834, Layer.rectifier(40), Layer.sigmoid(30));
         test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2640, Layer.rectifier(40), Layer.sigmoid(30));
     }
 }
