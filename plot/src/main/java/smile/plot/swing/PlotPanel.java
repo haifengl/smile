@@ -29,16 +29,12 @@ import java.awt.print.Printable;
 import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFileChooser;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JToolBar;
-import javax.swing.RepaintManager;
+import javax.swing.*;
+
 import smile.swing.FileChooser;
 import smile.swing.Printer;
 
@@ -252,5 +248,30 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
      */
     public void print() {
         Printer.getPrinter().print(this);
+    }
+
+    /**
+     * Shows the plot panel in a window.
+     * @return a new JFrame that contains the plot panel.
+     */
+    public JFrame window() throws InterruptedException, InvocationTargetException {
+        JFrame frame = new JFrame();
+
+        JPanel pane = new JPanel(new BorderLayout());
+        pane.add(this, BorderLayout.CENTER);
+        pane.add(toolbar, BorderLayout.NORTH);
+
+        frame.getContentPane().add(pane);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(new java.awt.Dimension(1000, 1000));
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            frame.toFront();
+            frame.repaint();
+        });
+
+        return frame;
     }
 }
