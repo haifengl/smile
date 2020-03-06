@@ -110,6 +110,12 @@ object Main extends App {
       |repl.prompt() = "smile> "
     """.stripMargin
 
+  if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+    // Change the terminal mode so that it accepts ANSI escape codes
+    if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
+      println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
+  }
+
   /** Handle the Ammonite results. */
   def isSuccess(res: Res[Any]): Boolean = res match {
     case Res.Failure(msg) =>
