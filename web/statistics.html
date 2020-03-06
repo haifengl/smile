@@ -42,7 +42,7 @@ permalink: "{{ page.filePathStem }}.html"
         from a given data set. With a <code>Distribution</code> object, we may access its distribution parameter(s), mean,
         variance, standard deviation, entropy, generates a random number following the distribution,
         call its probability density function (the method <code>p</code> or cumulative distribution function (<code>cdf</code>).
-        The reserve function of <code>cdf</code> is <code>quantile</code>. We can also calculate the likelihood or
+        The reverse function of <code>cdf</code> is <code>quantile</code>. We can also calculate the likelihood or
         log likelihood of a sample set.</p>
 
     <pre class="prettyprint lang-scala"><code>
@@ -82,9 +82,6 @@ permalink: "{{ page.filePathStem }}.html"
     smile&gt; val e = ExponentialDistribution.fit(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
     e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
     </code></pre>
-
-    <p>Note that <code>var</code> is a keyword in Scala. So we have to use <code>`var`</code> to access the variance
-        method.</p>
 
     <p>The below is a more advanced example of estimating a mixture model of Gaussian, exponential and gamma distribution.
         The result is quite accurate for this complicated case.</p>
@@ -216,7 +213,7 @@ permalink: "{{ page.filePathStem }}.html"
     def kstest(x: Array[Double], y: Distribution): KSTest
     </code></pre>
 
-    <h4 class="title">One-Sample Test</h4>
+    <h4 class="title">Two-Sample Test</h4>
     <p>The two-sample K–S for the null hypothesis that the data sets
         are drawn from the same distribution. Small values of p-value show that
         the cumulative distribution function of x is significantly different from
