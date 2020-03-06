@@ -221,7 +221,7 @@ public class MLPTest {
         model.setMomentum(0.0);
 
         int error = 0;
-        for (int epoch = 1; epoch <= 4; epoch++) {
+        for (int epoch = 1; epoch <= 5; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             for (int i : permutation) {
