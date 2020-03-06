@@ -188,7 +188,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     public void update(double[] x, int y) {
         propagate(x);
         setTarget(labels.indexOf(y));
-        backpropagate();
+        backpropagate(x);
         update();
     }
 
@@ -202,7 +202,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             setTarget(labels.indexOf(y[i]));
-            backpropagate();
+            backpropagate(x[i]);
         }
 
         update();

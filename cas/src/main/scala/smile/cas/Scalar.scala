@@ -20,6 +20,7 @@ package smile.cas
 /** Scalar: rank-0 tensor. */
 trait Scalar extends Tensor {
   override def rank: Option[Int] = Some(0)
+  override def shape: Option[Array[IntScalar]] = Some(Array())
 
   /** Applies the expression. */
   def apply(env: Map[String, Tensor]): Scalar
@@ -50,6 +51,8 @@ trait Scalar extends Tensor {
 /** Scalar: rank-0 tensor. */
 trait IntScalar extends Tensor {
   override def rank: Option[Int] = Some(0)
+  override def shape: Option[Array[IntScalar]] = Some(Array())
+
   /** Explicit conversion of int to float. */
   def toScalar: Scalar = Int2Scalar(this)
   /** Applies the expression. */

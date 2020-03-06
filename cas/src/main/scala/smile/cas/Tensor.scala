@@ -37,5 +37,5 @@ trait Tensor {
   def rank: Option[Int]
 
   /** The shape of tensor, i.e the size of each dimension. */
-  //def shape: Option[Array[Int]]
+  def shape: Option[Array[IntScalar]]
 }
