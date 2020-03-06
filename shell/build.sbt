@@ -29,21 +29,9 @@ bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}/..""""
 
 bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
 
-// native packager Docker plugin
-enablePlugins(DockerPlugin)
+batScriptExtraDefines  += """set _JAVA_OPTS=!_JAVA_OPTS! -Dsmile.home=%SMILE_HOME% -Djava.library.path=%SMILE_HOME%\\bin"""
 
-import com.typesafe.sbt.packager.docker._
-
-dockerBaseImage := "frolvlad/alpine-oraclejdk8"
-
-packageName in Docker := "haifengl/smile"
-
-dockerUpdateLatest := true
-
-dockerCommands := dockerCommands.value.flatMap{
-  case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
-  case other => List(other)
-}
+batScriptExtraDefines  += """set PATH=!PATH!;%~dp0"""
 
 // BuildInfo
 enablePlugins(BuildInfoPlugin)
@@ -57,3 +45,5 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies += "com.lihaoyi" % "ammonite" % "2.0.4" cross CrossVersion.full
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
+
+libraryDependencies += "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
