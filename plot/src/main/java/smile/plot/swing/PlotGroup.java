@@ -39,14 +39,13 @@ import smile.swing.FileChooser;
 import smile.swing.Printer;
 
 /**
- * PlotPanel is a simple JPanel to contain PlotCanvas objects. The PlotPanel
- * will organize the plots in a grid layout.
+ * PlotGroup organizes multiple plots in a grid layout.
  *
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class PlotPanel extends JPanel implements ActionListener, Printable {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotPanel.class);
+public class PlotGroup extends JPanel implements ActionListener, Printable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotGroup.class);
 
     /**
      * Toolbar command.
@@ -67,19 +66,9 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
     
     /**
      * Constructor.
-     * @param plot the plot to add into the frame.
-     */
-    public PlotPanel(PlotCanvas plot) {
-        init();
-        contentPane.add(plot);
-        organize();
-    }
-
-    /**
-     * Constructor.
      * @param plots the plots to add into the frame.
      */
-    public PlotPanel(PlotCanvas... plots) {
+    public PlotGroup(PlotCanvas... plots) {
         init();
         for (PlotCanvas plot : plots) {
             contentPane.add(plot);
@@ -105,9 +94,12 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
      * based on the number of plots in the frame.
      */
     private void organize() {
-        int m = (int) Math.sqrt(contentPane.getComponentCount());
-        if (m <= 0) m = 1;
-        contentPane.setLayout(new GridLayout(m, 0, 0, 0));
+        double col = Math.sqrt(contentPane.getComponentCount());
+        int n = (int) Math.floor(col);
+        int m = n < col ?  n + 1 : n;
+        if (m < 1) m = 1;
+
+        contentPane.setLayout(new GridLayout(m, n, 0, 0));
     }
 
     /**
@@ -130,10 +122,8 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
      * Initialize toolbar.
      */
     private void initToolBar() {
-        toolbar = new JToolBar(JToolBar.VERTICAL);
-        toolbar.setFloatable(false);
-        add(toolbar, BorderLayout.WEST);
-        
+        toolbar = new JToolBar();
+
         JButton button = makeButton("save", SAVE, "Save", "Save");
         toolbar.add(button);
 
@@ -251,8 +241,8 @@ public class PlotPanel extends JPanel implements ActionListener, Printable {
     }
 
     /**
-     * Shows the plot panel in a window.
-     * @return a new JFrame that contains the plot panel.
+     * Shows the plot group in a window.
+     * @return a new JFrame that contains the plot group.
      */
     public JFrame window() throws InterruptedException, InvocationTargetException {
         JFrame frame = new JFrame();
