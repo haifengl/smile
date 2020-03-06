@@ -126,13 +126,12 @@ package object swing {
     * @param legend the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, legend: Char): JPanel = {
+  def plot(data: DataFrame, legend: Char): PlotPanel = {
     val x = data.toArray
     val p = data.ncols
     val names = data.names
 
-    val panel = new JPanel(new GridLayout(p, p))
-    panel.setBackground(Color.white)
+    val panel = new PlotPanel()
 
     for (i <- 0 until p) {
       for (j <- 0 until p) {
@@ -154,15 +153,14 @@ package object swing {
     * @param palette the color for each class.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): JPanel = {
+  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): PlotPanel = {
     val dat = data.drop(category)
     val x = dat.toArray
     val y = data.column(category).toIntArray
     val p = x(0).length
     val names = dat.names()
 
-    val panel = new JPanel(new GridLayout(p, p))
-    panel.setBackground(Color.white)
+    val panel = new PlotPanel()
 
     for (i <- 0 until p) {
       for (j <- 0 until p) {
