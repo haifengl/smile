@@ -63,7 +63,7 @@ execRunner () {
 # Actually runs the script.
 run() {
   execRunner "$jshell_cmd" \
-    -J-D"smile.home=${app_home}/.." \
+    -R-D"smile.home=$smile_home" \
     --class-path "$app_classpath" \
     "$@"
 
@@ -75,8 +75,13 @@ run() {
 ###  Main script                     ###
 ###  ------------------------------- ###
 
+if [[ "$OSTYPE" == "darwin"* ]]; then
+    export JAVA_HOME=`/usr/libexec/java_home -v 11`
+fi
+
 declare -r real_script_path="$(realpath "$0")"
 declare -r app_home="$(realpath "$(dirname "$real_script_path")")"
+declare -r smile_home="${app_home}/../"
 declare -r lib_dir="$(realpath "${app_home}/../lib")"
 declare -r app_classpath="$lib_dir/*"
 

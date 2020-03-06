@@ -40,7 +40,7 @@ public class NLMatrix extends JMatrix {
             try {
                 System.loadLibrary("mkl_rt");
             } catch (Exception ex) {
-                logger.warn("Failed log mkl_rt native library: {}", ex);
+                logger.warn("mkl_rt.dll is not available: {}", ex);
             }
         }
     }
