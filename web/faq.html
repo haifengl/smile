@@ -120,12 +120,36 @@ permalink: "{{ page.filePathStem }}.html"
         a lot of plots without showing them on the screen, you may run Smile in headless model.
     </p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-bash"><code>
     bin/smile -Djava.awt.headless=true
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-bash"><code>
+    bin/jshell.sh -R-Djava.awt.headless=true
+    </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The following example shows how to save a plot in the headless mode.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
     val x = toy.select(1, 2).toArray
@@ -133,12 +157,38 @@ permalink: "{{ page.filePathStem }}.html"
 
     val canvas = ScatterPlot.plot(x, y, '*', Array(RED, BLUE))
 
-    val headless = new Headless(canvas);
-    headless.pack();
-    headless.setVisible(true);
+    val headless = new Headless(canvas)
+    headless.pack()
+    headless.setVisible(true)
 
     canvas.save(new java.io.File("headless.png"))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import java.awt.Color;
+    import smile.io.*;
+    import smile.plot.swing.*;
+    import org.apache.commons.csv.CSVFormat;
+
+    var toy = Read.csv("data/classification/toy/toy-train.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var x = toy.select(1, 2).toArray();
+    var y = toy.column(0).toIntArray();
+
+    Color[] colors = {Color.RED, Color.BLUE};
+    var canvas = ScatterPlot.plot(x, y, '*', colors);
+
+    var headless = new Headless(canvas);
+    headless.pack();
+    headless.setVisible(true);
+
+    canvas.save(new java.io.File("headless.png"));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 class="question" id="seed">How can I set the random number generator seed for random forest?</h2>
     <p class="answer">
