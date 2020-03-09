@@ -120,7 +120,6 @@ package object nlp {
       }
     }
 
-    println(sentences)
     smile.nlp.collocation.NGram.of(sentences.asJava, maxNGramSize, minFreq)
   }
 
@@ -215,10 +214,7 @@ package object nlp {
       features(i) = tfidf(bag(i), maxtf, n, df(i))
     }
 
-    val norm = MathEx.norm(features)
-    for (i <- 0 until features.length) {
-      features(i) = features(i) / norm
-    }
+    MathEx.unitize(features)
 
     features
   }
