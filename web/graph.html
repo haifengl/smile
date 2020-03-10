@@ -48,6 +48,71 @@ permalink: "{{ page.filePathStem }}.html"
         the overloaded <code>bfs(Visitor)</code> and <code>dfs(Visitor)</code>
         can take a user-define <code>Visitor</code> object to perform specific
         operations when visiting a vertex.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.graph.*
+
+    var graph = new AdjacencyList(8);
+    graph.addEdge(0, 2);
+    graph.addEdge(1, 7);
+    graph.addEdge(2, 6);
+    graph.addEdge(7, 4);
+    graph.addEdge(3, 4);
+    graph.addEdge(3, 5);
+    graph.addEdge(5, 4);
+
+    graph.dfs();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+
+    <p>With DFS or BFS, we can also obtain the topological ordering of a directed graph, which
+        is a linear ordering of its vertices such that for every directed edge uv from vertex
+        u to vertex v, u comes before v in the ordering. For instance, the vertices of the
+        graph may represent tasks to be performed, and the edges may represent constraints
+        that one task must be performed before another; in this application, a topological
+        ordering is just a valid sequence for the tasks. A topological ordering is possible
+        if and only if the graph has no directed cycles, that is, if it is a directed acyclic
+        graph (DAG).</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var graph = new AdjacencyList(13, true);
+    graph.addEdge(8, 7);
+    graph.addEdge(7, 6);
+    graph.addEdge(0, 1);
+    graph.addEdge(0, 2);
+    graph.addEdge(0, 3);
+    graph.addEdge(0, 5);
+    graph.addEdge(0, 6);
+    graph.addEdge(2, 3);
+    graph.addEdge(3, 4);
+    graph.addEdge(3, 5);
+    graph.addEdge(6, 4);
+    graph.addEdge(6, 9);
+    graph.addEdge(4, 9);
+    graph.addEdge(9, 10);
+    graph.addEdge(9, 11);
+    graph.addEdge(9, 12);
+    graph.addEdge(11, 12);
+
+    graph.sortdfs(); // DFS
+    graph.sortbfs(); // BFS
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Graph traversal can be used to compute the topological ordering of graph
         by the methods <code>sortbfs</code> or <code>sortdfs</code>. The topological
@@ -60,6 +125,32 @@ permalink: "{{ page.filePathStem }}.html"
         from a source to all other vertices in the graph by Dijkstra algorithm.
         Many manifold algorithms employ the shortest path among the samples as
         a similarity measure instead of pairwise distance.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var graph = new AdjacencyMatrix(6, true);
+    graph.addEdge(0, 1, 0.41);
+    graph.addEdge(1, 2, 0.51);
+    graph.addEdge(2, 3, 0.50);
+    graph.addEdge(4, 3, 0.36);
+    graph.addEdge(3, 5, 0.38);
+    graph.addEdge(3, 0, 0.45);
+    graph.addEdge(0, 5, 0.29);
+    graph.addEdge(5, 4, 0.21);
+    graph.addEdge(1, 4, 0.32);
+    graph.addEdge(4, 2, 0.32);
+    graph.addEdge(5, 1, 0.29);
+
+    graph.dijkstra();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

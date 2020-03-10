@@ -107,9 +107,33 @@ permalink: "{{ page.filePathStem }}.html"
         a <code>PrintStream</code> or file path to save the output. The return number is
         the number of discovered frequent item sets.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def fpgrowth(minSupport: Int, itemsets: Array[Array[Int]]): Stream[ItemSet]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class FPTree {
+        public static FPTree of(int minSupport, int[][] itemsets);
+        public static FPTree of(double minSupport, int[][] itemsets);
+    }
+
+    public class FPGrowth {
+        public static Stream&lt;ItemSet&gt; apply(FPTree tree);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In practice, even the raw input is often too big to fit into the memory. To conquer this
         challenge, the below methods scan the input file twice.
@@ -118,13 +142,40 @@ permalink: "{{ page.filePathStem }}.html"
         is a compressed form of data.
         In this way, we don't need load the whole database into the main memory.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def fptree(minSupport: Int, supplier: Supplier[Stream[Array[Int]]]): FPTree
 
     def fpgrowth(tree: FPTree): Stream[ItemSet]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class FPTree {
+        public static FPTree of(int minSupport, Supplier&lt;Stream&lt;int[]&gt;&gt; supplier);
+        public static FPTree of(double minSupport, Supplier&lt;Stream&lt;int[]&gt;&gt; supplier);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the below example, we apply FP-Growth to a toy data.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val itemsets = Array(
         Array(1, 3),
@@ -148,13 +199,56 @@ permalink: "{{ page.filePathStem }}.html"
     2 (7)
     3 2 (6)
     3 (8)
-
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import smile.association.*
+
+    jshell> int[][] itemsets = {
+       ...>         {1, 3},
+       ...>         {2},
+       ...>         {4},
+       ...>         {2, 3, 4},
+       ...>         {2, 3},
+       ...>         {2, 3},
+       ...>         {1, 2, 3, 4},
+       ...>         {1, 3},
+       ...>         {1, 2, 3},
+       ...>         {1, 2, 3}
+       ...>     }
+    itemsets ==> int[10][] { int[2] { 1, 3 }, int[1] { 2 }, int[1] ...  3 }, int[3] { 1, 2, 3 } }
+
+    jshell> var tree = FPTree.of(3, itemsets)
+    tree ==> smile.association.FPTree@2a7b6f69
+
+    jshell> FPGrowth.apply(tree).forEach(itemset -> System.out.println(itemset))
+    4 (3)
+    1 (5)
+    2 1 (3)
+    3 2 1 (3)
+    3 1 (5)
+    2 (7)
+    3 2 (6)
+    3 (8)
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Each row is a frequent item set, ending with the frequency in parenthesis.
         The sample data directory <code>data/transaction</code> contains a couple of
         large benchmark datasets.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val tree = fptree(1000, () => {
       smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line =>
@@ -174,6 +268,41 @@ permalink: "{{ page.filePathStem }}.html"
     2265 (1004)
     996 (1004)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var tree = FPTree.of(1000, () -> {
+       ...>         try {
+       ...>             return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").
+       ...>                 map(line -> Arrays.stream(line.split(" ")).
+       ...>                     mapToInt(Integer::valueOf).
+       ...>                     toArray()
+       ...>                 );
+       ...>         } catch (IOException ex) {
+       ...>             ex.printStackTrace();
+       ...>         }
+       ...>
+       ...>         return Stream.empty();
+       ...>     })
+    tree ==> smile.association.FPTree@3dddbe65
+
+    jshell> FPGrowth.apply(tree).limit(10).forEach(itemset -> System.out.println(itemset))
+    5634 (1000)
+    3805 (1001)
+    3376 (1001)
+    2279 (1001)
+    6333 (1002)
+    243 (1002)
+    808 (1003)
+    3875 (1004)
+    2265 (1004)
+    996 (1004)
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The data <code>kosarak.data</code> has 990,002 transactions.
         With minimum support 1000, our implementation generates 711,424
@@ -186,14 +315,40 @@ permalink: "{{ page.filePathStem }}.html"
         Our implementation generates association rules in a storage efficient way
         by employing the total support tree that is a kind of compressed set enumeration tree.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def arm(minSupport: Int, confidence: Double, itemsets: Array[Array[Int]]): Stream[AssociationRule]
 
     def arm(confidence: Double, tree: FPTree): Stream[AssociationRule]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class ARM {
+        public static Stream&lt;AssociationRule&gt; apply(double confidence, FPTree tree);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The API is similar to <code>fpgrowth</code> except the additional parameter <code>confidence</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> arm(0.6, tree).limit(10).forEach { rule => println(rule) }
     (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
@@ -207,6 +362,26 @@ permalink: "{{ page.filePathStem }}.html"
     (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
     (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> ARM.apply(0.6, tree).limit(10).forEach(rule -> System.out.println(rule))
+    (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
+    (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
+    (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123
+    (3, 1) => (6) support = 5.84% confidence = 68.28% lift = 1.12 leverage = 0.0064
+    (6, 1) => (11) support = 8.70% confidence = 65.17% lift = 1.77 leverage = 0.0379
+    (11, 1) => (6) support = 8.70% confidence = 93.70% lift = 1.54 leverage = 0.0306
+    (6, 3, 1) => (11) support = 3.81% confidence = 65.30% lift = 1.78 leverage = 0.0167
+    (3, 11, 1) => (6) support = 3.81% confidence = 93.73% lift = 1.54 leverage = 0.0134
+    (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
+    (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>
