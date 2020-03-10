@@ -424,7 +424,7 @@ println(s"OOB error = ${rf.error}")
           <pre class="prettyprint lang-java"><code>
 DataFrame iris = Read.arff("iris.arff");
 RandomForest rf = RandomForest.fit(Formula.lhs("class"), iris);
-System.out.format("OOB error = %.2f\n", rf.error);
+System.out.format("OOB error = %.2f%n", rf.error());
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>

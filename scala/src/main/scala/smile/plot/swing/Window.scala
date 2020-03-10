@@ -17,10 +17,8 @@
 
 package smile.plot.swing
 
-import java.awt.{Dimension, GridLayout}
 import java.awt.event.WindowEvent
-
-import javax.swing.{JComponent, JFrame, JPanel, SwingUtilities, WindowConstants}
+import javax.swing.JFrame
 
 /** A window/JFrame with plot canvas. */
 case class Window(frame: JFrame, canvas: PlotCanvas) {
@@ -34,42 +32,8 @@ object Window {
   /** The number of created windows, as the default window title. */
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
 
-  /** Create a window frame. */
-  def apply(canvas: JComponent): JFrame = {
-    val jframe = frame()
-    jframe.add(canvas)
-
-    SwingUtilities.invokeAndWait(() => {
-      jframe.toFront()
-      jframe.repaint()
-    })
-
-    jframe
-  }
-
   /** Create a plot window frame. */
   def apply(canvas: PlotCanvas): Window = {
-    val title = Option(canvas.getTitle)
-    val jframe = frame(title)
-    jframe.add(canvas)
-
-    SwingUtilities.invokeAndWait(() => {
-      canvas.reset()
-      canvas.repaint()
-      jframe.toFront()
-    })
-
-    Window(jframe, canvas)
-  }
-
-  /** Create a plot window frame. */
-  def frame(title: Option[String] = None): JFrame = {
-    val frame = new JFrame(title.getOrElse("Smile Plot " + windowCount.addAndGet(1)))
-    frame.setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE)
-    frame.getContentPane.add(new JPanel(new GridLayout(4, 4)))
-    frame.setSize(new Dimension(1000, 1000))
-    frame.setLocationRelativeTo(null)
-    frame.setVisible(true)
-    frame
+    Window(canvas.window, canvas)
   }
 }
