@@ -20,11 +20,11 @@ package smile
 import scala.language.implicitConversions
 import javax.swing.JComponent
 import smile.json.JsObject
-import smile.plot.swing.PlotCanvas
+import smile.plot.swing.{PlotCanvas, PlotGroup}
 
 package object plot {
   /** Shows a swing component with implicit renderer. */
-  def show(canvas: JComponent)(implicit renderer: JComponent => Unit): Unit = {
+  def show(canvas: PlotGroup)(implicit renderer: PlotGroup => Unit): Unit = {
     renderer(canvas)
   }
 
@@ -39,8 +39,8 @@ package object plot {
   }
 
   /** Swing component renderer. */
-  implicit def desktop(canvas: JComponent): Unit = {
-    swing.Window(canvas)
+  implicit def desktop(canvas: PlotGroup): Unit = {
+    canvas.window
   }
 
   /** Swing based plot renderer. */

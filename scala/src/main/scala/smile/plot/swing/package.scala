@@ -128,24 +128,23 @@ package object swing {
     * @param legend the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, legend: Char): JPanel = {
+  def plot(data: DataFrame, legend: Char): PlotGroup = {
     val x = data.toArray
     val p = data.ncols
     val names = data.names
 
-    val panel = new JPanel(new GridLayout(p, p))
-    panel.setBackground(Color.white)
+    val plots = new PlotGroup()
 
     for (i <- 0 until p) {
       for (j <- 0 until p) {
         val x2 = x.map { row => Array(row(i), row(j)) }
         val canvas = ScatterPlot.plot(x2, legend)
         canvas.setAxisLabels(names(i), names(j))
-        panel.add(canvas)
+        plots.add(canvas)
       }
     }
 
-    panel
+    plots
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame
@@ -156,26 +155,25 @@ package object swing {
     * @param palette the color for each class.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): JPanel = {
+  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): PlotGroup = {
     val dat = data.drop(category)
     val x = dat.toArray
     val y = data.column(category).toIntArray
     val p = x(0).length
     val names = dat.names()
 
-    val panel = new JPanel(new GridLayout(p, p))
-    panel.setBackground(Color.white)
+    val plots = new PlotGroup()
 
     for (i <- 0 until p) {
       for (j <- 0 until p) {
         val x2 = x.map { row => Array(row(i), row(j)) }
         val canvas = ScatterPlot.plot(x2, y, legend, palette)
         canvas.setAxisLabels(names(i), names(j))
-        panel.add(canvas)
+        plots.add(canvas)
       }
     }
 
-    panel
+    plots
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame

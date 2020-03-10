@@ -89,4 +89,4 @@ lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsO
 
 lazy val cas = project.in(file("cas")).settings(commonSettings: _*)
 
-lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala, netlib)
+lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, cas, scala)

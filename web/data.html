@@ -77,6 +77,12 @@ permalink: "{{ page.filePathStem }}.html"
         In fact, the output of most Smile data parsers is a DataFrame object.
         DataFrames are immutable and contain a fixed number of named columns.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
     <pre class="prettyprint lang-scala"><code>
     smile> val iris = read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
@@ -108,9 +114,59 @@ permalink: "{{ page.filePathStem }}.html"
     | petalwidth|  150|0.1|1.198667|2.5|
     +-----------+-----+---+--------+---+
     </code></pre>
+        </div>
+        <div class="tab-pane" id="java_1">
+    <pre class="prettyprint lang-java"><code>
+    jshell> import smile.data.*
+
+    jshell> import smile.io.*
+
+    jshell> var iris = Read.arff("data/weka/iris.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
+    140 more rows...
+
+    jshell> iris
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    $3 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
+    +-----------+----------+-----------+----------+-----------+
+    |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +-----------+----------+-----------+----------+-----------+
+    |        5.1|       3.5|        1.4|       0.2|Iris-setosa|
+    |        4.9|         3|        1.4|       0.2|Iris-setosa|
+    |        4.7|       3.2|        1.3|       0.2|Iris-setosa|
+    |        4.6|       3.1|        1.5|       0.2|Iris-setosa|
+    |          5|       3.6|        1.4|       0.2|Iris-setosa|
+    |        5.4|       3.9|        1.7|       0.4|Iris-setosa|
+    |        4.6|       3.4|        1.4|       0.3|Iris-setosa|
+    |          5|       3.4|        1.5|       0.2|Iris-setosa|
+    |        4.4|       2.9|        1.4|       0.2|Iris-setosa|
+    |        4.9|       3.1|        1.5|       0.1|Iris-setosa|
+    +-----------+----------+-----------+----------+-----------+
+    140 more rows...
+
+    jshell> iris.summary()
+    $5 ==> [column: String, count: long, min: double, avg: double, max: double]
+    +-----------+-----+---+--------+---+
+    |     column|count|min|     avg|max|
+    +-----------+-----+---+--------+---+
+    |sepallength|  150|4.3|5.843333|7.9|
+    | sepalwidth|  150|  2|   3.054|4.4|
+    |petallength|  150|  1|3.758667|6.9|
+    | petalwidth|  150|0.1|1.198667|2.5|
+    +-----------+-----+---+--------+---+
+    </code></pre>
+        </div>
+    </div>
 
     <p>We can get a row with the array syntax or refer a column by its name.</p>
-
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris(0)
     res5: Tuple = {
@@ -124,8 +180,35 @@ permalink: "{{ page.filePathStem }}.html"
     smile> iris("sepallength")
     res6: vector.BaseVector[T, TS, S] = [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> iris.get(0)
+    $7 ==> {
+      sepallength: 5.1,
+      sepalwidth: 3.5,
+      petallength: 1.4,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }
+
+    jshell> iris.column("sepallength")
+    $8 ==> [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Similarly, we can select a few columns to create a new data frame. </p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris.select("sepallength", "sepalwidth")
     res8: DataFrame =
@@ -145,10 +228,47 @@ permalink: "{{ page.filePathStem }}.html"
     +-----------+----------+
     140 more rows...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> iris.select("sepallength", "sepalwidth")
+    $9 ==> [sepallength: float, sepalwidth: float]
+    +-----------+----------+
+    |sepallength|sepalwidth|
+    +-----------+----------+
+    |        5.1|       3.5|
+    |        4.9|         3|
+    |        4.7|       3.2|
+    |        4.6|       3.1|
+    |          5|       3.6|
+    |        5.4|       3.9|
+    |        4.6|       3.4|
+    |          5|       3.4|
+    |        4.4|       2.9|
+    |        4.9|       3.1|
+    +-----------+----------+
+    140 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Advanced operations such as <code>exists</code>, <code>forall</code>,
-        <code>find</code>, <code>filter</code> are also supported.
+        <code>find</code>, <code>filter</code> are also supported. In Java API,
+        all these operations are on <code>Stream</code>. The corresponding methods
+        are <code>anyMatch</code>, <code>allMatch</code>, <code>findAny</code>,
+        and <code>filter</code>.
         The <code>predicate</code> of these functions expect a <code>Tuple</code></p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; iris.exists(_.getDouble(0) > 4.5)
     res16: Boolean = true
@@ -192,9 +312,65 @@ permalink: "{{ page.filePathStem }}.html"
     +-----------+----------+-----------+----------+---------------+
     15 more rows...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> iris.stream().anyMatch(row -> row.getDouble(0) > 4.5)
+    $14 ==> true
+
+    jshell> iris.stream().allMatch(row -> row.getDouble(0) < 10)
+    $15 ==> true
+
+    jshell> iris.stream().filter(row -> row.getByte("class") == 1).findAny()
+    $17 ==> Optional[{
+      sepallength: 6.2,
+      sepalwidth: 2.9,
+      petallength: 4.3,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }]
+
+    jshell> iris.stream().filter(row -> row.getString("class").equals("Iris-versicolor")).findAny()
+    $18 ==> Optional[{
+      sepallength: 6.2,
+      sepalwidth: 2.9,
+      petallength: 4.3,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }]
+
+    jshell> DataFrame.of(iris.stream().filter(row -> row.getDouble(1) > 3 && row.getByte("class") != 0))
+    $20 ==> [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
+    +-----------+----------+-----------+----------+---------------+
+    |sepallength|sepalwidth|petallength|petalwidth|          class|
+    +-----------+----------+-----------+----------+---------------+
+    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
+    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
+    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
+    |        6.3|       3.3|        4.7|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.4|       1.4|Iris-versicolor|
+    |          6|       3.4|        4.5|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.7|       1.5|Iris-versicolor|
+    |        6.3|       3.3|          6|       2.5| Iris-virginica|
+    |        7.2|       3.6|        6.1|       2.5| Iris-virginica|
+    +-----------+----------+-----------+----------+---------------+
+    15 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Besides numeric and nominal values, many other data types
         are also supported.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val strings = read.arff("data/weka/string.arff")
     [main] INFO smile.io.Arff - Read ARFF relation LCCvsLCSH
@@ -229,10 +405,48 @@ permalink: "{{ page.filePathStem }}.html"
     |2001-05-03 12:59:55|
     +-------------------+
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var strings = Read.arff("data/weka/string.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation LCCvsLCSH
+    strings ==> [LCC: String, LCSH: String]
+    +-----+--------------------------------------+
+    |  LCC|                                  LCSH|
+    +-----+--------------------------------------+
+    |  AG5|Encyclopedias and dictionaries.;Twe...|
+    |AS262|   Science -- Soviet Union -- History.|
+    |  AE5|       Encyclopedias and dictionaries.|
+    |AS281|Astronomy, Assyro-Babylonian.;Moon ...|
+    |AS281|Astronomy, Assyro-Babylonian.;Moon ...|
+    +-----+--------------------------------------+
+
+    jshell> var dates = Read.arff("data/weka/date.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation Timestamps
+    dates ==> [timestamp: DateTime]
+    +-------------------+
+    |          timestamp|
+    +-------------------+
+    |2001-04-03 12:12:12|
+    |2001-05-03 12:59:55|
+    +-------------------+
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>For data wrangling, the most important functions of <code>DataFrame</code>
         are <code>map</code> and <code>groupBy</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; iris.map { row =>
                     val x = new Array[Double](6)
@@ -268,7 +482,69 @@ permalink: "{{ page.filePathStem }}.html"
       Array(5.1, 3.3, 1.7, 0.5, 16.83, 0.85),
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var x6 = iris.stream().map(row -> {
+       ...>     var x = new double[6];
+       ...>     for (int i = 0; i < 4; i++) x[i] = row.getDouble(i);
+       ...>     x[4] = x[0] * x[1];
+       ...>     x[5] = x[2] * x[3];
+       ...>     return x;
+       ...> })
+    x6 ==> java.util.stream.ReferencePipeline$3@32eff876
 
+    jshell> x6.forEach(xi -> System.out.println(Arrays.toString(xi)))
+    [6.199999809265137, 2.9000000953674316, 4.300000190734863, 1.2999999523162842, 17.980000038146954, 5.590000042915335]
+    [7.300000190734863, 2.9000000953674316, 6.300000190734863, 1.7999999523162842, 21.170001249313373, 11.340000042915335]
+    [7.699999809265137, 3.0, 6.099999904632568, 2.299999952316284, 23.09999942779541, 14.029999489784245]
+    [6.699999809265137, 2.5, 5.800000190734863, 1.7999999523162842, 16.749999523162842, 10.440000066757193]
+    [7.199999809265137, 3.5999999046325684, 6.099999904632568, 2.5, 25.919998626709003, 15.249999761581421]
+    [6.5, 3.200000047683716, 5.099999904632568, 2.0, 20.800000309944153, 10.199999809265137]
+    [6.400000095367432, 2.700000047683716, 5.300000190734863, 1.899999976158142, 17.28000056266785, 10.070000236034389]
+    [5.699999809265137, 2.5999999046325684, 3.5, 1.0, 14.819998960495013, 3.5]
+    [4.599999904632568, 3.5999999046325684, 1.0, 0.20000000298023224, 16.55999921798707, 0.20000000298023224]
+    [5.400000095367432, 3.0, 4.5, 1.5, 16.200000286102295, 6.75]
+    [6.699999809265137, 3.0999999046325684, 4.400000095367432, 1.399999976158142, 20.76999876976015, 6.160000028610227]
+    [5.099999904632568, 3.799999952316284, 1.600000023841858, 0.20000000298023224, 19.379999394416814, 0.32000000953674324]
+    [5.599999904632568, 3.0, 4.5, 1.5, 16.799999713897705, 6.75]
+    [6.0, 3.4000000953674316, 4.5, 1.600000023841858, 20.40000057220459, 7.200000107288361]
+    [5.099999904632568, 3.299999952316284, 1.7000000476837158, 0.5, 16.82999944210053, 0.8500000238418579]
+    [5.5, 2.4000000953674316, 3.799999952316284, 1.100000023841858, 13.200000524520874, 4.1800000381469715]
+    [7.099999904632568, 3.0, 5.900000095367432, 2.0999999046325684, 21.299999713897705, 12.38999963760375]
+    [6.300000190734863, 3.4000000953674316, 5.599999904632568, 2.4000000953674316, 21.420001249313373, 13.440000305175772]
+    [5.099999904632568, 2.5, 3.0, 1.100000023841858, 12.749999761581421, 3.3000000715255737]
+    [6.400000095367432, 3.0999999046325684, 5.5, 1.7999999523162842, 19.839999685287466, 9.899999737739563]
+    [6.300000190734863, 2.9000000953674316, 5.599999904632568, 1.7999999523162842, 18.27000115394594, 10.079999561309819]
+    [5.5, 2.4000000953674316, 3.700000047683716, 1.0, 13.200000524520874, 3.700000047683716]
+    [6.5, 3.0, 5.800000190734863, 2.200000047683716, 19.5, 12.76000069618226]
+    [7.599999904632568, 3.0, 6.599999904632568, 2.0999999046325684, 22.799999713897705, 13.859999170303354]
+    [4.900000095367432, 2.5, 4.5, 1.7000000476837158, 12.250000238418579, 7.650000214576721]
+    [5.0, 2.299999952316284, 3.299999952316284, 1.0, 11.499999761581421, 3.299999952316284]
+    [5.599999904632568, 2.700000047683716, 4.199999809265137, 1.2999999523162842, 15.120000009536739, 5.45999955177308]
+    ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The <code>groupBy</code> operation groups elements according to a classification
+        function, and returning the results in a <code>Map</code>. The classification
+        function maps elements to some key type <code>K</code>. The collector produces
+        a map whose keys are the values resulting from applying the classification
+        function to the input elements, and whose corresponding values are Lists
+        containing the input elements which map to the associated key under the
+        classification function.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> iris.groupBy(row => row.getString("class"))
     res23: Map[String, DataFrame] = Map(
@@ -298,6 +574,72 @@ permalink: "{{ page.filePathStem }}.html"
     |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> iris.stream().collect(java.util.stream.Collectors.groupingBy(row -> row.getString("class")))
+    $24 ==> {Iris-versicolor=[{
+      sepallength: 7,
+      sepalwidth: 3.2,
+      petallength: 4.7,
+      petalwidth: 1.4,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.4,
+      sepalwidth: 3.2,
+      petallength: 4.5,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.9,
+      sepalwidth: 3.1,
+      petallength: 4.9,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 5.5,
+      sepalwidth: 2.3,
+      petallength: 4,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.5,
+      sepalwidth: 2.8,
+      petallength: 4.6,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 5.7,
+      sepalwidth: 2.8,
+      petallength: 4.5,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    },  ...  class: Iris-setosa
+    }, {
+      sepallength: 4.6,
+      sepalwidth: 3.2,
+      petallength: 1.4,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }, {
+      sepallength: 5.3,
+      sepalwidth: 3.7,
+      petallength: 1.5,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }, {
+      sepallength: 5,
+      sepalwidth: 3.3,
+      petallength: 1.4,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }]}
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="sparse">Sparse Dataset</h2>
 
@@ -326,9 +668,15 @@ permalink: "{{ page.filePathStem }}.html"
         is a columnar storage format that supports
         nested data structures. It uses the record shredding and
         assembly algorithm described in the Dremel paper.</p>
-
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.parquet("shell/src/universal/data/parquet/userdata1.parquet")
+    smile> val df = read.parquet("data/parquet/userdata1.parquet")
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -343,6 +691,29 @@ permalink: "{{ page.filePathStem }}.html"
     |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var df = Read.parquet("data/parquet/userdata1.parquet")
+    df ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.avro">Apache Avro</h3>
     <p><a href="https://avro.apache.org/">Apache Avro</a>
@@ -352,6 +723,13 @@ permalink: "{{ page.filePathStem }}.html"
         Avro relies on schemas. When Avro data is stored in a file, its schema
         is stored with it. Avro schemas are defined with JSON.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val stream = java.nio.file.Files.newInputStream(Paths.getTestData("avro/userdata.avsc"))
     stream: java.io.InputStream = sun.nio.ch.ChannelInputStream@1e5e2e06
@@ -374,6 +752,35 @@ permalink: "{{ page.filePathStem }}.html"
     |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var stream = java.nio.file.Files.newInputStream(smile.util.Paths.getTestData("avro/userdata.avsc"))
+    stream ==> sun.nio.ch.ChannelInputStream@4da855dd
+
+    jshell> var schema = new org.apache.avro.Schema.Parser().parse(stream)
+    schema ==> {"type":"record","name":"kylosample","doc":"Schem ...  inferred from '1E+02'"}]}
+
+    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), schema)
+    avrodf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.arrow">Apache Arrow</h3>
     <p><a href="https://arrow.apache.org/">Apache Arrow</a>
@@ -391,6 +798,13 @@ permalink: "{{ page.filePathStem }}.html"
     <p>In the below example, we write a DataFrame into Feather
         file and then read it back.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val temp = java.io.File.createTempFile("chinook", "arrow")
     temp: java.io.File = /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5413820941564790310arrow
@@ -416,11 +830,51 @@ permalink: "{{ page.filePathStem }}.html"
     |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var temp = java.io.File.createTempFile("chinook", "arrow")
+    temp ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
+
+    jshell> var path = temp.toPath()
+    path ==> /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/chinook5430879887643149276arrow
+
+    jshell> Write.arrow(df, path)
+    [main] INFO smile.io.Arrow - write 1000 rows
+
+    jshell> var arrowdf = Read.arrow(path)
+    [main] INFO smile.io.Arrow - read 1000 rows and 13 columns
+    arrowdf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.sas">SAS7BDAT</h3>
     <p>SAS7BDAT is currently the main format
         used for storing SAS datasets across all platforms.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.sas(Paths.getTestData("sas/airline.sas7bdat"))
     df: DataFrame = [YEAR: double, Y: double, W: double, R: double, L: double, K: double]
@@ -440,10 +894,43 @@ permalink: "{{ page.filePathStem }}.html"
     +----+-----+-----+------+-----+-----+
     22 more rows...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var sasdf = Read.sas("data/sas/airline.sas7bdat")
+    sasdf ==> [YEAR: double, Y: double, W: double, R: double, L: double, K: double]
+    +----+-----+-----+------+-----+-----+
+    |YEAR|    Y|    W|     R|    L|    K|
+    +----+-----+-----+------+-----+-----+
+    |1948|1.214|0.243|0.1454|1.415|0.612|
+    |1949|1.354| 0.26|0.2181|1.384|0.559|
+    |1950|1.569|0.278|0.3157|1.388|0.573|
+    |1951|1.948|0.297| 0.394| 1.55|0.564|
+    |1952|2.265| 0.31|0.3559|1.802|0.574|
+    |1953|2.731|0.322|0.3593|1.926|0.711|
+    |1954|3.025|0.335|0.4025|1.964|0.776|
+    |1955|3.562| 0.35|0.3961|2.116|0.827|
+    |1956|3.979|0.361|0.3822|2.435|  0.8|
+    |1957| 4.42|0.379|0.3045|2.707|0.921|
+    +----+-----+-----+------+-----+-----+
+    22 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.jdbc">Relational Database</h3>
     <p>It is also easy to load data from relation databases through JDBC.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> import $ivy.`org.xerial:sqlite-jdbc:3.28.0`
     import $ivy.$
@@ -491,6 +978,53 @@ permalink: "{{ page.filePathStem }}.html"
     +--------------+-------------+--------------+-------------+-------+-----+
     402 more rows...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> Class.forName("org.sqlite.JDBC")
+    $1 ==> class org.sqlite.JDBC
+
+    jshell> var url = String.format("jdbc:sqlite:%s", smile.util.Paths.getTestData("sqlite/chinook.db").toAbsolutePath())
+    url ==> "jdbc:sqlite:/Users/hli/github/smile/shell/target ... ../data/sqlite/chinook.db"
+
+    jshell> var sql = "select e.firstname as 'Employee First', e.lastname as 'Employee Last', c.firstname as 'Customer First', c.lastname as 'Customer Last', c.country, i.total " +
+                     "from employees as e " +
+                     "join customers as c on e.employeeid = c.supportrepid " +
+                     "join invoices as i on c.customerid = i.customerid "
+    sql ==> "select e.firstname as 'Employee First', e.lastna ... ustomerid = i.customerid "
+
+    jshell> var conn = java.sql.DriverManager.getConnection(url)
+    conn ==> org.sqlite.jdbc4.JDBC4Connection@1df82230
+
+    jshell> var stmt = conn.createStatement()
+    stmt ==> org.sqlite.jdbc4.JDBC4Statement@75329a49
+
+    jshell> var rs = stmt.executeQuery(sql)
+    rs ==> org.sqlite.jdbc4.JDBC4ResultSet@48aaecc3
+
+    jshell> var sqldf = DataFrame.of(rs)
+    sqldf ==> [Employee First: String, Employee Last: String, Customer First: String, Customer Last: String, Country: String, Total: Double]
+    +--------------+-------------+--------------+-------------+-------+-----+
+    |Employee First|Employee Last|Customer First|Customer Last|Country|Total|
+    +--------------+-------------+--------------+-------------+-------+-----+
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.98|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 3.96|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 5.94|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 0.99|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 1.98|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil|13.86|
+    |          Jane|      Peacock|          Luís|    Gonçalves| Brazil| 8.91|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 1.98|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany|13.86|
+    |         Steve|      Johnson|        Leonie|       Köhler|Germany| 8.91|
+    +--------------+-------------+--------------+-------------+-------+-----+
+    402 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.arff">Weka ARFF</h3>
     <p><a href="http://www.cs.waikato.ac.nz/ml/weka/arff.html">Weka ARFF (attribute relation file format)</a>
@@ -510,16 +1044,17 @@ permalink: "{{ page.filePathStem }}.html"
         Also, the ability to include comments ensure we can record extra information about the data set,
         including how it was derived, where it came from, and how it might be cited.</p>
 
-    <p>To read an ARFF file, <code>smile.io</code> has the function</p>
-
-    <pre class="prettyprint lang-scala"><code>
-    def read.arff(file: String): DataFrame
-    </code></pre>
-
     <p>In the directory <code>data/weka</code>,
         we have many sample ARFF files. We can also read data from remote servers
         by HTTP, FTP, etc.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
     [main] INFO smile.io.Arff - Read ARFF relation cpu
@@ -540,20 +1075,249 @@ permalink: "{{ page.filePathStem }}.html"
     +----+-----+-----+----+-----+-----+-----+
     199 more rows...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var cpu = Read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
+    [main] INFO smile.io.Arff - Read ARFF relation cpu
+    cpu ==> [MYCT: float, MMIN: float, MMAX: float, CACH: float, CHMIN: float, CHMAX: float, class: float]
+    +----+-----+-----+----+-----+-----+-----+
+    |MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
+    +----+-----+-----+----+-----+-----+-----+
+    | 125|  256| 6000| 256|   16|  128|  199|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|16000|  32|    8|   16|  132|
+    |  26| 8000|32000|  64|    8|   32|  290|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|64000|  64|   16|   32|  749|
+    |  23|32000|64000| 128|   32|   64| 1238|
+    +----+-----+-----+----+-----+-----+-----+
+    199 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.csv">Delimited Text and CSV</h3>
     <p>The delimited text files are widely used in machine learning research community.
         The comma-separated values (CSV) file is a special case. Smile provides flexible
-        parser for them.</p>
+        parser for them based on
+        <a href="https://commons.apache.org/proper/commons-csv/">Apache Commons CSV</a> library.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType = null): DataFrame
     </code></pre>
-    <p>The parser can infer the schema of data.</p>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <p>In Java API, the user may provide a
+                <a href="https://javadoc.io/doc/org.apache.commons/commons-csv/latest/index.html">CSVFormat</a>
+                argument to specify the format of a CSV file.</p>
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public interface Read {
+        /** Reads a CSV file. */
+        static DataFrame csv(String path) throws IOException, URISyntaxException
 
+        /** Reads a CSV file. */
+        static DataFrame csv(String path, CSVFormat format) throws IOException, URISyntaxException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(String path, CSVFormat format, StructType schema) throws IOException, URISyntaxException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path) throws IOException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path, CSVFormat format) throws IOException
+
+        /** Reads a CSV file. */
+        static DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The parser tries it best to infer the schema of data from the top rows.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
-    </code></pre>
+    smile> val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    zip: DataFrame = [V1: int, V2: double, V3: double, V4: double, V5: double, V6: double, V7: double, V8: double, V9: double, V10: double, V11: double, V12: double, V13: double, V14: double, V15: double, V16: double, V17: double, V18: double, V19: double, V20: double, V21: double, V22: double, V23: double, V24: double, V25: double, V26: double, V27: double, V28: double, V29: double, V30: double, V31: double, V32: double, V33: double, V34: double, V35: double, V36: double, V37: double, V38: double, V39: double, V40: double, V41: double, V42: double, V43: double, V44: double, V45: double, V46: double, V47: double, V48: double, V49: double, V50: double, V51: double, V52: double, V53: double, V54: double, V55: double, V56: double, V57: double, V58: double, V59: double, V60: double, V61: double, V62: double, V63: double, V64: double, V65: double, V66: double, V67: double, V68: double, V69: double, V70: double, V71: double, V72: double, V73: double, V74: double, V75: double, V76: double, V77: double, V78: double, V79: double, V80: double, V81: double, V82: double, V83: double, V84: double, V85: double, V86: double, V87: double, V88: double, V89: double, V90: double, V91: double, V92: double, V93: double, V94: double, V95: double, V96: double, V97: double, V98: double, V99: double, V100: double, V101: double, V102: double, V103: double, V104: double, V105: double, V106: double, V107: double, V108: double, V109: double, V110: double, V111: double, V112: double, V113: double, V114: double, V115: double, V116: double, V117: double, V118: double, V119: double, V120: double, V121: double, V122: double, V123: double, V124: double, V125: double, V126: double, V127: double, V128: double, V129: double, V130: double, V131: double, V132: double, V133: double, V134: double, V135: double, V136: double, V137: double, V138: double, V139: double, V140: double, V141: double, V142: double, V143: double, V144: double, V145: double, V146: double, V147: double, V148: double, V149: double, V150: double, V151: double, V152: double, V153: double, V154: double, V155: double, V156: double, V157: double, V158: double, V159: double, V160: double, V161: double, V162: double, V163: double, V164: double, V165: double, V166: double, V167: double, V168: double, V169: double, V170: double, V171: double, V172: double, V173: double, V174: double, V175: double, V176: double, V177: double, V178: double, V179: double, V180: double, V181: double, V182: double, V183: double, V184: double, V185: double, V186: double, V187: double, V188: double, V189: double, V190: double, V191: double, V192: double, V193: double, V194: double, V195: double, V196: double, V197: double, V198: double, V199: double, V200: double, V201: double, V202: double, V203: double, V204: double, V205: double, V206: double, V207: double, V208: double, V209: double, V210: double, V211: double, V212: double, V213: double, V214: double, V215: double, V216: double, V217: double, V218: double, V219: double, V220: double, V221: double, V222: double, V223: double, V224: double, V225: double, V226: double, V227: double, V228: double, V229: double, V230: double, V231: double, V232: double, V233: double, V234: double, V235: double, V236: double, V237: double, V238: double, V239: double, V240: double, V241: double, V242: double, V243: double, V244: double, V245: double, V246: double, V247: double, V248: double, V249: double, V250: double, V251: double, V252: double, V253: double, V254: double, V255: double, V256: double, V257: double]    </code></pre>
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import org.apache.commons.csv.CSVFormat
+
+    jshell> var format = CSVFormat.DEFAULT.withDelimiter(' ')
+    format ==> Delimiter=< > QuoteChar=<"> RecordSeparator=<
+    >  ... red SkipHeaderRecord:false
+
+    jshell> var zip = Read.csv("data/usps/zip.train", format)
+    zip ==> [V1: int, V2: double, V3: double, V4: double, V5: ...   -1|-0.454| 0.879|-0.745|
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+smile> val airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+         "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
+         "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
+         "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
+         "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
+         "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
+         "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
+         "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
+         "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
+         "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
+         "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
+         "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
+         "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
+         "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
+         "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
+         "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
+         "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
+         "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
+         "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
+         "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
+         "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
+         "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
+         "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
+         "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
+         "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
+         "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
+         "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
+         "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
+         "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
+         "YKM", "YUM")
+airport: NominalScale = nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM]
+
+smile> val schema = DataTypes.struct(
+         new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
+         new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
+           "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
+         new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+           "c-5", "c-6", "c-7")),
+         new StructField("DepTime", DataTypes.IntegerType),
+         new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
+           "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
+         new StructField("Origin", DataTypes.ShortType, airport),
+         new StructField("Dest", DataTypes.ShortType, airport),
+         new StructField("Distance", DataTypes.IntegerType),
+         new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
+       )
+schema: StructType = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
+
+smile> val airline = read.csv("shell/src/universal/data/airline/train-1m.csv", schema = schema)
+airline: DataFrame = [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12], DayofMonth: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7, c-8, c-9, c-10, c-11, c-12, c-13, c-14, c-15, c-16, c-17, c-18, c-19, c-20, c-21, c-22, c-23, c-24, c-25, c-26, c-27, c-28, c-29, c-30, c-31], DayOfWeek: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6, c-7], DepTime: int, UniqueCarrier: byte nominal[9E, AA, AQ, AS, B6, CO, DH, DL, EV, F9, FL, HA, HP, MQ, NW, OH, OO, TZ, UA, US, WN, XE, YV], Origin: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Dest: short nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, ADK, ADQ, AEX, AGS, AKN, ALB, ALO, AMA, ANC, APF, ASE, ATL, ATW, AUS, AVL, AVP, AZO, BDL, BET, BFL, BGM, BGR, BHM, BIL, BIS, BJI, BLI, BMI, BNA, BOI, BOS, BPT, BQK, BQN, BRO, BRW, BTM, BTR, BTV, BUF, BUR, BWI, BZN, CAE, CAK, CDC, CDV, CEC, CHA, CHO, CHS, CIC, CID, CKB, CLD, CLE, CLL, CLT, CMH, CMI, CMX, COD, COS, CPR, CRP, CRW, CSG, CVG, CWA, CYS, DAB, DAL, DAY, DBQ, DCA, DEN, DFW, DHN, DLG, DLH, DRO, DSM, DTW, EAU, EGE, EKO, ELM, ELP, ERI, EUG, EVV, EWN, EWR, EYW, FAI, FAR, FAT, FAY, FCA, FLG, FLL, FLO, FMN, FNT, FSD, FSM, FWA, GEG, GFK, GGG, GJT, GNV, GPT, GRB, GRK, GRR, GSO, GSP, GST, GTF, GTR, GUC, HDN, HHH, HKY, HLN, HNL, HOU, HPN, HRL, HSV, HTS, HVN, IAD, IAH, ICT, IDA, ILG, ILM, IND, INL, IPL, ISO, ISP, ITO, IYK, JAC, JAN, JAX, JFK, JNU, KOA, KTN, LAN, LAR, LAS, LAW, LAX, LBB, LBF, LCH, LEX, LFT, LGA, LGB, LIH, LIT, LNK, LRD, LSE, LWB, LWS, LYH, MAF, MBS, MCI, MCN, MCO, MDT, MDW, MEI, MEM, MFE, MFR, MGM, MHT, MIA, MKE, MLB, MLI, MLU, MOB, MOD, MOT, MQT, MRY, MSN, MSO, MSP, MSY, MTH, MTJ, MYR, OAJ, OAK, OGD, OGG, OKC, OMA, OME, ONT, ORD, ORF, OTZ, OXR, PBI, PDX, PFN, PHF, PHL, PHX, PIA, PIE, PIH, PIT, PLN, PMD, PNS, PSC, PSE, PSG, PSP, PUB, PVD, PVU, PWM, RAP, RCA, RDD, RDM, RDU, RFD, RHI, RIC, RNO, ROA, ROC, ROW, RST, RSW, SAN, SAT, SAV, SBA, SBN, SBP, SCC, SCE, SDF, SEA, SFO, SGF, SGU, SHV, SIT, SJC, SJT, SJU, SLC, SLE, SMF, SMX, SNA, SOP, SPI, SPS, SRQ, STL, STT, STX, SUN, SUX, SWF, SYR, TEX, TLH, TOL, TPA, TRI, TTN, TUL, TUP, TUS, TVC, TWF, TXK, TYR, TYS, VCT, VIS, VLD, VPS, WRG, WYS, XNA, YAK, YKM, YUM], Distance: int, dep_delayed_15min: byte nominal[N, Y]]
++-----+----------+---------+-------+-------------+------+----+--------+-----------------+
+|Month|DayofMonth|DayOfWeek|DepTime|UniqueCarrier|Origin|Dest|Distance|dep_delayed_15min|
+...
+                </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+jshell> import smile.data.type.*
+
+jshell> import smile.data.measure.*
+
+jshell> var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",
+   ...>   "ACV", "ACY", "ADK", "ADQ", "AEX", "AGS", "AKN", "ALB", "ALO", "AMA", "ANC",
+   ...>   "APF", "ASE", "ATL", "ATW", "AUS", "AVL", "AVP", "AZO", "BDL", "BET", "BFL",
+   ...>   "BGM", "BGR", "BHM", "BIL", "BIS", "BJI", "BLI", "BMI", "BNA", "BOI", "BOS",
+   ...>   "BPT", "BQK", "BQN", "BRO", "BRW", "BTM", "BTR", "BTV", "BUF", "BUR", "BWI",
+   ...>   "BZN", "CAE", "CAK", "CDC", "CDV", "CEC", "CHA", "CHO", "CHS", "CIC", "CID",
+   ...>   "CKB", "CLD", "CLE", "CLL", "CLT", "CMH", "CMI", "CMX", "COD", "COS", "CPR",
+   ...>   "CRP", "CRW", "CSG", "CVG", "CWA", "CYS", "DAB", "DAL", "DAY", "DBQ", "DCA",
+   ...>   "DEN", "DFW", "DHN", "DLG", "DLH", "DRO", "DSM", "DTW", "EAU", "EGE", "EKO",
+   ...>   "ELM", "ELP", "ERI", "EUG", "EVV", "EWN", "EWR", "EYW", "FAI", "FAR", "FAT",
+   ...>   "FAY", "FCA", "FLG", "FLL", "FLO", "FMN", "FNT", "FSD", "FSM", "FWA", "GEG",
+   ...>   "GFK", "GGG", "GJT", "GNV", "GPT", "GRB", "GRK", "GRR", "GSO", "GSP", "GST",
+   ...>   "GTF", "GTR", "GUC", "HDN", "HHH", "HKY", "HLN", "HNL", "HOU", "HPN", "HRL",
+   ...>   "HSV", "HTS", "HVN", "IAD", "IAH", "ICT", "IDA", "ILG", "ILM", "IND", "INL",
+   ...>   "IPL", "ISO", "ISP", "ITO", "IYK", "JAC", "JAN", "JAX", "JFK", "JNU", "KOA",
+   ...>   "KTN", "LAN", "LAR", "LAS", "LAW", "LAX", "LBB", "LBF", "LCH", "LEX", "LFT",
+   ...>   "LGA", "LGB", "LIH", "LIT", "LNK", "LRD", "LSE", "LWB", "LWS", "LYH", "MAF",
+   ...>   "MBS", "MCI", "MCN", "MCO", "MDT", "MDW", "MEI", "MEM", "MFE", "MFR", "MGM",
+   ...>   "MHT", "MIA", "MKE", "MLB", "MLI", "MLU", "MOB", "MOD", "MOT", "MQT", "MRY",
+   ...>   "MSN", "MSO", "MSP", "MSY", "MTH", "MTJ", "MYR", "OAJ", "OAK", "OGD", "OGG",
+   ...>   "OKC", "OMA", "OME", "ONT", "ORD", "ORF", "OTZ", "OXR", "PBI", "PDX", "PFN",
+   ...>   "PHF", "PHL", "PHX", "PIA", "PIE", "PIH", "PIT", "PLN", "PMD", "PNS", "PSC",
+   ...>   "PSE", "PSG", "PSP", "PUB", "PVD", "PVU", "PWM", "RAP", "RCA", "RDD", "RDM",
+   ...>   "RDU", "RFD", "RHI", "RIC", "RNO", "ROA", "ROC", "ROW", "RST", "RSW", "SAN",
+   ...>   "SAT", "SAV", "SBA", "SBN", "SBP", "SCC", "SCE", "SDF", "SEA", "SFO", "SGF",
+   ...>   "SGU", "SHV", "SIT", "SJC", "SJT", "SJU", "SLC", "SLE", "SMF", "SMX", "SNA",
+   ...>   "SOP", "SPI", "SPS", "SRQ", "STL", "STT", "STX", "SUN", "SUX", "SWF", "SYR",
+   ...>   "TEX", "TLH", "TOL", "TPA", "TRI", "TTN", "TUL", "TUP", "TUS", "TVC", "TWF",
+   ...>   "TXK", "TYR", "TYS", "VCT", "VIS", "VLD", "VPS", "WRG", "WYS", "XNA", "YAK",
+   ...>   "YKM", "YUM")
+airport ==> nominal[ABE, ABI, ABQ, ABY, ACK, ACT, ACV, ACY, A ... , WYS, XNA, YAK, YKM, YUM]
+
+jshell> var schema = DataTypes.struct(
+   ...>   new StructField("Month", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+   ...>     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12")),
+   ...>   new StructField("DayofMonth", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+   ...>     "c-5", "c-6", "c-7", "c-8", "c-9", "c-10", "c-11", "c-12", "c-13", "c-14", "c-15", "c-16", "c-17", "c-18",
+   ...>     "c-19", "c-20", "c-21", "c-22", "c-23", "c-24", "c-25", "c-26", "c-27", "c-28", "c-29", "c-30", "c-31")),
+   ...>   new StructField("DayOfWeek", DataTypes.ByteType, new NominalScale("c-1", "c-2", "c-3", "c-4",
+   ...>     "c-5", "c-6", "c-7")),
+   ...>   new StructField("DepTime", DataTypes.IntegerType),
+   ...>   new StructField("UniqueCarrier", DataTypes.ByteType, new NominalScale("9E", "AA", "AQ", "AS",
+   ...>     "B6", "CO", "DH", "DL", "EV", "F9", "FL", "HA", "HP", "MQ", "NW", "OH", "OO", "TZ", "UA", "US", "WN", "XE", "YV")),
+   ...>   new StructField("Origin", DataTypes.ShortType, airport),
+   ...>   new StructField("Dest", DataTypes.ShortType, airport),
+   ...>   new StructField("Distance", DataTypes.IntegerType),
+   ...>   new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
+   ...> )
+schema ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... 15min: byte nominal[N, Y]]
+
+jshell> var format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
+format ==> Delimiter=<,> QuoteChar=<"> RecordSeparator=<
+>  ... eaderRecord:true Header:[]
+
+jshell> var airline = Read.csv("data/airline/train-1m.csv", format, schema);
+airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
+999990 more rows...
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="read.libsvm">LibSVM</h3>
     <p>LibSVM is a very fast and popular library for support vector machines.
@@ -573,24 +1337,67 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>To read a libsvm file, <code>smile.io</code> has the function</p>
 
-    <pre class="prettyprint lang-scala"><code>
-    def read.libsvm(file: String): Dataset[Instance[SparseArray]]
-    </code></pre>
-
     <p>Although libsvm employs a sparse format, most libsvm files contain dense data.
         Therefore, Smile also provides helper functions to convert
         it to dense arrays.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val glass = read.libsvm("data/libsvm/glass.txt")
+    smile> val glass = read.libsvm("data/libsvm/glass.txt")
+    glass: Dataset[Instance[SparseArray]] = smile.data.DatasetImpl@5611bba
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
+    glass ==> smile.data.DatasetImpl@524f3b3a
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
         for more efficient matrix computation.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile&gt; val sparse = glass.toSparseMatrix
-    sparse: smile.math.matrix.SparseMatrix = smile.math.matrix.SparseMatrix@73ad7e90
+    smile> SparseDataset.of(glass).toMatrix
+    res2: SparseMatrix = smile.math.matrix.SparseMatrix@290807e5
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var glass = Read.libsvm("data/libsvm/glass.txt")
+    glass ==> smile.data.DatasetImpl@17baae6e
+
+    jshell> SparseDataset.of(glass).toMatrix()
+    $4 ==> smile.math.matrix.SparseMatrix@6b53e23f
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that <code>read.libsvm</code> returns a <code>Dataset[Instance[SparseArray]]</code>
+        object. The <code>Instance</code> class has both sample object and label. To convert the
+        sample set to a sparse matrix, we firstly convert the <code>Dataset</code> object to
+        <code>SparseDataset</code>, which doesn't have the label. We discuss the details of
+        <code>SparseDataset</code> in next section.</p>
 
     <h3 id="sparse-format">Coordinate Triple Tuple List</h3>
 
@@ -634,9 +1441,28 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>The sample data <code>data/text/kos.txt</code> is in the coordinate format.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val kos = SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    smile> val kos = SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    kos: SparseDataset = smile.data.SparseDatasetImpl@4da602fc
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var kos = SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    kos ==> smile.data.SparseDatasetImpl@4d826d77
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
 
@@ -659,9 +1485,30 @@ permalink: "{{ page.filePathStem }}.html"
         format. In the directory <code>data/matrix</code>, there are several sample files in
         the Harwell-Boeing format.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val blocks = SparseMatrix.text("data/matrix/08blocks.txt")
+    smile> val blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+    blocks: SparseMatrix = smile.math.matrix.SparseMatrix@4263b080
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_20">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import smile.math.matrix.*;
+
+    jshell> var blocks = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+    blocks ==> smile.math.matrix.SparseMatrix@7ff95560
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
         For details, see <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
@@ -669,33 +1516,155 @@ permalink: "{{ page.filePathStem }}.html"
         the optional right hand side vectors. This format is supported by the function
         <code>SparseMatrix.harwell(Path path)</code>. </p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+smile> val five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+[main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
+[main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
+[main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
+[main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
+[main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
+five: SparseMatrix = smile.math.matrix.SparseMatrix@1761de10
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_21">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+jshell> var five = SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+[main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
+[main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key
+[main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
+[main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
+[main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)
+five ==> smile.math.matrix.SparseMatrix@6b4a4e18
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
     <h3 id="wireframe">Wireframe</h3>
     <p>Smile can parse 3D wireframe models in Wavefront OBJ files.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def read.wavefront(file: String): (Array[Array[Double]], Array[Array[Int]])
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the directory <code>data/wireframe</code>, there is a teapot wireframe model. In the
         next section, we will learn how to visualize the 3D wireframe models.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
+    smile> val (vertices, edges) = read.wavefront("data/wireframe/teapot.obj")
+    vertices: Array[Array[Double]] = Array(
+      Array(40.6266, 28.3457, -1.10804),
+      Array(40.0714, 30.4443, -1.10804),
+      Array(40.7155, 31.1438, -1.10804),
+      Array(42.0257, 30.4443, -1.10804),
+      Array(43.4692, 28.3457, -1.10804),
+      Array(37.5425, 28.3457, 14.5117),
+      Array(37.0303, 30.4443, 14.2938),
+      Array(37.6244, 31.1438, 14.5466),
+      Array(38.8331, 30.4443, 15.0609),
+      Array(40.1647, 28.3457, 15.6274),
+      Array(29.0859, 28.3457, 27.1468),
+      Array(28.6917, 30.4443, 26.7527),
+      Array(29.149, 31.1438, 27.2099),
+      Array(30.0792, 30.4443, 28.1402),
+      Array(31.1041, 28.3457, 29.165),
+      Array(16.4508, 28.3457, 35.6034),
+      Array(16.2329, 30.4443, 35.0912),
+      Array(16.4857, 31.1438, 35.6853),
+      Array(16.9999, 30.4443, 36.894),
+      Array(17.5665, 28.3457, 38.2256),
+      Array(0.831025, 28.3457, 38.6876),
+      Array(0.831025, 30.4443, 38.1324),
+      Array(0.831025, 31.1438, 38.7764),
+      Array(0.831025, 30.4443, 40.0866),
+    ...
+    edges: Array[Array[Int]] = Array(
+      Array(6, 5),
+      Array(5, 0),
+      Array(6, 0),
+      Array(0, 1),
+      Array(1, 6),
+      Array(0, 6),
+      Array(7, 6),
+      Array(6, 1),
+      Array(7, 1),
+      Array(1, 2),
+      Array(2, 7),
+      Array(1, 7),
+      Array(8, 7),
+      Array(7, 2),
+      Array(8, 2),
+      Array(2, 3),
+      Array(3, 8),
+      Array(2, 8),
+      Array(9, 8),
+      Array(8, 3),
+      Array(9, 3),
+      Array(3, 4),
+      Array(4, 9),
+      Array(3, 9),
+    ...
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="export">Export Data and Models</h2>
 
     <p>To serialize a model, you may use</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_25">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     write(model, file)
     </code></pre>
+            </div>
+        </div>
+    </div>
+
     <p>This method is in the Scala API <code>smile.write</code> object and serialize the model to Java
         serialization format. This is handy if you want to use a model in Spark.</p>
 
     <p>Alternatively, you can also use</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_26">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     write.xstream(model, file)
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>which uses XStream library to serialize the model (actually any objects) to XML file.</p>
 
