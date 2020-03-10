@@ -76,7 +76,7 @@ run() {
 ###  ------------------------------- ###
 
 if [[ "$OSTYPE" == "darwin"* ]]; then
-    export JAVA_HOME=`/usr/libexec/java_home -v 11`
+    export JAVA_HOME=`/usr/libexec/java_home -v 11+`
 fi
 
 declare -r real_script_path="$(realpath "$0")"
