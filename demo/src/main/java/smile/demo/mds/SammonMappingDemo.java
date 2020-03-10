@@ -97,8 +97,8 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
      */
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray();
-        String[] labels = dataset[datasetIndex].names();
+        double[][] data = datasetIndex == 2 || datasetIndex == 3 ? dataset[datasetIndex].toArray() : dataset[datasetIndex].drop(0).toArray();
+        String[] labels = datasetIndex == 0 || datasetIndex == 1 ? dataset[datasetIndex].stringVector(0).toArray() : dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
         SammonMapping sammon = SammonMapping.of(data, 2);
@@ -146,13 +146,13 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t').withFirstRecordAsHeader();
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+                if (datasetIndex > 1) {
+                    format = format.withFirstRecordAsHeader();
+                }
 
                 try {
                     dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
-                    if (datasetIndex != 2 && datasetIndex != 3) {
-                        dataset[datasetIndex] = dataset[datasetIndex].drop(0); // row names
-                    }
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);
