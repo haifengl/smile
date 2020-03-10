@@ -48,36 +48,41 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>which will build the system and enter the shell.</p>
 
-    <p>Smile runs on both Windows (requires Windows Subsystem for Linux)
-        and UNIX-like systems (e.g. Linux, Mac OS).
+    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
         All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
         or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
 
     <h2 id="shell">Shell</h2>
 
-    <p>Smile comes with an interactive shell. In the home directory of Smile, type</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <p>Smile comes with an interactive shell for Scala. In the home directory of Smile, type</p>
 
     <pre class="prettyprint lang-bash"><code>
-    $ ./bin/smile
+    $ bin/smile
     </code></pre>
 
-    <p>to enter the shell, which is based on <a href="http://ammonite.io">Ammonite REPL</a>.
-        In the shell, you can run any valid Scala expressions.
-        In the simplest case, you can use it as a calculator.
-        Besides, all high-level Smile operators are predefined
-        in the shell. If you need more memory
-        to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
+            <p>to enter the shell, which is based on <a href="http://ammonite.io">Ammonite REPL</a>.
+                In the shell, you can run any valid Scala expressions.
+                In the simplest case, you can use it as a calculator.
+                Besides, all high-level Smile operators are predefined
+                in the shell. If you need more memory
+                to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
     <pre class="prettyprint lang-bash"><code>
     $ ./bin/smile -J-Xmx30G
     </code></pre>
 
-    <p>You can also modify the configuration file <code>./conf/smile.ini</code>
-        for the memory and other JVM settings.</p>
+            <p>You can also modify the configuration file <code>./conf/smile.ini</code>
+                for the memory and other JVM settings.</p>
 
-    <h3 id="basics">Basics</h3>
+            <h3 id="basics">Basics</h3>
 
-    <p>When the shell starts, we should see something like the following:</p>
+            <p>When the shell starts, we should see something like the following:</p>
     <pre class="prettyprint lang-scala"><code>
                                                        ..::''''::..
                                                      .;''        ``;.
@@ -95,49 +100,49 @@ permalink: "{{ page.filePathStem }}.html"
 ===============================================================================
 smile&gt;
     </code></pre>
-    <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
-        To get help information of Smile high-level operators,
-        type <code>help</code>. You can also get detailed information on
-        each operator by typing <code>help("command")</code>, e.g.
-        <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
+            <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
+                To get help information of Smile high-level operators,
+                type <code>help</code>. You can also get detailed information on
+                each operator by typing <code>help("command")</code>, e.g.
+                <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
 
-    <p>In the shell, type <code>demo</code> to bring up the demo window,
-        which shows off various Smile's machine learning capabilities.</p>
+            <p>In the shell, type <code>demo</code> to bring up the demo window,
+                which shows off various Smile's machine learning capabilities.</p>
 
-    <p>You can also type <code>benchmark()</code> to see Smile's performance
-        on a couple of test data. You can run a particular benchmark by
-        <code>bencharm("test name")</code>, where test name could be "airline",
-        "usps", etc.</p>
+            <p>You can also type <code>benchmark()</code> to see Smile's performance
+                on a couple of test data. You can run a particular benchmark by
+                <code>bencharm("test name")</code>, where test name could be "airline",
+                "usps", etc.</p>
 
-    <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
-        This is available via tab-completion analogous to the path-completion available in most shells.
-        If you type a partial path, tab will complete as far as it can and show you your options
-        if there is more than one.</p>
+            <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
+                This is available via tab-completion analogous to the path-completion available in most shells.
+                If you type a partial path, tab will complete as far as it can and show you your options
+                if there is more than one.</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; smile.classification.r
     randomForest   rbfnet   rda
     </code></pre>
 
-    <h3 id="third-party-libraries">Third Party Libraries</h3>
+            <h3 id="third-party-libraries">Third Party Libraries</h3>
 
-    <p>It is also possible to use third party libraries from Maven Central.
-        For example,</p>
+            <p>It is also possible to use third party libraries from Maven Central.
+                For example,</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; import $ivy.`com.google.guava:guava:18.0`, com.google.common.collect._
     </code></pre>
 
-    <p>If the library is not available in local ivy cache, Smile Shell will download
-        it automatically. Note that the format <code>org:library:version</code> is similar
-        with the library dependency in SBT. For Scala library, it is recommended to use
-        the format <code>org::library:version</code>, which will choose the library in the
-        same Scala major version (e.g. 2.13 vs 2.12).</p>
+            <p>If the library is not available in local ivy cache, Smile Shell will download
+                it automatically. Note that the format <code>org:library:version</code> is similar
+                with the library dependency in SBT. For Scala library, it is recommended to use
+                the format <code>org::library:version</code>, which will choose the library in the
+                same Scala major version (e.g. 2.13 vs 2.12).</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; import $ivy.`org.scalaz::scalaz-core:7.2.7`, scalaz._, Scalaz._
     </code></pre>
 
-    <p>Beyond the default resolvers, we can add third-party or our own repositories:</p>
+            <p>Beyond the default resolvers, we can add third-party or our own repositories:</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; interp.repositories() ++= Seq(coursier.ivy.IvyRepository.fromPattern(
       "https://ambiata-oss.s3-ap-southeast-2.amazonaws.com/" +:
@@ -145,10 +150,10 @@ smile&gt;
     ))
     </code></pre>
 
-    <h3 id="calculator">Calculator</h3>
+            <h3 id="calculator">Calculator</h3>
 
-    <p>Smile Shell is based on <a href="http://ammonite.io">Ammonite REPL</a>. We can run any valid Scala
-        expressions in the shell. In the simplest case, you can use it as a calculator.</p>
+            <p>Smile Shell is based on <a href="http://ammonite.io">Ammonite REPL</a>. We can run any valid Scala
+                expressions in the shell. In the simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; "Hello, World"
@@ -161,7 +166,7 @@ smile&gt;
     res2: Int = 5
     </code></pre>
 
-    <p>We can also define variables and reuse them.</p>
+            <p>We can also define variables and reuse them.</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val x = 2 + 3
@@ -174,8 +179,8 @@ smile&gt;
     z: Int = 12
     </code></pre>
 
-    <p>Functions can be defined too. As Scala is a functional language, functions are
-        first class citizen, just like other values.</p>
+            <p>Functions can be defined too. As Scala is a functional language, functions are
+                first class citizen, just like other values.</p>
     <pre class="prettyprint lang-scala"><code>
     smile&gt; def sq(x: Double) = x * x
     sq: (x: Double)Double
@@ -183,14 +188,14 @@ smile&gt;
     smile&gt; sq(y)
     res4: Double = 441.0
     </code></pre>
-    <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
-        Although you don't need to know all the bells and whistles of Scala to use Smile, we strongly recommend you to
-        learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
+            <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
+                Although you don't need to know all the bells and whistles of Scala to use Smile, we strongly recommend you to
+                learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
 
-    <h3 id="script">Script</h3>
+            <h3 id="script">Script</h3>
 
-    <p>We may also run Smile code in a script. The script
-        <code>examples/iris.sc</code> containing the following Smile code</p>
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.sc</code> containing the following Smile code</p>
 
     <pre class="prettyprint lang-scala"><code>
     val data = read.arff(Paths.getTestData("weka/iris.arff"))
@@ -201,24 +206,117 @@ smile&gt;
     println(s"OOB error = %.2f%%" format 100 * rf.error)
     </code></pre>
 
-    <p>can be run directly from the shell:</p>
+            <p>It can be run directly from the shell:</p>
 
     <pre class="prettyprint lang-bash"><code>
     $ bin/smile examples/iris.sc
     </code></pre>
 
-    <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
-        (including many open data for research purpose). The data
-        is in Weka's ARFF format. The function <code>read.arff</code> returns an object of
-        <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
-        the column "class" will be used as the class label while the rest columns
-        are predictors. Finally, we train a random forest
-        with default parameters and print out its OOB (out of bag) error. We can apply
-        the model on new data samples with the method <code>predict</code>.</p>
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <p>Smile provides an integration with JShell, which is available from Java 9+.
+                In the home directory of Smile, type</p>
 
-    <div id="btnv">
-        <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
-        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+            <pre class="prettyprint lang-bash"><code>
+    $ bin/jshell.sh
+    </code></pre>
+
+            <p>to enter the JShell with Smile libraries in the class path.
+                In the shell, you can run any valid Java expressions.
+                In the simplest case, you can use it as a calculator.
+                If you need more memory to handle large data, use the
+                option <code>-R-Xmx</code>. For example,</p>
+
+            <pre class="prettyprint lang-bash"><code>
+    $ ./bin/jshell.sh -R-Xmx30G
+    </code></pre>
+
+            <h3 id="basics_java">Basics</h3>
+
+            <p>When the shell starts, we should see something like the following:</p>
+            <pre class="prettyprint lang-java"><code>
+    |  Welcome to JShell -- Version 11.0.6
+    |  For an introduction type: /help intro
+
+    jshell>
+    </code></pre>
+            <p>To exit the shell, type <code>/exit</code>.</p>
+
+            <p>In the shell, run the below code to bring up the demo window,
+                which shows off various Smile's machine learning capabilities.</p>
+            <pre class="prettyprint lang-java"><code>
+    javax.swing.SwingUtilities.invokeLater(() -> smile.demo.SmileDemo.createAndShowGUI(false))
+    </code></pre>
+
+            <p>Different from Smile Shell, we don't pre-import any Smile's definitions in JShell.</p>
+
+            <h3 id="calculator_java">Calculator</h3>
+
+            <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
+
+            <pre class="prettyprint lang-java"><code>
+    jshell> "Hello, World"
+    $2 ==> "Hello, World"
+
+    jshell> 2
+    $3 ==> 2
+
+    jshell> 2+3
+    $4 ==> 5
+    </code></pre>
+
+            <p>We can also define variables and reuse them.</p>
+
+            <pre class="prettyprint lang-java"><code>
+    jshell> var x = 2 + 3
+    x ==> 5
+
+    jshell> var y = 2 * (x + 1)
+    y ==> 12
+    </code></pre>
+
+            <h3 id="script_java">Script</h3>
+
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.jsh</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-java"><code>
+    import smile.classification.RandomForest;
+    import smile.data.formula.Formula;
+    import smile.io.Read;
+    import smile.util.Paths;
+
+    var data = Read.arff(Paths.getTestData("weka/iris.arff"));
+    System.out.println(data);
+
+    var formula = Formula.lhs("class");
+    var rf = RandomForest.fit(formula, data);
+    System.out.format("OOB error = %.2f%%%n", 100 * rf.error());
+    </code></pre>
+
+            <p>It can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ bin/jshell.sh examples/iris.jsh
+    </code></pre>
+
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
     </div>
 
     <h2 id="notebook">Notebooks</h2>
@@ -291,6 +389,10 @@ smile&gt;
     }
     </code></pre>
 
+    <div id="btnv">
+        <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
 </div>
 
 <script type="text/javascript">

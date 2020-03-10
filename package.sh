@@ -45,6 +45,8 @@ while true; do
             check_error "sbt ++2.11.12 vega/publishSigned"
             sbt ++2.11.12 cas/publishSigned
             check_error "sbt ++2.11.12 cas/publishSigned"
+
+            git checkout master
             break;;
         [Nn]* ) exit;;
         * ) echo "Please answer yes or no.";;

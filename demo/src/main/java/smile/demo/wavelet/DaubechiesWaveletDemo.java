@@ -19,11 +19,11 @@ package smile.demo.wavelet;
 
 import java.awt.Color;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
 import smile.plot.swing.LinePlot;
 import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.PlotPanel;
+import smile.plot.swing.PlotGroup;
 import smile.wavelet.DaubechiesWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -33,7 +33,7 @@ import smile.wavelet.WaveletShrinkage;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class DaubechiesWaveletDemo extends PlotPanel {
+public class DaubechiesWaveletDemo extends PlotGroup {
     public DaubechiesWaveletDemo() {
         for (int i = 4; i <= 18; i+=2) {
             double[] x = new double[1024];

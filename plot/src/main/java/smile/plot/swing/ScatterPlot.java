@@ -230,6 +230,7 @@ public class ScatterPlot extends Plot {
     public char getLegend() {
         return legend;
     }
+
     /**
      * Create a plot canvas with the scatter plot of given data.
      * @param data a n-by-2 or n-by-3 matrix that describes coordinates of n points.
