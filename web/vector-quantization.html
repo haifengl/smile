@@ -113,6 +113,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_1">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
+    import smile.util.*;
+    import smile.vq.*;
     var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
 
     var epochs = 20;
