@@ -385,20 +385,19 @@ package object classification {
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
-    * @param p the number of variables in input layer.
     * @param builders the builders of layers from bottom to top.
     * @param epochs the number of epochs of stochastic learning.
     * @param eta the learning rate.
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time("Multi-layer Perceptron Neural Network") {
-    val mlp = new MLP(p, builders: _*)
-    mlp.setLearningRate(eta)
-    mlp.setMomentum(alpha)
-    mlp.setWeightDecay(lambda)
-    (0 until epochs).foreach { _ => mlp.update(x, y) }
-    mlp
+  def mlp(x: Array[Array[Double]], y: Array[Int], builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time("Multi-layer Perceptron Neural Network") {
+    val net = new MLP(x(0).length, builders: _*)
+    net.setLearningRate(eta)
+    net.setMomentum(alpha)
+    net.setWeightDecay(lambda)
+    (0 until epochs).foreach { _ => net.update(x, y) }
+    net
   }
 
   /** Radial basis function networks.
