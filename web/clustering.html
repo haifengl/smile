@@ -55,18 +55,33 @@ permalink: "{{ page.filePathStem }}.html"
         of observations is required. In most methods of hierarchical clustering,
         this is achieved by use of an appropriate metric, and a linkage criteria
         which specifies the dissimilarity of sets as a function of the pairwise
-        distances of observations in the sets.</p>
+        distances of observations in the sets. Hierarchical clustering has the
+        distinct advantage that any valid measure of distance can be used.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
-    </code></pre>
 
-    <p>Hierarchical clustering has the distinct advantage that any valid measure
-        of distance can be used.</p>
-
-    <pre class="prettyprint lang-scala"><code>
     def hclust[T](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class HierarchicalClustering {
+        public static HierarchicalClustering fit(Linkage linkage);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>method</code> specifies the agglomeration method to
         merge clusters. This should be one of "single", "complete",
@@ -134,11 +149,33 @@ permalink: "{{ page.filePathStem }}.html"
         to 2d data in the following. The data is generated from six Gaussian
         distributions, each 300 samples.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
     val clusters = hclust(x, "complete")
-    dendrogram(clusters)
+    show(dendrogram(clusters))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.clustering.*;
+    import smile.clustering.linkage.*;
+
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = HierarchicalClustering.fit(CompleteLinkage.of(x));
+    Dendrogram.plot(clusters.getTree(), clusters.getHeight()).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The clustering results can be visualized by a hendroagram, which
         is a tree diagram to illustrate the arrangement
@@ -152,10 +189,28 @@ permalink: "{{ page.filePathStem }}.html"
     <p>If a hard partition is need, we can cut a hierarchical clustering tree
         into several groups by specifying the desired number or the cut height.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val y = clusters.partition(6)
-    plot(x, y, '.', Palette.COLORS)
+    show(plot(x, y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var y = clusters.partition(6);
+    ScatterPlot.plot(x, y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The partitioning of six clusters is shown as</p>
 
@@ -196,9 +251,28 @@ permalink: "{{ page.filePathStem }}.html"
     <p>We also use K-D trees to speed up each K-Means step as described in the filter
         algorithm by Kanungo, et al.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class KMeans {
+        public static KMeans fit(double[][] data, int k, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
         If the output of K-Means is used to initialize other algorithms, a small number (says 20)
@@ -206,10 +280,28 @@ permalink: "{{ page.filePathStem }}.html"
         and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
         (e.g. 10 ~ 20).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val clusters = kmeans(x, 6, runs = 20)
-    plot(x, clusters.y, '.', Palette.COLORS)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 6));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>K-Means works very well on Gaussian mixtures.</p>
 
@@ -220,11 +312,30 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>If the clusters are elongated, however, the results may be far from optimal.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/elongate.txt", header=false, delimiter='\t').toArray
     val clusters = kmeans(x, 2, runs = 20)
-    plot(x, clusters.y, '.', Palette.COLORS)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 2));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/kmeans-elongate.png" class="enlarge" style="width: 480px;" />
@@ -246,11 +357,53 @@ permalink: "{{ page.filePathStem }}.html"
         The splitting decision is done by computing the Bayesian Information
         Criterion (BIC).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class XMeans {
+        public static XMeans fit(double[][] data, int kmax, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = xmeans(x, 50)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = XMeans.fit(x, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/xmeans-six.png" class="enlarge" style="width: 480px;" />
@@ -266,15 +419,57 @@ permalink: "{{ page.filePathStem }}.html"
         K-Means with increasing k in a hierarchical fashion until the test accepts
         the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GMeans {
+        public static GMeans fit(double[][] data, int kmax, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>k</code> is the maximum number of clusters</p>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/gmeans-six.png" class="enlarge" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">G-Means</div>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = gmeans(x, 50)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = GMeans.fit(x, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>Neither X-Means nor G-Means works well on the elongate data. Both report only
@@ -341,14 +536,40 @@ permalink: "{{ page.filePathStem }}.html"
         to local minima. If a limitation on the number of clusters is imposed,
         then at zero temperature a hard clustering solution is obtained.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DeterministicAnnealing {
+        public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>k</code> is the maximum number of clusters, and <code>alpha</code>
         is the annealing control parameter in (0, 1). The temperature <code>T</code>
         is decreasing as <code>T<sub>i+1</sub> = alpha * T<sub>i</sub></code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> dac(x, 12, 0.9)
     res58: DeterministicAnnealing = Cluster distortion: 17904.72351
@@ -366,6 +587,30 @@ permalink: "{{ page.filePathStem }}.html"
     Cluster   11      2 ( 0.7%)
     Cluster   12      5 ( 1.7%)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> DeterministicAnnealing.fit(x, 12, 0.9, 100, 1E-4, 1E-2)
+    $126 ==> Cluster distortion: 2862.52100
+    Cluster size of 1800 data points:
+    Cluster    1    297 (16.5%)
+    Cluster    2    105 ( 5.8%)
+    Cluster    3    159 ( 8.8%)
+    Cluster    4    137 ( 7.6%)
+    Cluster    5    139 ( 7.7%)
+    Cluster    6     21 ( 1.2%)
+    Cluster    7    292 (16.2%)
+    Cluster    8    149 ( 8.3%)
+    Cluster    9    140 ( 7.8%)
+    Cluster   10     59 ( 3.3%)
+    Cluster   11    143 ( 7.9%)
+    Cluster   12    159 ( 8.8%)
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Note that we set <code>k = 12</code> in the example although we know there are 6 clusters.
         It is because we maintain two codevectors/centroids for each cluster for sake of split.
@@ -407,20 +652,58 @@ permalink: "{{ page.filePathStem }}.html"
         is much larger than a single sample. In this implementation, we instead
         use the regular/unweighted Jensen-Shannon divergence.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def sib(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
     def sib(data: SparseDataset, k: Int, maxIter: Int, runs: Int): SIB
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SIB {
+        public static SIB fit(SparseArray[] data, int k, int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The news data in <code>data/libsvm/news20.dat</code> is a very sparse data
         of dimension 62061. The data contains 15935 samples. The below example
         clusters it into 20 clusters.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val data = read.libsvm("data/libsvm/news20.dat")
     val sparse = (0 until data.size).map(i => data(i).x).toArray
-    val clusters = sib(sparse, 20, 100, 8)
+    val clusters = sib(sparse, 20, 100)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var data = Read.libsvm("data/libsvm/news20.dat");
+    var sparse = data.stream().map(i -> i.x()).toArray(SparseArray[]::new);
+    var clusters = SIB.fit(sparse, 20, 100);
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="clarans">CLARANS</h2>
 
@@ -449,9 +732,28 @@ permalink: "{{ page.filePathStem }}.html"
         is a better choice for medoids. Otherwise, a local optima is discovered. The
         entire process is repeated multiple time to find better.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def clarans[T](data: Array[T], k: Int, maxNeighbor: Int, distance: Distance[T]): CLARANS[T]
+    def clarans[T](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class CLARANS {
+        public static CLARANS&lt;T&gt; fit(T[] data, int k, int maxNeighbor, Distance&lt;T&gt; distance);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>maxNeighbor</code> specifies the maximum number of
         neighbors examined. The higher the value of maxNeighbor, the closer is
@@ -459,6 +761,28 @@ permalink: "{{ page.filePathStem }}.html"
         the quality of such a local minima is higher and fewer local minima
         needs to be obtained.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = PartitionClustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/clarans.png" class="enlarge" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">CLARANS</div>
@@ -473,6 +797,13 @@ permalink: "{{ page.filePathStem }}.html"
         finds a number of clusters starting from the estimated density
         distribution of corresponding nodes.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     // DBSCAN with a customized data structure for neighborhood search
     def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
@@ -482,6 +813,20 @@ permalink: "{{ page.filePathStem }}.html"
     // DBSCAN with Euclidean distance
     def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DBSCAN {
+        public static DBSCAN&lt;double[]&gt; fit(double[][] data, int minPts, double radius);
+        public static DBSCAN&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int minPts, double radius);
+        public static DBSCAN&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int minPts, double radius);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>DBSCAN requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the
         number of minimum points required to form a cluster (<code>minPts</code>). It starts
@@ -505,11 +850,30 @@ permalink: "{{ page.filePathStem }}.html"
         an indexing structure is used that executes such a neighborhood query
         in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
     val clusters = dbscan(x, 20, 10)
     plot(x, clusters.y, '.', Palette.COLORS)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = DBSCAN.fit(x, 20, 10);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The chameleon is a set of complicated spatial data of
         arbitrary cluster shapes. With appropriate parameters, DBSCAN
@@ -560,9 +924,28 @@ permalink: "{{ page.filePathStem }}.html"
         DENCLUE works efficiently for high-dimensional data sets and allows arbitrary
         noise levels while still guaranteeing to find the clustering.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DENCLUE {
+        public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>sigma</code> is the smooth parameter in the Gaussian kernel.
         The user can choose <code>sigma</code> such that number of density attractors
@@ -577,11 +960,30 @@ permalink: "{{ page.filePathStem }}.html"
         of the curse of dimensionality. Therefore, DENCLUDE doesn't work well on
         high-dimensional data in general.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
     val clusters = denclue(x, 1.0, 50)
-    plot(x, clusters.y, '.', Palette.COLORS)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_20">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = DENCLUE.fit(x, 1.0, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>DENCLUE doesn't directly label some data as outliers. However, it may report
         very small clusters, which could be regarded as outliers.</p>
@@ -604,6 +1006,13 @@ permalink: "{{ page.filePathStem }}.html"
         spectral clustering methods and kernel PCA, which has been empirically
         observed to perform clustering.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def specc(W: Array[Array[Double]], k: Int): SpectralClustering
 
@@ -612,6 +1021,21 @@ permalink: "{{ page.filePathStem }}.html"
     // Nystrom approximation
     def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_21">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SpectralClustering {
+        public static SpectralClustering fit(DenseMatrix W, int k, int maxIter, double tol);
+        public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol);
+        // Nystrom approximation
+        public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>W</code> is the adjacency matrix of graph. The user may also
         provides the raw input <code>data</code> and the smooth/width parameter <code>sigma</code>
@@ -623,11 +1047,30 @@ permalink: "{{ page.filePathStem }}.html"
         random samples. The parameter <code>l</code> specifies the number of
         random samples.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_22" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_22">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/nonconvex/sincos.txt", header=false, delimiter='\t').toArray
     val clusters = specc(x, 2, 0.2)
-    plot(x, clusters.y, 'o', Palette.COLORS)
+    show(plot(x, clusters.y, 'o', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_22">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/nonconvex/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var clusters = SpectralClustering.fit(x, 2, 0.2);
+    ScatterPlot.plot(x, clusters.y, 'o', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>For this nonconvex data, spectral clustering works very well with appropriate smooth parameter.</p>
 
@@ -656,22 +1099,60 @@ permalink: "{{ page.filePathStem }}.html"
         The method can also correctly reveal the structure of data and effectively
         identify outliers simultaneously.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_23" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
-    def mec[T](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T]
     def mec[T](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T]
     def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_23">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class MEC {
+        public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int k, double radius);
+        public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int k, double radius, int[] y, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>MEC is an iterative algorithm starting with an initial partition given by
         any other clustering methods, e.g. K-Means, CLARNAS, hierarchical clustering,
         etc. Note that a random initialization is NOT appropriate.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_24" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
     val clusters = mec(x, 20, 2.0)
-    plot(x, clusters.y, '.', Palette.COLORS)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_24">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Note that we use <code>k = 20</code> for this data and the algorithm still successfully
         finds the correct structure of data. In practice, we rarely know the right number of

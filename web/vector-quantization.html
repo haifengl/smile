@@ -84,11 +84,18 @@ permalink: "{{ page.filePathStem }}.html"
         data set, as shown in the above. The SOM has <code>20 x 20</code>
         neurons.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
 
     val epochs = 20
-    val lattice = SOM.lattice(20, 20, x);
+    val lattice = SOM.lattice(20, 20, x)
     val som = new SOM(lattice,
                 TimeFunction.constant(0.1),
                 Neighborhood.Gaussian(1, x.length * epochs / 4))
@@ -99,8 +106,32 @@ permalink: "{{ page.filePathStem }}.html"
         }
     }
 
-    hexmap(som.umatrix, Palette.jet(256))
+    show(hexmap(som.umatrix, Palette.jet(256)))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+
+    var epochs = 20;
+    var lattice = SOM.lattice(20, 20, x);
+    var som = new SOM(lattice,
+                TimeFunction.constant(0.1),
+                Neighborhood.Gaussian(1, x.length * epochs / 4));
+
+    for (int e = 0; e < epochs; e++) {
+        for (int i : MathEx.permutate(x.length)) {
+            som.update(x[i]);
+        }
+    }
+
+    Hexmap.plot(som.umatrix(), Palette.jet(256)).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The U-Matrix is visualized with a hexmap, where a dark red coloring between
         the neurons corresponds to a large distance and thus a gap between
@@ -122,22 +153,53 @@ permalink: "{{ page.filePathStem }}.html"
         information can be used in other algorithms such as Guassian kernel smooth
         parameters, nearest neighbor range, etc.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val dist = som.umatrix.flatten
-    val win = hist(dist, 100)
+    val canvas = hist(dist, 100)
 
     val mixture = GaussianMixture.fit(dist)
 
     val minDist = MathEx.min(dist)
     val w = (MathEx.max(dist) - minDist) / 50
-    val pdf = (0 to 50).map {i =>
+    val pdf = (0 to 50).map { i =>
       val x = minDist + i * w
       val y = mixture.p(x) * w
       Array(x, y)
     }.toArray
 
-    win.canvas.line(pdf, RED)
+    canvas.line(pdf, RED)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var dist = Arrays.stream(som.umatrix()).flatMapToDouble(r -> Arrays.stream(r)).toArray();
+    var canvas = smile.plot.swing.Histogram.plot(dist, 100);
+
+    var mixture = GaussianMixture.fit(dist);
+
+    var minDist = MathEx.min(dist);
+    var w = (MathEx.max(dist) - minDist) / 50;
+    var pdf = new double[51][2];
+    for (int i = 0; i < pdf.length; i++) {
+      pdf[i][0] = minDist + i * w;
+      pdf[i][1] = mixture.p(pdf[i][0]) * w;
+    }
+
+    canvas.line(pdf, Color.RED);
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/som-umatrix-hist.png" class="enlarge" style="width: 480px;" />
@@ -147,6 +209,13 @@ permalink: "{{ page.filePathStem }}.html"
     <p>It is also common to visualize an SOM by mapping the neuron
         codebook vectors to a lower dimensional space (e.g. by Sammon's mapping).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val codebook = som.neurons.flatten
     val codebook2d = sammon(pdist(codebook, false), 2).coordinates
@@ -155,6 +224,26 @@ permalink: "{{ page.filePathStem }}.html"
     val neurons = (0 until nodes).map { i => codebook2d.slice(nodes*i, nodes*(i+1)) }.toArray
     grid(neurons)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var codebook = Arrays.stream(som.neurons()).flatMap(r -> Arrays.stream(r)).toArray(double[][]::new);
+    var codebook2d = SammonMapping.of(MathEx.pdist(codebook, false), 2).coordinates;
+
+    var nodes = 20;
+    var neurons = new double[nodes][nodes][];
+    for (int i = 0, k = 0; i < nodes; i++) {
+        for (int j = 0; j < nodes; j++, k++) {
+            neurons[i][j] = codebook2d[k];
+        }
+    }
+    Grid.plot(neurons).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Because this artificial data is 2-dimensional, it is not necessary
         to map the neurons in the SOM to a lower dimensional space.
@@ -189,8 +278,15 @@ permalink: "{{ page.filePathStem }}.html"
         compared to k-means clustering, a much more robust convergence of the
         algorithm can be achieved.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val epochs = 20;
+    val epochs = 20
     val gas = new NeuralGas(NeuralGas.seed(400, x),
                 TimeFunction.exp(0.3, x.length * epochs / 2),
                 TimeFunction.exp(30, x.length * epochs / 8),
@@ -198,13 +294,38 @@ permalink: "{{ page.filePathStem }}.html"
 
     (1 to epochs).foreach { _ =>
         MathEx.permutate(x.length).foreach { i =>
-            gas.update(x(i));
+            gas.update(x(i))
         }
     }
 
-    val win = plot(x, '.')
-    win.canvas.points(gas.neurons, '#', BLUE)
+    val canvas = plot(x, '.')
+    canvas.points(gas.neurons, '#', BLUE)
+    show(canvas)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var epochs = 20;
+    var gas = new NeuralGas(NeuralGas.seed(400, x),
+                TimeFunction.exp(0.3, x.length * epochs / 2),
+                TimeFunction.exp(30, x.length * epochs / 8),
+                x.length * 2);
+
+    for (int e = 0; e < epochs; e++) {
+        for (int i : MathEx.permutate(x.length)) {
+            gas.update(x[i]);
+        }
+    }
+
+    var canvas = ScatterPlot.plot(x, '.');
+    canvas.points(gas.neurons(), '#', Color.BLUE);
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the plot, we draw the neurons as big blue dots.</p>
 
@@ -235,12 +356,19 @@ permalink: "{{ page.filePathStem }}.html"
             not connected by edges).</li>
     </ul>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val gng = new GrowingNeuralGas(x(0).length)
 
     (1 to 10).foreach { _ =>
         MathEx.permutate(x.length).foreach { i =>
-            gng.update(x(i));
+            gng.update(x(i))
         }
     }
 
@@ -254,7 +382,36 @@ permalink: "{{ page.filePathStem }}.html"
         win.canvas.line(Array(neuron.w, edge.neighbor.w), BLUE)
       }
     }
+    show(canvas)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var gng = new GrowingNeuralGas(x[0].length);
+
+    for (int e = 0; e < epochs; e++) {
+        for (int i : MathEx.permutate(x.length)) {
+            gng.update(x[i]);
+        }
+    }
+
+    var neurons = gng.neurons();
+    var canvas = ScatterPlot.plot(x, '.');
+    canvas.points(Arrays.stream(neurons).map(n -> n.w).toArray(double[][]::new), '@', Color.BLUE);
+
+    Arrays.stream(neurons).forEach(neuron -> {
+        neuron.edges.stream().forEach(edge -> {
+            double[][] e = {neuron.w, edge.neighbor.w};
+            canvas.line(e, Color.BLUE);
+        });
+    });
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>As shown in the plot, GNG nicely capture the structure of data.
         However, there are also neurons fitting noises and connecting
@@ -276,21 +433,28 @@ permalink: "{{ page.filePathStem }}.html"
         (those clusters are not connected by edges). Neural Map employs Locality-Sensitive
         Hashing to speedup the learning while BIRCH uses balanced CF trees.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val cortex = new NeuralMap(10, 0.01, 0.002, 50, 0.995)
 
     (1 to 5).foreach { _ =>
         MathEx.permutate(x.length).foreach { i =>
-            cortex.update(x(i));
+            cortex.update(x(i))
         }
 
         // Removes staled neurons and the edges beyond lifetime.
-        cortex.clear(1E-7);
+        cortex.clear(1E-7)
     }
 
     val neurons = cortex.neurons
-    val win = plot(x, '.')
-    win.canvas.points(neurons.map(_.w).toArray, '@', BLUE)
+    val canvas = plot(x, '.')
+    canvas.points(neurons.map(_.w).toArray, '@', BLUE)
 
     import scala.jdk.CollectionConverters._
     neurons.foreach { neuron =>
@@ -298,7 +462,39 @@ permalink: "{{ page.filePathStem }}.html"
         win.canvas.line(Array(neuron.w, edge.neighbor.w), BLUE)
       }
     }
+    show(canvas)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var cortex = new NeuralMap(10, 0.01, 0.002, 50, 0.995);
+
+    for (int e = 0; e < 5; e++) {
+        for (int i : MathEx.permutate(x.length)) {
+            cortex.update(x[i]);
+        }
+
+        // Removes staled neurons and the edges beyond lifetime.
+        cortex.clear(1E-7);
+    }
+
+    var neurons = cortex.neurons();
+    var canvas = ScatterPlot.plot(x, '.');
+    canvas.points(Arrays.stream(neurons).map(n -> n.w).toArray(double[][]::new), '@', Color.BLUE);
+
+    Arrays.stream(neurons).forEach(neuron -> {
+        neuron.edges.stream().forEach(edge -> {
+            double[][] e = {neuron.w, edge.neighbor.w};
+            canvas.line(e, Color.BLUE);
+        });
+    });
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Note that points in orange are outliers labeled by the algorithm.</p>
     <div style="width: 100%; display: inline-block; text-align: center;">
@@ -334,15 +530,40 @@ permalink: "{{ page.filePathStem }}.html"
         maximum number of children nodes and the parameter <code>radius</code>
         is the maximum radius of a sub-cluster.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val birch = new BIRCH(x(0).length, 6, 3, 10)
     x.foreach { xi =>
+        birch.update(xi)
+    }
+
+    val canvas = plot(x, '.')
+    canvas.points(birch.centroids, '#', BLUE)
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var birch = new BIRCH(x[0].length, 6, 3, 10);
+    for (double[] xi : x) {
         birch.update(xi);
     }
 
-    val win = plot(x, '.')
-    win.canvas.points(birch.centroids, '#', BLUE)
-    </code></pre>
+    var canvas = ScatterPlot.plot(x, '.');
+    canvas.points(birch.centroids(), '#', Color.BLUE);
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/birch.png" class="enlarge" style="width: 480px;" />
