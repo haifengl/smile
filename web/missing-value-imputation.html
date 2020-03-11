@@ -99,9 +99,18 @@ permalink: "{{ page.filePathStem }}.html"
         non-missing attributes in the same instance. Note that this is not the
         average of same attribute across different instances.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def avgimpute(data: Array[Array[Double]]): Unit
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="knn">K-Nearest Neighbor Imputation</h2>
 
@@ -113,9 +122,18 @@ permalink: "{{ page.filePathStem }}.html"
         The average of values on attribute <code>i</code> from the <code>k</code> nearest
         neighbors is then used as an estimate for the missing value in instance <code>A</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def knnimpute(data: Array[Array[Double]], k: Int = 5)
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="kmeans">K-Means Imputation</h2>
 
@@ -123,9 +141,18 @@ permalink: "{{ page.filePathStem }}.html"
      with missing values and then impute missing values with the average value of each attribute
      in the clusters.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def impute(data: Array[Array[Double]], k: Int, runs: Int = 1): Unit
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="lls">Local Least Squares Imputation</h2>
 
@@ -133,9 +160,18 @@ permalink: "{{ page.filePathStem }}.html"
         a linear combination of similar instances, which are selected by k-nearest
         neighbors method.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def llsimpute(data: Array[Array[Double]], k: Int): Unit
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="svd">SVD Imputation</h2>
 
@@ -157,9 +193,18 @@ permalink: "{{ page.filePathStem }}.html"
         obtained matrix, until the total change in the matrix falls below the
         empirically determined threshold (say 0.01).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10)): Unit
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

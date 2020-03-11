@@ -65,12 +65,77 @@ permalink: "{{ page.filePathStem }}.html"
         of each feature in the training set will be 1.0. It does not shift/center
         the data, and thus does not destroy any sparsity.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var x = pendigits.drop(16).toArray();
+    var y = pendigits.column(16).toIntArray();
+    var scaler = WinsorScaler.fit(x, 0.01, 0.99);
+    x = scaler.transform(x);
+
+    CrossValidation.classification(10, x, y, (x, y) -> {
+        var model = new smile.classification.MLP(16,
+                    Layer.sigmoid(50),
+                    Layer.mle(10, OutputFunction.SIGMOID)
+            );
+
+        for (int epoch = 0; epoch < 10; epoch++) {
+            for (int i : MathEx.permutate(x.length)) {
+                model.update(x[i], y[i]);
+            }
+        }
+
+        return model;
+    });
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
     <p>The class <code>Standardizer</code> transforms numeric feature to 0 mean and unit variance.
         Standardization makes an assumption that the data follows
         a Gaussian distribution and are also not robust when outliers present.
         A robust alternative is to subtract the median and divide by the IQR, which
         is implemented <code>RobustStandardizer</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = zip.drop(0).toArray();
+    var y = zip.column(0).toIntArray();
+
+    var scaler = Standardizer.fit(x);
+    x = scaler.transform(x);
+
+    var model = new smile.classification.MLP(256,
+                Layer.sigmoid(768),
+                Layer.sigmoid(192),
+                Layer.sigmoid(30),
+                Layer.mle(10, OutputFunction.SIGMOID)
+        );
+
+    model.setLearningRate(0.1);
+    model.setMomentum(0.0);
+
+    for (int epoch = 0; epoch < 10; epoch++) {
+        for (int i : MathEx.permutate(x.length)) {
+            model.update(x[i], y[i]);
+        }
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
     <p>The class <code>Normalizer</code> transform samples to unit norm. This class
         is stateless and thus doesn't need to learn transformation parameters from data.
         Each sample (i.e. each row of the data matrix) with at least one non zero
@@ -146,10 +211,6 @@ permalink: "{{ page.filePathStem }}.html"
         are the standard deviations of the variable in classes 1 and 2, respectively.
         Clearly, features with larger S2N ratios are better for classification.</p>
 
-    <pre class="prettyprint lang-scala"><code>
-    def signalNoiseRatio(x: Array[Array[Double]], y: Array[Int]): Array[Double]
-    </code></pre>
-
     <p>The output is the S2N ratios for each variable.</p>
 
     <h3 id="sum-squares-ratio">Sum Squares Ratio</h3>
@@ -167,24 +228,46 @@ permalink: "{{ page.filePathStem }}.html"
         belonging to class k, and x<sub>ij</sub> is the value of variable j of sample i.
         Clearly, features with larger sum squares ratios are better for classification.</p>
 
-    <pre class="prettyprint lang-scala"><code>
-    def ssr(x: Array[Array[Double]], y: Array[Int]): Array[Double]
-
-    def ssr(formula: Formula, data: DataFrame): Array[Double]
-    </code></pre>
-
     <p>Applying it to Iris data, we can find that the last two variables have much higher
         sum squares ratios (about 16 and 13 in contrast to 1.6 and 0.6 of the first two variables).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
     ssr("class" ~, iris)
 
     val x = iris.select(2,3).toArray // take last two columns
     val y = iris("class").toIntArray
-    val window = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    window.canvas.setAxisLabels(iris.names.slice(2,4): _*)
+    val canvas = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
+    canvas.setAxisLabels(iris.names.slice(2,4): _*)
+    show(canvas)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var iris = Read.arff("data/weka/iris.arff");
+    var x = iris.drop("class").toArray();
+    var y = iris.column("class").toIntArray();
+    SumSquaresRatio.of(x, y);
+
+    x = iris.select(2,3).toArray();
+    char[] legends = {'*', '+', 'o'};
+    Color[] colors = {Color.RED, Color.BLUE, Color.CYAN};
+    var canvas = ScatterPlot.plot(x, y, legends, colors);
+    canvas.setAxisLabels(iris.names()[2], iris.names()[3]);
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The scatter plot of the last two variables shows clearly that they capture the difference
         among classes.</p>
@@ -208,10 +291,30 @@ permalink: "{{ page.filePathStem }}.html"
     <p>For these algorithms, there is a method <code>importance</code> returning
         the scores for feature selection (higher is better).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val model = smile.classification.randomForest("class" ~, iris)
     println(iris.names.slice(0, 4).zip(model.importance).mkString("\n"))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var model = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
+    for (int i = 0; i < 4; i++) {
+        System.out.format("%s\t%.2f\n", iris.names()[i], model.importance()[i]);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>For Iris data, random forest also gives much higher importance scores for
         the last two variables.</p>
@@ -221,7 +324,6 @@ permalink: "{{ page.filePathStem }}.html"
         levels. Therefore, the variable importance scores from random forest are
         not reliable for this type of data.</p>
 
-    <!-- GAFE deadlock on scala
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
 
     <p>Genetic algorithm (GA) is a search heuristic that mimics the process of
@@ -255,6 +357,39 @@ permalink: "{{ page.filePathStem }}.html"
     <p>In the below example, we use gradient boosted trees (100 tress)
         as the classifier, the accuracy of 5-fold cross validation as the fitness measure.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = train.drop("V1").toArray();
+    var y = train.column("V1").toIntArray();
+    var testx = test.drop("V1").toArray();
+    var testy = test.column("V1").toIntArray();
+
+    var selection = new GAFE();
+    var result = selection.apply(100, 20, 256,
+        GAFE.fitness(x, y, testx, testy, new Accuracy(),
+        (x, y) -> LDA.fit(x, y)));
+
+    for (BitString bits : result) {
+        System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+<!-- GAFE deadlock on scala
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     val train = read.csv("data/usps/zip.train", header=false, delimiter=' ')
     val test = read.csv("data/usps/zip.test", header=false, delimiter=' ')
@@ -273,7 +408,31 @@ permalink: "{{ page.filePathStem }}.html"
         println(bits.bits.mkString(" "))
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var test = Read.csv("data/usps/zip.test", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = train.drop("V1").toArray();
+    var y = train.column("V1").toIntArray();
+    var testx = test.drop("V1").toArray();
+    var testy = test.column("V1").toIntArray();
 
+    var selection = new GAFE();
+    var result = selection.apply(100, 20, 256,
+        GAFE.fitness(x, y, testx, testy, new Accuracy(),
+        (x, y) -> LDA.fit(x, y)));
+
+    for (BitString bits : result) {
+        System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+-->
     <p>When many such subsets of variables are obtained, the one with best
         performance may be used as selected features. Alternatively, the frequencies
         with which variables are selected may be analyzed further. The most
@@ -281,7 +440,6 @@ permalink: "{{ page.filePathStem }}.html"
         sample distinction and are finally used for prediction.</p>
 
     <p>Although GA avoids brute-force search, it is still much slower than univariate feature selection.</p>
-    -->
 
     <h2 id="dimension-reduction">Dimension Reduction</h2>
 
@@ -305,9 +463,29 @@ permalink: "{{ page.filePathStem }}.html"
         retaining the most important variance) to the space spanned by a few
         eigenvectors.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def pca(data: Array[Array[Double]], cor: Boolean = false): PCA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+              <pre class="prettyprint lang-java"><code>
+    public class PCA {
+        public static PCA fit(double[][] data);
+        public static PCA cor(double[][] data);
+    }
+              </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>If the parameter <code>cor</code> is true, PCA uses correlation matrix instead of covariance matrix.
         The correlation matrix is simply the covariance matrix, standardized by setting all variances equal
@@ -315,6 +493,13 @@ permalink: "{{ page.filePathStem }}.html"
         as the correlation matrix will lose information when standardizing the variance.
         The correlation matrix is recommended when variables are measured in different scales.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pendigits = read.csv("data/classification/pendigits.txt", delimiter='\t', header = false)
     val formula: Formula = "V17" ~
@@ -326,8 +511,28 @@ permalink: "{{ page.filePathStem }}.html"
 
     pc.setProjection(3)
     val x2 = pc.project(x)
-    plot(x2, y, '.', Palette.COLORS)
+    show(plot(x2, y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var formula = Formula.lhs("V17");
+    var x = formula.x(pendigits).toArray();
+    var y = formula.y(pendigits).toIntArray();
+
+    var pca = PCA.fit(x);
+    PlotCanvas.screeplot(pca).window();
+
+    pca.setProjection(3);
+    var x2 = pca.project(x);
+    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the above example, we apply PCA to the pen-digits data, which includes 16 variables.</p>
 
@@ -363,17 +568,55 @@ permalink: "{{ page.filePathStem }}.html"
         A close form of estimation of above parameters can be obtained
         by maximum likelihood method.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def ppca(data: Array[Array[Double]], k: Int): PPCA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    public class PPCA {
+        public static PPCA fit(double[][] data, int k);
+    }
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Similar to PCA example, we apply probabilistic PCA to the pen-digits data.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = ppca(x, 3)
     val x2 = pc.project(x)
-    plot(x2, y, '.', Palette.COLORS)
+    show(plot(x2, y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    var pca = PPCA.fit(x, 3);
+    var x2 = pca.project(x);
+    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/ppca.png" class="enlarge" style="width: 480px;" />
@@ -398,17 +641,55 @@ permalink: "{{ page.filePathStem }}.html"
         of those clusters. Since even this method may yield a relatively large K,
         it is common to compute only the top P eigenvalues and eigenvectors of <code>K</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def kpca[T](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    public class KPCA {
+        public static KPCA&lt;T&gt; fit(T[] data, MercerKernel&lt;T&gt; kernel, int k, double threshold);
+    }
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Here we apply kernel PCA to the pen-digits data.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = kpca(x, new GaussianKernel(45), 3)
     val x2 = pc.project(x)
-    plot(x2, y, '.', Palette.COLORS)
+    show(plot(x2, y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    var pca = KPCA.fit(x, new GaussianKernel(45), 3);
+    var x2 = pca.project(x);
+    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Because of its nonlinear nature, the projected data has very different structure from PCA.</p>
 
@@ -438,23 +719,63 @@ permalink: "{{ page.filePathStem }}.html"
         shown that a larger learning rate &eta; leads to faster convergence
         and larger asymptotic mean-square error, which is intuitively satisfying.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gha(data: Array[Array[Double]], k: Int, r: Double): GHA
 
     def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    public class GHA {
+        public GHA(int n, int p, double r);
+        public double update(double[] x);
+    }
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The first method starts with random initial projection matrix, while the second one
         starts with a given projection matrix.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val pc = gha(x, 3, 0.00001)
     val x2 = pc.project(x)
-    plot(x2, y, '.', Palette.COLORS)
+    show(plot(x2, y, '.', Palette.COLORS))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+                  <pre class="prettyprint lang-java"><code>
+    var gha = new GHA(x[0].length, 3, 0.00001);
+    Arrays.stream(x).forEach(xi -> gha.update(xi));
+    var x2 = gha.project(x);
+    ScatterPlot.plot(x2, y, '.', Palette.COLORS).window();
+                  </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The results look similar to PCA.</p>
-    
+
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/gha.png" class="enlarge" style="width: 480px;" />
         <div class="caption" style="min-width: 480px;">GHA</div>
