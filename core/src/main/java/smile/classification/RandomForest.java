@@ -19,7 +19,6 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.function.LongSupplier;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 
