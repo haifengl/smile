@@ -48,9 +48,28 @@ permalink: "{{ page.filePathStem }}.html"
         distance metric. However, when Euclidean distances are used, classical MDS is
         equivalent to PCA.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def mds(proximity: Array[Array[Double]], k: Int, add: Boolean = false): MDS
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class MDS {
+        public static MDS of(double[][] proximity, int k, boolean positive);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>proximity</code> is the nonnegative proximity matrix of dissimilarities.
         The diagonal should be zero and all other elements should be positive and
@@ -68,13 +87,34 @@ permalink: "{{ page.filePathStem }}.html"
         to minimize the dimensionality of the Euclidean space required for
         representing the objects.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = true)
+    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = false)
     val dist = eurodist.drop(0).toArray
     val citys = eurodist.stringVector(0).toArray
     val x = mds(dist, 2).coordinates
-    plot(x, citys)
+    show(plot(x, citys))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var eurodist = Read.csv("data/projection/eurodist.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var dist = eurodist.drop(0).toArray();
+    var citys = eurodist.stringVector(0).toArray();
+    var x = MDS.of(dist, 2).coordinates;
+    ScatterPlot.plot(x, citys).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the above example, we apply MDS to a distance matrix of some European cities.</p>
 
@@ -93,12 +133,54 @@ permalink: "{{ page.filePathStem }}.html"
         distances is usually not possible. The relationship is typically found
         using isotonic regression.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def isomds(proximity: Array[Array[Double]], k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class IsotonicMDS {
+        public static IsotonicMDS of(double[][] proximity, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>tol</code> is the tolerance for stopping iterations, and
         <code>maxIter</code> is the maximum number of iterations.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = isomds(dist, 2).coordinates
+    show(plot(x, citys))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = IsotonicMDS.of(dist, 2).coordinates;
+    ScatterPlot.plot(x, citys).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/isomds.png" class="enlarge" style="width: 480px;" />
@@ -135,11 +217,53 @@ permalink: "{{ page.filePathStem }}.html"
         iterative algorithm such as gradient descent suggested by Sammon. Kohonen
         also provides a heuristic that is simple and works reasonably well.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SammonMapping {
+        public static SammonMapping of(double[][] proximity, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>lambda</code> is the initial value of the step size constant in diagonal Newton method.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = sammon(dist, 2).coordinates
+    show(plot(x, citys))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = SammonMapping.of(dist, 2).coordinates;
+    ScatterPlot.plot(x, citys).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/sammon.png" class="enlarge" style="width: 480px;" />
