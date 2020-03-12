@@ -329,7 +329,7 @@ package object clustering {
     * @param numLocal the number of local minima to search for.
     */
   def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = time("CLARANS") {
-    PartitionClustering.run(numLocal, () => CLARANS.fit(data, distance, k, maxNeighbor))
+    PartitionClustering.run(numLocal, (() => CLARANS.fit(data, distance, k, maxNeighbor)).asJava)
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
