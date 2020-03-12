@@ -152,20 +152,59 @@ permalink: "{{ page.filePathStem }}.html"
         function is only approximated locally and all computation
         is deferred until classification.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class KNN {
+        public static KNN&lt;double[]&gt; fit(double[][] x, int[] y, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The simplest k-NN method takes a data set of feature vectors and labels
         with Euclidean distance as the similarity measure. When applied to the
         Iris datset, the accuracy of 10-fold cross validation is 96% for <code>k = 3</code>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
-    val x = iris.select(0, 1, 2, 3).toArray
+    val x = iris.drop("class").toArray
     val y = iris("class").toIntArray
     cv.classification(10, x, y) { case (x, y) => knn(x, y, 3) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var iris = Read.arff("data/weka/iris.arff");
+    var x = iris.drop("class").toArray();
+    var y = iris.column("class").toIntArray();
+    CrossValidation.classification(10, x, y, (x, y) -> KNN.fit(x, y, 3));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The best choice of k depends upon the data; generally, larger values of
         k reduce the effect of noise on the classification, but make boundaries
@@ -182,10 +221,28 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>The user can also provide a customized distance function.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def knn[T](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T]
     </code></pre>
-
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class KNN {
+        public static KNN&lt;T&gt; fit(T[] x, int[] y, Distance&lt;T&gt; distance, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <p>Often, the classification accuracy of k-NN can be improved significantly
         if the distance metric is learned with specialized algorithms such as
         Large Margin Nearest Neighbor or Neighborhood Components Analysis.</p>
@@ -195,9 +252,28 @@ permalink: "{{ page.filePathStem }}.html"
         Cover Tree, and LSH (Locality-Sensitive Hashing) for efficient
         k-nearest neighbor search.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def knn[T](x: KNNSearch[T, T], y: Array[Int], k: Int): KNN[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class KNN {
+        public KNN(KNNSearch&lt;T, T&gt; knn, int[] y, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>A KD-tree (short for k-dimensional tree) is a space-partitioning dataset
         structure for organizing points in a k-dimensional space. Cover tree
@@ -214,12 +290,32 @@ permalink: "{{ page.filePathStem }}.html"
         and you will observe the change of decision boundary. In general, the larger
         <code>k</code>, the smoother the boundary.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
     val x = toy.select(1, 2).toArray
     val y = toy.column(0).toIntArray
-    plot(x, y, knn(x, y, 3))
+    show(plot(x, y, knn(x, y, 3)))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var toy = Read.csv("data/classification/toy/toy-train.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var x = toy.select(1, 2).toArray();
+    var y = toy.column(0).toIntArray();
+    KNN.fit(x, y, 3);
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/knn.png" class="enlarge" style="width: 480px;" />
@@ -241,15 +337,54 @@ permalink: "{{ page.filePathStem }}.html"
         in a class is purely a function of this linear combination of independent
         variables.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def lda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): LDA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LDA {
+        public static LDA fit(double[][] x, int[] y, double[] priori, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>priori</code> is the priori probability of each class. If null, it will be
         estimated from the training data. The parameter <code>tol</code> is a tolerance to decide
         if a covariance matrix is singular. The function will reject variables whose variance is
         less than tol<sup>2</sup>.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(x, y, lda(x, y)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    LDA.fit(x, y);
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/lda.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -287,9 +422,28 @@ permalink: "{{ page.filePathStem }}.html"
         The resulting combination may be used for dimensionality reduction
         before later classification.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def fisher(x: Array[Array[Double]], y: Array[Int], L: Int = -1, tol: Double = 0.0001): FLD
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class FLD {
+        public static FLD fit(double[][] x, int[] y, int L, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The parameter <code>L</code> is the dimensionality of mapped space.
         The default value is the number of classes - 1.</p>
@@ -307,6 +461,26 @@ permalink: "{{ page.filePathStem }}.html"
         as normally distributed classes or equal class covariances.
         When the assumptions of LDA are satisfied, FLD is equivalent to LDA.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(x, y, fisher(x, y)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    FLD.fit(x, y);
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/fld.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -330,14 +504,53 @@ permalink: "{{ page.filePathStem }}.html"
         functions as a Gaussian distribution, then uses the posterior distributions
         to estimate the class for a given test data.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def qda(x: Array[Array[Double]], y: Array[Int], priori: Array[Double] = null, tol: Double = 0.0001): QDA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class QDA {
+        public static QDA fit(double[][] x, int[] y, double[] priori, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Unlike LDA, however, in QDA there is no assumption that the covariance of each of the classes
         is identical. Therefore, the resulting separating surface between
         the classes is quadratic.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(x, y, qda(x, y)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    QDA.fit(x, y);
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/qda.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -357,9 +570,28 @@ permalink: "{{ page.filePathStem }}.html"
         the regularized covariance matrices of each class is
         &Sigma;<sub>k</sub>(&alpha;) = &alpha; &Sigma;<sub>k</sub> + (1 - &alpha;) &Sigma;.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def rda(x: Array[Array[Double]], y: Array[Int], alpha: Double, priori: Array[Double] = null, tol: Double = 0.0001): RDA
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RDA {
+        public static RDA fit(double[][] x, int[] y, double alpha, double[] priori, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>alpha</code> is the regularization factor in <code>[0, 1]</code>.</p>
 
@@ -371,6 +603,26 @@ permalink: "{{ page.filePathStem }}.html"
         While &alpha; is zero, RDA is equivalent to LDA. Therefore, the
         regularization factor &alpha; allows a continuum of models between LDA and QDA.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(x, y, rda(x, y, 0.1)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    RDA.fit(x, y, 0.1);
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/rda.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -385,14 +637,53 @@ permalink: "{{ page.filePathStem }}.html"
         the highest value in multinomial models). In this way, logistic regression
         estimates the odds of a certain event (value) occurring.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def logit(x: Array[Array[Double]], y: Array[Int], lambda: Double = 0.0, tol: Double = 1E-5, maxIter: Int = 500): LogisticRegression
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LogisticRegression {
+        public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>lambda (&gt; 0)</code> gives a "regularized" estimate of linear
         weights which often has superior generalization performance, especially
         when the dimensionality is high.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(x, y, logit(x, y)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    LogisticRegression.fit(x, y);
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/logit.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -439,9 +730,28 @@ permalink: "{{ page.filePathStem }}.html"
         other than what have been observed and always choose the most uniform
         distribution subject to the observed constraints.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def maxent(x: Array[Array[Int]], y: Array[Int], p: Int, lambda: Double = 0.1, tol: Double = 1E-5, maxIter: Int = 500): Maxent
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Maxent {
+        public static Maxent fit(int[][] x, int[] y, double lambda, double tol, int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>x</code> is the sparse training samples. Each sample is represented by a set of sparse
         binary features. The features are stored in an integer array, of which
@@ -474,9 +784,28 @@ permalink: "{{ page.filePathStem }}.html"
         Commonly, each input variable is scaled into interval [0, 1] or to have
         mean 0 and standard deviation 1.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def mlp(x: Array[Array[Double]], y: Array[Int], p: Int, builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP
+    def mlp(x: Array[Array[Double]], y: Array[Int], builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class MLP {
+        public MLP(int p, LayerBuilder... builders);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>p</code> is the number of input variables, <code>builders</code>
         defines the each layer of network,
@@ -503,6 +832,40 @@ permalink: "{{ page.filePathStem }}.html"
         the neural network for categorical target variables, the outputs
         can be interpreted as posterior probabilities, which are very useful.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val net = mlp(x, y, Array(Layer.sigmoid(10), Layer.mle(1, OutputFunction.SIGMOID)), eta = 0.1, alpha = 0.1)
+    show(plot(x, y, net))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.base.mlp.*;
+    var net = new MLP(2,
+                Layer.sigmoid(10),
+                Layer.mle(1, OutputFunction.SIGMOID)
+            );
+
+    net.setLearningRate(0.1);
+    net.setMomentum(0.1);
+
+    for (int epoch = 0; epoch < 10; epoch++) {
+        for (int i : MathEx.permutate(x.length)) {
+            net.update(x[i], y[i]);
+        }
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <div style="width: 100%; display: inline-block; text-align: center;">
         <img src="images/neural-network.png" class="enlarge" style="width: 480px;" />
     </div>
@@ -595,9 +958,28 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
         network's parameters.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def rbfnet[T](x: Array[T], y: Array[Int], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RBFNetwork {
+        public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the so
         called thin plate splines. The advantage of the thin plate splines is that
@@ -610,10 +992,28 @@ permalink: "{{ page.filePathStem }}.html"
         effect of better conditioning (the separation distance of the scaled points
         increases).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val rbf = rbfnet(x, y, RBF.fit(x, 50), false)
-    plot(x, y, rbf)
+    show(plot(x, y, rbf))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_20">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.base.rbf.*;
+    RBFNetwork.fit(x, y, RBF.fit(x, 50), false);
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>After running the above example, you may notice that the decision boundary
         may be very different from the below picture. It is because the centers
@@ -657,9 +1057,35 @@ permalink: "{{ page.filePathStem }}.html"
         classifiers are well regularized, so the infinite dimension does not spoil
         the results.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def svm[T <](x: Array[T], y: Array[Int], kernel: MercerKernel[T], C: Double, tol: Double = 1E-3): SVM[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_21">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SVM {
+        // Fits a binary-class linear SVM
+        public static Classifier&lt;double[]&gt; fit(double[][] x, int[] y, double C, double tol);
+        // Fits a binary-class linear SVM of binary sparse data
+        public static Classifier&lt;int[]&gt; fit(int[][] x, int[] y, int p, double C, double tol);
+        // Fits a binary-class linear SVM of binary sparse data
+        public static Classifier&lt;SparseArray&gt; fit(SparseArray[] x, int[] y, int p, double C, double tol);
+        // Fits a non-linear SVM
+        public static SVM&lt;T&gt; fit(T[] x, int[] y, MercerKernel&lt;T&gt; kernel, double C, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The effectiveness of SVM depends on the selection of kernel, the kernel's
         parameters, and soft margin parameter <code>C</code>. Given a kernel, best combination
@@ -679,6 +1105,13 @@ permalink: "{{ page.filePathStem }}.html"
         class is increased by one vote, and finally the class with most votes
         determines the instance classification.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_22" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_22">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     // One-vs-one strategy
     def ovo[T](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusOne[T]
@@ -686,7 +1119,51 @@ permalink: "{{ page.filePathStem }}.html"
     // One-vs-rest (or one-vs-all) strategy
     def ovr[T](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_22">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class OneVersusOne {
+         public static OneVersusOne&lt;T&gt; fit(T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
+    }
 
+    public class OneVersusRest {
+         public static OneVersusRest&lt;T&gt; fit(T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_23" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val zip = read.csv("data/usps/zip.train", delimiter = ' ' , header = false)
+    val x = zip.drop(0).toArray
+    val y = zip.column(0).toIntArray
+    val kernel = new GaussianKernel(8.0)
+    val model = ovr(x, y) { (x, y) => SVM.fit(x, y, kernel, 5, 1E-3) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_23">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = zip.drop(0).toArray();
+    var y = zip.column(0).toIntArray();
+    var kernel = new GaussianKernel(8.0);
+    var model = OneVersusRest.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <p>With a Gaussian kernel of <code>&gamma; = 1.0</code> and <code>C = 10</code>,
         the decission boundary of SVM on the toy data is shown as following.</p>
 
@@ -733,9 +1210,28 @@ permalink: "{{ page.filePathStem }}.html"
         Instead, one may employ the information gain ratio, which solves the drawback
         of information gain.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_24" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_24">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DecisionTree {
+         public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>maxNodes</code> is the maximum number of leaf nodes in the tree as
         a regularization control.
@@ -750,6 +1246,79 @@ permalink: "{{ page.filePathStem }}.html"
         <img src="images/decision-tree.png" class="enlarge" style="width: 480px;" />
     </div>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_25" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_25">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> cart("V1" ~, zip)
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.754375
+    res22: DecisionTree = n=7291
+    node), split, n, loss, yval, (yprob)
+    * denotes terminal node
+    1) root 7291 33095 0 (0.16368 0.13779 0.10026 0.090262 0.089440 0.076291 0.091083 0.088481 0.074373 0.088344)
+     2) V214<=-0.999500 3352 12284 1 (0.0077335 0.29655 0.041939 0.028852 0.18233 0.023200 0.012195 0.17995 0.039857 0.18739)
+      4) V73<=0.0200000 2109 7264.8 7 (0.0056630 0.017933 0.046720 0.042945 0.26239 0.023124 0.010382 0.26852 0.053799 0.26852)
+       8) V25<=-0.862000 578 876.11 4 (0.0034014 0.0017007 0.068027 0.0085034 0.81122 0.018707 0.013605 0.049320 0.018707 0.0068027)
+        16) V57<=-0.548000 507 447.15 4 (0.0019342 0.0019342 0.038685 0.0058027 0.89749 0.013540 0.015474 0.0058027 0.013540 0.0058027)
+         32) V178<=-0.606000 495 374.13 4 (0.0019802 0.0019802 0.021782 0.0059406 0.91485 0.013861 0.013861 0.0059406 0.013861 0.0059406)
+          64) V9<=-0.381000 484 269.82 4 (0.0020243 0.0020243 0.020243 0.0020243 0.93320 0.014170 0.012146 0.0060729 0.0060729 0.0020243)
+           128) V146<=0.491500 475 217.48 4 (0.0020619 0.0020619 0.010309 0.0020619 0.94433 0.012371 0.012371 0.0061856 0.0061856 0.0020619)
+            256) V207<=0.658500 465 159.07 4 (0.0021053 0.0021053 0.0084211 0.0021053 0.95579 0.0084211 0.0063158 0.0063158 0.0063158 0.0021053) *
+            257) V207>0.658500 10 32.941 4 (0.050000 0.050000 0.10000 0.050000 0.25000 0.15000 0.20000 0.050000 0.050000 0.050000)
+             514) V90<=-0.996500 5 12.819 4 (0.066667 0.066667 0.13333 0.066667 0.33333 0.066667 0.066667 0.066667 0.066667 0.066667) *
+             515) V90>-0.996500 5 14.368 6 (0.066667 0.066667 0.066667 0.066667 0.066667 0.20000 0.26667 0.066667 0.066667 0.066667) *
+           129) V146>0.491500 9 25.378 2 (0.052632 0.052632 0.31579 0.052632 0.21053 0.10526 0.052632 0.052632 0.052632 0.052632) *
+          65) V9>-0.381000 11 41.156 8 (0.047619 0.047619 0.095238 0.14286 0.095238 0.047619 0.095238 0.047619 0.23810 0.14286)
+           130) V71<=-0.979000 6 21.710 3 (0.062500 0.062500 0.12500 0.18750 0.12500 0.062500 0.062500 0.062500 0.062500 0.18750) *
+           131) V71>-0.979000 5 12.819 8 (0.066667 0.066667 0.066667 0.066667 0.066667 0.066667 0.13333 0.066667 0.33333 0.066667) *
+         33) V178>-0.606000 12 26.958 2 (0.045455 0.045455 0.45455 0.045455 0.13636 0.045455 0.090909 0.045455 0.045455 0.045455) *
+        17) V57>-0.548000 71 229.31 7 (0.024691 0.012346 0.25926 0.037037 0.17284 0.061728 0.012346 0.33333 0.061728 0.024691)
+         34) V179<=-0.989500 50 139.53 7 (0.016667 0.016667 0.033333 0.033333 0.23333 0.083333 0.016667 0.45000 0.083333 0.033333)
+          68) V135<=-0.970000 32 57.888 7 (0.023810 0.023810 0.047619 0.047619 0.047619 0.047619 0.023810 0.64286 0.071429 0.023810)
+           136) V183<=-0.987000 26 22.052 7 (0.027778 0.027778 0.027778 0.027778 0.027778 0.055556 0.027778 0.72222 0.027778 0.027778) *
+           137) V183>-0.987000 6 23.331 8 (0.062500 0.062500 0.12500 0.12500 0.12500 0.062500 0.062500 0.12500 0.18750 0.062500) *
+    ...
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_25">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> DecisionTree.fit(Formula.lhs("V1"), zip)
+    $232 ==> n=7291
+    node), split, n, loss, yval, (yprob)
+    * denotes terminal node
+    1) root 7291 33095 0 (0.16368 0.13779 0.10026 0.090262 0.089440 0.076291 0.091083 0.088481 0.074373 0.088344)
+     2) V214<=-0.999500 3352 12284 1 (0.0077335 0.29655 0.041939 0.028852 0.18233 0.023200 0.012195 0.17995 0.039857 0.18739)
+      4) V73<=0.0200000 2109 7264.8 7 (0.0056630 0.017933 0.046720 0.042945 0.26239 0.023124 0.010382 0.26852 0.053799 0.26852)
+       8) V25<=-0.862000 578 876.11 4 (0.0034014 0.0017007 0.068027 0.0085034 0.81122 0.018707 0.013605 0.049320 0.018707 0.0068027)
+        16) V57<=-0.548000 507 447.15 4 (0.0019342 0.0019342 0.038685 0.0058027 0.89749 0.013540 0.015474 0.0058027 0.013540 0.0058027)
+         32) V178<=-0.606000 495 374.13 4 (0.0019802 0.0019802 0.021782 0.0059406 0.91485 0.013861 0.013861 0.0059406 0.013861 0.0059406)
+          64) V9<=-0.381000 484 269.82 4 (0.0020243 0.0020243 0.020243 0.0020243 0.93320 0.014170 0.012146 0.0060729 0.0060729 0.0020243)
+           128) V146<=0.491500 475 217.48 4 (0.0020619 0.0020619 0.010309 0.0020619 0.94433 0.012371 0.012371 0.0061856 0.0061856 0.0020619)
+            256) V207<=0.658500 465 159.07 4 (0.0021053 0.0021053 0.0084211 0.0021053 0.95579 0.0084211 0.0063158 0.0063158 0.0063158 0.0021053) *
+            257) V207>0.658500 10 32.941 4 (0.050000 0.050000 0.10000 0.050000 0.25000 0.15000 0.20000 0.050000 0.050000 0.050000)
+             514) V90<=-0.996500 5 12.819 4 (0.066667 0.066667 0.13333 0.066667 0.33333 0.066667 0.066667 0.066667 0.066667 0.066667) *
+             515) V90>-0.996500 5 14.368 6 (0.066667 0.066667 0.066667 0.066667 0.066667 0.20000 0.26667 0.066667 0.066667 0.066667) *
+           129) V146>0.491500 9 25.378 2 (0.052632 0.052632 0.31579 0.052632 0.21053 0.10526 0.052632 0.052632 0.052632 0.052632) *
+          65) V9>-0.381000 11 41.156 8 (0.047619 0.047619 0.095238 0.14286 0.095238 0.047619 0.095238 0.047619 0.23810 0.14286)
+           130) V71<=-0.979000 6 21.710 3 (0.062500 0.062500 0.12500 0.18750 0.12500 0.062500 0.062500 0.062500 0.062500 0.18750) *
+           131) V71>-0.979000 5 12.819 8 (0.066667 0.066667 0.066667 0.066667 0.066667 0.066667 0.13333 0.066667 0.33333 0.066667) *
+         33) V178>-0.606000 12 26.958 2 (0.045455 0.045455 0.45455 0.045455 0.13636 0.045455 0.090909 0.045455 0.045455 0.045455) *
+        17) V57>-0.548000 71 229.31 7 (0.024691 0.012346 0.25926 0.037037 0.17284 0.061728 0.012346 0.33333 0.061728 0.024691)
+         34) V179<=-0.989500 50 139.53 7 (0.016667 0.016667 0.033333 0.033333 0.23333 0.083333 0.016667 0.45000 0.083333 0.033333)
+          68) V135<=-0.970000 32 57.888 7 (0.023810 0.023810 0.047619 0.047619 0.047619 0.047619 0.023810 0.64286 0.071429 0.023810)
+           136) V183<=-0.987000 26 22.052 7 (0.027778 0.027778 0.027778 0.027778 0.027778 0.055556 0.027778 0.72222 0.027778 0.027778) *
+           137) V183>-0.987000 6 23.331 8 (0.062500 0.062500 0.12500 0.12500 0.12500 0.062500 0.062500 0.12500 0.18750 0.062500) *
+    ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
     <p>Decision tree techniques have a number of advantages
         over many of those alternative techniques.</p>
     <dl>
@@ -809,9 +1378,28 @@ permalink: "{{ page.filePathStem }}.html"
         <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
     </ol>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_26" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_26">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_26">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RandomForest {
+        public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight, LongStream seeds);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>ntrees</code> is the number of trees, and <code>mtry</code> is the number
         of attributed randomly selected at each node to choose the best split.
@@ -895,9 +1483,28 @@ permalink: "{{ page.filePathStem }}.html"
         the price of increasing computational time both during training and
         prediction: lower learning rate requires more iterations.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_28" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_28" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_28">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_28">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GradientTreeBoost {
+         public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>ntrees</code> is the number of trees or iterations and <code>shrinkage</code>
         is the learning rate.</p>
@@ -949,9 +1556,28 @@ permalink: "{{ page.filePathStem }}.html"
         classified example are decreased), so that the new classifier focuses more
         on those examples.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_30" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_30" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_30">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_30">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class AdaBoost {
+         public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The following picture is the decision boundary of AdaBoost of 100 trees on the toy data.</p>
 
