@@ -86,8 +86,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param k        the number of clusters.
      * @param distance the lambda of distance measure.
      */
-    public static <T> CLARANS<T> fit(T[] data, int k, Distance<T> distance) {
-        return fit(data, k, (int) Math.round(0.0125 * k * (data.length - k)), distance);
+    public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k) {
+        return fit(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
     }
 
     /**
@@ -99,7 +99,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      *                    the random search of local minima.
      * @param distance    the lambda of distance measure.
      */
-    public static <T> CLARANS<T> fit(T[] data, int k, int maxNeighbor, Distance<T> distance) {
+    public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k, int maxNeighbor) {
         if (maxNeighbor <= 0) {
             throw new IllegalArgumentException("Invalid maxNeighbors: " + maxNeighbor);
         }

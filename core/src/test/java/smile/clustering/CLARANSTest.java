@@ -63,7 +63,7 @@ public class CLARANSTest {
         double[][] testx = USPS.testx;
         int[] testy = USPS.testy;
 
-        CLARANS<double[]> model = CLARANS.fit(x,10, MathEx::squaredDistance);
+        CLARANS<double[]> model = CLARANS.fit(x, MathEx::squaredDistance,10);
         System.out.println(model);
 
         double r = RandIndex.of(y, model.y);
