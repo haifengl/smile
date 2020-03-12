@@ -70,6 +70,13 @@ permalink: "{{ page.filePathStem }}.html"
         only label 1 is regarded as positive and any other values are treated as negative class.</p>
 
     <p>The below example shows how to calculate the accuracy of a multi-class model.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val segTrain = read.arff("data/weka/segment-challenge.arff")
     val segTest = read.arff("data/weka/segment-test.arff")
@@ -80,6 +87,23 @@ permalink: "{{ page.filePathStem }}.html"
     smile&gt; accuracy(segTest("class").toIntArray, pred)
     res5: Double = 0.9728395061728395
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var segTrain = Read.arff("data/weka/segment-challenge.arff");
+    var segTest = Read.arff("data/weka/segment-test.arff");
+
+    var model = RandomForest.fit(Formula.lhs("class"), segTrain);
+    var pred = model.predict(segTest);
+
+    jshell> Accuracy.of(segTest.column("class").toIntArray(), pred)
+    $161 ==> 0.9617283950617284
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
         For any test, there is usually a trade-off between the measures. This trade-off
@@ -90,6 +114,13 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>The following example calculates various metrics for a binary classification problem.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val toyTrain = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
     val toyTest = read.csv("data/classification/toy/toy-test.txt", delimiter='\t', header=false)
@@ -133,6 +164,56 @@ permalink: "{{ page.filePathStem }}.html"
     smile&gt; auc(testy, prob)
     res17: Double = 0.8650958
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var toyTrain = Read.csv("data/classification/toy/toy-train.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var toyTest = Read.csv("data/classification/toy/toy-test.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+
+    var x = toyTrain.select(1, 2).toArray();
+    var y = toyTrain.column(0).toIntArray();
+    var model = LogisticRegression.fit(x, y, 0.1, 0.001, 100);
+
+    var testx = toyTest.select(1, 2).toArray();
+    var testy = toyTest.column(0).toIntArray();
+    var pred = Arrays.stream(testx).mapToInt(xi -> model.predict(xi)).toArray();
+
+    jshell>     Accuracy.of(testy, pred)
+    $171 ==> 0.81435
+
+    jshell>     Recall.of(testy, pred)
+    $172 ==> 0.7828
+
+    jshell>     Sensitivity.of(testy, pred)
+    $173 ==> 0.7828
+
+    jshell>     Specificity.of(testy, pred)
+    $174 ==> 0.8459
+
+    jshell>     Fallout.of(testy, pred)
+    $175 ==> 0.15410000000000001
+
+    jshell>     FDR.of(testy, pred)
+    $176 ==> 0.16447859963710107
+
+    jshell> FMeasure.of(testy, pred)
+    $177 ==> 0.808301925757654
+
+    // Calculate posteriori probability for AUC computation.
+    var posteriori = new double[2];
+    var prob = Arrays.stream(testx).mapToDouble(xi -> {
+            model.predict(xi, posteriori);
+            return posteriori[1];
+        }).toArray();
+
+    jshell> AUC.of(testy, prob)
+    $180 ==> 0.8650958
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>For regression, Smile has the following measures:</p>
 
@@ -165,6 +246,12 @@ permalink: "{{ page.filePathStem }}.html"
         A part of the data is held out for testing. Many benchmark data
         contain a separate test dataset.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     // Test a generic classifier. Only accuracy is calculated.
     def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T]
@@ -175,11 +262,21 @@ permalink: "{{ page.filePathStem }}.html"
     // Test a binary soft classifier. In addition to test2, AUC is caulcated.
     def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T]
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The above Scala methods takes a code block to train the model and apply it on the test data.
         These methods return the trained model
         and print out various measures.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val segTrain = read.arff("data/weka/segment-challenge.arff")
     val segTest = read.arff("data/weka/segment-test.arff")
@@ -197,7 +294,37 @@ permalink: "{{ page.filePathStem }}.html"
     class  6 |       0 |       0 |       1 |       2 |       0 |       0 |     120 |
     res21: RandomForest = smile.classification.RandomForest@77f95e19
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var segTrain = Read.arff("data/weka/segment-challenge.arff");
+    var segTest = Read.arff("data/weka/segment-test.arff");
+    var formula = Formula.lhs("class");
+    var model = RandomForest.fit(formula, segTrain);
+    var pred = model.predict(segTest);
 
+    jshell> ConfusionMatrix.of(formula.y(segTest).toIntArray(), pred)
+    $187 ==> ROW=truth and COL=predicted
+    class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
+    class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
+    class  2 |       3 |       0 |     115 |       1 |       3 |       0 |       0 |
+    class  3 |       2 |       0 |       0 |     106 |       2 |       0 |       0 |
+    class  4 |       2 |       0 |      10 |       6 |     108 |       0 |       0 |
+    class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
+    class  6 |       2 |       0 |       1 |       0 |       0 |       0 |     120 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val toyTrain = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
     val toyTest = read.csv("data/classification/toy/toy-test.txt", delimiter='\t', header=false)
@@ -243,6 +370,9 @@ permalink: "{{ page.filePathStem }}.html"
     test2soft(x, y, testx, testy) { case (x, y) => lda(x, y) }
     test2soft(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
     </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h3 id="out-of-bag">Out-of-bag Error</h3>
 
@@ -252,10 +382,28 @@ permalink: "{{ page.filePathStem }}.html"
         for training. OOB is the mean prediction error on each training sample <code>x<sub>i</sub></code>, using
         only the trees that did not have <code>x<sub>i</sub></code> in their bootstrap sample.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val rf = smile.classification.randomForest("class" ~, iris)
     println(s"OOB error = ${rf.error}")
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var rf = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
+    System.out.format("OOB error = %.2f%%%n", rf.error());
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Subsampling allows one to define an out-of-bag estimate of the prediction performance
         improvement by evaluating predictions on those observations which were not used
@@ -271,6 +419,13 @@ permalink: "{{ page.filePathStem }}.html"
         The overall performance is taken to be the average of the performance
         on all <code>k</code> partitions.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object cv {
         def classification[T](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
@@ -278,10 +433,32 @@ permalink: "{{ page.filePathStem }}.html"
         def regression[T](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class CrossValidation {
+        public static int[] classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
+        public static int[] classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
+        public static double[] regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
+        public static double[] regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>When no measures are provided, the methods use accuracy or RMSE by default
         for classification or regression, respectively.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; val iris = read.arff("data/weka/iris.arff")
     smile> cv.classification(10, "class" ~, iris) { case (formula, data) => smile.classification.cart(formula, data) }
@@ -301,7 +478,35 @@ permalink: "{{ page.filePathStem }}.html"
     class  2 |       0 |       5 |      45 |
     Accuracy: 93.33%
     res35: Array[Double] = Array(0.9333333333333333)
-</code></pre>
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var iris = Read.arff("data/weka/iris.arff");
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
+    140 more rows...
+
+    jshell> var pred = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
+    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }
+
+    jshell> var y = iris.column("class").toIntArray()
+    y ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 2, 2, 2, 2 }
+
+    jshell> Accuracy.of(y, pred)
+    $193 ==> 0.9266666666666666
+
+    jshell> ConfusionMatrix.of(y, pred)
+    $194 ==> ROW=truth and COL=predicted
+    class  0 |      50 |       0 |       0 |
+    class  1 |       0 |      45 |       5 |
+    class  2 |       0 |       6 |      44 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>On the Iris data, the accuracy estimation of 10-fold cross validation
         is about 84.7%. You may get different number because of the random partitions.</p>
@@ -314,6 +519,13 @@ permalink: "{{ page.filePathStem }}.html"
         usually very expensive from a computational point of view because of the
         large number of times the training process is repeated.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object loocv {
         def classification[T](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
@@ -321,11 +533,33 @@ permalink: "{{ page.filePathStem }}.html"
         def regression[T](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LOOCV {
+        public static int[] classification(T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
+        public static int[] classification(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
+        public static double[] regression(T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
+        public static double[] regression(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>On the Iris data, the accuracy estimation of LOOCV is 85.33%,
         which is higher than that of 10-fold cross validation. This
         is because more data is used for training and less for testing.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; loocv.classification(x, y) { case (x, y) => lda(x, y) }
     Confusion Matrix: ROW=truth and COL=predicted
@@ -334,22 +568,31 @@ permalink: "{{ page.filePathStem }}.html"
     Accuracy: 80.50%
     res41: Array[Double] = Array(0.805)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var x = iris.drop("class").toArray();
+    x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
 
-    <p>Java developers can use the below methods for cross validation. We need to provide
-        a <code>ClassifierTrainer</code> object to train the models during the validation.
-        The methods for regression have similar interface. For leave-one-out cross validation,
-        use the methods <code>loocv</code>.</p>
+    jshell> var pred = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
+    Mar 11, 2020 10:14:52 AM com.github.fommil.jni.JniLoader load
+    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 1, 2, 2, 2 }
 
-    <pre class="prettyprint lang-java"><code>
-    // Cross validation a classifier. Only accuracy is calculated.
-    public static &lt;T&gt; double cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y);
+    jshell> Accuracy.of(y, pred)
+    $197 ==> 0.8533333333333334
 
-    // Cross validation a classifier for given measure.
-    public static &lt;T&gt; double cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure measure);
-
-    // Cross validation a classifier for a given set of measure.
-    public static &lt;T&gt; double[] cv(int k, ClassifierTrainer&lt;T&gt; trainer, T[] x, int[] y, ClassificationMeasure[] measures);
-    </code></pre>
+    jshell> ConfusionMatrix.of(y, pred)
+    $198 ==> ROW=truth and COL=predicted
+    class  0 |      49 |       1 |       0 |
+    class  1 |       0 |      41 |       9 |
+    class  2 |       0 |      12 |      38 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <h2 id="bootstrap">Bootstrap</h2>
 
@@ -362,6 +605,13 @@ permalink: "{{ page.filePathStem }}.html"
         Then we fit the model to each of the bootstrap datasets and examine
         the behavior of the fits over the <code>k</code> replications.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object bootstrap {
         def classification[T](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
@@ -369,10 +619,32 @@ permalink: "{{ page.filePathStem }}.html"
         def regression[T](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Bootstrap {
+        public static double[] classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
+        public static double[] classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
+        public static double[] regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
+        public static double[] regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>On the Iris data, the accuracy estimation of 100 bootstraps
         is about 83.7%, which is slightly lower than that of 10-fold cross validation.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile&gt; bootstrap.classification(100, x, y) { case (x, y) => lda(x, y) }
     res40: Array[Double] = Array(
@@ -400,6 +672,17 @@ permalink: "{{ page.filePathStem }}.html"
       0.22388059701492535,
     ...
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
+    $199 ==> double[100] { 0.11111111111111116, 0.18867924528301883, 0.09090909090909094, 0.2068965517241379, 0.1428571428571429, 0.19999999999999996, 0.16981132075471694, 0.21153846153846156, 0.1785714285714286, 0.109375, 0.16666666666666663, 0.2142857142857143, 0.1071428571428571, 0.11764705882352944, 0.2545454545454545, 0.21568627450980393, 0.25806451612903225, 0.06382978723404253, 0.14814814814814814, 0.2222222222222222, 0.1578947368421053, 0.15517241379310343, 0.25, 0.18965517241379315, 0.17543859649122806, 0.18333333333333335, 0.12765957446808507, 0.0892857142857143, 0.17307692307692313, 0.16666666666666663, 0.17647058823529416, 0.2142857142857143, 0.12, 0.1818 ... 615, 0.1724137931034483, 0.11111111111111116, 0.1071428571428571, 0.1228070175438597, 0.2142857142857143, 0.23076923076923073, 0.07843137254901966, 0.13793103448275867, 0.06896551724137934, 0.17021276595744683, 0.1578947368421053, 0.2075471698113207, 0.1568627450980392, 0.1636363636363637, 0.18518518518518523, 0.15384615384615385 }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The bootstrap distribution of a parameter-estimator has been used to
         calculate confidence intervals for its population-parameter.

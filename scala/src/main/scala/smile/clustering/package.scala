@@ -326,9 +326,10 @@ package object clustering {
     * @param distance the distance/dissimilarity measure.
     * @param k the number of clusters.
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
+    * @param numLocal the number of local minima to search for.
     */
-  def clarans[T <: Object](data: Array[T], k: Int, maxNeighbor: Int, distance: Distance[T]): CLARANS[T] = time("CLARANS") {
-    CLARANS.fit(data, k, maxNeighbor, distance)
+  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = time("CLARANS") {
+    PartitionClustering.run(numLocal, () => CLARANS.fit(data, distance, k, maxNeighbor))
   }
 
   /** Density-Based Spatial Clustering of Applications with Noise.
