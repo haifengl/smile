@@ -147,10 +147,13 @@ public class CSV {
             for (CSVRecord record : csv) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
-                    String s = record.get(i).trim();
-                    if (!s.isEmpty()) {
-                        row[i] = parser.get(i).apply(s);
-                    }
+					String recordI = record.get(i);
+					if (recordI != null) {
+						String s = recordI.trim();
+						if (!s.isEmpty()) {
+							row[i] = parser.get(i).apply(s);
+						}
+					}
                 }
                 rows.add(Tuple.of(row, schema));
                 if (rows.size() >= limit) break;

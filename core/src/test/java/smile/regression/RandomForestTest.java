@@ -18,10 +18,13 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Properties;
+
 import org.junit.*;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
+import smile.regression.TreeShapImportance.TreeShapExplainer;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
@@ -95,7 +98,10 @@ public class RandomForestTest {
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds));
-
+        
+        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees());        
+        double[] meanShap = shapExplainer.shapImportance(model.schema(), Longley.data);   
+        
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
@@ -134,7 +140,15 @@ public class RandomForestTest {
         System.out.format("10-CV RMSE = %.4f%n", rmse);
         assertEquals(expected, rmse, 1E-4);
 
-        RandomForest model = RandomForest.fit(formula, data);
+        Properties props = new Properties();
+        props.put("smile.random.forest.trees", "100"); 
+        props.put("smile.random.forest.max.depth", "20"); 
+        props.put("smile.random.forest.max.nodes", "100");      
+        RandomForest model = RandomForest.fit(formula, data, props);        
+
+        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees(), true);        
+        double[] meanShap = shapExplainer.shapImportance(model.schema(), data);   
+               
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
@@ -153,6 +167,7 @@ public class RandomForestTest {
         test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
+        test("cervicalCancer", CervicalCancer.formula, CervicalCancer.data, 0.2341);
     }
 
     @Test
