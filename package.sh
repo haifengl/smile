@@ -30,14 +30,14 @@ while true; do
 
             git checkout scala-2.12
             git merge master
-            sbt ++2.12.10 scala/publishSigned
-            check_error "sbt ++2.12.10 scala/publishSigned"
-            sbt ++2.12.10 json/publishSigned
-            check_error "sbt ++2.12.10 json/publishSigned"
-            sbt ++2.12.10 vega/publishSigned
-            check_error "sbt ++2.12.10 vega/publishSigned"
-            sbt ++2.12.10 cas/publishSigned
-            check_error "sbt ++2.12.10 cas/publishSigned"
+            sbt ++2.12.11 scala/publishSigned
+            check_error "sbt ++2.12.11 scala/publishSigned"
+            sbt ++2.12.11 json/publishSigned
+            check_error "sbt ++2.12.11 json/publishSigned"
+            sbt ++2.12.11 vega/publishSigned
+            check_error "sbt ++2.12.11 vega/publishSigned"
+            sbt ++2.12.11 cas/publishSigned
+            check_error "sbt ++2.12.11 cas/publishSigned"
 
             git checkout scala-2.11
             git merge master
