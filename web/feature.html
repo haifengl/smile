@@ -71,7 +71,7 @@ permalink: "{{ page.filePathStem }}.html"
     <div class="tab-content">
         <div class="tab-pane active" id="java_1">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-java"><code>
     var pendigits = Read.csv("data/classification/pendigits.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var x = pendigits.drop(16).toArray();
     var y = pendigits.column(16).toIntArray();
@@ -109,7 +109,7 @@ permalink: "{{ page.filePathStem }}.html"
     <div class="tab-content">
         <div class="tab-pane active" id="java_2">
             <div class="code" style="text-align: left;">
-    <pre class="prettyprint lang-scala"><code>
+    <pre class="prettyprint lang-java"><code>
     var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
     var x = zip.drop(0).toArray();
     var y = zip.column(0).toIntArray();
@@ -360,7 +360,8 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
     </ul>
-        <div class="tab-pane" id="java_5">
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     var train = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
