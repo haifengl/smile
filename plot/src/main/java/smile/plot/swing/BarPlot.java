@@ -18,6 +18,7 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -180,28 +181,31 @@ public class BarPlot extends Plot {
     }
 
     @Override
-    public String getToolTip(double[] coord) {
+    public Optional<String> getToolTip(double[] coord) {
+        String tooltip = null;
+        boolean inBar = false;
         for (int i = 0; i < data.length; i++) {
             if (rightTop[i][1] > rightBottom[i][1]) {
                 if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] < rightTop[i][1] && coord[1] > rightBottom[i][1]) {
-                    if (description == null) {
-                        return String.format("data[%d] = %G", i, data[i][1]);
-                    } else {
-                        return String.format("%s = %g", description[i], data[i][1]);
-                    }
+                    inBar = true;
                 }
             } else {
                 if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] > rightTop[i][1] && coord[1] < rightBottom[i][1]) {
-                    if (description == null) {
-                        return String.format("data[%d] = %G", i, data[i][1]);
-                    } else {
-                        return String.format("%s = %G", description[i], data[i][1]);
-                    }
+                    inBar = true;
                 }
+            }
+
+            if (inBar) {
+                if (description == null) {
+                    tooltip = String.format("data[%d] = %G", i, data[i][1]);
+                } else {
+                    tooltip = String.format("%s = %G", description[i], data[i][1]);
+                }
+                break;
             }
         }
         
-        return null;        
+        return Optional.ofNullable(tooltip);
     }
     
     @Override
@@ -215,110 +219,20 @@ public class BarPlot extends Plot {
             g.drawLine(rightBottom[i], leftBottom[i]);
         }
 
-        g.setColor(getColor());
+        g.setColor(color);
         for (int i = 0; i < data.length; i++) {
             g.fillPolygon(0.2f, leftBottom[i], leftTop[i], rightTop[i], rightBottom[i]);
         }
         g.setColor(c);
     }
 
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a vector of which values will determine the heights of bars.
-     */
-    public static PlotCanvas plot(double[] data) {
-        return plot(null, data);
+    @Override
+    public double[] getLowerBound() {
+        return MathEx.colMin(data);
     }
 
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a vector of which values will determine the heights of bars.
-     */
-    public static PlotCanvas plot(String id, double[] data) {
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        BarPlot plot = new BarPlot(data);
-        plot.setID(id);
-        canvas.add(plot);
-
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a vector of which values will determine the heights of bars.
-     * @param labels the labels for each bar.
-     */
-    public static PlotCanvas plot(double[] data, String[] labels) {
-        return plot(null, data, labels);
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a vector of which values will determine the heights of bars.
-     * @param labels the labels for each bar.
-     */
-    public static PlotCanvas plot(String id, double[] data, String[] labels) {
-        if (data.length != labels.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
-        }
-
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        BarPlot plot = new BarPlot(labels, data);
-        plot.setID(id);
-        canvas.add(plot);
-
-        double[] locations = new double[labels.length];
-        for (int i = 0; i < labels.length; i++) {
-            locations[i] = i + 0.5;
-        }
-
-        canvas.getAxis(0).addLabel(labels, locations);
-
-        canvas.getAxis(0).setGridVisible(false);
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a n x 2 matrix of which data[][0] determine the location of
-     * bars and data[][1] determine the heights of bars. data[][0] will also be
-     * used as the labels. For best view, data[][0] should be monotonic.
-     */
-    public static PlotCanvas plot(double[]... data) {
-        return plot(null, data);
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a n x 2 matrix of which data[][0] determine the location of
-     * bars and data[][1] determine the heights of bars. data[][0] will also be
-     * used as the labels. For best view, data[][0] should be monotonic.
-     */
-    public static PlotCanvas plot(String id, double[]... data) {
-        if (data[0].length != 2) {
-            throw new IllegalArgumentException("Dataset is not 2-dimensional.");
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        BarPlot plot = new BarPlot(data);
-        plot.setID(id);
-        canvas.add(plot);
-
-        return canvas;
+    @Override
+    public double[] getUpperBound() {
+        return MathEx.colMax(data);
     }
 }

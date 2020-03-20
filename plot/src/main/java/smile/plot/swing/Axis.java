@@ -30,15 +30,6 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class Axis {
-
-    /**
-     * The font for axis label.
-     */
-    private static final Font axisLabelFont = new Font("Arial", Font.BOLD, 14);
-    /**
-     * The font for axis label.
-     */
-    private static final Font gridLabelFont = new Font("BitStream Vera Sans", Font.PLAIN, 12);
     /**
      * The base coordinate space.
      */
@@ -91,7 +82,7 @@ public class Axis {
     /**
      * The grid labels.
      */
-    private Label[] gridLabels;
+    private GridLabel[] gridLabels;
     /**
      * The grid label strings.
      */
@@ -203,7 +194,7 @@ public class Axis {
         int decimal = 0;
         String label;
 
-        gridLabels = new Label[labelsSlicing.length];
+        gridLabels = new GridLabel[labelsSlicing.length];
 
         for (int i = 0; i < gridLabels.length; i++) {
 
@@ -238,26 +229,20 @@ public class Axis {
             }
 
             if (base.getDimension() == 2) {
-                if (index == 0) {
-                    if (rotation == 0.0) {
-                        gridLabels[i] = new Label(label, 0.5, 1.0, labelCoord);
-                    } else {
-                        gridLabels[i] = new Label(label, 1.0, 0.5, rotation, labelCoord);
-                    }
+                if (index == 0 && rotation == 0.0) {
+                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, 1.0, rotation);
                 } else {
-                    gridLabels[i] = new Label(label, 1.0, 0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, labelCoord, 1.0, 0.5, rotation);
                 }
             } else {
                 if (index == 0) {
-                    gridLabels[i] = new Label(label, 0.5, -0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, -0.5, rotation);
                 } else if (index == 1) {
-                    gridLabels[i] = new Label(label, 0.5, 1.0, labelCoord);
+                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, 1.0, rotation);
                 } else if (index == 2) {
-                    gridLabels[i] = new Label(label, 0.0, 0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, labelCoord, 0.0, 0.5, rotation);
                 }
             }
-
-            gridLabels[i].setFont(gridLabelFont);
         }
 
         gridLabelStrings = null;
@@ -287,10 +272,11 @@ public class Axis {
                 originBase[index] = linesSlicing[j];
                 endBase[index] = linesSlicing[j];
 
-                if (j == 0 || j == gridLines[i].length - 1) {
-                    gridLines[i][j] = new Line(originBase, endBase);
+                double[][] points = {originBase, endBase};
+                if (j > 0 && j < gridLines[i].length - 1) {
+                    gridLines[i][j] = Line.of(points, Line.Style.DOT, ' ', Color.LIGHT_GRAY);
                 } else {
-                    gridLines[i][j] = new Line(Line.Style.DOT, Color.lightGray, originBase, endBase);
+                    gridLines[i][j] = Line.of(points, Line.Style.SOLID, ' ', Color.BLACK);
                 }
             }
             i2++;
@@ -442,28 +428,26 @@ public class Axis {
                 position[index] = 0.5;
                 if (index == 0) {
                     position[1] = -0.1;
-                    axisLabel = new BaseLabel(label, 0.5, 1.0, position);
+                    axisLabel = new BaseLabel(label, position,0.5, 1.0, 0.0);
                 } else {
                     position[0] = -0.15;
-                    axisLabel = new BaseLabel(label, 0.5, 0.5, -Math.PI / 2, position);
+                    axisLabel = new BaseLabel(label, position,0.5, 0.5, -Math.PI / 2);
                 }
             } else {
                 if (index == 0) {
                     position[2] = 1.0;
                     position[index] = 0.5;
-                    axisLabel = new BaseLabel(label, 0.5, -2.0, position);
+                    axisLabel = new BaseLabel(label, position, 0.5, -2.0, 0.0);
                 } else if (index == 1) {
                     position[0] = 1.0;
                     position[index] = 0.5;
-                    axisLabel = new BaseLabel(label, 0.5, 3.0, position);
+                    axisLabel = new BaseLabel(label, position, 0.5, 3.0, 0.0);
                 } else if (index == 2) {
                     position[1] = 1.0;
                     position[index] = 1.0;
-                    axisLabel = new BaseLabel(label, -0.5, -1.0, position);
+                    axisLabel = new BaseLabel(label, position, -0.5, -1.0, 0.0);
                 }
             }
-
-            axisLabel.setFont(axisLabelFont);
         }
         return this;
     }
@@ -475,7 +459,7 @@ public class Axis {
         if (axisLabel == null) {
             return null;
         } else {
-            return axisLabel.getText();
+            return axisLabel.text;
         }
     }
 
@@ -502,12 +486,12 @@ public class Axis {
 
         if (labelVisible) {
             if (gridLabels != null) {
-                int[] xy = g.projection.screenProjection(gridLabels[1].getCoordinate());
+                int[] xy = g.projection.screenProjection(gridLabels[1].coordinates);
                 int prevx = xy[0];
                 int prevy = xy[1];
                 for (int i = 0; i < gridLabels.length; i++) {
                     if (!gridLabels[i].text.isEmpty()) {
-                        double[] coord = gridLabels[i].getCoordinate();
+                        double[] coord = gridLabels[i].coordinates;
                         xy = g.projection.screenProjection(coord);
                         int x = xy[0];
                         int y = xy[1];
@@ -528,7 +512,7 @@ public class Axis {
                             }
                         } else {
                             if ((prevx == x && prevy == y)
-                              || Math.abs(x - prevx) > g.g2d.getFontMetrics(gridLabels[i].font).stringWidth(gridLabels[i].text)
+                              || Math.abs(x - prevx) > g.getGraphics().getFontMetrics(gridLabels[i].font).stringWidth(gridLabels[i].text)
                               || Math.abs(prevy - y) > gridLabels[i].font.getSize()) {
                                 gridLabels[i].paint(g);
                                 prevx = x;

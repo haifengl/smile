@@ -60,13 +60,6 @@ public class SparseMatrixPlot extends Plot {
     private Color[] palette;
 
     /**
-     * Constructor. Use blue color for nonzero entries.
-     */
-    public SparseMatrixPlot(SparseMatrix sparse) {
-        this(sparse, Color.BLUE);
-    }
-
-    /**
      * Constructor.
      */
     public SparseMatrixPlot(SparseMatrix sparse, Color color) {
@@ -84,14 +77,6 @@ public class SparseMatrixPlot extends Plot {
         for (int i = 0; i < y.length; i++) {
             y[i] = y.length - i - 0.5;
         }
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param k the number of colors in the palette.
-     */
-    public SparseMatrixPlot(SparseMatrix sparse, int k) {
-        this(sparse, Palette.jet(k, 1.0f));
     }
 
     /**
@@ -126,6 +111,18 @@ public class SparseMatrixPlot extends Plot {
         min = values[(int) Math.round(0.01 * values.length)];
         max = values[(int) Math.round(0.99 * (values.length-1))];
         width = (max - min) / palette.length;
+    }
+
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {0, 0};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {sparse.ncols(), sparse.nrows()};
+        return bound;
     }
 
     @Override
@@ -186,7 +183,7 @@ public class SparseMatrixPlot extends Plot {
                 }
             }
         } else {
-            g.setColor(getColor());
+            g.setColor(color);
             int m = sparse.nrows();
             int n = sparse.ncols();
             for (int i = 0; i < m; i++) {
@@ -266,15 +263,12 @@ public class SparseMatrixPlot extends Plot {
         g.setColor(c);
     }
 
-    /**
-     * Create a sparse matrix plot canvas.
-     * @param sparse a sparse matrix.
-     */
-    public static PlotCanvas plot(SparseMatrix sparse) {
+    @Override
+    public Canvas canvas() {
         double[] lowerBound = {0, 0};
         double[] upperBound = {sparse.ncols(), sparse.nrows()};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new SparseMatrixPlot(sparse));
+        Canvas canvas = new Canvas(lowerBound, upperBound, false);
+        canvas.add(this);
 
         canvas.getAxis(0).setLabelVisible(false);
         canvas.getAxis(0).setGridVisible(false);
@@ -285,38 +279,17 @@ public class SparseMatrixPlot extends Plot {
     }
 
     /**
-     * Create a sparse matrix plot canvas.
-     * @param sparse a sparse matrix.
+     * Creates a sparse matrix plot with blue color for nonzero entries.
      */
-    public static PlotCanvas plot(SparseMatrix sparse, Color color) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {sparse.ncols(), sparse.nrows()};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new SparseMatrixPlot(sparse, color));
-
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
+    public static SparseMatrixPlot of(SparseMatrix sparse) {
+        return new SparseMatrixPlot(sparse, Color.BLUE);
     }
 
     /**
-     * Create a sparse matrix plot canvas.
-     * @param sparse a sparse matrix.
+     * Creates a sparse matrix plot with Use jet color palette.
+     * @param k the number of colors in the palette.
      */
-    public static PlotCanvas plot(SparseMatrix sparse, Color[] palette) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {sparse.ncols(), sparse.nrows()};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new SparseMatrixPlot(sparse, palette));
-
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
+    public static SparseMatrixPlot of(SparseMatrix sparse, int k) {
+        return new SparseMatrixPlot(sparse, Palette.jet(k, 1.0f));
     }
 }

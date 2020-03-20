@@ -19,6 +19,7 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -130,24 +131,24 @@ public class BoxPlot extends Plot {
     private static String format = "<table border=\"1\"><tr><td>Median</td><td align=\"right\">%g</td></tr><tr><td>Q1</td><td align=\"right\">%g</td></tr><tr><td>Q3</td><td align=\"right\">%g</td></tr></table>";
 
     @Override
-    public String getToolTip(double[] coord) {
+    public Optional<String> getToolTip(double[] coord) {
+        String tooltip = null;
         for (int i = 0; i < data.length; i++) {
             if (coord[0] < i + 0.8 && coord[0] > i + 0.2 && coord[1] < quantiles[i][3] && coord[1] > quantiles[i][1]) {
-                if (description != null) {
-                    return "<b>&nbsp;" + description[i] + ":</b></br>" + String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]);
-                } else {
-                    return String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]);
-                }
+                tooltip = description != null ?
+                        "<b>&nbsp;" + description[i] + ":</b></br>" + String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]) :
+                        String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]);
+                break;
             }
         }
         
-        return null;        
+        return Optional.ofNullable(tooltip);
     }
     
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         double[] start = new double[2];
         double[] end = new double[2];

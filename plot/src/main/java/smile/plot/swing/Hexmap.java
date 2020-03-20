@@ -19,6 +19,7 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -147,13 +148,13 @@ public class Hexmap extends Plot {
     }
 
     @Override
-    public String getToolTip(double[] coord) {
+    public Optional<String> getToolTip(double[] coord) {
         if (labels == null) {
-            return null;
+            return Optional.empty();
         }
         
         if (coord[0] < -0.5 || coord[0] > z[0].length || coord[1] < 0.36 || coord[1] > z.length * 0.87 + 0.5) {
-            return null;
+            return Optional.empty();
         }
     
         int x = (int) (coord[0] + 0.5);
@@ -164,13 +165,13 @@ public class Hexmap extends Plot {
                 int yj = y + j;
                 if (xi >= 0 && xi < hexagon[0].length && yj >= 0 && yj < hexagon.length) {
                     if (MathEx.contains(hexagon[yj][xi], coord)) {
-                        return labels[yj][xi];
+                        return Optional.of(labels[yj][xi]);
                     }
                 }
             }
         }
-        
-        return null;
+
+        return Optional.empty();
     }
     
     @Override

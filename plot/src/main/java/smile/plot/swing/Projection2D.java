@@ -27,7 +27,7 @@ class Projection2D extends Projection {
     /**
      * Constructor.
      */
-    public Projection2D(PlotCanvas canvas) {
+    public Projection2D(Canvas canvas) {
         super(canvas);
     }
 
@@ -47,11 +47,11 @@ class Projection2D extends Projection {
     public double[] inverseProjection(int x, int y) {
         double[] sc = new double[2];
 
-        double ratio = (canvas.base.upperBound[0] - canvas.base.lowerBound[0]) / (canvas.getWidth() * (1 - 2 * canvas.margin));
-        sc[0] = canvas.base.lowerBound[0] + ratio * (x - canvas.getWidth() * canvas.margin);
+        double ratio = (canvas.base.upperBound[0] - canvas.base.lowerBound[0]) / (width * (1 - 2 * canvas.margin));
+        sc[0] = canvas.base.lowerBound[0] + ratio * (x - width * canvas.margin);
 
-        ratio = (canvas.base.upperBound[1] - canvas.base.lowerBound[1]) / (canvas.getHeight() * (1 - 2 * canvas.margin));
-        sc[1] = canvas.base.lowerBound[1] + ratio * (canvas.getHeight() * (1 - canvas.margin) - y);
+        ratio = (canvas.base.upperBound[1] - canvas.base.lowerBound[1]) / (height * (1 - 2 * canvas.margin));
+        sc[1] = canvas.base.lowerBound[1] + ratio * (height * (1 - canvas.margin) - y);
 
         return sc;
     }

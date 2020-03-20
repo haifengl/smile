@@ -17,27 +17,8 @@
 
 package smile.plot.swing;
 
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Container;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Frame;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.ComponentEvent;
-import java.awt.event.ComponentListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
-import java.awt.event.MouseMotionListener;
-import java.awt.event.MouseWheelEvent;
-import java.awt.event.MouseWheelListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.*;
+import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.awt.print.PageFormat;
 import java.awt.print.Printable;
@@ -45,17 +26,11 @@ import java.awt.print.PrinterException;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
-
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
-
-import smile.math.MathEx;
-import smile.projection.PCA;
 import smile.swing.Button;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
@@ -72,60 +47,15 @@ import smile.swing.Table;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class PlotCanvas extends JPanel {
-
+public class PlotPanel extends JPanel {
     /**
-     * The default (one side) margin portion.
+     * The canvas of plots.
      */
-    private static final double DEFAULT_MARGIN = 0.15;
+    private Canvas canvas;
     /**
-     * The default font for rendering the title.
+     * The Swing component to draw the canvas.
      */
-    private static final Font DEFAULT_TITLE_FONT = new Font("Arial", Font.BOLD, 16);
-    /**
-     * The default color for rendering the title.
-     */
-    private static final Color DEFAULT_TITLE_COLOR = Color.BLACK;
-    /**
-     * The current coordinate base.
-     */
-    Base base;
-    /**
-     * The graphics object associated with this canvas.
-     */
-    Graphics graphics;
-    /**
-     * The portion of the canvas used for margin.
-     */
-    double margin = DEFAULT_MARGIN;
-    /**
-     * The main title of plot.
-     */
-    private String title;
-    /**
-     * The font for rendering the title.
-     */
-    private Font titleFont = DEFAULT_TITLE_FONT;
-    /**
-     * The color for rendering the title.
-     */
-    private Color titleColor = DEFAULT_TITLE_COLOR;
-    /**
-     * The coordinate base when the user start dragging the mouse.
-     */
-    private Base backupBase;
-    /**
-     * The coordinate grid plot.
-     */
-    private BaseGrid baseGrid;
-    /**
-     * The shapes in the canvas, e.g. label, plots, etc.
-     */
-    private List<Shape> shapes = new ArrayList<>();
-    /**
-     * The real canvas for plots.
-     */
-    private MathCanvas canvas;
+    private JCanvas contentPane;
     /**
      * Optional tool bar to control plots.
      */
@@ -140,9 +70,9 @@ public class PlotCanvas extends JPanel {
     private JTable propertyTable;
 
     /**
-     * The real canvas for plotting.
+     * The Swing component to draw the canvas.
      */
-    private class MathCanvas extends JComponent implements Printable, ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
+    private class JCanvas extends JComponent implements Printable, ComponentListener, MouseListener, MouseMotionListener, MouseWheelListener, ActionListener {
         /**
          * If the mouse double clicked.
          */
@@ -163,95 +93,38 @@ public class PlotCanvas extends JPanel {
          * The y coordinate (in Java2D coordinate space) of mouse dragging.
          */
         private int mouseDraggingY = -1;
-        
+        /**
+         * The coordinate base when the user start dragging the mouse.
+         */
+        private Base backupBase;
+
         /**
          * Constructor.
          */
-        MathCanvas() {
-            init();
-        }
-
-        /**
-         * Initialize the canvas.
-         */
-        private void init() {
+        JCanvas() {
             setBackground(Color.white);
             setDoubleBuffered(true);
             addComponentListener(this);
             addMouseListener(this);
             addMouseMotionListener(this);
-            addMouseWheelListener(this); 
+            addMouseWheelListener(this);
         }
-        
+
         @Override
         public void paintComponent(java.awt.Graphics g) {
-            Graphics2D g2d = (Graphics2D) g;
-            graphics.setGraphics(g2d, getWidth(), getHeight());
-
-            Color color = g2d.getColor();
-            g2d.setColor(getBackground());
-            g2d.fillRect(0, 0, getSize().width, getSize().height);
-            g2d.setColor(color);
-            baseGrid.paint(graphics);
-
-            // draw plot
-            graphics.clip();
-            int k = 0;
-            // with for-each loop, we will get a ConcurrentModificationException.
-            // Use for loop instead.
-            for (Shape shape : shapes) {
-                graphics.setColor(shape.color);
-                shape.paint(graphics);
-                if (shape instanceof NamedShape) {
-                    NamedShape p = (NamedShape) shape;
-                    if (p.name().isPresent()) {
-                        k++;
-                    }
-                }
-            }
-            graphics.clearClip();
-
-            if (k > 1) {
-                Font font = g2d.getFont();
-                int x = (int) (getWidth() * (1 - margin) + 20);
-                int y = (int) (getHeight() * margin + 50);
-                int width = font.getSize();
-                int height = font.getSize();
-
-                for (int i = 0; i < shapes.size(); i++) {
-                    Shape s = shapes.get(i);
-                    if (s instanceof NamedShape) {
-                        NamedShape p = (NamedShape) s;
-                        if (p.name().isPresent()) {
-                            g2d.setColor(p.color);
-                            g2d.fillRect(x, y, width, height);
-                            g2d.drawRect(x, y, width, height);
-                            g2d.drawString(p.name().get(), x + 2 * width, y + height);
-                            y += 2 * width;
-                        }
-                    }
-                }
-            }
-
-            if (title != null) {
-                g2d.setFont(titleFont);
-                g2d.setColor(titleColor);
-                FontMetrics fm = g.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(title)) / 2;
-                int y = (int) (getHeight() * margin) / 2;
-                g2d.drawString(title, x, y);
-            }
+            canvas.paint((Graphics2D) g, getWidth(), getHeight());
 
             if (mouseDraggingX >= 0 && mouseDraggingY >= 0) {
-                g.drawRect(Math.min(mouseClickX, mouseDraggingX),
+                g.setColor(Color.BLACK);
+                g.drawRect(
+                        Math.min(mouseClickX, mouseDraggingX),
                         Math.min(mouseClickY, mouseDraggingY),
                         Math.abs(mouseClickX - mouseDraggingX),
-                        Math.abs(mouseClickY - mouseDraggingY));
+                        Math.abs(mouseClickY - mouseDraggingY)
+                );
             }
-
-            g2d.setColor(color);
         }
-        
+
         @Override
         public int print(java.awt.Graphics g, PageFormat pf, int page) throws PrinterException {
             if (page > 0) {
@@ -260,24 +133,18 @@ public class PlotCanvas extends JPanel {
             }
 
             Graphics2D g2d = (Graphics2D) g;
-            
-            // User (0,0) is typically outside the imageable area, so we must
+
+            // User (0,0) is typically outside the printable area, so we must
             // translate by the X and Y values in the PageFormat to avoid clipping
             g2d.translate(pf.getImageableX(), pf.getImageableY());
 
             // Scale plots to paper size.
-            double scaleX = pf.getImageableWidth() / canvas.getWidth();
-            double scaleY = pf.getImageableHeight() / canvas.getHeight();
+            double scaleX = pf.getImageableWidth() / getWidth();
+            double scaleY = pf.getImageableHeight() / getHeight();
             g2d.scale(scaleX, scaleY);
 
-            // Disable double buffering
-            canvas.setDoubleBuffered(false);
-
             // Now we perform our rendering
-            canvas.print(g);
-
-            // Enable double buffering
-            canvas.setDoubleBuffered(true);
+            canvas.paint(g2d, getWidth(), getHeight());
 
             // tell the caller that this page is part of the printed document
             return PAGE_EXISTS;
@@ -297,23 +164,24 @@ public class PlotCanvas extends JPanel {
 
         @Override
         public void mouseDragged(MouseEvent e) {
-            if (base.dimension == 2) {
+            if (canvas.base.dimension == 2) {
                 mouseDraggingX = e.getX();
                 mouseDraggingY = e.getY();
-                repaint();
-
-            } else if (base.dimension == 3) {
-                graphics.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
+            } else if (canvas.base.dimension == 3) {
+                canvas.graphics.rotate(e.getX() - mouseClickX, e.getY() - mouseClickY);
                 mouseClickX = e.getX();
                 mouseClickY = e.getY();
-                repaint();
             }
 
+            repaint();
             e.consume();
         }
 
         @Override
         public void mouseReleased(MouseEvent e) {
+            Base base = canvas.base;
+            Graphics graphics = canvas.graphics;
+
             if (e.isPopupTrigger()) {
                 popup.show(e.getComponent(), e.getX(), e.getY());
                 e.consume();
@@ -328,7 +196,7 @@ public class PlotCanvas extends JPanel {
                             double[] sc2 = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
 
                             if (Math.min(sc1[0], sc2[0]) < base.upperBound[0]
-                                    && Math.max(sc1[0], sc2[0]) > base.lowerBound[0]
+                                    && Math.max(sc1[0], sc2[0]) > canvas.base.lowerBound[0]
                                     && Math.min(sc1[1], sc2[1]) < base.upperBound[1]
                                     && Math.max(sc1[1], sc2[1]) > base.lowerBound[1]) {
 
@@ -342,7 +210,7 @@ public class PlotCanvas extends JPanel {
                                 }
                                 base.initBaseCoord();
                                 graphics.projection.reset();
-                                baseGrid.setBase(base);
+                                canvas.baseGrid.setBase(base);
                             }
                         }
                     }
@@ -357,7 +225,7 @@ public class PlotCanvas extends JPanel {
         public void mouseClicked(MouseEvent e) {
             if (e.getClickCount() == 2) {
                 mouseDoubleClicked = true;
-                backupBase = base;
+                backupBase = canvas.base;
             } else {
                 mouseDoubleClicked = false;
             }
@@ -379,14 +247,17 @@ public class PlotCanvas extends JPanel {
         @Override
         public void actionPerformed(ActionEvent e) {
         }
-        
+
         @Override
         public void mouseMoved(MouseEvent e) {
+            Base base = canvas.base;
+            Graphics graphics = canvas.graphics;
+
             if (base.dimension == 2) {
                 if (mouseDoubleClicked) {
                     double x = mouseClickX - e.getX();
                     if (Math.abs(x) > 20) {
-                        int s = baseGrid.getAxis(0).getLinearSlices();
+                        int s = canvas.baseGrid.getAxis(0).getLinearSlices();
                         x = x > 0 ? 1.0 / s : -1.0 / s;
                         x *= (backupBase.upperBound[0] - backupBase.lowerBound[0]);
                         base.lowerBound[0] = backupBase.lowerBound[0] + x;
@@ -396,7 +267,7 @@ public class PlotCanvas extends JPanel {
 
                     double y = mouseClickY - e.getY();
                     if (Math.abs(y) > 20) {
-                        int s = baseGrid.getAxis(1).getLinearSlices();
+                        int s = canvas.baseGrid.getAxis(1).getLinearSlices();
                         y = y > 0 ? -1.0 / s : 1.0 / s;
                         y *= (backupBase.upperBound[1] - backupBase.lowerBound[1]);
                         base.lowerBound[1] = backupBase.lowerBound[1] + y;
@@ -406,14 +277,14 @@ public class PlotCanvas extends JPanel {
 
                     base.initBaseCoord();
                     graphics.projection.reset();
-                    baseGrid.setBase(base);
+                    canvas.baseGrid.setBase(base);
                     repaint();
                 } else {
                     String tooltip = null;
                     double[] sc = ((Projection2D) (graphics.projection)).inverseProjection(e.getX(), e.getY());
 
                     String firstid = null;
-                    for (Shape shape : shapes) {
+                    for (Shape shape : canvas.shapes) {
                         if (shape instanceof Plot) {
                             Plot plot = (Plot) shape;
                             Optional<String> s = plot.getToolTip(sc);
@@ -455,8 +326,11 @@ public class PlotCanvas extends JPanel {
                 return;
             }
 
+            Base base = canvas.base;
+            Graphics graphics = canvas.graphics;
+
             for (int i = 0; i < base.dimension; i++) {
-                int s = baseGrid.getAxis(i).getLinearSlices();
+                int s = canvas.baseGrid.getAxis(i).getLinearSlices();
                 double r = e.getWheelRotation() > 0 ? 1.0 / s : -1.0 / s;
                 if (r > -0.5) {
                     double d = (base.upperBound[i] - base.lowerBound[i]) * r;
@@ -468,21 +342,24 @@ public class PlotCanvas extends JPanel {
             for (int i = 0; i < base.dimension; i++) {
                 base.setPrecisionUnit(i);
             }
-            
+
             base.initBaseCoord();
             graphics.projection.reset();
-            baseGrid.setBase(base);
-            
+            canvas.baseGrid.setBase(base);
+
             repaint();
             e.consume();
         }
 
         @Override
         public void componentResized(ComponentEvent e) {
+            Base base = canvas.base;
+            Graphics graphics = canvas.graphics;
+
             if (graphics != null) {
                 base.initBaseCoord();
                 graphics.projection.reset();
-                baseGrid.setBase(base);
+                canvas.baseGrid.setBase(base);
             }
 
             repaint();
@@ -504,39 +381,15 @@ public class PlotCanvas extends JPanel {
     /**
      * Constructor
      */
-    public PlotCanvas(double[] lowerBound, double[] upperBound) {
-        initCanvas();
-        initBase(lowerBound, upperBound);
-        initGraphics();
+    public PlotPanel(Canvas canvas) {
+        this.canvas = canvas;
+        contentPane = new JCanvas();
+
+        setLayout(new BorderLayout());
+        add(contentPane, BorderLayout.CENTER);
+        initContextMenauAndToolBar();
     }
 
-    /**
-     * Constructor
-     */
-    public PlotCanvas(double[] lowerBound, double[] upperBound, boolean extendBound) {
-        initCanvas();
-        initBase(lowerBound, upperBound, extendBound);
-        initGraphics();
-    }
-
-    /**
-     * Constructor
-     */
-    public PlotCanvas(double[] lowerBound, double[] upperBound, String[] axisLabels) {
-        initCanvas();
-        initBase(lowerBound, upperBound, axisLabels);
-        initGraphics();
-    }
-
-    /**
-     * Constructor
-     */
-    public PlotCanvas(double[] lowerBound, double[] upperBound, String[] axisLabels, boolean extendBound) {
-        initCanvas();
-        initBase(lowerBound, upperBound, axisLabels, extendBound);
-        initGraphics();
-    }
-    
     /**
      * Returns a tool bar to control the plot.
      * @return a tool bar to control the plot.
@@ -545,27 +398,6 @@ public class PlotCanvas extends JPanel {
         return toolbar;
     }
 
-    /**
-     * Initialize the canvas.
-     */
-    private void initCanvas() {
-        GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        if (ge.isHeadless()) {
-            setPreferredSize(new Dimension(1600,1200));
-
-        }
-
-        setLayout(new BorderLayout());
-        
-        canvas = new MathCanvas();
-        add(canvas, BorderLayout.CENTER);
-
-        initContextMenauAndToolBar();
-        
-        // set a new dismiss delay to a really big value, default is 4 sec.
-        //ToolTipManager.sharedInstance().setDismissDelay(Integer.MAX_VALUE);
-    }
-    
     /**
      * Toolbar button actions.
      */
@@ -603,12 +435,12 @@ public class PlotCanvas extends JPanel {
         toolbar.add(new Button(decreaseWidthAction));
         toolbar.addSeparator();
         toolbar.add(new Button(propertyAction));
-    
+
         decreaseHeightAction.setEnabled(false);
         decreaseWidthAction.setEnabled(false);
-        
+
         //Initialize popup menu.
-        popup = new JPopupMenu();        
+        popup = new JPopupMenu();
         popup.add(new JMenuItem(saveAction));
         popup.add(new JMenuItem(printAction));
         popup.addSeparator();
@@ -624,7 +456,7 @@ public class PlotCanvas extends JPanel {
         popup.add(new JMenuItem(decreaseWidthAction));
         popup.addSeparator();
         popup.add(new JMenuItem(propertyAction));
-        
+
         AncestorListener ancestorListener = new AncestorListener() {
 
             @Override
@@ -637,10 +469,10 @@ public class PlotCanvas extends JPanel {
                         scrollPane = (JScrollPane) parent;
                         break;
                     }
-                    
+
                     parent = parent.getParent();
                 }
-                
+
                 increaseHeightAction.setEnabled(inScrollPane);
                 increaseWidthAction.setEnabled(inScrollPane);
             }
@@ -653,10 +485,10 @@ public class PlotCanvas extends JPanel {
             public void ancestorMoved(AncestorEvent ae) {
             }
         };
-        
+
         addAncestorListener(ancestorListener);
     }
-    
+
     private class SaveAction extends AbstractAction {
 
         public SaveAction() {
@@ -729,16 +561,16 @@ public class PlotCanvas extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (margin > 0.05) {
-                margin -= 0.05;
-                graphics.projection.reset();
+            if (canvas.margin > 0.05) {
+                canvas.margin -= 0.05;
+                canvas.graphics.projection.reset();
                 repaint();
             }
-            
-            if (margin <= 0.05) {
+
+            if (canvas.margin <= 0.05) {
                 setEnabled(false);
             }
-            
+
             if (!shrinkPlotAreaAction.isEnabled()) {
                 shrinkPlotAreaAction.setEnabled(true);
             }
@@ -753,22 +585,22 @@ public class PlotCanvas extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            if (margin < 0.3) {
-                margin += 0.05;
-                graphics.projection.reset();
+            if (canvas.margin < 0.3) {
+                canvas.margin += 0.05;
+                canvas.graphics.projection.reset();
                 repaint();
             }
-            
-            if (margin >= 0.3) {
+
+            if (canvas.margin >= 0.3) {
                 setEnabled(false);
             }
-            
+
             if (!enlargePlotAreaAction.isEnabled()) {
                 enlargePlotAreaAction.setEnabled(true);
             }
         }
     }
-    
+
     private class IncreaseWidthAction extends AbstractAction {
 
         public IncreaseWidthAction() {
@@ -782,13 +614,13 @@ public class PlotCanvas extends JPanel {
             setPreferredSize(d);
             invalidate();
             scrollPane.getParent().validate();
-            
+
             if (!decreaseWidthAction.isEnabled()) {
                 decreaseWidthAction.setEnabled(true);
             }
         }
     }
-    
+
     private class IncreaseHeightAction extends AbstractAction {
 
         public IncreaseHeightAction() {
@@ -802,13 +634,13 @@ public class PlotCanvas extends JPanel {
             setPreferredSize(d);
             invalidate();
             scrollPane.getParent().validate();
-            
+
             if (!decreaseHeightAction.isEnabled()) {
                 decreaseHeightAction.setEnabled(true);
-            }            
+            }
         }
     }
-    
+
     private class DecreaseWidthAction extends AbstractAction {
 
         public DecreaseWidthAction() {
@@ -819,19 +651,19 @@ public class PlotCanvas extends JPanel {
         public void actionPerformed(ActionEvent e) {
             Dimension d = getSize();
             d.width -= 100;
-            
+
             Dimension vd = scrollPane.getViewport().getSize();
             if (d.width <= vd.width) {
                 d.width = vd.width;
                 decreaseWidthAction.setEnabled(false);
             }
-            
+
             setPreferredSize(d);
             invalidate();
             scrollPane.getParent().validate();
         }
     }
-    
+
     private class DecreaseHeightAction extends AbstractAction {
 
         public DecreaseHeightAction() {
@@ -842,19 +674,19 @@ public class PlotCanvas extends JPanel {
         public void actionPerformed(ActionEvent e) {
             Dimension d = getSize();
             d.height -= 100;
-            
+
             Dimension vd = scrollPane.getViewport().getSize();
             if (d.height <= vd.height) {
                 d.height = vd.height;
                 decreaseHeightAction.setEnabled(false);
             }
-            
+
             setPreferredSize(d);
             invalidate();
             scrollPane.getParent().validate();
         }
     }
-    
+
     private class PropertyAction extends AbstractAction {
 
         public PropertyAction() {
@@ -876,7 +708,7 @@ public class PlotCanvas extends JPanel {
             dialog = null;
         }
     }
-    
+
     /**
      * Creates the property dialog.
      * @return the property dialog.
@@ -905,30 +737,31 @@ public class PlotCanvas extends JPanel {
         inputMap.put(KeyStroke.getKeyStroke("ENTER"), okAction.getValue(Action.DEFAULT));
 
         String[] columnNames = {"Property", "Value"};
-        
-        if (base.dimension == 2) {
+        Base base = canvas.base;
+
+        if (canvas.base.dimension == 2) {
             Object[][] data = {
-                {"Title", title},
-                {"Title Font", titleFont},
-                {"Title Color", titleColor},
-                {"X Axis Title", getAxis(0).getAxisLabel()},
-                {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
-                {"Y Axis Title", getAxis(1).getAxisLabel()},
-                {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}}
+                    {"Title", canvas.getTitle()},
+                    {"Title Font", canvas.getTitleFont()},
+                    {"Title Color", canvas.getTitleColor()},
+                    {"X Axis Title", canvas.getAxis(0).getAxisLabel()},
+                    {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
+                    {"Y Axis Title", canvas.getAxis(1).getAxisLabel()},
+                    {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}}
             };
 
             propertyTable = new Table(data, columnNames);
         } else {
             Object[][] data = {
-                {"Title", title},
-                {"Title Font", titleFont},
-                {"Title Color", titleColor},
-                {"X Axis Title", getAxis(0).getAxisLabel()},
-                {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
-                {"Y Axis Title", getAxis(1).getAxisLabel()},
-                {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}},
-                {"Z Axis Title", getAxis(2).getAxisLabel()},
-                {"Z Axis Range", new double[]{base.getLowerBounds()[2], base.getUpperBounds()[2]}}
+                    {"Title", canvas.getTitle()},
+                    {"Title Font", canvas.getTitleFont()},
+                    {"Title Color", canvas.getTitleColor()},
+                    {"X Axis Title", canvas.getAxis(0).getAxisLabel()},
+                    {"X Axis Range", new double[]{base.getLowerBounds()[0], base.getUpperBounds()[0]}},
+                    {"Y Axis Title", canvas.getAxis(1).getAxisLabel()},
+                    {"Y Axis Range", new double[]{base.getLowerBounds()[1], base.getUpperBounds()[1]}},
+                    {"Z Axis Title", canvas.getAxis(2).getAxisLabel()},
+                    {"Z Axis Range", new double[]{base.getLowerBounds()[2], base.getUpperBounds()[2]}}
             };
 
             propertyTable = new Table(data, columnNames);
@@ -947,13 +780,13 @@ public class PlotCanvas extends JPanel {
         // There is a magic property which you have to set on the JTable
         // instance to turn this feature on.
         propertyTable.putClientProperty("terminateEditOnFocusLost", Boolean.TRUE);
-        
-        propertyTable.setFillsViewportHeight(true); 
+
+        propertyTable.setFillsViewportHeight(true);
         JScrollPane tablePanel = new JScrollPane(propertyTable);
 
         dialog.getContentPane().add(tablePanel, BorderLayout.CENTER);
         dialog.getContentPane().add(buttonsPanel, BorderLayout.SOUTH);
-        
+
         dialog.pack();
         dialog.setLocationRelativeTo(frame);
         return dialog;
@@ -973,37 +806,37 @@ public class PlotCanvas extends JPanel {
 
         @Override
         public void actionPerformed(ActionEvent e) {
-            setTitle((String) propertyTable.getValueAt(0, 1));
-            setTitleFont((Font) propertyTable.getValueAt(1, 1));
-            setTitleColor((Color) propertyTable.getValueAt(2, 1));
-            
-            getAxis(0).setAxisLabel((String) propertyTable.getValueAt(3, 1));
+            canvas.setTitle((String) propertyTable.getValueAt(0, 1));
+            canvas.setTitleFont((Font) propertyTable.getValueAt(1, 1));
+            canvas.setTitleColor((Color) propertyTable.getValueAt(2, 1));
+
+            canvas.getAxis(0).setAxisLabel((String) propertyTable.getValueAt(3, 1));
             double[] xbound = (double[]) propertyTable.getValueAt(4, 1);
-            base.lowerBound[0] = xbound[0];
-            base.upperBound[0] = xbound[1];
-            
-            getAxis(1).setAxisLabel((String) propertyTable.getValueAt(5, 1));
+            canvas.base.lowerBound[0] = xbound[0];
+            canvas.base.upperBound[0] = xbound[1];
+
+            canvas.getAxis(1).setAxisLabel((String) propertyTable.getValueAt(5, 1));
             double[] ybound = (double[]) propertyTable.getValueAt(6, 1);
-            base.lowerBound[1] = ybound[0];
-            base.upperBound[1] = ybound[1];
-            
-            if (base.dimension > 2) {
-                getAxis(2).setAxisLabel((String) propertyTable.getValueAt(7, 1));
+            canvas.base.lowerBound[1] = ybound[0];
+            canvas.base.upperBound[1] = ybound[1];
+
+            if (canvas.base.dimension > 2) {
+                canvas.getAxis(2).setAxisLabel((String) propertyTable.getValueAt(7, 1));
                 double[] zbound = (double[]) propertyTable.getValueAt(8, 1);
-                base.lowerBound[2] = zbound[0];
-                base.upperBound[2] = zbound[1];
-            }
-            
-            for (int i = 0; i < base.dimension; i++) {
-                base.setPrecisionUnit(i);
+                canvas.base.lowerBound[2] = zbound[0];
+                canvas.base.upperBound[2] = zbound[1];
             }
 
-            base.initBaseCoord();
-            graphics.projection.reset();
-            baseGrid.setBase(base);
+            for (int i = 0; i < canvas.base.dimension; i++) {
+                canvas.base.setPrecisionUnit(i);
+            }
+
+            canvas.base.initBaseCoord();
+            canvas.graphics.projection.reset();
+            canvas.baseGrid.setBase(canvas.base);
 
             dialog.setVisible(false);
-            canvas.repaint();
+            contentPane.repaint();
         }
     }
 
@@ -1045,7 +878,7 @@ public class PlotCanvas extends JPanel {
             save(file);
         }
     }
-    
+
     /**
      * Exports the plot to an image file.
      * @param file the destination file.
@@ -1059,27 +892,29 @@ public class PlotCanvas extends JPanel {
             ex.printStackTrace();
         }
 
-        BufferedImage bi = new BufferedImage(canvas.getWidth(), canvas.getHeight(), BufferedImage.TYPE_INT_ARGB);
+        BufferedImage bi = new BufferedImage(contentPane.getWidth(), contentPane.getHeight(), BufferedImage.TYPE_INT_ARGB);
         Graphics2D g2d = bi.createGraphics();
-        canvas.print(g2d);
+        canvas.paint(g2d, contentPane.getWidth(), contentPane.getHeight());
 
         ImageIO.write(bi, FileChooser.getExtension(file), file);
     }
-    
+
     /**
      * Prints the plot.
      */
     public void print() {
-        Printer.getPrinter().print(canvas);
+        Printer.getPrinter().print(contentPane);
     }
-    
+
     /**
      * Zooms in/out the plot.
      * @param inout true if zoom in. Otherwise, zoom out.
      */
     public void zoom(boolean inout) {
+        Base base = canvas.base;
+
         for (int i = 0; i < base.dimension; i++) {
-            int s = baseGrid.getAxis(i).getLinearSlices();
+            int s = canvas.baseGrid.getAxis(i).getLinearSlices();
             double r = inout ? -1.0 / s : 1.0 / s;
             double d = (base.upperBound[i] - base.lowerBound[i]) * r;
             base.lowerBound[i] -= d;
@@ -1091,344 +926,28 @@ public class PlotCanvas extends JPanel {
         }
 
         base.initBaseCoord();
-        graphics.projection.reset();
-        baseGrid.setBase(base);
+        canvas.graphics.projection.reset();
+        canvas.baseGrid.setBase(base);
 
-        canvas.repaint();
+        contentPane.repaint();
     }
-    
+
     /**
      * Resets the plot.
      */
     public void reset() {
+        Base base = canvas.base;
+        Graphics graphics = canvas.graphics;
+
         base.reset();
         graphics.projection.reset();
-        baseGrid.setBase(base);
+        canvas.baseGrid.setBase(base);
 
         if (graphics.projection instanceof Projection3D) {
             ((Projection3D) graphics.projection).setDefaultView();
         }
 
-        canvas.repaint();    
-    }
-    
-    /**
-     * Initialize the Graphics object.
-     */
-    private void initGraphics() {
-        if (base.dimension == 2) {
-            //graphics = new Graphics(new Projection2D(this));
-        } else {
-            //graphics = new Graphics(new Projection3D(this));
-        }
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound) {
-        base = new Base(lowerBound, upperBound);
-        backupBase = base;
-        baseGrid = new BaseGrid(base);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound, boolean extendBound) {
-        base = new Base(lowerBound, upperBound, extendBound);
-        backupBase = base;
-        baseGrid = new BaseGrid(base);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound, String[] axisLabels) {
-        base = new Base(lowerBound, upperBound);
-        backupBase = base;
-        baseGrid = new BaseGrid(base, axisLabels);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound, String[] axisLabels, boolean extendBound) {
-        base = new Base(lowerBound, upperBound, extendBound);
-        backupBase = base;
-        baseGrid = new BaseGrid(base, axisLabels);
-    }
-    
-    /**
-     * Returns the size of margin, which is not used as plot area.
-     * Currently, all four sides have the same margin size.
-     * @return the size of margin.
-     */
-    public double getMargin() {
-        return margin;
-    }
-    
-    /**
-     * Sets the size of margin in [0.0, 0.3] on each side. Currently, all four
-     * sides have the same margin size.
-     * @param margin the size of margin.
-     */
-    public PlotCanvas setMargin(double margin) {
-        if (margin < 0.0 || margin >= 0.3) {
-            throw new IllegalArgumentException("Invalid margin: " + margin);
-        }
-        
-        this.margin = margin;
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Returns the coordinate base.
-     * @return the coordinate base.
-     */
-    public Base getBase() {
-        return base;
-    }
-    
-    /**
-     * Returns the main title of canvas.
-     */
-    public String getTitle() {
-        return title;
-    }
-
-    /**
-     * Set the main title of canvas.
-     */
-    public PlotCanvas setTitle(String title) {
-        this.title = title;
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Returns the font for title.
-     */
-    public Font getTitleFont() {
-        return titleFont;
-    }
-
-    /**
-     * Returns the color for title.
-     */
-    public Color getTitleColor() {
-        return titleColor;
-    }
-
-    /**
-     * Set the font for title.
-     */
-    public PlotCanvas setTitleFont(Font font) {
-        this.titleFont = font;
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Set the color for title.
-     */
-    public PlotCanvas setTitleColor(Color color) {
-        this.titleColor = color;
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Returns the i-<i>th</i> axis.
-     */
-    public Axis getAxis(int i) {
-        return baseGrid.getAxis(i);
-    }
-
-    /**
-     * Returns the labels/legends of axes.
-     */
-    public String[] getAxisLabels() {
-        String[] labels = new String[base.dimension];
-        for (int i = 0; i < base.dimension; i++) {
-            labels[i] = baseGrid.getAxis(i).getAxisLabel();
-        }
-        return labels;
-    }
-
-    /**
-     * Returns the label/legend of an axis.
-     */
-    public String getAxisLabel(int axis) {
-        return baseGrid.getAxis(axis).getAxisLabel();
-    }
-
-    /**
-     * Sets the labels/legends of axes.
-     */
-    public PlotCanvas setAxisLabels(String... labels) {
-        baseGrid.setAxisLabel(labels);
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Sets the label/legend of an axis.
-     */
-    public PlotCanvas setAxisLabel(int axis, String label) {
-        baseGrid.setAxisLabel(axis, label);
-        //repaint();
-        return this;
-    }
-
-    /**
-     * Returns the list of shapes in the canvas.
-     * @return the list of shapes in the canvas. 
-     */
-    public List<Shape> getShapes() {
-        return shapes;
-    }
-    
-    /**
-     * Add a graphical shape to the canvas.
-     */
-    public void add(Shape p) {
-        shapes.add(p);
-        //repaint();
-    }
-
-    /**
-     * Remove a graphical shape from the canvas.
-     */
-    public void remove(Shape p) {
-        shapes.remove(p);
-        //repaint();
-    }
-
-    /**
-     * Add a graphical shape to the canvas.
-     */
-    public void add(Plot p) {
-        shapes.add(p);
-        extendBound(p.getLowerBound(), p.getUpperBound());
-
-        Optional<JComponent[]> tb = p.getToolBar();
-        if (tb.isPresent()) {
-            toolbar.addSeparator();
-            for (JComponent comp : tb.get()) {
-                toolbar.add(comp);
-            }
-        }
-
-        //repaint();
-    }
-
-    /**
-     * Remove a graphical shape from the canvas.
-     */
-    public void remove(Plot p) {
-        shapes.remove(p);
-
-        Optional<JComponent[]> tb = p.getToolBar();
-        if (tb.isPresent()) {
-            for (JComponent comp : tb.get()) {
-                toolbar.remove(comp);
-            }
-        }
-
-        //repaint();
-    }
-
-    /**
-     * Remove all graphic plots from the canvas.
-     */
-    public void clear() {
-        shapes.clear();
-        //repaint();
-    }
-
-    /**
-     * Returns the lower bounds.
-     */
-    public double[] getLowerBounds() {
-        return base.lowerBound;
-    }
-
-    /**
-     * Returns the upper bounds.
-     */
-    public double[] getUpperBounds() {
-        return base.upperBound;
-    }
-
-    /**
-     * Extend lower bounds.
-     */
-    public void extendLowerBound(double[] bound) {
-        base.extendLowerBound(bound);
-        baseGrid.setBase(base);
-        //repaint();
-    }
-
-    /**
-     * Extend upper bounds.
-     */
-    public void extendUpperBound(double[] bound) {
-        base.extendUpperBound(bound);
-        baseGrid.setBase(base);
-        //repaint();
-    }
-
-    /**
-     * Extend lower and upper bounds.
-     */
-    public void extendBound(double[] lowerBound, double[] upperBound) {
-        base.extendBound(lowerBound, upperBound);
-        baseGrid.setBase(base);
-        //repaint();
-    }
-
-    /**
-     * Create a scree plot for PCA.
-     * @param pca principal component analysis object.
-     */
-    public static PlotCanvas screeplot(PCA pca) {
-        int n = pca.getVarianceProportion().length;
-
-        double[] lowerBound = {0, 0.0};
-        double[] upperBound = {n + 1, 1.0};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.setAxisLabels("Principal Component", "Proportion of Variance");
-
-        String[] labels = new String[n];
-        double[] x = new double[n];
-        double[][] data = new double[n][2];
-        double[][] data2 = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            labels[i] = "PC" + (i + 1);
-            x[i] = i + 1;
-            data[i][0] = x[i];
-            data[i][1] = pca.getVarianceProportion()[i];
-            data2[i][0] = x[i];
-            data2[i][1] = pca.getCumulativeVarianceProportion()[i];
-        }
-
-        LinePlot plot = LinePlot.of(data);
-        //plot.setID("Variance");
-        //plot.setColor(Color.RED);
-        //plot.setLegend('@');
-        canvas.add(plot);
-        canvas.getAxis(0).addLabel(labels, x);
-
-        LinePlot plot2 = LinePlot.of(data2);
-        //plot2.setID("Cumulative Variance");
-        //plot2.setColor(Color.BLUE);
-        //plot2.setLegend('@');
-        canvas.add(plot2);
-
-        return canvas;
+        contentPane.repaint();
     }
 
     /**
@@ -1437,13 +956,11 @@ public class PlotCanvas extends JPanel {
      */
     public JFrame window() throws InterruptedException, InvocationTargetException  {
         JFrame frame = new JFrame();
-        if (title != null) frame.setTitle(title);
+        if (canvas.getTitle() != null) frame.setTitle(canvas.getTitle());
 
-        JPanel pane = new JPanel(new BorderLayout());
-        pane.add(this, BorderLayout.CENTER);
-        pane.add(toolbar, BorderLayout.NORTH);
+        add(toolbar, BorderLayout.NORTH);
 
-        frame.getContentPane().add(pane);
+        frame.getContentPane().add(this);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
         frame.setSize(new java.awt.Dimension(1000, 1000));
         frame.setLocationRelativeTo(null);

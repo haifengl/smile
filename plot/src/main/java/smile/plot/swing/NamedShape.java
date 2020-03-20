@@ -18,28 +18,34 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 
 /**
- * This is specialized line for axis lines. Coordinates used here are are
- * proportional to the base coordinates.
+ * A shape with optional name, which may be used to
+ * draw a legend outside the box.
+ *
  * @author Haifeng Li
  */
-class BaseLine extends Line {
+public abstract class NamedShape extends Shape {
+
+    /**
+     * The optional name of shape.
+     */
+    final Optional<String> name;
 
     /**
      * Constructor.
-     * @param start the start point of the line.
-     * @param end   the end point of the line.
      */
-    public BaseLine(double[] start, double[] end) {
-        super(new double[][] {start, end}, Style.SOLID, ' ', Color.BLACK, null);
+    public NamedShape(String name, Color color) {
+        super(color);
+        this.name = Optional.ofNullable(name);
     }
 
-    @Override
-    public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(color);
-        g.drawLineBaseRatio(points);
-        g.setColor(c);
+    /**
+     * Returns the optional name of shape, which will be used to
+     * draw a legend outside the box.
+     */
+    public Optional<String> name() {
+        return name;
     }
 }

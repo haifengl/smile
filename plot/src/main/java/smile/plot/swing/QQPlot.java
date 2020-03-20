@@ -150,7 +150,7 @@ public class QQPlot extends Plot {
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         double[] lowerEnd = g.getLowerBound();
         lowerEnd[0] = Math.min(lowerEnd[0], lowerEnd[1]);
@@ -167,76 +167,14 @@ public class QQPlot extends Plot {
 
         g.setColor(c);
     }
-    
-    /**
-     * Create a plot canvas with the one sample Q-Q plot to standard normal
-     * distribution. The x-axis is the quantiles of x and the y-axis is the
-     * quantiles of normal distribution.
-     * @param x a sample set.
-     */
-    public static PlotCanvas plot(double[] x) {
-        double[] lowerBound = {MathEx.min(x), GaussianDistribution.getInstance().quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), GaussianDistribution.getInstance().quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x));
-        return canvas;
+
+    @Override
+    public double[] getLowerBound() {
+        return MathEx.colMin(data);
     }
 
-    /**
-     * Create a plot canvas with the one sample Q-Q plot to given distribution.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of
-     * given distribution.
-     * @param x a sample set.
-     * @param d a distribution.
-     */
-    public static PlotCanvas plot(double[] x, Distribution d) {
-        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, d));
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the two sample Q-Q plot.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
-     * @param x a sample set.
-     * @param y a sample set.
-     */
-    public static PlotCanvas plot(double[] x, double[] y) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, y));
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the one sample Q-Q plot to given distribution.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of
-     * given distribution.
-     * @param x a sample set.
-     * @param d a distribution.
-     */
-    public static PlotCanvas plot(int[] x, DiscreteDistribution d) {
-        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, d));
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the two sample Q-Q plot.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
-     * @param x a sample set.
-     * @param y a sample set.
-     */
-    public static PlotCanvas plot(int[] x, int[] y) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, y));
-        return canvas;
+    @Override
+    public double[] getUpperBound() {
+        return MathEx.colMax(data);
     }
 }

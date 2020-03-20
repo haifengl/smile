@@ -18,28 +18,23 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.awt.Font;
 
 /**
- * This is specialized line for axis lines. Coordinates used here are are
- * proportional to the base coordinates.
+ * This is specialized label for axis grid labels.
+ *
  * @author Haifeng Li
  */
-class BaseLine extends Line {
+class GridLabel extends Label {
+    /**
+     * The font for axis label.
+     */
+    private static final Font BitStreamVeraSans = new Font("BitStream Vera Sans", Font.PLAIN, 12);
 
     /**
      * Constructor.
-     * @param start the start point of the line.
-     * @param end   the end point of the line.
      */
-    public BaseLine(double[] start, double[] end) {
-        super(new double[][] {start, end}, Style.SOLID, ' ', Color.BLACK, null);
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(color);
-        g.drawLineBaseRatio(points);
-        g.setColor(c);
+    public GridLabel(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation) {
+        super(text, coordinates, horizontalReference, verticalReference, rotation, BitStreamVeraSans, Color.BLACK);
     }
 }

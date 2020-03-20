@@ -31,7 +31,7 @@ import java.awt.geom.AffineTransform;
 /**
  * Graphics provides methods to draw graphical primitives in logical/mathematical
  * coordinates. The mathematical coordinates are translated into Java2D
- * coordinates based on suitiabel projection method. Both 2D and 3D shapes are
+ * coordinates based on suitable projection method. Both 2D and 3D shapes are
  * supported.
  *
  * @author Haifeng Li
@@ -42,34 +42,34 @@ public class Graphics {
      * Projection used to map logical/mathematical coordinates to Java2D
      * coordinates.
      */
-    Projection projection;
+    final Projection projection;
     /**
      * Java2D graphics object to render shapes.
      */
-    Graphics2D g2d;
+    private Graphics2D g2d;
     /**
      * Original clip shape.
      */
-    java.awt.Shape originalClip;
+    private java.awt.Shape originalClip;
 
     /**
      * Constructor.
      */
-    Graphics(Projection projection) {
+    public Graphics(Projection projection) {
         this.projection = projection;
     }
 
     /**
      * Reset projection object when the PlotCanvas size changed.
      */
-    void resetProjection() {
+    public void resetProjection() {
         projection.reset();
     }
 
     /**
      * Returns the projection object.
      */
-    Projection getProjection() {
+    public Projection getProjection() {
         return projection;
     }
 
@@ -83,8 +83,9 @@ public class Graphics {
     /**
      * Set the Java2D graphics object.
      */
-    public void setGraphics(java.awt.Graphics2D g2d) {
+    public void setGraphics(java.awt.Graphics2D g2d, int width, int height) {
         this.g2d = g2d;
+        projection.setSize(width, height);
         // anti-aliasing methods
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -168,10 +169,10 @@ public class Graphics {
      * Restrict the draw area to the valid base coordinate space.
      */
     public void clip() {
-        int x = (int) (projection.canvas.getWidth() * projection.canvas.margin);
-        int y = (int) (projection.canvas.getHeight() * projection.canvas.margin);
-        int w = (int) (projection.canvas.getWidth() * (1 - 2 * projection.canvas.margin));
-        int h = (int) (projection.canvas.getHeight() * (1 - 2 * projection.canvas.margin));
+        int x = (int) (projection.width * projection.canvas.margin);
+        int y = (int) (projection.height * projection.canvas.margin);
+        int w = (int) (projection.width * (1 - 2 * projection.canvas.margin));
+        int h = (int) (projection.height * (1 - 2 * projection.canvas.margin));
         originalClip = g2d.getClip();
         g2d.clipRect(x, y, w, h);
     }

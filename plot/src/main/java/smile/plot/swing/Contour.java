@@ -204,7 +204,7 @@ public class Contour extends Plot {
                     horizontalReference = 0.0;
                 }
 
-                label = new Label(String.format("%.2G", level), horizontalReference, verticalReference, angle, coord);
+                label = Label.of(String.format("%.2G", level), coord, horizontalReference, verticalReference, angle);
             }
 
             if (showLevelValue && label != null) {
