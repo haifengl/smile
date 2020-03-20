@@ -19,35 +19,34 @@ import smile.data.type.StructType;
 
 /**
  * SHAP is a recently proposed algorithm for interpretable machine learning by
- * 
+ *
  * <pre>
  * Lundberg, Scott M., and Su-In Lee. “A unified approach to interpreting model predictions.” Advances in Neural Information Processing Systems. 2017
  * </pre>
- * 
- * and tree-SHAP is a specific version of implementation for tree-based machine
- * learning like CART, Random Forest, Gradient Boost, etc.
- * 
+ *
+ * and tree-SHAP is a specific version of implementation for tree-based machine learning like CART,
+ * Random Forest, Gradient Boost, etc.
+ *
  * <pre>
  * Lundberg, Scott M., Gabriel G. Erion, and Su-In Lee. “Consistent individualized feature attribution for tree ensembles.” arXiv preprint arXiv:1802.03888 (2018)
  * </pre>
- * 
+ *
  * implementation reference as below:
- * 
+ *
  * <pre>
  * https://github.com/slundberg/shap/blob/master/shap/explainers/pytree.py
  * </pre>
- * 
- * support only {@link RegressionTree} or ensemble based on it like
- * {@link smile.regression.GradientTreeBoost}
+ *
+ * support only {@link RegressionTree} or ensemble based on it like {@link
+ * smile.regression.GradientTreeBoost}
+ *
  * <p>
- * 
+ *
  * @author ray
  * @see
- * 
- * <pre>
+ *     <pre>
  * https://christophm.github.io/interpretable-ml-book/shap.html
  * </pre>
- *
  */
 public class TreeShapImportance {
 
