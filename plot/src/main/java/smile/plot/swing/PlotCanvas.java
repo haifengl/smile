@@ -47,6 +47,7 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
@@ -185,7 +186,7 @@ public class PlotCanvas extends JPanel {
         @Override
         public void paintComponent(java.awt.Graphics g) {
             Graphics2D g2d = (Graphics2D) g;
-            graphics.setGraphics(g2d);
+            graphics.setGraphics(g2d, getWidth(), getHeight());
 
             Color color = g2d.getColor();
             g2d.setColor(getBackground());
@@ -198,12 +199,12 @@ public class PlotCanvas extends JPanel {
             int k = 0;
             // with for-each loop, we will get a ConcurrentModificationException.
             // Use for loop instead.
-            for (int i = 0; i < shapes.size(); i++) {
-                Shape s = shapes.get(i);
-                s.paint(graphics);
-                if (s instanceof Plot) {
-                    Plot p = (Plot) s;
-                    if (p.getID() != null) {
+            for (Shape shape : shapes) {
+                graphics.setColor(shape.color);
+                shape.paint(graphics);
+                if (shape instanceof NamedShape) {
+                    NamedShape p = (NamedShape) shape;
+                    if (p.name().isPresent()) {
                         k++;
                     }
                 }
@@ -219,13 +220,13 @@ public class PlotCanvas extends JPanel {
 
                 for (int i = 0; i < shapes.size(); i++) {
                     Shape s = shapes.get(i);
-                    if (s instanceof Plot) {
-                        Plot p = (Plot) s;
-                        if (p.getID() != null) {
-                            g2d.setColor(p.getColor());
+                    if (s instanceof NamedShape) {
+                        NamedShape p = (NamedShape) s;
+                        if (p.name().isPresent()) {
+                            g2d.setColor(p.color);
                             g2d.fillRect(x, y, width, height);
                             g2d.drawRect(x, y, width, height);
-                            g2d.drawString(p.getID(), x + 2 * width, y + height);
+                            g2d.drawString(p.name().get(), x + 2 * width, y + height);
                             y += 2 * width;
                         }
                     }
@@ -415,18 +416,18 @@ public class PlotCanvas extends JPanel {
                     for (Shape shape : shapes) {
                         if (shape instanceof Plot) {
                             Plot plot = (Plot) shape;
-                            String s = plot.getToolTip(sc);
-                            if (s != null) {
+                            Optional<String> s = plot.getToolTip(sc);
+                            if (s.isPresent()) {
                                 if (tooltip == null) {
-                                    tooltip = s;
-                                    firstid = plot.getID();
+                                    tooltip = s.get();
+                                    firstid = null;//plot.name();
                                 } else {
                                     if (firstid != null) {
                                         tooltip = "<b>" + firstid + ":</b><br>" + tooltip;
                                         firstid = null;
                                     }
 
-                                    String id = plot.getID();
+                                    String id = null;//plot.name();
                                     if (id != null) {
                                         tooltip += "<br><b>" + id + ":</b><br>" + s;
                                     } else {
@@ -1116,9 +1117,9 @@ public class PlotCanvas extends JPanel {
      */
     private void initGraphics() {
         if (base.dimension == 2) {
-            graphics = new Graphics(new Projection2D(this));
+            //graphics = new Graphics(new Projection2D(this));
         } else {
-            graphics = new Graphics(new Projection3D(this));
+            //graphics = new Graphics(new Projection3D(this));
         }
     }
 
@@ -1310,11 +1311,12 @@ public class PlotCanvas extends JPanel {
      */
     public void add(Plot p) {
         shapes.add(p);
+        extendBound(p.getLowerBound(), p.getUpperBound());
 
-        JComponent[] tb = p.getToolBar();
-        if (tb != null) {
+        Optional<JComponent[]> tb = p.getToolBar();
+        if (tb.isPresent()) {
             toolbar.addSeparator();
-            for (JComponent comp : tb) {
+            for (JComponent comp : tb.get()) {
                 toolbar.add(comp);
             }
         }
@@ -1328,9 +1330,9 @@ public class PlotCanvas extends JPanel {
     public void remove(Plot p) {
         shapes.remove(p);
 
-        JComponent[] tb = p.getToolBar();
-        if (tb != null) {
-            for (JComponent comp : tb) {
+        Optional<JComponent[]> tb = p.getToolBar();
+        if (tb.isPresent()) {
+            for (JComponent comp : tb.get()) {
                 toolbar.remove(comp);
             }
         }
@@ -1388,853 +1390,6 @@ public class PlotCanvas extends JPanel {
     }
 
     /**
-     * Adds a label to this canvas.
-     */
-    public void label(String text, double... coord) {
-        add(new Label(text, coord));
-    }
-
-    /**
-     * Adds a label to this canvas.
-     */
-    public void label(String text, Font font, double... coord) {
-        Label label = new Label(text, coord);
-        label.setFont(font);
-        add(label);
-    }
-
-    /**
-     * Adds a label to this canvas.
-     */
-    public void label(String text, Color color, double... coord) {
-        Label label = new Label(text, coord);
-        label.setColor(color);
-        add(label);
-    }
-
-    /**
-     * Adds a label to this canvas.
-     */
-    public void label(String text, Font font, Color color, double... coord) {
-        Label label = new Label(text, coord);
-        label.setFont(font);
-        label.setColor(color);
-        add(label);
-    }
-
-    /**
-     * Adds a point to this canvas.
-     */
-    public void point(double... coord) {
-        add(new Point(coord));
-    }
-
-    /**
-     * Adds a point to this canvas.
-     */
-    public void point(char legend, double... coord) {
-        add(new Point(legend, coord));
-    }
-
-    /**
-     * Adds a point to this canvas.
-     */
-    public void point(Color color, double... coord) {
-        add(new Point(color, coord));
-    }
-
-    /**
-     * Adds a point to this canvas.
-     */
-    public void point(char legend, Color color, double... coord) {
-        add(new Point(legend, color, coord));
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(double[]... data) {
-        return points(null, data);
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(String id, double[]... data) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        ScatterPlot plot = new ScatterPlot(data);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param labels labels of points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(double[][] data, String[] labels) {
-        return points(null, data, labels);
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param labels labels of points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(String id, double[][] data, String[] labels) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        if (data.length != labels.length) {
-            throw new IllegalArgumentException("The number of points and that of labels are not same.");
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        ScatterPlot plot = new ScatterPlot(data, labels);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param legend the legend used to draw points.
-     * <ul>
-     * <li> . : dot
-     * <li> + : +
-     * <li> - : -
-     * <li> | : |
-     * <li> * : star
-     * <li> x : x
-     * <li> o : circle
-     * <li> O : large circle
-     * <li> @ : solid circle
-     * <li> # : large solid circle
-     * <li> s : square
-     * <li> S : large square
-     * <li> q : solid square
-     * <li> Q : large solid square
-     * <li> others : dot
-     * </ul>
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(double[][] data, char legend) {
-        return points(null, data, legend);
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param legend the legend used to draw points.
-     * <ul>
-     * <li> . : dot
-     * <li> + : +
-     * <li> - : -
-     * <li> | : |
-     * <li> * : star
-     * <li> x : x
-     * <li> o : circle
-     * <li> O : large circle
-     * <li> @ : solid circle
-     * <li> # : large solid circle
-     * <li> s : square
-     * <li> S : large square
-     * <li> q : solid square
-     * <li> Q : large solid square
-     * <li> others : dot
-     * </ul>
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(String id, double[][] data, char legend) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        ScatterPlot plot = new ScatterPlot(data, legend);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color used to draw points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(double[][] data, Color color) {
-        return points(null, data, color);
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color used to draw points.
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(String id, double[][] data, Color color) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        ScatterPlot plot = new ScatterPlot(data);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color used to draw points.
-     * @param legend the legend used to draw points.
-     * <ul>
-     * <li> . : dot
-     * <li> + : +
-     * <li> - : -
-     * <li> | : |
-     * <li> * : star
-     * <li> x : x
-     * <li> o : circle
-     * <li> O : large circle
-     * <li> @ : solid circle
-     * <li> # : large solid circle
-     * <li> s : square
-     * <li> S : large square
-     * <li> q : solid square
-     * <li> Q : large solid square
-     * <li> others : dot
-     * </ul>
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(double[][] data, char legend, Color color) {
-        return points(null, data, legend, color);
-    }
-
-    /**
-     * Adds a scatter plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color used to draw points.
-     * @param legend the legend used to draw points.
-     * <ul>
-     * <li> . : dot
-     * <li> + : +
-     * <li> - : -
-     * <li> | : |
-     * <li> * : star
-     * <li> x : x
-     * <li> o : circle
-     * <li> O : large circle
-     * <li> @ : solid circle
-     * <li> # : large solid circle
-     * <li> s : square
-     * <li> S : large square
-     * <li> q : solid square
-     * <li> Q : large solid square
-     * <li> others : dot
-     * </ul>
-     * @return the scatter plot for the given points.
-     */
-    public ScatterPlot points(String id, double[][] data, char legend, Color color) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        ScatterPlot plot = new ScatterPlot(data, legend);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     */
-    public LinePlot line(double[] y) {
-        return line(null, y);
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     */
-    public LinePlot line(String id, double[] y) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        extendBound(lowerBound, upperBound);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param color the color of line.
-     */
-    public LinePlot line(double[] y, Color color) {
-        return line(null, y, color);
-
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param color the color of line.
-     */
-    public LinePlot line(String id, double[] y, Color color) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        extendBound(lowerBound, upperBound);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Add a poly line plot of given data into the current canvas.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     */
-    public LinePlot line(double[] y, Line.Style style) {
-        return line(null, y, style);
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     */
-    public LinePlot line(String id, double[] y, Line.Style style) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        extendBound(lowerBound, upperBound);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     * @param color the color of line.
-     */
-    public LinePlot line(double[] y, Line.Style style, Color color) {
-        return line(null, y, style, color);
-    }
-
-    /**
-     * Add a poly line plot of given data into the current canvas.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     * @param color the color of line.
-     */
-    public LinePlot line(String id, double[] y, Line.Style style, Color color) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        extendBound(lowerBound, upperBound);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     */
-    public LinePlot line(double[]... data) {
-        return line(null, data);
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     */
-    public LinePlot line(String id, double[]... data) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color of line.
-     */
-    public LinePlot line(double[][] data, Color color) {
-        return line(null, data, color);
-
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param color the color of line.
-     */
-    public LinePlot line(String id, double[][] data, Color color) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     */
-    public LinePlot line(double[][] data, Line.Style style) {
-        return line(null, data, style);
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     */
-    public LinePlot line(String id, double[][] data, Line.Style style) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     * @param color the color of line.
-     */
-    public LinePlot line(double[][] data, Line.Style style, Color color) {
-        return line(null, data, style, color);
-    }
-
-    /**
-     * Adds a poly line plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     * @param color the color of line.
-     */
-    public LinePlot line(String id, double[][] data, Line.Style style, Color color) {
-        if (data[0].length != base.dimension) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        extendBound(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-
-        return plot;
-    }
-
-    /**
-     * Adds a staircase line plot to this canvas.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
-     * @param color the color of line.
-     */
-    public StaircasePlot staircase(double[][] data, Color color) {
-        return staircase(null, data, color);
-    }
-
-    /**
-     * Adds a staircase line plot to this canvas.
-     * @param id the id of the plot.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
-     * @param color the color of line.
-     */
-    public StaircasePlot staircase(String id, double[][] data, Color color) {
-        if (data[0].length != 2 && data[0].length != 3) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        StaircasePlot plot = new StaircasePlot(data);
-        plot.setID(id);
-        plot.setColor(color);
-        add(plot);
-        return plot;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     */
-    public Histogram histogram(double[] data, Color color) {
-        return histogram((String) null, data, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     */
-    public Histogram histogram(String id, double[] data, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram histogram(double[] data, int k, Color color) {
-        return histogram(null, data, k, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram histogram(String id, double[] data, int k, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data, k);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram histogram(double[] data, double[] breaks, Color color) {
-        return histogram(null, data, breaks, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram histogram(String id, double[] data, double[] breaks, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data, breaks);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     */
-    public Histogram histogram(int[] data, Color color) {
-        return histogram((String) null, data, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     */
-    public Histogram histogram(String id, int[] data, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram histogram(int[] data, int k, Color color) {
-        return histogram(null, data, k, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram histogram(String id, int[] data, int k, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data, k);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram histogram(int[] data, double[] breaks, Color color) {
-        return histogram(null, data, breaks, color);
-    }
-
-    /**
-     * Adds a histogram to this canvas.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram histogram(String id, int[] data, double[] breaks, Color color) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Histogram can be only painted in a 2D canvas.");
-        }
-
-        Histogram histogram = new Histogram(data, breaks);
-        histogram.setID(id);
-        histogram.setColor(color);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        extendBound(lowerBound, upperBound);
-        add(histogram);
-
-        return histogram;
-    }
-
-    /**
-     * Adds a 2D grid plot to the canvas.
-     * @param data an m x n x 2 array which are coordinates of m x n grid.
-     */
-    public Grid grid(double[][][] data) {
-        if (base.dimension != 2) {
-            throw new IllegalArgumentException("Grid can be only painted in a 2D canvas. Try surface() for 3D grid.");
-        }
-
-        Grid grid = new Grid(data);
-        add(grid);
-        return grid;
-    }
-
-    /**
      * Create a scree plot for PCA.
      * @param pca principal component analysis object.
      */
@@ -2260,17 +1415,17 @@ public class PlotCanvas extends JPanel {
             data2[i][1] = pca.getCumulativeVarianceProportion()[i];
         }
 
-        LinePlot plot = new LinePlot(data);
-        plot.setID("Variance");
-        plot.setColor(Color.RED);
-        plot.setLegend('@');
+        LinePlot plot = LinePlot.of(data);
+        //plot.setID("Variance");
+        //plot.setColor(Color.RED);
+        //plot.setLegend('@');
         canvas.add(plot);
         canvas.getAxis(0).addLabel(labels, x);
 
-        LinePlot plot2 = new LinePlot(data2);
-        plot2.setID("Cumulative Variance");
-        plot2.setColor(Color.BLUE);
-        plot2.setLegend('@');
+        LinePlot plot2 = LinePlot.of(data2);
+        //plot2.setID("Cumulative Variance");
+        //plot2.setColor(Color.BLUE);
+        //plot2.setLegend('@');
         canvas.add(plot2);
 
         return canvas;

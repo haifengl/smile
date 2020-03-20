@@ -17,6 +17,7 @@
 
 package smile.plot.swing;
 
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -182,7 +183,7 @@ public class Histogram extends BarPlot {
     }
     
     @Override
-    public String getToolTip(double[] coord) {
+    public Optional<String> getToolTip(double[] coord) {
         for (int i = 0; i < data.length; i++) {
             if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] < rightTop[i][1] && coord[1] > rightBottom[i][1]) {
                 double lower = leftBottom[i][0];
@@ -196,18 +197,17 @@ public class Histogram extends BarPlot {
                 }
 
                 String format = String.format(" in [%%.%df, %%.%df]", precision, precision);
+                String tooltip = prob ?
+                        String.format("%.1f%%" + format, 100.0 * data[i][1], lower, upper) :
+                        String.format("%d" + format, (int) data[i][1], lower, upper);
 
-                if (prob) {
-                    return String.format("%.1f%%" + format, 100.0 * data[i][1], lower, upper);
-                } else {
-                    return String.format("%d" + format, (int) data[i][1], lower, upper);
-                }
+                return Optional.of(tooltip);
             }
         }
         
-        return null;        
+        return Optional.empty();
     }
-    
+
     /**
      * Generate the histogram of k bins.
      *
@@ -271,7 +271,7 @@ public class Histogram extends BarPlot {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
-        
+
         double[][] hist = smile.math.Histogram.of(data, breaks);
 
         double[][] freq = new double[k][2];
@@ -301,7 +301,7 @@ public class Histogram extends BarPlot {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
-        
+
         double[][] hist = smile.math.Histogram.of(data, breaks);
 
         double[][] freq = new double[k][2];
@@ -318,229 +318,5 @@ public class Histogram extends BarPlot {
         }
 
         return freq;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot.
-     * @param data a sample set.
-     */
-    public static PlotCanvas plot(double[] data) {
-        return plot((String) null, data);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     */
-    public static PlotCanvas plot(String id, double[] data) {
-        Histogram histogram = new Histogram(data);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public static PlotCanvas plot(double[] data, int k) {
-        return plot(null, data, k);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public static PlotCanvas plot(String id, double[] data, int k) {
-        Histogram histogram = new Histogram(data, k);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public static PlotCanvas plot(double[] data, double[] breaks) {
-        return plot(null, data, breaks);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public static PlotCanvas plot(String id, double[] data, double[] breaks) {
-        return plot(id, data, breaks, true);
-    }
-    
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public static PlotCanvas plot(String id, double[] data, double[] breaks, boolean prob) {
-        Histogram histogram = new Histogram(data, breaks, prob);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data), 0};
-        double[] upperBound = {MathEx.max(data), 0};
-        
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-    
-    /**
-     * Create a plot canvas with the histogram plot.
-     * @param data a sample set.
-     */
-    public static PlotCanvas plot(int[] data) {
-        return plot((String) null, data);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     */
-    public static PlotCanvas plot(String id, int[] data) {
-        Histogram histogram = new Histogram(data);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public static PlotCanvas plot(int[] data, int k) {
-        return plot(null, data, k);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public static PlotCanvas plot(String id, int[] data, int k) {
-        Histogram histogram = new Histogram(data, k);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public static PlotCanvas plot(int[] data, double[] breaks) {
-        return plot(null, data, breaks);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param id the id of the plot.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public static PlotCanvas plot(String id, int[] data, double[] breaks) {
-        Histogram histogram = new Histogram(data, breaks);
-        histogram.setID(id);
-
-        double[] lowerBound = {MathEx.min(data) - 0.5, 0};
-        double[] upperBound = {MathEx.max(data) + 0.5, 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][1] > upperBound[1]) {
-                upperBound[1] = freq[i][1];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.add(histogram);
-
-        return canvas;
     }
 }

@@ -22,11 +22,11 @@ import java.awt.Color;
 import java.awt.Stroke;
 
 /**
- * This class respesents a poly line in the plot.
+ * This class represents a poly line in the plot.
  *
  * @author Haifeng Li
  */
-public class Line extends Shape {
+public class Line extends NamedShape {
     /**
      * The supported styles of lines.
      */
@@ -36,7 +36,8 @@ public class Line extends Shape {
         DASH,
         DOT_DASH,
         LONG_DASH
-    };
+    }
+
     /**
      * The stroke for solid line.
      */
@@ -60,24 +61,52 @@ public class Line extends Shape {
     /**
      * The stroke object to rendering the line.
      */
-    private Stroke stroke;
+    private final Stroke stroke;
     /**
      * The end points of the line.
      */
-    double[][] points;
+    final double[][] points;
+    /**
+     * The style of line.
+     */
+    final Style style;
+    /**
+     * The mark of points.
+     */
+    final char mark;
 
     /**
      * Constructor.
+     * @param points a n-by-2 or n-by-3 matrix that are the coordinates of points.
+     * @param style the style of line.
+     * @param mark the mark of points.
+     * <ul>
+     * <li> white space : don't draw the points.
+     * <li> . : dot
+     * <li> + : +
+     * <li> - : -
+     * <li> | : |
+     * <li> * : star
+     * <li> x : x
+     * <li> o : circle
+     * <li> O : large circle
+     * <li> @ : solid circle
+     * <li> # : large solid circle
+     * <li> s : square
+     * <li> S : large square
+     * <li> q : solid square
+     * <li> Q : large solid square
+     * <li> others : dot
+     * </ul>
+     * @param color the color of points.
+     * @param name the optional name.
      */
-    public Line(double[]... points) {
+    public Line(double[][] points, Style style, char mark, Color color, String name) {
+        super(name, color);
         this.points = points;
-        stroke = SOLID_STROKE;
-    }
+        this.style = style;
+        this.mark = mark;
 
-    /**
-     * Constructor.
-     */
-    public Line(Style style, double[]... points) {
         switch (style) {
             case SOLID:
                 stroke = SOLID_STROKE;
@@ -95,70 +124,57 @@ public class Line extends Shape {
                 stroke = LONG_DASH_STROKE;
                 break;
             default:
-                stroke = SOLID_STROKE;
-                break;
+                throw new IllegalArgumentException("Unknown style: " + style);
         }
-
-        this.points = points;
-    }
-
-    /**
-     * Constructor.
-     */
-    public Line(Style style, Color color, double[]... points) {
-        super(color);
-
-        switch (style) {
-            case SOLID:
-                stroke = SOLID_STROKE;
-                break;
-            case DOT:
-                stroke = DOT_STROKE;
-                break;
-            case DASH:
-                stroke = DASH_STROKE;
-                break;
-            case DOT_DASH:
-                stroke = DOT_DASH_STROKE;
-                break;
-            case LONG_DASH:
-                stroke = LONG_DASH_STROKE;
-                break;
-        }
-
-        this.points = points;
-    }
-
-    /**
-     * Returns the line stroke style.
-     */
-    public Stroke getStroke() {
-        return stroke;
-    }
-
-    /**
-     * Set the line stroke style.
-     */
-    public Line setStroke(Stroke stroke) {
-        this.stroke = stroke;
-        return this;
     }
 
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         Stroke s = g.getStroke();
-        if (stroke != null) {
-            g.setStroke(stroke);
-        }
+        g.setStroke(stroke);
 
         g.drawLine(points);
 
-        if (stroke != null) {
-            g.setStroke(s);
+        if (mark != ' ') {
+            for (double[] point : points) {
+                g.drawPoint(mark, point);
+            }
         }
+
+        g.setStroke(s);
         g.setColor(c);
+    }
+
+    /**
+     * Returns a 2-dimensional array with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
+     */
+    public static double[][] zipWithIndex(double[] y) {
+        int n = y.length;
+        double[][] data = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            data[i][0] = i;
+            data[i][1] = y[i];
+        }
+
+        return data;
+    }
+
+    /**
+     * Creates a Line with solid stroke and black color.
+     */
+    public static Line of(double[][] points) {
+        return new Line(points, Style.SOLID, ' ', Color.BLACK, null);
+    }
+
+    /**
+     * Creates a Line with solid stroke and black color.
+     */
+    public static Line of(double[][] points, Style style, char mark, Color color) {
+        return new Line(points, style, mark, color, null);
     }
 }

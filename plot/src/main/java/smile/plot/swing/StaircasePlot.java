@@ -36,22 +36,25 @@ public class StaircasePlot extends Plot {
     /**
      * Constructor.
      */
-    public StaircasePlot(double[][] data) {
-        this.data = data;
-    }
-
-    /**
-     * Constructor.
-     */
     public StaircasePlot(double[][] data, Color color) {
         super(color);
         this.data = data;
     }
 
     @Override
+    public double[] getLowerBound() {
+        return MathEx.colMin(data);
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        return MathEx.colMax(data);
+    }
+
+    @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         double[] begin = new double[data[0].length];
         double[] end = new double[data[0].length];
@@ -76,32 +79,11 @@ public class StaircasePlot extends Plot {
 
         g.setColor(c);
     }
-    
-    /**
-     * Create a plot canvas with the staircase line plot of given data.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
-     */
-    public static PlotCanvas plot(double[]... data) {
-        return plot(null, data);
-    }
 
     /**
-     * Create a plot canvas with the staircase line plot of given data.
-     * @param id the id of the plot.
-     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
+     * Creates a staircase plot.
      */
-    public static PlotCanvas plot(String id, double[]... data) {
-        if (data[0].length != 2 && data[0].length != 3) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        StaircasePlot plot = new StaircasePlot(data);
-        plot.setID(id);
-        canvas.add(plot);
-        return canvas;
+    public static StaircasePlot of(double[][] data) {
+        return new StaircasePlot(data, Color.BLACK);
     }
 }

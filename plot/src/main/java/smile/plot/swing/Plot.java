@@ -18,60 +18,37 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 import javax.swing.JComponent;
 
 /**
- * This is the abstract base class of plots.
+ * The abstract base class of plots.
  *
  * @author Haifeng Li
  */
 public abstract class Plot extends Shape {
-    /**
-     * The id of plot.
-     */
-    private String id;
-
-    /**
-     * Constructor.
-     */
+    /** Constructor. */
     public Plot() {
+        this(Color.BLACK);
     }
 
-    /**
-     * Constructor.
-     */
-    public Plot(String id) {
-        this.id = id;
-    }
-
-    /**
-     * Constructor.
-     */
+    /** Constructor. */
     public Plot(Color color) {
         super(color);
     }
 
-    /**
-     * Constructor.
-     */
-    public Plot(String id, Color color) {
-        super(color);
-        this.id = id;
-    }
+    /** Returns the lower bound of data. */
+    public double[] getLowerBound() { return null; }
+    /** Returns the upper bound of data. */
+    public double[] getUpperBound() { return null; }
 
-    /**
-     * Set the id of plot.
-     */
-    public Plot setID(String id) {
-        this.id = id;
-        return this;
-    }
-
-    /**
-     * Returns the id of plot.
-     */
-    public String getID() {
-        return id;
+    /** Returns a canvas of the plot. */
+    public Canvas canvas() {
+        double[] lowerBound = getLowerBound();
+        double[] upperBound = getUpperBound();
+        Canvas canvas = new Canvas(lowerBound, upperBound);
+        canvas.add(this);
+        return canvas;
     }
 
     /**
@@ -80,15 +57,15 @@ public abstract class Plot extends Shape {
      * @return a string if an object with label close to the given coordinates.
      * Otherwise null.
      */
-    public String getToolTip(double[] coord) {
-        return null;
+    public Optional<String> getToolTip(double[] coord) {
+        return Optional.empty();
     }
     
     /**
      * Returns an optional list of components in tool bar to control the plot.
      * @return an optional list of toolbar components, may be null.
      */
-    public JComponent[] getToolBar() {
-        return null;
+    public Optional<JComponent[]> getToolBar() {
+        return Optional.empty();
     }
 }

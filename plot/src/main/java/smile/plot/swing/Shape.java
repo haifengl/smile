@@ -29,12 +29,13 @@ public abstract class Shape {
     /**
      * The color of the shape. By default, it is black.
      */
-    private Color color = Color.BLACK;
+    final Color color;
 
     /**
      * Constructor.
      */
     public Shape() {
+        this(Color.BLACK);
     }
 
     /**
@@ -45,23 +46,7 @@ public abstract class Shape {
     }
 
     /**
-     * Set the color of component.
+     * Draws the shape.
      */
-    public Shape setColor(Color color) {
-        this.color = color;
-        return this;
-    }
-
-    /**
-     * Returns the color of component.
-     */
-    public Color getColor() {
-        return color;
-    }
-    
-    /**
-     * Draw the component with given graphics object.
-     * @param painter
-     */
-    public abstract void paint(Graphics painter);
+    public abstract void paint(Graphics g);
 }

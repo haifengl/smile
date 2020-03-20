@@ -66,148 +66,21 @@ public class Surface extends Plot {
     private Color[] palette;
 
     /**
-     * Constructor.
-     * @param z the z-axis values of surface. The x-axis and y-axis location of
-     * surface will be set to 0.5, 1.5, 2.5, ...
+     * Constructor for irregular mesh grid.
+     * @param data an m x n x 3 array which are coordinates of m x n surface.
      */
-    public Surface(double[][] z) {
-        super(Color.GRAY);
-        init(z);
-    }
-    
-    /**
-     * Initialization.
-     */
-    private void init(double[][] z) {
-        max = MathEx.max(z);
-        min = MathEx.min(z);
-        if (palette != null) {
-            width = (max - min) / palette.length;
-        }
-
-        int m = z.length;
-        int n = z[0].length;
-        triangles = new int[2 * m * n][6];
-        az = new double[2 * m * n];
-        order = new int[az.length];
-
-        zc = new double[m][n];
-        data = new double[m][n][3];
-        for (int i = 0, k = 0; i < m; i++) {
-            for (int j = 0; j < n; j++, k += 2) {
-                data[i][j][0] = i + 0.5;
-                data[i][j][1] = j + 0.5;
-                data[i][j][2] = z[i][j];
-
-                if (i < m - 1 && j < n - 1) {
-                    triangles[k][0] = i;
-                    triangles[k][1] = j;
-                    triangles[k][2] = i + 1;
-                    triangles[k][3] = j;
-                    triangles[k][4] = i;
-                    triangles[k][5] = j + 1;
-
-                    triangles[k + 1][0] = i + 1;
-                    triangles[k + 1][1] = j + 1;
-                    triangles[k + 1][2] = i + 1;
-                    triangles[k + 1][3] = j;
-                    triangles[k + 1][4] = i;
-                    triangles[k + 1][5] = j + 1;
-                }
-            }
-        }
-    }
-
-    /**
-     * Constructor.
-     * @param z the z-axis values of surface. The x-axis and y-axis location of
-     * surface will be set to 0.5, 1.5, 2.5, ...
-     * @param palette the color palette.
-     */
-    public Surface(double[][] z, Color[] palette) {
-        this.palette = palette;
-        init(z);
-    }
-    
-    /**
-     * Constructor for regular mesh grid.
-     * @param x the x-axis values of surface.
-     * @param y the y-axis values of surface.
-     * @param z the z-axis values of surface.
-     */
-    public Surface(double[] x, double[] y, double[][] z) {
-        super(Color.GRAY);
-        init(x, y, z);
-    }
-    
-    /**
-     * Initialization.
-     */
-    private void init(double[] x, double[] y, double[][] z) {
-        max = MathEx.max(z);
-        min = MathEx.min(z);
-        if (palette != null) {
-            width = (max - min) / palette.length;
-        }
-
-        int m = z.length;
-        int n = z[0].length;
-        triangles = new int[2 * m * n][6];
-        az = new double[2 * m * n];
-        order = new int[az.length];
-
-        zc = new double[m][n];
-        data = new double[m][n][3];
-        for (int i = 0, k = 0; i < m; i++) {
-            for (int j = 0; j < n; j++, k += 2) {
-                data[i][j][0] = x[i];
-                data[i][j][1] = y[j];
-                data[i][j][2] = z[i][j];
-
-                if (i < m - 1 && j < n - 1) {
-                    triangles[k][0] = i;
-                    triangles[k][1] = j;
-                    triangles[k][2] = i + 1;
-                    triangles[k][3] = j;
-                    triangles[k][4] = i;
-                    triangles[k][5] = j + 1;
-
-                    triangles[k + 1][0] = i + 1;
-                    triangles[k + 1][1] = j + 1;
-                    triangles[k + 1][2] = i + 1;
-                    triangles[k + 1][3] = j;
-                    triangles[k + 1][4] = i;
-                    triangles[k + 1][5] = j + 1;
-                }
-            }
-        }
-    }
-
-    /**
-     * Constructor for regular mesh grid.
-     * @param x the x-axis values of surface.
-     * @param y the y-axis values of surface.
-     * @param z the z-axis values of surface.
-     * @param palette the color palette.
-     */
-    public Surface(double[] x, double[] y, double[][] z, Color[] palette) {
-        this.palette = palette;
-        init(x, y, z);
+    public Surface(double[][][] data) {
+        this(data, null);
     }
 
     /**
      * Constructor for irregular mesh grid.
      * @param data an m x n x 3 array which are coordinates of m x n surface.
      */
-    public Surface(double[][][] data) {
+    public Surface(double[][][] data, Color[] palette) {
         super(Color.GRAY);
-        init(data);
-    }
-    
-    /**
-     * Initialization.
-     */
-    private void init(double[][][] data) {
+
+        this.palette = palette;
         this.data = data;
 
         int m = data.length;
@@ -254,19 +127,50 @@ public class Surface extends Plot {
 
     }
 
-    /**
-     * Constructor for irregular mesh grid.
-     * @param data an m x n x 3 array which are coordinates of m x n surface.
-     */
-    public Surface(double[][][] data, Color[] palette) {
-        this.palette = palette;
-        init(data);
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {data[0][0][0], data[0][0][1], data[0][0][2]};
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                if (data[i][j][0] < bound[0]) {
+                    bound[0] = data[i][j][0];
+                }
+                if (data[i][j][1] < bound[1]) {
+                    bound[1] = data[i][j][1];
+                }
+                if (data[i][j][2] < bound[2]) {
+                    bound[2] = data[i][j][2];
+                }
+            }
+        }
+
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {data[0][0][0], data[0][0][1], data[0][0][2]};
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                if (data[i][j][0] > bound[0]) {
+                    bound[0] = data[i][j][0];
+                }
+                if (data[i][j][1] > bound[1]) {
+                    bound[1] = data[i][j][1];
+                }
+                if (data[i][j][2] > bound[2]) {
+                    bound[2] = data[i][j][2];
+                }
+            }
+        }
+
+        return bound;
     }
 
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length - 1; j++) {
@@ -332,151 +236,64 @@ public class Surface extends Plot {
     }
 
     /**
-     * Create a plot canvas with the 3D surface plot of given data.
+     * Creates a regular mesh grid.
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
      */
-    public static PlotCanvas plot(double[][] z) {
-        double[] lowerBound = {0, 0, MathEx.min(z)};
-        double[] upperBound = {z.length, z[0].length, MathEx.max(z)};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(z);
-        canvas.add(surface);
-
-        return canvas;
+    public static Surface of(double[][] z) {
+        return of(z, null);
     }
 
     /**
-     * Create a plot canvas with the 3D surface plot of given data.
+     * Creates a regular mesh grid.
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[][] z, Color[] palette) {
-        double[] lowerBound = {0, 0, MathEx.min(z)};
-        double[] upperBound = {z.length, z[0].length, MathEx.max(z)};
+    public static Surface of(double[][] z, Color[] palette) {
+        int m = z.length;
+        int n = z[0].length;
+        double[] x = new double[m];
+        double[] y = new double[n];
+        for (int i = 0; i < m; i++) {
+            x[i] = i + 0.5;
+        }
+        for (int j = 0; j < n; j++) {
+            y[j] = j + 0.5;
+        }
 
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(z, palette);
-        canvas.add(surface);
-
-        return canvas;
+        return of(x, y, z, palette);
     }
 
     /**
-     * Create a plot canvas with the 3D surface plot of given data.
+     * Creates a regular mesh grid.
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y), MathEx.min(z)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y), MathEx.max(z)};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(x, y, z);
-        canvas.add(surface);
-
-        return canvas;
+    public static Surface of(double[] x, double[] y, double[][] z) {
+        return of(x, y, z, null);
     }
 
     /**
-     * Create a plot canvas with the 3D surface plot of given data.
+     * Creates a regular mesh grid.
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y), MathEx.min(z)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y), MathEx.max(z)};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(x, y, z, palette);
-        canvas.add(surface);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the 3D surface plot of given data.
-     * @param data an m x n x 3 array which are coordinates of m x n surface.
-     */
-    public static PlotCanvas plot(double[][][] data) {
-        double[] lowerBound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        double[] upperBound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] < lowerBound[0]) {
-                    lowerBound[0] = data[i][j][0];
-                }
-                if (data[i][j][0] > upperBound[0]) {
-                    upperBound[0] = data[i][j][0];
-                }
-                if (data[i][j][1] < lowerBound[1]) {
-                    lowerBound[1] = data[i][j][1];
-                }
-                if (data[i][j][1] > upperBound[1]) {
-                    upperBound[1] = data[i][j][1];
-                }
-                if (data[i][j][2] < lowerBound[2]) {
-                    lowerBound[2] = data[i][j][2];
-                }
-                if (data[i][j][2] > upperBound[2]) {
-                    upperBound[2] = data[i][j][2];
-                }
+    public static Surface of(double[] x, double[] y, double[][] z, Color[] palette) {
+        int m = z.length;
+        int n = z[0].length;
+        double[][][] data = new double[m][n][3];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                data[i][j][0] = x[i];
+                data[i][j][1] = y[j];
+                data[i][j][2] = z[i][j];
             }
         }
 
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(data);
-        canvas.add(surface);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the 3D surface plot of given data.
-     * @param data an m x n x 3 array which are coordinates of m x n surface.
-     * @param palette the color palette.
-     */
-    public static PlotCanvas plot(double[][][] data, Color[] palette) {
-        double[] lowerBound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        double[] upperBound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] < lowerBound[0]) {
-                    lowerBound[0] = data[i][j][0];
-                }
-                if (data[i][j][0] > upperBound[0]) {
-                    upperBound[0] = data[i][j][0];
-                }
-                if (data[i][j][1] < lowerBound[1]) {
-                    lowerBound[1] = data[i][j][1];
-                }
-                if (data[i][j][1] > upperBound[1]) {
-                    upperBound[1] = data[i][j][1];
-                }
-                if (data[i][j][2] < lowerBound[2]) {
-                    lowerBound[2] = data[i][j][2];
-                }
-                if (data[i][j][2] > upperBound[2]) {
-                    upperBound[2] = data[i][j][2];
-                }
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Surface surface = new Surface(data, palette);
-        canvas.add(surface);
-
-        return canvas;
+        return new Surface(data, palette);
     }
 }

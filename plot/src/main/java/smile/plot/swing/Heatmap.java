@@ -19,6 +19,7 @@ package smile.plot.swing;
 
 import java.awt.Color;
 import java.util.Arrays;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -198,19 +199,19 @@ public class Heatmap extends Plot {
     }
 
     @Override
-    public String getToolTip(double[] coord) {
+    public Optional<String> getToolTip(double[] coord) {
         if (rowLabels == null || columnLabels == null) {
-            return null;
+            return Optional.empty();
         }
         
         if (coord[0] < 0.0 || coord[0] > z[0].length || coord[1] < 0.0 || coord[1] > z.length) {
-            return null;
+            return Optional.empty();
         }
 
         int i = (int) coord[0];
         int j = (int) (y.length - coord[1]);
         
-        return String.format("%s, %s", rowLabels[j], columnLabels[i]);
+        return Optional.of(String.format("%s, %s", rowLabels[j], columnLabels[i]));
     }
     
     @Override

@@ -31,154 +31,62 @@ public class Label extends Shape {
     /**
      * The text of label.
      */
-    String text;
+    final String text;
     /**
      * The coordinates of label.
      */
-    double[] coord;
+    final double[] coordinates;
     /**
      *  The reference position of coordinates respected to dimension of text.
      * (0.5, 0.5) is center, (0, 0) is lower left, (0, 1) is upper left, etc.
      */
-    double horizontalReference;
+    final double horizontalReference;
     /**
      *  The reference position of coordinates respected to dimension of text.
      * (0.5, 0.5) is center, (0, 0) is lower left, (0, 1) is upper left, etc.
      */
-    double verticalReference;
+    final double verticalReference;
     /**
      * The rotation angel of text.
      */
-    double rotation = 0.0;
+    final double rotation;
     /**
      * The font for rendering the text. Use the system default font if this is
      * null.
      */
-    Font font;
+    final Font font;
 
     /**
      * Constructor.
      */
-    public Label(String text, double[] coord) {
-        this(text, 0.5, 0.5, coord);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Label(String text, double rotation, double[] coord) {
-        this(text, 0.5, 0.5, rotation, coord);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Label(String text, double horizontalReference, double verticalReference, double[] coord) {
-        this(text, horizontalReference, verticalReference, 0.0, coord);
-    }
-
-    /**
-     * Constructor. The reference position of coordinates respected to dimension
-     * of text. (0.5, 0.5) is center, (0, 0) is lower left, (0, 1) is upper
-     * left, etc.
-     */
-    public Label(String text, double horizontalReference, double verticalReference, double rotation, double[] coord) {
+    public Label(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation, Font font, Color color) {
+        super(color);
         this.text = text;
+        this.coordinates = coordinates;
         this.horizontalReference = horizontalReference;
         this.verticalReference = verticalReference;
         this.rotation = rotation;
-        this.coord = coord;
-    }
-
-    /**
-     * Constructor. Use coordinates as text.
-     */
-    public Label(double... coord) {
-        this(coordToString(coord), coord);
-    }
-
-    /**
-     * Set the text of label.
-     */
-    public Label setText(String text) {
-        this.text = text;
-        return this;
-    }
-
-    /**
-     * Returns the text of label.
-     */
-    public String getText() {
-        return text;
-    }
-
-    /**
-     * Set the coordinate of label.
-     */
-    public Label setCoordinate(double... coord) {
-        this.coord = coord;
-        return this;
-    }
-
-    /**
-     * Returns the coordinates of label.
-     */
-    public double[] getCoordinate() {
-        return coord;
-    }
-
-    /**
-     * Set the rotation angel of label.
-     */
-    public Label setRotation(double angle) {
-        this.rotation = angle;
-        return this;
-    }
-
-    /**
-     * Returns the rotation angel of label.
-     */
-    public double getRotation() {
-        return rotation;
-    }
-
-    /**
-     * Set the font of label.
-     */
-    public Label setFont(Font font) {
         this.font = font;
-        return this;
-    }
-
-    /**
-     * Returns the font of label.
-     */
-    public Font getFont() {
-        return font;
     }
 
     @Override
     public void paint(Graphics g) {
         Font f = g.getFont();
-        if (font != null) {
-            g.setFont(font);
-        }
+        if (font != null) g.setFont(font);
 
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
-        g.drawText(text, horizontalReference, verticalReference, rotation, coord);
+        g.drawText(text, horizontalReference, verticalReference, rotation, coordinates);
 
         g.setColor(c);
-        if (font != null) {
-            g.setFont(f);
-        }
+        if (font != null) g.setFont(f);
     }
 
     /**
      * Convert coordinate to a string.
      */
-    public static String coordToString(double... c) {
+    private static String coordinatesToString(double... c) {
         StringBuilder builder = new StringBuilder("(");
         for (int i = 0; i < c.length; i++) {
             builder.append(MathEx.round(c[i], 2)).append(",");
@@ -191,5 +99,29 @@ public class Label extends Shape {
         }
 
         return builder.toString();
+    }
+
+    /** The default JLabel font may vary on different systems. */
+    private static Font DefaultFont = new javax.swing.JLabel().getFont();
+
+    /**
+     * Creates a black label centered at the coordinates.
+     */
+    public static Label of(String text, double[] coordinates) {
+        return Label.of(text, coordinates, 0.5, 0.5, 0.0);
+    }
+
+    /**
+     * Creates a black label with coordinates as text.
+     */
+    public static Label of(double... coordinates) {
+        return Label.of(coordinatesToString(coordinates), coordinates, 0.5, 0.5, 0.0);
+    }
+
+    /**
+     * Creates a black label with system default font.
+     */
+    public static Label of(String text, double[] coordinates, double horizontalReference, double verticalReference, double rotation) {
+        return new Label(text, coordinates, horizontalReference, verticalReference, rotation, DefaultFont, Color.BLACK);
     }
 }

@@ -393,7 +393,7 @@ public class Histogram3D extends Plot {
             int i = k / 6;
             if (topNW[i][2] != bottomNW[i][2]) {
                 if (palette == null) {
-                    g.setColor(getColor());
+                    g.setColor(color);
                 } else {
                     int p = (int) (freq[i][2] / width);
                     if (p == palette.length) {

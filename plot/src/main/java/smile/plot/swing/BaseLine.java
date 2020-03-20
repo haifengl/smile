@@ -32,13 +32,13 @@ class BaseLine extends Line {
      * @param end   the end point of the line.
      */
     public BaseLine(double[] start, double[] end) {
-        super(start, end);
+        super(new double[][] {start, end}, Style.SOLID, ' ', Color.BLACK, null);
     }
 
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
         g.drawLineBaseRatio(points);
         g.setColor(c);
     }

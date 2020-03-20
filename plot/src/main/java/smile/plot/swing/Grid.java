@@ -32,61 +32,23 @@ public class Grid extends Plot {
     private double[][][] data;
 
     /**
-     * If true, draw the nodes as a circle.
-     */
-    private boolean drawNodes = false;
-
-    /**
      * Constructor.
      * @param data an m x n x 2 array which are coordinates of m x n grid.
      */
-    public Grid(double[][][] data) {
-        this(data, false);
-    }
-
-    /**
-     * Constructor.
-     * @param data an m x n x 2 array which are coordinates of m x n grid.
-     */
-    public Grid(double[][][] data, boolean drawNodes) {
-        this(data, drawNodes, Color.BLACK);
-    }
-
-    /**
-     * Constructor.
-     * @param data an m x n x 2 array which are coordinates of m x n grid.
-     */
-    public Grid(double[][][] data, boolean drawNodes, Color color) {
+    public Grid(double[][][] data, Color color) {
         super(color);
         this.data = data;
-        this.drawNodes = drawNodes;
-    }
-
-    /**
-     * Gets if draw the nodes.
-     */
-    public boolean setDrawNodes() {
-        return drawNodes;
-    }
-
-    /**
-     * Sets if draw the nodes.
-     */
-    public void setDrawNodes(boolean drawNodes) {
-        this.drawNodes = drawNodes;
     }
 
     @Override
     public void paint(Graphics g) {
         Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length - 1; j++) {
-                if (drawNodes) g.drawPoint('o', data[i][j]);
                 g.drawLine(data[i][j], data[i][j+1]);
             }
-            if (drawNodes) g.drawPoint('o', data[i][data[i].length - 1]);
         }
 
         for (int i = 0; i < data.length - 1; i++) {
@@ -98,45 +60,45 @@ public class Grid extends Plot {
         g.setColor(c);
     }
     
-    /**
-     * Create a 2D grid plot canvas.
-     * @param data an m x n x 2 array which are coordinates of m x n grid.
-     */
-    public static PlotCanvas plot(double[][][] data) {
-        return plot(null, data);
-    }
-    
-    /**
-     * Create a 2D grid plot canvas.
-     * @param id the id of the plot.
-     * @param data an m x n x 2 array which are coordinates of m x n grid.
-     */
-    public static PlotCanvas plot(String id, double[][][] data) {
-        double[] lowerBound = {data[0][0][0], data[0][0][1]};
-        double[] upperBound = {data[0][0][0], data[0][0][1]};
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {data[0][0][0], data[0][0][1]};
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] < lowerBound[0]) {
-                    lowerBound[0] = data[i][j][0];
+                if (data[i][j][0] < bound[0]) {
+                    bound[0] = data[i][j][0];
                 }
-                if (data[i][j][0] > upperBound[0]) {
-                    upperBound[0] = data[i][j][0];
-                }
-                if (data[i][j][1] < lowerBound[1]) {
-                    lowerBound[1] = data[i][j][1];
-                }
-                if (data[i][j][1] > upperBound[1]) {
-                    upperBound[1] = data[i][j][1];
+                if (data[i][j][1] < bound[1]) {
+                    bound[1] = data[i][j][1];
                 }
             }
         }
 
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
+        return bound;
+    }
 
-        Grid grid = new Grid(data);
-        if (id != null) grid.setID(id);
-        canvas.add(grid);
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {data[0][0][0], data[0][0][1]};
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < data[i].length; j++) {
+                if (data[i][j][0] > bound[0]) {
+                    bound[0] = data[i][j][0];
+                }
+                if (data[i][j][1] > bound[1]) {
+                    bound[1] = data[i][j][1];
+                }
+            }
+        }
 
-        return canvas;
+        return bound;
+    }
+
+    /**
+     * Creates a grid with black lines.
+     * @param data an m x n x 2 array which are coordinates of m x n grid.
+     */
+    public static Grid of(double[][][] data) {
+        return new Grid(data, Color.BLACK);
     }
 }
