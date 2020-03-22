@@ -366,11 +366,16 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     public double predict(Tuple x) {
         Tuple xt = formula.x(x);
         double y = 0;
+        int nanCount = 0;
         for (RegressionTree tree : trees) {
-            y += tree.predict(xt);
+            double p = tree.predict(xt);
+            if(Double.isNaN(p)) {
+                nanCount ++ ;
+            } else {
+                y += p;
+            }
         }
-        
-        return y / trees.length;
+        return y / (trees.length - nanCount);
     }
 
     /**
