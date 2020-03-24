@@ -27,6 +27,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.event.AncestorEvent;
@@ -948,19 +949,26 @@ public class PlotPanel extends JPanel {
         contentPane.repaint();
     }
 
+    /** The number of created windows, as the default window title. */
+    static AtomicInteger WindowCount = new AtomicInteger();
+
     /**
      * Shows the plot in a window.
      * @return a new JFrame that contains the plot.
      */
     public JFrame window() throws InterruptedException, InvocationTargetException  {
         JFrame frame = new JFrame();
-        if (canvas.getTitle() != null) frame.setTitle(canvas.getTitle());
+        String title = canvas.getTitle();
+        if (title != null) {
+            title = String.format("Smile Plot %d", WindowCount.addAndGet(1));
+        }
+        frame.setTitle(title);
 
         add(toolbar, BorderLayout.NORTH);
-
         frame.getContentPane().add(this);
+
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1000, 1000));
+        frame.setSize(new java.awt.Dimension(1280, 800));
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 

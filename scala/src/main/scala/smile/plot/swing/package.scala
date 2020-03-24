@@ -39,15 +39,8 @@ import smile.projection.PCA
   */
 package object swing {
   /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def img(canvas: JComponent): String = {
-    val headless = new Headless(canvas)
-    headless.pack
-    headless.setVisible(true)
-    SwingUtilities.invokeAndWait(() => {})
-
-    val bi = new BufferedImage(canvas.getWidth, canvas.getHeight, BufferedImage.TYPE_INT_ARGB)
-    val g2d = bi.createGraphics
-    canvas.print(g2d)
+  def img(canvas: Canvas, width: Int = 1000, height: Int = 1000): String = {
+    val bi = canvas.toBufferedImage(width, height)
 
     val os = new ByteArrayOutputStream
     ImageIO.write(bi, "png", os)
@@ -58,9 +51,9 @@ package object swing {
 
   /** Scatter plot.
     *
-    * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
+    * @param x a n-by-2 or n-by-3 matrix that describes coordinates of points.
     * @param color the color used to draw points.
-    * @param legend the legend used to draw points.
+    * @param mark the mark used to draw points.
     *               - . : dot
     *               - + : +
     *               - - : -
@@ -79,158 +72,122 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = Color.BLACK): PlotCanvas = {
-    ScatterPlot.plot(data, legend, color)
+  def plot(x: Array[Array[Double]], mark: Char = '*', color: Color = Color.BLACK): Canvas = {
+    ScatterPlot.of(x, mark, color).canvas
   }
 
   /** Scatter plot.
     *
-    * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-    * @param labels labels of points.
+    * @param x a n-by-2 or n-by-3 matrix that describes coordinates of points.
+    * @param y labels of points.
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas = {
-    ScatterPlot.plot(data, labels)
+  def plot(x: Array[Array[Double]], y: Array[String], mark: Char): Canvas = {
+    ScatterPlot.of(x, y, mark).canvas
   }
 
   /** Scatter plot.
     *
-    * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-    * @param label the class labels of data.
-    * @param legend the legend for all classes.
-    * @param palette the color for each class.
+    * @param x a n-by-2 or n-by-3 matrix that describes coordinates of points.
+    * @param y class label.
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): PlotCanvas = {
-    ScatterPlot.plot(data, label, legend, palette)
+  def plot(x: Array[Array[Double]], y: Array[Int], mark: Char): Canvas = {
+    ScatterPlot.of(x, y, mark).canvas
   }
 
   /** Scatter plot.
     *
-    * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-    * @param label the class labels of data.
-    * @param legend the legend for each class.
-    * @param palette the color for each class.
-    *
+    * @param data the data frame.
+    * @param x    the column as x-axis.
+    * @param y    the column as y-axis.
     * @return the plot canvas which can be added other shapes.
     */
-  def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): PlotCanvas = {
-    ScatterPlot.plot(data, label, legend, palette)
+  def plot(data: DataFrame, x: String, y: String, mark: Char, color: Color): Canvas = {
+    ScatterPlot.of(data, x, y, mark, color).canvas
+  }
+
+  /** Scatter plot.
+    *
+    * @param data the data frame.
+    * @param x    the column as x-axis.
+    * @param y    the column as y-axis.
+    * @param category the category column for coloring.
+    * @return the plot canvas which can be added other shapes.
+    */
+  def plot(data: DataFrame, x: String, y: String, category: String, mark: Char): Canvas = {
+    ScatterPlot.of(data, x, y, category, mark).canvas
+  }
+
+  /** Scatter plot.
+    *
+    * @param data the data frame.
+    * @param x    the column as x-axis.
+    * @param y    the column as y-axis.
+    * @param z    the column as z-axis.
+    * @return the plot canvas which can be added other shapes.
+    */
+  def plot(data: DataFrame, x: String, y: String, z: String, mark: Char, color: Color): Canvas = {
+    ScatterPlot.of(data, x, y, z, mark, color).canvas
+  }
+
+  /** Scatter plot.
+    *
+    * @param data the data frame.
+    * @param x    the column as x-axis.
+    * @param y    the column as y-axis.
+    * @param z    the column as z-axis.
+    * @param category the category column for coloring.
+    * @return the plot canvas which can be added other shapes.
+    */
+  def plot(data: DataFrame, x: String, y: String, z: String, category: String, mark: Char): Canvas = {
+    ScatterPlot.of(data, x, y, z, category, mark).canvas
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame.
     *
     * @param data a data frame.
-    * @param legend the legend for all classes.
+    * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, legend: Char): PlotGroup = {
-    val x = data.toArray
-    val p = data.ncols
-    val names = data.names
-
-    val plots = new PlotGroup()
-
-    for (i <- 0 until p) {
-      for (j <- 0 until p) {
-        val x2 = x.map { row => Array(row(i), row(j)) }
-        val canvas = ScatterPlot.plot(x2, legend)
-        canvas.setAxisLabels(names(i), names(j))
-        plots.add(canvas)
-      }
-    }
-
-    plots
+  def plot(data: DataFrame, mark: Char, color: Color): PlotGroup = {
+    PlotGroup.of(data, mark, color)
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame
     * of which the response variable is integer.
     *
     * @param data an attribute frame.
-    * @param legend the legend for all classes.
-    * @param palette the color for each class.
+    * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, legend: Char, palette: Array[Color]): PlotGroup = {
-    val dat = data.drop(category)
-    val x = dat.toArray
-    val y = data.column(category).toIntArray
-    val p = x(0).length
-    val names = dat.names()
-
-    val plots = new PlotGroup()
-
-    for (i <- 0 until p) {
-      for (j <- 0 until p) {
-        val x2 = x.map { row => Array(row(i), row(j)) }
-        val canvas = ScatterPlot.plot(x2, y, legend, palette)
-        canvas.setAxisLabels(names(i), names(j))
-        plots.add(canvas)
-      }
-    }
-
-    plots
-  }
-
-  /** Plot a grid of scatter plots of for all attribute pairs in the data frame
-    * of which the response variable is integer.
-    *
-    * @param data an attribute frame.
-    * @param legend the legend for each class.
-    * @param palette the color for each class.
-    * @return the plot panel.
-    */
-  def plot(data: DataFrame, category: String, legend: Array[Char], palette: Array[Color]): JPanel = {
-    val dat = data.drop(category)
-    val x = dat.toArray
-    val y = data.column(category).toIntArray
-    val p = x(0).length
-    val names = dat.names()
-
-    val panel = new JPanel(new GridLayout(p, p))
-    panel.setBackground(Color.white)
-
-    for (i <- 0 until p) {
-      for (j <- 0 until p) {
-        val x2 = x.map { row => Array(row(i), row(j)) }
-        val canvas = ScatterPlot.plot(x2, y, legend, palette)
-        canvas.setAxisLabels(names(i), names(j))
-        panel.add(canvas)
-      }
-    }
-
-    panel
+  def plot(data: DataFrame, category: String, mark: Char): PlotGroup = {
+    PlotGroup.of(data, category, mark);
   }
 
   /** Line plot.
     *
     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
     * @param style the stroke style of line.
-    * @param legend the legend used to draw data points. The default value ' ' makes the point indistinguishable
+    * @param mark the mark used to draw data points. The default value ' ' makes the point indistinguishable
     *               from the line on purpose.
     * @param color the color of line.
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, legend: Char = ' '): PlotCanvas = {
-    val canvas = LinePlot.plot(data, style, color)
-
-    if (legend != ' ') {
-      val scatter = new ScatterPlot(data, legend)
-      scatter.setColor(color)
-      canvas.add(scatter)
-    }
-
-    canvas
+  def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas = {
+    val lines = Array(new Line(data, style, mark, color))
+    val legends = Array(new Legend(label, color))
+    new LinePlot(lines, legends).canvas
   }
 
   /** Create a plot canvas with the staircase line plot.
     * @param data a n x 2 or n x 3 matrix that describes coordinates of points.
     */
-  def staircase(data: Array[Double]*): PlotCanvas = {
-    StaircasePlot.plot(data: _*)
+  def staircase(data: Array[Array[Double]], color: Color = Color.BLACK, label: String = null): Canvas = {
+    StaircasePlot.of(data, color, label).canvas
   }
 
   /** A box plot is a convenient way of graphically depicting groups of numerical
@@ -268,8 +225,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def boxplot(data: Array[Double]*): PlotCanvas = {
-    BoxPlot.plot(data: _*)
+  def boxplot(data: Array[Double]*): Canvas = {
+    BoxPlot.of(data: _*).canvas
   }
 
   /** Box plot.
@@ -279,8 +236,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def boxplot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas = {
-    BoxPlot.plot(data, labels)
+  def boxplot(data: Array[Array[Double]], labels: Array[String]): Canvas = {
+    new BoxPlot(data, labels).canvas()
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -293,8 +250,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def contour(z: Array[Array[Double]]): PlotCanvas = {
-    Contour.plot(z)
+  def contour(z: Array[Array[Double]]): Canvas = {
+    Contour.of(z).canvas
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -305,12 +262,11 @@ package object swing {
     *
     * @param z the data matrix to create contour plot.
     * @param levels the level values of contours.
-    * @param palette the color for each contour level.
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas = {
-    Contour.plot(z, levels, palette)
+  def contour(z: Array[Array[Double]], levels: Array[Double]): Canvas = {
+    new Contour(z, levels).canvas
   }
 
   /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
@@ -325,36 +281,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas = {
-    Contour.plot(x, y, z)
-  }
-
-  /** Contour plot. A contour plot is a graphical technique for representing a 3-dimensional
-    * surface by plotting constant z slices, called contours, on a 2-dimensional
-    * format. That is, given a value for z, lines are drawn for connecting the
-    * (x, y) coordinates where that z value occurs. The contour plot is an
-    * alternative to a 3-D surface plot.
-    *
-    * @param x the x coordinates of the data grid of z. Must be in ascending order.
-    * @param y the y coordinates of the data grid of z. Must be in ascending order.
-    * @param z the data matrix to create contour plot.
-    * @param levels the level values of contours.
-    * @param palette the color for each contour level.
-    *
-    * @return the plot canvas which can be added other shapes.
-    */
-  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas = {
-    Contour.plot(x, y, z, levels, palette)
-  }
-
-  /** 3D surface plot.
-    *
-    * @param z the z-axis values of surface.
-    *
-    * @return the plot canvas which can be added other shapes.
-    */
-  def surface(z: Array[Array[Double]]): PlotCanvas = {
-    Surface.plot(z)
+  def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Canvas = {
+    Contour.of(x, y, z).canvas
   }
 
   /** 3D surface plot.
@@ -364,20 +292,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def surface(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Surface.plot(z, palette)
-  }
-
-  /** 3D surface plot.
-    *
-    * @param x the x-axis values of surface.
-    * @param y the y-axis values of surface.
-    * @param z the z-axis values of surface.
-    *
-    * @return the plot canvas which can be added other shapes.
-    */
-  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas = {
-    Surface.plot(x, y, z)
+  def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
+    Surface.of(z, palette).canvas
   }
 
   /** 3D surface plot.
@@ -389,8 +305,8 @@ package object swing {
     *
     * @return the plot canvas which can be added other shapes.
     */
-  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Surface.plot(x, y, z, palette)
+  def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
+    Surface.of(x, y, z, palette).canvas
   }
 
   /** Wire frame plot.
@@ -402,40 +318,24 @@ package object swing {
     * @param edges an m-by-2 array of which each row is the vertex indices of two
     *              end points of each edge.
     */
-  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): PlotCanvas = {
-    Wireframe.plot(vertices, edges)
+  def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Canvas = {
+    Wireframe.of(vertices, edges).canvas
   }
 
   /** 2D grid plot.
     *
     * @param data an m x n x 2 array which are coordinates of m x n grid.
     */
-  def grid(data: Array[Array[Array[Double]]]): PlotCanvas = {
-    Grid.plot(data)
-  }
-
-  /** Pseudo heat map plot.
-    * @param z a data matrix to be shown in pseudo heat map.
-    */
-  def heatmap(z: Array[Array[Double]]): PlotCanvas = {
-    Heatmap.plot(z)
+  def grid(data: Array[Array[Array[Double]]]): Canvas = {
+    Grid.of(data).canvas
   }
 
   /** Pseudo heat map plot.
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def heatmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Heatmap.plot(z, palette)
-  }
-
-  /** Pseudo heat map plot.
-    * @param x x coordinate of data matrix cells. Must be in ascending order.
-    * @param y y coordinate of data matrix cells. Must be in ascending order.
-    * @param z a data matrix to be shown in pseudo heat map.
-    */
-  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas = {
-    Heatmap.plot(x, y, z)
+  def heatmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
+    Heatmap.of(z, palette).canvas
   }
 
   /** Pseudo heat map plot.
@@ -444,17 +344,8 @@ package object swing {
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Heatmap.plot(x, y, z, palette)
-  }
-
-  /** Pseudo heat map plot.
-    * @param z a data matrix to be shown in pseudo heat map.
-    * @param rowLabels the labels for rows of data matrix.
-    * @param columnLabels the labels for columns of data matrix.
-    */
-  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): PlotCanvas = {
-    Heatmap.plot(rowLabels, columnLabels, z)
+  def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
+    new Heatmap(x, y, z, palette).canvas
   }
 
   /** Pseudo heat map plot.
@@ -463,62 +354,31 @@ package object swing {
     * @param columnLabels the labels for columns of data matrix.
     * @param palette the color palette.
     */
-  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Heatmap.plot(rowLabels, columnLabels, z, palette)
+  def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Canvas = {
+    new Heatmap(rowLabels, columnLabels, z, palette).canvas
   }
 
   /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
-  def spy(matrix: SparseMatrix): PlotCanvas = {
-    SparseMatrixPlot.plot(matrix)
-  }
-
-  /** Heat map with hex shape.
-    * @param z a data matrix to be shown in pseudo heat map.
-    */
-  def hexmap(z: Array[Array[Double]]): PlotCanvas = {
-    Heatmap.plot(z)
+  def spy(matrix: SparseMatrix): Canvas = {
+    SparseMatrixPlot.of(matrix).canvas
   }
 
   /** Heat map with hex shape.
     * @param z a data matrix to be shown in pseudo heat map.
     * @param palette the color palette.
     */
-  def hexmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Hexmap.plot(z, palette)
-  }
-
-  /** Heat map with hex shape.
-    * @param labels the descriptions of each cell in the data matrix.
-    * @param z a data matrix to be shown in pseudo heat map.
-    */
-  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): PlotCanvas = {
-    Hexmap.plot(labels, z)
-  }
-
-  /** Heat map with hex shape.
-    * @param labels the descriptions of each cell in the data matrix.
-    * @param z a data matrix to be shown in pseudo heat map.
-    * @param palette the color palette.
-    */
-  def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas = {
-    Hexmap.plot(labels, z, palette)
-  }
-
-  /** Histogram plot.
-    * @param data a sample set.
-    */
-  def hist(data: Array[Double]): PlotCanvas = {
-    Histogram.plot(data)
+  def hexmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas = {
+    Hexmap.of(z, palette).canvas
   }
 
   /** Histogram plot.
     * @param data a sample set.
     * @param k the number of bins.
     */
-  def hist(data: Array[Double], k: Int): PlotCanvas = {
-    Histogram.plot(data, k)
+  def hist(data: Array[Double], k: Int = 10, prob: Boolean = false, color: Color = Color.BLUE): Canvas = {
+    Histogram.of(data, k, prob, color).canvas
   }
 
   /** Histogram plot.
@@ -526,23 +386,8 @@ package object swing {
     * @param breaks an array of size k+1 giving the breakpoints between
     *               histogram cells. Must be in ascending order.
     */
-  def hist(data: Array[Double], breaks: Array[Double]): PlotCanvas = {
-    Histogram.plot(data, breaks)
-  }
-
-  /** 3D histogram plot.
-    * @param data a sample set.
-    */
-  def hist(data: Array[Array[Double]]): PlotCanvas = {
-    Histogram3D.plot(data)
-  }
-
-  /** 3D histogram plot.
-    * @param data a sample set.
-    * @param k the number of bins.
-    */
-  def hist(data: Array[Array[Double]], k: Int): PlotCanvas = {
-    Histogram3D.plot(data, k)
+  def hist(data: Array[Double], breaks: Array[Double], prob: Boolean, color: Color): Canvas = {
+    Histogram.of(data, breaks, prob, color).canvas
   }
 
   /** 3D histogram plot.
@@ -550,8 +395,8 @@ package object swing {
     * @param xbins the number of bins on x-axis.
     * @param ybins the number of bins on y-axis.
     */
-  def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): PlotCanvas = {
-    Histogram3D.plot(data, xbins, ybins)
+  def hist3(data: Array[Array[Double]], xbins: Int = 10, ybins: Int = 10, prob: Boolean = false, palette: Array[Color] = Palette.jet(16)): Canvas = {
+    new Histogram3D(data, xbins, ybins, prob, palette).canvas
   }
 
   /** QQ plot of samples to standard normal distribution.
@@ -559,8 +404,8 @@ package object swing {
     * quantiles of normal distribution.
     * @param x a sample set.
     */
-  def qqplot(x: Array[Double]): PlotCanvas = {
-    QQPlot.plot(x)
+  def qqplot(x: Array[Double]): Canvas = {
+    QQPlot.of(x).canvas
   }
 
   /** QQ plot of samples to given distribution.
@@ -569,8 +414,8 @@ package object swing {
     * @param x a sample set.
     * @param d a distribution.
     */
-  def qqplot(x: Array[Double], d: Distribution): PlotCanvas = {
-    QQPlot.plot(x, d)
+  def qqplot(x: Array[Double], d: Distribution): Canvas = {
+    QQPlot.of(x, d).canvas
   }
 
   /** QQ plot of two sample sets.
@@ -578,8 +423,8 @@ package object swing {
     * @param x a sample set.
     * @param y a sample set.
     */
-  def qqplot(x: Array[Double], y: Array[Double]): PlotCanvas = {
-    QQPlot.plot(x, y)
+  def qqplot(x: Array[Double], y: Array[Double]): Canvas = {
+    QQPlot.of(x, y).canvas
   }
 
   /** QQ plot of samples to given distribution.
@@ -588,8 +433,8 @@ package object swing {
     * @param x a sample set.
     * @param d a distribution.
     */
-  def qqplot(x: Array[Int], d: DiscreteDistribution): PlotCanvas = {
-    QQPlot.plot(x, d)
+  def qqplot(x: Array[Int], d: DiscreteDistribution): Canvas = {
+    QQPlot.of(x, d).canvas
   }
 
   /** QQ plot of two sample sets.
@@ -597,83 +442,8 @@ package object swing {
     * @param x a sample set.
     * @param y a sample set.
     */
-  def qqplot(x: Array[Int], y: Array[Int]): PlotCanvas = {
-    QQPlot.plot(x, y)
-  }
-
-  /** Plots the classification boundary.
-   *
-   * @param x training data.
-   * @param y training label.
-   * @param model classification model.
-   */
-  def plot(x: Array[Array[Double]], y: Array[Int], model: Classifier[Array[Double]]): PlotCanvas = {
-    require(x(0).size == 2, "plot of classification model supports only 2-dimensional data")
-
-    val canvas = plot(x, y, 'o', Palette.COLORS)
-
-    val lower = canvas.getLowerBounds
-    val upper = canvas.getUpperBounds
-
-    val steps = 50
-    val step1 = (upper(0) - lower(0)) / steps
-    val v1 = (0 to steps).map(lower(0) + step1 * _).toArray
-
-    val step2 = (upper(1) - lower(1)) / steps
-    val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
-
-    val z = Array.ofDim[Double](v1.length, v2.length)
-    for (i <- 0 to steps) {
-      for (j <- 0 to steps) {
-        val p = Array(v1(i), v2(j))
-        val c = model.predict(p)
-        z(j)(i) = c
-        canvas.point('.', Palette.COLORS(c), p: _*)
-      }
-    }
-
-    val levels = (0 until MathEx.max(y)).map(_ + 0.5).toArray
-    val contour = new Contour(v1, v2, z, levels)
-    contour.showLevelValue(false)
-    canvas.add(contour)
-
-    canvas
-  }
-
-  /** Plots the regression surface.
-    *
-    * @param x training data.
-    * @param y response variable.
-    * @param model regression model.
-    */
-  def plot(x: Array[Array[Double]], y: Array[Double], model: Regression[Array[Double]]): PlotCanvas = {
-    require(x(0).size == 2, "plot of regression model supports only 2-dimensional data")
-
-    val points = x.zip(y).map { case (x, y) => Array(x(0), x(1), y) }.toArray
-    val canvas = plot(points, 'o')
-
-    val lower = canvas.getLowerBounds
-    val upper = canvas.getUpperBounds
-
-    val steps = 50
-    val step1 = (upper(0) - lower(0)) / steps
-    val v1 = (0 to steps).map(lower(0) + step1 * _).toArray
-
-    val step2 = (upper(1) - lower(1)) / steps
-    val v2 = (0 to steps).map(lower(1) + step2 * _).toArray
-
-    val z = Array.ofDim[Double](v1.length, v2.length)
-    for (i <- 0 to steps) {
-      for (j <- 0 to steps) {
-        val p = Array(v1(i), v2(j))
-        z(j)(i) = model.predict(p)
-      }
-    }
-
-    val surface = new Surface(v1, v2, z, Palette.jet(256))
-    canvas.add(surface)
-
-    canvas
+  def qqplot(x: Array[Int], y: Array[Int]): Canvas = {
+    QQPlot.of(x, y).canvas
   }
 
   /** The scree plot is a useful visual aid for determining an appropriate number of principal components.
@@ -683,8 +453,8 @@ package object swing {
     *
     * @param pca principal component analysis object.
     */
-  def screeplot(pca: PCA): PlotCanvas = {
-    PlotCanvas.screeplot(pca)
+  def screeplot(pca: PCA): Canvas = {
+    new ScreePlot(pca).canvas
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement
@@ -692,8 +462,8 @@ package object swing {
     *
     * @param hc hierarchical clustering object.
     */
-  def dendrogram(hc: HierarchicalClustering): PlotCanvas = {
-    Dendrogram.plot("Dendrogram", hc.getTree, hc.getHeight)
+  def dendrogram(hc: HierarchicalClustering): Canvas = {
+    new Dendrogram(hc.getTree, hc.getHeight).canvas
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement
@@ -707,7 +477,7 @@ package object swing {
     *               i.e., the value of the criterion associated with the clustering method
     *               for the particular agglomeration.
     */
-  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): PlotCanvas = {
-    Dendrogram.plot(merge, height)
+  def dendrogram(merge: Array[Array[Int]], height: Array[Double]): Canvas = {
+    new Dendrogram(merge, height).canvas
   }
 }

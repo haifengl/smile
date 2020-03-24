@@ -82,7 +82,7 @@ public class DBSCANDemo extends ClusteringDemo {
         DBSCAN<double[]> dbscan = DBSCAN.fit(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
         System.out.format("DBSCAN clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, dbscan.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], dbscan.y, mark).canvas();
         return plot.panel();
 
     }

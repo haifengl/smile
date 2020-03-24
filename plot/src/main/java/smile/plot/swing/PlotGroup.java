@@ -21,6 +21,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.GridLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
@@ -33,8 +34,16 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 
 import javax.imageio.ImageIO;
-import javax.swing.*;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFileChooser;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
+import javax.swing.JPanel;
+import javax.swing.JToolBar;
+import javax.swing.RepaintManager;
 
+import smile.data.DataFrame;
 import smile.swing.FileChooser;
 import smile.swing.Printer;
 
@@ -63,43 +72,55 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * Optional tool bar to control plots.
      */
     private JToolBar toolbar;
-    
+
+    /**
+     * Constructor.
+     * @param nrows the number of rows.
+     * @param ncols the number of columns.
+     */
+    public PlotGroup(int nrows, int ncols) {
+        init(layout(nrows, ncols));
+    }
     /**
      * Constructor.
      * @param plots the plots to add into the frame.
      */
     public PlotGroup(PlotPanel... plots) {
-        init();
+        init(layout(plots.length));
         for (PlotPanel plot : plots) {
             contentPane.add(plot);
         }
-        organize();
     }
 
     /**
      * Initialization.
      */
-    private void init() {
+    private void init(LayoutManager layout) {
         setLayout(new BorderLayout());
         initToolBar();
 
         contentPane = new JPanel();
-        contentPane.setLayout(new GridLayout(0, 1, 0, 0));
+        contentPane.setLayout(layout);
         contentPane.setBackground(Color.WHITE);
         add(contentPane, BorderLayout.CENTER);
     }
     
     /**
-     * Reorganize the plots in the frame. Basically, it reset the surface layout
-     * based on the number of plots in the frame.
+     * Returns a layout manager for content pane.
+     * @param size the number of plots.
      */
-    private void organize() {
-        double col = Math.sqrt(contentPane.getComponentCount());
-        int n = (int) Math.floor(col);
-        int m = n < col ?  n + 1 : n;
-        if (m < 1) m = 1;
+    private LayoutManager layout(int size) {
+        int n = (int) Math.ceil(Math.sqrt(size));
+        return layout(n, n);
+    }
 
-        contentPane.setLayout(new GridLayout(m, n, 0, 0));
+    /**
+     * Returns a layout manager for content pane.
+     * @param nrows the number of rows.
+     * @param ncols the number of columns.
+     */
+    private LayoutManager layout(int nrows, int ncols) {
+        return new GridLayout(nrows, ncols, 0, 0);
     }
 
     /**
@@ -107,7 +128,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      */
     public void add(PlotPanel plot) {
         contentPane.add(plot);
-        organize();
+        contentPane.setLayout(layout(contentPane.getComponentCount()));
     }
 
     /**
@@ -115,7 +136,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      */
     public void remove(PlotPanel plot) {
         contentPane.remove(plot);
-        organize();
+        contentPane.setLayout(layout(contentPane.getComponentCount()));
     }
     
     /**
@@ -246,6 +267,8 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      */
     public JFrame window() throws InterruptedException, InvocationTargetException {
         JFrame frame = new JFrame();
+        String title = String.format("Smile Plot %d", PlotPanel.WindowCount.addAndGet(1));
+        frame.setTitle(title);
 
         JPanel pane = new JPanel(new BorderLayout());
         pane.add(this, BorderLayout.CENTER);
@@ -253,7 +276,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
 
         frame.getContentPane().add(pane);
         frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
-        frame.setSize(new java.awt.Dimension(1000, 1000));
+        frame.setSize(new java.awt.Dimension(1280, 1000));
         frame.setLocationRelativeTo(null);
         frame.setVisible(true);
 
@@ -263,5 +286,42 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
         });
 
         return frame;
+    }
+
+    /**
+     * Creates pairwise scatter plots from a data frame.
+     * @param data the data frame.
+     */
+    public static PlotGroup of(DataFrame data, char mark, Color color) {
+        String[] columns = data.names();
+        int p = columns.length;
+        PlotGroup group = new PlotGroup(p, p);
+        for (int i = 0; i < p; i++) {
+            for (int j = 0; j < p; j++) {
+                Plot plot = ScatterPlot.of(data, columns[i], columns[j], mark, color);
+                group.add(plot.canvas().panel());
+            }
+        }
+
+        return group;
+    }
+
+    /**
+     * Creates pairwise scatter plots from a data frame.
+     * @param data the data frame.
+     * @param category the category column for coloring.
+     */
+    public static PlotGroup of(DataFrame data, String category, char mark) {
+        String[] columns = data.names();
+        int p = columns.length;
+        PlotGroup group = new PlotGroup(p, p);
+        for (int i = 0; i < p; i++) {
+            for (int j = 0; j < p; j++) {
+                Plot plot = ScatterPlot.of(data, columns[i], columns[j], category, mark);
+                group.add(plot.canvas().panel());
+            }
+        }
+
+        return group;
     }
 }
