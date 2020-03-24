@@ -22,7 +22,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.LinePlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.wavelet.SymletWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -44,9 +44,9 @@ public class SymletWaveletDemo extends JPanel {
             Wavelet wavelet = new SymletWavelet(i);
             wavelet.inverse(x);
 
-            PlotCanvas canvas = LinePlot.plot(x);
+            Canvas canvas = LinePlot.of(x).canvas();
             canvas.setTitle(String.format("S%d", i));
-            add(canvas);
+            add(canvas.panel());
         }
 
         double[] sp500 = {
@@ -89,19 +89,19 @@ public class SymletWaveletDemo extends JPanel {
             1242.52, 1241.84, 1241.58, 1236.34
         };
 
-        PlotCanvas canvas = LinePlot.plot(sp500);
+        Canvas canvas = LinePlot.of(sp500).canvas();
         double[] smooth = sp500.clone();
         WaveletShrinkage.denoise(smooth, new SymletWavelet(8));
-        canvas.line(smooth, Color.BLUE);
+        canvas.add(LinePlot.of(smooth, Color.BLUE));
         canvas.setTitle("S&P 500 (S8, Hard)");
-        add(canvas);
+        add(canvas.panel());
 
-        canvas = LinePlot.plot(sp500);
+        canvas = LinePlot.of(sp500).canvas();
         smooth = sp500.clone();
         WaveletShrinkage.denoise(smooth, new SymletWavelet(8), true);
-        canvas.line(smooth, Color.BLUE);
+        canvas.add(LinePlot.of(smooth, Color.BLUE));
         canvas.setTitle("S&P 500 (S8, Soft)");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

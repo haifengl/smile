@@ -25,7 +25,8 @@ import javax.swing.JPanel;
 
 import smile.math.MathEx;
 import smile.plot.swing.Histogram;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.LinePlot;
 import smile.plot.swing.QQPlot;
 import smile.stat.distribution.ExponentialFamilyMixture;
 import smile.stat.distribution.GaussianDistribution;
@@ -53,9 +54,9 @@ public class GaussianMixtureDemo extends JPanel {
 
         ExponentialFamilyMixture mixture = GaussianMixture.fit(data);
 
-        PlotCanvas canvas = Histogram.plot(data, 24);
+        Canvas canvas = Histogram.of(data, 24, true).canvas();
         canvas.setTitle("Gaussian Mixture with Singular Component");
-        add(canvas);
+        add(canvas.panel());
 
         double width = (MathEx.max(data) - MathEx.min(data)) / 24;
         double[][] p = new double[50][2];
@@ -64,11 +65,11 @@ public class GaussianMixtureDemo extends JPanel {
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
-        canvas = QQPlot.plot(data, mixture);
+        canvas = QQPlot.of(data, mixture).canvas();
         canvas.setTitle("Q-Q Plot");
-        add(canvas);
+        add(canvas.panel());
 
         // Gaussian mixture of five components.
         data = new double[3000];
@@ -95,9 +96,9 @@ public class GaussianMixtureDemo extends JPanel {
 
         mixture = GaussianMixture.fit(5, data);
 
-        canvas = Histogram.plot(data, 50);
+        canvas = Histogram.of(data, 50, true).canvas();
         canvas.setTitle("Gaussian Mixture of Five Components");
-        add(canvas);
+        add(canvas.panel());
 
         width = (MathEx.max(data) - MathEx.min(data)) / 50;
         p = new double[220][2];
@@ -106,11 +107,11 @@ public class GaussianMixtureDemo extends JPanel {
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
-        canvas = QQPlot.plot(data, mixture);
+        canvas = QQPlot.of(data, mixture).canvas();
         canvas.setTitle("Q-Q Plot");
-        add(canvas);
+        add(canvas.panel());
     }
     
     @Override

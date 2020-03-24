@@ -37,8 +37,8 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.mds.MDS;
-import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.TextPlot;
 
 @SuppressWarnings("serial")
 public class MDSDemo extends JPanel implements Runnable, ActionListener {
@@ -103,17 +103,17 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         MDS mds = MDS.of(data, 2);
         System.out.format("Learn MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(mds.coordinates, labels);
+        Canvas plot = TextPlot.of(labels, mds.coordinates).canvas();
         plot.setTitle("MDS (k = 2)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
         mds = MDS.of(data, 3);
         System.out.format("Learn MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(mds.coordinates, labels);
+        plot = TextPlot.of(labels, mds.coordinates).canvas();
         plot.setTitle("MDS (k = 3)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

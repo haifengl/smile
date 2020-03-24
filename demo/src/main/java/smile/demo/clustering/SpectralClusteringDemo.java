@@ -26,8 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.clustering.SpectralClustering;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -62,18 +61,9 @@ public class SpectralClusteringDemo extends ClusteringDemo {
         SpectralClustering spectral = SpectralClustering.fit(dataset[datasetIndex], clusterNumber, gaussianWidth);
         System.out.format("Spectral Clustering clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int k = 0; k < spectral.k; k++) {
-                double[][] cluster = new double[spectral.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (spectral.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], spectral.y).canvas();
+        return plot.panel();
 
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-        }
-        return plot;
     }
 
     @Override

@@ -26,8 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.clustering.XMeans;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -67,21 +66,9 @@ public class XMeansDemo extends ClusteringDemo {
         XMeans xmeans = XMeans.fit(dataset[datasetIndex], maxClusterNumber);
         System.out.format("X-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(xmeans.centroids, '@');
-        for (int k = 0; k < xmeans.k; k++) {
-            if (xmeans.size[k] > 0) {
-                double[][] cluster = new double[xmeans.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (xmeans.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
-        plot.points(xmeans.centroids, '@');
-        return plot;
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], xmeans.y).canvas();
+        plot.add(ScatterPlot.of(xmeans.centroids, '@'));
+        return plot.panel();
     }
 
     @Override

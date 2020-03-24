@@ -24,7 +24,9 @@ import java.awt.Color;
  * proportional to the base coordinates.
  * @author Haifeng Li
  */
-class BaseLine extends Line {
+class BaseLine extends Shape {
+    double[] start;
+    double[] end;
 
     /**
      * Constructor.
@@ -32,14 +34,14 @@ class BaseLine extends Line {
      * @param end   the end point of the line.
      */
     public BaseLine(double[] start, double[] end) {
-        super(new double[][] {start, end}, Style.SOLID, ' ', Color.BLACK, null);
+        super(Color.BLACK);
+        this.start = start;
+        this.end = end;
     }
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
-        g.drawLineBaseRatio(points);
-        g.setColor(c);
+        g.drawLineBaseRatio(start, end);
     }
 }

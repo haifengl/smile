@@ -34,7 +34,7 @@ public class Base {
     /**
      * The dimensionality of base. Should be 2 or 3.
      */
-    int dimension;
+    final int dimension;
     /**
      * Coordinates of base.
      */

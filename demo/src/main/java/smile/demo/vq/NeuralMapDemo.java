@@ -19,17 +19,14 @@ package smile.demo.vq;
 
 import java.awt.Dimension;
 import java.util.Arrays;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
+import javax.swing.*;
 
 import smile.math.MathEx;
+import smile.plot.swing.LinePlot;
 import smile.vq.hebb.Edge;
 import smile.vq.hebb.Neuron;
 import smile.vq.NeuralMap;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -61,8 +58,9 @@ public class NeuralMapDemo extends VQDemo {
             return null;
         }
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
 
+        JPanel panel = plot.panel();
         int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
             try {
@@ -79,17 +77,15 @@ public class NeuralMapDemo extends VQDemo {
 
                     if (++k % period == 0) {
                         plot.clear();
-                        plot.points(dataset[datasetIndex], pointLegend);
+                        plot.add(ScatterPlot.of(dataset[datasetIndex], pointLegend));
                         Neuron[] neurons = cortex.neurons();
                         double[][] w = Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
-                        plot.points(w, '@');
+                        plot.add(ScatterPlot.of(w, '@'));
 
-                        for (Neuron neuron : neurons) {
-                            for (Edge edge : neuron.edges) {
-                                plot.line(neuron.w, edge.neighbor.w);
-                            }
-                        }
-                        plot.repaint();
+                        double[][] lines = Arrays.stream(neurons).flatMap(neuron -> neuron.edges.stream().map(edge -> new double[][]{neuron.w, edge.neighbor.w})).toArray(double[][]::new);
+                        plot.add(LinePlot.of(lines));
+
+                        panel.repaint();
 
                         try {
                             Thread.sleep(100);
@@ -105,7 +101,7 @@ public class NeuralMapDemo extends VQDemo {
         });
         thread.start();
 
-        return plot;
+        return panel;
     }
 
     @Override

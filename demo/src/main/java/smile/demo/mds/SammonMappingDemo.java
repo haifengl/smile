@@ -23,7 +23,6 @@ import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.util.Properties;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -38,8 +37,8 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.mds.SammonMapping;
-import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.TextPlot;
 
 @SuppressWarnings("serial")
 public class SammonMappingDemo extends JPanel implements Runnable, ActionListener {
@@ -104,17 +103,17 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         SammonMapping sammon = SammonMapping.of(data, 2);
         System.out.format("Learn Sammon's Mapping (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(sammon.coordinates, labels);
+        Canvas plot = TextPlot.of(labels, sammon.coordinates).canvas();
         plot.setTitle("Sammon's Mapping (k = 2)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
         sammon = SammonMapping.of(data, 3);
         System.out.format("Learn Sammon's Mapping (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(sammon.coordinates, labels);
+        plot = TextPlot.of(labels, sammon.coordinates).canvas();
         plot.setTitle("Sammon's Mapping (k = 3)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

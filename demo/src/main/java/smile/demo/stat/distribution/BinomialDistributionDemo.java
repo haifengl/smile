@@ -18,7 +18,6 @@
 package smile.demo.stat.distribution;
 
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.Hashtable;
@@ -31,9 +30,11 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.Bar;
 import smile.plot.swing.BarPlot;
 import smile.plot.swing.Histogram;
+import smile.plot.swing.Staircase;
 import smile.stat.distribution.BinomialDistribution;
 
 /**
@@ -44,9 +45,9 @@ import smile.stat.distribution.BinomialDistribution;
 public class BinomialDistributionDemo extends JPanel implements ChangeListener {
     private JPanel optionPane;
     private JPanel canvas;
-    private PlotCanvas pdf;
-    private PlotCanvas cdf;
-    private PlotCanvas histogram;
+    private Canvas pdf;
+    private Canvas cdf;
+    private Canvas histogram;
     private JSlider nSlider;
     private JSlider probSlider;
     private int n = 10;
@@ -96,35 +97,34 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
 
         BinomialDistribution dist = new BinomialDistribution(n, prob);
 
-        double[][] p = new double[50][2];
+        double[] p = new double[50];
         double[][] q = new double[50][2];
         for (int i = 0; i < p.length; i++) {
-            p[i][0] = i;
-            p[i][1] = dist.p(p[i][0]);
+            p[i] = dist.p(i);
             q[i][0] = i;
-            q[i][1] = dist.cdf(p[i][0]);
+            q[i][1] = dist.cdf(i);
         }
 
         double[] lowerBound = {0.0, 0.0};
         double[] upperBound = {50.0, 1.0};
-        pdf = new PlotCanvas(lowerBound, upperBound);
-        pdf.add(new BarPlot(p));
+        pdf = new Canvas(lowerBound, upperBound);
+        pdf.add(BarPlot.of(p));
         pdf.setTitle("PDF");
-        canvas.add(pdf);
+        canvas.add(pdf.panel());
 
-        cdf = new PlotCanvas(lowerBound, upperBound);
-        cdf.staircase(q, Color.BLACK);
+        cdf = new Canvas(lowerBound, upperBound);
+        cdf.add(Staircase.of(q));
         cdf.setTitle("CDF");
-        canvas.add(cdf);
+        canvas.add(cdf.panel());
 
         int[] data = new int[500];
         for (int i = 0; i < data.length; i++) {
             data[i] = (int) dist.rand();
         }
 
-        histogram = Histogram.plot(data, 20);
+        histogram = Histogram.of(data, 20, true).canvas();
         histogram.setTitle("Histogram");
-        canvas.add(histogram);
+        canvas.add(histogram.panel());
     }
 
     @Override
@@ -137,20 +137,19 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
 
             BinomialDistribution dist = new BinomialDistribution(n, prob);
 
-            double[][] p = new double[50][2];
+            double[] p = new double[50];
             double[][] q = new double[50][2];
             for (int i = 0; i < p.length; i++) {
-                p[i][0] = i;
-                p[i][1] = dist.p(p[i][0]);
+                p[i] = dist.p(i);
                 q[i][0] = i;
-                q[i][1] = dist.cdf(p[i][0]);
+                q[i][1] = dist.cdf(i);
             }
 
             pdf.clear();
-            pdf.add(new BarPlot(p));
+            pdf.add(BarPlot.of(p));
 
             cdf.clear();
-            cdf.staircase(q, Color.BLACK);
+            cdf.add(Staircase.of(q));
 
             int[] data = new int[500];
             for (int i = 0; i < data.length; i++) {
@@ -158,7 +157,7 @@ public class BinomialDistributionDemo extends JPanel implements ChangeListener {
             }
 
             histogram.clear();
-            histogram.histogram(data, 20, Color.BLUE);
+            histogram.add(Histogram.of(data, 20, true));
             canvas.repaint();
         }
     }

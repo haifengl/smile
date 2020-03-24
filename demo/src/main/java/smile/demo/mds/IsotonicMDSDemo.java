@@ -37,8 +37,8 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.mds.IsotonicMDS;
-import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.TextPlot;
 
 @SuppressWarnings("serial")
 public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener {
@@ -103,17 +103,17 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         IsotonicMDS isomds = IsotonicMDS.of(data, 2);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(isomds.coordinates, labels);
+        Canvas plot = TextPlot.of(labels, isomds.coordinates).canvas();
         plot.setTitle("Kruskal's Nonmetric MDS (k = 2)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
         isomds = IsotonicMDS.of(data, 3);
         System.out.format("Learn Kruskal's Nonmetric MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(isomds.coordinates, labels);
+        plot = TextPlot.of(labels, isomds.coordinates).canvas();
         plot.setTitle("Kruskal's Nonmetric MDS (k = 3)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

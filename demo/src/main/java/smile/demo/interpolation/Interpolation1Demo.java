@@ -22,13 +22,14 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.interpolation.CubicSplineInterpolation1D;
 import smile.interpolation.KrigingInterpolation1D;
 import smile.interpolation.LinearInterpolation;
 import smile.interpolation.RBFInterpolation1D;
 import smile.interpolation.ShepardInterpolation1D;
 import smile.math.rbf.GaussianRadialBasis;
+import smile.plot.swing.LinePlot;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -50,7 +51,7 @@ public class Interpolation1Demo extends JPanel {
             controls[i][1] = y[i];
         }
 
-        PlotCanvas canvas = ScatterPlot.plot(controls, '@');
+        Canvas canvas = ScatterPlot.of(controls, '@').canvas();
         canvas.setTitle("Linear");
         LinearInterpolation linear = new LinearInterpolation(x, y);
         double[][] yy = new double[61][2];
@@ -58,10 +59,10 @@ public class Interpolation1Demo extends JPanel {
             yy[i][0] = i * 0.1;
             yy[i][1] = linear.interpolate(yy[i][0]);
         }
-        canvas.line(yy, Color.RED);
-        add(canvas);
+        canvas.add(LinePlot.of(yy, Color.RED));
+        add(canvas.panel());
 
-        canvas = ScatterPlot.plot(controls, '@');
+        canvas = ScatterPlot.of(controls, '@').canvas();
         canvas.setTitle("Cubic Spline");
         CubicSplineInterpolation1D spline = new CubicSplineInterpolation1D(x, y);
         double[][] zz = new double[61][2];
@@ -69,10 +70,10 @@ public class Interpolation1Demo extends JPanel {
             zz[i][0] = i * 0.1;
             zz[i][1] = spline.interpolate(zz[i][0]);
         }
-        canvas.line(zz, Color.BLUE);
-        add(canvas);
+        canvas.add(LinePlot.of(zz, Color.BLUE));
+        add(canvas.panel());
 
-        canvas = ScatterPlot.plot(controls, '@');
+        canvas = ScatterPlot.of(controls, '@').canvas();
         canvas.setTitle("RBF");
         RBFInterpolation1D rbf = new RBFInterpolation1D(x, y, new GaussianRadialBasis());
         double[][] ww = new double[61][2];
@@ -80,10 +81,10 @@ public class Interpolation1Demo extends JPanel {
             ww[i][0] = i * 0.1;
             ww[i][1] = rbf.interpolate(zz[i][0]);
         }
-        canvas.line(ww, Color.GREEN);
-        add(canvas);
+        canvas.add(LinePlot.of(ww, Color.GREEN));
+        add(canvas.panel());
 
-        canvas = ScatterPlot.plot(controls, '@');
+        canvas = ScatterPlot.of(controls, '@').canvas();
         canvas.setTitle("Kriging");
         KrigingInterpolation1D kriging = new KrigingInterpolation1D(x, y);
         double[][] uu = new double[61][2];
@@ -91,10 +92,10 @@ public class Interpolation1Demo extends JPanel {
             uu[i][0] = i * 0.1;
             uu[i][1] = kriging.interpolate(zz[i][0]);
         }
-        canvas.line(uu, Color.PINK);
-        add(canvas);
+        canvas.add(LinePlot.of(uu, Color.PINK));
+        add(canvas.panel());
 
-        canvas = ScatterPlot.plot(controls, '@');
+        canvas = ScatterPlot.of(controls, '@').canvas();
         canvas.setTitle("Shepard");
         ShepardInterpolation1D shepard = new ShepardInterpolation1D(x, y, 3);
         double[][] vv = new double[61][2];
@@ -102,8 +103,8 @@ public class Interpolation1Demo extends JPanel {
             vv[i][0] = i * 0.1;
             vv[i][1] = shepard.interpolate(zz[i][0]);
         }
-        canvas.line(vv, Color.CYAN);
-        add(canvas);
+        canvas.add(LinePlot.of(vv, Color.CYAN));
+        add(canvas.panel());
     }
 
     @Override

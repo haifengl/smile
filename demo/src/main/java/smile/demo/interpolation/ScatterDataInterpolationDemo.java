@@ -25,7 +25,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.RBFInterpolation;
@@ -60,9 +60,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Heatmap.plot(yy, Palette.jet(256));
+        Canvas canvas = Heatmap.of(yy, Palette.jet(256)).canvas();
         canvas.setTitle("Original");
-        add(canvas);
+        add(canvas.panel());
 
         double[][] ww = new double[26][26];
         ArrayList<double[]> xx = new ArrayList<>();
@@ -91,9 +91,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
             q[i] = zz.get(i);
         }
 
-        canvas = Heatmap.plot(ww, Palette.jet(256));
+        canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
         canvas.setTitle("Missing Values");
-        add(canvas);
+        add(canvas.panel());
 
         KrigingInterpolation kriging = new KrigingInterpolation(p, q);
         double[][] uu = new double[26][26];
@@ -106,9 +106,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(uu, Palette.jet(256));
+        canvas = Heatmap.of(uu, Palette.jet(256)).canvas();
         canvas.setTitle("Kriging");
-        add(canvas);
+        add(canvas.panel());
 
         RBFInterpolation rbf = new RBFInterpolation(p, q, new GaussianRadialBasis(0.25));
         double[][] vv = new double[26][26];
@@ -121,9 +121,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(vv, Palette.jet(256));
+        canvas = Heatmap.of(vv, Palette.jet(256)).canvas();
         canvas.setTitle("RBF");
-        add(canvas);
+        add(canvas.panel());
 
         ShepardInterpolation shepard = new ShepardInterpolation(p, q, 3);
         double[][] rr = new double[26][26];
@@ -136,9 +136,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(rr, Palette.jet(256));
+        canvas = Heatmap.of(rr, Palette.jet(256)).canvas();
         canvas.setTitle("Shepard");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

@@ -27,7 +27,7 @@ import javax.swing.JTextField;
 
 import smile.math.MathEx;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.clustering.CLARANS;
 import smile.plot.swing.ScatterPlot;
 
@@ -80,21 +80,9 @@ public class CLARANSDemo extends ClusteringDemo {
         CLARANS<double[]> clarans = CLARANS.fit(dataset[datasetIndex], MathEx::distance, clusterNumber, maxNeighbor);
         System.out.format("CLARANS clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(clarans.centroids, '@');
-        for (int k = 0; k < clusterNumber; k++) {
-            if (clarans.size[k] > 0) {
-                double[][] cluster = new double[clarans.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (clarans.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
-        plot.points(clarans.centroids, '@');
-        return plot;
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], clarans.y).canvas();
+        plot.add(ScatterPlot.of(clarans.centroids, '@'));
+        return plot.panel();
     }
 
     @Override

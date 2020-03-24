@@ -47,7 +47,7 @@ class BaseLabel extends Label {
         Color c = g.getColor();
         g.setColor(color);
 
-        g.drawTextBaseRatio(text, horizontalReference, verticalReference, rotation, coordinates);
+        g.drawTextBaseRatio(text, coordinates, horizontalReference, verticalReference, rotation);
 
         g.setColor(c);
         g.setFont(f);

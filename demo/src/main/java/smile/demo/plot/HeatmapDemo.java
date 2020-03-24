@@ -24,7 +24,7 @@ import javax.swing.JPanel;
 import smile.plot.swing.Contour;
 import smile.plot.swing.Heatmap;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -52,34 +52,34 @@ public class HeatmapDemo extends JPanel {
                 z[i][j] = x[j] * Math.exp(-x[j]*x[j] - y[i]*y[i]);
         }
 
-        PlotCanvas canvas = Heatmap.plot(z, Palette.jet(256));
-        canvas.add(new Contour(z));
+        Canvas canvas = Heatmap.of(z, Palette.jet(256)).canvas();
+        canvas.add(Contour.of(z));
         canvas.setTitle("jet");
-        add(canvas);
-        canvas = Heatmap.plot(x, y, z, Palette.redblue(256));
-        canvas.add(new Contour(x, y, z));
+        add(canvas.panel());
+        canvas = new Heatmap(x, y, z, Palette.redblue(256)).canvas();
+        canvas.add(Contour.of(x, y, z));
         canvas.setTitle("redblue");
-        add(canvas);
-        canvas = Heatmap.plot(z, Palette.redgreen(256));
-        canvas.add(new Contour(z));
+        add(canvas.panel());
+        canvas = Heatmap.of(z, Palette.redgreen(256)).canvas();
+        canvas.add(Contour.of(z));
         canvas.setTitle("redgreen");
-        add(canvas);
-        canvas = Heatmap.plot(x, y, z, Palette.heat(256));
-        canvas.add(new Contour(x, y, z));
+        add(canvas.panel());
+        canvas = new Heatmap(x, y, z, Palette.heat(256)).canvas();
+        canvas.add(Contour.of(x, y, z));
         canvas.setTitle("heat");
-        add(canvas);
-        canvas = Heatmap.plot(z, Palette.terrain(256));
-        canvas.add(new Contour(z));
+        add(canvas.panel());
+        canvas = Heatmap.of(z, Palette.terrain(256)).canvas();
+        canvas.add(Contour.of(z));
         canvas.setTitle("terrain");
-        add(canvas);
-        canvas = Heatmap.plot(x, y, z, Palette.rainbow(256));
-        canvas.add(new Contour(x, y, z));
+        add(canvas.panel());
+        canvas = new Heatmap(x, y, z, Palette.rainbow(256)).canvas();
+        canvas.add(Contour.of(x, y, z));
         canvas.setTitle("rainbow");
-        add(canvas);
-        canvas = Heatmap.plot(z, Palette.topo(256));
-        canvas.add(new Contour(z));
+        add(canvas.panel());
+        canvas = Heatmap.of(z, Palette.topo(256)).canvas();
+        canvas.add(Contour.of(z));
         canvas.setTitle("topo");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

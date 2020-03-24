@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.BarPlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -41,9 +41,17 @@ public class BarPlotDemo extends JPanel {
             labels[j] = "V" + (j+1);
             data[j] = Math.random() - 0.5;
         }
-        PlotCanvas canvas = BarPlot.plot(data, labels);
+        Canvas canvas = BarPlot.of(data).canvas();
         canvas.setTitle(BAR_PLOT);
-        add(canvas);
+
+        int k = labels.length;
+        double[] locations = new double[k];
+        for (int i = 0; i < k; i++) {
+            locations[i] = i + 0.5;
+        }
+
+        canvas.getAxis(0).addLabel(labels, locations);
+        add(canvas.panel());
     }
 
     @Override

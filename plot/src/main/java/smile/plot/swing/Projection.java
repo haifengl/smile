@@ -24,13 +24,12 @@ package smile.plot.swing;
  * @author Haifeng Li
  */
 abstract class Projection {
-
     /**
      * The canvas associated with this projection. The base object of canvas
      * provides logical coordinate space and the Java2D coordinate space of
      * canvas is the projection target.
      */
-    protected Canvas canvas;
+    protected final Canvas canvas;
     /**
      * The base coordinates on Java2D screen.
      */
@@ -49,16 +48,19 @@ abstract class Projection {
      */
     public Projection(Canvas canvas) {
         this.canvas = canvas;
-        initBaseCoordsProjection();
+        init();
     }
 
     /**
      * Reset the base coordinates on Java2D screen.
      */
     public void reset() {
-        initBaseCoordsProjection();
+        init();
     }
 
+    /**
+     * Sets the size of physical plot area.
+     */
     public void setSize(int width, int height) {
         this.width = width;
         this.height = height;
@@ -67,12 +69,15 @@ abstract class Projection {
     /**
      * Initialize base coordinates on Java2D screen.
      */
-    private void initBaseCoordsProjection() {
-        baseScreenCoords = new int[canvas.base.baseCoords.length][2];
-        for (int i = 0; i < canvas.base.dimension + 1; i++) {
-            double[] ratio = baseCoordsScreenProjectionRatio(canvas.base.baseCoords[i]);
-            baseScreenCoords[i][0] = (int) (width * (canvas.margin + (1 - 2 * canvas.margin) * ratio[0]));
-            baseScreenCoords[i][1] = (int) (height - height * (canvas.margin + (1 - 2 * canvas.margin) * ratio[1]));
+    private void init() {
+        Base base = canvas.base;
+        double margin = canvas.margin;
+
+        baseScreenCoords = new int[base.baseCoords.length][2];
+        for (int i = 0; i < base.dimension + 1; i++) {
+            double[] ratio = baseCoordsScreenProjectionRatio(base.baseCoords[i]);
+            baseScreenCoords[i][0] = (int) (width * (margin + (1 - 2 * margin) * ratio[0]));
+            baseScreenCoords[i][1] = (int) (height - height * (margin + (1 - 2 * margin) * ratio[1]));
         }
     }
 
@@ -80,13 +85,15 @@ abstract class Projection {
      * Project logical coordinates to Java2D coordinates.
      */
     public int[] screenProjection(double... coord) {
+        Base base = canvas.base;
+
         double[] sc = new double[2];
         sc[0] = baseScreenCoords[0][0];
         sc[1] = baseScreenCoords[0][1];
 
-        for (int i = 0; i < canvas.base.dimension; i++) {
-            sc[0] += ((coord[i] - canvas.base.baseCoords[0][i]) / (canvas.base.baseCoords[i + 1][i] - canvas.base.baseCoords[0][i])) * (baseScreenCoords[i + 1][0] - baseScreenCoords[0][0]);
-            sc[1] += ((coord[i] - canvas.base.baseCoords[0][i]) / (canvas.base.baseCoords[i + 1][i] - canvas.base.baseCoords[0][i])) * (baseScreenCoords[i + 1][1] - baseScreenCoords[0][1]);
+        for (int i = 0; i < base.dimension; i++) {
+            sc[0] += ((coord[i] - base.baseCoords[0][i]) / (base.baseCoords[i + 1][i] - base.baseCoords[0][i])) * (baseScreenCoords[i + 1][0] - baseScreenCoords[0][0]);
+            sc[1] += ((coord[i] - base.baseCoords[0][i]) / (base.baseCoords[i + 1][i] - base.baseCoords[0][i])) * (baseScreenCoords[i + 1][1] - baseScreenCoords[0][1]);
         }
 
         return new int[]{(int) sc[0], (int) sc[1]};
@@ -96,11 +103,13 @@ abstract class Projection {
      * Project logical coordinates in base ratio to Java2D coordinates.
      */
     public int[] screenProjectionBaseRatio(double... coord) {
+        Base base = canvas.base;
+
         double[] sc = new double[2];
         sc[0] = baseScreenCoords[0][0];
         sc[1] = baseScreenCoords[0][1];
 
-        for (int i = 0; i < canvas.base.dimension; i++) {
+        for (int i = 0; i < base.dimension; i++) {
             sc[0] += coord[i] * (baseScreenCoords[i + 1][0] - baseScreenCoords[0][0]);
             sc[1] += coord[i] * (baseScreenCoords[i + 1][1] - baseScreenCoords[0][1]);
         }

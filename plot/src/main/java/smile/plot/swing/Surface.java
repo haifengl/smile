@@ -74,7 +74,7 @@ public class Surface extends Plot {
     }
 
     /**
-     * Constructor for irregular mesh grid.
+     * Constructor for irregular mesh surface.
      * @param data an m x n x 3 array which are coordinates of m x n surface.
      */
     public Surface(double[][][] data, Color[] palette) {
@@ -130,16 +130,16 @@ public class Surface extends Plot {
     @Override
     public double[] getLowerBound() {
         double[] bound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] < bound[0]) {
-                    bound[0] = data[i][j][0];
+        for (double[][] row : data) {
+            for (double[] x : row) {
+                if (x[0] < bound[0]) {
+                    bound[0] = x[0];
                 }
-                if (data[i][j][1] < bound[1]) {
-                    bound[1] = data[i][j][1];
+                if (x[1] < bound[1]) {
+                    bound[1] = x[1];
                 }
-                if (data[i][j][2] < bound[2]) {
-                    bound[2] = data[i][j][2];
+                if (x[2] < bound[2]) {
+                    bound[2] = x[2];
                 }
             }
         }
@@ -150,16 +150,16 @@ public class Surface extends Plot {
     @Override
     public double[] getUpperBound() {
         double[] bound = {data[0][0][0], data[0][0][1], data[0][0][2]};
-        for (int i = 0; i < data.length; i++) {
-            for (int j = 0; j < data[i].length; j++) {
-                if (data[i][j][0] > bound[0]) {
-                    bound[0] = data[i][j][0];
+        for (double[][] row : data) {
+            for (double[] x : row) {
+                if (x[0] > bound[0]) {
+                    bound[0] = x[0];
                 }
-                if (data[i][j][1] > bound[1]) {
-                    bound[1] = data[i][j][1];
+                if (x[1] > bound[1]) {
+                    bound[1] = x[1];
                 }
-                if (data[i][j][2] > bound[2]) {
-                    bound[2] = data[i][j][2];
+                if (x[2] > bound[2]) {
+                    bound[2] = x[2];
                 }
             }
         }
@@ -169,7 +169,6 @@ public class Surface extends Plot {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
         for (int i = 0; i < data.length; i++) {
@@ -231,21 +230,20 @@ public class Surface extends Plot {
                 g.fillPolygon(data[triangles[i][0]][triangles[i][1]], data[triangles[i][2]][triangles[i][3]], data[triangles[i][4]][triangles[i][5]]);
             }
         }
-        
-        g.setColor(c);
     }
 
     /**
-     * Creates a regular mesh grid.
+     * Creates a regular mesh surface with the jet color palette.
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
+     * @param k the number of colors in the palette.
      */
-    public static Surface of(double[][] z) {
-        return of(z, null);
+    public static Surface of(double[][] z, int k) {
+        return of(z, Palette.jet(k, 1.0f));
     }
 
     /**
-     * Creates a regular mesh grid.
+     * Creates a regular mesh surface.
      * @param z the z-axis values of surface. The x-axis and y-axis location of
      * surface will be set to 0.5, 1.5, 2.5, ...
      * @param palette the color palette.
@@ -266,7 +264,7 @@ public class Surface extends Plot {
     }
 
     /**
-     * Creates a regular mesh grid.
+     * Creates an irregular mesh grid.
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.
@@ -276,7 +274,17 @@ public class Surface extends Plot {
     }
 
     /**
-     * Creates a regular mesh grid.
+     * Creates an irregular mesh surface with the jet color palette.
+     * @param x the x-axis values of surface.
+     * @param y the y-axis values of surface.
+     * @param z the z-axis values of surface.
+     */
+    public static Surface of(double[] x, double[] y, double[][] z, int k) {
+        return of(x, y, z, Palette.jet(k, 1.0f));
+    }
+
+    /**
+     * Creates an irregular mesh surface.
      * @param x the x-axis values of surface.
      * @param y the y-axis values of surface.
      * @param z the z-axis values of surface.

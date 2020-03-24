@@ -33,7 +33,8 @@ import smile.vq.SOM;
 import smile.math.MathEx;
 import smile.plot.swing.Hexmap;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.Grid;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -87,10 +88,11 @@ public class SOMDemo  extends VQDemo {
                 Neighborhood.Gaussian(neighborhood, dataset[datasetIndex].length * epochs / 4));
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.grid(som.neurons());
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
+        plot.add(Grid.of(som.neurons()));
         plot.setTitle("SOM");
-        pane.add(plot);
+        JPanel panel = plot.panel();
+        pane.add(panel);
 
         int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
@@ -106,10 +108,10 @@ public class SOMDemo  extends VQDemo {
 
                     if (++k % period == 0) {
                         plot.clear();
-                        plot.points(dataset[datasetIndex], pointLegend);
-                        plot.grid(som.neurons());
+                        plot.add(ScatterPlot.of(dataset[datasetIndex], pointLegend));
+                        plot.add(Grid.of(som.neurons()));
                         plot.setTitle("SOM");
-                        plot.repaint();
+                        pane.repaint();
 
                         try {
                             Thread.sleep(100);
@@ -122,9 +124,9 @@ public class SOMDemo  extends VQDemo {
             }
 
             double[][] umatrix = som.umatrix();
-            PlotCanvas umatrixPlot = Hexmap.plot(umatrix, Palette.jet(256));
+            Canvas umatrixPlot = Hexmap.of(umatrix, Palette.jet(256)).canvas();
             umatrixPlot.setTitle("U-Matrix");
-            pane.add(umatrixPlot);
+            pane.add(umatrixPlot.panel());
             pane.invalidate();
         });
         thread.start();

@@ -25,7 +25,7 @@ import javax.swing.JPanel;
 
 import smile.math.MathEx;
 import smile.plot.swing.Histogram;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -49,9 +49,9 @@ public class HistogramDemo extends JPanel {
             data[j] = 0.01 * x * z;
         }
 
-        PlotCanvas canvas = Histogram.plot("Dataset 1", data, smile.math.Histogram.breaks(-6/100., 6/100., 30));
+        Canvas canvas = Histogram.of(data, smile.math.Histogram.breaks(-6/100., 6/100., 30), false, Color.BLUE).canvas();
         canvas.setTitle("Overlapped Histogram");
-        add(canvas);
+        add(canvas.panel());
 
         data = new double[1000];
         for (int j = 0; j < data.length; j++) {
@@ -66,14 +66,14 @@ public class HistogramDemo extends JPanel {
             data[j] = 0.01 *( 2 + x * z);
         }
 
-        canvas.histogram("Dataset 2", data, smile.math.Histogram.breaks(-6/100., 6/100., 30), Color.RED);
+        canvas.add(Histogram.of(data, smile.math.Histogram.breaks(-6/100., 6/100., 30), false, Color.RED));
 
         double[] prob = {0.2, 0.3, 0.1, 0.05, 0.2, 0.15};
         int[] data2 = MathEx.random(prob, 1000);
 
-        canvas = Histogram.plot(data2, 6);
+        canvas = Histogram.of(data2, 6, true, Color.BLUE).canvas();
         canvas.setTitle("Sampling with Uneuqal Probabilities");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

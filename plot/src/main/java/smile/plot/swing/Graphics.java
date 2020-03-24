@@ -192,7 +192,7 @@ public class Graphics {
      * are logical coordinates.
      */
     public void drawText(String label, double[] coord) {
-        drawText(label, 0.5, 0.5, 0.0, coord);
+        drawText(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -200,16 +200,16 @@ public class Graphics {
      * of string. The coordinates are logical coordinates. The angle of rotation
      * is in radians.
      */
-    public void drawText(String label, double rotation, double[] coord) {
-        drawText(label, 0.5, 0.5, rotation, coord);
+    public void drawText(String label, double[] coord, double rotation) {
+        drawText(label, coord, 0.5, 0.5, rotation);
     }
 
     /**
      * Draw a string with given reference point. (0.5, 0.5) is center, (0, 0) is
      * lower left, (0, 1) is upper left, etc. The coordinates are logical coordinates.
      */
-    public void drawText(String label, double horizontalReference, double verticalReference, double[] coord) {
-        drawText(label, horizontalReference, verticalReference, 0.0, coord);
+    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference) {
+        drawText(label, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
@@ -217,7 +217,7 @@ public class Graphics {
      * is center, (0, 0) is lower left, (0, 1) is upper left, etc. The angle of
      * rotation is in radians. The coordinates are logical coordinates.
      */
-    public void drawText(String label, double horizontalReference, double verticalReference, double rotation, double[] coord) {
+    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjection(coord);
         int x = sc[0];
         int y = sc[1];
@@ -247,7 +247,7 @@ public class Graphics {
      * of string. The logical coordinates are proportional to the base coordinates.
      */
     public void drawTextBaseRatio(String label, double[] coord) {
-        drawTextBaseRatio(label, 0.5, 0.5, 0.0, coord);
+        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -255,8 +255,8 @@ public class Graphics {
      * of string. The angle of rotation is in radians. The logical coordinates
      * are proportional to the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double rotation, double[] coord) {
-        drawTextBaseRatio(label, 0.5, 0.5, 0.0, coord);
+    public void drawTextBaseRatio(String label, double[] coord, double rotation) {
+        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -264,8 +264,8 @@ public class Graphics {
      * lower left, (0, 1) is upper left, etc. The logical coordinates are
      * proportional to the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double horizontalReference, double verticalReference, double[] coord) {
-        drawTextBaseRatio(label, horizontalReference, verticalReference, 0.0, coord);
+    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference) {
+        drawTextBaseRatio(label, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
@@ -274,7 +274,7 @@ public class Graphics {
      * The angle of rotation is in radians. The logical  are proportional to
      * the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double horizontalReference, double verticalReference, double rotation, double[] coord) {
+    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjectionBaseRatio(coord);
         int x = sc[0];
         int y = sc[1];

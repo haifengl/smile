@@ -26,7 +26,7 @@ import java.awt.Stroke;
  *
  * @author Haifeng Li
  */
-public class Line extends NamedShape {
+public class Line extends Shape {
     /**
      * The supported styles of lines.
      */
@@ -98,11 +98,10 @@ public class Line extends NamedShape {
      * <li> Q : large solid square
      * <li> others : dot
      * </ul>
-     * @param color the color of points.
-     * @param name the optional name.
+     * @param color the color of line.
      */
-    public Line(double[][] points, Style style, char mark, Color color, String name) {
-        super(name, color);
+    public Line(double[][] points, Style style, char mark, Color color) {
+        super(color);
         this.points = points;
         this.style = style;
         this.mark = mark;
@@ -130,7 +129,6 @@ public class Line extends NamedShape {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
         Stroke s = g.getStroke();
@@ -145,7 +143,6 @@ public class Line extends NamedShape {
         }
 
         g.setStroke(s);
-        g.setColor(c);
     }
 
     /**
@@ -168,13 +165,34 @@ public class Line extends NamedShape {
      * Creates a Line with solid stroke and black color.
      */
     public static Line of(double[][] points) {
-        return new Line(points, Style.SOLID, ' ', Color.BLACK, null);
+        return new Line(points, Style.SOLID, ' ', Color.BLACK);
     }
 
     /**
-     * Creates a Line with solid stroke and black color.
+     * Creates a Line.
      */
-    public static Line of(double[][] points, Style style, char mark, Color color) {
-        return new Line(points, style, mark, color, null);
+    public static Line of(double[][] points, Style style) {
+        return new Line(points, style, ' ', Color.BLACK);
+    }
+
+    /**
+     * Creates a Line.
+     */
+    public static Line of(double[][] points, char mark) {
+        return new Line(points, Style.SOLID, mark, Color.BLACK);
+    }
+
+    /**
+     * Creates a Line.
+     */
+    public static Line of(double[][] points, Color color) {
+        return new Line(points, Style.SOLID, ' ', color);
+    }
+
+    /**
+     * Creates a Line.
+     */
+    public static Line of(double[][] points, Style style, Color color) {
+        return new Line(points, style, ' ', color);
     }
 }

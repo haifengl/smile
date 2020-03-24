@@ -22,7 +22,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.math.matrix.SparseMatrix;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.SparseMatrixPlot;
 
 /**
@@ -36,14 +36,14 @@ public class SparseMatrixPlotDemo extends JPanel {
 
         try {
             SparseMatrix m1 = SparseMatrix.text(smile.util.Paths.getTestData("matrix/08blocks.txt"));
-            PlotCanvas canvas = SparseMatrixPlot.plot(m1);
+            Canvas canvas = SparseMatrixPlot.of(m1).canvas();
             canvas.setTitle("08blocks");
-            add(canvas);
+            add(canvas.panel());
 
             SparseMatrix m2 = SparseMatrix.text(smile.util.Paths.getTestData("matrix/mesh2em5.txt"));
-            canvas = SparseMatrixPlot.plot(m2, Palette.jet(256));
+            canvas = new SparseMatrixPlot(m2, Palette.jet(256)).canvas();
             canvas.setTitle("mesh2em5");
-            add(canvas);
+            add(canvas.panel());
         } catch (Exception ex) {
             System.err.println(ex);
             ex.printStackTrace();

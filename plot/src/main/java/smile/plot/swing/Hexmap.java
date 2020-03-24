@@ -28,14 +28,20 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Hexmap extends Plot {
+    /** The lambda interface to retrieve the tooltip of cell. */
+    public interface Tooltip {
+        /** Gets the tooltip of cell at (i, j). */
+        String get(int i, int j);
+    }
+
     /**
      * The two-dimensional data matrix.
      */
     private double[][] z;
     /**
-     * Descriptions for each cell in data matrix.
+     * Tooltip lambda.
      */
-    private String[][] labels;
+    private Tooltip tooltip;
     /**
      * The coordinates of hexagons for each cell in data matrix.
      */
@@ -58,61 +64,16 @@ public class Hexmap extends Plot {
     private Color[] palette;
 
     /**
-     * Constructor. Use 16-color jet color palette.
-     * @param z a data matrix to be shown in hexmap.
-     */
-    public Hexmap(double[][] z) {
-        this(z, 16);
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param z a data matrix to be shown in hexmap.
-     * @param k the number of colors in the palette.
-     */
-    public Hexmap(double[][] z, int k) {
-        this(z, Palette.jet(k, 1.0f));
-    }
-
-    /**
      * Constructor.
      * @param z a data matrix to be shown in hexmap.
      * @param palette the color palette.
+     * @param tooltip the lambda to return the description of cells.
      */
-    public Hexmap(double[][] z, Color[] palette) {
-        this(null, z, palette);
-    }
-    
-    /**
-     * Constructor. Use 16-color jet color palette.
-     * @param labels the descriptions of each cell in the data matrix.
-     * @param z a data matrix to be shown in hexmap.
-     */
-    public Hexmap(String[][] labels, double[][] z) {
-        this(labels, z, 16);
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param labels the descriptions of each cell in the data matrix.
-     * @param z a data matrix to be shown in hexmap.
-     * @param k the number of colors in the palette.
-     */
-    public Hexmap(String[][] labels, double[][] z, int k) {
-        this(labels, z, Palette.jet(k, 1.0f));
-    }
-
-    /**
-     * Constructor.
-     * @param labels the descriptions of each cell in the data matrix.
-     * @param z a data matrix to be shown in hexmap.
-     * @param palette the color palette.
-     */
-    public Hexmap(String[][] labels, double[][] z, Color[] palette) {
-        this.labels = labels;
+    public Hexmap(double[][] z, Color[] palette, Tooltip tooltip) {
         this.z = z;
         this.palette = palette;
-        
+        this.tooltip = tooltip;
+
         double s = Math.sqrt(0.75);
         hexagon = new double[z.length][z[0].length][6][2];
         for (int i = 0; i < z.length; i++) {
@@ -148,11 +109,9 @@ public class Hexmap extends Plot {
     }
 
     @Override
-    public Optional<String> getToolTip(double[] coord) {
-        if (labels == null) {
-            return Optional.empty();
-        }
-        
+    public Optional<String> tooltip(double[] coord) {
+        if (tooltip == null) return Optional.empty();
+
         if (coord[0] < -0.5 || coord[0] > z[0].length || coord[1] < 0.36 || coord[1] > z.length * 0.87 + 0.5) {
             return Optional.empty();
         }
@@ -165,7 +124,7 @@ public class Hexmap extends Plot {
                 int yj = y + j;
                 if (xi >= 0 && xi < hexagon[0].length && yj >= 0 && yj < hexagon.length) {
                     if (MathEx.contains(hexagon[yj][xi], coord)) {
-                        return Optional.of(labels[yj][xi]);
+                        return Optional.of(tooltip.get(yj, xi));
                     }
                 }
             }
@@ -173,11 +132,21 @@ public class Hexmap extends Plot {
 
         return Optional.empty();
     }
-    
+
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {-0.5, 0.36};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {z[0].length, z.length * 0.87 + 0.5};
+        return bound;
+    }
+
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-
         for (int i = 0; i < z.length; i++) {
             for (int j = 0; j < z[i].length; j++) {
                 if (Double.isNaN(z[i][j])) {
@@ -225,26 +194,19 @@ public class Hexmap extends Plot {
         double log = Math.log10(Math.abs(max));
         int decimal = 1;
         if (log < 0) decimal = (int) -log + 1;
-        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), start,0.0, 1.0);
 
         start[1] = 0.15 - height;
         log = Math.log10(Math.abs(min));
         decimal = 1;
         if (log < 0) decimal = (int) -log + 1;
-        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
-
-        g.setColor(c);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), start,0.0, 0.0);
     }
 
-    /**
-     * Create a plot canvas with the pseudo hexmap plot of given data.
-     * @param data a data matrix to be shown in hexmap.
-     */
-    public static PlotCanvas plot(double[][] data) {
-        double[] lowerBound = {-0.5, 0.36};
-        double[] upperBound = {data[0].length, data.length * 0.87 + 0.5};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Hexmap(data));
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+        canvas.add(this);
 
         canvas.getAxis(0).setFrameVisible(false);
         canvas.getAxis(0).setLabelVisible(false);
@@ -257,66 +219,28 @@ public class Hexmap extends Plot {
     }
 
     /**
-     * Create a plot canvas with the pseudo hexmap plot of given data.
-     * @param data a data matrix to be shown in hexmap.
+     * Creates a hexmap with 16-color jet color palette.
+     * @param z a data matrix to be shown in hexmap.
+     */
+    public static Hexmap of(double[][] z) {
+        return of(z, 16);
+    }
+
+    /**
+     * Creates a hexmap with the jet color palette.
+     * @param z a data matrix to be shown in hexmap.
+     * @param k the number of colors in the palette.
+     */
+    public static Hexmap  of(double[][] z, int k) {
+        return of(z, Palette.jet(k, 1.0f));
+    }
+
+    /**
+     * Constructor.
+     * @param z a data matrix to be shown in hexmap.
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[][] data, Color[] palette) {
-        double[] lowerBound = {-0.5, 0.36};
-        double[] upperBound = {data[0].length, data.length * 0.87 + 0.5};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Hexmap(data, palette));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the pseudo hexmap plot of given data.
-     * @param labels the descriptions of each cell in the data matrix.
-     * @param data a data matrix to be shown in hexmap.
-     */
-    public static PlotCanvas plot(String[][] labels, double[][] data) {
-        double[] lowerBound = {-0.5, 0.36};
-        double[] upperBound = {data[0].length, data.length * 0.87 + 0.5};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Hexmap(labels, data));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the pseudo hexmap plot of given data.
-     * @param labels the descriptions of each cell in the data matrix.
-     * @param data a data matrix to be shown in hexmap.
-     * @param palette the color palette.
-     */
-    public static PlotCanvas plot(String[][] labels, double[][] data, Color[] palette) {
-        double[] lowerBound = {-0.5, 0.36};
-        double[] upperBound = {data[0].length, data.length * 0.87 + 0.5};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Hexmap(labels, data, palette));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
+    public static Hexmap of(double[][] z, Color[] palette) {
+        return new Hexmap(z, palette, null);
     }
 }

@@ -22,7 +22,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.StaircasePlot;
 
 /**
@@ -40,9 +40,9 @@ public class StaircasePlotDemo extends JPanel {
             data[j][1] = Math.random();
         }
 
-        PlotCanvas canvas = StaircasePlot.plot("Staircase Plot", data);
+        Canvas canvas = StaircasePlot.of(data).canvas();
         canvas.setTitle("Staircase Plot");
-        add(canvas);
+        add(canvas.panel());
     }
     
     @Override

@@ -26,7 +26,7 @@ import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.LaplaceInterpolation;
 import smile.plot.swing.Heatmap;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -55,9 +55,9 @@ public class LaplaceInterpolationDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Heatmap.plot(yy, Palette.jet(256));
+        Canvas canvas = Heatmap.of(yy, Palette.jet(256)).canvas();
         canvas.setTitle("Original");
-        add(canvas);
+        add(canvas.panel());
 
         double[][] zz = new double[101][101];
         double[][] ww = new double[101][101];
@@ -72,14 +72,14 @@ public class LaplaceInterpolationDemo extends JPanel {
             }
         }
 
-        canvas = Heatmap.plot(ww, Palette.jet(256));
+        canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
         canvas.setTitle("Missing Values");
-        add(canvas);
+        add(canvas.panel());
 
         LaplaceInterpolation.interpolate(zz);
-        canvas = Heatmap.plot(zz, Palette.jet(256));
+        canvas = Heatmap.of(zz, Palette.jet(256)).canvas();
         canvas.setTitle("Laplace");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

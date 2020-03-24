@@ -28,7 +28,7 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.math.MathEx;
 import smile.plot.swing.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
@@ -40,7 +40,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
 @SuppressWarnings("serial")
 public class MultivariateGaussianDistributionDemo extends JPanel implements ChangeListener {
     private JPanel optionPane;
-    private PlotCanvas pdf;
+    private Canvas pdf;
     private JSlider sigma1Slider;
     private JSlider sigma2Slider;
     private double[] mu = {0.0, 0.0};
@@ -93,9 +93,9 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
             }
         }
 
-        pdf = Surface.plot(z);
+        pdf = new Surface(z).canvas();
         pdf.setTitle("Multivariate Gaussian");
-        add(pdf, BorderLayout.CENTER);
+        add(pdf.panel(), BorderLayout.CENTER);
     }
 
     @Override
@@ -117,7 +117,10 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
                 }
             }
 
-            pdf.repaint();
+            pdf = new Surface(z).canvas();
+            pdf.setTitle("Multivariate Gaussian");
+            add(pdf.panel(), BorderLayout.CENTER);
+            repaint();
         }
     }
 

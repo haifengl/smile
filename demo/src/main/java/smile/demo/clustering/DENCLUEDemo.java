@@ -18,18 +18,15 @@
 package smile.demo.clustering;
 
 import java.awt.Dimension;
-import java.awt.GridLayout;
 
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.clustering.DENCLUE;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -84,22 +81,9 @@ public class DENCLUEDemo  extends ClusteringDemo {
         System.out.format("DENCLUE clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
         System.out.println(denclue);
 
-        JPanel pane = new JPanel(new GridLayout(1, 2));
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int l = 0; l < denclue.k; l++) {
-                double[][] cluster = new double[denclue.size[l]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (denclue.y[i] == l) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[l % Palette.COLORS.length]);
-        }
-        plot.points(denclue.attractors, '@');
-        pane.add(plot);
-
-        return pane;
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], denclue.y).canvas();
+        plot.add(ScatterPlot.of(denclue.attractors, '@'));
+        return plot.panel();
     }
 
     @Override

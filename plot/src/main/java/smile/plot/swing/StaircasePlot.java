@@ -18,6 +18,7 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -29,61 +30,91 @@ import smile.math.MathEx;
 public class StaircasePlot extends Plot {
 
     /**
-     * The coordinates of points.
+     * The set of lines which may have different stroke, marks, and/or colors.
      */
-    private double[][] data;
+    final Staircase[] lines;
+    /**
+     * The legends of each line.
+     */
+    final Optional<Legend[]> legends;
 
     /**
      * Constructor.
      */
-    public StaircasePlot(double[][] data, Color color) {
-        super(color);
-        this.data = data;
+    public StaircasePlot(Staircase... lines) {
+        this.lines = lines;
+        legends = Optional.empty();
+    }
+
+    /**
+     * Constructor.
+     */
+    public StaircasePlot(Staircase[] lines, Legend[] legends) {
+        this.lines = lines;
+        this.legends = Optional.of(legends);
+    }
+
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+        canvas.base.extendBound(1);
+        canvas.add(this);
+        return canvas;
     }
 
     @Override
     public double[] getLowerBound() {
-        return MathEx.colMin(data);
+        double[] bound = MathEx.colMin(lines[0].points);
+        for (int k = 1; k < lines.length; k++) {
+            for (double[] x : lines[k].points) {
+                for (int i = 0; i < x.length; i++) {
+                    if (bound[i] > x[i]) {
+                        bound[i] = x[i];
+                    }
+                }
+            }
+        }
+
+        return bound;
     }
 
     @Override
     public double[] getUpperBound() {
-        return MathEx.colMax(data);
+        double[] bound = MathEx.colMax(lines[0].points);
+        for (int k = 1; k < lines.length; k++) {
+            for (double[] x : lines[k].points) {
+                for (int i = 0; i < x.length; i++) {
+                    if (bound[i] < x[i]) {
+                        bound[i] = x[i];
+                    }
+                }
+            }
+        }
+
+        return bound;
     }
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(color);
-
-        double[] begin = new double[data[0].length];
-        double[] end = new double[data[0].length];
-
-        for (int i = 0; i < data.length - 1; i++) {
-            for (int j = 0; j < data[0].length; j++) {
-                begin[j] = data[i][j];
-                end[j] = data[i+1][j];
-            }
-            end[end.length - 1] = data[i][end.length - 1];
-            g.drawLine(begin, end);
+        for (Staircase line : lines) {
+            line.paint(g);
         }
-
-        for (int i = 1; i < data.length - 1; i++) {
-            for (int j = 0; j < data[0].length; j++) {
-                begin[j] = data[i][j];
-                end[j] = data[i][j];
-            }
-            begin[end.length - 1] = data[i-1][end.length - 1];
-            g.drawLine(begin, end);
-        }
-
-        g.setColor(c);
     }
 
     /**
-     * Creates a staircase plot.
+     * Creates a line plot.
      */
     public static StaircasePlot of(double[][] data) {
-        return new StaircasePlot(data, Color.BLACK);
+        return new StaircasePlot(Staircase.of(data));
+    }
+
+
+    /**
+     * Creates a line plot.
+     */
+    public static StaircasePlot of(double[][] data, Color color, String label) {
+        Staircase[] line = {new Staircase(data, color)};
+        Legend[] legend = {new Legend(label, color)};
+        return new StaircasePlot(line, legend);
     }
 }

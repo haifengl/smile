@@ -24,10 +24,12 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+
+import smile.plot.swing.Canvas;
+import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.ScreePlot;
+import smile.plot.swing.TextPlot;
 import smile.projection.PCA;
-import smile.math.MathEx;
 
 /**
  *
@@ -56,26 +58,24 @@ public class PCADemo extends ProjectionDemo {
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        PlotCanvas scree = PlotCanvas.screeplot(pca);
+        Canvas scree = new ScreePlot(pca).canvas();
         scree.setTitle("Variance");
-        pane.add(scree);
+        pane.add(scree.panel());
 
         pca.setProjection(3);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
+        Canvas plot;
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("Scatter Plot");
-        pane.add(plot);
+        pane.add(plot.panel());
         return pane;
     }
 

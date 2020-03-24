@@ -287,7 +287,7 @@ public class PlotPanel extends JPanel {
                     for (Shape shape : canvas.shapes) {
                         if (shape instanceof Plot) {
                             Plot plot = (Plot) shape;
-                            Optional<String> s = plot.getToolTip(sc);
+                            Optional<String> s = plot.tooltip(sc);
                             if (s.isPresent()) {
                                 if (tooltip == null) {
                                     tooltip = s.get();
@@ -492,7 +492,7 @@ public class PlotPanel extends JPanel {
     private class SaveAction extends AbstractAction {
 
         public SaveAction() {
-            super("Save", new ImageIcon(PlotCanvas.class.getResource("images/save16.png")));
+            super("Save", new ImageIcon(PlotPanel.class.getResource("images/save16.png")));
         }
 
         @Override
@@ -508,7 +508,7 @@ public class PlotPanel extends JPanel {
     private class PrintAction extends AbstractAction {
 
         public PrintAction() {
-            super("Print", new ImageIcon(PlotCanvas.class.getResource("images/print16.png")));
+            super("Print", new ImageIcon(PlotPanel.class.getResource("images/print16.png")));
         }
 
         @Override
@@ -520,7 +520,7 @@ public class PlotPanel extends JPanel {
     private class ZoomInAction extends AbstractAction {
 
         public ZoomInAction() {
-            super("Zoom In", new ImageIcon(PlotCanvas.class.getResource("images/zoom-in16.png")));
+            super("Zoom In", new ImageIcon(PlotPanel.class.getResource("images/zoom-in16.png")));
         }
 
         @Override
@@ -532,7 +532,7 @@ public class PlotPanel extends JPanel {
     private class ZoomOutAction extends AbstractAction {
 
         public ZoomOutAction() {
-            super("Zoom Out", new ImageIcon(PlotCanvas.class.getResource("images/zoom-out16.png")));
+            super("Zoom Out", new ImageIcon(PlotPanel.class.getResource("images/zoom-out16.png")));
         }
 
         @Override
@@ -544,7 +544,7 @@ public class PlotPanel extends JPanel {
     private class ResetAction extends AbstractAction {
 
         public ResetAction() {
-            super("Reset", new ImageIcon(PlotCanvas.class.getResource("images/refresh16.png")));
+            super("Reset", new ImageIcon(PlotPanel.class.getResource("images/refresh16.png")));
         }
 
         @Override
@@ -556,7 +556,7 @@ public class PlotPanel extends JPanel {
     private class EnlargePlotAreaAction extends AbstractAction {
 
         public EnlargePlotAreaAction() {
-            super("Enlarge", new ImageIcon(PlotCanvas.class.getResource("images/resize-larger16.png")));
+            super("Enlarge", new ImageIcon(PlotPanel.class.getResource("images/resize-larger16.png")));
         }
 
         @Override
@@ -580,7 +580,7 @@ public class PlotPanel extends JPanel {
     private class ShrinkPlotAreaAction extends AbstractAction {
 
         public ShrinkPlotAreaAction() {
-            super("Shrink", new ImageIcon(PlotCanvas.class.getResource("images/resize-smaller16.png")));
+            super("Shrink", new ImageIcon(PlotPanel.class.getResource("images/resize-smaller16.png")));
         }
 
         @Override
@@ -604,7 +604,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseWidthAction extends AbstractAction {
 
         public IncreaseWidthAction() {
-            super("Increase Width", new ImageIcon(PlotCanvas.class.getResource("images/increase-width16.png")));
+            super("Increase Width", new ImageIcon(PlotPanel.class.getResource("images/increase-width16.png")));
         }
 
         @Override
@@ -624,7 +624,7 @@ public class PlotPanel extends JPanel {
     private class IncreaseHeightAction extends AbstractAction {
 
         public IncreaseHeightAction() {
-            super("Increase Height", new ImageIcon(PlotCanvas.class.getResource("images/increase-height16.png")));
+            super("Increase Height", new ImageIcon(PlotPanel.class.getResource("images/increase-height16.png")));
         }
 
         @Override
@@ -644,7 +644,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseWidthAction extends AbstractAction {
 
         public DecreaseWidthAction() {
-            super("Decrease Width", new ImageIcon(PlotCanvas.class.getResource("images/decrease-width16.png")));
+            super("Decrease Width", new ImageIcon(PlotPanel.class.getResource("images/decrease-width16.png")));
         }
 
         @Override
@@ -667,7 +667,7 @@ public class PlotPanel extends JPanel {
     private class DecreaseHeightAction extends AbstractAction {
 
         public DecreaseHeightAction() {
-            super("Decrease Height", new ImageIcon(PlotCanvas.class.getResource("images/decrease-height16.png")));
+            super("Decrease Height", new ImageIcon(PlotPanel.class.getResource("images/decrease-height16.png")));
         }
 
         @Override
@@ -690,14 +690,13 @@ public class PlotPanel extends JPanel {
     private class PropertyAction extends AbstractAction {
 
         public PropertyAction() {
-            super("Properties", new ImageIcon(PlotCanvas.class.getResource("images/property16.png")));
+            super("Properties", new ImageIcon(PlotPanel.class.getResource("images/property16.png")));
         }
 
         @Override
         public void actionPerformed(ActionEvent e) {
             JDialog dialog = createPropertyDialog();
             dialog.addWindowListener(new WindowAdapter() {
-
                 @Override
                 public void windowClosing(WindowEvent e) {
                 }
@@ -705,7 +704,6 @@ public class PlotPanel extends JPanel {
 
             dialog.setVisible(true);
             dialog.dispose();
-            dialog = null;
         }
     }
 

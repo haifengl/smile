@@ -141,7 +141,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
 
-        canvas = ScatterPlot.plot(dataset[datasetIndex], '.');
+        canvas = ScatterPlot.of(dataset[datasetIndex], '.').canvas().panel();
         add(canvas, BorderLayout.CENTER);
     }
 
@@ -222,7 +222,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
             } else {
                 pointLegend = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -240,7 +240,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
             } else {
                 pointLegend = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }

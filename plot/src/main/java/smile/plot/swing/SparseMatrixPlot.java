@@ -127,100 +127,52 @@ public class SparseMatrixPlot extends Plot {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-
         double[] start = new double[2];
         double[] end = new double[2];
 
-        if (palette != null) {
-            int m = sparse.nrows();
-            int n = sparse.ncols();
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    double z = sparse.get(i, j);
-                    if (z != 0.0 && !Double.isNaN(z)) {
-                        int k = (int) ((z - min) / width);
-                        
-                        if (k < 0) {
-                            k = 0;
-                        }
+        g.setColor(color);
+        for (SparseMatrix.Entry cell : sparse) {
+            int i = cell.i;
+            int j = cell.j;
+            double z = cell.x;
 
-                        if (k >= palette.length) {
-                            k = palette.length - 1;
-                        }
-                        
-                        g.setColor(palette[k]);
+            if (palette != null) {
+                int k = (int) ((z - min) / width);
 
-                        start[0] = x[j];
-                        if (j == 0) {
-                            start[0] -= Math.abs(x[j + 1] - x[j]) / 2;
-                        } else {
-                            start[0] -= Math.abs(x[j] - x[j - 1]) / 2;
-                        }
+                if (k < 0) k = 0;
+                if (k >= palette.length) k = palette.length - 1;
 
-                        start[1] = y[i];
-                        if (i == 0) {
-                            start[1] += Math.abs(y[i + 1] - y[i]) / 2;
-                        } else {
-                            start[1] += Math.abs(y[i] - y[i - 1]) / 2;
-                        }
-
-                        end[0] = x[j];
-                        if (j == x.length - 1) {
-                            end[0] += Math.abs(x[j] - x[j - 1]) / 2;
-                        } else {
-                            end[0] += Math.abs(x[j + 1] - x[j]) / 2;
-                        }
-
-                        end[1] = y[i];
-                        if (i == y.length - 1) {
-                            end[1] -= Math.abs(y[i] - y[i - 1]) / 2;
-                        } else {
-                            end[1] -= Math.abs(y[i + 1] - y[i]) / 2;
-                        }
-                        g.fillRect(start, end);
-                    }
-                }
+                g.setColor(palette[k]);
             }
-        } else {
-            g.setColor(color);
-            int m = sparse.nrows();
-            int n = sparse.ncols();
-            for (int i = 0; i < m; i++) {
-                for (int j = 0; j < n; j++) {
-                    double z = sparse.get(i, j);
-                    if (z != 0.0) {
-                        start[0] = x[j];
-                        if (j == 0) {
-                            start[0] -= Math.abs(x[j + 1] - x[j]) / 2;
-                        } else {
-                            start[0] -= Math.abs(x[j] - x[j - 1]) / 2;
-                        }
 
-                        start[1] = y[i];
-                        if (i == 0) {
-                            start[1] += Math.abs(y[i + 1] - y[i]) / 2;
-                        } else {
-                            start[1] += Math.abs(y[i] - y[i - 1]) / 2;
-                        }
-
-                        end[0] = x[j];
-                        if (j == x.length - 1) {
-                            end[0] += Math.abs(x[j] - x[j - 1]) / 2;
-                        } else {
-                            end[0] += Math.abs(x[j + 1] - x[j]) / 2;
-                        }
-
-                        end[1] = y[i];
-                        if (i == y.length - 1) {
-                            end[1] -= Math.abs(y[i] - y[i - 1]) / 2;
-                        } else {
-                            end[1] -= Math.abs(y[i + 1] - y[i]) / 2;
-                        }
-                        g.fillRect(start, end);
-                    }
-                }
+            start[0] = x[j];
+            if (j == 0) {
+                start[0] -= Math.abs(x[j + 1] - x[j]) / 2;
+            } else {
+                start[0] -= Math.abs(x[j] - x[j - 1]) / 2;
             }
+
+            start[1] = y[i];
+            if (i == 0) {
+                start[1] += Math.abs(y[i + 1] - y[i]) / 2;
+            } else {
+                start[1] += Math.abs(y[i] - y[i - 1]) / 2;
+            }
+
+            end[0] = x[j];
+            if (j == x.length - 1) {
+                end[0] += Math.abs(x[j] - x[j - 1]) / 2;
+            } else {
+                end[0] += Math.abs(x[j + 1] - x[j]) / 2;
+            }
+
+            end[1] = y[i];
+            if (i == y.length - 1) {
+                end[1] -= Math.abs(y[i] - y[i - 1]) / 2;
+            } else {
+                end[1] -= Math.abs(y[i + 1] - y[i]) / 2;
+            }
+            g.fillRect(start, end);
         }
 
         if (palette != null) {
@@ -249,7 +201,7 @@ public class SparseMatrixPlot extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), start, 0.0, 1.0);
 
             start[1] = 0.15 - height;
             log = Math.log10(Math.abs(min));
@@ -257,10 +209,8 @@ public class SparseMatrixPlot extends Plot {
             if (log < 0) {
                 decimal = (int) -log + 1;
             }
-            g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
+            g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), start, 0.0, 0.0);
         }
-
-        g.setColor(c);
     }
 
     @Override
@@ -286,7 +236,7 @@ public class SparseMatrixPlot extends Plot {
     }
 
     /**
-     * Creates a sparse matrix plot with Use jet color palette.
+     * Creates a sparse matrix plot with the jet color palette.
      * @param k the number of colors in the palette.
      */
     public static SparseMatrixPlot of(SparseMatrix sparse, int k) {

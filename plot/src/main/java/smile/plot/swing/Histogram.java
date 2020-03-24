@@ -17,8 +17,7 @@
 
 package smile.plot.swing;
 
-import java.util.Optional;
-import smile.math.MathEx;
+import java.awt.Color;
 
 /**
  * A histogram is a graphical display of tabulated frequencies, shown as bars.
@@ -30,190 +29,36 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class Histogram extends BarPlot {
+public class Histogram {
     /**
-     * If true, the y-axis will be in the probability scale.
-     * Otherwise, y-axis will be in the frequency scale.
-     */
-    private boolean prob;
-
-    /**
-     * Constructor. The number of bins will be determined by square-root rule
+     * Creates a histogram plot.
+     * The number of bins will be determined by square-root rule
      * and the y-axis will be in the probability scale.
      * @param data a sample set.
      */
-    public Histogram(int[] data) {
-        this(data, true);
+    public static BarPlot of(int[] data) {
+        return of(data, smile.math.Histogram.bins(data.length), true);
     }
 
     /**
-     * Constructor. The number of bins will be determined by square-root rule.
-     * @param data a sample set.
-     * @param prob if true, the y-axis will be in the probability scale.
-     * Otherwise, y-axis will be in the frequency scale.
-     */
-    public Histogram(int[] data, boolean prob) {
-        this(data, smile.math.Histogram.bins(data.length), prob);
-    }
-
-    /**
-     * Constructor. The number of bins will be determined by square-root rule
-     * and the y-axis will be in the probability scale.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram(int[] data, int k) {
-        this(data, k, true);
-    }
-
-    /**
-     * Constructor.
+     * Creates a histogram plot.
      * @param data a sample set.
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
      */
-    public Histogram(int[] data, int k, boolean prob) {
-        super(histogram(data, k, prob));
-        this.prob = prob;
+    public static BarPlot of(int[] data, int k, boolean prob) {
+        return of(data, k, prob, Color.BLUE);
     }
 
     /**
-     * Constructor. The number of bins will be determined by square-root rule
-     * and the y-axis will be in the probability scale.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram(int[] data, double[] breaks) {
-        this(data, breaks, true);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     * @param prob if true, the y-axis will be in the probability scale.
-     * Otherwise, y-axis will be in the frequency scale.
-     */
-    public Histogram(int[] data, double[] breaks, boolean prob) {
-        super(histogram(data, breaks, prob));
-        this.prob = prob;
-    }
-
-    /**
-     * Constructor. The number of bins will be determined by square-root rule
-     * and the y-axis will be in the probability scale.
-     * @param data a sample set.
-     */
-    public Histogram(double[] data) {
-        this(data, true);
-    }
-
-    /**
-     * Constructor. The number of bins will be determined by square-root rule.
-     * @param data a sample set.
-     * @param prob if true, the y-axis will be in the probability scale.
-     * Otherwise, y-axis will be in the frequency scale.
-     */
-    public Histogram(double[] data, boolean prob) {
-        this(data, smile.math.Histogram.bins(data.length), prob);
-    }
-
-    /**
-     * Constructor. The y-axis will be in the probability scale.
-     * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public Histogram(double[] data, int k) {
-        this(data, k, true);
-    }
-
-    /**
-     * Constructor.
+     * Creates a histogram plot.
      * @param data a sample set.
      * @param k the number of bins.
      * @param prob if true, the y-axis will be in the probability scale.
      * Otherwise, y-axis will be in the frequency scale.
      */
-    public Histogram(double[] data, int k, boolean prob) {
-        super(histogram(data, k, prob));
-        this.prob = prob;
-    }
-
-    /**
-     * Constructor. The y-axis will be in the probability scale.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     */
-    public Histogram(double[] data, double[] breaks) {
-        this(data, breaks, true);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param breaks an array of size k+1 giving the breakpoints between
-     * histogram cells. Must be in ascending order.
-     * @param prob if true, the y-axis will be in the probability scale.
-     * Otherwise, y-axis will be in the frequency scale.
-     */
-    public Histogram(double[] data, double[] breaks, boolean prob) {
-        super(histogram(data, breaks, prob));
-        this.prob = prob;
-    }
-
-    /**
-     * Returns the bin centers and frequencies/probabilities.
-     * @return a n x 2 array, where n is the number of bins. a[][0] are the
-     * centers of bins and a[][1] are frequencies or probabilities.
-     */
-    public double[][] getHistogram() {
-        return data;
-    }
-    
-    /**
-     * Returns the number of bins in the histogram.
-     * @return the number of bins.
-     */
-    public int getNumBins() {
-        return data.length;
-    }
-    
-    @Override
-    public Optional<String> getToolTip(double[] coord) {
-        for (int i = 0; i < data.length; i++) {
-            if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] < rightTop[i][1] && coord[1] > rightBottom[i][1]) {
-                double lower = leftBottom[i][0];
-                double upper = rightBottom[i][0];
-
-                int precision = (int) Math.round(Math.log10(Math.abs(upper - lower)));
-                if (precision > 0) {
-                    precision = 0;
-                } else {
-                    precision = -precision + 1;
-                }
-
-                String format = String.format(" in [%%.%df, %%.%df]", precision, precision);
-                String tooltip = prob ?
-                        String.format("%.1f%%" + format, 100.0 * data[i][1], lower, upper) :
-                        String.format("%d" + format, (int) data[i][1], lower, upper);
-
-                return Optional.of(tooltip);
-            }
-        }
-        
-        return Optional.empty();
-    }
-
-    /**
-     * Generate the histogram of k bins.
-     *
-     * @param k the number of bins.
-     */
-    private static double[][] histogram(int[] data, int k, boolean prob) {
+    public static BarPlot of(int[] data, int k, boolean prob, Color color) {
         double[][] hist = smile.math.Histogram.of(data, k);
 
         // The number of bins may be extended to cover all data.
@@ -231,42 +76,30 @@ public class Histogram extends BarPlot {
             }
         }
 
-        return freq;
+        return new BarPlot(new Bar(freq, width(freq), color));
     }
 
     /**
-     * Generate the histogram of k bins.
-     *
-     * @param k the number of bins.
-     */
-    private static double[][] histogram(double[] data, int k, boolean prob) {
-        double[][] hist = smile.math.Histogram.of(data, k);
-
-        // The number of bins may be extended to cover all data.
-        k = hist[0].length;
-        double[][] freq = new double[k][2];
-        for (int i = 0; i < k; i++) {
-            freq[i][0] = (hist[0][i] + hist[1][i]) / 2.0;
-            freq[i][1] = hist[2][i];
-        }
-
-        if (prob) {
-            double n = data.length;
-            for (int i = 0; i < k; i++) {
-                freq[i][1] /= n;
-            }
-        }
-
-        return freq;
-    }
-
-    /**
-     * Generate the histogram of k bins.
-     *
+     * Creates a histogram plot.
+     * @param data a sample set.
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
      */
-    private static double[][] histogram(int[] data, double[] breaks, boolean prob) {
+    public static BarPlot of(int[] data, double[] breaks, boolean prob) {
+        return of(data, breaks, prob, Color.BLUE);
+    }
+
+    /**
+     * Creates a histogram plot.
+     * @param data a sample set.
+     * @param breaks an array of size k+1 giving the breakpoints between
+     * histogram cells. Must be in ascending order.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
+     */
+    public static BarPlot of(int[] data, double[] breaks, boolean prob, Color color) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -287,16 +120,79 @@ public class Histogram extends BarPlot {
             }
         }
 
-        return freq;
+        return new BarPlot(new Bar(freq, width(freq), color));
     }
 
     /**
-     * Generate the histogram of k bins.
-     *
+     * Creates a histogram plot.
+     * The number of bins will be determined by square-root rule
+     * and the y-axis will be in the probability scale.
+     * @param data a sample set.
+     */
+    public static BarPlot of(double[] data) {
+        return of(data, smile.math.Histogram.bins(data.length), true, Color.BLUE);
+    }
+
+    /**
+     * Creates a histogram plot.
+     * @param data a sample set.
+     * @param k the number of bins.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
+     */
+    public static BarPlot of(double[] data, int k, boolean prob) {
+        return of(data, k, prob, Color.BLUE);
+    }
+
+    /**
+     * Creates a histogram plot.
+     * @param data a sample set.
+     * @param k the number of bins.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
+     */
+    public static BarPlot of(double[] data, int k, boolean prob, Color color) {
+        double[][] hist = smile.math.Histogram.of(data, k);
+
+        // The number of bins may be extended to cover all data.
+        k = hist[0].length;
+        double[][] freq = new double[k][2];
+        for (int i = 0; i < k; i++) {
+            freq[i][0] = (hist[0][i] + hist[1][i]) / 2.0;
+            freq[i][1] = hist[2][i];
+        }
+
+        if (prob) {
+            double n = data.length;
+            for (int i = 0; i < k; i++) {
+                freq[i][1] /= n;
+            }
+        }
+
+        return new BarPlot(new Bar(freq, width(freq), color));
+    }
+
+    /**
+     * Creates a histogram plot.
+     * @param data a sample set.
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
      */
-    private static double[][] histogram(double[] data, double[] breaks, boolean prob) {
+    public static BarPlot of(double[] data, double[] breaks, boolean prob) {
+        return of(data, breaks, prob, Color.BLUE);
+    }
+
+    /**
+     * Creates a histogram plot.
+     * @param data a sample set.
+     * @param breaks an array of size k+1 giving the breakpoints between
+     * histogram cells. Must be in ascending order.
+     * @param prob if true, the y-axis will be in the probability scale.
+     * Otherwise, y-axis will be in the frequency scale.
+     */
+    public static BarPlot of(double[] data, double[] breaks, boolean prob, Color color) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -317,6 +213,16 @@ public class Histogram extends BarPlot {
             }
         }
 
-        return freq;
+        return new BarPlot(new Bar(freq, width(freq), color));
+    }
+
+    /** Calculates the width of bins. */
+    private static double width(double[][] freq) {
+        double width = Double.MAX_VALUE;
+        for (int i = 1; i < freq.length; i++) {
+            double w = Math.abs(freq[i][0] - freq[i - 1][0]);
+            if (width > w) width = w;
+        }
+        return width;
     }
 }

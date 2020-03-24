@@ -18,34 +18,28 @@
 package smile.plot.swing;
 
 import java.awt.Color;
-import java.util.Optional;
 
 /**
- * A shape with optional name, which may be used to
- * draw a legend outside the box.
+ * Legend is a single line text which coordinates are in
+ * proportional to the base coordinates.
  *
  * @author Haifeng Li
  */
-public abstract class NamedShape extends Shape {
-
+public class Legend {
     /**
-     * The optional name of shape.
+     * The text of label.
      */
-    final Optional<String> name;
+    final String text;
+    /**
+     * The coordinates of label.
+     */
+    final Color color;
 
     /**
      * Constructor.
      */
-    public NamedShape(String name, Color color) {
-        super(color);
-        this.name = Optional.ofNullable(name);
-    }
-
-    /**
-     * Returns the optional name of shape, which will be used to
-     * draw a legend outside the box.
-     */
-    public Optional<String> name() {
-        return name;
+    public Legend(String text, Color color) {
+        this.text = text;
+        this.color = color;
     }
 }

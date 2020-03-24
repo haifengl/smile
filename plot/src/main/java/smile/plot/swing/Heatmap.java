@@ -35,14 +35,6 @@ public class Heatmap extends Plot {
      */
     private double[] x;
     /**
-     * The labels for columns of data matrix.
-     */
-    private String[] columnLabels;
-    /**
-     * The labels for rows of data matrix.
-     */
-    private String[] rowLabels;
-    /**
      * The y coordinate for rows of data matrix.
      */
     private double[] y;
@@ -50,6 +42,14 @@ public class Heatmap extends Plot {
      * The two-dimensional data matrix.
      */
     private double[][] z;
+    /**
+     * The labels for columns of data matrix.
+     */
+    private String[] columnLabels;
+    /**
+     * The labels for rows of data matrix.
+     */
+    private String[] rowLabels;
     /**
      * The minimum of the data.
      */
@@ -66,82 +66,32 @@ public class Heatmap extends Plot {
      * The color palette to represent values.
      */
     private Color[] palette;
-
     /**
-     * Constructor. Use 16-color jet color palette.
+     * If show axis marks.
      */
-    public Heatmap(double[][] z) {
-        this(z, 16);
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param k the number of colors in the palette.
-     */
-    public Heatmap(double[][] z, int k) {
-        this(z, Palette.jet(k, 1.0f));
-    }
+    private boolean isLabelVisible;
 
     /**
      * Constructor.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param palette the color palette.
-     */
-    public Heatmap(double[][] z, Color[] palette) {
-        this.z = z;
-        this.palette = palette;
-        init();
-    }
-
-    /**
-     * Constructor. Use 16-color jet color palette.
-     */
-    public Heatmap(String[] rowLabels, String[] columnLabels, double[][] z) {
-        this(rowLabels, columnLabels, z, 16);
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param k the number of colors in the palette.
-     */
-    public Heatmap(String[] rowLabels, String[] columnLabels, double[][] z, int k) {
-        this(rowLabels, columnLabels, z, Palette.jet(k, 1.0f));
-    }
-
-    /**
-     * Constructor.
+     * @param rowLabels the labels of rows.
+     * @param columnLabels the labels of columns.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param palette the color palette.
      */
     public Heatmap(String[] rowLabels, String[] columnLabels, double[][] z, Color[] palette) {
+        if (columnLabels.length != z[0].length) {
+            throw new IllegalArgumentException("columnLabels.length != z[0].length");
+        }
+
+        if (rowLabels.length != z.length) {
+            throw new IllegalArgumentException("rowLabels.length != z.length");
+        }
+
         this.z = z;
         this.columnLabels = columnLabels;
         this.rowLabels = rowLabels;
         this.palette = palette;
         init();
-    }
-
-    /**
-     * Constructor. Use 16-color jet color palette.
-     * @param x x coordinate of data matrix cells. Must be in ascending order.
-     * @param y y coordinate of data matrix cells. Must be in ascending order.
-     * @param z a data matrix to be shown in pseudo heat map.
-     */
-    public Heatmap(double[] x, double[] y, double[][] z) {
-        this(x, y, z, 16);
-    }
-
-    /**
-     * Constructor. Use jet color palette.
-     * @param x x coordinate of data matrix cells. Must be in ascending order.
-     * @param y y coordinate of data matrix cells. Must be in ascending order.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param k the number of colors in the palette.
-     */
-    public Heatmap(double[] x, double[] y, double[][] z, int k) {
-        this(x, y, z, Palette.jet(k, 1.0f));
     }
 
     /**
@@ -163,6 +113,8 @@ public class Heatmap extends Plot {
      * Initialize the internal variables.
      */
     private void init() {
+        isLabelVisible = x != null || y != null || rowLabels != null || columnLabels != null;
+
         if (x == null) {
             x = new double[z[0].length];
             for (int i = 0; i < x.length; i++) {
@@ -175,6 +127,14 @@ public class Heatmap extends Plot {
             for (int i = 0; i < y.length; i++) {
                 y[i] = y.length - i - 0.5;
             }
+        }
+
+        if (x.length != z[0].length) {
+            throw new IllegalArgumentException("x.length != z[0].length");
+        }
+
+        if (y.length != z.length) {
+            throw new IllegalArgumentException("y.length != z.length");
         }
 
         // In case of outliers, we use 1% and 99% quantiles as lower and
@@ -199,7 +159,7 @@ public class Heatmap extends Plot {
     }
 
     @Override
-    public Optional<String> getToolTip(double[] coord) {
+    public Optional<String> tooltip(double[] coord) {
         if (rowLabels == null || columnLabels == null) {
             return Optional.empty();
         }
@@ -213,11 +173,21 @@ public class Heatmap extends Plot {
         
         return Optional.of(String.format("%s, %s", rowLabels[j], columnLabels[i]));
     }
-    
+
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {MathEx.min(x), MathEx.min(y)};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {MathEx.max(x), MathEx.max(y)};
+        return bound;
+    }
+
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-
         double[] start = new double[2];
         double[] end = new double[2];
 
@@ -296,7 +266,7 @@ public class Heatmap extends Plot {
         if (log < 0) {
             decimal = (int) -log + 1;
         }
-        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), 0.0, 1.0, start);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(max, decimal)), start,0.0, 1.0);
 
         start[1] = 0.15 - height;
         log = Math.log10(Math.abs(min));
@@ -304,161 +274,104 @@ public class Heatmap extends Plot {
         if (log < 0) {
             decimal = (int) -log + 1;
         }
-        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), 0.0, 0.0, start);
-
-        g.setColor(c);
+        g.drawTextBaseRatio(String.valueOf(MathEx.round(min, decimal)), start,0.0, 0.0);
     }
     
-    /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
-     * @param z a data matrix to be shown in pseudo heat map.
-     */
-    public static PlotCanvas plot(double[][] z) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(z));
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+        canvas.add(this);
 
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
         canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
         canvas.getAxis(1).setGridVisible(false);
+
+        if (!isLabelVisible) {
+            canvas.getAxis(0).setLabelVisible(false);
+            canvas.getAxis(0).setFrameVisible(false);
+            canvas.getAxis(1).setLabelVisible(false);
+            canvas.getAxis(1).setFrameVisible(false);
+        }
+
+        if (rowLabels != null) {
+            double[] locations = new double[rowLabels.length];
+            for (int i = 0; i < rowLabels.length; i++) {
+                locations[i] = z.length - i - 0.5;
+            }
+            canvas.getAxis(1).addLabel(rowLabels, locations);
+        }
+
+        if (columnLabels != null) {
+            canvas.getAxis(0).setRotation(-Math.PI / 2);
+
+            double[] locations = new double[columnLabels.length];
+            for (int i = 0; i < columnLabels.length; i++) {
+                locations[i] = i + 0.5;
+            }
+            canvas.getAxis(0).addLabel(columnLabels, locations);
+        }
 
         return canvas;
     }
 
     /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
+     * Constructor. Use 16-color jet color palette.
+     */
+    public static Heatmap of(double[][] z) {
+        return of(z, 16);
+    }
+
+    /**
+     * Creates a heatmap with jet color palette.
+     * @param z a data matrix to be shown in pseudo heat map.
+     * @param k the number of colors in the palette.
+     */
+    public static Heatmap of(double[][] z, int k) {
+        return of(z, Palette.jet(k, 1.0f));
+    }
+
+    /**
+     * Constructor.
      * @param z a data matrix to be shown in pseudo heat map.
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[][] z, Color[] palette) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(z, palette));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
+    public static Heatmap of(double[][] z, Color[] palette) {
+        return new Heatmap((double[]) null, null, z, palette);
     }
 
     /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
+     * Constructor. Use 16-color jet color palette.
+     */
+    public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z) {
+        return of(rowLabels, columnLabels, z, 16);
+    }
+
+    /**
+     * Constructor. Use jet color palette.
+     * @param z a data matrix to be shown in pseudo heat map.
+     * @param k the number of colors in the palette.
+     */
+    public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z, int k) {
+        return new Heatmap(rowLabels, columnLabels, z, Palette.jet(k, 1.0f));
+    }
+
+    /**
+     * Constructor. Use 16-color jet color palette.
      * @param x x coordinate of data matrix cells. Must be in ascending order.
      * @param y y coordinate of data matrix cells. Must be in ascending order.
      * @param z a data matrix to be shown in pseudo heat map.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(x, y, z));
-
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
+    public static Heatmap of(double[] x, double[] y, double[][] z) {
+        return of(x, y, z, 16);
     }
 
     /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
+     * Constructor. Use jet color palette.
      * @param x x coordinate of data matrix cells. Must be in ascending order.
      * @param y y coordinate of data matrix cells. Must be in ascending order.
      * @param z a data matrix to be shown in pseudo heat map.
-     * @param palette the color palette.
+     * @param k the number of colors in the palette.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(x, y, z, palette));
-
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param rowLabels the labels for rows of data matrix.
-     * @param columnLabels the labels for columns of data matrix.
-     */
-    public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z) {
-        if (z.length != rowLabels.length || z[0].length != columnLabels.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
-        }
-
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(rowLabels, columnLabels, z));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setRotation(-Math.PI / 2);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        double[] locations = new double[rowLabels.length];
-        for (int i = 0; i < rowLabels.length; i++) {
-            locations[i] = z.length - i - 0.5;
-        }
-        canvas.getAxis(1).addLabel(rowLabels, locations);
-
-        locations = new double[columnLabels.length];
-        for (int i = 0; i < columnLabels.length; i++) {
-            locations[i] = i + 0.5;
-        }
-        canvas.getAxis(0).addLabel(columnLabels, locations);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the pseudo heat map plot of given data.
-     * @param z a data matrix to be shown in pseudo heat map.
-     * @param rowLabels the labels for rows of data matrix.
-     * @param columnLabels the labels for columns of data matrix.
-     * @param palette the color palette.
-     */
-    public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z, Color[] palette) {
-        if (z.length != rowLabels.length || z[0].length != columnLabels.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
-        }
-
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Heatmap(rowLabels, columnLabels, z, palette));
-
-        canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setRotation(-Math.PI / 2);
-        canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setGridVisible(false);
-
-        double[] locations = new double[rowLabels.length];
-        for (int i = 0; i < rowLabels.length; i++) {
-            locations[i] = z.length - i - 0.5;
-        }
-        canvas.getAxis(1).addLabel(rowLabels, locations);
-
-        locations = new double[columnLabels.length];
-        for (int i = 0; i < columnLabels.length; i++) {
-            locations[i] = i + 0.5;
-        }
-        canvas.getAxis(0).addLabel(columnLabels, locations);
-
-        return canvas;
+    public static Heatmap of(double[] x, double[] y, double[][] z, int k) {
+        return new Heatmap(x, y, z, Palette.jet(k, 1.0f));
     }
 }

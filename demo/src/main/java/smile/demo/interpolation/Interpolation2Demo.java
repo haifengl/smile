@@ -25,7 +25,7 @@ import smile.interpolation.BilinearInterpolation;
 import smile.interpolation.CubicSplineInterpolation2D;
 import smile.plot.swing.Heatmap;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -45,9 +45,9 @@ public class Interpolation2Demo extends JPanel {
             {5, 4, 2, 3}
         };
 
-        PlotCanvas canvas = Heatmap.plot(y, Palette.jet(256));
+        Canvas canvas = Heatmap.of(y, Palette.jet(256)).canvas();
         canvas.setTitle("Original");
-        add(canvas);
+        add(canvas.panel());
 
         BicubicInterpolation bicubic = new BicubicInterpolation(x1, x2, y);
         double[][] yy = new double[101][101];
@@ -55,9 +55,9 @@ public class Interpolation2Demo extends JPanel {
             for (int j = 0; j <= 100; j++)
                 yy[i][j] = bicubic.interpolate(i*0.03, j*0.03);
 
-        canvas = Heatmap.plot(yy, Palette.jet(256));
+        canvas = Heatmap.of(yy, Palette.jet(256)).canvas();
         canvas.setTitle("Bicubic");
-        add(canvas);
+        add(canvas.panel());
 
         BilinearInterpolation bilinear = new BilinearInterpolation(x1, x2, y);
         double[][] zz = new double[101][101];
@@ -65,9 +65,9 @@ public class Interpolation2Demo extends JPanel {
             for (int j = 0; j <= 100; j++)
                 zz[i][j] = bilinear.interpolate(i*0.03, j*0.03);
 
-        canvas = Heatmap.plot(zz, Palette.jet(256));
+        canvas = Heatmap.of(zz, Palette.jet(256)).canvas();
         canvas.setTitle("Blinear");
-        add(canvas);
+        add(canvas.panel());
 
         CubicSplineInterpolation2D spline = new CubicSplineInterpolation2D(x1, x2, y);
         double[][] ww = new double[101][101];
@@ -75,9 +75,9 @@ public class Interpolation2Demo extends JPanel {
             for (int j = 0; j <= 100; j++)
                 ww[i][j] = spline.interpolate(i*0.03, j*0.03);
 
-        canvas = Heatmap.plot(ww, Palette.jet(256));
+        canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
         canvas.setTitle("Cubic Spline");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

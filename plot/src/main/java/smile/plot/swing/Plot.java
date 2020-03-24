@@ -38,34 +38,39 @@ public abstract class Plot extends Shape {
     }
 
     /** Returns the lower bound of data. */
-    public double[] getLowerBound() { return null; }
+    public abstract double[] getLowerBound();
     /** Returns the upper bound of data. */
-    public double[] getUpperBound() { return null; }
+    public abstract double[] getUpperBound();
 
     /** Returns a canvas of the plot. */
     public Canvas canvas() {
-        double[] lowerBound = getLowerBound();
-        double[] upperBound = getUpperBound();
-        Canvas canvas = new Canvas(lowerBound, upperBound);
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
         canvas.add(this);
         return canvas;
+    }
+
+    /**
+     * Returns the optional name of shape, which will be used to
+     * draw a legend outside the box.
+     */
+    public Optional<Legend[]> legends() {
+        return Optional.empty();
     }
 
     /**
      * Returns a optional tool tip for the object at given coordinates.
      * @param coord the logical coordinates of current mouse position.
      * @return a string if an object with label close to the given coordinates.
-     * Otherwise null.
      */
-    public Optional<String> getToolTip(double[] coord) {
+    public Optional<String> tooltip(double[] coord) {
         return Optional.empty();
     }
     
     /**
      * Returns an optional list of components in tool bar to control the plot.
-     * @return an optional list of toolbar components, may be null.
+     * @return an optional list of toolbar components.
      */
-    public Optional<JComponent[]> getToolBar() {
+    public Optional<JComponent[]> toolbar() {
         return Optional.empty();
     }
 }

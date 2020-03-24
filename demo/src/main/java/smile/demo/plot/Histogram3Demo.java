@@ -23,7 +23,7 @@ import javax.swing.JPanel;
 import smile.math.MathEx;
 import smile.plot.swing.Histogram3D;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -47,14 +47,14 @@ public class Histogram3Demo extends JPanel {
             data[j][0] = new Double(x * z);
             data[j][1] = new Double(y * z);
         }
-        
-        PlotCanvas canvas = Histogram3D.plot(data, 20);
+
+        Canvas canvas = Histogram3D.of(data, 20, false).canvas();
         canvas.setTitle("Histogram 3D");
-        add(canvas);
+        add(canvas.panel());
         
-        canvas = Histogram3D.plot(data, 20, Palette.jet(16));
+        canvas = Histogram3D.of(data, 20, false, Palette.jet(16)).canvas();
         canvas.setTitle("Histogram 3D with Colormap");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

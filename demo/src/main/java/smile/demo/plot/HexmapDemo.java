@@ -23,7 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.Hexmap;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -51,27 +51,27 @@ public class HexmapDemo extends JPanel {
                 z[i][j] = x[j] * Math.exp(-x[j]*x[j] - y[i]*y[i]);
         }
 
-        PlotCanvas canvas = Hexmap.plot(z, Palette.jet(256));
+        Canvas canvas = Hexmap.of(z, Palette.jet(256)).canvas();
         canvas.setTitle("jet");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.redblue(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.redblue(256)).canvas();
         canvas.setTitle("redblue");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.redgreen(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.redgreen(256)).canvas();
         canvas.setTitle("redgreen");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.heat(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.heat(256)).canvas();
         canvas.setTitle("heat");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.terrain(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.terrain(256)).canvas();
         canvas.setTitle("terrain");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.rainbow(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.rainbow(256)).canvas();
         canvas.setTitle("rainbow");
-        add(canvas);
-        canvas = Hexmap.plot(z, Palette.topo(256));
+        add(canvas.panel());
+        canvas = Hexmap.of(z, Palette.topo(256)).canvas();
         canvas.setTitle("topo");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override
