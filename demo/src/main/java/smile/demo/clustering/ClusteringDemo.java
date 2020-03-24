@@ -93,7 +93,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
     private JTextField clusterNumberField;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = '.';
+    char mark = '.';
 
     /**
      * Constructor.
@@ -185,11 +185,11 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
 
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -203,11 +203,11 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             datasetBox.setSelectedIndex(datasetIndex);
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }

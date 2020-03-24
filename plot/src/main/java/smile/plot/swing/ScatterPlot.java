@@ -139,7 +139,7 @@ public class ScatterPlot extends Plot {
      * @param data the data points. The elements should be of dimension 2 or 3.
      * @param labels the group label of data points.
      */
-    public static ScatterPlot of(double[][] data, String[] labels) {
+    public static ScatterPlot of(double[][] data, char mark, String[] labels) {
         if (data.length != labels.length) {
             throw new IllegalArgumentException("The number of points and that of labels are not the same.");
         }
@@ -149,14 +149,13 @@ public class ScatterPlot extends Plot {
         Legend[] legends = new Legend[groups.size()];
         int k = 0;
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
-            char mark = Point.MARKS[k % Point.MARKS.length];
             Color color = Palette.COLORS[k % Palette.COLORS.length];
             points[k] = new Point(
                     group.getValue().stream().map(i -> data[i]).toArray(double[][]::new),
                     mark,
                     color
             );
-            legends[k] = new Legend(String.format("%c %s", mark, group.getKey()), color);
+            legends[k] = new Legend(group.getKey(), color);
             k++;
         }
 
@@ -168,7 +167,7 @@ public class ScatterPlot extends Plot {
      * @param data the data points. The elements should be of dimension 2 or 3.
      * @param labels the group label of data points.
      */
-    public static ScatterPlot of(double[][] data, int[] labels) {
-        return of(data, Arrays.stream(labels).mapToObj(i -> String.format("class %d", i)).toArray(String[]::new));
+    public static ScatterPlot of(double[][] data, char mark, int[] labels) {
+        return of(data, mark, Arrays.stream(labels).mapToObj(i -> String.format("class %d", i)).toArray(String[]::new));
     }
 }

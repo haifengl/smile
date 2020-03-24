@@ -61,7 +61,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            plot = ScatterPlot.of(y, labels).canvas();
+            plot = ScatterPlot.of(y, mark, labels).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }
@@ -75,7 +75,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            plot = ScatterPlot.of(y, labels).canvas();
+            plot = ScatterPlot.of(y, mark, labels).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }
@@ -97,7 +97,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            plot = ScatterPlot.of(y, labels).canvas();
+            plot = ScatterPlot.of(y, mark, labels).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }
@@ -119,7 +119,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            plot = ScatterPlot.of(y, labels).canvas();
+            plot = ScatterPlot.of(y, mark, labels).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }

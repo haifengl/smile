@@ -63,7 +63,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
     JComponent canvas;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = '.';
+    char mark = '.';
 
     /**
      * Constructor.
@@ -112,7 +112,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
 
         Canvas plot;
         if (labels != null) {
-            plot = ScatterPlot.of(y, labels).canvas();
+            plot = ScatterPlot.of(y, mark, labels).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }
@@ -158,9 +158,9 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
             }
 
             if (dataset[datasetIndex].size() < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
 
             Thread thread = new Thread(this);

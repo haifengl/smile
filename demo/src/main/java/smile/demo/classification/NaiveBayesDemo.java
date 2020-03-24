@@ -79,7 +79,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
             }
         }
 
-        return ScatterPlot.of(paintPoints, label).canvas();
+        return ScatterPlot.of(paintPoints, 'o', label).canvas();
     }
     
     @Override

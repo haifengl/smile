@@ -65,7 +65,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
     JComponent canvas;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    protected char pointLegend = '.';
+    protected char mark = '.';
 
     /**
      * Constructor.
@@ -147,9 +147,9 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
             loadData(datasetIndex);
 
             if (dataset[datasetIndex].size() < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
             
             Thread thread = new Thread(this);

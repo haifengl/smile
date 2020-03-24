@@ -40,7 +40,7 @@ public class KMeansDemo extends ClusteringDemo {
         KMeans kmeans = KMeans.fit(dataset[datasetIndex], clusterNumber, 100, 4);
         System.out.format("K-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], kmeans.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, kmeans.y).canvas();
         plot.add(ScatterPlot.of(kmeans.centroids, '@'));
         return plot.panel();
     }

@@ -514,9 +514,9 @@ public class Canvas {
                 Plot p = (Plot) s;
                 if (p.legends().isPresent()) {
                     for (Legend legend : p.legends().get()) {
+                        g2d.setColor(legend.color);
                         g2d.fillRect(x, y, fontWidth, fontHeight);
                         g2d.drawRect(x, y, fontWidth, fontHeight);
-                        g2d.setColor(legend.color);
                         g2d.drawString(legend.text, x + 2 * fontWidth, y + fontHeight);
                         y += 2 * fontWidth;
                     }
