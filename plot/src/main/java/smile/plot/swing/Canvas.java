@@ -62,9 +62,9 @@ public class Canvas {
      */
     double margin = DEFAULT_MARGIN;
     /**
-     * The coordinate grid plot.
+     * The axis objects.
      */
-    BaseGrid baseGrid;
+    Axis[] axis;
     /**
      * The shapes in the canvas, e.g. label, plots, etc.
      */
@@ -161,7 +161,19 @@ public class Canvas {
      */
     private void initBase(double[] lowerBound, double[] upperBound, boolean extendBound) {
         base = new Base(lowerBound, upperBound, extendBound);
-        baseGrid = new BaseGrid(base);
+        axis = new Axis[base.getDimension()];
+        for (int i = 0; i < base.getDimension(); i++) {
+            axis[i] = new Axis(base, i);
+        }
+    }
+
+    /**
+     * Reset the grid (when the base changes).
+     */
+    void resetAxis() {
+        for (int i = 0; i < axis.length; i++) {
+            axis[i].reset();
+        }
     }
 
     /**
@@ -246,7 +258,7 @@ public class Canvas {
      * Returns the i-<i>th</i> axis.
      */
     public Axis getAxis(int i) {
-        return baseGrid.getAxis(i);
+        return axis[i];
     }
 
     /**
@@ -255,7 +267,7 @@ public class Canvas {
     public String[] getAxisLabels() {
         String[] labels = new String[base.dimension];
         for (int i = 0; i < base.dimension; i++) {
-            labels[i] = baseGrid.getAxis(i).getAxisLabel();
+            labels[i] = axis[i].getAxisLabel();
         }
         return labels;
     }
@@ -263,16 +275,18 @@ public class Canvas {
     /**
      * Returns the label/legend of an axis.
      */
-    public String getAxisLabel(int axis) {
-        return baseGrid.getAxis(axis).getAxisLabel();
+    public String getAxisLabel(int i) {
+        return axis[i].getAxisLabel();
     }
 
     /**
      * Sets the labels/legends of axes.
      */
     public Canvas setAxisLabels(String... labels) {
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", baseGrid.getAxisLabel(), labels);
-        baseGrid.setAxisLabel(labels);
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", getAxisLabels(), labels);
+        for (int i = 0; i < labels.length; i++) {
+            axis[i].setAxisLabel(labels[i]);
+        }
         pcs.firePropertyChange(event);
         return this;
     }
@@ -280,9 +294,9 @@ public class Canvas {
     /**
      * Sets the label/legend of an axis.
      */
-    public Canvas setAxisLabel(int axis, String label) {
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", baseGrid.getAxisLabel(axis), label);
-        baseGrid.setAxisLabel(axis, label);
+    public Canvas setAxisLabel(int i, String label) {
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axis[i].getAxisLabel(), label);
+        axis[i].setAxisLabel(label);
         pcs.firePropertyChange(event);
         return this;
     }
@@ -362,7 +376,7 @@ public class Canvas {
     public void extendLowerBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendLowerBound", this, bound);
         base.extendLowerBound(bound);
-        baseGrid.reset();
+        resetAxis();
         pcs.firePropertyChange(event);
     }
 
@@ -372,7 +386,7 @@ public class Canvas {
     public void extendUpperBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendUpperBound", this, bound);
         base.extendUpperBound(bound);
-        baseGrid.reset();
+        resetAxis();
         pcs.firePropertyChange(event);
     }
 
@@ -382,7 +396,7 @@ public class Canvas {
     public void extendBound(double[] lowerBound, double[] upperBound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendBound", this, new double[][]{lowerBound, upperBound});
         base.extendBound(lowerBound, upperBound);
-        baseGrid.reset();
+        resetAxis();
         pcs.firePropertyChange(event);
     }
 
@@ -392,7 +406,7 @@ public class Canvas {
     public void setBound(double[] lowerBound, double[] upperBound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "setBound", this, new double[][]{lowerBound, upperBound});
         base.setBound(lowerBound, upperBound);
-        baseGrid.reset();
+        resetAxis();
         pcs.firePropertyChange(event);
     }
 
@@ -402,11 +416,12 @@ public class Canvas {
     public void paint(java.awt.Graphics2D g2d, int width, int height) {
         graphics.setGraphics(g2d, width, height);
 
-        Color color = g2d.getColor();
         g2d.setColor(Color.WHITE);
         g2d.fillRect(0, 0, width, height);
-        g2d.setColor(color);
-        baseGrid.paint(graphics);
+
+        for (int i = 0; i < axis.length; i++) {
+            axis[i].paint(graphics);
+        }
 
         // draw plot
         graphics.clip();
@@ -450,8 +465,6 @@ public class Canvas {
             y = (int) (height * margin) / 2;
             g2d.drawString(title, x, y);
         }
-
-        g2d.setColor(color);
     }
 
     /**
