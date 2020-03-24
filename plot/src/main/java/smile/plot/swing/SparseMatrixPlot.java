@@ -220,9 +220,9 @@ public class SparseMatrixPlot extends Plot {
         Canvas canvas = new Canvas(lowerBound, upperBound, false);
         canvas.add(this);
 
-        canvas.getAxis(0).setLabelVisible(false);
+        canvas.getAxis(0).setTickVisible(false);
         canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
+        canvas.getAxis(1).setTickVisible(false);
         canvas.getAxis(1).setGridVisible(false);
 
         return canvas;

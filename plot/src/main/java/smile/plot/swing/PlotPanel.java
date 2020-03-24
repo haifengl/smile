@@ -211,7 +211,7 @@ public class PlotPanel extends JPanel {
                                 }
                                 base.initBaseCoord();
                                 graphics.projection.reset();
-                                canvas.baseGrid.setBase(base);
+                                canvas.baseGrid.reset();
                             }
                         }
                     }
@@ -278,7 +278,7 @@ public class PlotPanel extends JPanel {
 
                     base.initBaseCoord();
                     graphics.projection.reset();
-                    canvas.baseGrid.setBase(base);
+                    canvas.baseGrid.reset();
                     repaint();
                 } else {
                     String tooltip = null;
@@ -346,7 +346,7 @@ public class PlotPanel extends JPanel {
 
             base.initBaseCoord();
             graphics.projection.reset();
-            canvas.baseGrid.setBase(base);
+            canvas.baseGrid.reset();
 
             repaint();
             e.consume();
@@ -360,7 +360,7 @@ public class PlotPanel extends JPanel {
             if (graphics != null) {
                 base.initBaseCoord();
                 graphics.projection.reset();
-                canvas.baseGrid.setBase(base);
+                canvas.baseGrid.reset();
             }
 
             repaint();
@@ -832,7 +832,7 @@ public class PlotPanel extends JPanel {
 
             canvas.base.initBaseCoord();
             canvas.graphics.projection.reset();
-            canvas.baseGrid.setBase(canvas.base);
+            canvas.baseGrid.reset();
 
             dialog.setVisible(false);
             contentPane.repaint();
@@ -884,17 +884,7 @@ public class PlotPanel extends JPanel {
      * @throws IOException if an error occurs during writing.
      */
     public void save(File file) throws IOException {
-        // flush swing event queue
-        try {
-            SwingUtilities.invokeAndWait(() -> {});
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        BufferedImage bi = new BufferedImage(contentPane.getWidth(), contentPane.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = bi.createGraphics();
-        canvas.paint(g2d, contentPane.getWidth(), contentPane.getHeight());
-
+        BufferedImage bi = canvas.toBufferedImage(contentPane.getWidth(), contentPane.getHeight());
         ImageIO.write(bi, FileChooser.getExtension(file), file);
     }
 
@@ -926,7 +916,7 @@ public class PlotPanel extends JPanel {
 
         base.initBaseCoord();
         canvas.graphics.projection.reset();
-        canvas.baseGrid.setBase(base);
+        canvas.baseGrid.reset();
 
         contentPane.repaint();
     }
@@ -940,7 +930,7 @@ public class PlotPanel extends JPanel {
 
         base.reset();
         graphics.projection.reset();
-        canvas.baseGrid.setBase(base);
+        canvas.baseGrid.reset();
 
         if (graphics.projection instanceof Projection3D) {
             ((Projection3D) graphics.projection).setDefaultView();

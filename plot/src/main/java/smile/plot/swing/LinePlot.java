@@ -59,8 +59,7 @@ public class LinePlot extends Plot {
 
     @Override
     public Canvas canvas() {
-        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
-        canvas.base.extendBound(1);
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
         canvas.add(this);
         return canvas;
     }

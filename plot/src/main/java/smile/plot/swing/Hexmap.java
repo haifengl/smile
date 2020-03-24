@@ -209,10 +209,10 @@ public class Hexmap extends Plot {
         canvas.add(this);
 
         canvas.getAxis(0).setFrameVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
+        canvas.getAxis(0).setTickVisible(false);
         canvas.getAxis(0).setGridVisible(false);
         canvas.getAxis(1).setFrameVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
+        canvas.getAxis(1).setTickVisible(false);
         canvas.getAxis(1).setGridVisible(false);
 
         return canvas;

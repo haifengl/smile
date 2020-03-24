@@ -111,6 +111,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      */
     private LayoutManager layout(int size) {
         int n = (int) Math.ceil(Math.sqrt(size));
+        if (n < 1) n = 1;
         return layout(n, n);
     }
 

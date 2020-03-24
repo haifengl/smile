@@ -23,11 +23,6 @@ package smile.plot.swing;
  * @author Haifeng Li
  */
 class BaseGrid {
-
-    /**
-     * The base coordinate space.
-     */
-    private Base base;
     /**
      * The axis objects.
      */
@@ -37,73 +32,10 @@ class BaseGrid {
      * Constructor.
      */
     public BaseGrid(Base base) {
-        this.base = base;
         axis = new Axis[base.getDimension()];
         for (int i = 0; i < base.getDimension(); i++) {
             axis[i] = new Axis(base, i);
         }
-    }
-
-    /**
-     * Constructor.
-     */
-    public BaseGrid(Base base, String... axisLabels) {
-        if (axisLabels.length != base.getDimension()) {
-            throw new IllegalArgumentException("Axis label size don't match base dimension.");
-        }
-
-        this.base = base;
-        axis = new Axis[base.getDimension()];
-        for (int i = 0; i < base.getDimension(); i++) {
-            axis[i] = new Axis(base, i, axisLabels[i]);
-        }
-    }
-
-    /**
-     * Set if labels and tickmarks are visible.
-     */
-    public BaseGrid setLabelVisible(int i, boolean v) {
-        axis[i].setLabelVisible(v);
-        return this;
-    }
-
-    /**
-     * Returns if labels and tickmarks are visible.
-     */
-    public boolean isLabelVisible(int i) {
-        return axis[i].isLabelVisible();
-    }
-
-    /**
-     * Set if the grid visible.
-     */
-    public BaseGrid setGridVisible(int i, boolean v) {
-        axis[i].setGridVisible(v);
-        return this;
-    }
-
-    /**
-     * Returns if the grid visible.
-     */
-    public boolean isGridVisible(int i) {
-        return axis[i].isGridVisible();
-    }
-
-    /**
-     * Set if the frame visible.
-     */
-    public BaseGrid setFrameVisible(boolean v) {
-        for (int i = 0; i < axis.length; i++) {
-            axis[i].setGridVisible(v);
-        }
-        return this;
-    }
-
-    /**
-     * Returns if the frame visible.
-     */
-    public boolean isFrameVisible() {
-        return axis[0].isGridVisible();
     }
 
     /**
@@ -117,10 +49,6 @@ class BaseGrid {
      * Set axis labels.
      */
     public BaseGrid setAxisLabel(String... axisLabels) {
-        if (axisLabels.length != base.getDimension()) {
-            throw new IllegalArgumentException("Axis label size don't match base dimension.");
-        }
-
         for (int i = 0; i < axisLabels.length; i++) {
             axis[i].setAxisLabel(axisLabels[i]);
         }
@@ -155,12 +83,11 @@ class BaseGrid {
     }
 
     /**
-     * Set the base coordinate space.
+     * Reset the grid (when the base changes).
      */
-    public BaseGrid setBase(Base base) {
-        this.base = base;
+    public BaseGrid reset() {
         for (int i = 0; i < axis.length; i++) {
-            axis[i].setBase(base);
+            axis[i].reset();
         }
         return this;
     }

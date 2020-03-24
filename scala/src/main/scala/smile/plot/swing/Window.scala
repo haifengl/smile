@@ -31,6 +31,6 @@ case class Window(frame: JFrame, canvas: Canvas) {
 object Window {
   /** Create a plot window frame. */
   def apply(canvas: Canvas): Window = {
-    Window(canvas.panel.window, canvas)
+    Window(canvas.window, canvas)
   }
 }
