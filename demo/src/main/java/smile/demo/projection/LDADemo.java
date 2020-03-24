@@ -112,7 +112,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
 
         Canvas plot;
         if (labels != null) {
-            plot = ScatterPlot.of(y, mark, labels).canvas();
+            plot = ScatterPlot.of(y, labels, mark).canvas();
         } else {
             plot = ScatterPlot.of(y).canvas();
         }

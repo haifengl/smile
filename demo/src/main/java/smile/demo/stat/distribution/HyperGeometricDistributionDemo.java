@@ -108,7 +108,7 @@ public class HyperGeometricDistributionDemo extends JPanel implements ChangeList
         pdf.setTitle("PDF");
         canvas.add(pdf.panel());
 
-        cdf = new Canvas(lowerBound, upperBound);
+        cdf = new Canvas(lowerBound, upperBound, false);
         cdf.add(Staircase.of(q));
         cdf.setTitle("CDF");
         canvas.add(cdf.panel());

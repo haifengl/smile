@@ -61,7 +61,7 @@ public class SpectralClusteringDemo extends ClusteringDemo {
         SpectralClustering spectral = SpectralClustering.fit(dataset[datasetIndex], clusterNumber, gaussianWidth);
         System.out.format("Spectral Clustering clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, spectral.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], spectral.y, mark).canvas();
         return plot.panel();
 
     }

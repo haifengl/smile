@@ -80,7 +80,7 @@ public class CLARANSDemo extends ClusteringDemo {
         CLARANS<double[]> clarans = CLARANS.fit(dataset[datasetIndex], MathEx::distance, clusterNumber, maxNeighbor);
         System.out.format("CLARANS clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, clarans.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], clarans.y, mark).canvas();
         plot.add(ScatterPlot.of(clarans.centroids, '@'));
         return plot.panel();
     }

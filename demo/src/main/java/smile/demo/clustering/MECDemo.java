@@ -61,7 +61,7 @@ public class MECDemo extends ClusteringDemo {
         MEC<double[]> mec = MEC.fit(dataset[datasetIndex], new EuclideanDistance(), clusterNumber, range);
         System.out.format("MEC clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, mec.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mec.y, mark).canvas();
         return plot.panel();
     }
 

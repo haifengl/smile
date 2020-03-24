@@ -21,7 +21,7 @@ import java.awt.event.WindowEvent
 import javax.swing.JFrame
 
 /** A window/JFrame with plot canvas. */
-case class Window(frame: JFrame, canvas: PlotCanvas) {
+case class Window(frame: JFrame, canvas: Canvas) {
   /** Closes the window programmatically. */
   def close: Unit = {
     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
@@ -29,11 +29,8 @@ case class Window(frame: JFrame, canvas: PlotCanvas) {
 }
 
 object Window {
-  /** The number of created windows, as the default window title. */
-  private val windowCount = new java.util.concurrent.atomic.AtomicInteger
-
   /** Create a plot window frame. */
-  def apply(canvas: PlotCanvas): Window = {
-    Window(canvas.window, canvas)
+  def apply(canvas: Canvas): Window = {
+    Window(canvas.panel.window, canvas)
   }
 }

@@ -94,7 +94,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
 
         double[][] y = tsne.coordinates;
 
-        Canvas plot = ScatterPlot.of(y, '@', labels).canvas();
+        Canvas plot = ScatterPlot.of(y, labels, '@').canvas();
 
         plot.setTitle("t-SNE");
         pane.add(plot.panel());

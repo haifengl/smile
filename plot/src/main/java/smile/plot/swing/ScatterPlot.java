@@ -24,6 +24,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+
+import smile.data.DataFrame;
 import smile.math.MathEx;
 
 /**
@@ -136,22 +138,22 @@ public class ScatterPlot extends Plot {
 
     /**
      * Creates a scatter plot of multiple groups of data.
-     * @param data the data points. The elements should be of dimension 2 or 3.
-     * @param labels the group label of data points.
+     * @param x the data points. The elements should be of dimension 2 or 3.
+     * @param y the group label of data points.
      */
-    public static ScatterPlot of(double[][] data, char mark, String[] labels) {
-        if (data.length != labels.length) {
+    public static ScatterPlot of(double[][] x, String[] y, char mark) {
+        if (x.length != y.length) {
             throw new IllegalArgumentException("The number of points and that of labels are not the same.");
         }
 
-        Map<String, List<Integer>> groups = IntStream.range(0, data.length).boxed().collect(Collectors.groupingBy(i -> labels[i]));
+        Map<String, List<Integer>> groups = IntStream.range(0, x.length).boxed().collect(Collectors.groupingBy(i -> y[i]));
         Point[] points = new Point[groups.size()];
         Legend[] legends = new Legend[groups.size()];
         int k = 0;
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
             Color color = Palette.COLORS[k % Palette.COLORS.length];
             points[k] = new Point(
-                    group.getValue().stream().map(i -> data[i]).toArray(double[][]::new),
+                    group.getValue().stream().map(i -> x[i]).toArray(double[][]::new),
                     mark,
                     color
             );
@@ -164,10 +166,69 @@ public class ScatterPlot extends Plot {
 
     /**
      * Creates a scatter plot of multiple groups of data.
-     * @param data the data points. The elements should be of dimension 2 or 3.
-     * @param labels the group label of data points.
+     * @param x the data points. The elements should be of dimension 2 or 3.
+     * @param y the group label of data points.
      */
-    public static ScatterPlot of(double[][] data, char mark, int[] labels) {
-        return of(data, mark, Arrays.stream(labels).mapToObj(i -> String.format("class %d", i)).toArray(String[]::new));
+    public static ScatterPlot of(double[][] x, int[] y, char mark) {
+        return of(x, Arrays.stream(y).mapToObj(i -> String.format("class %d", i)).toArray(String[]::new), mark);
+    }
+
+    /**
+     * Creates a scatter plot from a data frame.
+     * @param data the data frame.
+     * @param x the column as x-axis.
+     * @param y the column as y-axis.
+     */
+    public static ScatterPlot of(DataFrame data, String x, String y, char mark, Color color) {
+        int ix = data.columnIndex(x);
+        int iy = data.columnIndex(y);
+        double[][] xy = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy)}).toArray(double[][]::new);
+        return of(xy, mark, color);
+    }
+
+    /**
+     * Creates a scatter plot from a data frame.
+     * @param data the data frame.
+     * @param x the column as x-axis.
+     * @param y the column as y-axis.
+     * @param category the category column for coloring.
+     */
+    public static ScatterPlot of(DataFrame data, String x, String y, String category, char mark) {
+        int ix = data.columnIndex(x);
+        int iy = data.columnIndex(y);
+        double[][] xy = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy)}).toArray(double[][]::new);
+        String[] label = data.column(category).toStringArray();
+        return of(xy, label, mark);
+    }
+
+    /**
+     * Creates a scatter plot from a data frame.
+     * @param data the data frame.
+     * @param x the column as x-axis.
+     * @param y the column as y-axis.
+     * @param z the column as z-axis.
+     */
+    public static ScatterPlot of(DataFrame data, String x, String y, String z, char mark, Color color) {
+        int ix = data.columnIndex(x);
+        int iy = data.columnIndex(y);
+        int iz = data.columnIndex(z);
+        double[][] xyz = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy), row.getDouble(iz)}).toArray(double[][]::new);
+        return of(xyz, mark, color);
+    }
+
+    /**
+     * Creates a scatter plot from a data frame.
+     * @param data the data frame.
+     * @param x the column as x-axis.
+     * @param y the column as y-axis.
+     * @param z the column as z-axis.
+     */
+    public static ScatterPlot of(DataFrame data, String x, String y, String z, String category, char mark) {
+        int ix = data.columnIndex(x);
+        int iy = data.columnIndex(y);
+        int iz = data.columnIndex(z);
+        double[][] xyz = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy), row.getDouble(iz)}).toArray(double[][]::new);
+        String[] label = data.column(category).toStringArray();
+        return of(xyz, label, mark);
     }
 }

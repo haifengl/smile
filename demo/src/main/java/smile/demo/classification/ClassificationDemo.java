@@ -114,7 +114,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
      * @param label the data label for classification
      */
     protected Canvas paintOnCanvas(double[][] data, int[] label) {
-        return ScatterPlot.of(data, mark, label).canvas();
+        return ScatterPlot.of(data, label, mark).canvas();
     }
     
     /**
@@ -228,7 +228,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             } else {
                 mark = '.';
             }
-            Canvas canvas = ScatterPlot.of(data, mark, label).canvas();
+            Canvas canvas = ScatterPlot.of(data, label, mark).canvas();
             BorderLayout layout = (BorderLayout) getLayout();
             remove(layout.getLayoutComponent(BorderLayout.CENTER));
             add(canvas.panel(), BorderLayout.CENTER);
@@ -244,7 +244,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             double[][] data = formula.x(dataset[datasetIndex]).toArray();
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-            Canvas canvas = ScatterPlot.of(data, mark, label).canvas();
+            Canvas canvas = ScatterPlot.of(data, label, mark).canvas();
             BorderLayout layout = (BorderLayout) getLayout();
             remove(layout.getLayoutComponent(BorderLayout.CENTER));
             add(canvas.panel(), BorderLayout.CENTER);

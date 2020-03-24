@@ -81,7 +81,7 @@ public class DENCLUEDemo  extends ClusteringDemo {
         System.out.format("DENCLUE clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
         System.out.println(denclue);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, denclue.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], denclue.y, mark).canvas();
         plot.add(ScatterPlot.of(denclue.attractors, '@'));
         return plot.panel();
     }
