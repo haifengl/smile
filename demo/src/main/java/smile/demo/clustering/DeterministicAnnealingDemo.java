@@ -62,7 +62,7 @@ public class DeterministicAnnealingDemo extends ClusteringDemo {
         DeterministicAnnealing annealing = DeterministicAnnealing.fit(dataset[datasetIndex], clusterNumber, alpha, 100, 1E-4, 1E-2);
         System.out.format("Deterministic Annealing clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], annealing.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, annealing.y).canvas();
         plot.add(ScatterPlot.of(annealing.centroids, '@'));
         return plot.panel();
 

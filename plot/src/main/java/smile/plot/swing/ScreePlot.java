@@ -18,6 +18,8 @@
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
+
 import smile.projection.PCA;
 
 /**
@@ -38,19 +40,20 @@ import smile.projection.PCA;
  * @author Haifeng Li
  */
 public class ScreePlot extends Plot {
+    /** The line legends. */
+    private static Legend[] legends = {
+            new Legend("Variance", Color.RED),
+            new Legend("Cumulative Variance", Color.BLUE)
+    };
 
-    /**
-     * The principal component analysis object.
-     */
+    /** The principal component analysis object. */
     private PCA pca;
     /** The mark of x-axis. */
     private double[] x;
     /** The label of x-axis. */
     private String[] labels;
-    /** The variance plot. */
-    private Plot varPlot;
-    /** The cumulative variance plot. */
-    private Plot cumVarPlot;
+    /** The variance & cumulative variance plot. */
+    private Line[] lines;
 
     /**
      * Constructor.
@@ -73,14 +76,22 @@ public class ScreePlot extends Plot {
             cumVar[i][1] = pca.getCumulativeVarianceProportion()[i];
         }
 
-        varPlot = new LinePlot(new Line(var, Line.Style.SOLID, '@', Color.RED));
-        cumVarPlot = new LinePlot(new Line(cumVar, Line.Style.SOLID, '@', Color.BLUE));
+        lines = new Line[] {
+                new Line(var, Line.Style.SOLID, '@', Color.RED),
+                new Line(cumVar, Line.Style.SOLID, '@', Color.BLUE)
+        };
     }
 
     @Override
     public void paint(Graphics g) {
-        varPlot.paint(g);
-        cumVarPlot.paint(g);
+        for (Line line : lines) {
+            line.paint(g);
+        }
+    }
+
+    @Override
+    public Optional<Legend[]> legends() {
+        return Optional.of(legends);
     }
 
     @Override
@@ -88,23 +99,20 @@ public class ScreePlot extends Plot {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
         canvas.setAxisLabels("Principal Component", "Proportion of Variance");
         canvas.getAxis(0).addLabel(labels, x);
-
-        canvas.add(varPlot);
-        canvas.add(cumVarPlot);
-
+        canvas.add(this);
         return canvas;
     }
 
     @Override
     public double[] getLowerBound() {
-        double[] bound = {0, 0.0};
+        double[] bound = {1, 0.0};
         return bound;
     }
 
     @Override
     public double[] getUpperBound() {
         int n = pca.getVarianceProportion().length;
-        double[] bound = {n + 1, 1.0};
+        double[] bound = {n, 1.0};
         return bound;
     }
 }

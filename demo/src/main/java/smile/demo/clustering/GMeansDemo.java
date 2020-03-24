@@ -65,7 +65,7 @@ public class GMeansDemo extends ClusteringDemo {
         GMeans gmeans = GMeans.fit(dataset[datasetIndex], maxClusterNumber);
         System.out.format("G-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], gmeans.y).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, gmeans.y).canvas();
         plot.add(ScatterPlot.of(gmeans.centroids, '@'));
         return plot.panel();
     }

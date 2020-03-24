@@ -44,17 +44,17 @@ public class LinePlot extends Plot {
         legends = Optional.empty();
     }
 
-    @Override
-    public Optional<Legend[]> legends() {
-        return legends;
-    }
-
     /**
      * Constructor.
      */
     public LinePlot(Line[] lines, Legend[] legends) {
         this.lines = lines;
         this.legends = Optional.of(legends);
+    }
+
+    @Override
+    public Optional<Legend[]> legends() {
+        return legends;
     }
 
     @Override

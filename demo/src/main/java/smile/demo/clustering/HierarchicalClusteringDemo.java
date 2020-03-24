@@ -95,7 +95,7 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
         }
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        Canvas plot = ScatterPlot.of(dataset[datasetIndex], membership).canvas();
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], mark, membership).canvas();
         pane.add(plot.panel());
 
         plot = new Dendrogram(hac.getTree(), hac.getHeight()).canvas();
