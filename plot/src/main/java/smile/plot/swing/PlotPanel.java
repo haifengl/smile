@@ -211,7 +211,7 @@ public class PlotPanel extends JPanel {
                                 }
                                 base.initBaseCoord();
                                 graphics.projection.reset();
-                                canvas.baseGrid.reset();
+                                canvas.resetAxis();
                             }
                         }
                     }
@@ -258,7 +258,7 @@ public class PlotPanel extends JPanel {
                 if (mouseDoubleClicked) {
                     double x = mouseClickX - e.getX();
                     if (Math.abs(x) > 20) {
-                        int s = canvas.baseGrid.getAxis(0).getLinearSlices();
+                        int s = canvas.axis[0].getLinearSlices();
                         x = x > 0 ? 1.0 / s : -1.0 / s;
                         x *= (backupBase.upperBound[0] - backupBase.lowerBound[0]);
                         base.lowerBound[0] = backupBase.lowerBound[0] + x;
@@ -268,7 +268,7 @@ public class PlotPanel extends JPanel {
 
                     double y = mouseClickY - e.getY();
                     if (Math.abs(y) > 20) {
-                        int s = canvas.baseGrid.getAxis(1).getLinearSlices();
+                        int s = canvas.axis[1].getLinearSlices();
                         y = y > 0 ? -1.0 / s : 1.0 / s;
                         y *= (backupBase.upperBound[1] - backupBase.lowerBound[1]);
                         base.lowerBound[1] = backupBase.lowerBound[1] + y;
@@ -278,7 +278,7 @@ public class PlotPanel extends JPanel {
 
                     base.initBaseCoord();
                     graphics.projection.reset();
-                    canvas.baseGrid.reset();
+                    canvas.resetAxis();
                     repaint();
                 } else {
                     String tooltip = null;
@@ -331,7 +331,7 @@ public class PlotPanel extends JPanel {
             Graphics graphics = canvas.graphics;
 
             for (int i = 0; i < base.dimension; i++) {
-                int s = canvas.baseGrid.getAxis(i).getLinearSlices();
+                int s = canvas.axis[i].getLinearSlices();
                 double r = e.getWheelRotation() > 0 ? 1.0 / s : -1.0 / s;
                 if (r > -0.5) {
                     double d = (base.upperBound[i] - base.lowerBound[i]) * r;
@@ -346,7 +346,7 @@ public class PlotPanel extends JPanel {
 
             base.initBaseCoord();
             graphics.projection.reset();
-            canvas.baseGrid.reset();
+            canvas.resetAxis();
 
             repaint();
             e.consume();
@@ -360,7 +360,7 @@ public class PlotPanel extends JPanel {
             if (graphics != null) {
                 base.initBaseCoord();
                 graphics.projection.reset();
-                canvas.baseGrid.reset();
+                canvas.resetAxis();
             }
 
             repaint();
@@ -832,7 +832,7 @@ public class PlotPanel extends JPanel {
 
             canvas.base.initBaseCoord();
             canvas.graphics.projection.reset();
-            canvas.baseGrid.reset();
+            canvas.resetAxis();
 
             dialog.setVisible(false);
             contentPane.repaint();
@@ -903,7 +903,7 @@ public class PlotPanel extends JPanel {
         Base base = canvas.base;
 
         for (int i = 0; i < base.dimension; i++) {
-            int s = canvas.baseGrid.getAxis(i).getLinearSlices();
+            int s = canvas.axis[i].getLinearSlices();
             double r = inout ? -1.0 / s : 1.0 / s;
             double d = (base.upperBound[i] - base.lowerBound[i]) * r;
             base.lowerBound[i] -= d;
@@ -916,7 +916,7 @@ public class PlotPanel extends JPanel {
 
         base.initBaseCoord();
         canvas.graphics.projection.reset();
-        canvas.baseGrid.reset();
+        canvas.resetAxis();
 
         contentPane.repaint();
     }
@@ -930,7 +930,7 @@ public class PlotPanel extends JPanel {
 
         base.reset();
         graphics.projection.reset();
-        canvas.baseGrid.reset();
+        canvas.resetAxis();
 
         if (graphics.projection instanceof Projection3D) {
             ((Projection3D) graphics.projection).setDefaultView();
