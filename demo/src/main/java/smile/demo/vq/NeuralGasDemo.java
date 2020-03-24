@@ -20,11 +20,11 @@ package smile.demo.vq;
 import java.awt.*;
 import javax.swing.*;
 
-import smile.graph.Graph;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
+import smile.plot.swing.Wireframe;
 import smile.vq.NeuralGas;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -59,9 +59,10 @@ public class NeuralGasDemo extends VQDemo {
                 TimeFunction.exp(neighborhood, dataset[datasetIndex].length * epochs / 8),
                 2 * dataset[datasetIndex].length);
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.points(gas.neurons(), '@');
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
+        plot.add(ScatterPlot.of(gas.neurons(), '@'));
 
+        JPanel panel = plot.panel();
         int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
             try {
@@ -76,18 +77,11 @@ public class NeuralGasDemo extends VQDemo {
 
                     if (++k % period == 0) {
                         plot.clear();
-                        plot.points(dataset[datasetIndex], pointLegend);
+                        plot.add(ScatterPlot.of(dataset[datasetIndex], pointLegend));
                         double[][] neurons = gas.neurons();
-                        plot.points(neurons, '@');
-                        Graph graph = gas.network();
-                        for (int l = 0; l < numNeurons; l++) {
-                            for (Graph.Edge e : graph.getEdges(l)) {
-                                if (e.v2 > e.v1) {
-                                    plot.line(neurons[e.v1], neurons[e.v2]);
-                                }
-                            }
-                        }
-                        plot.repaint();
+                        plot.add(ScatterPlot.of(neurons, '@'));
+                        plot.add(Wireframe.of(neurons, gas.network().getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new)));
+                        panel.repaint();
 
                         try {
                             Thread.sleep(100);
@@ -101,7 +95,7 @@ public class NeuralGasDemo extends VQDemo {
         });
         thread.start();
 
-        return plot;
+        return panel;
     }
 
     @Override

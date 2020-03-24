@@ -23,7 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.plot.swing.LinePlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.wavelet.HaarWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -43,9 +43,9 @@ public class HaarWaveletDemo extends JPanel {
         Wavelet wavelet = new HaarWavelet();
         wavelet.inverse(x);
 
-        PlotCanvas canvas = LinePlot.plot(x);
+        Canvas canvas = LinePlot.of(x).canvas();
         canvas.setTitle("Haar");
-        add(canvas);
+        add(canvas.panel());
 
         double[] sp500 = {
             1103.96, 1107.84, 1114.11, 1108.61, 1106.36, 1097.86, 1105.31,
@@ -87,12 +87,12 @@ public class HaarWaveletDemo extends JPanel {
             1242.52, 1241.84, 1241.58, 1236.34
         };
 
-        canvas = LinePlot.plot(sp500);
+        canvas = LinePlot.of(sp500).canvas();
         double[] smooth = sp500.clone();
         WaveletShrinkage.denoise(smooth, wavelet);
-        canvas.line(smooth, Color.BLUE);
+        canvas.add(LinePlot.of(smooth, Color.BLUE));
         canvas.setTitle("S&P 500");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

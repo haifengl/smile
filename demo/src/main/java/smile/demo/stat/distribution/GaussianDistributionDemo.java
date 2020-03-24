@@ -32,8 +32,7 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
 import smile.plot.swing.Histogram;
-import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.Line;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.LinePlot;
 import smile.plot.swing.QQPlot;
 import smile.stat.distribution.GaussianDistribution;
@@ -46,10 +45,10 @@ import smile.stat.distribution.GaussianDistribution;
 public class GaussianDistributionDemo extends JPanel implements ChangeListener {
     private JPanel optionPane;
     private JPanel canvas;
-    private PlotCanvas pdf;
-    private PlotCanvas cdf;
-    private PlotCanvas histogram;
-    private PlotCanvas qqplot;
+    private Canvas pdf;
+    private Canvas cdf;
+    private Canvas histogram;
+    private Canvas qqplot;
     private JSlider sigmaSlider;
     private double sigma = 1;
 
@@ -90,26 +89,26 @@ public class GaussianDistributionDemo extends JPanel implements ChangeListener {
             q[i][1] = dist.cdf(p[i][0]);
         }
 
-        pdf = LinePlot.plot(p, Line.Style.SOLID, Color.BLUE);
+        pdf = LinePlot.of(p, Color.BLUE).canvas();
         pdf.setTitle("PDF");
-        canvas.add(pdf);
+        canvas.add(pdf.panel());
 
-        cdf = LinePlot.plot(q, Line.Style.SOLID, Color.BLUE);
+        cdf = LinePlot.of(q, Color.BLUE).canvas();
         cdf.setTitle("CDF");
-        canvas.add(cdf);
+        canvas.add(cdf.panel());
 
         double[] data = new double[500];
         for (int i = 0; i < data.length; i++) {
             data[i] = dist.rand();
         }
 
-        histogram = Histogram.plot(data, 20);
+        histogram = Histogram.of(data, 20, true).canvas();
         histogram.setTitle("Histogram");
-        canvas.add(histogram);
+        canvas.add(histogram.panel());
 
-        qqplot = QQPlot.plot(data, dist);
+        qqplot = QQPlot.of(data, dist).canvas();
         qqplot.setTitle("Q-Q Plot");
-        canvas.add(qqplot);
+        canvas.add(qqplot.panel());
     }
 
     @Override
@@ -130,10 +129,10 @@ public class GaussianDistributionDemo extends JPanel implements ChangeListener {
             }
 
             pdf.clear();
-            pdf.line(p, Line.Style.SOLID, Color.BLUE);
+            pdf.add(LinePlot.of(p, Color.BLUE));
 
             cdf.clear();
-            cdf.line(q, Line.Style.SOLID, Color.BLUE);
+            cdf.add(LinePlot.of(q, Color.BLUE));
 
             double[] data = new double[500];
             for (int i = 0; i < data.length; i++) {
@@ -141,10 +140,10 @@ public class GaussianDistributionDemo extends JPanel implements ChangeListener {
             }
 
             histogram.clear();
-            histogram.histogram(data, 20, Color.BLUE);
+            histogram.add(Histogram.of(data, 20, true));
 
             qqplot.clear();
-            qqplot.add(new QQPlot(data, dist));
+            qqplot.add(QQPlot.of(data, dist));
             canvas.repaint();
         }
     }

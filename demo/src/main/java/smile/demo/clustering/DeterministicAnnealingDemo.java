@@ -26,8 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.clustering.DeterministicAnnealing;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -63,21 +62,10 @@ public class DeterministicAnnealingDemo extends ClusteringDemo {
         DeterministicAnnealing annealing = DeterministicAnnealing.fit(dataset[datasetIndex], clusterNumber, alpha, 100, 1E-4, 1E-2);
         System.out.format("Deterministic Annealing clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(annealing.centroids, '@');
-        for (int k = 0; k < clusterNumber; k++) {
-            if (annealing.size[k] > 0) {
-                double[][] cluster = new double[annealing.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (annealing.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], annealing.y).canvas();
+        plot.add(ScatterPlot.of(annealing.centroids, '@'));
+        return plot.panel();
 
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
-        plot.points(annealing.centroids, '@');
-        return plot;
     }
 
     @Override

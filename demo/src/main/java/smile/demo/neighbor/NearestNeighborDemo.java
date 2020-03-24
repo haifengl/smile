@@ -41,7 +41,7 @@ import smile.neighbor.LinearSearch;
 import smile.neighbor.MPLSH;
 import smile.neighbor.Neighbor;
 import smile.plot.swing.BarPlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -206,14 +206,16 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
 
         canvas.removeAll();
         double[] buildTime = {naiveBuild, kdtreeBuild, coverBuild, lshBuild, mplshBuild};
-        PlotCanvas build = BarPlot.plot(buildTime, label);
+        Canvas build = BarPlot.of(buildTime).canvas();
         build.setTitle("Build Time");
-        canvas.add(build);
+        build.setAxisLabels(label);
+        canvas.add(build.panel());
 
         double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch, lshSearch, mplshSearch};
-        PlotCanvas search = BarPlot.plot(searchTime, label);
+        Canvas search = BarPlot.of(searchTime).canvas();
         search.setTitle("Search Time");
-        canvas.add(search);
+        search.setAxisLabels(label);
+        canvas.add(search.panel());
         validate();
 
         startButton.setEnabled(true);

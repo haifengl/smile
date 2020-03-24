@@ -17,9 +17,11 @@
 
 package smile.plot.swing;
 
+import java.awt.Color;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -32,15 +34,28 @@ import smile.math.MathEx;
 public class ScatterPlot extends Plot {
 
     /**
-     * The coordinates of points.
+     * The set of points which may have different marks and/or colors.
      */
     final Point[] points;
+    /**
+     * The legends of each point group.
+     */
+    final Optional<Legend[]> legends;
 
     /**
      * Constructor.
      */
     public ScatterPlot(Point... points) {
         this.points = points;
+        legends = Optional.empty();
+    }
+
+    /**
+     * Constructor.
+     */
+    public ScatterPlot(Point[] points, Legend[] legends) {
+        this.points = points;
+        this.legends = Optional.of(legends);
     }
 
     @Override
@@ -48,6 +63,11 @@ public class ScatterPlot extends Plot {
         for (Point point : points) {
             point.paint(g);
         }
+    }
+
+    @Override
+    public Optional<Legend[]> legends() {
+        return legends;
     }
 
     @Override
@@ -91,28 +111,56 @@ public class ScatterPlot extends Plot {
     }
 
     /**
+     * Create a scatter plot.
+     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     */
+    public static ScatterPlot of(double[][] points, Color color) {
+        return new ScatterPlot(Point.of(points, color));
+    }
+
+    /**
+     * Create a scatter plot.
+     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     */
+    public static ScatterPlot of(double[][] points, char mark) {
+        return new ScatterPlot(Point.of(points, mark));
+    }
+
+    /**
+     * Create a scatter plot.
+     * @param points a n-by-2 or n-by-3 matrix that describes coordinates of n points.
+     */
+    public static ScatterPlot of(double[][] points, char mark, Color color) {
+        return new ScatterPlot(new Point(points, mark, color));
+    }
+
+    /**
      * Creates a scatter plot of multiple groups of data.
      * @param data the data points. The elements should be of dimension 2 or 3.
      * @param labels the group label of data points.
      */
     public static ScatterPlot of(double[][] data, String[] labels) {
         if (data.length != labels.length) {
-            throw new IllegalArgumentException("The number of points and that of labels are not same.");
+            throw new IllegalArgumentException("The number of points and that of labels are not the same.");
         }
 
         Map<String, List<Integer>> groups = IntStream.range(0, data.length).boxed().collect(Collectors.groupingBy(i -> labels[i]));
         Point[] points = new Point[groups.size()];
+        Legend[] legends = new Legend[groups.size()];
         int k = 0;
         for (Map.Entry<String, List<Integer>> group : groups.entrySet()) {
+            char mark = Point.MARKS[k % Point.MARKS.length];
+            Color color = Palette.COLORS[k % Palette.COLORS.length];
             points[k] = new Point(
                     group.getValue().stream().map(i -> data[i]).toArray(double[][]::new),
-                    Point.MARKS[k % Point.MARKS.length],
-                    Palette.COLORS[k % Palette.COLORS.length],
-                    group.getKey());
+                    mark,
+                    color
+            );
+            legends[k] = new Legend(String.format("%c %s", mark, group.getKey()), color);
             k++;
         }
 
-        return new ScatterPlot(points);
+        return new ScatterPlot(points, legends);
     }
 
     /**

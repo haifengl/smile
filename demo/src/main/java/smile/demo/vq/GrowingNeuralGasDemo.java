@@ -19,14 +19,14 @@ package smile.demo.vq;
 
 import java.util.Arrays;
 import java.awt.Dimension;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
+import javax.swing.*;
 
 import smile.math.MathEx;
 import smile.vq.GrowingNeuralGas;
 import smile.vq.hebb.Edge;
 import smile.vq.hebb.Neuron;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.LinePlot;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -40,8 +40,9 @@ public class GrowingNeuralGasDemo extends VQDemo {
 
     @Override
     public JComponent learn() {
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
 
+        JPanel panel = plot.panel();
         int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
             try {
@@ -58,17 +59,14 @@ public class GrowingNeuralGasDemo extends VQDemo {
 
                     if (++k % period == 0) {
                         plot.clear();
-                        plot.points(dataset[datasetIndex], pointLegend);
+                        plot.add(ScatterPlot.of(dataset[datasetIndex], pointLegend));
                         Neuron[] neurons = gas.neurons();
                         double[][] w = Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
-                        plot.points(w, '@');
+                        plot.add(ScatterPlot.of(w, '@'));
 
-                        for (Neuron neuron : neurons) {
-                            for (Edge e : neuron.edges) {
-                                plot.line(neuron.w, e.neighbor.w);
-                            }
-                        }
-                        plot.repaint();
+                        double[][] lines = Arrays.stream(neurons).flatMap(neuron -> neuron.edges.stream().map(edge -> new double[][]{neuron.w, edge.neighbor.w})).toArray(double[][]::new);
+                        plot.add(LinePlot.of(lines));
+                        panel.repaint();
 
                         try {
                             Thread.sleep(100);
@@ -82,7 +80,7 @@ public class GrowingNeuralGasDemo extends VQDemo {
         });
         thread.start();
 
-        return plot;
+        return panel;
     }
 
     @Override

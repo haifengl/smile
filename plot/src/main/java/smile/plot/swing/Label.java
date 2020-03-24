@@ -27,6 +27,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Label extends Shape {
+    /** The default JLabel font may vary on different systems. */
+    private static Font DefaultFont = new javax.swing.JLabel().getFont();
 
     /**
      * The text of label.
@@ -77,7 +79,7 @@ public class Label extends Shape {
         Color c = g.getColor();
         g.setColor(color);
 
-        g.drawText(text, horizontalReference, verticalReference, rotation, coordinates);
+        g.drawText(text, coordinates, horizontalReference, verticalReference, rotation);
 
         g.setColor(c);
         if (font != null) g.setFont(f);
@@ -100,9 +102,6 @@ public class Label extends Shape {
 
         return builder.toString();
     }
-
-    /** The default JLabel font may vary on different systems. */
-    private static Font DefaultFont = new javax.swing.JLabel().getFont();
 
     /**
      * Creates a black label centered at the coordinates.

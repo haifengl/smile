@@ -17,10 +17,8 @@
 
 package smile.plot.swing;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
-
 import smile.math.MathEx;
 
 /**
@@ -33,9 +31,6 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class Contour extends Plot {
-
-    private static final String DIMENSIONS_XZ_DONT_MATCH = "The dimensions of x and z don't match.";
-    private static final String DIMENSIONS_YZ_DONT_MATCH = "The dimensions of y and z don't match.";
     /**
      * The x coordinate of surface.
      */
@@ -69,173 +64,17 @@ public class Contour extends Plot {
      */
     private double[] levels;
     /**
-     * The contour color.
-     */
-    private Color[] colors;
-    /**
-     * True if show the level values.
-     */
-    private boolean showLevelValue = true;
-    /**
      * The set of contours.
      */
     private List<Isoline> contours;
-
     /**
-     * Contour contains a list of segments.
+     * If show axis marks.
      */
-    class Isoline {
-
-        /**
-         * The coordinates of points along the contour line.
-         */
-        List<double[]> points = new ArrayList<>();
-        /**
-         * The level value of contour line.
-         */
-        double level;
-        /**
-         * The color of contour line.
-         */
-        Color color;
-        /**
-         * The label of contour line.
-         */
-        Label label;
-
-        /**
-         * Constructor.
-         */
-        Isoline(double level) {
-            this.level = level;
-        }
-
-        /**
-         * Constructor.
-         */
-        Isoline(double level, Color color) {
-            this.level = level;
-            this.color = color;
-        }
-
-        /**
-         * Add a point to the contour line.
-         */
-        void add(double[] point) {
-            points.add(point);
-        }
-
-        /**
-         * Add a point to the contour line.
-         */
-        void add(double x, double y) {
-            double[] point = {x, y};
-            points.add(point);
-        }
-
-        /**
-         * Paint the contour line. If the color attribute is null, the level
-         * value of contour line will be shown along the line.
-         */
-        void paint(Graphics g) {
-            Color c = g.getColor();
-            if (color != null) {
-                g.setColor(color);
-            }
-
-            double angle = 0.0;
-            double horizontalReference = 0.0;
-            double verticalReference = 0.0;
-            double[] coord = null;
-
-            if (points.size() > 1) {
-                double[] x1 = points.get(0);
-                for (int i = 1; i < points.size(); i++) {
-                    double[] x2 = points.get(i);
-                    g.drawLine(x1, x2);
-                    x1 = x2;
-
-                    if (label == null) {
-                        if (i == points.size() / 2) {
-                            coord = x1;
-
-                            int k = i + 1;
-                            if (k >= points.size()) {
-                                k = i;
-                            }
-
-                            // compute label angle
-                            angle = Math.PI / 2;
-
-                            double dxx = points.get(k)[0] - points.get(i)[0];
-                            double dyy = points.get(k)[1] - points.get(i)[1];
-                            if (dyy < 0.0) {
-                                angle = -Math.PI / 2;
-                            }
-
-                            if (dxx != 0.0) {
-                                angle = Math.atan(dyy / dxx) + Math.PI / 2;
-                            }
-                        }
-                    }
-                }
-            } else if (points.size() == 1) {
-                double[] x1 = points.get(0);
-                g.drawPoint('@', x1);
-                coord = x1;
-                horizontalReference = 0.0;
-            }
-
-            if (label == null) {
-                double[] lb = g.getLowerBound();
-                double[] ub = g.getUpperBound();
-                double xrange = ub[0] - lb[0];
-                double yrange = ub[1] - lb[1];
-
-                if (ub[0] - coord[0] < xrange / 10) {
-                    horizontalReference = 1.0;
-                }
-
-                if (ub[1] - coord[1] < yrange / 10) {
-                    horizontalReference = 1.0;
-                }
-
-                if (coord[1] - lb[1] < yrange / 10) {
-                    horizontalReference = 0.0;
-                }
-
-                label = Label.of(String.format("%.2G", level), coord, horizontalReference, verticalReference, angle);
-            }
-
-            if (showLevelValue && label != null) {
-                label.paint(g);
-            }
-
-            if (color != null) {
-                g.setColor(c);
-            }
-        }
-    }
-
+    private boolean isLabelVisible;
     /**
-     * Constructor.
-     * @param z the data matrix to create contour plot.
+     * Show the level.
      */
-    public Contour(double[][] z) {
-        this.z = z;
-        init();
-    }
-
-    /**
-     * Constructor.
-     * @param z the data matrix to create contour plot.
-     * @param numLevels the number of contour levels.
-     */
-    public Contour(double[][] z, int numLevels) {
-        this.z = z;
-        this.numLevels = numLevels;
-        init();
-    }
+    private boolean showValue = true;
 
     /**
      * Constructor.
@@ -263,64 +102,6 @@ public class Contour extends Plot {
 
     /**
      * Constructor.
-     * @param z the data matrix to create contour plot.
-     * @param levels the level values of contours.
-     * @param colors the color for each contour level.
-     */
-    public Contour(double[][] z, double[] levels, Color[] colors) {
-        this.z = z;
-        this.levels = levels;
-        this.colors = colors;
-        showLevelValue = false;
-        init();
-    }
-
-    /**
-     * Constructor.
-     * @param x the x coordinates of the data grid of z. Must be in ascending order.
-     * @param y the y coordinates of the data grid of z. Must be in ascending order.
-     * @param z the data matrix to create contour plot.
-     */
-    public Contour(double[] x, double[] y, double[][] z) {
-        if (x.length != z[0].length) {
-            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
-        }
-
-        if (y.length != z.length) {
-            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
-        }
-
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        init();
-    }
-
-    /**
-     * Constructor.
-     * @param x the x coordinates of the data grid of z. Must be in ascending order.
-     * @param y the y coordinates of the data grid of z. Must be in ascending order.
-     * @param z the data matrix to create contour plot.
-     * @param numLevels the number of contour levels.
-     */
-    public Contour(double[] x, double[] y, double[][] z, int numLevels) {
-        if (x.length != z[0].length) {
-            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
-        }
-
-        if (y.length != z.length) {
-            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
-        }
-
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.numLevels = numLevels;
-        init();
-    }
-
-    /**
-     * Constructor.
      * @param x the x coordinates of the data grid of z. Must be in ascending order.
      * @param y the y coordinates of the data grid of z. Must be in ascending order.
      * @param z the data matrix to create contour plot.
@@ -329,11 +110,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, int numLevels, boolean logScale) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
+            throw new IllegalArgumentException("x.length != z[0].length");
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
+            throw new IllegalArgumentException("y.length != z.length");
         }
 
         this.x = x;
@@ -353,11 +134,11 @@ public class Contour extends Plot {
      */
     public Contour(double[] x, double[] y, double[][] z, double[] levels) {
         if (x.length != z[0].length) {
-            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
+            throw new IllegalArgumentException("x.length != z[0].length");
         }
 
         if (y.length != z.length) {
-            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
+            throw new IllegalArgumentException("y.length != z.length");
         }
 
         this.x = x;
@@ -368,33 +149,11 @@ public class Contour extends Plot {
     }
 
     /**
-     * Constructor.
-     * @param x the x coordinates of the data grid of z. Must be in ascending order.
-     * @param y the y coordinates of the data grid of z. Must be in ascending order.
-     * @param z the data matrix to create contour plot.
-     * @param levels the level values of contours. Must be strictly increasing and finite.
-     * @param colors the color for each contour level.
+     * Sets if show the value of isoline.
+     * @param showValue
      */
-    public Contour(double[] x, double[] y, double[][] z, double[] levels, Color[] colors) {
-        if (x.length != z[0].length) {
-            throw new IllegalArgumentException(DIMENSIONS_XZ_DONT_MATCH);
-        }
-
-        if (y.length != z.length) {
-            throw new IllegalArgumentException(DIMENSIONS_YZ_DONT_MATCH);
-        }
-
-        if (levels.length != colors.length) {
-            throw new IllegalArgumentException("The number of levels and colors don't match.");
-        }
-
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.levels = levels;
-        this.colors = colors;
-        showLevelValue = false;
-        init();
+    public void setShowValue(boolean showValue) {
+        this.showValue = showValue;
     }
 
     /**
@@ -431,6 +190,8 @@ public class Contour extends Plot {
      * Initialize the contour lines.
      */
     private void init() {
+        isLabelVisible = x != null || y != null;
+
         if (x == null) {
             x = new double[z[0].length];
             for (int i = 0; i < x.length; i++) {
@@ -781,10 +542,7 @@ public class Contour extends Plot {
                         }
 
                         // Save the contour locations into the list of contours
-                        Isoline contour = new Isoline(zc);
-                        if (colors != null) {
-                            contour.color = colors[c];
-                        }
+                        Isoline contour = new Isoline(zc, showValue);
 
                         Segment s = start;
                         contour.add(s.x0, s.y0);
@@ -794,7 +552,7 @@ public class Contour extends Plot {
                         }
                         contour.add(s.x1, s.y1);
                         
-                        if (!contour.points.isEmpty()) {
+                        if (!contour.isEmpty()) {
                             contours.add(contour);
                         }
                     }
@@ -938,11 +696,16 @@ public class Contour extends Plot {
         return seglist;
     }
 
-    /**
-     * Set if show the level value with each contour line.
-     */
-    public void showLevelValue(boolean b) {
-        showLevelValue = b;
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {MathEx.min(x), MathEx.min(y)};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {MathEx.max(x), MathEx.max(y)};
+        return bound;
     }
 
     @Override
@@ -950,101 +713,56 @@ public class Contour extends Plot {
         for (Isoline contour : contours) {
             contour.paint(g);
         }
+    }
 
-        if (colors != null) {
-            g.clearClip();
-            Color c = g.getColor();
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+        canvas.add(this);
 
-            double height = 0.7 / colors.length;
-            double[] start = {1.1, 0.15};
-            double[] end = {1.13, start[1] - height};
-
-            for (int i = 0; i < colors.length; i++) {
-                g.setColor(colors[i]);
-                g.fillRectBaseRatio(start, end);
-                start[1] += height;
-                end[1] += height;
-            }
-
-            g.setColor(Color.BLACK);
-            start[1] -= height;
-            end[1] = 0.15 - height;
-            g.drawRectBaseRatio(start, end);
-            start[0] = 1.14;
-            double log = Math.log10(Math.abs(levels[levels.length-1]));
-            int decimal = 1;
-            if (log < 0) {
-                decimal = (int) -log + 1;
-            }
-            g.drawTextBaseRatio(String.valueOf(MathEx.round(levels[levels.length-1], decimal)), 0.0, 1.0, start);
-
-            start[1] = 0.15 - height;
-            log = Math.log10(Math.abs(levels[0]));
-            decimal = 1;
-            if (log < 0) {
-                decimal = (int) -log + 1;
-            }
-            g.drawTextBaseRatio(String.valueOf(MathEx.round(levels[0], decimal)), 0.0, 0.0, start);
-
-            g.setColor(c);
+        if (!isLabelVisible) {
+            canvas.getAxis(0).setLabelVisible(false);
+            canvas.getAxis(1).setLabelVisible(false);
         }
-    }
-
-    /**
-     * Create a plot canvas with the contour plot of given data.
-     * @param z a matrix.
-     */
-    public static PlotCanvas plot(double[][] z) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Contour(z));
-
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
 
         return canvas;
     }
 
     /**
-     * Create a plot canvas with the contour plot of given data.
-     * @param z a matrix.
+     * Creates a contour plot with 10 isolines.
+     * @param z the data matrix to create contour plot.
      */
-    public static PlotCanvas plot(double[][] z, double[] levels, Color[] palette) {
-        double[] lowerBound = {0, 0};
-        double[] upperBound = {z[0].length, z.length};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Contour(z, levels, palette));
-
-        canvas.getAxis(0).setLabelVisible(false);
-        canvas.getAxis(1).setLabelVisible(false);
-
-        return canvas;
+    public static Contour of(double[][] z) {
+        return of(z, 10);
     }
 
     /**
-     * Create a plot canvas with the contour plot of given data.
-     * @param z a matrix.
+     * Creates a contour plot.
+     * @param z the data matrix to create contour plot.
+     * @param numLevels the number of contour levels.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Contour(x, y, z));
-
-        return canvas;
+    public static Contour of(double[][] z, int numLevels) {
+        return new Contour(z, numLevels, false);
     }
 
     /**
-     * Create a plot canvas with the contour plot of given data.
-     * @param z a matrix.
+     * Creates a contour plot with 10 isolines.
+     * @param x the x coordinates of the data grid of z. Must be in ascending order.
+     * @param y the y coordinates of the data grid of z. Must be in ascending order.
+     * @param z the data matrix to create contour plot.
      */
-    public static PlotCanvas plot(double[] x, double[] y, double[][] z, double[] levels, Color[] palette) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.add(new Contour(x, y, z, levels, palette));
+    public static Contour of(double[] x, double[] y, double[][] z) {
+        return of(x, y, z, 10);
+    }
 
-        return canvas;
+    /**
+     * Creates a contour plot.
+     * @param x the x coordinates of the data grid of z. Must be in ascending order.
+     * @param y the y coordinates of the data grid of z. Must be in ascending order.
+     * @param z the data matrix to create contour plot.
+     * @param numLevels the number of contour levels.
+     */
+    public static Contour of(double[] x, double[] y, double[][] z, int numLevels) {
+        return new Contour(x, y, z, numLevels, false);
     }
 }

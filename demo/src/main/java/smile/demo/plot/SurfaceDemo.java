@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.Surface;
 
 /**
@@ -45,9 +45,9 @@ public class SurfaceDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Surface.plot(z);
+        Canvas canvas = new Surface(z).canvas();
         canvas.setTitle("Gaussian");
-        add(canvas);
+        add(canvas.panel());
 
         z = new double[m][n][3];
         for (int i = 0; i < m; i++) {
@@ -59,9 +59,9 @@ public class SurfaceDemo extends JPanel {
             }
         }
 
-        canvas = Surface.plot(z, Palette.jet(256, 1.0f));
+        canvas = new Surface(z, Palette.jet(256, 1.0f)).canvas();
         canvas.setTitle("Mexican Hat");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

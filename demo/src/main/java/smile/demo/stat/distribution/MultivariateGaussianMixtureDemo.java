@@ -23,7 +23,7 @@ import javax.swing.JPanel;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.plot.swing.Histogram;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 import smile.stat.distribution.MultivariateGaussianMixture;
@@ -93,9 +93,9 @@ public class MultivariateGaussianMixtureDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Surface.plot(z);
+        Canvas canvas = new Surface(z).canvas();
         canvas.setTitle("Gaussian Mixture");
-        add(canvas);
+        add(canvas.panel());
     }
     
     @Override
@@ -178,7 +178,7 @@ public class MultivariateGaussianMixtureDemo extends JPanel {
         frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
-        frame.getContentPane().add(Histogram.plot(data100, 100));
+        frame.getContentPane().add(Histogram.of(data100, 100, true).canvas().panel());
         frame.setVisible(true);
     }
 }

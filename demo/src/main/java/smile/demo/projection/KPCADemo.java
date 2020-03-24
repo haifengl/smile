@@ -28,7 +28,9 @@ import javax.swing.JPanel;
 import javax.swing.JTextField;
 
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.TextPlot;
 import smile.projection.KPCA;
 import smile.projection.PCA;
 import smile.math.MathEx;
@@ -84,72 +86,61 @@ public class KPCADemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
+        Canvas plot;
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("PCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("PCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         KPCA<double[]> kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 2);
 
         y = kpca.getCoordinates();
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("KPCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
         kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 3);
         System.out.format("Learn KPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
         y = kpca.getCoordinates();
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("KPCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

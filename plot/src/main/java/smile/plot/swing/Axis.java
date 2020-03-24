@@ -274,9 +274,9 @@ public class Axis {
 
                 double[][] points = {originBase, endBase};
                 if (j > 0 && j < gridLines[i].length - 1) {
-                    gridLines[i][j] = Line.of(points, Line.Style.DOT, ' ', Color.LIGHT_GRAY);
+                    gridLines[i][j] = new Line(points, Line.Style.DOT, ' ', Color.LIGHT_GRAY);
                 } else {
-                    gridLines[i][j] = Line.of(points, Line.Style.SOLID, ' ', Color.BLACK);
+                    gridLines[i][j] = new Line(points, Line.Style.SOLID, ' ', Color.BLACK);
                 }
             }
             i2++;

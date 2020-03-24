@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.BoxPlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -47,14 +47,14 @@ public class BoxPlotDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = BoxPlot.plot(data, new String[] {"Group A", "Group B", "Big Group C", "Group D", "Very Long Group E"});
+        Canvas canvas = new BoxPlot(data, new String[] {"Group A", "Group B", "Big Group C", "Group D", "Very Long Group E"}).canvas();
         canvas.setTitle("Box Plot A");
         canvas.getAxis(0).setRotation(-Math.PI / 2);
-        add(canvas);
+        add(canvas.panel());
 
-        canvas = BoxPlot.plot(data[0]);
+        canvas = BoxPlot.of(data[0]).canvas();
         canvas.setTitle("Box Plot B");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

@@ -34,6 +34,10 @@ import smile.sort.QuickSort;
 public class Histogram3D extends Plot {
 
     /**
+     * The original data.
+     */
+    private double[][] data;
+    /**
      * The frequencies/probabilities of bins.
      */
     private double[][] freq;
@@ -78,121 +82,7 @@ public class Histogram3D extends Plot {
     /**
      * The color palette to represent values.
      */
-    private Color[] palette = null;
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     */
-    public Histogram3D(double[][] data) {
-        this(data, true);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param palette the color palette.
-     */
-    public Histogram3D(double[][] data, Color[] palette) {
-        this(data, true, palette);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param prob if true, the z-axis will be in the probability scale.
-     * Otherwise, z-axis will be in the frequency scale.
-     */
-    public Histogram3D(double[][] data, boolean prob) {
-        this(data, 10);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param prob if true, the z-axis will be in the probability scale.
-     * Otherwise, z-axis will be in the frequency scale.
-     * @param palette the color palette.
-     */
-    public Histogram3D(double[][] data, boolean prob, Color[] palette) {
-        this(data, 10, palette);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param nbins the number of bins.
-     */
-    public Histogram3D(double[][] data, int nbins) {
-        this(data, nbins, nbins, true);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param nbins the number of bins.
-     * @param palette the color palette.
-     */
-    public Histogram3D(double[][] data, int nbins, Color[] palette) {
-        this(data, nbins, nbins, true, palette);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param nbins the number of bins.
-     * @param prob if true, the z-axis will be in the probability scale.
-     * Otherwise, z-axis will be in the frequency scale.
-     */
-    public Histogram3D(double[][] data, int nbins, boolean prob) {
-        this(data, nbins, nbins, prob);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param nbins the number of bins.
-     * @param prob if true, the z-axis will be in the probability scale.
-     * Otherwise, z-axis will be in the frequency scale.
-     * @param palette the color palette.
-     */
-    public Histogram3D(double[][] data, int nbins, boolean prob, Color[] palette) {
-        this(data, nbins, nbins, prob, palette);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
-     */
-    public Histogram3D(double[][] data, int xbins, int ybins) {
-        this(data, xbins, ybins, true);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
-     * @param palette the color palette.
-     */
-    public Histogram3D(double[][] data, int xbins, int ybins, Color[] palette) {
-        this(data, xbins, ybins, true, palette);
-    }
-
-    /**
-     * Constructor.
-     * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
-     * @param prob if true, the z-axis will be in the probability scale.
-     * Otherwise, z-axis will be in the frequency scale.
-     */
-    public Histogram3D(double[][] data, int xbins, int ybins, boolean prob) {
-        super(Color.LIGHT_GRAY);
-        init(data, xbins, ybins, prob);
-    }
+    private Color[] palette;
 
     /**
      * Constructor.
@@ -205,22 +95,13 @@ public class Histogram3D extends Plot {
      */
     public Histogram3D(double[][] data, int xbins, int ybins, boolean prob, Color[] palette) {
         super(Color.LIGHT_GRAY);
-        this.palette = palette;
-        init(data, xbins, ybins, prob);
-    }
-
-    /**
-     * Generate the frequency table.
-     */
-    private void init(double[][] data, int xbins, int ybins, boolean prob) {
-        // Generate the histogram.
-        if (data.length == 0) {
-            throw new IllegalArgumentException("array is empty.");
-        }
 
         if (data[0].length != 2) {
             throw new IllegalArgumentException("dimension is not 2.");
         }
+
+        this.data = data;
+        this.palette = palette;
 
         double xmin = data[0][0];
         double xmax = data[0][0];
@@ -344,8 +225,27 @@ public class Histogram3D extends Plot {
     }
 
     @Override
+    public double[] getLowerBound() {
+        double[] min = MathEx.colMin(data);
+        double[] bound = {min[0], min[1], 0};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] max = MathEx.colMax(data);
+        double[] bound = {max[0], max[1], 0};
+        for (int i = 0; i < freq.length; i++) {
+            if (freq[i][2] > bound[2]) {
+                bound[2] = freq[i][2];
+            }
+        }
+
+        return bound;
+    }
+
+    @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         Projection3D p3d = (Projection3D) g.projection;
 
         /**
@@ -456,142 +356,46 @@ public class Histogram3D extends Plot {
                 }
             }
         }
-        
-        g.setColor(c);
     }
 
     /**
-     * Get the frequencies/probabilities table.
-     */
-    public double[][] getHistogram() {
-        return freq;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot.
+     * Creates a 3D histogram plot.
      * @param data a sample set.
      */
-    public static PlotCanvas plot(double[][] data) {
-        return plot(data);
+    public static Histogram3D of(double[][] data) {
+        return of(data, 10, true);
     }
 
     /**
-     * Create a plot canvas with the histogram plot.
+     * Creates a 3D histogram plot.
      * @param data a sample set.
+     * @param nbins the number of bins.
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[][] data, Color[] palette) {
-        Histogram3D histogram = new Histogram3D(data, palette);
-
-        double[] min = MathEx.colMin(data);
-        double[] max = MathEx.colMax(data);
-        double[] lowerBound = {min[0], min[1], 0};
-        double[] upperBound = {max[0], max[1], 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][2] > upperBound[2]) {
-                upperBound[2] = freq[i][2];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(histogram);
-
-        return canvas;
+    public static Histogram3D of(double[][] data, int nbins, Color[] palette) {
+        return new Histogram3D(data, nbins, nbins, true, palette);
     }
 
     /**
-     * Create a plot canvas with the histogram plot of given data.
+     * Creates a 3D histogram plot.
      * @param data a sample set.
-     * @param k the number of bins.
-     */
-    public static PlotCanvas plot(double[][] data, int k) {
-        return plot(data, k, null);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param k the number of bins.
-     * @param palette the color palette.
-     */
-    public static PlotCanvas plot(double[][] data, int k, Color[] palette) {
-        return plot(data, k, false, palette);
-    }
-    
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param k the number of bins.
+     * @param nbins the number of bins.
      * @param prob if true, the z-axis will be in the probability scale.
-     * @param palette the color palette.
+     * Otherwise, z-axis will be in the frequency scale.
      */
-    public static PlotCanvas plot(double[][] data, int k, boolean prob, Color[] palette) {
-        return plot(data, k, k, prob, palette);
+    public static Histogram3D of(double[][] data, int nbins, boolean prob) {
+        return new Histogram3D(data, nbins, nbins, prob, null);
     }
-    
+
     /**
-     * Create a plot canvas with the histogram plot of given data.
+     * Creates a 3D histogram plot.
      * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
+     * @param nbins the number of bins.
      * @param prob if true, the z-axis will be in the probability scale.
+     * Otherwise, z-axis will be in the frequency scale.
      * @param palette the color palette.
      */
-    public static PlotCanvas plot(double[][] data, int xbins, int ybins, boolean prob, Color[] palette) {
-        Histogram3D histogram = new Histogram3D(data, xbins, ybins, prob, palette);
-
-        double[] min = MathEx.colMin(data);
-        double[] max = MathEx.colMax(data);
-        double[] lowerBound = {min[0], min[1], 0};
-        double[] upperBound = {max[0], max[1], 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][2] > upperBound[2]) {
-                upperBound[2] = freq[i][2];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(histogram);
-
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
-     */
-    public static PlotCanvas plot(double[][] data, int xbins, int ybins) {
-        return plot(data, xbins, ybins, null);
-    }
-
-    /**
-     * Create a plot canvas with the histogram plot of given data.
-     * @param data a sample set.
-     * @param xbins the number of bins on x-axis.
-     * @param ybins the number of bins on y-axis.
-     * @param palette the color palette.
-     */
-    public static PlotCanvas plot(double[][] data, int xbins, int ybins, Color[] palette) {
-        Histogram3D histogram = new Histogram3D(data, xbins, ybins, palette);
-
-        double[] min = MathEx.colMin(data);
-        double[] max = MathEx.colMax(data);
-        double[] lowerBound = {min[0], min[1], 0};
-        double[] upperBound = {max[0], max[1], 0};
-        double[][] freq = histogram.getHistogram();
-        for (int i = 0; i < freq.length; i++) {
-            if (freq[i][2] > upperBound[2]) {
-                upperBound[2] = freq[i][2];
-            }
-        }
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(histogram);
-
-        return canvas;
+    public static Histogram3D of(double[][] data, int nbins, boolean prob, Color[] palette) {
+        return new Histogram3D(data, nbins, nbins, prob, palette);
     }
 }

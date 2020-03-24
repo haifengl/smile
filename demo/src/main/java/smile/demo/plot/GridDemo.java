@@ -21,7 +21,7 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import smile.plot.swing.Grid;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -43,9 +43,9 @@ public class GridDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Grid.plot("Grid Plot", z);
+        Canvas canvas = Grid.of(z).canvas();
         canvas.setTitle("Grid Plot");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

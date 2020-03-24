@@ -68,9 +68,9 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * Constructor.
      * @param plots the plots to add into the frame.
      */
-    public PlotGroup(PlotCanvas... plots) {
+    public PlotGroup(PlotPanel... plots) {
         init();
-        for (PlotCanvas plot : plots) {
+        for (PlotPanel plot : plots) {
             contentPane.add(plot);
         }
         organize();
@@ -105,7 +105,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
     /**
      * Add a plot into the frame.
      */
-    public void add(PlotCanvas plot) {
+    public void add(PlotPanel plot) {
         contentPane.add(plot);
         organize();
     }
@@ -113,7 +113,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
     /**
      * Remove a plot from the frame.
      */
-    public void remove(PlotCanvas plot) {
+    public void remove(PlotPanel plot) {
         contentPane.remove(plot);
         organize();
     }
@@ -137,7 +137,7 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
     private JButton makeButton(String imageName, String actionCommand, String toolTipText, String altText) {
         //Look for the image.
         String imgLocation = "images/" + imageName + "16.png";
-        URL imageURL = PlotCanvas.class.getResource(imgLocation);
+        URL imageURL = getClass().getResource(imgLocation);
 
         //Create and initialize the button.
         JButton button = new JButton();

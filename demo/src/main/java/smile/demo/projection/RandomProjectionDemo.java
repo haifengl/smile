@@ -26,11 +26,11 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.math.matrix.DenseMatrix;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.TextPlot;
 import smile.projection.PCA;
 import smile.projection.RandomProjection;
-import smile.math.MathEx;
 
 /**
  *
@@ -57,36 +57,31 @@ public class RandomProjectionDemo extends ProjectionDemo {
         pca.setProjection(2);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
+        Canvas plot;
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("PCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         pca.setProjection(3);
         y = pca.project(data);
 
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("PCA");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         RandomProjection rp = sparseBox.isSelected() ? RandomProjection.sparse(data[0].length, 0) : RandomProjection.of(data[0].length, 2);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
@@ -99,19 +94,16 @@ public class RandomProjectionDemo extends ProjectionDemo {
         }
 
         y = rp.project(data);
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("Random Projection");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         rp = sparseBox.isSelected() ?  RandomProjection.sparse(data[0].length, 3) : RandomProjection.of(data[0].length, 3);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
@@ -124,19 +116,16 @@ public class RandomProjectionDemo extends ProjectionDemo {
         }
 
         y = rp.project(data);
-        plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
         if (names != null) {
-            plot.points(y, names);
+            plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("Random Projection");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

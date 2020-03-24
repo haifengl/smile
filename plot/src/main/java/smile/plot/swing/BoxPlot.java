@@ -17,7 +17,6 @@
 
 package smile.plot.swing;
 
-import java.awt.Color;
 import java.util.Arrays;
 import java.util.Optional;
 import smile.math.MathEx;
@@ -58,15 +57,19 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BoxPlot extends Plot {
+    /**
+     * Tooltip format string.
+     */
+    private static String format = "<table border=\"1\"><tr><td>Median</td><td align=\"right\">%g</td></tr><tr><td>Q1</td><td align=\"right\">%g</td></tr><tr><td>Q3</td><td align=\"right\">%g</td></tr></table>";
 
     /**
      * The input data. Each row is a variable.
      */
     private double[][] data;
     /**
-     * The description of each variable.
+     * The label of each variable.
      */
-    private String[] description;
+    private String[] labels;
     /**
      * The quantiles of data.
      */
@@ -74,42 +77,18 @@ public class BoxPlot extends Plot {
 
     /**
      * Constructor.
-     */
-    public BoxPlot(double[] data) {
-        this.data = new double[1][];
-        this.data[0] = data;
-        init();
-    }
-
-    /**
-     * Constructor.
      * @param data the input dataset of which each row is a set of samples
-     * and will have a corresponding box plot.
+     *            and will have a corresponding box plot.
      */
-    public BoxPlot(double[][] data) {
-        this.data = data;
-        init();
-    }
-
-    /**
-     * Constructor.
-     * @param data the input dataset of which each row is a set of samples
-     * and will have a corresponding box plot.
-     */
-    public BoxPlot(String[] description, double[][] data) {
-        if (description.length != data.length) {
+    public BoxPlot(double[][] data, String[] labels) {
+        if (labels != null && labels.length != data.length) {
             throw new IllegalArgumentException("Data size and label size don't match.");
         }
         
-        this.description = description;
         this.data = data;
-        init();
-    }
+        this.labels = labels;
 
-    /**
-     * Calculate quantiles.
-     */
-    private void init() {
+        // Calculate quantiles.
         quantiles = new double[data.length][8];
         for (int i = 0; i < data.length; i++) {
             int n = data[i].length;
@@ -125,29 +104,33 @@ public class BoxPlot extends Plot {
         }
     }
 
-    /**
-     * Tooltip format string.
-     */
-    private static String format = "<table border=\"1\"><tr><td>Median</td><td align=\"right\">%g</td></tr><tr><td>Q1</td><td align=\"right\">%g</td></tr><tr><td>Q3</td><td align=\"right\">%g</td></tr></table>";
-
     @Override
-    public Optional<String> getToolTip(double[] coord) {
+    public Optional<String> tooltip(double[] coord) {
         String tooltip = null;
         for (int i = 0; i < data.length; i++) {
             if (coord[0] < i + 0.8 && coord[0] > i + 0.2 && coord[1] < quantiles[i][3] && coord[1] > quantiles[i][1]) {
-                tooltip = description != null ?
-                        "<b>&nbsp;" + description[i] + ":</b></br>" + String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]) :
-                        String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]);
+                tooltip = String.format(format, quantiles[i][2], quantiles[i][1], quantiles[i][3]);
                 break;
             }
         }
         
         return Optional.ofNullable(tooltip);
     }
-    
+
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = {0, MathEx.min(data)};
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = {data.length, MathEx.max(data)};
+        return bound;
+    }
+
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
         double[] start = new double[2];
@@ -197,40 +180,31 @@ public class BoxPlot extends Plot {
                 }
             }
         }
-
-        g.setColor(c);
     }
 
-    /**
-     * Create a plot canvas with the box plot of given data.
-     * @param data a sample set.
-     */
-    public static PlotCanvas plot(double[] data) {
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {1, MathEx.max(data)};
+    @Override
+    public Canvas canvas() {
+        double[] lowerBound = getLowerBound();
+        double[] upperBound = getUpperBound();
 
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new BoxPlot(data));
-
+        Canvas canvas = new Canvas(lowerBound, upperBound);
+        canvas.add(this);
         canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
 
-        return canvas;
-    }
+        if (labels != null) {
+            int k = labels.length;
+            double[] locations = new double[k];
+            for (int i = 0; i < k; i++) {
+                locations[i] = i + 0.5;
+            }
 
-    /**
-     * Create a plot canvas with multiple box plots of given data.
-     * @param data a data matrix of which each row will create a box plot.
-     */
-    public static PlotCanvas plot(double[]... data) {
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new BoxPlot(data));
-
-        canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
+            canvas.getAxis(0).addLabel(labels, locations);
+            if (k > 10) {
+                canvas.getAxis(0).setRotation(-Math.PI / 2);
+            }
+        } else {
+            canvas.getAxis(0).setLabelVisible(false);
+        }
 
         return canvas;
     }
@@ -238,31 +212,8 @@ public class BoxPlot extends Plot {
     /**
      * Create a plot canvas with multiple box plots of given data.
      * @param data a data matrix of which each row will create a box plot.
-     * @param labels the labels for each box plot.
      */
-    public static PlotCanvas plot(double[][] data, String[] labels) {
-        if (data.length != labels.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
-        }
-
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new BoxPlot(labels, data));
-
-        double[] locations = new double[labels.length];
-        for (int i = 0; i < labels.length; i++) {
-            locations[i] = i + 0.5;
-        }
-
-        canvas.getAxis(0).addLabel(labels, locations);
-        canvas.getAxis(0).setGridVisible(false);
-        
-        if (labels.length > 10) {
-            canvas.getAxis(0).setRotation(-Math.PI / 2);
-        }
-
-        return canvas;
+    public static BoxPlot of(double[]... data) {
+        return new BoxPlot(data, null);
     }
 }

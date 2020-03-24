@@ -26,9 +26,10 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.manifold.TSNE;
 import smile.math.MathEx;
+import smile.plot.swing.ScatterPlot;
 import smile.projection.PCA;
 
 /**
@@ -93,14 +94,10 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
 
         double[][] y = tsne.coordinates;
 
-        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
-
-        for (int i = 0; i < y.length; i++) {
-            plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-        }
+        Canvas plot = ScatterPlot.of(y, labels).canvas();
 
         plot.setTitle("t-SNE");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }

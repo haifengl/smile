@@ -18,16 +18,13 @@
 package smile.demo.clustering;
 
 import java.awt.Dimension;
-import java.awt.GridLayout;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.clustering.DBSCAN;
 import smile.math.distance.EuclideanDistance;
 import smile.plot.swing.ScatterPlot;
@@ -85,21 +82,9 @@ public class DBSCANDemo extends ClusteringDemo {
         DBSCAN<double[]> dbscan = DBSCAN.fit(dataset[datasetIndex], new EuclideanDistance(), minPts, range);
         System.out.format("DBSCAN clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        JPanel pane = new JPanel(new GridLayout(1, 2));
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        for (int k = 0; k < dbscan.k; k++) {
-                double[][] cluster = new double[dbscan.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (dbscan.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], dbscan.y).canvas();
+        return plot.panel();
 
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-        }
-        pane.add(plot);
-
-        return pane;
     }
 
     @Override

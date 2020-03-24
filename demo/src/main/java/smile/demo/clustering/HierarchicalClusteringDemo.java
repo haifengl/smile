@@ -27,8 +27,7 @@ import javax.swing.JPanel;
 
 import smile.clustering.HierarchicalClustering;
 import smile.clustering.linkage.*;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.Dendrogram;
 import smile.plot.swing.ScatterPlot;
 
@@ -95,25 +94,13 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
             clusterSize[membership[i]]++;
         }
 
-        JPanel pane = new JPanel(new GridLayout(1, 3));
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
-        plot.setTitle("Data");
-        pane.add(plot);
+        JPanel pane = new JPanel(new GridLayout(1, 2));
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], membership).canvas();
+        pane.add(plot.panel());
 
-        for (int k = 0; k < clusterNumber; k++) {
-            double[][] cluster = new double[clusterSize[k]][];
-            for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                if (membership[i] == k) {
-                    cluster[j++] = dataset[datasetIndex][i];
-                }
-            }
-
-            plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-        }
-
-        plot = Dendrogram.plot("Dendrogram", hac.getTree(), hac.getHeight());
+        plot = new Dendrogram(hac.getTree(), hac.getHeight()).canvas();
         plot.setTitle("Dendrogram");
-        pane.add(plot);
+        pane.add(plot.panel());
         return pane;
     }
 

@@ -18,12 +18,9 @@
 package smile.demo.vq;
 
 import java.awt.*;
-import javax.swing.JComponent;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JOptionPane;
-import javax.swing.JTextField;
-import smile.plot.swing.PlotCanvas;
+import javax.swing.*;
+
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 import smile.vq.BIRCH;
 
@@ -92,8 +89,9 @@ public class BIRCHDemo extends VQDemo {
 
         BIRCH birch = new BIRCH(2, B, L, T);
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
 
+        JPanel panel = plot.panel();
         int period = dataset[datasetIndex].length / 10;
         Thread thread = new Thread(() -> {
             try {
@@ -108,10 +106,10 @@ public class BIRCHDemo extends VQDemo {
 
                 if ((i + 1) % 100 == 0) {
                     plot.clear();
-                    plot.points(dataset[datasetIndex], pointLegend);
+                    plot.add(ScatterPlot.of(dataset[datasetIndex], pointLegend));
                     double[][] neurons = birch.centroids();
-                    plot.points(neurons, '@', Color.RED);
-                    plot.repaint();
+                    plot.add(ScatterPlot.of(neurons, '@', Color.RED));
+                    panel.repaint();
 
                     try {
                         Thread.sleep(100);
@@ -123,7 +121,7 @@ public class BIRCHDemo extends VQDemo {
         });
         thread.start();
 
-        return plot;
+        return panel;
     }
 
     @Override

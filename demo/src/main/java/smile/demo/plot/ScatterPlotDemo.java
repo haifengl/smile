@@ -22,7 +22,8 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.Point;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -40,80 +41,80 @@ public class ScatterPlotDemo extends JPanel {
             data[j][1] = Math.random();
         }
 
-        PlotCanvas canvas = ScatterPlot.plot(data);
+        Canvas canvas = ScatterPlot.of(data).canvas();
         canvas.setTitle("2D Scatter Plot");
         canvas.setAxisLabels("X Axis", "A Long Label");
-        add(canvas);
+        add(canvas.panel());
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10001 + Math.random();
             data[j][1] = 1+Math.random();
         }
-        canvas.points(data, '*', Color.RED);
+        canvas.add(ScatterPlot.of(data, '*', Color.RED));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10002 + Math.random();
             data[j][1] = Math.random();
         }
-        canvas.points(data, '+', Color.BLUE);
+        canvas.add(ScatterPlot.of(data, '+', Color.BLUE));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10000 + Math.random();
             data[j][1] = 2+Math.random();
         }
-        canvas.points(data, '-', Color.GREEN);
+        canvas.add(ScatterPlot.of(data, '-', Color.GREEN));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10001 + Math.random();
             data[j][1] = Math.random();
         }
-        canvas.points(data, 'x', Color.CYAN);
+        canvas.add(ScatterPlot.of(data, 'x', Color.CYAN));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10000 + Math.random();
             data[j][1] = 1+Math.random();
         }
-        canvas.points(data, '@', Color.MAGENTA);
+        canvas.add(ScatterPlot.of(data, '@', Color.MAGENTA));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10002 + Math.random();
             data[j][1] = Math.random();
         }
-        canvas.points(data, 's', Color.ORANGE);
+        canvas.add(ScatterPlot.of(data, 's', Color.ORANGE));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10000 + Math.random();
             data[j][1] = 2+Math.random();
         }
-        canvas.points(data, 'S', Color.PINK);
+        canvas.add(ScatterPlot.of(data, 'S', Color.PINK));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10002+Math.random();
             data[j][1] = 2+Math.random();
         }
-        canvas.points(data, 'a', Color.YELLOW);
+        canvas.add(ScatterPlot.of(data, 'a', Color.YELLOW));
 
         data = new double[10][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10001.5+Math.random();
             data[j][1] = 1.5+Math.random();
         }
-        canvas.points(data, 'A', Color.DARK_GRAY);
+        canvas.add(ScatterPlot.of(data, 'A', Color.DARK_GRAY));
 
         data = new double[100][2];
         for (int j = 0; j < data.length; j++) {
             data[j][0] = 10000 + 3*Math.random();
             data[j][1] = 3*Math.random();
         }
-        canvas.points(data, '.', Color.BLACK);
+        canvas.add(ScatterPlot.of(data, '.', Color.BLACK));
 
         data = new double[100][3];
         for (int j = 0; j < data.length; j++) {
@@ -122,9 +123,9 @@ public class ScatterPlotDemo extends JPanel {
             data[j][2] = Math.random();
         }
 
-        PlotCanvas canvas3d = ScatterPlot.plot(data);
+        Canvas canvas3d = ScatterPlot.of(data).canvas();
         canvas3d.setTitle("3D Scatter Plot");
-        add(canvas3d);
+        add(canvas3d.panel());
     }
 
     @Override

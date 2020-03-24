@@ -24,7 +24,7 @@ import java.awt.Color;
  *
  * @author Haifeng Li
  */
-public class Point extends NamedShape {
+public class Point extends Shape {
 
     /** The marks of point. */
     public static char[] MARKS = {'.', '+', '-', '|', '*', 'x', 'o', 'O', '@', '#', 's', 'S', 'q', 'Q'};
@@ -60,30 +60,40 @@ public class Point extends NamedShape {
      * <li> others : dot
      * </ul>
      * @param color the color of points.
-     * @param name the optional name.
      */
-    public Point(double[][] points, char mark, Color color, String name) {
-        super(name, color);
+    public Point(double[][] points, char mark, Color color) {
+        super(color);
         this.points = points;
         this.mark = mark;
     }
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
         for (double[] point : points) {
             g.drawPoint(mark, point);
         }
-
-        g.setColor(c);
     }
 
     /**
      * Creates a Point with circle mark and black color.
      */
     public static Point of (double[][] points) {
-        return new Point(points, 'o', Color.BLACK, null);
+        return new Point(points, 'o', Color.BLACK);
+    }
+
+    /**
+     * Creates a Point with circle mark.
+     */
+    public static Point of (double[][] points, Color color) {
+        return new Point(points, 'o', color);
+    }
+
+    /**
+     * Creates a Point with black color.
+     */
+    public static Point of (double[][] points, char mark) {
+        return new Point(points, mark, Color.BLACK);
     }
 }

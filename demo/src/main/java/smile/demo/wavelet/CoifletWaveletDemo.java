@@ -23,7 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.plot.swing.LinePlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.wavelet.CoifletWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -45,9 +45,9 @@ public class CoifletWaveletDemo extends JPanel {
             Wavelet wavelet = new CoifletWavelet(i);
             wavelet.inverse(x);
 
-            PlotCanvas canvas = LinePlot.plot(x);
+            Canvas canvas = LinePlot.of(x).canvas();
             canvas.setTitle(String.format("C%d", i));
-            add(canvas);
+            add(canvas.panel());
         }
 
         double[] sp500 = {
@@ -90,12 +90,12 @@ public class CoifletWaveletDemo extends JPanel {
             1242.52, 1241.84, 1241.58, 1236.34
         };
 
-        PlotCanvas canvas = LinePlot.plot(sp500);
+        Canvas canvas = LinePlot.of(sp500).canvas();
         double[] smooth = sp500.clone();
         WaveletShrinkage.denoise(smooth, new CoifletWavelet(6));
-        canvas.line(smooth, Color.BLUE);
+        canvas.add(LinePlot.of(smooth, Color.BLUE));
         canvas.setTitle("S&P 500");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

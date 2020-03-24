@@ -26,8 +26,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.clustering.GMeans;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -66,21 +65,9 @@ public class GMeansDemo extends ClusteringDemo {
         GMeans gmeans = GMeans.fit(dataset[datasetIndex], maxClusterNumber);
         System.out.format("G-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(gmeans.centroids, '@');
-        for (int k = 0; k < gmeans.k; k++) {
-            if (gmeans.size[k] > 0) {
-                double[][] cluster = new double[gmeans.size[k]][];
-                for (int i = 0, j = 0; i < dataset[datasetIndex].length; i++) {
-                    if (gmeans.y[i] == k) {
-                        cluster[j++] = dataset[datasetIndex][i];
-                    }
-                }
-
-                plot.points(cluster, pointLegend, Palette.COLORS[k % Palette.COLORS.length]);
-            }
-        }
-        plot.points(gmeans.centroids, '@');
-        return plot;
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], gmeans.y).canvas();
+        plot.add(ScatterPlot.of(gmeans.centroids, '@'));
+        return plot.panel();
     }
 
     @Override

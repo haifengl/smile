@@ -42,7 +42,6 @@ public class Grid extends Plot {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
         for (int i = 0; i < data.length; i++) {
@@ -56,8 +55,6 @@ public class Grid extends Plot {
                 g.drawLine(data[i][j], data[i+1][j]);
             }
         }
-        
-        g.setColor(c);
     }
     
     @Override

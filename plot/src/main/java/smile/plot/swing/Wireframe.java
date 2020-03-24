@@ -62,14 +62,11 @@ public class Wireframe extends Plot {
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
         g.setColor(color);
 
-        for (int i = 0; i < edges.length; i++) {
-            g.drawLine(vertices[edges[i][0]], vertices[edges[i][1]]);
+        for (int[] edge : edges) {
+            g.drawLine(vertices[edge[0]], vertices[edge[1]]);
         }
-
-        g.setColor(c);
     }
 
     /**

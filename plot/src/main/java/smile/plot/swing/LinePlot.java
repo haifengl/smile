@@ -17,6 +17,8 @@
 
 package smile.plot.swing;
 
+import java.awt.Color;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -26,15 +28,41 @@ import smile.math.MathEx;
  */
 public class LinePlot extends Plot {
     /**
-     * The poly line of points.
+     * The set of lines which may have different stroke, marks, and/or colors.
      */
     final Line[] lines;
+    /**
+     * The legends of each line.
+     */
+    final Optional<Legend[]> legends;
 
     /**
      * Constructor.
      */
     public LinePlot(Line... lines) {
         this.lines = lines;
+        legends = Optional.empty();
+    }
+
+    @Override
+    public Optional<Legend[]> legends() {
+        return legends;
+    }
+
+    /**
+     * Constructor.
+     */
+    public LinePlot(Line[] lines, Legend[] legends) {
+        this.lines = lines;
+        this.legends = Optional.of(legends);
+    }
+
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
+        canvas.base.extendBound(1);
+        canvas.add(this);
+        return canvas;
     }
 
     @Override
@@ -84,11 +112,79 @@ public class LinePlot extends Plot {
     }
 
     /**
+     * Creates a line plot.
+     */
+    public static LinePlot of(double[][] data, Line.Style style) {
+        return new LinePlot(Line.of(data, style));
+    }
+
+    /**
+     * Creates a line plot.
+     */
+    public static LinePlot of(double[][] data, Color color) {
+        return new LinePlot(Line.of(data, color));
+    }
+
+    /**
+     * Creates a line plot.
+     */
+    public static LinePlot of(double[][] data, Line.Style style, Color color) {
+        return new LinePlot(Line.of(data, style, color));
+    }
+
+    /**
+     * Creates a line plot.
+     */
+    public static LinePlot of(double[][] data, Line.Style style, Color color, String label) {
+        Line[] line = {Line.of(data, style, color)};
+        Legend[] legend = {new Legend(label, color)};
+        return new LinePlot(line, legend);
+    }
+
+    /**
      * Creates a line plot with the index as the x coordinate.
      * @param y the data vector of y coordinates.
      *          The x coordinates will be [0, n), where n is the length of y.
      */
     public static LinePlot of(double[] y) {
         return of(Line.zipWithIndex(y));
+    }
+
+    /**
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
+     */
+    public static LinePlot of(double[] y, Line.Style style) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), style));
+    }
+
+    /**
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
+     */
+    public static LinePlot of(double[] y, Color color) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), color));
+    }
+
+    /**
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
+     */
+    public static LinePlot of(double[] y, Line.Style style, Color color) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), style, color));
+    }
+
+    /**
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
+     */
+    public static LinePlot of(double[] y, Line.Style style, Color color, String label) {
+        Line[] line = {Line.of(Line.zipWithIndex(y), style, color)};
+        Legend[] legend = {new Legend(label, color)};
+        return new LinePlot(line, legend);
     }
 }

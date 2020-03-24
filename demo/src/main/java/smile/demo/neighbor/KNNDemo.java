@@ -37,7 +37,7 @@ import javax.swing.JPanel;
 import javax.swing.JSlider;
 import javax.swing.JTextField;
 
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
@@ -237,14 +237,16 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
 
         canvas.removeAll();
         double[] buildTime = {naiveBuild, kdtreeBuild, coverBuild, lshBuild};
-        PlotCanvas build = BarPlot.plot(buildTime, label);
+        Canvas build = BarPlot.of(buildTime).canvas();
         build.setTitle("Build Time");
-        canvas.add(build);
+        build.setAxisLabels(label);
+        canvas.add(build.panel());
 
         double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch, lshSearch};
-        PlotCanvas search = BarPlot.plot(searchTime, label);
+        Canvas search = BarPlot.of(searchTime).canvas();
         search.setTitle("Search Time");
-        canvas.add(search);
+        search.setAxisLabels(label);
+        canvas.add(search.panel());
         validate();
 
         startButton.setEnabled(true);

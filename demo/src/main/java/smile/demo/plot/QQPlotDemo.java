@@ -23,7 +23,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.math.MathEx;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.QQPlot;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -46,18 +46,18 @@ public class QQPlotDemo extends JPanel {
             y[j] = j / 500.0;
         }
 
-        PlotCanvas canvas = QQPlot.plot(x, y);
+        Canvas canvas = QQPlot.of(x, y).canvas();
         canvas.setTitle("Uniform (Smile)");
-        add(canvas);
+        add(canvas.panel());
 
         double[] x3  = new double[5000];
         for (int j = 0; j < x3.length; j++) {
             x3[j] = GaussianDistribution.getInstance().rand();
         }
 
-        canvas = QQPlot.plot(x3);
+        canvas = QQPlot.of(x3).canvas();
         canvas.setTitle("Gaussian");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override

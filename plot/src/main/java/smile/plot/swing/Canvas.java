@@ -35,7 +35,6 @@ import javax.swing.event.SwingPropertyChangeSupport;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings("serial")
 public class Canvas {
 
     /**
@@ -493,37 +492,32 @@ public class Canvas {
 
         // draw plot
         graphics.clip();
-        int k = 0;
         // with for-each loop, we will get a ConcurrentModificationException.
         // Use for loop instead.
-        for (Shape shape : shapes) {
+        for (int i = 0; i < shapes.size(); i++) {
+            Shape shape = shapes.get(i);
             graphics.setColor(shape.color);
             shape.paint(graphics);
-            if (shape instanceof NamedShape) {
-                NamedShape p = (NamedShape) shape;
-                if (p.name().isPresent()) {
-                    k++;
-                }
-            }
         }
         graphics.clearClip();
 
-        if (k > 1) {
-            Font font = g2d.getFont();
-            int x = (int) (width * (1 - margin) + 20);
-            int y = (int) (height * margin + 50);
-            int fontWidth = font.getSize();
-            int fontHeight = font.getSize();
+        // draw legends
+        Font font = g2d.getFont();
+        int x = (int) (width * (1 - margin) + 20);
+        int y = (int) (height * margin + 50);
+        int fontWidth = font.getSize();
+        int fontHeight = font.getSize();
 
-            for (int i = 0; i < shapes.size(); i++) {
-                Shape s = shapes.get(i);
-                if (s instanceof NamedShape) {
-                    NamedShape p = (NamedShape) s;
-                    if (p.name().isPresent()) {
-                        g2d.setColor(p.color);
+        for (int i = 0; i < shapes.size(); i++) {
+            Shape s = shapes.get(i);
+            if (s instanceof Plot) {
+                Plot p = (Plot) s;
+                if (p.legends().isPresent()) {
+                    for (Legend legend : p.legends().get()) {
                         g2d.fillRect(x, y, fontWidth, fontHeight);
                         g2d.drawRect(x, y, fontWidth, fontHeight);
-                        g2d.drawString(p.name().get(), x + 2 * fontWidth, y + fontHeight);
+                        g2d.setColor(legend.color);
+                        g2d.drawString(legend.text, x + 2 * fontWidth, y + fontHeight);
                         y += 2 * fontWidth;
                     }
                 }
@@ -534,8 +528,8 @@ public class Canvas {
             g2d.setFont(titleFont);
             g2d.setColor(titleColor);
             FontMetrics fm = g2d.getFontMetrics();
-            int x = (width - fm.stringWidth(title)) / 2;
-            int y = (int) (height * margin) / 2;
+            x = (width - fm.stringWidth(title)) / 2;
+            y = (int) (height * margin) / 2;
             g2d.drawString(title, x, y);
         }
 
