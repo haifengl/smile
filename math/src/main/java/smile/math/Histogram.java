@@ -42,7 +42,7 @@ public interface Histogram {
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(int[] data) {
@@ -54,7 +54,7 @@ public interface Histogram {
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(float[] data) {
@@ -66,7 +66,7 @@ public interface Histogram {
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(double[] data) {
@@ -78,7 +78,7 @@ public interface Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(int[] data, int k) {
@@ -121,7 +121,7 @@ public interface Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-n bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(int[] data, double[] breaks) {
@@ -161,7 +161,7 @@ public interface Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(float[] data, int k) {
@@ -193,7 +193,7 @@ public interface Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(float[] data, float[] breaks) {
@@ -233,7 +233,7 @@ public interface Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(double[] data, int k) {
@@ -261,7 +261,7 @@ public interface Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
     static double[][] of(double[] data, double[] breaks) {
