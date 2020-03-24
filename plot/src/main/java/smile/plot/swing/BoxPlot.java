@@ -198,12 +198,12 @@ public class BoxPlot extends Plot {
                 locations[i] = i + 0.5;
             }
 
-            canvas.getAxis(0).addLabel(labels, locations);
+            canvas.getAxis(0).setTicks(labels, locations);
             if (k > 10) {
                 canvas.getAxis(0).setRotation(-Math.PI / 2);
             }
         } else {
-            canvas.getAxis(0).setLabelVisible(false);
+            canvas.getAxis(0).setTickVisible(false);
         }
 
         return canvas;

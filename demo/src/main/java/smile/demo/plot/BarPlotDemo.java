@@ -50,7 +50,7 @@ public class BarPlotDemo extends JPanel {
             locations[i] = i + 0.5;
         }
 
-        canvas.getAxis(0).addLabel(labels, locations);
+        canvas.getAxis(0).setTicks(labels, locations);
         add(canvas.panel());
     }
 

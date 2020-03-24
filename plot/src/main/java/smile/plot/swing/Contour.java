@@ -68,9 +68,9 @@ public class Contour extends Plot {
      */
     private List<Isoline> contours;
     /**
-     * If show axis marks.
+     * If show axis ticks.
      */
-    private boolean isLabelVisible;
+    private boolean isTickVisible;
     /**
      * Show the level.
      */
@@ -184,7 +184,7 @@ public class Contour extends Plot {
      * Initialize the contour lines.
      */
     private void init() {
-        isLabelVisible = x != null || y != null;
+        isTickVisible = x != null || y != null;
 
         if (x == null) {
             x = new double[z[0].length];
@@ -714,9 +714,9 @@ public class Contour extends Plot {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
         canvas.add(this);
 
-        if (!isLabelVisible) {
-            canvas.getAxis(0).setLabelVisible(false);
-            canvas.getAxis(1).setLabelVisible(false);
+        if (!isTickVisible) {
+            canvas.getAxis(0).setTickVisible(false);
+            canvas.getAxis(1).setTickVisible(false);
         }
 
         return canvas;

@@ -164,7 +164,7 @@ public class Dendrogram extends Plot {
     public Canvas canvas() {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound(), false);
         canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
+        canvas.getAxis(0).setTickVisible(false);
 
         canvas.add(this);
         return canvas;

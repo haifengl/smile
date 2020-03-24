@@ -90,8 +90,7 @@ public class Canvas {
      * Constructor
      */
     public Canvas(double[] lowerBound, double[] upperBound) {
-        initBase(lowerBound, upperBound);
-        initGraphics();
+        this(lowerBound, upperBound, true);
     }
 
     /**
@@ -99,22 +98,6 @@ public class Canvas {
      */
     public Canvas(double[] lowerBound, double[] upperBound, boolean extendBound) {
         initBase(lowerBound, upperBound, extendBound);
-        initGraphics();
-    }
-
-    /**
-     * Constructor
-     */
-    public Canvas(double[] lowerBound, double[] upperBound, String[] axisLabels) {
-        initBase(lowerBound, upperBound, axisLabels);
-        initGraphics();
-    }
-
-    /**
-     * Constructor
-     */
-    public Canvas(double[] lowerBound, double[] upperBound, String[] axisLabels, boolean extendBound) {
-        initBase(lowerBound, upperBound, axisLabels, extendBound);
         initGraphics();
     }
 
@@ -163,48 +146,6 @@ public class Canvas {
     }
 
     /**
-     * Zooms in/out the plot.
-     *
-     * @param inout true if zoom in. Otherwise, zoom out.
-     */
-    public void zoom(boolean inout) {
-        for (int i = 0; i < base.dimension; i++) {
-            int s = baseGrid.getAxis(i).getLinearSlices();
-            double r = inout ? -1.0 / s : 1.0 / s;
-            double d = (base.upperBound[i] - base.lowerBound[i]) * r;
-            base.lowerBound[i] -= d;
-            base.upperBound[i] += d;
-        }
-
-        for (int i = 0; i < base.dimension; i++) {
-            base.setPrecisionUnit(i);
-        }
-
-        base.initBaseCoord();
-        graphics.projection.reset();
-        baseGrid.setBase(base);
-
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "base", base, base);
-        pcs.firePropertyChange(event);
-    }
-
-    /**
-     * Resets the plot.
-     */
-    public void reset() {
-        base.reset();
-        graphics.projection.reset();
-        baseGrid.setBase(base);
-
-        if (graphics.projection instanceof Projection3D) {
-            ((Projection3D) graphics.projection).setDefaultView();
-        }
-
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "canvas", this, this);
-        pcs.firePropertyChange(event);
-    }
-
-    /**
      * Initialize the Graphics object.
      */
     private void initGraphics() {
@@ -218,33 +159,9 @@ public class Canvas {
     /**
      * Initialize a coordinate base.
      */
-    private void initBase(double[] lowerBound, double[] upperBound) {
-        base = new Base(lowerBound, upperBound);
-        baseGrid = new BaseGrid(base);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
     private void initBase(double[] lowerBound, double[] upperBound, boolean extendBound) {
         base = new Base(lowerBound, upperBound, extendBound);
         baseGrid = new BaseGrid(base);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound, String[] axisLabels) {
-        base = new Base(lowerBound, upperBound);
-        baseGrid = new BaseGrid(base, axisLabels);
-    }
-
-    /**
-     * Initialize a coordinate base.
-     */
-    private void initBase(double[] lowerBound, double[] upperBound, String[] axisLabels, boolean extendBound) {
-        base = new Base(lowerBound, upperBound, extendBound);
-        baseGrid = new BaseGrid(base, axisLabels);
     }
 
     /**
@@ -275,15 +192,6 @@ public class Canvas {
     }
 
     /**
-     * Returns the coordinate base.
-     *
-     * @return the coordinate base.
-     */
-    public Base getBase() {
-        return base;
-    }
-
-    /**
      * Returns the main title of canvas.
      */
     public String getTitle() {
@@ -308,13 +216,6 @@ public class Canvas {
     }
 
     /**
-     * Returns the color for title.
-     */
-    public Color getTitleColor() {
-        return titleColor;
-    }
-
-    /**
      * Set the font for title.
      */
     public Canvas setTitleFont(Font font) {
@@ -322,6 +223,13 @@ public class Canvas {
         this.titleFont = font;
         pcs.firePropertyChange(event);
         return this;
+    }
+
+    /**
+     * Returns the color for title.
+     */
+    public Color getTitleColor() {
+        return titleColor;
     }
 
     /**
@@ -454,7 +362,7 @@ public class Canvas {
     public void extendLowerBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendLowerBound", this, bound);
         base.extendLowerBound(bound);
-        baseGrid.setBase(base);
+        baseGrid.reset();
         pcs.firePropertyChange(event);
     }
 
@@ -464,7 +372,7 @@ public class Canvas {
     public void extendUpperBound(double[] bound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendUpperBound", this, bound);
         base.extendUpperBound(bound);
-        baseGrid.setBase(base);
+        baseGrid.reset();
         pcs.firePropertyChange(event);
     }
 
@@ -474,7 +382,17 @@ public class Canvas {
     public void extendBound(double[] lowerBound, double[] upperBound) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "extendBound", this, new double[][]{lowerBound, upperBound});
         base.extendBound(lowerBound, upperBound);
-        baseGrid.setBase(base);
+        baseGrid.reset();
+        pcs.firePropertyChange(event);
+    }
+
+    /**
+     * Extend lower and upper bounds.
+     */
+    public void setBound(double[] lowerBound, double[] upperBound) {
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "setBound", this, new double[][]{lowerBound, upperBound});
+        base.setBound(lowerBound, upperBound);
+        baseGrid.reset();
         pcs.firePropertyChange(event);
     }
 
