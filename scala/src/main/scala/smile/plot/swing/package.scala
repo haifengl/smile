@@ -365,8 +365,11 @@ package object swing {
   /** Visualize sparsity pattern.
     * @param matrix a sparse matrix.
     */
-  def spy(matrix: SparseMatrix): Canvas = {
-    SparseMatrixPlot.of(matrix).canvas
+  def spy(matrix: SparseMatrix, k: Int = 1): Canvas = {
+    if (k <= 1)
+      SparseMatrixPlot.of(matrix).canvas
+    else
+      SparseMatrixPlot.of(matrix, k).canvas
   }
 
   /** Heat map with hex shape.
