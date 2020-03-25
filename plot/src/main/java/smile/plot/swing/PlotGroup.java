@@ -313,13 +313,18 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * @param category the category column for coloring.
      */
     public static PlotGroup of(DataFrame data, String category, char mark) {
+        int clazz = data.columnIndex(category);
         String[] columns = data.names();
         int p = columns.length;
         PlotGroup group = new PlotGroup(p, p);
         for (int i = 0; i < p; i++) {
+            if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
-                Plot plot = ScatterPlot.of(data, columns[i], columns[j], category, mark);
-                group.add(plot.canvas().panel());
+                if (j == clazz) continue;
+                Canvas canvas = ScatterPlot.of(data, columns[i], columns[j], category, mark).canvas();
+                canvas.setLegendVisible(false);
+                canvas.setAxisLabels(columns[i], columns[j]);
+                group.add(canvas.panel());
             }
         }
 

@@ -38,10 +38,13 @@ public class Axis {
      */
     private int index;
     /**
-     * Mapping of the data on this axis, which is the association between values
-     * along this axis as String and double numbers.
+     * The tick mark label.
      */
-    private HashMap<String, Double> ticks;
+    private String[] ticks;
+    /**
+     * The tick mark location.
+     */
+    private double[] location;
     /**
      * Visibility of ticks.
      */
@@ -57,15 +60,7 @@ public class Axis {
     /**
      * The number of slices in linear scale.
      */
-    private int linearSlices = 10;
-    /**
-     * The slicing location.
-     */
-    private double[] linesSlicing;
-    /**
-     * The slicing labels.
-     */
-    private double[] labelsSlicing;
+    private int slices = 10;
     /**
      * The coordinates of origin point.
      */
@@ -82,10 +77,6 @@ public class Axis {
      * The grid labels.
      */
     private GridLabel[] gridLabels;
-    /**
-     * The grid label strings.
-     */
-    private String[] gridLabelStrings;
     /**
      * The rotation degree of grid labels.
      */
@@ -110,7 +101,8 @@ public class Axis {
                 label = "Z";
                 break;
         }
-        setAxisLabel(label);
+        setLabel(label);
+
         init();
     }
 
@@ -119,9 +111,7 @@ public class Axis {
      */
     private void init() {
         initOrigin();
-        setSlice();
-        initGridLines();
-        initGridLabels();
+        setTicks();
     }
 
     /**
@@ -134,60 +124,54 @@ public class Axis {
     /**
      * Set the slices of axis.
      */
-    private void setSlice() {
+    private void setTicks() {
         // slicing initialisation
-        if (ticks == null) {
+        double[] gridLocation;
+        double[] tickLocation;
+        String[] marks = null;
+
+        if (ticks == null || location == null) {
             double min = base.getPrecisionUnit()[index] * Math.ceil(base.getLowerBounds()[index] / base.getPrecisionUnit()[index]);
             double max = base.getPrecisionUnit()[index] * Math.floor(base.getUpperBounds()[index] / base.getPrecisionUnit()[index]);
-            linearSlices = (int) Math.ceil(MathEx.round((max - min) / base.getPrecisionUnit()[index], 1));
-            if (linearSlices <= 0) {
-                linearSlices = 1;
-            }
+            slices = (int) Math.ceil(MathEx.round((max - min) / base.getPrecisionUnit()[index], 1));
 
-            if (linearSlices < 3) {
-                linearSlices *= 2;
-            }
+            if (slices <= 0) slices = 1;
+            if (slices < 3) slices *= 2;
 
-            linesSlicing = new double[linearSlices + 3];
-            labelsSlicing = new double[linearSlices + 3];
+            gridLocation = new double[slices + 3];
+            tickLocation = new double[slices + 3];
 
-            double pitch = (max - min) / linearSlices;
-            for (int i = 1; i <= linearSlices + 1; i++) {
+            double pitch = (max - min) / slices;
+            for (int i = 1; i <= slices + 1; i++) {
                 // lines and labels slicing are the same
-                linesSlicing[i] = min + (i - 1) * pitch;
-                labelsSlicing[i] = min + (i - 1) * pitch;
+                gridLocation[i] = min + (i - 1) * pitch;
+                tickLocation[i] = min + (i - 1) * pitch;
             }
 
-            linesSlicing[0] = base.getLowerBounds()[index];
-            labelsSlicing[0] = base.getLowerBounds()[index];
-            linesSlicing[linearSlices + 2] = base.getUpperBounds()[index];
-            labelsSlicing[linearSlices + 2] = base.getUpperBounds()[index];
+            gridLocation[0] = base.getLowerBounds()[index];
+            tickLocation[0] = base.getLowerBounds()[index];
+            gridLocation[slices + 2] = base.getUpperBounds()[index];
+            tickLocation[slices + 2] = base.getUpperBounds()[index];
 
         } else {
-            linesSlicing = new double[ticks.size() + 2];
-            labelsSlicing = new double[ticks.size()];
-            gridLabelStrings = new String[ticks.size()];
+            gridLocation = new double[ticks.length + 2];
+            tickLocation = new double[ticks.length];
+            marks = new String[ticks.length];
 
-            linesSlicing[0] = base.getLowerBounds()[index];
+            gridLocation[0] = base.getLowerBounds()[index];
+            gridLocation[gridLocation.length - 1] = base.getUpperBounds()[index];
 
-            int i = 1;
-            for (String string : ticks.keySet()) {
-                linesSlicing[i] = ticks.get(string);
-                labelsSlicing[i - 1] = ticks.get(string);
-                gridLabelStrings[i - 1] = string;
-                i++;
+            for (int i = 0; i < ticks.length; i++) {
+                gridLocation[i+1] = location[i];
+                tickLocation[i] = location[i];
+                marks[i] = ticks[i];
             }
 
-            linesSlicing[i] = base.getUpperBounds()[index];
-            Arrays.sort(linesSlicing);
-            QuickSort.sort(labelsSlicing, gridLabelStrings);
+            Arrays.sort(gridLocation);
+            QuickSort.sort(tickLocation, marks);
         }
-    }
 
-    /**
-     * Initialize grid line labels.
-     */
-    private void initGridLabels() {
+        // Initialize grid line labels.
         int dim = base.getDimension();
         double[] offset = new double[dim];
         for (int j = 0; j < dim; j++) {
@@ -196,72 +180,63 @@ public class Axis {
             }
         }
 
-        int decimal = 0;
-        String label;
-
-        gridLabels = new GridLabel[labelsSlicing.length];
-
+        gridLabels = new GridLabel[tickLocation.length];
         for (int i = 0; i < gridLabels.length; i++) {
-
-            double[] labelCoord = new double[base.getDimension()];
-            System.arraycopy(base.getCoordinateSpace()[index + 1], 0, labelCoord, 0, base.getDimension());
-            labelCoord[index] = labelsSlicing[i];
+            double[] coord = new double[base.getDimension()];
+            System.arraycopy(base.getCoordinateSpace()[index + 1], 0, coord, 0, base.getDimension());
+            coord[index] = tickLocation[i];
 
             if (dim == 3) {
                 if (index == 0) {
-                    labelCoord[2] = base.getUpperBounds()[2] - 2 * offset[2];
+                    coord[2] = base.getUpperBounds()[2] - 2 * offset[2];
                 } else if (index == 1) {
-                    labelCoord[0] = base.getUpperBounds()[0] - 2 * offset[0];
+                    coord[0] = base.getUpperBounds()[0] - 2 * offset[0];
                 } else if (index == 2) {
-                    labelCoord[1] = base.getUpperBounds()[1] - 2 * offset[1];
+                    coord[1] = base.getUpperBounds()[1] - 2 * offset[1];
                 }
             }
 
-            decimal = base.getPrecisionDigits()[index];
-
-            if (gridLabelStrings != null) {
-                label = gridLabelStrings[i % gridLabelStrings.length];
+            String label;
+            if (marks != null) {
+                label = marks[i % marks.length];
             } else {
+                int decimal = base.getPrecisionDigits()[index];
+                if (ticks == null) {
+                    if ((i == 0 && tickLocation[0] != tickLocation[1]) || (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2]))
+                    decimal -= 1;
+                }
+
                 String format = "%.0f";
                 if (decimal < 0) {
                     format = String.format("%%.%df", -decimal);
                 }
-                label = String.format(format, labelsSlicing[i]);
+                label = String.format(format, tickLocation[i]);
             }
 
             for (int j = 0; j < dim; j++) {
-                labelCoord[j] += offset[j];
+                coord[j] += offset[j];
             }
 
             if (base.getDimension() == 2) {
                 if (index == 0 && rotation == 0.0) {
-                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, 1.0, rotation);
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, 1.0, rotation);
                 } else {
-                    gridLabels[i] = new GridLabel(label, labelCoord, 1.0, 0.5, rotation);
+                    gridLabels[i] = new GridLabel(label, coord, 1.0, 0.5, rotation);
                 }
             } else {
                 if (index == 0) {
-                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, -0.5, rotation);
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, -0.5, rotation);
                 } else if (index == 1) {
-                    gridLabels[i] = new GridLabel(label, labelCoord, 0.5, 1.0, rotation);
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, 1.0, rotation);
                 } else if (index == 2) {
-                    gridLabels[i] = new GridLabel(label, labelCoord, 0.0, 0.5, rotation);
+                    gridLabels[i] = new GridLabel(label, coord, 0.0, 0.5, rotation);
                 }
             }
         }
 
-        gridLabelStrings = null;
-    }
-
-    /**
-     * Initialize grid lines.
-     */
-    private void initGridLines() {
-        gridLines = new Line[base.getDimension() - 1][linesSlicing.length];
-
-        int i2 = 0;
-
-        for (int i = 0; i < base.getDimension() - 1; i++) {
+        // Initialize grid lines.
+        gridLines = new Line[base.getDimension() - 1][gridLocation.length];
+        for (int i = 0, i2 = 0; i < base.getDimension() - 1; i++) {
             if (i2 == index) {
                 i2++;
             }
@@ -274,8 +249,8 @@ public class Axis {
                 System.arraycopy(origin, 0, endBase, 0, base.getDimension());
 
                 endBase[i2] = base.getCoordinateSpace()[i2 + 1][i2];
-                originBase[index] = linesSlicing[j];
-                endBase[index] = linesSlicing[j];
+                originBase[index] = gridLocation[j];
+                endBase[index] = gridLocation[j];
 
                 double[][] points = {originBase, endBase};
                 if (j > 0 && j < gridLines[i].length - 1) {
@@ -307,27 +282,22 @@ public class Axis {
     /**
      * Add a label to the axis at given location.
      */
-    public Axis setTicks(String[] ticks, double[] location) {
+    public void setTicks(String[] ticks, double[] location) {
         if (ticks.length != location.length) {
             throw new IllegalArgumentException("Tick and location size don't match.");
         }
 
-        this.ticks = new HashMap<>();
-        for (int i = 0; i < ticks.length; i++) {
-            this.ticks.put(ticks[i], location[i]);
-        }
+        this.ticks = ticks;
+        this.location = location;
 
-        setSlice();
-        initGridLines();
-        initGridLabels();
-        return this;
+        setTicks();
     }
 
     /**
      * Returns the number of slices in linear scale.
      */
-    public int getLinearSlices() {
-        return linearSlices;
+    public int slices() {
+        return slices;
     }
 
     /**
@@ -376,9 +346,9 @@ public class Axis {
     }
 
     /**
-     * Sets the label of this axis.
+     * Sets the label.
      */
-    public void setAxisLabel(String label) {
+    public void setLabel(String label) {
         if (label == null) {
             axisLabel = null;
             return;
@@ -414,7 +384,7 @@ public class Axis {
     /**
      * Returns the label of the axis.
      */
-    public String getAxisLabel() {
+    public String getLabel() {
         if (axisLabel == null) {
             return null;
         } else {
