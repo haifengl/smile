@@ -121,7 +121,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, mark: Char, color: Color): Canvas = {
-    ScatterPlot.of(data, x, y, mark, color).canvas
+    val canvas = ScatterPlot.of(data, x, y, mark, color).canvas
+    canvas.setAxisLabels(x, y)
+    canvas
   }
 
   /** Scatter plot.
@@ -133,7 +135,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, category: String, mark: Char): Canvas = {
-    ScatterPlot.of(data, x, y, category, mark).canvas
+    val canvas = ScatterPlot.of(data, x, y, category, mark).canvas
+    canvas.setAxisLabels(x, y)
+    canvas
   }
 
   /** Scatter plot.
@@ -145,7 +149,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, z: String, mark: Char, color: Color): Canvas = {
-    ScatterPlot.of(data, x, y, z, mark, color).canvas
+    val canvas = ScatterPlot.of(data, x, y, z, mark, color).canvas
+    canvas.setAxisLabels(x, y, z)
+    canvas
   }
 
   /** Scatter plot.
@@ -158,7 +164,9 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def plot(data: DataFrame, x: String, y: String, z: String, category: String, mark: Char): Canvas = {
-    ScatterPlot.of(data, x, y, z, category, mark).canvas
+    val canvas = ScatterPlot.of(data, x, y, z, category, mark).canvas
+    canvas.setAxisLabels(x, y, z)
+    canvas
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame.
