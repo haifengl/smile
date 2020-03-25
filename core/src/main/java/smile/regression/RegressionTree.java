@@ -193,7 +193,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
                 int o = orderj[i];
                 double xij = xj.getDouble(o);
 
-                if (xij != prevx) {
+                if (!MathEx.isZero(xij - prevx, 1E-7)) {
                     fc = node.size() - tc;
                 }
 
