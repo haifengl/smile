@@ -271,7 +271,12 @@ public abstract class CART implements Serializable {
         int mid = split.lo + trueSamples.length;
 
         LeafNode trueChild = newNode(trueSamples);
+        assert trueChild.size == split.trueCount : String.format("trueChild.size != split.trueCount: %d != %d", trueChild.size, split.trueCount);
+        assert trueChild.size >= nodeSize : String.format("trueChild size is too small: %d < %d", trueChild.size, nodeSize);
+
         LeafNode falseChild = newNode(falseSamples);
+        assert falseChild.size == split.falseCount : String.format("falseChild.size != split.falseCount: %d != %d", falseChild.size, split.falseCount);
+        assert falseChild.size >= nodeSize : String.format("falseChild size is too small: %d < %d", falseChild.size, nodeSize);
         InternalNode node = split.toNode(trueChild, falseChild);
 
         shuffle(split.lo, mid, split.hi, trues);
