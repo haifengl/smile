@@ -35,9 +35,9 @@ package object vega {
       |<!DOCTYPE html>
       |<html>
       |<head>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega@5.9.0"></script>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.0.2"></script>
-      |  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.2.1"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega@5.10.0"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4.8.1"></script>
+      |  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6.5.1"></script>
       |</head>
       |<body>
       |
@@ -278,7 +278,9 @@ package object vega {
                          text: Option[JsObject] = None
                         ): JsObject = {
     val spec = JsObject(
-      "$schema" -> "https://vega.github.io/schema/vega-lite/v4.0.2.json",
+      "$schema" -> "https://vega.github.io/schema/vega-lite/v4.8.1.json",
+      "width" -> "container",
+      "height" -> "container",
       "data" -> data,
       "mark" -> mark,
       "encoding" -> JsObject(
