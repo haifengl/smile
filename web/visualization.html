@@ -273,8 +273,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def boxplot(data: Array[Double]*): PlotCanvas
-    def boxplot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas
+    def boxplot(data: Array[Double]*): Canvas
+
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): Canvas
     </code></pre>
             </div>
         </div>
@@ -282,9 +283,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class BoxPlot {
-        public static PlotCanvas plot(double[] data);
-        public static PlotCanvas plot(double[]... data);
-        public static PlotCanvas plot(double[][] data, String[] labels);
+        public BoxPlot(double[][] data, String[] labels);
+
+        public static BoxPlot of(double[]... data);
     }
           </code></pre>
             </div>
@@ -323,7 +324,7 @@ permalink: "{{ page.filePathStem }}.html"
               mapToDouble(row -> row.getFloat("sepallength")).
               toArray();
     }
-    var canvas = BoxPlot.plot(data, labels);
+    var canvas = new BoxPlot(data, labels).canvas();
     canvas.setAxisLabels("", "sepallength");
     canvas.window();
           </code></pre>
@@ -349,9 +350,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def hist(data: Array[Double]): PlotCanvas
-    def hist(data: Array[Double], k: Int): PlotCanvas
-    def hist(data: Array[Double], breaks: Array[Double]): PlotCanvas
+    def hist(data: Array[Double], k: Int = 10, prob: Boolean = false, color: Color = Color.BLUE): Canvas
+
+    def hist(data: Array[Double], breaks: Array[Double], prob: Boolean, color: Color): Canvas
     </code></pre>
             </div>
         </div>
@@ -359,19 +360,11 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Histogram {
-        public static PlotCanvas plot(double[] data);
-        public static PlotCanvas plot(String id, double[] data);
-        public static PlotCanvas plot(double[] data, int k);
-        public static PlotCanvas plot(String id, double[] data, int k);
-        public static PlotCanvas plot(double[] data, double[] breaks);
-        public static PlotCanvas plot(String id, double[] data, double[] breaks);
-        public static PlotCanvas plot(String id, double[] data, double[] breaks, boolean prob);
-        public static PlotCanvas plot(int[] data);
-        public static PlotCanvas plot(String id, int[] data);
-        public static PlotCanvas plot(int[] data, int k);
-        public static PlotCanvas plot(String id, int[] data, int k);
-        public static PlotCanvas plot(int[] data, double[] breaks);
-        public static PlotCanvas plot(String id, int[] data, double[] breaks);
+        public static BarPlot of(double[] data);
+        public static BarPlot of(double[] data, int k, boolean prob);
+        public static BarPlot of(double[] data, int k, boolean prob, Color color);
+        public static BarPlot of(double[] data, double[] breaks, boolean prob);
+        public static BarPlot of(double[] data, double[] breaks, boolean prob, Color color);
     }
           </code></pre>
             </div>
@@ -409,7 +402,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var cow = Read.csv("data/npr/cow.txt").column("V1").toDoubleArray();
-    var canvas = Histogram.plot(cow, 50);
+    var canvas = Histogram.of(cow, 50, true).canvas();
     canvas.setAxisLabels("Weight", "Probability");
     canvas.window();
           </code></pre>
@@ -441,9 +434,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_11">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = Histogram.plot(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50)
-    canvas.setAxisLabels("Weight", "Probability")
-    canvas.window()
+    var canvas = Histogram.of(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50, true).canvas();
+    canvas.setAxisLabels("Weight", "Probability");
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -463,9 +456,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def hist(data: Array[Array[Double]]): PlotCanvas
-    def hist(data: Array[Array[Double]], k: Int): PlotCanvas
-    def hist(data: Array[Array[Double]], xbins: Int, ybins: Int): PlotCanvas
+    def hist3(data: Array[Array[Double]], xbins: Int = 10, ybins: Int = 10, prob: Boolean = false, palette: Array[Color] = Palette.jet(16)): Canvas
     </code></pre>
             </div>
         </div>
@@ -473,14 +464,10 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Histogram3D {
-        public static PlotCanvas plot(double[][] data);
-        public static PlotCanvas plot(double[][] data, Color[] palette);
-        public static PlotCanvas plot(double[][] data, int k);
-        public static PlotCanvas plot(double[][] data, int k, Color[] palette);
-        public static PlotCanvas plot(double[][] data, int k, boolean prob, Color[] palette);
-        public static PlotCanvas plot(double[][] data, int xbins, int ybins, boolean prob, Color[] palette);
-        public static PlotCanvas plot(double[][] data, int xbins, int ybins);
-        public static PlotCanvas plot(double[][] data, int xbins, int ybins, Color[] palette);
+        public static Histogram3D of(double[][] data);
+        public static Histogram3D of(double[][] data, int nbins, Color[] palette);
+        public static Histogram3D of(double[][] data, int nbins, boolean prob);
+        public static Histogram3D of(double[][] data, int nbins, boolean prob, Color[] palette);
     }
           </code></pre>
             </div>
@@ -499,7 +486,7 @@ permalink: "{{ page.filePathStem }}.html"
     <pre class="prettyprint lang-scala"><code>
     val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
     val data = (0 until 10000) map { i: Int => gauss.rand }
-    show(hist(data.toArray, 50))
+    show(hist3(data.toArray, 50, 50))
     </code></pre>
             </div>
         </div>
@@ -510,7 +497,7 @@ permalink: "{{ page.filePathStem }}.html"
     double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
     var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
     var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
-    Histogram3D.plot(data, 50).window();
+    Histogram3D.of(data, 50, false).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -537,11 +524,13 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def qqplot(x: Array[Double], d: Distribution): PlotCanvas
-    def qqplot(x: Array[Double], y: Array[Double]): PlotCanvas
+    def qqplot(x: Array[Double]): Canvas
 
-    def qqplot(x: Array[Int], d: DiscreteDistribution): PlotCanvas
-    def qqplot(x: Array[Int], y: Array[Int]): PlotCanvas
+    def qqplot(x: Array[Double], d: Distribution): Canvas
+    def qqplot(x: Array[Double], y: Array[Double]): Canvas
+
+    def qqplot(x: Array[Int], d: DiscreteDistribution): Canvas
+    def qqplot(x: Array[Int], y: Array[Int]): Canvas
     </code></pre>
             </div>
         </div>
@@ -549,11 +538,11 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class QQPlot {
-        public static PlotCanvas plot(double[] x);
-        public static PlotCanvas plot(double[] x, Distribution d);
-        public static PlotCanvas plot(double[] x, double[] y);
-        public static PlotCanvas plot(int[] x, DiscreteDistribution d);
-        public static PlotCanvas plot(int[] x, int[] y);
+        public static QQPlot of(double[] x);
+        public static QQPlot of(double[] x, Distribution d);
+        public static QQPlot of(double[] x, double[] y);
+        public static QQPlot of(int[] x, DiscreteDistribution d);
+        public static QQPlot of(int[] x, int[] y);
     }
           </code></pre>
             </div>
@@ -584,7 +573,7 @@ permalink: "{{ page.filePathStem }}.html"
           <pre class="prettyprint lang-java"><code>
     var gauss = new GaussianDistribution(0.0, 1.0);
     var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
-    QQPlot.plot(data).window()
+    QQPlot.of(data).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -610,13 +599,11 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def heatmap(z: Array[Array[Double]]): PlotCanvas
-    def heatmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
-    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def heatmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
 
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]]): PlotCanvas
-    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
+
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Canvas
     </code></pre>
             </div>
         </div>
@@ -624,12 +611,12 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Heatmap {
-        public static PlotCanvas plot(double[][] z);
-        public static PlotCanvas plot(double[][] z, Color[] palette);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette);
-        public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z);
-        public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z, Color[] palette);
+        public static Heatmap of(double[][] z);
+        public static Heatmap of(double[][] z, int k);
+        public static Heatmap of(double[] x, double[] y, double[][] z);
+        public static Heatmap of(double[] x, double[] y, double[][] z, int k);
+        public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z);
+        public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z, int k);
     }
           </code></pre>
             </div>
@@ -695,7 +682,7 @@ permalink: "{{ page.filePathStem }}.html"
         Z[i][j] = bicubic.interpolate(i * 0.03, j * 0.03);
     }
 
-    Heatmap.plot(Z, Palette.jet(256)).window();
+    Heatmap.of(Z, Palette.jet(256)).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -715,7 +702,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_18">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def spy(matrix: SparseMatrix): PlotCanvas
+    def spy(matrix: SparseMatrix, k: Int = 1): Canvas
     </code></pre>
             </div>
         </div>
@@ -723,9 +710,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SparseMatrixPlot {
-        public static PlotCanvas plot(SparseMatrix sparse);
-        public static PlotCanvas plot(SparseMatrix sparse, Color color);
-        public static PlotCanvas plot(SparseMatrix sparse, Color[] palette);
+        public static SparseMatrixPlot of(SparseMatrix sparse);
+
+        public static SparseMatrixPlot of(SparseMatrix sparse, int k);
     }
           </code></pre>
             </div>
@@ -752,10 +739,10 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_19">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"))
-    var canvas = SparseMatrixPlot.plot(sparse)
-    canvas.setTitle("mesh2em5")
-    canvas.window()
+    var sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"));
+    var canvas = SparseMatrixPlot.of(sparse).canvas();
+    canvas.setTitle("mesh2em5");
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -775,10 +762,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_20">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def hexmap(z: Array[Array[Double]]): PlotCanvas
-    def hexmap(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]]): PlotCanvas
-    def hexmap(labels: Array[Array[String]], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def hexmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
     </code></pre>
             </div>
         </div>
@@ -786,12 +770,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Hexmap {
-        public static PlotCanvas plot(double[][] z);
-        public static PlotCanvas plot(double[][] z, Color[] palette);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette);
-        public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z);
-        public static PlotCanvas plot(String[] rowLabels, String[] columnLabels, double[][] z, Color[] palette);
+        public static Hexmap of(double[][] z);
+        public static Hexmap of(double[][] z, int k);
+        public static Hexmap of(double[][] z, Color[] palette);
     }          </code></pre>
             </div>
         </div>
@@ -850,7 +831,7 @@ permalink: "{{ page.filePathStem }}.html"
         }
     }
 
-    Hexmap.plot(som.umatrix(), Palette.heat(256)).window()
+    Hexmap.of(som.umatrix(), Palette.heat(256)).canvas().window()
           </code></pre>
             </div>
         </div>
@@ -878,10 +859,10 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_22">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def contour(z: Array[Array[Double]]): PlotCanvas
-    def contour(z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
-    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double], palette: Array[Color]): PlotCanvas
+    def contour(z: Array[Array[Double]]): Canvas
+    def contour(z: Array[Array[Double]], levels: Array[Double]): Canvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Canvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double]): Canvas
     </code></pre>
             </div>
         </div>
@@ -889,10 +870,10 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Contour {
-        public static PlotCanvas plot(double[][] z);
-        public static PlotCanvas plot(double[][] z, double[] levels, Color[] palette);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z, double[] levels, Color[] palette);
+        public static Contour of(double[][] z);
+        public static Contour of(double[][] z, int numLevels);
+        public static Contour of(double[] x, double[] y, double[][] z);
+        public static Contour of(double[] x, double[] y, double[][] z, int numLevels);
     }
           </code></pre>
             </div>
@@ -916,7 +897,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val canvas = heatmap(Z, Palette.jet(256))
-    canvas.add(new Contour(Z))
+    canvas.add(Contour.of(Z))
     show(canvas)
     </code></pre>
             </div>
@@ -924,9 +905,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_23">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var canvas = Heatmap.plot(Z, Palette.jet(256))
-    canvas.add(new Contour(Z))
-    canvas.window()
+    var canvas = Heatmap.of(Z, 256).canvas();
+    canvas.add(Contour.of(Z));
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -951,9 +932,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def surface(z: Array[Array[Double]]): PlotCanvas
-    def surface(z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): PlotCanvas
+    def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): PlotCanvas
+
     def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
     </code></pre>
             </div>
@@ -962,12 +942,10 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Surface {
-        public static PlotCanvas plot(double[][] z);
-        public static PlotCanvas plot(double[][] z, Color[] palette);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z);
-        public static PlotCanvas plot(double[] x, double[] y, double[][] z, Color[] palette);
-        public static PlotCanvas plot(double[][][] data);
-        public static PlotCanvas plot(double[][][] data, Color[] palette);
+        public static Surface of(double[][] z);
+        public static Surface of(double[][] z, Color[] palette);
+        public static Surface of(double[] x, double[] y, double[][] z);
+        public static Surface of(double[] x, double[] y, double[][] z, Color[] palette);
     }
           </code></pre>
             </div>
@@ -991,7 +969,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_25">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    Surface.plot(Z, Palette.jet(256, 1.0f)).window()
+    Surface.of(Z, Palette.jet(256, 1.0f)).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -1012,6 +990,7 @@ permalink: "{{ page.filePathStem }}.html"
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_26" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_26">
@@ -1019,6 +998,15 @@ permalink: "{{ page.filePathStem }}.html"
     <pre class="prettyprint lang-scala"><code>
     def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): PlotCanvas
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_26">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Wireframe {
+        public static Wireframe of(double[][] vertices, int[][] edges);
+    }
+          </code></pre>
             </div>
         </div>
     </div>
