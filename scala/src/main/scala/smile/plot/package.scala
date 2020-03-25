@@ -17,13 +17,14 @@
 
 package smile
 
+import javax.swing.JComponent
 import scala.language.implicitConversions
 import smile.json.JsObject
 import smile.plot.swing.{Canvas, PlotGroup}
 
 package object plot {
   /** Shows a swing component with implicit renderer. */
-  def show(canvas: PlotGroup)(implicit renderer: PlotGroup => Unit): Unit = {
+  def show(canvas: JComponent)(implicit renderer: JComponent => Unit): Unit = {
     renderer(canvas)
   }
 
@@ -44,7 +45,7 @@ package object plot {
 
   /** Swing based plot renderer. */
   implicit def desktop(canvas: Canvas): Unit = {
-    canvas.panel.window
+    canvas.window
   }
 
   /** Vega plot renderer with JavaFX. */
@@ -54,7 +55,12 @@ package object plot {
 
   /** Swing component renderer in Apache Zeppelin Notebook. */
   implicit def zeppelin(canvas: Canvas): Unit = {
-    print(s"%html ${swing.img(canvas)}")
+    print(s"%html ${swing.canvas2Image(canvas)}")
+  }
+
+  /** Swing component renderer in Apache Zeppelin Notebook. */
+  implicit def zeppelin(canvas: JComponent): Unit = {
+    print(s"%html ${swing.component2Image(canvas)}")
   }
 
   /** Vega plot renderer in Apache Zeppelin Notebook. */
