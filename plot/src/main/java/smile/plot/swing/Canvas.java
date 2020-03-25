@@ -17,8 +17,6 @@
 
 package smile.plot.swing;
 
-import smile.stat.distribution.MultivariateMixture;
-
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;

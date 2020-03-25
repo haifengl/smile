@@ -17,6 +17,7 @@
 
 package smile.plot.swing;
 
+import java.awt.Dimension;
 import javax.swing.JComponent;
 import javax.swing.JInternalFrame;
 
@@ -33,7 +34,8 @@ import javax.swing.JInternalFrame;
 @SuppressWarnings("serial")
 public class Headless extends JInternalFrame {
 
-    public Headless(JComponent component) {
+    public Headless(JComponent component, int width, int height) {
+        component.setPreferredSize(new Dimension(width, height));
         setContentPane(component);
     }
 

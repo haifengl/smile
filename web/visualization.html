@@ -70,7 +70,7 @@ permalink: "{{ page.filePathStem }}.html"
     </ul>
     <p>For any other char, the data point will be drawn as a dot.</p>
 
-    <p>The functions return a PlotCanvas, which can be used to control the plot
+    <p>The functions return a Canvas, which can be used to control the plot
         programmatically. The user can also use the popup context menu by right
         mouse click to print, change the title, axis labels, and font, etc. To
         display the canvas on desktop, call <code>show(canvas)</code>, which
@@ -932,9 +932,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_24">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): PlotCanvas
+    def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
 
-    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): PlotCanvas
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
     </code></pre>
             </div>
         </div>
@@ -996,7 +996,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_26">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): PlotCanvas
+    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Canvas
     </code></pre>
             </div>
         </div>

@@ -17,18 +17,15 @@
 
 package smile.plot
 
+import java.awt.Color
 import java.awt.image.BufferedImage
-import java.awt.{Color, GridLayout}
 import java.io.ByteArrayOutputStream
 import java.util.Base64
-
 import javax.imageio.ImageIO
-import javax.swing.{JComponent, JPanel, SwingUtilities}
+import javax.swing.JComponent
+import javax.swing.SwingUtilities
 import smile.data.DataFrame
-import smile.classification.Classifier
-import smile.regression.Regression
 import smile.clustering.HierarchicalClustering
-import smile.math.MathEx
 import smile.math.matrix.SparseMatrix
 import smile.stat.distribution.{DiscreteDistribution, Distribution}
 import smile.projection.PCA
@@ -39,8 +36,26 @@ import smile.projection.PCA
   */
 package object swing {
   /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def img(canvas: Canvas, width: Int = 1000, height: Int = 1000): String = {
+  def canvas2Image(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
     val bi = canvas.toBufferedImage(width, height)
+
+    val os = new ByteArrayOutputStream
+    ImageIO.write(bi, "png", os)
+    val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
+
+    s"""<img src="data:image/png;base64,${base64}">"""
+  }
+
+  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
+  def component2Image(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
+    val headless = new Headless(canvas, width, height)
+    headless.pack
+    headless.setVisible(true)
+    SwingUtilities.invokeAndWait(() => {})
+
+    val bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
+    val g2d = bi.createGraphics
+    canvas.print(g2d)
 
     val os = new ByteArrayOutputStream
     ImageIO.write(bi, "png", os)
@@ -166,6 +181,14 @@ package object swing {
   def plot(data: DataFrame, category: String, mark: Char): PlotGroup = {
     PlotGroup.of(data, category, mark);
   }
+
+  /**
+    * Text plot.
+    *
+    * @param texts       the texts.
+    * @param coordinates a n-by-2 or n-by-3 matrix that are the coordinates of texts.
+    */
+  def text(texts: Array[String], coordinates: Array[Array[Double]]): Canvas = TextPlot.of(texts, coordinates).canvas
 
   /** Line plot.
     *
