@@ -28,13 +28,11 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def plot(data: Array[Array[Double]], legend: Char = '*', color: Color = BLACK): PlotCanvas
+    def plot(x: Array[Array[Double]], mark: Char = '*', color: Color = Color.BLACK): Canvas
 
-    def plot(data: Array[Array[Double]], labels: Array[String]): PlotCanvas
+    def plot(x: Array[Array[Double]], y: Array[String], mark: Char): Canvas
 
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Char, palette: Array[Color]): PlotCanvas
-
-    def plot(data: Array[Array[Double]], label: Array[Int], legend: Array[Char], palette: Array[Color]): PlotCanvas
+    def plot(x: Array[Array[Double]], y: Array[Int], mark: Char): Canvas
     </code></pre>
             </div>
         </div>
@@ -42,20 +40,11 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class ScatterPlot {
-        public static PlotCanvas plot(double[]... data);
-        public static PlotCanvas plot(String id, double[]... data);
-        public static PlotCanvas plot(double[][] data, String[] labels);
-        public static PlotCanvas plot(String id, double[][] data, String[] labels);
-        public static PlotCanvas plot(double[][] data, Color color);
-        public static PlotCanvas plot(String id, double[][] data, Color color);
-        public static PlotCanvas plot(double[][] data, char legend);
-        public static PlotCanvas plot(String id, double[][] data, char legend);
-        public static PlotCanvas plot(double[][] data, char legend, Color color);
-        public static PlotCanvas plot(String id, double[][] data, char legend, Color color);
-        public static PlotCanvas plot(double[][] data, int[] y, char legend, Color[] palette);
-        public static PlotCanvas plot(String id, double[][] data, int[] y, char legend, Color[] palette);
-        public static PlotCanvas plot(double[][] data, int[] y, char[] legend, Color[] palette) {
-        public static PlotCanvas plot(String id, double[][] data, int[] y, char[] legend, Color[] palette);
+        public static ScatterPlot of(double[][] points, char mark, Color color);
+
+        public static ScatterPlot of(double[][] x, String[] y, char mark);
+
+        public static ScatterPlot of(double[][] x, int[] y, char mark);
     }
           </code></pre>
             </div>
@@ -101,11 +90,8 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val iris = read.arff("data/weka/iris.arff")
-    val x = iris.select(0, 1).toArray
-    val y = iris("class").toIntArray
-    val canvas = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    val names = iris.names
-    canvas.setAxisLabels(names(0), names(1))
+    val canvas = plot(iris, "sepallength", "sepalwidth", "class", '*')
+    canvas.setAxisLabels("sepallength", "sepalwidth")
     show(canvas)
     </code></pre>
             </div>
@@ -120,13 +106,8 @@ permalink: "{{ page.filePathStem }}.html"
     import smile.math.matrix.*;
 
     var iris = Read.arff("data/weka/iris.arff");
-    var x = iris.select(0, 1).toArray();
-    var y = iris.column("class").toIntArray();
-    char[] legends = {'*', '+', 'o'};
-    Color[] colors = {Color.RED, Color.BLUE, Color.CYAN};
-    var canvas = ScatterPlot.plot(x, y, legends, colors)
-    var names = iris.names();
-    canvas.setAxisLabels(names[0], names[1]);
+    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
+    canvas.setAxisLabels("sepallength", "sepalwidth");
     canvas.window();
           </code></pre>
             </div>
@@ -151,9 +132,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val x = iris.select(0, 1, 2).toArray // take first three columns
-    val canvas = plot(x, y, Array('*', '+', 'o'), Array(RED, BLUE, CYAN))
-    canvas.setAxisLabels(names(0), names(1), names(2))
+    val canvas = plot(iris, "sepallength", "sepalwidth", "petallength", "class", '*')
+    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength")
     show(canvas)
     </code></pre>
             </div>
@@ -161,10 +141,9 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var x = iris.select(0, 1, 2).toArray() // take first three columns
-    var canvas = ScatterPlot.plot(x, y, legends, colors)
-    canvas.setAxisLabels(names[0], names[1], names[2])
-    canvas.window()
+    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
+    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
+    canvas.window();
           </code></pre>
             </div>
         </div>
@@ -180,13 +159,22 @@ permalink: "{{ page.filePathStem }}.html"
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    show(plot(iris, "class", '*', Array(RED, BLUE, CYAN)))
+    show(plot(iris, "class", '*'))
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var canvas = PlotGroup.of(iris, "class", '*');
+    canvas.window();
+          </code></pre>
             </div>
         </div>
     </div>
@@ -208,7 +196,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = BLACK, legend: Char = ' '): PlotCanvas
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas
     </code></pre>
             </div>
         </div>
@@ -216,16 +204,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LinePlot {
-        public static PlotCanvas plot(double[] y);
-        public static PlotCanvas plot(String id, double[] y);
-        public static PlotCanvas plot(double[] y, Line.Style style);
-        public static PlotCanvas plot(String id, double[] y, Line.Style style);
-        public static PlotCanvas plot(double[] y, Line.Style style, Color color);
-        public static PlotCanvas plot(String id, double[] y, Line.Style style, Color color);
-        public static PlotCanvas plot(double[][] data, Line.Style style);
-        public static PlotCanvas plot(String id, double[][] data, Line.Style style);
-        public static PlotCanvas plot(double[][] data, Line.Style style, Color color);
-        public static PlotCanvas plot(String id, double[][] data, Line.Style style, Color color);
+        public static LinePlot of(double[][] data, Line.Style style, Color color);
+
+        public static LinePlot of(double[] y, Line.Style style, Color color);
     }
           </code></pre>
             </div>
@@ -241,7 +222,8 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val heart = -PI to PI by 0.1 map { t =>
+    val heart = -314 to 314 map { i =>
+      val t = i / 100.0
       val x = 16 * pow(sin(t), 3)
       val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
       Array(x, y)
@@ -260,7 +242,7 @@ permalink: "{{ page.filePathStem }}.html"
         heart[i][0] = 16 * pow(sin(t), 3);
         heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
     }
-    var canvas = LinePlot.plot(heart, Line.Style.SOLID, Color.RED);
+    var canvas = LinePlot.of(heart, Color.RED);
     canvas.window();
           </code></pre>
             </div>

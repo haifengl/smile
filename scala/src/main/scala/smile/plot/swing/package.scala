@@ -178,9 +178,13 @@ package object swing {
     * @return the plot canvas which can be added other shapes.
     */
   def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas = {
-    val lines = Array(new Line(data, style, mark, color))
-    val legends = Array(new Legend(label, color))
-    new LinePlot(lines, legends).canvas
+    if (label == null) {
+      new LinePlot(new Line(data, style, mark, color)).canvas
+    } else {
+      val lines = Array(new Line(data, style, mark, color))
+      val legends = Array(new Legend(label, color))
+      new LinePlot(lines, legends).canvas
+    }
   }
 
   /** Create a plot canvas with the staircase line plot.

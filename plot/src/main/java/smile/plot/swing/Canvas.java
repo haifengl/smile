@@ -17,11 +17,15 @@
 
 package smile.plot.swing;
 
+import smile.stat.distribution.MultivariateMixture;
+
 import java.awt.Color;
 import java.awt.Font;
 import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.lang.reflect.InvocationTargetException;
@@ -69,6 +73,10 @@ public class Canvas {
      * The shapes in the canvas, e.g. label, plots, etc.
      */
     List<Shape> shapes = new ArrayList<>();
+    /**
+     * Show legends if true.
+     */
+    private boolean isLegendVisible = true;
     /**
      * The main title of plot.
      */
@@ -177,6 +185,21 @@ public class Canvas {
     }
 
     /**
+     * Returns true if legends are visible.
+     */
+    public boolean isLegendVisible() {
+        return isLegendVisible;
+    }
+
+    /**
+     * Sets if legends are visible.
+     */
+    public Canvas setLegendVisible(boolean visible) {
+        isLegendVisible = visible;
+        return this;
+    }
+
+    /**
      * Returns the size of margin, which is not used as plot area.
      * Currently, all four sides have the same margin size.
      *
@@ -267,7 +290,7 @@ public class Canvas {
     public String[] getAxisLabels() {
         String[] labels = new String[base.dimension];
         for (int i = 0; i < base.dimension; i++) {
-            labels[i] = axis[i].getAxisLabel();
+            labels[i] = axis[i].getLabel();
         }
         return labels;
     }
@@ -276,7 +299,7 @@ public class Canvas {
      * Returns the label/legend of an axis.
      */
     public String getAxisLabel(int i) {
-        return axis[i].getAxisLabel();
+        return axis[i].getLabel();
     }
 
     /**
@@ -285,7 +308,7 @@ public class Canvas {
     public Canvas setAxisLabels(String... labels) {
         PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabels", getAxisLabels(), labels);
         for (int i = 0; i < labels.length; i++) {
-            axis[i].setAxisLabel(labels[i]);
+            axis[i].setLabel(labels[i]);
         }
         pcs.firePropertyChange(event);
         return this;
@@ -295,8 +318,8 @@ public class Canvas {
      * Sets the label/legend of an axis.
      */
     public Canvas setAxisLabel(int i, String label) {
-        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axis[i].getAxisLabel(), label);
-        axis[i].setAxisLabel(label);
+        PropertyChangeEvent event = new PropertyChangeEvent(this, "axisLabel", axis[i].getLabel(), label);
+        axis[i].setLabel(label);
         pcs.firePropertyChange(event);
         return this;
     }
@@ -435,23 +458,25 @@ public class Canvas {
         graphics.clearClip();
 
         // draw legends
-        Font font = g2d.getFont();
-        int x = (int) (width * (1 - margin) + 20);
-        int y = (int) (height * margin + 50);
-        int fontWidth = font.getSize();
-        int fontHeight = font.getSize();
+        if (isLegendVisible) {
+            Font font = g2d.getFont();
+            int x = (int) (width * (1 - margin) + 20);
+            int y = (int) (height * margin + 50);
+            int fontWidth = font.getSize();
+            int fontHeight = font.getSize();
 
-        for (int i = 0; i < shapes.size(); i++) {
-            Shape s = shapes.get(i);
-            if (s instanceof Plot) {
-                Plot p = (Plot) s;
-                if (p.legends().isPresent()) {
-                    for (Legend legend : p.legends().get()) {
-                        g2d.setColor(legend.color);
-                        g2d.fillRect(x, y, fontWidth, fontHeight);
-                        g2d.drawRect(x, y, fontWidth, fontHeight);
-                        g2d.drawString(legend.text, x + 2 * fontWidth, y + fontHeight);
-                        y += 2 * fontWidth;
+            for (int i = 0; i < shapes.size(); i++) {
+                Shape s = shapes.get(i);
+                if (s instanceof Plot) {
+                    Plot p = (Plot) s;
+                    if (p.legends().isPresent()) {
+                        for (Legend legend : p.legends().get()) {
+                            g2d.setColor(legend.color);
+                            g2d.fillRect(x, y, fontWidth, fontHeight);
+                            g2d.drawRect(x, y, fontWidth, fontHeight);
+                            g2d.drawString(legend.text, x + 2 * fontWidth, y + fontHeight);
+                            y += 2 * fontWidth;
+                        }
                     }
                 }
             }
@@ -461,8 +486,8 @@ public class Canvas {
             g2d.setFont(titleFont);
             g2d.setColor(titleColor);
             FontMetrics fm = g2d.getFontMetrics();
-            x = (width - fm.stringWidth(title)) / 2;
-            y = (int) (height * margin) / 2;
+            int x = (width - fm.stringWidth(title)) / 2;
+            int y = (int) (height * margin) / 2;
             g2d.drawString(title, x, y);
         }
     }
@@ -471,7 +496,21 @@ public class Canvas {
      * Returns a Swing JPanel of the canvas.
      */
     public PlotPanel panel() {
-        return new PlotPanel(this);
+        PlotPanel panel = new PlotPanel(this);
+        panel.addComponentListener(new ComponentAdapter() {
+            @Override
+            public void componentResized(ComponentEvent e) {
+                panel.reset();
+                panel.repaint();
+            }
+
+            @Override
+            public void componentShown(ComponentEvent e) {
+                panel.reset();
+                panel.repaint();
+            }
+        });
+        return panel;
     }
 
     /**
