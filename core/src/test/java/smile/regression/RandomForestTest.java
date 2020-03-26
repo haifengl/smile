@@ -24,7 +24,7 @@ import org.junit.*;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.regression.TreeShapImportance.TreeShapExplainer;
+import smile.regression.treeshap.TreeShapImportance;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
@@ -99,7 +99,7 @@ public class RandomForestTest {
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
         RandomForest model = RandomForest.fit(Longley.formula, Longley.data, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds));
         
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees());        
+        TreeShapImportance shapExplainer = new TreeShapImportance(model.trees());        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), Longley.data);   
         
         double[] importance = model.importance();
@@ -146,7 +146,7 @@ public class RandomForestTest {
         props.put("smile.random.forest.max.nodes", "100");      
         RandomForest model = RandomForest.fit(formula, data, props);        
 
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees(), true);        
+        TreeShapImportance shapExplainer = new TreeShapImportance(model.trees(), true);        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data);   
                
         double[] importance = model.importance();
@@ -167,7 +167,6 @@ public class RandomForestTest {
         test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
-        test("cervicalCancer", CervicalCancer.formula, CervicalCancer.data, 0.2341);
     }
 
     @Test

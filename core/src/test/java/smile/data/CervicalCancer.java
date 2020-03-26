@@ -86,10 +86,11 @@ public class CervicalCancer {
 
         CSVFormat format = CSVFormat.DEFAULT;
         //format = format.withNullString("?");
+        format = format.withSkipHeaderRecord();
         
         CSV csv = new CSV(format);
         csv.schema(schema);
-
+        
         try {
             data = csv.read(Paths.getTestData("uci/risk_factors_cervical_cancer.csv"));
             

@@ -24,7 +24,7 @@ import smile.validation.LOOCV;
 import smile.validation.RMSE;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
-import smile.regression.TreeShapImportance.TreeShapExplainer;
+import smile.regression.treeshap.TreeShapImportance;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -66,7 +66,7 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Longley.formula, Longley.data);
 
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees(), true);        
+        TreeShapImportance shapExplainer = new TreeShapImportance(model.trees(), true);        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), Longley.data); 
         
         double[] importance = model.importance();
@@ -96,7 +96,7 @@ public class GradientTreeBoostTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(formula, data);
         
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(model.trees(), true);        
+        TreeShapImportance shapExplainer = new TreeShapImportance(model.trees(), true);        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data); 
 
         double[] importance = model.importance();

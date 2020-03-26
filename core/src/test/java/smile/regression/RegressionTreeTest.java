@@ -31,11 +31,11 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
 import smile.validation.Validation;
-import static smile.regression.TreeShapImportance.TreeShapExplainer;
 
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import smile.regression.treeshap.TreeShapImportance;
 
 /**
  *
@@ -73,7 +73,7 @@ public class RegressionTreeTest {
         System.out.println("----- dot -----");
         System.out.println(model);
 
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(new RegressionTree[] {model});        
+        TreeShapImportance shapExplainer = new TreeShapImportance(new RegressionTree[] {model});        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), Longley.data); 
         
         double[] importance = model.importance();
@@ -101,7 +101,7 @@ public class RegressionTreeTest {
         System.out.println("----- dot -----");
         System.out.println(model);
 
-        TreeShapExplainer shapExplainer = new TreeShapExplainer(new RegressionTree[] {model});        
+        TreeShapImportance shapExplainer = new TreeShapImportance(new RegressionTree[] {model});        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data);      
 
         double[] importance = model.importance();
