@@ -144,7 +144,12 @@ public class CSV {
 
         try (CSVParser csv = CSVParser.parse(reader, format)) {
             List<Tuple> rows = new ArrayList<>();
-            for (CSVRecord record : csv) {
+            List<CSVRecord> records = csv.getRecords();
+            for (int ri = 0;ri < records.size();ri++) {
+            	CSVRecord record = records.get(ri);
+            	if(format.getSkipHeaderRecord() && ri == 0) {
+            	   continue;
+            	}
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
 					String recordI = record.get(i);
