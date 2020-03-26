@@ -88,19 +88,19 @@ object read {
     }
 
     /** Reads a CSV file. */
-    fun csv(file: Path, delimiter: Char, header: Boolean, quote: Char, escape: Char, schema: StructType): DataFrame {
+    fun csv(file: Path, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame {
         var format = CSVFormat.DEFAULT.withDelimiter(delimiter).withQuote(quote).withEscape(escape)
         if (header) format = format.withFirstRecordAsHeader()
         return Read.csv(file, format, schema)
     }
 
     /** Reads a CSV file. */
-    fun csv(file: String, format: CSVFormat, schema: StructType): DataFrame {
+    fun csv(file: String, format: CSVFormat, schema: StructType? = null): DataFrame {
         return Read.csv(file, format, schema)
     }
 
     /** Reads a CSV file. */
-    fun csv(file: Path, format: CSVFormat, schema: StructType): DataFrame {
+    fun csv(file: Path, format: CSVFormat, schema: StructType? = null): DataFrame {
         return Read.csv(file, format, schema)
     }
 
