@@ -75,6 +75,7 @@ package object wavelet {
       case "la16" => new SymletWavelet(16)
       case "la18" => new SymletWavelet(18)
       case "la20" => new SymletWavelet(20)
+      case _ => throw new IllegalArgumentException(s"Unsupported wavelet: $filter")
     }
   }
 
