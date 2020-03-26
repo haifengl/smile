@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 /**
  * Keyword extraction. Given a piece of text, such as a journal article,
