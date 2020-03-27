@@ -63,19 +63,19 @@ public class ShapTree {
       thresholds.add(n);
 
       if (n instanceof InternalNode) {
-        splitFeatures.add(idx, ((InternalNode) n).feature());
-        q.add(((InternalNode) n).trueChild());
-        childrenLefts.add(idx, (++nodeNum));
-        q.add(((InternalNode) n).falseChild());
-        childrenRights.add(idx, (++nodeNum));
+          splitFeatures.add(idx, ((InternalNode) n).feature());
+          q.add(((InternalNode) n).trueChild());
+          childrenLefts.add(idx, (++nodeNum));
+          q.add(((InternalNode) n).falseChild());
+          childrenRights.add(idx, (++nodeNum));
       } else if (n instanceof LeafNode) {
-        splitFeatures.add(idx, -1);
-        childrenLefts.add(idx, -1);
-        childrenRights.add(idx, -1);
+          splitFeatures.add(idx, -1);
+          childrenLefts.add(idx, -1);
+          childrenRights.add(idx, -1);
       } else {
-    	String err = "error node type for tree structure conversion: " + n.getClass() + ":" + n.toString();
-    	logger.error(err);
-        throw new RuntimeException(err);
+          String err = "error node type for tree structure conversion: " + n.getClass() + ":" + n.toString();
+          logger.error(err);
+          throw new RuntimeException(err);
       }
 
       n = q.poll();
@@ -90,10 +90,10 @@ public class ShapTree {
     this.node_sample_weight = sampleWeights.stream().mapToDouble(Double::doubleValue).toArray();
 
     if (this.normalize) {
-      double valueSum = values.stream().mapToDouble(Double::doubleValue).sum();
-      this.values = values.stream().mapToDouble(num -> num / valueSum).toArray();
+        double valueSum = values.stream().mapToDouble(Double::doubleValue).sum();
+        this.values = values.stream().mapToDouble(num -> num / valueSum).toArray();
     } else {
-      this.values = values.stream().mapToDouble(Double::doubleValue).toArray();
+        this.values = values.stream().mapToDouble(Double::doubleValue).toArray();
     }
 
     // we recompute the expectations to make sure they follow the SHAP logic
@@ -106,17 +106,17 @@ public class ShapTree {
   private double subtreeValues(Node n) {
     double v = 0;
     if (n instanceof RegressionNode) {
-      v = ((RegressionNode) n).output();
-      assert (v != Double.NaN);
+        v = ((RegressionNode) n).output();
+        assert (v != Double.NaN);
     } else if (n instanceof InternalNode) {
-      Node lc = ((InternalNode) n).trueChild();
-      Node rc = ((InternalNode) n).falseChild();
-      v = (double) (lc.size() * subtreeValues(lc) + rc.size() * subtreeValues(rc)) / (double) (lc.size() + rc.size());
-      assert (v != Double.NaN);
+        Node lc = ((InternalNode) n).trueChild();
+        Node rc = ((InternalNode) n).falseChild();
+        v = (double) (lc.size() * subtreeValues(lc) + rc.size() * subtreeValues(rc)) / (double) (lc.size() + rc.size());
+        assert (v != Double.NaN);
     } else {
-      String err = "error node type for node value calculation: " + n.getClass() + ":" + n.toString();
-      logger.error(err);
-      throw new RuntimeException(err);
+        String err = "error node type for node value calculation: " + n.getClass() + ":" + n.toString();
+        logger.error(err);
+        throw new RuntimeException(err);
     }
     return v;
   }
@@ -130,22 +130,21 @@ public class ShapTree {
       int depth) {
 	  
     if (depth < 0) {
-      depth = 0;
+        depth = 0;
     }
 
     if (children_right[i] == -1) {
-      return 0;
+        return 0;
     } else {
-      int li = children_left[i];
-      int ri = children_right[i];
-      int depth_left = computeExpectations(children_left, children_right, node_sample_weight, values, li, depth + 1);
-      int depth_right =
-          computeExpectations(children_left, children_right, node_sample_weight, values, ri, depth + 1);
-      double left_weight = node_sample_weight[li];
-      double right_weight = node_sample_weight[ri];
-      double v = (left_weight * values[li] + right_weight * values[ri]) / (left_weight + right_weight);
-      values[i] = v;
-      return Math.max(depth_left, depth_right) + 1;
+        int li = children_left[i];
+        int ri = children_right[i];
+        int depth_left = computeExpectations(children_left, children_right, node_sample_weight, values, li, depth + 1);
+        int depth_right = computeExpectations(children_left, children_right, node_sample_weight, values, ri, depth + 1);
+        double left_weight = node_sample_weight[li];
+        double right_weight = node_sample_weight[ri];
+        double v = (left_weight * values[li] + right_weight * values[ri]) / (left_weight + right_weight);
+        values[i] = v;
+        return Math.max(depth_left, depth_right) + 1;
     }
   }
   

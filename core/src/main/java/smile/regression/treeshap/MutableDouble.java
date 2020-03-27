@@ -8,7 +8,7 @@ package smile.regression.treeshap;
 public class MutableDouble {
   public double value = Double.MIN_VALUE;
 
-  MutableDouble(double value) {
+  public MutableDouble(double value) {
     this.value = value;
   }
 }
