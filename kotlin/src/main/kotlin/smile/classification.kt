@@ -30,7 +30,8 @@ import smile.math.kernel.MercerKernel
 import smile.neighbor.KNNSearch
 import smile.stat.distribution.Distribution
 
-/** K-nearest neighbor classifier.
+/**
+ * K-nearest neighbor classifier.
  * The k-nearest neighbor algorithm (k-NN) is
  * a method for classifying objects by a majority vote of its neighbors,
  * with the object being assigned to the class most common amongst its k
@@ -76,7 +77,8 @@ fun <T> knn(x: KNNSearch<T, T>, y: IntArray, k: Int): KNN<T> {
     return KNN(x, y, k)
 }
 
-/** K-nearest neighbor classifier.
+/**
+ * K-nearest neighbor classifier.
  *
  * @param x training samples.
  * @param y training labels in [0, c), where c is the number of classes.
@@ -87,7 +89,8 @@ fun <T> knn(x: Array<T>, y: IntArray, distance: Distance<T>, k: Int): KNN<T> {
     return KNN.fit(x, y, distance, k)
 }
 
-/** K-nearest neighbor classifier with Euclidean distance as the similarity measure.
+/**
+ * K-nearest neighbor classifier with Euclidean distance as the similarity measure.
  *
  * @param x training samples.
  * @param y training labels in [0, c), where c is the number of classes.
@@ -97,7 +100,8 @@ fun knn(x: Array<DoubleArray>, y: IntArray, k: Int): KNN<DoubleArray> {
     return KNN.fit(x, y, k)
 }
 
-/** Logistic regression.
+/**
+ * Logistic regression.
  * Logistic regression (logit model) is a generalized
  * linear model used for binomial regression. Logistic regression applies
  * maximum likelihood estimation after transforming the dependent into
@@ -155,7 +159,8 @@ fun logit(x: Array<DoubleArray>, y: IntArray, lambda: Double = 0.0, tol: Double 
     return LogisticRegression.fit(x, y, lambda, tol, maxIter)
 }
 
-/** Maximum Entropy Classifier.
+/**
+ * Maximum Entropy Classifier.
  * Maximum entropy is a technique for learning
  * probability distributions from data. In maximum entropy models, the
  * observed data itself is assumed to be the testable information. Maximum
@@ -189,7 +194,8 @@ fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: D
     return Maxent.fit(p, x, y, lambda, tol, maxIter)
 }
 
-/** Multilayer perceptron neural network.
+/**
+ * Multilayer perceptron neural network.
  * An MLP consists of several layers of nodes, interconnected through weighted
  * acyclic arcs from each preceding layer to the following, without lateral or
  * feedback connections. Each node calculates a transformed weighted linear
@@ -253,7 +259,7 @@ fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: D
  * the "empirical risk" and the "structural risk".
  *
  * For neural networks, the input patterns usually should be scaled/standardized.
- * Commonly, each input variable is scaled into interval [0, 1] or to have
+ * Commonly, each input variable is scaled into interval `[0, 1]` or to have
  * mean 0 and standard deviation 1.
  *
  * For penalty functions and output units, the following natural pairings are
@@ -286,7 +292,8 @@ fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epoch
     return net
 }
 
-/** Radial basis function networks.
+/**
+ * Radial basis function networks.
  * A radial basis function network is an
  * artificial neural network that uses radial basis functions as activation
  * functions. It is a linear combination of radial basis functions. They are
@@ -357,7 +364,8 @@ fun rbfnet(x: Array<DoubleArray>, y: IntArray, k: Int, normalized: Boolean = fal
     return RBFNetwork.fit(x, y, neurons, normalized)
 }
 
-/** Support vector machines for classification. The basic support vector machine
+/**
+ * Support vector machines for classification. The basic support vector machine
  * is a binary linear classifier which chooses the hyperplane that represents
  * the largest separation, or margin, between the two classes. If such a
  * hyperplane exists, it is known as the maximum-margin hyperplane and the
@@ -411,7 +419,8 @@ fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: D
     return SVM.fit(x, y, kernel, C, tol)
 }
 
-/** Decision tree. A decision tree can be learned by
+/**
+ * Decision tree. A decision tree can be learned by
  * splitting the training set into subsets based on an attribute value
  * test. This process is repeated on each derived subset in a recursive
  * manner called recursive partitioning. The recursion is completed when
@@ -484,7 +493,8 @@ fun cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GIN
     return DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size() / nodeSize, nodeSize)
 }
 
-/** Random forest for classification. Random forest is an ensemble classifier
+/**
+ * Random forest for classification. Random forest is an ensemble classifier
  * that consists of many decision trees and outputs the majority vote of
  * individual trees. The method combines bagging idea and the random
  * selection of features.
@@ -541,7 +551,8 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
     return RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds)
 }
 
-/** Gradient boosted classification trees.
+/**
+ * Gradient boosted classification trees.
  *
  * Generic gradient boosting at the t-th step would fit a regression tree to
  * pseudo-residuals. Let J be the number of its leaves. The tree partitions
@@ -620,7 +631,8 @@ fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20
     return GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
 }
 
-/** AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
+/**
+ * AdaBoost (Adaptive Boosting) classifier with decision trees. In principle,
  * AdaBoost is a meta-algorithm, and can be used in conjunction with many other
  * learning algorithms to improve their performance. In practice, AdaBoost with
  * decision trees is probably the most popular combination. AdaBoost is adaptive
@@ -659,7 +671,8 @@ fun adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int
     return AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
 }
 
-/** Fisher's linear discriminant. Fisher defined the separation between two
+/**
+ * Fisher's linear discriminant. Fisher defined the separation between two
  * distributions to be the ratio of the variance between the classes to
  * the variance within the classes, which is, in some sense, a measure
  * of the signal-to-noise ratio for the class labeling. FLD finds a linear
@@ -697,7 +710,8 @@ fun fisher(x: Array<DoubleArray>, y: IntArray, L: Int = -1, tol: Double = 0.0001
     return FLD.fit(x, y, L, tol)
 }
 
-/** Linear discriminant analysis. LDA is based on the Bayes decision theory
+/**
+ * Linear discriminant analysis. LDA is based on the Bayes decision theory
  * and assumes that the conditional probability density functions are normally
  * distributed. LDA also makes the simplifying homoscedastic assumption (i.e.
  * that the class covariances are identical) and that the covariances have full
@@ -735,7 +749,8 @@ fun lda(x: Array<DoubleArray>, y: IntArray, priori: DoubleArray? = null, tol: Do
     return LDA.fit(x, y, priori, tol)
 }
 
-/** Quadratic discriminant analysis. QDA is closely related to linear discriminant
+/**
+ * Quadratic discriminant analysis. QDA is closely related to linear discriminant
  * analysis (LDA). Like LDA, QDA models the conditional probability density
  * functions as a Gaussian distribution, then uses the posterior distributions
  * to estimate the class for a given test data. Unlike LDA, however,
@@ -763,20 +778,21 @@ fun qda(x: Array<DoubleArray>, y: IntArray, priori: DoubleArray? = null, tol: Do
     return QDA.fit(x, y, priori, tol)
 }
 
-/** Regularized discriminant analysis. RDA is a compromise between LDA and QDA,
+/**
+ * Regularized discriminant analysis. RDA is a compromise between LDA and QDA,
  * which allows one to shrink the separate covariances of QDA toward a common
  * variance as in LDA. This method is very similar in flavor to ridge regression.
  * The regularized covariance matrices of each class is
  * &Sigma;<sub>k</sub>(&alpha;) = &alpha; &Sigma;<sub>k</sub> + (1 - &alpha;) &Sigma;.
  * The quadratic discriminant function is defined using the shrunken covariance
- * matrices &Sigma;<sub>k</sub>(&alpha;). The parameter &alpha; in [0, 1]
+ * matrices &Sigma;<sub>k</sub>(&alpha;). The parameter &alpha; in `[0, 1]`
  * controls the complexity of the model. When &alpha; is one, RDA becomes QDA.
  * While &alpha; is zero, RDA is equivalent to LDA. Therefore, the
  * regularization factor &alpha; allows a continuum of models between LDA and QDA.
  *
  * @param x training samples.
- * @param y training labels in [0, k), where k is the number of classes.
- * @param alpha regularization factor in [0, 1] allows a continuum of models
+ * @param y training labels in `[0, k)`, where k is the number of classes.
+ * @param alpha regularization factor in `[0, 1]` allows a continuum of models
  *              between LDA and QDA.
  * @param priori the priori probability of each class.
  * @param tol tolerance to decide if a covariance matrix is singular; it
@@ -788,11 +804,12 @@ fun rda(x: Array<DoubleArray>, y: IntArray, alpha: Double, priori: DoubleArray? 
     return RDA.fit(x, y, alpha, priori, tol)
 }
 
-/** Creates a naive Bayes classifier for document classification.
+/**
+ * Creates a naive Bayes classifier for document classification.
  * Add-k smoothing.
  *
  * @param x training samples.
- * @param y training labels in [0, k), where k is the number of classes.
+ * @param y training labels in `[0, k)`, where k is the number of classes.
  * @param model the generation model of naive Bayes classifier.
  * @param priori the priori probability of each class. If null, equal probability is assume for each class.
  * @param sigma the prior count of add-k smoothing of evidence.
@@ -809,18 +826,20 @@ fun naiveBayes(x: Array<IntArray>, y: IntArray, model: DiscreteNaiveBayes.Model,
     return naive
 }
 
-/** Creates a general naive Bayes classifier.
+/**
+ * Creates a general naive Bayes classifier.
  *
  * @param priori the priori probability of each class.
  * @param condprob the conditional distribution of each variable in
- *                 each class. In particular, condprob[i][j] is the conditional
+ *                 each class. In particular, `condprob[i][j]` is the conditional
  *                 distribution P(x<sub>j</sub> | class i).
  */
 fun naiveBayes(priori: DoubleArray, condprob: Array<Array<Distribution>>): NaiveBayes {
 return NaiveBayes(priori, condprob)
 }
 
-/** One-vs-one strategy for reducing the problem of
+/**
+ * One-vs-one strategy for reducing the problem of
  * multiclass classification to multiple binary classification problems.
  * This approach trains K (K − 1) / 2 binary classifiers for a
  * K-way multiclass problem; each receives the samples of a pair of
@@ -836,7 +855,8 @@ fun <T> ovo(x: Array<T>, y: IntArray, trainer: (Array<T>, IntArray) -> Classifie
     return OneVersusOne.fit(x, y, trainer)
 }
 
-/** One-vs-rest (or one-vs-all) strategy for reducing the problem of
+/**
+ * One-vs-rest (or one-vs-all) strategy for reducing the problem of
  * multiclass classification to multiple binary classification problems.
  * It involves training a single classifier per class, with the samples
  * of that class as positive samples and all other samples as negatives.

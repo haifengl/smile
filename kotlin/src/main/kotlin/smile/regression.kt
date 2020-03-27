@@ -23,7 +23,8 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.kernel.MercerKernel
 
-/** Ordinary least squares. In linear regression,
+/**
+ * Ordinary least squares. In linear regression,
  * the model specification is that the dependent variable is a linear
  * combination of the parameters (but need not be linear in the independent
  * variables). The residual is the difference between the value of the
@@ -75,7 +76,8 @@ fun ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolea
     return OLS.fit(formula, data, method, stderr, recursive)
 }
 
-/** Ridge Regression. When the predictor variables are highly correlated amongst
+/**
+ * Ridge Regression. When the predictor variables are highly correlated amongst
  * themselves, the coefficients of the resulting least squares fit may be very
  * imprecise. By allowing a small amount of bias in the estimates, more
  * reasonable coefficients may often be obtained. Ridge regression is one
@@ -101,7 +103,8 @@ fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel {
     return RidgeRegression.fit(formula, data, lambda)
 }
 
-/** Least absolute shrinkage and selection operator.
+/**
+ * Least absolute shrinkage and selection operator.
  * The Lasso is a shrinkage and selection method for linear regression.
  * It minimizes the usual sum of squared errors, with a bound on the sum
  * of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
@@ -145,7 +148,8 @@ fun lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3,
     return LASSO.fit(formula, data, lambda, tol, maxIter)
 }
 
-/** Support vector regression. Like SVM for classification, the model produced
+/**
+ * Support vector regression. Like SVM for classification, the model produced
  * by SVR depends only on a subset of the training data, because the cost
  * function ignores any training data close to the model prediction (within
  * a threshold).
@@ -164,7 +168,8 @@ fun <T> svr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, eps: Double, C
     return SVR.fit(x, y, kernel, eps, C, tol)
 }
 
-/** Regression tree. A decision tree can be learned by
+/**
+ * Regression tree. A decision tree can be learned by
  * splitting the training set into subsets based on an attribute value
  * test. This process is repeated on each derived subset in a recursive
  * manner called recursive partitioning. The recursion is completed when
@@ -237,7 +242,8 @@ fun cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 
     return RegressionTree.fit(formula, data, maxDepth, if (maxNodes > 0) maxNodes else data.size() / nodeSize, nodeSize)
 }
 
-/** Random forest for regression. Random forest is an ensemble classifier
+/**
+ * Random forest for regression. Random forest is an ensemble classifier
  * that consists of many decision trees and outputs the majority vote of
  * individual trees. The method combines bagging idea and the random
  * selection of features.
@@ -291,7 +297,8 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
     return RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
 }
 
-/** Gradient boosted regression trees.
+/**
+ * Gradient boosted regression trees.
  *
  * Generic gradient boosting at the t-th step would fit a regression tree to
  * pseudo-residuals. Let J be the number of its leaves. The tree partitions
@@ -372,7 +379,8 @@ fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int =
     return GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
 }
 
-/** Gaussian Process for Regression. A Gaussian process is a stochastic process
+/**
+ * Gaussian Process for Regression. A Gaussian process is a stochastic process
  * whose realizations consist of random values associated with every point in
  * a range of times (or of space) such that each such random variable has
  * a normal distribution. Moreover, every finite collection of those random
@@ -424,7 +432,8 @@ fun <T> gpr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, lambda: Double
 
 /** Gaussian Process for Regression. */
 object gpr {
-    /** This method fits an approximate Gaussian process model by the method
+    /**
+     * This method fits an approximate Gaussian process model by the method
      * of subset of regressors.
      *
      * @param x the training dataset.
@@ -439,7 +448,8 @@ object gpr {
         return GaussianProcessRegression.fit(x, y, t, kernel, lambda)
     }
 
-    /** This method fits an approximate Gaussian process model by the method
+    /**
+     * This method fits an approximate Gaussian process model by the method
      * of subset of regressors.
      *
      * @param x the training dataset.
@@ -455,7 +465,8 @@ object gpr {
     }
 }
 
-/** Radial basis function networks. A radial basis function network is an
+/**
+ * Radial basis function networks. A radial basis function network is an
  * artificial neural network that uses radial basis functions as activation
  * functions. It is a linear combination of radial basis functions. They are
  * used in function approximation, time series prediction, and control.

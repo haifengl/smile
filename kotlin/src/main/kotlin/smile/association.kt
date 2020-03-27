@@ -20,7 +20,8 @@ package smile.association
 import java.util.function.Supplier
 import java.util.stream.Stream
 
-/** Builds a FP-tree.
+/**
+ * Builds a FP-tree.
  * @param supplier the lambda to retrun a stream of item set database. Each item set
  *                 may have different length. The item identifiers have to be in [0, n),
  *                 where n is the number of items. Item set should NOT contain duplicated
@@ -33,7 +34,8 @@ fun fptree(minSupport: Int, supplier: Supplier<Stream<IntArray>>): FPTree {
     return FPTree.of(minSupport, supplier)
 }
 
-/** Frequent item set mining based on the FP-growth (frequent pattern growth)
+/**
+ * Frequent item set mining based on the FP-growth (frequent pattern growth)
  * algorithm, which employs an extended prefix-tree (FP-tree) structure to
  * store the database in a compressed form. The FP-growth algorithm is
  * currently one of the fastest approaches to discover frequent item sets.
@@ -71,7 +73,8 @@ fun fpgrowth(minSupport: Int, itemsets: Array<IntArray>): Stream<ItemSet> {
     return FPGrowth.apply(tree)
 }
 
-/** Frequent item set mining based on the FP-growth (frequent pattern growth)
+/**
+ * Frequent item set mining based on the FP-growth (frequent pattern growth)
  * algorithm, which employs an extended prefix-tree (FP-tree) structure to
  * store the database in a compressed form. The FP-growth algorithm is
  * currently one of the fastest approaches to discover frequent item sets.
@@ -103,7 +106,8 @@ fun fpgrowth(tree: FPTree): Stream<ItemSet> {
     return FPGrowth.apply(tree)
 }
 
-/** Association Rule Mining.
+/**
+ * Association Rule Mining.
  * Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
  * binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
  * be a set of transactions called the database. Each transaction in D has a
@@ -135,7 +139,8 @@ fun arm(minSupport: Int, confidence: Double, itemsets: Array<IntArray>): Stream<
     return ARM.apply(confidence, tree)
 }
 
-/** Association Rule Mining.
+/**
+ * Association Rule Mining.
  * Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
  * binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
  * be a set of transactions called the database. Each transaction in D has a
