@@ -1,6 +1,7 @@
 import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import java.net.URL
 
 // compile bytecode to Java 8 (default is Java 6)
 tasks.withType<KotlinCompile> {
@@ -29,9 +30,16 @@ dependencies {
 }
 
 // Configure existing Dokka task to output HTML
-tasks.dokka {
-    outputFormat = "html"
-    outputDirectory = "../docs/2.0/api/kotlin"
+tasks {
+    val dokka by getting(DokkaTask::class) {
+        outputFormat = "html"
+        outputDirectory = "../docs/2.0/api/kotlin"
+        configuration {
+            externalDocumentationLink {
+                url = URL("http://haifengl.github.io/api/java/")
+            }
+        }
+    }
 }
 
 // Create dokka Jar task from dokka task output
@@ -97,6 +105,15 @@ publishing {
             val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
             val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
             url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+            credentials {
+                val nexusUser: String by project
+                val nexusPassword: String by project
+                username = nexusUser
+                password = nexusPassword
+            }
         }
     }
 }
