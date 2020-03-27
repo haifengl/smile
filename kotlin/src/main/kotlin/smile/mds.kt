@@ -17,7 +17,8 @@
 
 package smile.mds
 
-/** Classical multidimensional scaling, also known as principal coordinates
+/**
+ * Classical multidimensional scaling, also known as principal coordinates
  * analysis. Given a matrix of dissimilarities (e.g. pairwise distances), MDS
  * finds a set of points in low dimensional space that well-approximates the
  * dissimilarities in A. We are not restricted to using a Euclidean
@@ -44,7 +45,8 @@ fun mds(proximity: Array<DoubleArray>, k: Int, positive: Boolean = false): MDS {
     return MDS.of(proximity, k, positive)
 }
 
-/** Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
+/**
+ * Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
  * in the proximity matrix (not the actual dissimilarities) is assumed to
  * contain the significant information. Hence, the distances of the final
  * configuration should as far as possible be in the same rank order as the
@@ -62,7 +64,8 @@ fun isomds(proximity: Array<DoubleArray>, k: Int, tol: Double = 0.0001, maxIter:
     return IsotonicMDS.of(proximity, k, tol, maxIter)
 }
 
-/** The Sammon's mapping is an iterative technique for making interpoint
+/**
+ * The Sammon's mapping is an iterative technique for making interpoint
  * distances in the low-dimensional projection as close as possible to the
  * interpoint distances in the high-dimensional object. Two points close
  * together in the high-dimensional space should appear close together in the

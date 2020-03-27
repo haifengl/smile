@@ -26,7 +26,8 @@ import smile.math.matrix.DenseMatrix
 import smile.neighbor.RNNSearch
 import smile.util.SparseArray
 
-/** Agglomerative Hierarchical Clustering. This method
+/**
+ * Agglomerative Hierarchical Clustering. This method
  * seeks to build a hierarchy of clusters in a bottom up approach: each
  * observation starts in its own cluster, and pairs of clusters are merged as
  * one moves up the hierarchy. The results of hierarchical clustering are
@@ -65,7 +66,8 @@ fun hclust(data: Array<DoubleArray>, method: String): HierarchicalClustering {
     return HierarchicalClustering.fit(linkage)
 }
 
-/** Agglomerative Hierarchical Clustering. This method
+/**
+ * Agglomerative Hierarchical Clustering. This method
  * seeks to build a hierarchy of clusters in a bottom up approach: each
  * observation starts in its own cluster, and pairs of clusters are merged as
  * one moves up the hierarchy. The results of hierarchical clustering are
@@ -113,7 +115,8 @@ fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): K
     return PartitionClustering.run(runs, { KModes.fit(data, k, maxIter) })
 }
 
-/** K-Means clustering. The algorithm partitions n observations into k clusters in which
+/**
+ * K-Means clustering. The algorithm partitions n observations into k clusters in which
  * each observation belongs to the cluster with the nearest mean.
  * Although finding an exact solution to the k-means problem for arbitrary
  * input is NP-hard, the standard approach to finding an approximate solution
@@ -158,7 +161,8 @@ fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1
     return PartitionClustering.run(runs, { KMeans.fit(data, k, maxIter, tol) })
 }
 
-/** X-Means clustering algorithm, an extended K-Means which tries to
+/**
+ * X-Means clustering algorithm, an extended K-Means which tries to
  * automatically determine the number of clusters based on BIC scores.
  * Starting with only one cluster, the X-Means algorithm goes into action
  * after each run of K-Means, making local decisions about which subset of the
@@ -176,7 +180,8 @@ fun xmeans(data: Array<DoubleArray>, k: Int = 100): XMeans {
     return XMeans.fit(data, k)
 }
 
-/** G-Means clustering algorithm, an extended K-Means which tries to
+/**
+ * G-Means clustering algorithm, an extended K-Means which tries to
  * automatically determine the number of clusters by normality test.
  * The G-means algorithm is based on a statistical test for the hypothesis
  * that a subset of data follows a Gaussian distribution. G-means runs
@@ -193,7 +198,8 @@ fun gmeans(data: Array<DoubleArray>, k: Int = 100): GMeans {
     return GMeans.fit(data, k)
 }
 
-/** The Sequential Information Bottleneck algorithm. SIB clusters co-occurrence
+/**
+ * The Sequential Information Bottleneck algorithm. SIB clusters co-occurrence
  * data such as text documents vs words. SIB is guaranteed to converge to a local
  * maximum of the information. Moreover, the time and space complexity are
  * significantly improved in contrast to the agglomerative IB algorithm.
@@ -231,7 +237,8 @@ fun sib(data: Array<SparseArray>, k: Int, maxIter: Int = 100, runs: Int = 8): SI
     return PartitionClustering.run(runs, { SIB.fit(data, k, maxIter) })
 }
 
-/** Deterministic annealing clustering. Deterministic annealing extends
+/**
+ * Deterministic annealing clustering. Deterministic annealing extends
  * soft-clustering to an annealing process.
  * For each temperature value, the algorithm iterates between the calculation
  * of all posteriori probabilities and the update of the centroids vectors,
@@ -257,7 +264,8 @@ fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 10
     return DeterministicAnnealing.fit(data, k, alpha, maxIter, tol, splitTol)
 }
 
-/** Clustering Large Applications based upon RANdomized Search. CLARANS is an
+/**
+ * Clustering Large Applications based upon RANdomized Search. CLARANS is an
  * efficient medoid-based clustering algorithm. The k-medoids algorithm is an
  * adaptation of the k-means algorithm. Rather than calculate the mean of the
  * items in each cluster, a representative item, or medoid, is chosen for each
@@ -289,7 +297,8 @@ fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int, maxNeighbor: Int,
     return PartitionClustering.run(numLocal, { CLARANS.fit(data, distance, k, maxNeighbor) })
 }
 
-/** Density-Based Spatial Clustering of Applications with Noise.
+/**
+ * Density-Based Spatial Clustering of Applications with Noise.
  * DBSCAN finds a number of clusters starting from the estimated density
  * distribution of corresponding nodes.
  *
@@ -350,7 +359,8 @@ fun <T> dbscan(data: Array<T>, nns: RNNSearch<T, T>, minPts: Int, radius: Double
     return DBSCAN.fit(data, nns, minPts, radius)
 }
 
-/** Density-Based Spatial Clustering of Applications with Noise.
+/**
+ * Density-Based Spatial Clustering of Applications with Noise.
  * DBSCAN finds a number of clusters starting from the estimated density
  * distribution of corresponding nodes.
  *
@@ -363,7 +373,8 @@ fun <T> dbscan(data: Array<T>, distance: Distance<T>, minPts: Int, radius: Doubl
     return DBSCAN.fit(data, distance, minPts, radius)
 }
 
-/** DBSCAN with Euclidean distance.
+/**
+ * DBSCAN with Euclidean distance.
  * DBSCAN finds a number of clusters starting from the estimated density
  * distribution of corresponding nodes.
  *
@@ -375,7 +386,8 @@ fun dbscan(data: Array<DoubleArray>, minPts: Int, radius: Double): DBSCAN<Double
     return dbscan(data, EuclideanDistance(), minPts, radius)
 }
 
-/** DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
+/**
+ * DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
  * kernel density estimation. A cluster is defined by a local maximum of the
  * estimated density function. Data points going to the same local maximum
  * are put into the same cluster.
@@ -402,7 +414,8 @@ fun denclue(data: Array<DoubleArray>, sigma: Double, m: Int): DENCLUE {
     return DENCLUE.fit(data, sigma, m)
 }
 
-/** Nonparametric Minimum Conditional Entropy Clustering. This method performs
+/**
+ * Nonparametric Minimum Conditional Entropy Clustering. This method performs
  * very well especially when the exact number of clusters is unknown.
  * The method can also correctly reveal the structure of data and effectively
  * identify outliers simultaneously.
@@ -434,7 +447,8 @@ fun <T> mec(data: Array<T>, distance: Distance<T>, k: Int, radius: Double): MEC<
     return MEC.fit(data, distance, k, radius)
 }
 
-/** Nonparametric Minimum Conditional Entropy Clustering.
+/**
+ * Nonparametric Minimum Conditional Entropy Clustering.
  *
  * @param data the data set.
  * @param distance the distance measure for neighborhood search.
@@ -446,7 +460,8 @@ fun <T> mec(data: Array<T>, distance: Metric<T>, k: Int, radius: Double): MEC<T>
     return MEC.fit(data, distance, k, radius)
 }
 
-/** Nonparametric Minimum Conditional Entropy Clustering. Assume Euclidean distance.
+/**
+ * Nonparametric Minimum Conditional Entropy Clustering. Assume Euclidean distance.
  *
  * @param data the data set.
  * @param k the number of clusters. Note that this is just a hint. The final
@@ -457,7 +472,8 @@ fun mec(data: Array<DoubleArray>, k: Int, radius: Double): MEC<DoubleArray> {
     return MEC.fit(data, EuclideanDistance(), k, radius)
 }
 
-/** Nonparametric Minimum Conditional Entropy Clustering.
+/**
+ * Nonparametric Minimum Conditional Entropy Clustering.
  *
  * @param data the data set.
  * @param nns the data structure for neighborhood search.
@@ -470,7 +486,8 @@ fun <T> mec(data: Array<T>, nns: RNNSearch<T, T>, k: Int, radius: Double, y: Int
     return MEC.fit(data, nns, k, radius, y, tol)
 }
 
-/** Spectral Clustering. Given a set of data points, the similarity matrix may
+/**
+ * Spectral Clustering. Given a set of data points, the similarity matrix may
  * be defined as a matrix S where S<sub>ij</sub> represents a measure of the
  * similarity between points. Spectral clustering techniques make use of the
  * spectrum of the similarity matrix of the data to perform dimensionality
@@ -492,7 +509,8 @@ fun specc(W: DenseMatrix, k: Int): SpectralClustering {
     return SpectralClustering.fit(W, k)
 }
 
-/** Spectral clustering.
+/**
+ * Spectral clustering.
  * @param data the dataset for clustering.
  * @param k the number of clusters.
  * @param sigma the smooth/width parameter of Gaussian kernel, which
@@ -504,7 +522,8 @@ fun specc(data: Array<DoubleArray>, k: Int, sigma: Double): SpectralClustering {
     return SpectralClustering.fit(data, k, sigma)
 }
 
-/** Spectral clustering with Nystrom approximation.
+/**
+ * Spectral clustering with Nystrom approximation.
  * @param data the dataset for clustering.
  * @param k the number of clusters.
  * @param l the number of random samples for Nystrom approximation.

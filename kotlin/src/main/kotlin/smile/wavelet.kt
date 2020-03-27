@@ -17,7 +17,8 @@
 
 package smile.wavelet
 
-/** Returns the wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
+/**
+ * Crerates a wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
  * Daubechies, Least Asymetric, Best Localized and Coiflet. The prefixes for filters of these classes are
  * d, la, bl and c, respectively. Following the prefix, the filter name consists of an integer indicating length.
  * Supported lengths are as follows:
@@ -68,7 +69,8 @@ fun wavelet(filter: String): Wavelet {
     }
 }
 
-/** Discrete wavelet transform.
+/**
+ * Discrete wavelet transform.
  * @param t the time series array. The size should be a power of 2. For time
  *          series of size no power of 2, 0 padding can be applied.
  * @param filter wavelet filter.
@@ -77,7 +79,8 @@ fun dwt(t: DoubleArray, filter: String): Unit {
     wavelet(filter).transform(t)
 }
 
-/** Inverse discrete wavelet transform.
+/**
+ * Inverse discrete wavelet transform.
  * @param wt the wavelet coefficients. The size should be a power of 2. For time
  *          series of size no power of 2, 0 padding can be applied.
  * @param filter wavelet filter.
@@ -86,7 +89,8 @@ fun idwt(wt: DoubleArray, filter: String): Unit {
     wavelet(filter).inverse(wt)
 }
 
-/** The wavelet shrinkage is a signal denoising technique based on the idea of
+/**
+ * The wavelet shrinkage is a signal denoising technique based on the idea of
  * thresholding the wavelet coefficients. Wavelet coefficients having small
  * absolute value are considered to encode mostly noise and very fine details
  * of the signal. In contrast, the important information is encoded by the
