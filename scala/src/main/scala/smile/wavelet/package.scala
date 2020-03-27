@@ -28,7 +28,7 @@ package smile
   * @author Haifeng Li
   */
 package object wavelet {
-  /** Returns the wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
+  /** Creates a wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
     * Daubechies, Least Asymetric, Best Localized and Coiflet. The prefixes for filters of these classes are
     * d, la, bl and c, respectively. Following the prefix, the filter name consists of an integer indicating length.
     * Supported lengths are as follows:
