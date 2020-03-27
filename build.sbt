@@ -44,7 +44,7 @@ lazy val commonSettings = Seq(
         <developer>
           <id>haifengl</id>
           <name>Haifeng Li</name>
-          <url>http://haifengl.github.io/</url>
+          <url>https://haifengl.github.io/</url>
         </developer>
       </developers>
   )
