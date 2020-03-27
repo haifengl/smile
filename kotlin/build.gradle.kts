@@ -2,7 +2,7 @@ import org.gradle.jvm.tasks.Jar
 import org.jetbrains.dokka.gradle.DokkaTask
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
-// compile bytecode to java 8 (default is java 6)
+// compile bytecode to Java 8 (default is Java 6)
 tasks.withType<KotlinCompile> {
     kotlinOptions.jvmTarget = "1.8"
 }
@@ -10,14 +10,16 @@ tasks.withType<KotlinCompile> {
 plugins {
     `maven-publish`
     kotlin("jvm") version "1.3.70" 
-    id("org.jetbrains.dokka") version "0.10.0"
+    id("org.jetbrains.dokka") version "0.10.1"
+    signing
 }
 
 group = "com.github.haifengl"
-version = "2.3.0"
+version = "2.2.2"
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
@@ -51,15 +53,57 @@ val sourcesJar by tasks.creating(Jar::class) {
 
 publishing {
     publications {
-        create<MavenPublication>("default") {
+        create<MavenPublication>("mavenJava") {
+            groupId = "com.github.haifengl"
+            artifactId = "smile-kotlin"
             from(components["java"])
             artifact(sourcesJar)
             artifact(dokkaJar)
+            versionMapping {
+                usage("java-api") {
+                    fromResolutionOf("runtimeClasspath")
+                }
+                usage("java-runtime") {
+                    fromResolutionResult()
+                }
+            }
+            pom {
+                name.set("smile-kotlin")
+                description.set("Statistical Machine Intelligence and Learning Engine")
+                url.set("https://haifengl.github.io//")
+                licenses {
+                    license {
+                        name.set("GNU Lesser General Public License, Version 3")
+                        url.set("https://opensource.org/licenses/LGPL-3.0")
+                    }
+                }
+                developers {
+                    developer {
+                        id.set("haifengl")
+                        name.set("Haifeng Li")
+                        url.set("https://haifengl.github.io/")
+                    }
+                }
+                scm {
+                    connection.set("git@github.com:haifengl/smile.git")
+                    developerConnection.set("scm:git:git@github.com:haifengl/smile.git")
+                    url.set("https://github.com/haifengl/smile")
+                }
+            }
         }
     }
     repositories {
         maven {
-            url = uri("$buildDir/repository")
+            val releasesRepoUrl = uri("https://oss.sonatype.org/service/local/staging/deploy/maven2")
+            val snapshotsRepoUrl = uri("https://oss.sonatype.org/content/repositories/snapshots")
+            url = if (version.toString().endsWith("SNAPSHOT")) snapshotsRepoUrl else releasesRepoUrl
         }
     }
 }
+
+signing {
+    useGpgCmd()
+    sign(configurations.archives.get())
+    sign(publishing.publications["mavenJava"])
+}
+
