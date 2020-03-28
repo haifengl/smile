@@ -17,9 +17,7 @@
 
 package smile
 
-import java.util.Optional
 import java.util.stream.LongStream
-
 import smile.base.cart.SplitRule
 import smile.base.mlp.LayerBuilder
 import smile.base.rbf.RBF
