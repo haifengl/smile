@@ -57,6 +57,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -225,7 +226,7 @@ smile&gt;
             <p>Smile provides an integration with JShell, which is available from Java 9+.
                 In the home directory of Smile, type</p>
 
-            <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-bash"><code>
     $ bin/jshell.sh
     </code></pre>
 
@@ -235,7 +236,7 @@ smile&gt;
                 If you need more memory to handle large data, use the
                 option <code>-R-Xmx</code>. For example,</p>
 
-            <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-bash"><code>
     $ ./bin/jshell.sh -R-Xmx30G
     </code></pre>
 
@@ -262,7 +263,7 @@ smile&gt;
 
             <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
 
-            <pre class="prettyprint lang-java"><code>
+    <pre class="prettyprint lang-java"><code>
     jshell> "Hello, World"
     $2 ==> "Hello, World"
 
@@ -275,7 +276,7 @@ smile&gt;
 
             <p>We can also define variables and reuse them.</p>
 
-            <pre class="prettyprint lang-java"><code>
+    <pre class="prettyprint lang-java"><code>
     jshell> var x = 2 + 3
     x ==> 5
 
@@ -311,7 +312,92 @@ smile&gt;
             <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
                 (including many open data for research purpose). The data
                 is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
-                <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
+                <code>DataFrame</code>. The formula <code>Formula.lhs("class")</code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <p>Smile provides an integration with Kotlin REPL.
+                In the home directory of Smile, type</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ bin/kotlin.sh
+    </code></pre>
+
+            <p>to enter the Kotlin REPL with Smile libraries in the class path.
+                In the shell, you can run any valid Kotlin expressions.
+                In the simplest case, you can use it as a calculator.
+                If you need more memory to handle large data, use the
+                option <code>-J-Xmx</code>. For example,</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ ./bin/kotlin.sh -J-Xmx30G
+    </code></pre>
+
+            <h3 id="basics_java">Basics</h3>
+
+            <p>When the shell starts, we should see something like the following:</p>
+            <pre class="prettyprint lang-kotlin"><code>
+    Welcome to Kotlin version 1.3.70 (JRE 1.8.0_241-b07)
+    Type :help for help, :quit for quit
+    >>>
+    </code></pre>
+            <p>To exit the REPL, type <code>:quit</code>. Different from
+            Smile Shell, we don't pre-import any Smile's definitions in Kotlin REPL.</p>
+
+            <h3 id="calculator_java">Calculator</h3>
+
+            <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> "Hello, World"
+    res0: kotlin.String = Hello, World
+    >>> 2
+    res1: kotlin.Int = 2
+    >>> 2+3
+    res2: kotlin.Int = 5
+    </code></pre>
+
+            <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> var x = 2 + 3
+    >>> var y = 2 * (x + 1)
+    >>> y
+    res13: kotlin.Int = 12
+    </code></pre>
+
+            <h3 id="script_java">Script</h3>
+
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.kts</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    import smile.*
+    import smile.classification.*
+    import smile.data.formula.Formula
+    import smile.util.Paths
+
+    val data = read.arff(Paths.getTestData("weka/iris.arff"))
+    println(data)
+
+    val formula = Formula.lhs("class")
+    val rf = randomForest(formula, data)
+    println("OOB error = ${rf.error()}")
+    </code></pre>
+
+            <p>It can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-bash"><code>
+    $ bin/kotlin.sh examples/iris.kts
+    </code></pre>
+
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>Formula.lhs("class")</code> defines that
                 the column "class" will be used as the class label while the rest columns
                 are predictors. Finally, we train a random forest
                 with default parameters and print out its OOB (out of bag) error. We can apply
@@ -372,9 +458,8 @@ smile&gt;
     import smile.plot.swing._
     import smile.plot.show
 
-    System.setProperty("java.awt.headless", "true")
-    implicit def almond(canvas: javax.swing.JComponent): Unit = {
-      publish.html(smile.plot.swing.img(canvas))
+    implicit def render(canvas: Canvas): Unit = {
+      publish.html(smile.plot.swing.canvas2Image(canvas))
     }
     </code></pre>
 
@@ -384,7 +469,7 @@ smile&gt;
     import smile.plot.vega._
     import smile.plot.show
 
-    implicit def almond(spec: JsObject): Unit = {
+    implicit def render(spec: JsObject): Unit = {
       publish.html(iframe(spec))
     }
     </code></pre>
