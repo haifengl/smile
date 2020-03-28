@@ -153,11 +153,9 @@ public class CSV {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
 					String recordI = record.get(i);
-					if (recordI != null) {
-						String s = recordI.trim();
-						if (!s.isEmpty()) {
-							row[i] = parser.get(i).apply(s);
-						}
+					String s = recordI.trim();
+					if (!s.isEmpty()) {
+						row[i] = parser.get(i).apply(s);
 					}
                 }
                 rows.add(Tuple.of(row, schema));
