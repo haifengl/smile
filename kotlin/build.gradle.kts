@@ -29,6 +29,17 @@ dependencies {
     implementation("com.github.haifengl:smile-io:2.2.2")
 }
 
+// Copy jar to shell lib
+val copyJarToShell by tasks.registering(Copy::class) {
+    from(tasks.jar)
+    into(file("../shell/src/universal/lib"))
+}
+
+// Run copy task after build
+tasks.build {
+    finalizedBy(copyJarToShell)
+}
+
 // Configure existing Dokka task to output HTML
 tasks {
     val dokka by getting(DokkaTask::class) {
@@ -123,4 +134,3 @@ signing {
     sign(configurations.archives.get())
     sign(publishing.publications["mavenJava"])
 }
-
