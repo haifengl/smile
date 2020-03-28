@@ -31,7 +31,7 @@ import smile.io.Write
 import smile.io.JSON
 import smile.util.SparseArray
 
-/** Output operators. */
+/** Data saving utilities. */
 object write {
     /** Writes a data frame to an Apache Arrow file. */
     fun arrow(data: DataFrame, file: String): Unit {
@@ -73,7 +73,7 @@ object write {
     }
 }
 
-/** Input operators. */
+/** Data loading utilities. */
 object read {
     /** Reads a JDBC query result to a data frame. */
     fun jdbc(rs: ResultSet): DataFrame {

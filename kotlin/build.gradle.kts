@@ -46,6 +46,7 @@ tasks {
         outputFormat = "html"
         outputDirectory = "../docs/2.0/api/kotlin"
         configuration {
+            includes = listOf("packages.md")
             externalDocumentationLink {
                 url = URL("http://haifengl.github.io/api/java/")
             }
