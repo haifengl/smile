@@ -43,6 +43,13 @@ get_jshell_cmd() {
   fi
 }
 
+get_classpath() {
+  JARS=("$lib_dir"/*.jar)
+  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala|kotlin).* ]] && unset -v 'JARS[$index]' ; done
+  CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
+  echo $CLASSPATH
+}
+
 execRunner () {
   # print the arguments one to a line, quoting any containing spaces
   [[ $verbose || $debug ]] && echo "# Executing command line:" && {
@@ -83,7 +90,7 @@ declare -r real_script_path="$(realpath "$0")"
 declare -r app_home="$(realpath "$(dirname "$real_script_path")")"
 declare -r smile_home="${app_home}/../"
 declare -r lib_dir="$(realpath "${app_home}/../lib")"
-declare -r app_classpath="$lib_dir/*"
+declare -r app_classpath=$(get_classpath)
 
 declare jshell_cmd=$(get_jshell_cmd)
 

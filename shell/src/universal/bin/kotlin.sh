@@ -31,9 +31,19 @@ realpath () {
 )
 }
 
-# Detect if we should use JAVA_HOME or just try PATH.
 get_kotlin_cmd() {
-  echo "kotlinc-jvm"
+  if [[ -n "$KOTLIN_HOME" ]] && [[ -x "$KOTLIN_HOME/bin/kotlinc-jvm" ]];  then
+    echo "$KOTLIN_HOME/bin/kotlinc-jvm"
+  else
+    echo "kotlinc-jvm"
+  fi
+}
+
+get_classpath() {
+  JARS=("$lib_dir"/*.jar)
+  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala).* ]] && unset -v 'JARS[$index]' ; done
+  CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
+  echo $CLASSPATH
 }
 
 execRunner () {
@@ -73,7 +83,7 @@ declare -r real_script_path="$(realpath "$0")"
 declare -r app_home="$(realpath "$(dirname "$real_script_path")")"
 declare -r smile_home="${app_home}/../"
 declare -r lib_dir="$(realpath "${app_home}/../lib")"
-declare -r app_classpath=$(JARS=("$lib_dir"/*.jar); IFS=:; echo "${JARS[*]}")
+declare -r app_classpath=$(get_classpath)
 
 declare kotlin_cmd=$(get_kotlin_cmd)
 
