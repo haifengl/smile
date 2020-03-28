@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.csv.CSVFormat;
+
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -40,63 +41,42 @@ import smile.util.Paths;
 public class NHANES {
 
   public static DataFrame data;
-  public static DataFrame xdata;
-  public static DataFrame ydata;
   public static Formula formula = Formula.lhs("y");
 
   public static double[][] x;
   public static double[] y;
 
   static {
-    List<StructField> xfields = new ArrayList<StructField>();
-    xfields.add(new StructField("Row", DataTypes.IntegerType));
-    xfields.add(new StructField("Age", DataTypes.DoubleType));
-    xfields.add(new StructField("Diastolic BP", DataTypes.DoubleType));
-    xfields.add(new StructField("Poverty index", DataTypes.DoubleType));
-    xfields.add(new StructField("Race", DataTypes.DoubleType));
-    xfields.add(new StructField("Red blood cells", DataTypes.DoubleType));
-    xfields.add(new StructField("Sedimentation rate", DataTypes.DoubleType));
-    xfields.add(new StructField("Serum Albumin", DataTypes.DoubleType));
-    xfields.add(new StructField("Serum Cholesterol", DataTypes.DoubleType));
-    xfields.add(new StructField("Serum Iron", DataTypes.DoubleType));
-    xfields.add(new StructField("Serum Magnesium", DataTypes.DoubleType));
-    xfields.add(new StructField("Serum Protein", DataTypes.DoubleType));
-    xfields.add(new StructField("Sex", DataTypes.DoubleType));
-    xfields.add(new StructField("Systolic BP", DataTypes.DoubleType));
-    xfields.add(new StructField("TIBC", DataTypes.DoubleType));
-    xfields.add(new StructField("TS", DataTypes.DoubleType));
-    xfields.add(new StructField("White blood cells", DataTypes.DoubleType));
-    xfields.add(new StructField("BMI", DataTypes.DoubleType));
-    xfields.add(new StructField("Pulse pressure", DataTypes.DoubleType));
-
-    List<StructField> yfields = new ArrayList<StructField>();
-    yfields.add(new StructField("Row", DataTypes.IntegerType));
-    yfields.add(new StructField("y", DataTypes.DoubleType));
-
     List<StructField> fields = new ArrayList<StructField>();
-    fields.addAll(xfields);
-    fields.addAll(yfields);
+    fields.add(new StructField("y", DataTypes.DoubleType));
+    fields.add(new StructField("Age", DataTypes.DoubleType));
+    fields.add(new StructField("Diastolic BP", DataTypes.DoubleType));
+    fields.add(new StructField("Poverty index", DataTypes.DoubleType));
+    fields.add(new StructField("Race", DataTypes.DoubleType));
+    fields.add(new StructField("Red blood cells", DataTypes.DoubleType));
+    fields.add(new StructField("Sedimentation rate", DataTypes.DoubleType));
+    fields.add(new StructField("Serum Albumin", DataTypes.DoubleType));
+    fields.add(new StructField("Serum Cholesterol", DataTypes.DoubleType));
+    fields.add(new StructField("Serum Iron", DataTypes.DoubleType));
+    fields.add(new StructField("Serum Magnesium", DataTypes.DoubleType));
+    fields.add(new StructField("Serum Protein", DataTypes.DoubleType));
+    fields.add(new StructField("Sex", DataTypes.DoubleType));
+    fields.add(new StructField("Systolic BP", DataTypes.DoubleType));
+    fields.add(new StructField("TIBC", DataTypes.DoubleType));
+    fields.add(new StructField("TS", DataTypes.DoubleType));
+    fields.add(new StructField("White blood cells", DataTypes.DoubleType));
+    fields.add(new StructField("BMI", DataTypes.DoubleType));
+    fields.add(new StructField("Pulse pressure", DataTypes.DoubleType));
 
-    StructType xschema = DataTypes.struct(xfields);
-    StructType yschema = DataTypes.struct(yfields);
+    StructType schema = DataTypes.struct(fields);
 
     try {
       CSVFormat format = CSVFormat.DEFAULT;
       format = format.withSkipHeaderRecord();
       CSV csv = new CSV(format);
-      csv.schema(xschema);
-      xdata = csv.read(Paths.getTestData("regression/NHANESI_subset_X.csv"));
-      xdata = xdata.drop("Row");
-
-      CSVFormat yformat = CSVFormat.DEFAULT;
-      yformat = yformat.withSkipHeaderRecord();
-      CSV ycsv = new CSV(yformat);
-      ycsv.schema(yschema);
-      ydata = ycsv.read(Paths.getTestData("regression/NHANESI_subset_y.csv"));
-      ydata = ydata.drop("Row");
-
-      data = xdata.merge(ydata);
-
+      csv.schema(schema);
+      data = csv.read(Paths.getTestData("regression/NHANESI_subset.csv"));
+      
       x = formula.x(data).toArray();
       y = formula.y(data).toDoubleArray();
     } catch (Exception ex) {
