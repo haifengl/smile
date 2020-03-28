@@ -59,11 +59,12 @@ public class TreeShapTest {
     public void tearDown() {
     }
 
-    public void test(Loss loss, String name, Formula formula, DataFrame data, String mostImportantByShap) {
+    public void test(Loss loss, String name, Formula formula, DataFrame data, String mostImportantByShap, 
+    		         int ntrees, double shrinkage, double subsample) {
         System.out.println(name + "\t" + loss);
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(formula, data, loss, 5000, 3, 10, 5, 0.001, 0.5);
+        GradientTreeBoost model = GradientTreeBoost.fit(formula, data, loss, ntrees, 3, 10, 5, shrinkage, subsample);
         
         TreeShapImportance shapExplainer = new TreeShapImportance(model.trees(), true);        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data);
@@ -85,7 +86,8 @@ public class TreeShapTest {
 
     @Test
     public void testLS() {
-        test(Loss.ls(), "cervicalCancer", CervicalCancer.formula, CervicalCancer.data, "Hormonal Contraceptives (years)");
-        test(Loss.ls(), "NHANES-I", NHANES.formula, NHANES.data, "Age");
+        test(Loss.ls(), "cervicalCancer", CervicalCancer.formula, CervicalCancer.data, "Hormonal Contraceptives (years)", 5000, 0.001, 0.5);
+        test(Loss.ls(), "NHANES-I", NHANES.formula, NHANES.data, "Age", 5000, 0.001, 0.5);
+        test(Loss.ls(), "Boston Housing", BostonHousing.formula, BostonHousing.data, "LSTAT", 100, 0.01, 1);
     }
 }
