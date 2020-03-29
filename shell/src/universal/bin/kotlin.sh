@@ -43,7 +43,7 @@ get_classpath() {
   JARS=("$lib_dir"/*.jar)
   for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala).* ]] && unset -v 'JARS[$index]' ; done
   CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
-  echo $CLASSPATH
+  echo $CLASSPATH:$app_home/*.jar
 }
 
 execRunner () {
