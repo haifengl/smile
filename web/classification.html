@@ -155,6 +155,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -173,6 +174,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    fun knn(x: Array<DoubleArray>, y: IntArray, k: Int): KNN<DoubleArray>
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The simplest k-NN method takes a data set of feature vectors and labels
@@ -182,6 +190,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_2">
@@ -201,6 +210,16 @@ permalink: "{{ page.filePathStem }}.html"
     var x = iris.drop("class").toArray();
     var y = iris.column("class").toIntArray();
     CrossValidation.classification(10, x, y, (x, y) -> KNN.fit(x, y, 3));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    val iris = read.arff("data/weka/iris.arff")
+    val x = iris.drop("class").toArray()
+    val y = iris.column("class").toIntArray()
+    CrossValidation.classification(10, x, y, {x, y -> KNN.fit(x, y, 3)})
           </code></pre>
             </div>
         </div>
@@ -224,6 +243,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -242,6 +262,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+   fun <T> knn(x: Array<T>, y: IntArray, distance: Distance<T>, k: Int): KNN<T>
+          </code></pre>
+            </div>
+        </div>
     </div>
     <p>Often, the classification accuracy of k-NN can be improved significantly
         if the distance metric is learned with specialized algorithms such as
@@ -255,6 +282,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
@@ -270,6 +298,13 @@ permalink: "{{ page.filePathStem }}.html"
     public class KNN {
         public KNN(KNNSearch&lt;T, T&gt; knn, int[] y, int k);
     }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    fun <T> knn(x: KNNSearch<T, T>, y: IntArray, k: Int): KNN<T>
           </code></pre>
             </div>
         </div>
@@ -293,6 +328,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -312,6 +348,16 @@ permalink: "{{ page.filePathStem }}.html"
     var x = toy.select(1, 2).toArray();
     var y = toy.column(0).toIntArray();
     KNN.fit(x, y, 3);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
+    val x = toy.select(1, 2).toArray()
+    val y = toy.column(0).toIntArray()
+    knn(x, y, 3)
           </code></pre>
             </div>
         </div>
@@ -340,6 +386,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_6">
@@ -358,6 +405,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lda(x: Array<DoubleArray>, y: IntArray, priori: DoubleArray? = null, tol: Double = 0.0001): LDA
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The parameter <code>priori</code> is the priori probability of each class. If null, it will be
@@ -368,6 +422,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_7">
@@ -381,6 +436,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     LDA.fit(x, y);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    lda(x, y)
           </code></pre>
             </div>
         </div>
