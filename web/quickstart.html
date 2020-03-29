@@ -27,7 +27,7 @@ permalink: "{{ page.filePathStem }}.html"
     <p>If you would like to build Smile from source, please first install Java 8, Scala 2.13
         and SBT 1.0+. Then clone the repo and build the package:</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ git clone https://github.com/haifengl/smile.git
     $ cd smile
     $ sbt package
@@ -35,13 +35,13 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>To build with Scala 2.12, run</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ sbt ++2.12.10 scala/package
     </code></pre>
 
     <p>To test the latest code, run the following</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ git pull
     $ ./smile.sh
     </code></pre>
@@ -63,7 +63,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_1">
             <p>Smile comes with an interactive shell for Scala. In the home directory of Smile, type</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/smile
     </code></pre>
 
@@ -74,7 +74,7 @@ permalink: "{{ page.filePathStem }}.html"
                 in the shell. If you need more memory
                 to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ ./bin/smile -J-Xmx30G
     </code></pre>
 
@@ -209,7 +209,7 @@ smile&gt;
 
             <p>It can be run directly from the shell:</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/smile examples/iris.sc
     </code></pre>
 
@@ -226,7 +226,7 @@ smile&gt;
             <p>Smile provides an integration with JShell, which is available from Java 9+.
                 In the home directory of Smile, type</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/jshell.sh
     </code></pre>
 
@@ -236,7 +236,7 @@ smile&gt;
                 If you need more memory to handle large data, use the
                 option <code>-R-Xmx</code>. For example,</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ ./bin/jshell.sh -R-Xmx30G
     </code></pre>
 
@@ -305,7 +305,7 @@ smile&gt;
 
             <p>It can be run directly from the shell:</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/jshell.sh examples/iris.jsh
     </code></pre>
 
@@ -322,7 +322,7 @@ smile&gt;
             <p>Smile provides an integration with Kotlin REPL.
                 In the home directory of Smile, type</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/kotlin.sh
     </code></pre>
 
@@ -332,7 +332,7 @@ smile&gt;
                 If you need more memory to handle large data, use the
                 option <code>-J-Xmx</code>. For example,</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ ./bin/kotlin.sh -J-Xmx30G
     </code></pre>
 
@@ -390,7 +390,7 @@ smile&gt;
 
             <p>It can be run directly from the shell:</p>
 
-    <pre class="prettyprint lang-bash"><code>
+    <pre class="prettyprint lang-sh"><code>
     $ bin/kotlin.sh examples/iris.kts
     </code></pre>
 

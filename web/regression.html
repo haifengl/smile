@@ -42,12 +42,17 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel
+    def ols(formula: Formula,
+            data: DataFrame,
+            method: String = "qr",
+            stderr: Boolean = true,
+            recursive: Boolean = true): LinearModel
     </code></pre>
             </div>
         </div>
@@ -55,9 +60,24 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class OLS {
-        public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive);
+        public static LinearModel fit(Formula formula,
+                                      DataFrame data,
+                                      String method,
+                                      boolean stderr,
+                                      boolean recursive);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun ols(formula: Formula,
+            data: DataFrame,
+            method: String = "qr",
+            stderr: Boolean = true,
+            recursive: Boolean = true): LinearModel
+    </code></pre>
             </div>
         </div>
     </div>
@@ -97,6 +117,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_2">
@@ -167,6 +188,42 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+    <div class="tab-pane" id="kotlin_2">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.regression.*
+    >>> val planes = read.arff("data/weka/regression/2dplanes.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation 2dplanes
+    >>> val model = ols(Formula.lhs("y"), planes)
+    >>> model
+    res165: smile.regression.LinearModel = Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	   -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112 
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402 
+    x9                  0.0024     0.0145     0.1649     0.8690 
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>We then can apply the regression model on a new data point.</p>
@@ -174,6 +231,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -189,6 +247,14 @@ permalink: "{{ page.filePathStem }}.html"
           <pre class="prettyprint lang-java"><code>
     jshell> model.predict(planes.get(0))
     $238 ==> 5.073347388203141
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    >>> model.predict(planes[0])
+    res166: kotlin.Double = 5.073347388203141
           </code></pre>
             </div>
         </div>
@@ -240,6 +306,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
@@ -258,6 +325,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
@@ -272,6 +346,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -327,6 +402,34 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_5">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val longley = read.arff("data/weka/regression/longley.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation longley
+    >>> val model = ridge(Formula.lhs("employed"), longley, 0.0057)
+    >>> model
+    res169: smile.regression.LinearModel = Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>When including an intercept term in the regression, we usually leave
@@ -373,12 +476,17 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel
+    def lasso(formula: Formula,
+              data: DataFrame,
+              lambda: Double,
+              tol: Double = 1E-3,
+              maxIter: Int = 5000): LinearModel
     </code></pre>
             </div>
         </div>
@@ -386,9 +494,24 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LASSO {
-        public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter);
+        public static LinearModel fit(Formula formula,
+                                      DataFrame data,
+                                      double lambda,
+                                      double tol,
+                                      int maxIter);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lasso(formula: Formula,
+              data: DataFrame,
+              lambda: Double,
+              tol: Double = 1E-3,
+              maxIter: Int = 5000): LinearModel
+    </code></pre>
             </div>
         </div>
     </div>
@@ -414,6 +537,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_7">
@@ -434,6 +558,17 @@ permalink: "{{ page.filePathStem }}.html"
     LASSO.fit(formula, diabetes, 10);
     LASSO.fit(formula, diabetes, 100);
     LASSO.fit(formula, diabetes, 500);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    val diabetes = read.csv("data/regression/diabetes.csv")
+    val formula = Formula.lhs("y")
+    lasso(formula, diabetes, 10)
+    lasso(formula, diabetes, 100)
+    lasso(formula, diabetes, 500)
           </code></pre>
             </div>
         </div>
@@ -480,6 +615,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
         <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_8">
@@ -500,6 +636,15 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: DoubleArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
+
+    fun rbfnet(x: Array&lt;DoubleArray&gt;, y: DoubleArray, k: Int, normalized: Boolean = false): RBFNetwork&lt;DoubleArray&gt;
+          </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the so
@@ -516,6 +661,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_9">
@@ -534,6 +680,15 @@ permalink: "{{ page.filePathStem }}.html"
     var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
     CrossValidation.regression(10, x, y, (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val y = diabetes.column("y").toDoubleArray()
+    val x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray() // use only the primary attributes
+    CrossValidation.regression(10, x, y, { x, y -> rbfnet(x, y, RBF.fit(x, 10), false) })
+    </code></pre>
             </div>
         </div>
     </div>
@@ -570,12 +725,18 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
         <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_10">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T]
+    def svr[T](x: Array[T],
+               y: Array[Double],
+               kernel: MercerKernel[T],
+               eps: Double,
+               C: Double,
+               tol: Double = 1E-3): KernelMachine[T]
     </code></pre>
             </div>
         </div>
@@ -583,9 +744,26 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class SVR {
-        public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double eps, double C, double tol);
+        public static KernelMachine&lt;T&gt; fit(T[] x,
+                                                 double[] y,
+                                                 MercerKernel&lt;T&gt; kernel,
+                                                 double eps,
+                                                 double C,
+                                                 double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; svr(x: Array&lt;T&gt;,
+               y: DoubleArray,
+               kernel: MercerKernel&lt;T&gt;,
+               eps: Double,
+               C: Double,
+               tol: Double = 1E-3): KernelMachine&lt;T&gt;
+    </code></pre>
             </div>
         </div>
     </div>
@@ -602,6 +780,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_11">
@@ -615,6 +794,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, x, y, (x, y) -> SVR.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, x, y, { x, y -> svr(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
           </code></pre>
             </div>
         </div>
@@ -654,12 +840,18 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
         <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_12">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree
+    def cart(formula: Formula,
+             data: DataFrame,
+             splitRule: SplitRule = SplitRule.GINI,
+             maxDepth: Int = 20,
+             maxNodes: Int = 0,
+             nodeSize: Int = 5): RegressionTree
     </code></pre>
             </div>
         </div>
@@ -667,9 +859,26 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RegressionTree {
-         public static RegressionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize);
+         public static RegressionTree fit(Formula formula,
+                                          DataFrame data,
+                                          SplitRule rule,
+                                          int maxDepth,
+                                          int maxNodes,
+                                          int nodeSize);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun cart(formula: Formula,
+             data: DataFrame,
+             splitRule: SplitRule = SplitRule.GINI,
+             maxDepth: Int = 20,
+             maxNodes: Int = 0,
+             nodeSize: Int = 5): RegressionTree
+    </code></pre>
             </div>
         </div>
     </div>
@@ -689,6 +898,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_13">
@@ -702,6 +912,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> RegressionTree.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> cart(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -772,12 +989,20 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
         <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_14">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest
+    def randomForest(formula: Formula,
+                     data: DataFrame,
+                     ntrees: Int = 500,
+                     mtry: Int = 0,
+                     maxDepth: Int = 20,
+                     maxNodes: Int = 0,
+                     nodeSize: Int = 5,
+                     subsample: Double = 1.0): RandomForest
     </code></pre>
             </div>
         </div>
@@ -785,9 +1010,31 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class RandomForest {
-         public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds);
+         public static RandomForest fit(Formula formula,
+                                        DataFrame data,
+                                        int ntrees,
+                                        int mtry,
+                                        int maxDepth,
+                                        int maxNodes,
+                                        int nodeSize,
+                                        double subsample,
+                                        LongStream seeds);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun randomForest(formula: Formula,
+                     data: DataFrame,
+                     ntrees: Int = 500,
+                     mtry: Int = 0,
+                     maxDepth: Int = 20,
+                     maxNodes: Int = 0,
+                     nodeSize: Int = 5,
+                     subsample: Double = 1.0): RandomForest
+    </code></pre>
             </div>
         </div>
     </div>
@@ -815,6 +1062,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_15">
@@ -828,6 +1076,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.RandomForest.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> randomForest(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -899,12 +1154,21 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
         <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_16">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
+    def gbm(formula: Formula,
+            data: DataFrame,
+            loss: Loss = Loss.ls(),
+            ntrees: Int = 500,
+            maxDepth: Int = 20,
+            maxNodes: Int = 6,
+            nodeSize: Int = 5,
+            shrinkage: Double = 0.05,
+            subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
             </div>
         </div>
@@ -912,9 +1176,32 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class GradientTreeBoost {
-         public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample);
+         public static GradientTreeBoost fit(Formula formula,
+                                             DataFrame data,
+                                             Loss loss,
+                                             int ntrees,
+                                             int maxDepth,
+                                             int maxNodes,
+                                             int nodeSize,
+                                             double shrinkage,
+                                             double subsample);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun gbm(formula: Formula,
+            data: DataFrame,
+            loss: Loss = Loss.ls(),
+            ntrees: Int = 500,
+            maxDepth: Int = 20,
+            maxNodes: Int = 6,
+            nodeSize: Int = 5,
+            shrinkage: Double = 0.05,
+            subsample: Double = 0.7): GradientTreeBoost
+    </code></pre>
             </div>
         </div>
     </div>
@@ -942,6 +1229,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_17">
@@ -955,6 +1243,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> gbm(formula, data) })
           </code></pre>
             </div>
         </div>
@@ -1028,6 +1323,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
         <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_18">
@@ -1058,6 +1354,21 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    // regular Gaussian process model
+    fun &lt;T&gt; gpr(x: Array&lt;T&gt;, y: DoubleArray, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+
+    object gpr {
+        // approximate Gaussian process model
+        def &lt;T&gt; approx(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+        // Nystrom approximation
+        def &lt;T&gt; nystrom(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+    }
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>where the parameter <code>x</code> is the training data,
@@ -1073,6 +1384,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_19">
@@ -1092,6 +1404,16 @@ permalink: "{{ page.filePathStem }}.html"
         var t = KMeans.fit(x, 20).centroids;
         return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), 0.01);
     });
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, x, y, { x, y ->
+        val t = kmeans(x, 20).centroids
+        gpr.approx(x, y, t, GaussianKernel(0.06), 0.01)
+    })
           </code></pre>
             </div>
         </div>
