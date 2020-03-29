@@ -22,11 +22,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.regression.treeshap.TreeShapImportance;
 import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -70,7 +68,7 @@ public class RegressionTreeTest {
         RegressionTree model = RegressionTree.fit(Longley.formula, Longley.data, 100, 20, 2);
         System.out.println("----- dot -----");
         System.out.println(model);
-        
+
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
@@ -95,7 +93,7 @@ public class RegressionTreeTest {
         RegressionTree model = RegressionTree.fit(formula, data);
         System.out.println("----- dot -----");
         System.out.println(model);
-        
+
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

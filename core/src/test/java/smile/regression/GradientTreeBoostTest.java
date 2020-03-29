@@ -63,7 +63,7 @@ public class GradientTreeBoostTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(Longley.formula, Longley.data);
-        
+
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
