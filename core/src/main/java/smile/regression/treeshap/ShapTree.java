@@ -1,7 +1,23 @@
+/*******************************************************************************
+ * Copyright (c) 2010-2019 Haifeng Li
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package smile.regression.treeshap;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
@@ -41,13 +57,13 @@ public class ShapTree {
   public ShapTree(RegressionTree tree, boolean normalize) {
     this.normalize = normalize;
 
-    List<Integer> childrenLefts = new ArrayList<Integer>();
-    List<Integer> childrenRights = new ArrayList<Integer>();
-    List<Integer> splitFeatures = new ArrayList<Integer>();
-    List<Node> thresholds = new ArrayList<Node>();
-    List<Double> values = new ArrayList<Double>();
-    List<Double> sampleWeights = new ArrayList<Double>();
     int totalSamples = tree.root().size();
+    children_left = new int[totalSamples];
+    children_right = new int[totalSamples];
+    features = new int[totalSamples];
+    thresholds = new Node[totalSamples];
+    values = new double[totalSamples];
+    node_sample_weight = new double[totalSamples];
     //
     // we convert smile tree structure to sth favored by shap calculation
     //
@@ -58,20 +74,24 @@ public class ShapTree {
     Node n = q.poll();
 
     while (n != null) {
-      sampleWeights.add(idx, (double) n.size() / (double) totalSamples);
-      values.add(idx, subtreeValues(n));
-      thresholds.add(n);
+      node_sample_weight[idx] = (double) n.size() / (double) totalSamples;
+      
+      values[idx] = subtreeValues(n);
+      
+      thresholds[idx] = n;
 
       if (n instanceof InternalNode) {
-          splitFeatures.add(idx, ((InternalNode) n).feature());
+    	  features[idx] = ((InternalNode) n).feature();
+          
           q.add(((InternalNode) n).trueChild());
-          childrenLefts.add(idx, (++nodeNum));
+          children_left[idx] = (++nodeNum);
+          
           q.add(((InternalNode) n).falseChild());
-          childrenRights.add(idx, (++nodeNum));
+          children_right[idx] = (++nodeNum);
       } else if (n instanceof LeafNode) {
-          splitFeatures.add(idx, -1);
-          childrenLefts.add(idx, -1);
-          childrenRights.add(idx, -1);
+    	  features[idx] = -1;
+          children_left[idx] = -1;
+          children_right[idx] = -1;
       } else {
           String err = "error node type for tree structure conversion: " + n.getClass() + ":" + n.toString();
           logger.error(err);
@@ -82,19 +102,12 @@ public class ShapTree {
       idx++;
     }
 
-    this.children_left = childrenLefts.stream().mapToInt(Integer::intValue).toArray();
-    this.children_right = childrenRights.stream().mapToInt(Integer::intValue).toArray();
     this.children_default = this.children_left; // missing values...
-    this.features = splitFeatures.stream().mapToInt(Integer::intValue).toArray();
-    this.thresholds = thresholds.toArray(new Node[thresholds.size()]);
-    this.node_sample_weight = sampleWeights.stream().mapToDouble(Double::doubleValue).toArray();
 
     if (this.normalize) {
-        double valueSum = values.stream().mapToDouble(Double::doubleValue).sum();
-        this.values = values.stream().mapToDouble(num -> num / valueSum).toArray();
-    } else {
-        this.values = values.stream().mapToDouble(Double::doubleValue).toArray();
-    }
+        double valueSum = Arrays.stream(values).sum();
+        this.values = Arrays.stream(values).map(num -> num / valueSum).toArray();
+    } 
 
     // we recompute the expectations to make sure they follow the SHAP logic
     this.max_depth = computeExpectations(this.children_left, this.children_right, this.node_sample_weight, this.values, 0, 0);
