@@ -45,7 +45,7 @@ get_jshell_cmd() {
 
 get_classpath() {
   JARS=("$lib_dir"/*.jar)
-  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala|kotlin).* ]] && unset -v 'JARS[$index]' ; done
+  for index in "${!JARS[@]}" ; do [[ ${JARS[index]} =~ .*(lihaoyi|scala).* ]] && unset -v 'JARS[$index]' ; done
   CLASSPATH=$(JARS=("${JARS[@]}"); IFS=:; echo "${JARS[*]}")
   echo $CLASSPATH
 }

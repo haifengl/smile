@@ -32,7 +32,7 @@ dependencies {
 // Copy jar to shell lib
 val copyJarToShell by tasks.registering(Copy::class) {
     from(tasks.jar)
-    into(file("../shell/src/universal/lib"))
+    into(file("../shell/src/universal/bin"))
 }
 
 // Run copy task after build
