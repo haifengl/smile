@@ -20,8 +20,6 @@ package smile.regression;
 import smile.base.cart.Loss;
 import smile.data.*;
 import smile.data.formula.Formula;
-import smile.validation.RMSE;
-import smile.validation.CrossValidation;
 import smile.math.MathEx;
 import smile.regression.treeshap.TreeShapImportance;
 
@@ -31,7 +29,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**

@@ -144,19 +144,13 @@ public class CSV {
 
         try (CSVParser csv = CSVParser.parse(reader, format)) {
             List<Tuple> rows = new ArrayList<>();
-            List<CSVRecord> records = csv.getRecords();
-            for (int ri = 0;ri < records.size();ri++) {
-            	CSVRecord record = records.get(ri);
-            	if(format.getSkipHeaderRecord() && ri == 0) {
-            	   continue;
-            	}
+            for (CSVRecord record : csv) {
                 Object[] row = new Object[fields.length];
                 for (int i = 0; i < fields.length; i++) {
-					String recordI = record.get(i);
-					String s = recordI.trim();
-					if (!s.isEmpty()) {
-						row[i] = parser.get(i).apply(s);
-					}
+                    String s = record.get(i).trim();
+                    if (!s.isEmpty()) {
+                        row[i] = parser.get(i).apply(s);
+                    }
                 }
                 rows.add(Tuple.of(row, schema));
                 if (rows.size() >= limit) break;

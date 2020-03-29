@@ -1,18 +1,37 @@
+/*******************************************************************************
+ * Copyright (c) 2010-2019 Haifeng Li
+ *
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ ******************************************************************************/
+
 package smile.regression.treeshap;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import smile.base.cart.Node;
 import smile.base.cart.InternalNode;
+import smile.base.cart.Node;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.StructType;
 import smile.regression.RegressionTree;
+import smile.util.MutableDouble;
 import smile.util.MutableInt;
 
 /**
@@ -118,7 +137,14 @@ public class TreeShapImportance {
 	 * @param x data {@link Tuple}
 	 */
 	public double[] shapValues(Tuple x) {
-		return shapValues(x, false, ShapCalculationTemp.createSingelItemList(maxd * (maxd + 1)));
+		int s = maxd * (maxd + 1);
+		List<MutableInt> feature_indexes = initMutableList(s, false);
+		List<MutableDouble> zero_fractions = initMutableList(s, true); 
+		List<MutableDouble> one_fractions = initMutableList(s, true);
+		List<MutableDouble> pweight = initMutableList(s, true);
+		
+		double[] shaps = shapValues(x, false, feature_indexes, zero_fractions, one_fractions, pweight);
+		return shaps;
 	}
 
 	/**
@@ -128,19 +154,23 @@ public class TreeShapImportance {
 	 * @param returnAbsolute true if you want the feature importance, just take
 	 *                       absolute shap values for every instance, average by
 	 *                       feature and then sort, default false
-	 * @param calcTemps      calculation registers, one for each tree if ensemble
-	 *                       model
-	 * @param concurrent     if true then use muti-thread for tree ensemble
-	 *                       otherwise run in single thread
 	 */
-	private double[] shapValues(Tuple x, boolean returnAbsolute, List<ShapCalculationTemp> calcTemps) {
+	private double[] shapValues(Tuple x, boolean returnAbsolute, 
+			List<MutableInt> feature_indexes,
+			List<MutableDouble> zero_fractions, 
+			List<MutableDouble> one_fractions,
+			List<MutableDouble> pweights) {
 		int length = x.schema().length();
 		double[] phi = new double[length + 1];
 
 		int treeLength = this.trees.size();
 		for (int tIdx = 0; tIdx < treeLength; tIdx++) {
 			try {
-				treeShap(this.trees.get(tIdx), x, phi, 0.0, 0, calcTemps.get(0));
+				treeShap(this.trees.get(tIdx), x, phi, 0.0, 0, 
+						feature_indexes,
+						zero_fractions, 
+						one_fractions,
+						pweights);
 			} catch (Exception e) {
 				String err = "error calculating shap for instance: " + x + " using " + tIdx + "th sub-tree.";
 				logger.error(err, e);
@@ -193,7 +223,11 @@ public class TreeShapImportance {
 					   double[] means = new double[data.schema().length()];
 					   Arrays.setAll(means, num -> 0.0);
 				       
-					   List<ShapCalculationTemp> calcTemp = ShapCalculationTemp.createSingelItemList(maxd * (maxd + 1));
+					   int s = maxd * (maxd + 1);
+					   List<MutableInt> feature_indexes = initMutableList(s, false);
+					   List<MutableDouble> zero_fractions = initMutableList(s, true); 
+					   List<MutableDouble> one_fractions = initMutableList(s, true);
+					   List<MutableDouble> pweight = initMutableList(s, true);
 					   
 					   for (int xi = startIdx; xi < endIdx; xi++) {
 							if (((xi - startIdx) + 1) % batchOperSize == 0) {
@@ -203,7 +237,7 @@ public class TreeShapImportance {
 							Tuple xx = null;
 							try {
 								xx = data.get(xi);
-								double[] shapValues = shapValues(xx, true, calcTemp);
+								double[] shapValues = shapValues(xx, true, feature_indexes, zero_fractions, one_fractions, pweight);
 								for (int i = 0; i < means.length; i++) {
 									means[i] += shapValues[i];
 								}
@@ -238,8 +272,29 @@ public class TreeShapImportance {
 
 		return meanShap;
 	}
+	
+	/** initialize list of {@link MutableInt} or {@link MutableDouble} */
+	private List initMutableList(int size, boolean doubleValue) {
+		List ret = Collections.emptyList();
+		if(doubleValue) {
+		   ret = new ArrayList<MutableDouble>(size);
+		   for(int i = 0;i < size;i++) {
+			   ret.add(new MutableDouble());
+		   }
+		}else {
+		   ret = new ArrayList<MutableInt>(size);
+		   for(int i = 0;i < size;i++) {
+			   ret.add(new MutableInt(Integer.MIN_VALUE));
+		   }
+		}
+		return ret;
+	}
 
-	private static void treeShap(ShapTree tree, Tuple x, double[] phi, double condition, int condition_feature, ShapCalculationTemp calcTemp) {
+	private static void treeShap(ShapTree tree, Tuple x, double[] phi, double condition, int condition_feature, 
+			List<MutableInt> feature_indexes,
+			List<MutableDouble> zero_fractions, 
+			List<MutableDouble> one_fractions,
+			List<MutableDouble> pweights) {
 
 		// update the bias term, which is the last index in phi
 		// (note the paper has this as phi_0 instead of phi_M)
@@ -249,12 +304,21 @@ public class TreeShapImportance {
 
 		// start the recursive algorithm
 		treeShapRecursive(tree.children_left, tree.children_right, tree.children_default, tree.features,
-				tree.thresholds, tree.values, tree.node_sample_weight, x, phi, 0, 0, calcTemp.feature_indexes,
-				calcTemp.zero_fractions, calcTemp.one_fractions, calcTemp.pweights, 1, 1, -1, condition,
+				tree.thresholds, tree.values, tree.node_sample_weight, x, phi, 0, 0, 
+				feature_indexes,
+				zero_fractions, 
+				one_fractions, 
+				pweights, 
+				1, 1, -1, condition,
 				condition_feature, 1);
 
-		// recycle shap calculation register
-		calcTemp.returnTemp(false);
+		// reset following mutables for another tuples
+		for (int i = 0; i < feature_indexes.size(); i++) {
+			feature_indexes.get(i).value = Integer.MIN_VALUE;
+			zero_fractions.get(i).value = Double.MIN_VALUE;
+			one_fractions.get(i).value = Double.MIN_VALUE;
+			pweights.get(i).value = Double.MIN_VALUE;
+		}
 	}
 
 	/**
@@ -268,7 +332,7 @@ public class TreeShapImportance {
 			double zero_fraction,
 			double one_fraction,
 			int feature_index) {
-
+		
 		feature_indexes.get(unique_depth).value = feature_index;
 		zero_fractions.get(unique_depth).value = zero_fraction;
 		one_fractions.get(unique_depth).value = one_fraction;
@@ -285,8 +349,11 @@ public class TreeShapImportance {
 	/**
 	 * undo a previous extension of the decision path
 	 */
-	private static void unwindPath(List<MutableInt> feature_indexes, List<MutableDouble> zero_fractions,
-			List<MutableDouble> one_fractions, List<MutableDouble> pweights, int unique_depth, int path_index) {
+	private static void unwindPath(List<MutableInt> feature_indexes, 
+			List<MutableDouble> zero_fractions,
+			List<MutableDouble> one_fractions, 
+			List<MutableDouble> pweights, 
+			int unique_depth, int path_index) {
 
 		double one_fraction = one_fractions.get(path_index).value;
 		double zero_fraction = zero_fractions.get(path_index).value;
@@ -339,7 +406,7 @@ public class TreeShapImportance {
 
 		return total;
 	}	
-
+	
 	private static List shallowCopyNumbers(List original, int unique_depth, boolean doubleValue) {
 		int uniqueDepthPlus1 = (unique_depth + 1);
 		for (int i = 0; i < uniqueDepthPlus1; i++) {
@@ -361,22 +428,25 @@ public class TreeShapImportance {
 	 */
 	private static void treeShapRecursive(int[] children_left, int[] children_right, int[] children_default,
 			int[] features, Node[] thresholds, double[] values, double[] node_sample_weight, Tuple x, double[] phi,
-			int node_index, int unique_depth, List<MutableInt> parent_feature_indexes,
-			List<MutableDouble> parent_zero_fractions, List<MutableDouble> parent_one_fractions,
-			List<MutableDouble> parent_pweights, double parent_zero_fraction, double parent_one_fraction,
+			int node_index, int unique_depth, 
+			List<MutableInt> parent_feature_indexes,
+			List<MutableDouble> parent_zero_fractions, 
+			List<MutableDouble> parent_one_fractions,
+			List<MutableDouble> parent_pweights, 
+			double parent_zero_fraction, double parent_one_fraction,
 			int parent_feature_index, double condition, int condition_feature, double condition_fraction) {
 
 		// stop if we have no weight coming down to us
 		if (condition_fraction == 0) {
 			return;
 		}
-
+		
 		// extend the unique path
 		List<MutableInt> feature_indexes = shallowCopyNumbers(parent_feature_indexes, unique_depth, false);
 		List<MutableDouble> zero_fractions = shallowCopyNumbers(parent_zero_fractions, unique_depth, true);
 		List<MutableDouble> one_fractions = shallowCopyNumbers(parent_one_fractions, unique_depth, true);
 		List<MutableDouble> pweights = shallowCopyNumbers(parent_pweights, unique_depth, true);
-
+		
 		if (condition == 0 || condition_feature != parent_feature_index) {
 			extendPath(feature_indexes, zero_fractions, one_fractions, pweights, unique_depth, parent_zero_fraction,
 					parent_one_fraction, parent_feature_index);

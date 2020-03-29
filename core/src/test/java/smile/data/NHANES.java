@@ -16,16 +16,10 @@
  */
 package smile.data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.apache.commons.csv.CSVFormat;
 
 import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
+import smile.io.Read;
 import smile.util.Paths;
 
 /**
@@ -47,36 +41,11 @@ public class NHANES {
   public static double[] y;
 
   static {
-    List<StructField> fields = new ArrayList<StructField>();
-    fields.add(new StructField("y", DataTypes.DoubleType));
-    fields.add(new StructField("Age", DataTypes.DoubleType));
-    fields.add(new StructField("Diastolic BP", DataTypes.DoubleType));
-    fields.add(new StructField("Poverty index", DataTypes.DoubleType));
-    fields.add(new StructField("Race", DataTypes.DoubleType));
-    fields.add(new StructField("Red blood cells", DataTypes.DoubleType));
-    fields.add(new StructField("Sedimentation rate", DataTypes.DoubleType));
-    fields.add(new StructField("Serum Albumin", DataTypes.DoubleType));
-    fields.add(new StructField("Serum Cholesterol", DataTypes.DoubleType));
-    fields.add(new StructField("Serum Iron", DataTypes.DoubleType));
-    fields.add(new StructField("Serum Magnesium", DataTypes.DoubleType));
-    fields.add(new StructField("Serum Protein", DataTypes.DoubleType));
-    fields.add(new StructField("Sex", DataTypes.DoubleType));
-    fields.add(new StructField("Systolic BP", DataTypes.DoubleType));
-    fields.add(new StructField("TIBC", DataTypes.DoubleType));
-    fields.add(new StructField("TS", DataTypes.DoubleType));
-    fields.add(new StructField("White blood cells", DataTypes.DoubleType));
-    fields.add(new StructField("BMI", DataTypes.DoubleType));
-    fields.add(new StructField("Pulse pressure", DataTypes.DoubleType));
-
-    StructType schema = DataTypes.struct(fields);
-
     try {
-      CSVFormat format = CSVFormat.DEFAULT;
-      format = format.withSkipHeaderRecord();
-      CSV csv = new CSV(format);
-      csv.schema(schema);
-      data = csv.read(Paths.getTestData("regression/NHANESI_subset.csv"));
-      
+      data = Read.csv(
+              Paths.getTestData("regression/NHANESI_subset.csv"),
+              CSVFormat.DEFAULT.withFirstRecordAsHeader());
+
       x = formula.x(data).toArray();
       y = formula.y(data).toDoubleArray();
     } catch (Exception ex) {
