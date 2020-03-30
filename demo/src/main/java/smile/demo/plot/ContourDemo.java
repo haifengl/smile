@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.plot;
 
@@ -33,7 +33,7 @@ import smile.plot.swing.Palette;
 @SuppressWarnings("serial")
 public class ContourDemo extends JPanel {
     public ContourDemo() {
-        super(new GridLayout(1,2));
+        super(new GridLayout(1,1));
         setBackground(Color.white);
 
         int n = 41;
@@ -52,13 +52,7 @@ public class ContourDemo extends JPanel {
                 z[i][j] = x[j] * Math.exp(-x[j]*x[j] - y[i]*y[i]);
         }
 
-        add(Contour.plot(x, y, z));
-
-        double[] c = new double[9];
-        for (int i = 0; i < c.length; i++) {
-            c[i] = -0.4 + 0.1 * i;
-        }
-        add(Contour.plot(x, y, z, c, Palette.jet(c.length)));
+        add(Contour.of(x, y, z).canvas().panel());
     }
 
     @Override

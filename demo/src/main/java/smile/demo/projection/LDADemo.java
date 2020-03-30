@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.projection;
 
@@ -36,8 +36,9 @@ import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
 import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.math.MathEx;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public class LDADemo extends JPanel implements Runnable, ActionListener {
@@ -62,7 +63,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
     JComponent canvas;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = '.';
+    char mark = '.';
 
     /**
      * Constructor.
@@ -109,17 +110,15 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
 
         double[][] y = lda.project(data);
 
-        PlotCanvas plot = new PlotCanvas(MathEx.colMin(y), MathEx.colMax(y));
+        Canvas plot;
         if (labels != null) {
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = ScatterPlot.of(y, labels, mark).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("Linear Discriminant Analysis");
-        return plot;
+        return plot.panel();
     }
 
     @Override
@@ -159,9 +158,9 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
             }
 
             if (dataset[datasetIndex].size() < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
 
             Thread thread = new Thread(this);

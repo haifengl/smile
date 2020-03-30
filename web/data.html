@@ -80,9 +80,11 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val iris = read.arff("data/weka/iris.arff")
     [main] INFO smile.io.Arff - Read ARFF relation iris
@@ -115,7 +117,9 @@ permalink: "{{ page.filePathStem }}.html"
     +-----------+-----+---+--------+---+
     </code></pre>
         </div>
+    </div>
         <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-java"><code>
     jshell> import smile.data.*
 
@@ -157,12 +161,53 @@ permalink: "{{ page.filePathStem }}.html"
     +-----------+-----+---+--------+---+
     </code></pre>
         </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.*
+    >>> import smile.data.*
+    >>> import smile.io.*
+    >>> val iris = Read.arff("data/weka/iris.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    >>> iris
+    res3: smile.data.DataFrame! = [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
+    +-----------+----------+-----------+----------+-----------+
+    |sepallength|sepalwidth|petallength|petalwidth|      class|
+    +-----------+----------+-----------+----------+-----------+
+    |        5.1|       3.5|        1.4|       0.2|Iris-setosa|
+    |        4.9|         3|        1.4|       0.2|Iris-setosa|
+    |        4.7|       3.2|        1.3|       0.2|Iris-setosa|
+    |        4.6|       3.1|        1.5|       0.2|Iris-setosa|
+    |          5|       3.6|        1.4|       0.2|Iris-setosa|
+    |        5.4|       3.9|        1.7|       0.4|Iris-setosa|
+    |        4.6|       3.4|        1.4|       0.3|Iris-setosa|
+    |          5|       3.4|        1.5|       0.2|Iris-setosa|
+    |        4.4|       2.9|        1.4|       0.2|Iris-setosa|
+    |        4.9|       3.1|        1.5|       0.1|Iris-setosa|
+    +-----------+----------+-----------+----------+-----------+
+    140 more rows...
+
+    >>> iris.summary()
+    res4: smile.data.DataFrame! = [column: String, count: long, min: double, avg: double, max: double]
+    +-----------+-----+---+--------+---+
+    |     column|count|min|     avg|max|
+    +-----------+-----+---+--------+---+
+    |sepallength|  150|4.3|5.843333|7.9|
+    | sepalwidth|  150|  2|   3.054|4.4|
+    |petallength|  150|  1|3.758667|6.9|
+    | petalwidth|  150|0.1|1.198667|2.5|
+    +-----------+-----+---+--------+---+
+    </code></pre>
+        </div>
+        </div>
     </div>
 
     <p>We can get a row with the array syntax or refer a column by its name.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_2">
@@ -199,12 +244,29 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_2">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> iris[0]
+    res6: smile.data.Tuple! = {
+      sepallength: 5.1,
+      sepalwidth: 3.5,
+      petallength: 1.4,
+      petalwidth: 0.2,
+      class: Iris-setosa
+    }
+    >>> iris.column("sepallength")
+    res7: smile.data.vector.BaseVector<(raw) kotlin.Any!, (raw) kotlin.Any!, (raw) java.util.stream.BaseStream<*, *>!>! = [5.099999904632568, 4.900000095367432, 4.699999809265137, 4.599999904632568, 5.0, 5.400000095367432, 4.599999904632568, 5.0, 4.400000095367432, 4.900000095367432, ... 140 more]
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>Similarly, we can select a few columns to create a new data frame. </p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -253,6 +315,29 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_3">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> iris.select("sepallength", "sepalwidth")
+    res8: smile.data.DataFrame! = [sepallength: float, sepalwidth: float]
+    +-----------+----------+
+    |sepallength|sepalwidth|
+    +-----------+----------+
+    |        5.1|       3.5|
+    |        4.9|         3|
+    |        4.7|       3.2|
+    |        4.6|       3.1|
+    |          5|       3.6|
+    |        5.4|       3.9|
+    |        4.6|       3.4|
+    |          5|       3.4|
+    |        4.4|       2.9|
+    |        4.9|       3.1|
+    +-----------+----------+
+    140 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>Advanced operations such as <code>exists</code>, <code>forall</code>,
@@ -265,6 +350,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
@@ -360,6 +446,49 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_4">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> iris.stream().anyMatch({row -> row.getDouble(0) > 4.5})
+    res10: kotlin.Boolean = true
+    >>> iris.stream().allMatch({row -> row.getDouble(0) < 10})
+    res11: kotlin.Boolean = true
+    >>> iris.stream().filter({row -> row.getByte("class") == 1.toByte()}).findAny()
+    res14: java.util.Optional<smile.data.Tuple!>! = Optional[{
+      sepallength: 6.2,
+      sepalwidth: 2.9,
+      petallength: 4.3,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }]
+    >>> iris.stream().filter({row -> row.getString("class").equals("Iris-versicolor")}).findAny()
+    res15: java.util.Optional<smile.data.Tuple!>! = Optional[{
+      sepallength: 5.4,
+      sepalwidth: 3,
+      petallength: 4.5,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }]
+    >>> DataFrame.of(iris.stream().filter({row -> row.getDouble(1) > 3 && row.getByte("class") != 0.toByte()}))
+    res22: smile.data.DataFrame! = [sepallength: float, sepalwidth: float, petallength: float, petalwidth: float, class: byte nominal[Iris-setosa, Iris-versicolor, Iris-virginica]]
+    +-----------+----------+-----------+----------+---------------+
+    |sepallength|sepalwidth|petallength|petalwidth|          class|
+    +-----------+----------+-----------+----------+---------------+
+    |          7|       3.2|        4.7|       1.4|Iris-versicolor|
+    |        6.4|       3.2|        4.5|       1.5|Iris-versicolor|
+    |        6.9|       3.1|        4.9|       1.5|Iris-versicolor|
+    |        6.3|       3.3|        4.7|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.4|       1.4|Iris-versicolor|
+    |        5.9|       3.2|        4.8|       1.8|Iris-versicolor|
+    |          6|       3.4|        4.5|       1.6|Iris-versicolor|
+    |        6.7|       3.1|        4.7|       1.5|Iris-versicolor|
+    |        6.3|       3.3|          6|       2.5| Iris-virginica|
+    |        7.2|       3.6|        6.1|       2.5| Iris-virginica|
+    +-----------+----------+-----------+----------+---------------+
+    15 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>Besides numeric and nominal values, many other data types
@@ -367,6 +496,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -435,6 +565,36 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_5">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val strings = read.arff("data/weka/string.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation LCCvsLCSH
+    >>> strings
+    res26: smile.data.DataFrame = [LCC: String, LCSH: String]
+    +-----+--------------------------------------+
+    |  LCC|                                  LCSH|
+    +-----+--------------------------------------+
+    |  AG5|Encyclopedias and dictionaries.;Twe...|
+    |AS262|   Science -- Soviet Union -- History.|
+    |  AE5|       Encyclopedias and dictionaries.|
+    |AS281|Astronomy, Assyro-Babylonian.;Moon ...|
+    |AS281|Astronomy, Assyro-Babylonian.;Moon ...|
+    +-----+--------------------------------------+
+
+    >>> val dates = read.arff("data/weka/date.arff") 
+    [main] INFO smile.io.Arff - Read ARFF relation Timestamps
+    >>> dates
+    res28: smile.data.DataFrame = [timestamp: DateTime]
+    +-------------------+
+    |          timestamp|
+    +-------------------+
+    |2001-04-03 12:12:12|
+    |2001-05-03 12:59:55|
+    +-------------------+
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>For data wrangling, the most important functions of <code>DataFrame</code>
@@ -443,6 +603,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_6">
@@ -528,6 +689,53 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_6">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>>  val x6 = iris.stream().map({row ->
+    ...            val x = DoubleArray(6)
+    ...            for (i in 0..3) x[i] = row.getDouble(i)
+    ...            x[4] = x[0] * x[1]
+    ...            x[5] = x[2] * x[3]
+    ...            x
+    ...        })
+    >>> x6.forEach({xi: DoubleArray -> println(java.util.Arrays.toString(xi))})
+    [5.699999809265137, 2.5999999046325684, 3.5, 1.0, 14.819998960495013, 3.5]
+    [6.699999809265137, 3.0999999046325684, 4.400000095367432, 1.399999976158142, 20.76999876976015, 6.160000028610227]
+    [5.400000095367432, 3.0, 4.5, 1.5, 16.200000286102295, 6.75]
+    [5.5, 2.4000000953674316, 3.799999952316284, 1.100000023841858, 13.200000524520874, 4.1800000381469715]
+    [5.599999904632568, 3.0, 4.5, 1.5, 16.799999713897705, 6.75]
+    [4.900000095367432, 3.0999999046325684, 1.5, 0.10000000149011612, 15.189999828338614, 0.15000000223517418]
+    [4.599999904632568, 3.5999999046325684, 1.0, 0.20000000298023224, 16.55999921798707, 0.20000000298023224]
+    [7.699999809265137, 3.0, 6.099999904632568, 2.299999952316284, 23.09999942779541, 14.029999489784245]
+    [5.400000095367432, 3.700000047683716, 1.5, 0.20000000298023224, 19.980000610351567, 0.30000000447034836]
+    [5.800000190734863, 2.700000047683716, 4.099999904632568, 1.0, 15.660000791549692, 4.099999904632568]
+    [6.300000190734863, 3.4000000953674316, 5.599999904632568, 2.4000000953674316, 21.420001249313373, 13.440000305175772]
+    [6.0, 3.4000000953674316, 4.5, 1.600000023841858, 20.40000057220459, 7.200000107288361]
+    [6.199999809265137, 2.200000047683716, 4.5, 1.5, 13.63999987602233, 6.75]
+    [6.400000095367432, 3.0999999046325684, 5.5, 1.7999999523162842, 19.839999685287466, 9.899999737739563]
+    [6.699999809265137, 3.0999999046325684, 4.699999809265137, 1.5, 20.76999876976015, 7.049999713897705]
+    [5.5, 2.4000000953674316, 3.700000047683716, 1.0, 13.200000524520874, 3.700000047683716]
+    [5.099999904632568, 3.799999952316284, 1.600000023841858, 0.20000000298023224, 19.379999394416814, 0.32000000953674324]
+    [6.199999809265137, 2.9000000953674316, 4.300000190734863, 1.2999999523162842, 17.980000038146954, 5.590000042915335]
+    [6.300000190734863, 2.299999952316284, 4.400000095367432, 1.2999999523162842, 14.490000138282767, 5.719999914169307]
+    [5.800000190734863, 2.700000047683716, 3.9000000953674316, 1.2000000476837158, 15.660000791549692, 4.680000300407414]
+    [6.0, 3.0, 4.800000190734863, 1.7999999523162842, 18.0, 8.640000114440909]
+    [5.599999904632568, 2.5, 3.9000000953674316, 1.100000023841858, 13.999999761581421, 4.290000197887423]
+    [4.800000190734863, 3.4000000953674316, 1.600000023841858, 0.20000000298023224, 16.320001106262225, 0.32000000953674324]
+    [6.900000095367432, 3.0999999046325684, 5.400000095367432, 2.0999999046325684, 21.38999963760375, 11.339999685287466]
+    [5.900000095367432, 3.200000047683716, 4.800000190734863, 1.7999999523162842, 18.88000058650971, 8.640000114440909]
+    [4.800000190734863, 3.0, 1.399999976158142, 0.10000000149011612, 14.40000057220459, 0.13999999970197674]
+    [5.099999904632568, 3.299999952316284, 1.7000000476837158, 0.5, 16.82999944210053, 0.8500000238418579]
+    [6.099999904632568, 2.799999952316284, 4.0, 1.2999999523162842, 17.07999944210053, 5.199999809265137]
+    [7.900000095367432, 3.799999952316284, 6.400000095367432, 2.0, 30.01999998569488, 12.800000190734863]
+    [6.0, 2.700000047683716, 5.099999904632568, 1.600000023841858, 16.200000286102295, 8.159999969005582]
+    [6.400000095367432, 2.799999952316284, 5.599999904632568, 2.200000047683716, 17.919999961853023, 12.320000057220454]
+    [6.599999904632568, 3.0, 4.400000095367432, 1.399999976158142, 19.799999713897705, 6.160000028610227]
+    ...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>The <code>groupBy</code> operation groups elements according to a classification
@@ -541,6 +749,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_7">
@@ -639,6 +848,63 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_7">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> iris.stream().collect(java.util.stream.Collectors.groupingBy({row: Tuple -> row.getString("class")}))
+    res98: kotlin.collections.(Mutable)Map<kotlin.String!, kotlin.collections.(Mutable)List<smile.data.Tuple!>!>! = {Iris-versicolor=[{
+      sepallength: 7,
+      sepalwidth: 3.2,
+      petallength: 4.7,
+      petalwidth: 1.4,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.4,
+      sepalwidth: 3.2,
+      petallength: 4.5,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.9,
+      sepalwidth: 3.1,
+      petallength: 4.9,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 5.5,
+      sepalwidth: 2.3,
+      petallength: 4,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.5,
+      sepalwidth: 2.8,
+      petallength: 4.6,
+      petalwidth: 1.5,
+      class: Iris-versicolor
+    }, {
+      sepallength: 5.7,
+      sepalwidth: 2.8,
+      petallength: 4.5,
+      petalwidth: 1.3,
+      class: Iris-versicolor
+    }, {
+      sepallength: 6.3,
+      sepalwidth: 3.3,
+      petallength: 4.7,
+      petalwidth: 1.6,
+      class: Iris-versicolor
+    }, {
+      sepallength: 4.9,
+      sepalwidth: 2.4,
+      petallength: 3.3,
+      petalwidth: 1,
+      class: Iris-versicolor
+    }, {
+    ...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h2 id="sparse">Sparse Dataset</h2>
@@ -671,6 +937,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
         <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_8">
@@ -713,6 +980,31 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_8">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val df = read.parquet("data/parquet/userdata1.parquet")
+    >>> df
+    res100: smile.data.DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T00:36:21|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    |2016-02-03T03:52:53|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|                |         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+    |2016-02-03T18:29:47| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
+    +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="read.avro">Apache Avro</h3>
@@ -726,6 +1018,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_9">
@@ -780,6 +1073,32 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_9">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val stream = java.nio.file.Files.newInputStream(smile.util.Paths.getTestData("avro/userdata.avsc"))
+    >>> val schema = org.apache.avro.Schema.Parser().parse(stream)
+    >>> val avrodf = read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), schema)
+    >>> avrodf
+    res104: smile.data.DataFrame = [registration_dttm: String, id: long, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: Long, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |   registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |2016-02-03T07:55:29Z|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |2016-02-03T17:04:03Z|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|            null|              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |2016-02-03T01:09:31Z|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |2016-02-03T12:36:21Z|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |2016-02-03T05:05:31Z|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |2016-02-03T07:22:34Z|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |2016-02-03T08:33:08Z|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |2016-02-03T06:47:06Z|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|            null|Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    |2016-02-03T03:52:53Z|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|            null|         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+    |2016-02-03T18:29:47Z| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
+    +--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="read.arrow">Apache Arrow</h3>
@@ -801,6 +1120,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
         <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_10">
@@ -862,6 +1182,35 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_10">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val temp = java.io.File.createTempFile("chinook", "arrow")
+    >>> val path = temp.toPath()
+    >>> write.arrow(df, path)
+    [main] INFO smile.io.Arrow - write 1000 rows
+    >>> val df = read.arrow(path)
+    [main] INFO smile.io.Arrow - read 1000 rows and 13 columns
+    >>> df
+    res109: smile.data.DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
+    +-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
+    +-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    |             null|  1|    Amanda|   Jordan|    ajordan0@com.com|Female|   1.197.201.2|6759521864920116|           Indonesia|  3/8/1971| 49756.53|    Internal Auditor|   1E+02|
+    |             null|  2|    Albert|  Freeman|     afreeman1@is.gd|  Male|218.111.175.34|                |              Canada| 1/16/1968|150280.17|       Accountant IV|        |
+    |             null|  3|    Evelyn|   Morgan|emorgan2@altervis...|Female|  7.161.136.94|6767119071901597|              Russia|  2/1/1960|144972.51| Structural Engineer|        |
+    |             null|  4|    Denise|    Riley|    driley3@gmpg.org|Female| 140.35.109.83|3576031598965625|               China|  4/8/1997| 90263.05|Senior Cost Accou...|        |
+    |             null|  5|    Carlos|    Burns|cburns4@miitbeian...|      |169.113.235.40|5602256255204850|        South Africa|          |     null|                    |        |
+    |             null|  6|   Kathryn|    White|  kwhite5@google.com|Female|195.131.81.179|3583136326049310|           Indonesia| 2/25/1983| 69227.11|   Account Executive|        |
+    |             null|  7|    Samuel|   Holmes|sholmes6@foxnews.com|  Male|232.234.81.197|3582641366974690|            Portugal|12/18/1987| 14247.62|Senior Financial ...|        |
+    |             null|  8|     Harry|   Howell| hhowell7@eepurl.com|  Male|  91.235.51.73|                |Bosnia and Herzeg...|  3/1/1962|186469.43|    Web Developer IV|        |
+    |             null|  9|      Jose|   Foster|   jfoster8@yelp.com|  Male|  132.31.53.61|                |         South Korea| 3/27/1992|231067.84|Software Test Eng...|   1E+02|
+    |             null| 10|     Emily|  Stewart|estewart9@opensou...|Female|143.28.251.245|3574254110301671|             Nigeria| 1/28/1997| 27234.28|     Health Coach IV|        |
+    +-----------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
+    990 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="read.sas">SAS7BDAT</h3>
@@ -871,6 +1220,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_11">
@@ -919,6 +1269,30 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_11">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val df = read.sas("data/sas/airline.sas7bdat")
+    >>> df
+    res112: smile.data.DataFrame = [YEAR: double, Y: double, W: double, R: double, L: double, K: double]
+    +----+-----+-----+------+-----+-----+
+    |YEAR|    Y|    W|     R|    L|    K|
+    +----+-----+-----+------+-----+-----+
+    |1948|1.214|0.243|0.1454|1.415|0.612|
+    |1949|1.354| 0.26|0.2181|1.384|0.559|
+    |1950|1.569|0.278|0.3157|1.388|0.573|
+    |1951|1.948|0.297| 0.394| 1.55|0.564|
+    |1952|2.265| 0.31|0.3559|1.802|0.574|
+    |1953|2.731|0.322|0.3593|1.926|0.711|
+    |1954|3.025|0.335|0.4025|1.964|0.776|
+    |1955|3.562| 0.35|0.3961|2.116|0.827|
+    |1956|3.979|0.361|0.3822|2.435|  0.8|
+    |1957| 4.42|0.379|0.3045|2.707|0.921|
+    +----+-----+-----+------+-----+-----+
+    22 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="read.jdbc">Relational Database</h3>
@@ -1051,6 +1425,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_13">
@@ -1101,6 +1476,31 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_13">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val df = read.arff("https://github.com/haifengl/smile/blob/master/shell/src/universal/data/weka/cpu.arff?raw=true")
+    [main] INFO smile.io.Arff - Read ARFF relation cpu
+    >>> df
+    res114: smile.data.DataFrame = [MYCT: float, MMIN: float, MMAX: float, CACH: float, CHMIN: float, CHMAX: float, class: float]
+    +----+-----+-----+----+-----+-----+-----+
+    |MYCT| MMIN| MMAX|CACH|CHMIN|CHMAX|class|
+    +----+-----+-----+----+-----+-----+-----+
+    | 125|  256| 6000| 256|   16|  128|  199|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|32000|  32|    8|   32|  253|
+    |  29| 8000|16000|  32|    8|   16|  132|
+    |  26| 8000|32000|  64|    8|   32|  290|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|32000|  64|   16|   32|  381|
+    |  23|16000|64000|  64|   16|   32|  749|
+    |  23|32000|64000| 128|   32|   64| 1238|
+    +----+-----+-----+----+-----+-----+-----+
+    199 more rows...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="read.csv">Delimited Text and CSV</h3>
@@ -1112,6 +1512,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
         <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_14">
@@ -1149,6 +1550,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    fun csv(file: String, delimiter: Char = ',', header: Boolean = true, quote: Char = '"', escape: Char = '\\', schema: StructType? = null): DataFrame
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The parser tries it best to infer the schema of data from the top rows.</p>
@@ -1156,6 +1564,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_15">
@@ -1180,6 +1589,16 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_15">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    >>> zip
+    res116: smile.data.DataFrame = [V1: int, V2: double, V3: double, V4: double, V5: double, V6: double, V7: double, V8: double, V9: double, V10: double, V11: double, V12: double, V13: double, V14: double, V15: double, V16: double, V17: double, V18: double, V19: double, V20: double, V21: double, V22: double, V23: double, V24: double, V25: double, V26: double, V27: double, V28: double, V29: double, V30: double, V31: double, V32: double, V33: double, V34: double, V35: double, V36: double, V37: double, V38: double, V39: double, V40: double, V41: double, V42: double, V43: double, V44: double, V45: double, V46: double, V47: double, V48: double, V49: double, V50: double, V51: double, V52: double, V53: double, V54: double, V55: double, V56: double, V57: double, V58: double, V59: double, V60: double, V61: double, V62: double, V63: double, V64: double, V65: double, V66: double, V67: double, V68: double, V69: double, V70: double, V71: double, V72: double, V73: double, V74: double, V75: double, V76: double, V77: double, V78: double, V79: double, V80: double, V81: double, V82: double, V83: double, V84: double, V85: double, V86: double, V87: double, V88: double, V89: double, V90: double, V91: double, V92: double, V93: double, V94: double, V95: double, V96: double, V97: double, V98: double, V99: double, V100: double, V101: double, V102: double, V103: double, V104: double, V105: double, V106: double, V107: double, V108: double, V109: double, V110: double, V111: double, V112: double, V113: double, V114: double, V115: double, V116: double, V117: double, V118: double, V119: double, V120: double, V121: double, V122: double, V123: double, V124: double, V125: double, V126: double, V127: double, V128: double, V129: double, V130: double, V131: double, V132: double, V133: double, V134: double, V135: double, V136: double, V137: double, V138: double, V139: double, V140: double, V141: double, V142: double, V143: double, V144: double, V145: double, V146: double, V147: double, V148: double, V149: double, V150: double, V151: double, V152: double, V153: double, V154: double, V155: double, V156: double, V157: double, V158: double, V159: double, V160: double, V161: double, V162: double, V163: double, V164: double, V165: double, V166: double, V167: double, V168: double, V169: double, V170: double, V171: double, V172: double, V173: double, V174: double, V175: double, V176: double, V177: double, V178: double, V179: double, V180: double, V181: double, V182: double, V183: double, V184: double, V185: double, V186: double, V187: double, V188: double, V189: double, V190: double, V191: double, V192: double, V193: double, V194: double, V195: double, V196: double, V197: double, V198: double, V199: double, V200: double, V201: double, V202: double, V203: double, V204: double, V205: double, V206: double, V207: double, V208: double, V209: double, V210: double, V211: double, V212: double, V213: double, V214: double, V215: double, V216: double, V217: double, V218: double, V219: double, V220: double, V221: double, V222: double, V223: double, V224: double, V225: double, V226: double, V227: double, V228: double, V229: double, V230: double, V231: double, V232: double, V233: double, V234: double, V235: double, V236: double, V237: double, V238: double, V239: double, V240: double, V241: double, V242: double, V243: double, V244: double, V245: double, V246: double, V247: double, V248: double, V249: double, V250: double, V251: double, V252: double, V253: double, V254: double, V255: double, V256: double, V257: double]
+    ...
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>In case that the parser fails to infer the schema, the user may provide a predefined schema.</p>
@@ -1344,6 +1763,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_17">
@@ -1362,6 +1782,14 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> read.libsvm("data/libsvm/glass.txt")
+    res118: smile.data.Dataset<smile.data.Instance<smile.util.SparseArray>> = smile.data.DatasetImpl@50d667c3
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>In case of truly sparse libsvm data, we can convert it to <code>SparseMatrix</code>
@@ -1370,6 +1798,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
         <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_18">
@@ -1391,6 +1820,14 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_18">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> SparseDataset.of(glass).toMatrix()
+    res120: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@45db84b0
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>Note that <code>read.libsvm</code> returns a <code>Dataset[Instance[SparseArray]]</code>
@@ -1444,6 +1881,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_19">
@@ -1462,6 +1900,14 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_19">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> SparseDataset.from(java.nio.file.Paths.get("data/text/kos.txt"), 1)
+    res123: smile.data.SparseDataset! = smile.data.SparseDatasetImpl@485b4fd0
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="Harwell-Boeing">Harwell-Boeing Column-Compressed Sparse Matrix</h3>
@@ -1488,6 +1934,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
         <li><a href="#java_20" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_20" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_20">
@@ -1508,6 +1955,15 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_20">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.math.matrix.*
+    >>> SparseMatrix.text(java.nio.file.Paths.get("data/matrix/08blocks.txt"))
+    res126: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@1a479168
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <p>The second format is more complicated and powerful, called Harwell-Boeing Exchange Format.
@@ -1519,6 +1975,7 @@ airline ==> [Month: byte nominal[c-1, c-2, c-3, c-4, c-5, c-6 ... ----+
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
         <li><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_21">
@@ -1547,6 +2004,19 @@ five ==> smile.math.matrix.SparseMatrix@6b4a4e18
           </code></pre>
             </div>
         </div>
+            <div class="tab-pane" id="kotlin_21">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> SparseMatrix.harwell(java.nio.file.Paths.get("data/matrix/5by5_rua.hb"))
+    [main] INFO smile.math.matrix.SparseMatrix - Reads sparse matrix file '/Users/hli/github/smile/shell/target/universal/stage/data/matrix/5by5_rua.hb'
+    [main] INFO smile.math.matrix.SparseMatrix - Title                                                                   Key     
+    [main] INFO smile.math.matrix.SparseMatrix - 5             1             1             3             0
+    [main] INFO smile.math.matrix.SparseMatrix - RUA                        5             5            13             0
+    [main] INFO smile.math.matrix.SparseMatrix - (6I3)           (13I3)          (5E15.8)            (5E15.8)            
+    res127: smile.math.matrix.SparseMatrix! = smile.math.matrix.SparseMatrix@37672764
+    </code></pre>
+    </div>
+    </div>
     </div>
 
     <h3 id="wireframe">Wireframe</h3>

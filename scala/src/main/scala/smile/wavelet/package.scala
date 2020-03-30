@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile
 
@@ -28,7 +28,7 @@ package smile
   * @author Haifeng Li
   */
 package object wavelet {
-  /** Returns the wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
+  /** Creates a wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
     * Daubechies, Least Asymetric, Best Localized and Coiflet. The prefixes for filters of these classes are
     * d, la, bl and c, respectively. Following the prefix, the filter name consists of an integer indicating length.
     * Supported lengths are as follows:
@@ -75,6 +75,7 @@ package object wavelet {
       case "la16" => new SymletWavelet(16)
       case "la18" => new SymletWavelet(18)
       case "la20" => new SymletWavelet(20)
+      case _ => throw new IllegalArgumentException(s"Unsupported wavelet: $filter")
     }
   }
 

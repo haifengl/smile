@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
@@ -57,7 +57,7 @@ class Projection3D extends Projection {
     /**
      * Constructor.
      */
-    public Projection3D(PlotCanvas canvas) {
+    public Projection3D(Canvas canvas) {
         super(canvas);
     }
 

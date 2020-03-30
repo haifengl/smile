@@ -13,11 +13,9 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile
-
-import java.util.function.ToDoubleBiFunction
 
 import smile.clustering.linkage.{CompleteLinkage, SingleLinkage, UPGMALinkage, UPGMCLinkage, WPGMALinkage, WPGMCLinkage, WardLinkage}
 import smile.math.distance.{Distance, EuclideanDistance, Metric}
@@ -83,9 +81,9 @@ package object clustering {
     * <h2>References</h2>
     *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
     *
-    * @param data The data set.
+    * @param data   The data set.
     * @param method the agglomeration method to merge clusters. This should be one of
-    *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
+    *               "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
   def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering = {
     val linkage = method match {
@@ -124,9 +122,9 @@ package object clustering {
     * <h2>References</h2>
     *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
     *
-    * @param data The data set.
+    * @param data   The data set.
     * @param method the agglomeration method to merge clusters. This should be one of
-    *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
+    *               "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
   def hclust[T <: Object](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering = {
     val linkage = time(s"$method linkage") {
@@ -191,11 +189,11 @@ package object clustering {
     *
     * This method runs the algorithm for given times and return the best one with smallest distortion.
     *
-    * @param data the data set.
-    * @param k the number of clusters.
+    * @param data    the data set.
+    * @param k       the number of clusters.
     * @param maxIter the maximum number of iterations for each running.
-    * @param tol tol the tolerance of convergence test.
-    * @param runs the number of runs of K-Means algorithm.
+    * @param tol     tol the tolerance of convergence test.
+    * @param runs    the number of runs of K-Means algorithm.
     */
   def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans = time("K-Means") {
     PartitionClustering.run(runs, () => KMeans.fit(data, k, maxIter, tol))
@@ -213,7 +211,7 @@ package object clustering {
     *  - Dan Pelleg and Andrew Moore. X-means: Extending K-means with Efficient Estimation of the Number of Clusters. ICML, 2000.
     *
     * @param data the data set.
-    * @param k the maximum number of clusters.
+    * @param k    the maximum number of clusters.
     */
   def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans = time("X-Means") {
     XMeans.fit(data, k)
@@ -230,7 +228,7 @@ package object clustering {
     *  - G. Hamerly and C. Elkan. Learning the k in k-means. NIPS, 2003.
     *
     * @param data the data set.
-    * @param k the maximum number of clusters.
+    * @param k    the maximum number of clusters.
     */
   def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans = time("G-Means") {
     GMeans.fit(data, k)
@@ -265,10 +263,10 @@ package object clustering {
     *  - N. Slonim, N. Friedman, and N. Tishby. Unsupervised document classification using sequential information maximization. ACM SIGIR, 2002.
     *  - Jaakko Peltonen, Janne Sinkkonen, and Samuel Kaski. Sequential information bottleneck for finite data. ICML, 2004.
     *
-    * @param data the data set.
-    * @param k the number of clusters.
+    * @param data    the data set.
+    * @param k       the number of clusters.
     * @param maxIter the maximum number of iterations.
-    * @param runs the number of runs of SIB algorithm.
+    * @param runs    the number of runs of SIB algorithm.
     */
   def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 8): SIB = time("Sequential information bottleneck") {
     PartitionClustering.run(runs, () => SIB.fit(data, k, maxIter))
@@ -289,11 +287,11 @@ package object clustering {
     * ====References:====
     *  - Kenneth Rose. Deterministic Annealing for Clustering, Compression, Classification, Regression, and Speech Recognition.
     *
-    * @param data the data set.
-    * @param k the maximum number of clusters.
-    * @param alpha the temperature T is decreasing as T = T * alpha. alpha has
-    *              to be in (0, 1).
-    * @param tol   the tolerance of convergence test.
+    * @param data     the data set.
+    * @param k        the maximum number of clusters.
+    * @param alpha    the temperature T is decreasing as T = T * alpha. alpha has
+    *                 to be in (0, 1).
+    * @param tol      the tolerance of convergence test.
     * @param splitTol the tolerance to split a cluster.
     */
   def dac(data: Array[Array[Double]], k: Int, alpha: Double = 0.9, maxIter: Int = 100, tol: Double = 1E-4, splitTol: Double = 1E-2): DeterministicAnnealing = time("Deterministic annealing clustering") {
@@ -322,11 +320,11 @@ package object clustering {
     * ====References:====
     *  - R. Ng and J. Han. CLARANS: A Method for Clustering Objects for Spatial Data Mining. IEEE TRANS. KNOWLEDGE AND DATA ENGINEERING, 2002.
     *
-    * @param data the data set.
-    * @param distance the distance/dissimilarity measure.
-    * @param k the number of clusters.
+    * @param data        the data set.
+    * @param distance    the distance/dissimilarity measure.
+    * @param k           the number of clusters.
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
-    * @param numLocal the number of local minima to search for.
+    * @param numLocal    the number of local minima to search for.
     */
   def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = time("CLARANS") {
     PartitionClustering.run(numLocal, () => CLARANS.fit(data, distance, k, maxNeighbor))
@@ -361,31 +359,31 @@ package object clustering {
     * DBSCAN has many advantages such as
     *
     *  - DBSCAN does not need to know the number of clusters in the data
-    *    a priori, as opposed to k-means.
+    * a priori, as opposed to k-means.
     *  - DBSCAN can find arbitrarily shaped clusters. It can even find clusters
-    *    completely surrounded by (but not connected to) a different cluster.
-    *    Due to the MinPts parameter, the so-called single-link effect
-    *    (different clusters being connected by a thin line of points) is reduced.
+    * completely surrounded by (but not connected to) a different cluster.
+    * Due to the MinPts parameter, the so-called single-link effect
+    * (different clusters being connected by a thin line of points) is reduced.
     *  - DBSCAN has a notion of noise.
     *  - DBSCAN requires just two parameters and is mostly insensitive to the
-    *    ordering of the points in the database. (Only points sitting on the
-    *    edge of two different clusters might swap cluster membership if the
-    *    ordering of the points is changed, and the cluster assignment is unique
-    *    only up to isomorphism.)
+    * ordering of the points in the database. (Only points sitting on the
+    * edge of two different clusters might swap cluster membership if the
+    * ordering of the points is changed, and the cluster assignment is unique
+    * only up to isomorphism.)
     *
     * On the other hand, DBSCAN has the disadvantages of
     *
     *  - In high dimensional space, the data are sparse everywhere
-    *    because of the curse of dimensionality. Therefore, DBSCAN doesn't
-    *    work well on high-dimensional data in general.
+    * because of the curse of dimensionality. Therefore, DBSCAN doesn't
+    * work well on high-dimensional data in general.
     *  - DBSCAN does not respond well to data sets with varying densities.
     *
     * ====References:====
     *  - Martin Ester, Hans-Peter Kriegel, Jorg Sander, Xiaowei Xu (1996-). A density-based algorithm for discovering clusters in large spatial databases with noise". KDD, 1996.
     *  - Jorg Sander, Martin Ester, Hans-Peter  Kriegel, Xiaowei Xu. (1998). Density-Based Clustering in Spatial Databases: The Algorithm GDBSCAN and Its Applications. 1998.
     *
-    * @param data the data set.
-    * @param nns the data structure for neighborhood search.
+    * @param data   the data set.
+    * @param nns    the data structure for neighborhood search.
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
@@ -397,10 +395,10 @@ package object clustering {
     * DBSCAN finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
     *
-    * @param data the data set.
+    * @param data     the data set.
     * @param distance the distance metric.
-    * @param minPts the minimum number of neighbors for a core data point.
-    * @param radius the neighborhood radius.
+    * @param minPts   the minimum number of neighbors for a core data point.
+    * @param radius   the neighborhood radius.
     */
   def dbscan[T <: Object](data: Array[T], distance: Distance[T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
     DBSCAN.fit(data, distance, minPts, radius)
@@ -410,7 +408,7 @@ package object clustering {
     * DBSCAN finds a number of clusters starting from the estimated density
     * distribution of corresponding nodes.
     *
-    * @param data the data set.
+    * @param data   the data set.
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
@@ -432,14 +430,14 @@ package object clustering {
     *  - A. Hinneburg and D. A. Keim. A general approach to clustering in large databases with noise. Knowledge and Information Systems, 5(4):387-415, 2003.
     *  - Alexander Hinneburg and Hans-Henning Gabriel. DENCLUE 2.0: Fast Clustering based on Kernel Density Estimation. IDA, 2007.
     *
-    * @param data the data set.
+    * @param data  the data set.
     * @param sigma the smooth parameter in the Gaussian kernel. The user can
     *              choose sigma such that number of density attractors is constant for a
     *              long interval of sigma.
-    * @param m the number of selected samples used in the iteration.
-    *          This number should be much smaller than the number of data points
-    *          to speed up the algorithm. It should also be large enough to capture
-    *          the sufficient information of underlying distribution.
+    * @param m     the number of selected samples used in the iteration.
+    *              This number should be much smaller than the number of data points
+    *              to speed up the algorithm. It should also be large enough to capture
+    *              the sufficient information of underlying distribution.
     */
   def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE = time("DENCLUE") {
     DENCLUE.fit(data, sigma, m)
@@ -467,11 +465,11 @@ package object clustering {
     * ====References:====
     *  - Haifeng Li, Keshu Zhang, and Tao Jiang. Minimum Entropy Clustering and Applications to Gene Expression Analysis. CSB, 2004.
     *
-    * @param data the data set.
+    * @param data     the data set.
     * @param distance the distance measure for neighborhood search.
-    * @param k the number of clusters. Note that this is just a hint. The final
-    *          number of clusters may be less.
-    * @param radius the neighborhood radius.
+    * @param k        the number of clusters. Note that this is just a hint. The final
+    *                 number of clusters may be less.
+    * @param radius   the neighborhood radius.
     */
   def mec[T <: Object](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T] = time("MEC") {
     MEC.fit(data, distance, k, radius)
@@ -479,11 +477,11 @@ package object clustering {
 
   /** Nonparametric Minimum Conditional Entropy Clustering.
     *
-    * @param data the data set.
+    * @param data     the data set.
     * @param distance the distance measure for neighborhood search.
-    * @param k the number of clusters. Note that this is just a hint. The final
-    *          number of clusters may be less.
-    * @param radius the neighborhood radius.
+    * @param k        the number of clusters. Note that this is just a hint. The final
+    *                 number of clusters may be less.
+    * @param radius   the neighborhood radius.
     */
   def mec[T <: Object](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T] = time("MEC") {
     MEC.fit(data, distance, k, radius)
@@ -491,9 +489,9 @@ package object clustering {
 
   /** Nonparametric Minimum Conditional Entropy Clustering. Assume Euclidean distance.
     *
-    * @param data the data set.
-    * @param k the number of clusters. Note that this is just a hint. The final
-    *          number of clusters may be less.
+    * @param data   the data set.
+    * @param k      the number of clusters. Note that this is just a hint. The final
+    *               number of clusters may be less.
     * @param radius the neighborhood radius.
     */
   def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]] = time("MEC") {
@@ -502,12 +500,12 @@ package object clustering {
 
   /** Nonparametric Minimum Conditional Entropy Clustering.
     *
-    * @param data the data set.
-    * @param nns the data structure for neighborhood search.
-    * @param k the number of clusters. Note that this is just a hint. The final
-    *          number of clusters may be less.
+    * @param data   the data set.
+    * @param nns    the data structure for neighborhood search.
+    * @param k      the number of clusters. Note that this is just a hint. The final
+    *               number of clusters may be less.
     * @param radius the neighborhood radius.
-    * @param tol the tolerance of convergence test.
+    * @param tol    the tolerance of convergence test.
     */
   def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
     MEC.fit(data, nns, k, radius, y, tol)
@@ -536,8 +534,9 @@ package object clustering {
   }
 
   /** Spectral clustering.
-    * @param data the dataset for clustering.
-    * @param k the number of clusters.
+    *
+    * @param data  the dataset for clustering.
+    * @param k     the number of clusters.
     * @param sigma the smooth/width parameter of Gaussian kernel, which
     *              is a somewhat sensitive parameter. To search for the best setting,
     *              one may pick the value that gives the tightest clusters (smallest
@@ -548,9 +547,10 @@ package object clustering {
   }
 
   /** Spectral clustering with Nystrom approximation.
-    * @param data the dataset for clustering.
-    * @param k the number of clusters.
-    * @param l the number of random samples for Nystrom approximation.
+    *
+    * @param data  the dataset for clustering.
+    * @param k     the number of clusters.
+    * @param l     the number of random samples for Nystrom approximation.
     * @param sigma the smooth/width parameter of Gaussian kernel, which
     *              is a somewhat sensitive parameter. To search for the best setting,
     *              one may pick the value that gives the tightest clusters (smallest

@@ -13,12 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
-import java.awt.Stroke;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -26,243 +26,164 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class LinePlot extends ScatterPlot {
-
+public class LinePlot extends Plot {
     /**
-     * If draw the legend of points.
+     * The set of lines which may have different stroke, marks, and/or colors.
      */
-    private boolean drawDot = false;
-
+    final Line[] lines;
     /**
-     * The poly line of points.
+     * The legends of each line.
      */
-    private Line line;
+    final Optional<Legend[]> legends;
 
     /**
      * Constructor.
      */
-    public LinePlot(double[][] data) {
-        this(data, Line.Style.SOLID);
+    public LinePlot(Line... lines) {
+        this.lines = lines;
+        legends = Optional.empty();
     }
 
     /**
      * Constructor.
      */
-    public LinePlot(double[][] data, Line.Style style) {
-        super(data, '.');
-        line = new Line(style, data);
+    public LinePlot(Line[] lines, Legend[] legends) {
+        this.lines = lines;
+        this.legends = Optional.of(legends);
     }
 
     @Override
-    public LinePlot setColor(Color color) {
-        super.setColor(color);
-        line.setColor(color);
-        return this;
+    public Optional<Legend[]> legends() {
+        return legends;
     }
 
     @Override
-    public Color getColor() {
-        return line.getColor();
-    }
-
-    /**
-     * Returns the line stroke style.
-     */
-    public Stroke getStroke() {
-        return line.getStroke();
-    }
-
-    /**
-     * Set the line stroke style.
-     */
-    public LinePlot setStroke(Stroke stroke) {
-        line.setStroke(stroke);
-        return this;
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+        canvas.add(this);
+        return canvas;
     }
 
     @Override
-    public LinePlot setLegend(char legend) {
-        super.setLegend(legend);
-        drawDot = true;
-        return this;
+    public double[] getLowerBound() {
+        double[] bound = MathEx.colMin(lines[0].points);
+        for (int k = 1; k < lines.length; k++) {
+            for (double[] x : lines[k].points) {
+                for (int i = 0; i < x.length; i++) {
+                    if (bound[i] > x[i]) {
+                        bound[i] = x[i];
+                    }
+                }
+            }
+        }
+
+        return bound;
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = MathEx.colMax(lines[0].points);
+        for (int k = 1; k < lines.length; k++) {
+            for (double[] x : lines[k].points) {
+                for (int i = 0; i < x.length; i++) {
+                    if (bound[i] < x[i]) {
+                        bound[i] = x[i];
+                    }
+                }
+            }
+        }
+
+        return bound;
     }
 
     @Override
     public void paint(Graphics g) {
-        line.paint(g);
-
-        if (drawDot) {
-            super.paint(g);
+        for (Line line : lines) {
+            line.paint(g);
         }
     }
-    
+
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
+     * Creates a line plot.
      */
-    public static PlotCanvas plot(double[] y) {
-        return plot(null, y);
+    public static LinePlot of(double[][] data) {
+        return new LinePlot(Line.of(data));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
+     * Creates a line plot.
      */
-    public static PlotCanvas plot(String id, double[] y) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.base.extendBound(1);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data);
-        plot.setID(id);
-        canvas.add(plot);
-        return canvas;
+    public static LinePlot of(double[][] data, Line.Style style) {
+        return new LinePlot(Line.of(data, style));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
+     * Creates a line plot.
      */
-    public static PlotCanvas plot(double[] y, Line.Style style) {
-        return plot(null, y, style);
+    public static LinePlot of(double[][] data, Color color) {
+        return new LinePlot(Line.of(data, color));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
+     * Creates a line plot.
      */
-    public static PlotCanvas plot(String id, double[] y, Line.Style style) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.base.extendBound(1);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        canvas.add(plot);
-        return canvas;
+    public static LinePlot of(double[][] data, Line.Style style, Color color) {
+        return new LinePlot(Line.of(data, style, color));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     * @param color the color of line.
+     * Creates a line plot.
      */
-    public static PlotCanvas plot(double[] y, Line.Style style, Color color) {
-        return plot(null, y, style, color);
+    public static LinePlot of(double[][] data, Line.Style style, Color color, String label) {
+        Line[] line = {Line.of(data, style, color)};
+        Legend[] legend = {new Legend(label, color)};
+        return new LinePlot(line, legend);
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param id the id of the plot.
-     * @param y a data vector that describes y coordinates of points. The x
-     * coordinates will be [0, n), where n is the length of y.
-     * @param style the stroke style of line.
-     * @param color the color of line.
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
      */
-    public static PlotCanvas plot(String id, double[] y, Line.Style style, Color color) {
-        double[] lowerBound = {0, MathEx.min(y)};
-        double[] upperBound = {y.length, MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound, false);
-        canvas.base.extendBound(1);
-
-        double[][] data = new double[y.length][2];
-        for (int i = 0; i < data.length; i++) {
-            data[i][0] = i;
-            data[i][1] = y[i];
-        }
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        plot.setColor(color);
-        canvas.add(plot);
-        return canvas;
+    public static LinePlot of(double[] y) {
+        return of(Line.zipWithIndex(y));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
      */
-    public static PlotCanvas plot(double[][] data, Line.Style style) {
-        return plot(null, data, style);
+    public static LinePlot of(double[] y, Line.Style style) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), style));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
      */
-    public static PlotCanvas plot(String id, double[][] data, Line.Style style) {
-        if (data[0].length != 2 && data[0].length != 3) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        canvas.add(plot);
-        return canvas;
+    public static LinePlot of(double[] y, Color color) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), color));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     * @param color the color of line.
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
      */
-    public static PlotCanvas plot(double[][] data, Line.Style style, Color color) {
-        return plot(null, data, style, color);
+    public static LinePlot of(double[] y, Line.Style style, Color color) {
+        return new LinePlot(Line.of(Line.zipWithIndex(y), style, color));
     }
 
     /**
-     * Create a plot canvas with the poly line plot of given data.
-     * @param id the id of the plot.
-     * @param data a n-by-2 or n-by-3 matrix that describes coordinates of points.
-     * @param style the stroke style of line.
-     * @param color the color of line.
+     * Creates a line plot with the index as the x coordinate.
+     * @param y the data vector of y coordinates.
+     *          The x coordinates will be [0, n), where n is the length of y.
      */
-    public static PlotCanvas plot(String id, double[][] data, Line.Style style, Color color) {
-        if (data[0].length != 2 && data[0].length != 3) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        LinePlot plot = new LinePlot(data, style);
-        plot.setID(id);
-        plot.setColor(color);
-        canvas.add(plot);
-
-        return canvas;
+    public static LinePlot of(double[] y, Line.Style style, Color color, String label) {
+        Line[] line = {Line.of(Line.zipWithIndex(y), style, color)};
+        Legend[] legend = {new Legend(label, color)};
+        return new LinePlot(line, legend);
     }
 }

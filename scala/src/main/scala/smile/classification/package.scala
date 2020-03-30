@@ -13,13 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile
 
-import java.util.Optional
 import java.util.stream.LongStream
-
 import smile.base.cart.SplitRule
 import smile.base.mlp.LayerBuilder
 import smile.base.rbf.RBF
