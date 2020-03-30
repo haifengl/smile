@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.regression.treeshap;
+package smile.feature;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,9 +65,9 @@ import smile.util.MutableInt;
  * https://christophm.github.io/interpretable-ml-book/shap.html
  * </pre>
  */
-public class TreeShapImportance {
+public class EnsembleTreeSHAP {
 	
-	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TreeShapImportance.class);
+	private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnsembleTreeSHAP.class);
 	
 	/** data batch size in shap calculation concurrency */
 	private static final int batchOperSize = 500;
@@ -75,14 +75,14 @@ public class TreeShapImportance {
 	/** max depth among all tree in model ensemble */
 	private int maxd;
 	
-	/** {@link ShapTree} structures for shap value calculation */
-	private List<ShapTree> trees;
+	/** {@link TreeSHAP} structures for shap value calculation */
+	private List<TreeSHAP> trees;
 	
 	/** indicate whether the shap importance is normalized or not */
 	private boolean normalize = false;
 
 	/** constructor with tree ensemble */
-	public TreeShapImportance(RegressionTree[] trees) {
+	public EnsembleTreeSHAP(RegressionTree[] trees) {
 		this(trees, false);
 	}
 
@@ -90,9 +90,9 @@ public class TreeShapImportance {
 	 * constructor with tree ensemble and normalization choice (if true, shap value
 	 * will be normalized)
 	 */
-	public TreeShapImportance(RegressionTree[] trees, boolean normalize) {
+	public EnsembleTreeSHAP(RegressionTree[] trees, boolean normalize) {
 		this.normalize = normalize;
-		this.trees = new ArrayList<ShapTree>(trees.length);
+		this.trees = new ArrayList<TreeSHAP>(trees.length);
 
 		try {
 			logger.info("----- waiting for all shap trees get created -----");
@@ -100,7 +100,7 @@ public class TreeShapImportance {
 					tree -> {
 						try {
 							logger.info("start build shap tree using thread: " + Thread.currentThread().getName());
-							this.trees.add(new ShapTree(tree, this.normalize));
+							this.trees.add(new TreeSHAP(tree, this.normalize));
 						} catch (Exception e) {
 							String err = "error creating shap for tree.";
 							logger.error(err, e);
@@ -116,7 +116,7 @@ public class TreeShapImportance {
 			throw new RuntimeException(err, e);
 		}
 
-		for (ShapTree t : this.trees) {
+		for (TreeSHAP t : this.trees) {
 			if (t.max_depth > maxd) {
 				maxd = t.max_depth;
 			}
@@ -286,7 +286,7 @@ public class TreeShapImportance {
 		return ret;
 	}
 
-	private static void treeShap(ShapTree tree, Tuple x, double[] phi, double condition, int condition_feature, 
+	private static void treeShap(TreeSHAP tree, Tuple x, double[] phi, double condition, int condition_feature, 
 			List<MutableInt> feature_indexes,
 			List<MutableDouble> zero_fractions, 
 			List<MutableDouble> one_fractions,

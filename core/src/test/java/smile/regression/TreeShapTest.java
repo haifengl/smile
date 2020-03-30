@@ -20,8 +20,8 @@ package smile.regression;
 import smile.base.cart.Loss;
 import smile.data.*;
 import smile.data.formula.Formula;
+import smile.feature.EnsembleTreeSHAP;
 import smile.math.MathEx;
-import smile.regression.treeshap.TreeShapImportance;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -63,7 +63,7 @@ public class TreeShapTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(formula, data, loss, ntrees, 3, 10, 5, shrinkage, subsample);
         
-        TreeShapImportance shapExplainer = new TreeShapImportance(model.trees(), true);        
+        EnsembleTreeSHAP shapExplainer = new EnsembleTreeSHAP(model.trees(), true);        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data);
 		int[] shapAsc = smile.sort.QuickSort.sort(meanShap);
         System.out.println("----- tree shap importance (sorted) -----");
