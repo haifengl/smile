@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
@@ -34,7 +34,7 @@ public class Base {
     /**
      * The dimensionality of base. Should be 2 or 3.
      */
-    int dimension;
+    final int dimension;
     /**
      * Coordinates of base.
      */

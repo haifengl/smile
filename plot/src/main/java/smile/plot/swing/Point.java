@@ -13,79 +13,87 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
 
 /**
- * A single point in the plot.
+ * One more more points in the plot.
  *
  * @author Haifeng Li
  */
 public class Point extends Shape {
 
+    /** The marks of point. */
+    public static char[] MARKS = {'.', '+', '-', '|', '*', 'x', 'o', 'O', '@', '#', 's', 'S', 'q', 'Q'};
+
     /**
-     * The coordinate of point.
+     * The coordinate of points.
      */
-    double[] point;
+    final double[][] points;
     /**
-     * The legend of points.
+     * The mark of points.
      */
-    private char legend;
+    final char mark;
 
     /**
      * Constructor.
+     * @param points a n-by-2 or n-by-3 matrix that are the coordinates of points.
+     * @param mark the mark of points.
+     * <ul>
+     * <li> . : dot
+     * <li> + : +
+     * <li> - : -
+     * <li> | : |
+     * <li> * : star
+     * <li> x : x
+     * <li> o : circle
+     * <li> O : large circle
+     * <li> @ : solid circle
+     * <li> # : large solid circle
+     * <li> s : square
+     * <li> S : large square
+     * <li> q : solid square
+     * <li> Q : large solid square
+     * <li> others : dot
+     * </ul>
+     * @param color the color of points.
      */
-    public Point(double... point) {
-        this('o', point);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Point(char legend, double... point) {
-        this(legend, Color.BLACK, point);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Point(Color color, double... point) {
-        this('o', color, point);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Point(char legend, Color color, double... point) {
+    public Point(double[][] points, char mark, Color color) {
         super(color);
-        this.legend = legend;
-        this.point = point;
-    }
-
-    /**
-     * Returns the legend of point.
-     */
-    public char getLegend() {
-        return legend;
-    }
-
-    /**
-     * Set the legend of point.
-     */
-    public Point setLegend(char legend) {
-        this.legend = legend;
-        return this;
+        this.points = points;
+        this.mark = mark;
     }
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
-        g.drawPoint(legend, point);
-        g.setColor(c);
+        for (double[] point : points) {
+            g.drawPoint(mark, point);
+        }
+    }
+
+    /**
+     * Creates a Point with circle mark and black color.
+     */
+    public static Point of (double[][] points) {
+        return new Point(points, 'o', Color.BLACK);
+    }
+
+    /**
+     * Creates a Point with circle mark.
+     */
+    public static Point of (double[][] points, Color color) {
+        return new Point(points, 'o', color);
+    }
+
+    /**
+     * Creates a Point with black color.
+     */
+    public static Point of (double[][] points, char mark) {
+        return new Point(points, mark, Color.BLACK);
     }
 }

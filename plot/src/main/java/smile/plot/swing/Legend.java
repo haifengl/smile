@@ -13,33 +13,33 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
 
 /**
- * This is specialized line for axis lines. Coordinates used here are are
+ * Legend is a single line text which coordinates are in
  * proportional to the base coordinates.
+ *
  * @author Haifeng Li
  */
-class BaseLine extends Line {
+public class Legend {
+    /**
+     * The text of label.
+     */
+    final String text;
+    /**
+     * The coordinates of label.
+     */
+    final Color color;
 
     /**
      * Constructor.
-     * @param start the start point of the line.
-     * @param end   the end point of the line.
      */
-    public BaseLine(double[] start, double[] end) {
-        super(start, end);
-    }
-
-    @Override
-    public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(getColor());
-        g.drawLineBaseRatio(points);
-        g.setColor(c);
+    public Legend(String text, Color color) {
+        this.text = text;
+        this.color = color;
     }
 }

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
@@ -31,7 +31,7 @@ import java.awt.geom.AffineTransform;
 /**
  * Graphics provides methods to draw graphical primitives in logical/mathematical
  * coordinates. The mathematical coordinates are translated into Java2D
- * coordinates based on suitiabel projection method. Both 2D and 3D shapes are
+ * coordinates based on suitable projection method. Both 2D and 3D shapes are
  * supported.
  *
  * @author Haifeng Li
@@ -42,34 +42,34 @@ public class Graphics {
      * Projection used to map logical/mathematical coordinates to Java2D
      * coordinates.
      */
-    Projection projection;
+    final Projection projection;
     /**
      * Java2D graphics object to render shapes.
      */
-    Graphics2D g2d;
+    private Graphics2D g2d;
     /**
      * Original clip shape.
      */
-    java.awt.Shape originalClip;
+    private java.awt.Shape originalClip;
 
     /**
      * Constructor.
      */
-    Graphics(Projection projection) {
+    public Graphics(Projection projection) {
         this.projection = projection;
     }
 
     /**
      * Reset projection object when the PlotCanvas size changed.
      */
-    void resetProjection() {
+    public void resetProjection() {
         projection.reset();
     }
 
     /**
      * Returns the projection object.
      */
-    Projection getProjection() {
+    public Projection getProjection() {
         return projection;
     }
 
@@ -83,8 +83,9 @@ public class Graphics {
     /**
      * Set the Java2D graphics object.
      */
-    public void setGraphics(java.awt.Graphics2D g2d) {
+    public void setGraphics(java.awt.Graphics2D g2d, int width, int height) {
         this.g2d = g2d;
+        projection.setSize(width, height);
         // anti-aliasing methods
         g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
         g2d.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
@@ -168,10 +169,10 @@ public class Graphics {
      * Restrict the draw area to the valid base coordinate space.
      */
     public void clip() {
-        int x = (int) (projection.canvas.getWidth() * projection.canvas.margin);
-        int y = (int) (projection.canvas.getHeight() * projection.canvas.margin);
-        int w = (int) (projection.canvas.getWidth() * (1 - 2 * projection.canvas.margin));
-        int h = (int) (projection.canvas.getHeight() * (1 - 2 * projection.canvas.margin));
+        int x = (int) (projection.width * projection.canvas.margin);
+        int y = (int) (projection.height * projection.canvas.margin);
+        int w = (int) (projection.width * (1 - 2 * projection.canvas.margin));
+        int h = (int) (projection.height * (1 - 2 * projection.canvas.margin));
         originalClip = g2d.getClip();
         g2d.clipRect(x, y, w, h);
     }
@@ -191,7 +192,7 @@ public class Graphics {
      * are logical coordinates.
      */
     public void drawText(String label, double[] coord) {
-        drawText(label, 0.5, 0.5, 0.0, coord);
+        drawText(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -199,16 +200,16 @@ public class Graphics {
      * of string. The coordinates are logical coordinates. The angle of rotation
      * is in radians.
      */
-    public void drawText(String label, double rotation, double[] coord) {
-        drawText(label, 0.5, 0.5, rotation, coord);
+    public void drawText(String label, double[] coord, double rotation) {
+        drawText(label, coord, 0.5, 0.5, rotation);
     }
 
     /**
      * Draw a string with given reference point. (0.5, 0.5) is center, (0, 0) is
      * lower left, (0, 1) is upper left, etc. The coordinates are logical coordinates.
      */
-    public void drawText(String label, double horizontalReference, double verticalReference, double[] coord) {
-        drawText(label, horizontalReference, verticalReference, 0.0, coord);
+    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference) {
+        drawText(label, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
@@ -216,7 +217,7 @@ public class Graphics {
      * is center, (0, 0) is lower left, (0, 1) is upper left, etc. The angle of
      * rotation is in radians. The coordinates are logical coordinates.
      */
-    public void drawText(String label, double horizontalReference, double verticalReference, double rotation, double[] coord) {
+    public void drawText(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjection(coord);
         int x = sc[0];
         int y = sc[1];
@@ -246,7 +247,7 @@ public class Graphics {
      * of string. The logical coordinates are proportional to the base coordinates.
      */
     public void drawTextBaseRatio(String label, double[] coord) {
-        drawTextBaseRatio(label, 0.5, 0.5, 0.0, coord);
+        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -254,8 +255,8 @@ public class Graphics {
      * of string. The angle of rotation is in radians. The logical coordinates
      * are proportional to the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double rotation, double[] coord) {
-        drawTextBaseRatio(label, 0.5, 0.5, 0.0, coord);
+    public void drawTextBaseRatio(String label, double[] coord, double rotation) {
+        drawTextBaseRatio(label, coord, 0.5, 0.5, 0.0);
     }
 
     /**
@@ -263,8 +264,8 @@ public class Graphics {
      * lower left, (0, 1) is upper left, etc. The logical coordinates are
      * proportional to the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double horizontalReference, double verticalReference, double[] coord) {
-        drawTextBaseRatio(label, horizontalReference, verticalReference, 0.0, coord);
+    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference) {
+        drawTextBaseRatio(label, coord, horizontalReference, verticalReference, 0.0);
     }
 
     /**
@@ -273,7 +274,7 @@ public class Graphics {
      * The angle of rotation is in radians. The logical  are proportional to
      * the base coordinates.
      */
-    public void drawTextBaseRatio(String label, double horizontalReference, double verticalReference, double rotation, double[] coord) {
+    public void drawTextBaseRatio(String label, double[] coord, double horizontalReference, double verticalReference, double rotation) {
         int[] sc = projection.screenProjectionBaseRatio(coord);
         int x = sc[0];
         int y = sc[1];
