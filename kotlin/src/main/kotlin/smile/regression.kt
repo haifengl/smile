@@ -376,7 +376,7 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
  *
  * @return Gradient boosted trees.
  */
-fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500,
+fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500,
         maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
         subsample: Double = 0.7): GradientTreeBoost {
     return GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
@@ -436,8 +436,7 @@ fun <T> gpr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, lambda: Double
 /** Gaussian Process for Regression. */
 object gpr {
     /**
-     * This method fits an approximate Gaussian process model by the method
-     * of subset of regressors.
+     * Fits an approximate Gaussian process model with a subset of regressors.
      *
      * @param x the training dataset.
      * @param y the response variable.
@@ -452,8 +451,7 @@ object gpr {
     }
 
     /**
-     * This method fits an approximate Gaussian process model by the method
-     * of subset of regressors.
+     * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      *
      * @param x the training dataset.
      * @param y the response variable.
