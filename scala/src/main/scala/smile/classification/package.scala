@@ -389,7 +389,8 @@ package object classification {
     * @param alpha the momentum factor.
     * @param lambda the weight decay for regularization.
     */
-  def mlp(x: Array[Array[Double]], y: Array[Int], builders: Array[LayerBuilder], epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time("Multi-layer Perceptron Neural Network") {
+  def mlp(x: Array[Array[Double]], y: Array[Int], builders: Array[LayerBuilder], epochs: Int = 10,
+          eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP = time("Multi-layer Perceptron Neural Network") {
     val net = new MLP(x(0).length, builders: _*)
     net.setLearningRate(eta)
     net.setMomentum(alpha)
@@ -592,7 +593,8 @@ package object classification {
     * @param splitRule the splitting rule.
     * @return Decision tree model.
     */
-  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
+  def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20,
+           maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree = time("Decision Tree") {
     DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size / nodeSize, nodeSize)
   }
 
@@ -646,7 +648,10 @@ package object classification {
     * @param splitRule Decision tree node split rule.
     * @return Random forest classification model.
     */
-  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null, seeds: LongStream = null): RandomForest = time("Random Forest") {
+  def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0,
+                   splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 500,
+                   nodeSize: Int = 1, subsample: Double = 1.0, classWeight: Array[Int] = null,
+                   seeds: LongStream = null): RandomForest = time("Random Forest") {
     RandomForest.fit(formula, data, ntrees, mtry, splitRule, maxDepth, maxNodes, nodeSize, subsample, classWeight, seeds)
   }
 
@@ -725,7 +730,8 @@ package object classification {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
+  def gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6,
+          nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boosting") {
     GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
   }
 
@@ -764,7 +770,8 @@ package object classification {
     *
     * @return AdaBoost model.
     */
-  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
+  def adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
+               maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost = time("AdaBoost") {
     AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
   }
 

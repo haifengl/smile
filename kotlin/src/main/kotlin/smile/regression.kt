@@ -293,7 +293,8 @@ fun cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 
  *
  * @return Random forest regression model.
  */
-fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest {
+fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20,
+                 maxNodes: Int = 500, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest {
     return RandomForest.fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample)
 }
 
@@ -375,7 +376,9 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
  *
  * @return Gradient boosted trees.
  */
-fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost {
+fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500,
+        maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
+        subsample: Double = 0.7): GradientTreeBoost {
     return GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
 }
 
