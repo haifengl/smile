@@ -13,11 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 import smile.math.MathEx;
 
 /**
@@ -26,299 +27,124 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class BarPlot extends Plot {
-
     /**
-     * The input data.
+     * The bar groups which may have different colors.
      */
-    double[][] data;
+    final Bar[] bars;
     /**
-     * The description of each data point.
+     * The legends of each bar group.
      */
-    String[] description;
-    /**
-     * The width of bar.
-     */
-    double width;
-    /**
-     * The left top coordinates of bar.
-     */
-    double[][] leftTop;
-    /**
-     * The right top coordinates of bar.
-     */
-    double[][] rightTop;
-    /**
-     * The left bottom coordinates of bar.
-     */
-    double[][] leftBottom;
-    /**
-     * The right bottom coordinates of bar.
-     */
-    double[][] rightBottom;
+    final Optional<Legend[]> legends;
 
     /**
      * Constructor.
      */
-    public BarPlot(int[] data) {
-        super(Color.BLUE);
-
-        this.data = new double[data.length][2];
-        for (int i = 0; i < data.length; i++) {
-            this.data[i][0] = i + 0.5;
-            this.data[i][1] = data[i];
-        }
-
-        init();
+    public BarPlot(Bar... bars) {
+        this.bars = bars;
+        legends = Optional.empty();
     }
 
     /**
      * Constructor.
      */
-    public BarPlot(double[] data) {
-        super(Color.BLUE);
-
-        this.data = new double[data.length][2];
-        for (int i = 0; i < data.length; i++) {
-            this.data[i][0] = i + 0.5;
-            this.data[i][1] = data[i];
-        }
-
-        init();
+    public BarPlot(Bar[] bars, Legend[] legends) {
+        this.bars = bars;
+        this.legends = Optional.of(legends);
     }
 
-    /**
-     * Constructor.
-     */
-    public BarPlot(String[] description, double[] data) {
-        super(Color.BLUE);
-
-        if (data.length != description.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
-        }
-
-        this.description = description;
-        this.data = new double[data.length][2];
-        for (int i = 0; i < data.length; i++) {
-            this.data[i][0] = i + 0.5;
-            this.data[i][1] = data[i];
-        }
-
-        init();
-    }
-
-    /**
-     * Constructor.
-     */
-    public BarPlot(int[][] data) {
-        super(Color.BLUE);
-
-        if (data[0].length != 2) {
-            throw new IllegalArgumentException("Invalid data dimension: " + data[0].length);
-        }
-
-        this.data = new double[data.length][2];
-        for (int i = 0; i < data.length; i++) {
-            this.data[i][0] = data[i][0];
-            this.data[i][1] = data[i][1];
-        }
-
-        init();
-    }
-
-    /**
-     * Constructor.
-     */
-    public BarPlot(double[][] data) {
-        super(Color.BLUE);
-
-        if (data[0].length != 2) {
-            throw new IllegalArgumentException("Dataset is not 2-dimensional.");
-        }
-
-        this.data = data;
-
-        init();
-    }
-
-    /**
-     * Calculate bar width and position.
-     */
-    private void init() {
-        width = Double.MAX_VALUE;
-        for (int i = 1; i < data.length; i++) {
-            double w = Math.abs(data[i][0] - data[i - 1][0]);
-            if (width > w) {
-                width = w;
-            }
-        }
-
-        leftTop = new double[data.length][2];
-        rightTop = new double[data.length][2];
-        leftBottom = new double[data.length][2];
-        rightBottom = new double[data.length][2];
-
-        for (int i = 0; i < data.length; i++) {
-            leftTop[i][0] = data[i][0] - width / 2;
-            leftTop[i][1] = data[i][1];
-
-            rightTop[i][0] = data[i][0] + width / 2;
-            rightTop[i][1] = data[i][1];
-
-            leftBottom[i][0] = data[i][0] - width / 2;
-            leftBottom[i][1] = 0;
-
-            rightBottom[i][0] = data[i][0] + width / 2;
-            rightBottom[i][1] = 0;
-        }
-    }
-
-    /**
-     * Returns the width of bar.
-     */
-    public double getWidth() {
-        return width;
-    }
-
-    @Override
-    public String getToolTip(double[] coord) {
-        for (int i = 0; i < data.length; i++) {
-            if (rightTop[i][1] > rightBottom[i][1]) {
-                if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] < rightTop[i][1] && coord[1] > rightBottom[i][1]) {
-                    if (description == null) {
-                        return String.format("data[%d] = %G", i, data[i][1]);
-                    } else {
-                        return String.format("%s = %g", description[i], data[i][1]);
-                    }
-                }
-            } else {
-                if (coord[0] < rightBottom[i][0] && coord[0] > leftBottom[i][0] && coord[1] > rightTop[i][1] && coord[1] < rightBottom[i][1]) {
-                    if (description == null) {
-                        return String.format("data[%d] = %G", i, data[i][1]);
-                    } else {
-                        return String.format("%s = %G", description[i], data[i][1]);
-                    }
-                }
-            }
-        }
-        
-        return null;        
-    }
-    
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(Color.BLACK);
-        for (int i = 0; i < data.length; i++) {
-            g.drawLine(leftBottom[i], leftTop[i]);
-            g.drawLine(leftTop[i], rightTop[i]);
-            g.drawLine(rightTop[i], rightBottom[i]);
-            g.drawLine(rightBottom[i], leftBottom[i]);
+        for (Bar bar : bars) {
+            bar.paint(g);
         }
-
-        g.setColor(getColor());
-        for (int i = 0; i < data.length; i++) {
-            g.fillPolygon(0.2f, leftBottom[i], leftTop[i], rightTop[i], rightBottom[i]);
-        }
-        g.setColor(c);
     }
 
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a vector of which values will determine the heights of bars.
-     */
-    public static PlotCanvas plot(double[] data) {
-        return plot(null, data);
+    @Override
+    public double[] getLowerBound() {
+        double[] bound = MathEx.colMin(bars[0].data);
+        bound[0] -= bars[0].width / 2;
+
+        for (int k = 1; k < bars.length; k++) {
+            for (double[] x : bars[k].data) {
+                if (bound[0] > x[0] - bars[k].width / 2) {
+                    bound[0] = x[0] - bars[k].width / 2;
+                }
+                if (bound[1] > x[1]) {
+                    bound[1] = x[1];
+                }
+            }
+        }
+
+        return bound;
     }
 
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a vector of which values will determine the heights of bars.
-     */
-    public static PlotCanvas plot(String id, double[] data) {
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
+    @Override
+    public double[] getUpperBound() {
+        double[] bound = MathEx.colMax(bars[0].data);
+        bound[0] += bars[0].width / 2;
 
-        BarPlot plot = new BarPlot(data);
-        plot.setID(id);
-        canvas.add(plot);
+        for (int k = 1; k < bars.length; k++) {
+            for (double[] x : bars[k].data) {
+                if (bound[0] > x[0] + bars[k].width / 2) {
+                    bound[0] = x[0] + bars[k].width / 2;
+                }
+                if (bound[1] > x[1]) {
+                    bound[1] = x[1];
+                }
+            }
+        }
 
+        return bound;
+    }
+
+    @Override
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+        canvas.add(this);
         canvas.getAxis(0).setGridVisible(false);
-        canvas.getAxis(0).setLabelVisible(false);
-
         return canvas;
     }
 
     /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a vector of which values will determine the heights of bars.
-     * @param labels the labels for each bar.
+     * Creates a bar plot.
      */
-    public static PlotCanvas plot(double[] data, String[] labels) {
-        return plot(null, data, labels);
+    public static BarPlot of(double[] data) {
+        return new BarPlot(Bar.of(data));
     }
 
     /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a vector of which values will determine the heights of bars.
-     * @param labels the labels for each bar.
+     * Creates a bar plot.
      */
-    public static PlotCanvas plot(String id, double[] data, String[] labels) {
+    public static BarPlot of(int[] data) {
+        return new BarPlot(Bar.of(data));
+    }
+
+    /**
+     * Creates a bar plot of multiple groups/colors.
+     * @param data each row is a data set of bars (bar height).
+     * @param labels the group label of data points.
+     */
+    public static BarPlot of(double[][] data, String[] labels) {
         if (data.length != labels.length) {
-            throw new IllegalArgumentException("Data size and label size don't match.");
+            throw new IllegalArgumentException("The number of data groups and that of labels are not the same.");
         }
 
-        double[] lowerBound = {0, MathEx.min(data)};
-        double[] upperBound = {data.length, MathEx.max(data)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
+        int n = data.length;
+        double width = 0.5 / n;
+        Bar[] bars = new Bar[n];
+        Legend[] legends = new Legend[n];
+        for (int i = 0; i < n; i++) {
+            double[][] x = new double[data[i].length][2];
+            for (int j = 0; j < x.length; j++) {
+                x[i][0] = j + (i+1) * width;
+                x[i][1] = data[i][j];
+            }
 
-        BarPlot plot = new BarPlot(labels, data);
-        plot.setID(id);
-        canvas.add(plot);
-
-        double[] locations = new double[labels.length];
-        for (int i = 0; i < labels.length; i++) {
-            locations[i] = i + 0.5;
+            Color color = Palette.COLORS[i];
+            bars[i] = new Bar(x, width, color);
+            legends[i] = new Legend(labels[i], color);
         }
 
-        canvas.getAxis(0).addLabel(labels, locations);
-
-        canvas.getAxis(0).setGridVisible(false);
-        return canvas;
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param data a n x 2 matrix of which data[][0] determine the location of
-     * bars and data[][1] determine the heights of bars. data[][0] will also be
-     * used as the labels. For best view, data[][0] should be monotonic.
-     */
-    public static PlotCanvas plot(double[]... data) {
-        return plot(null, data);
-    }
-
-    /**
-     * Create a plot canvas with the bar plot of given data.
-     * @param id the id of the plot.
-     * @param data a n x 2 matrix of which data[][0] determine the location of
-     * bars and data[][1] determine the heights of bars. data[][0] will also be
-     * used as the labels. For best view, data[][0] should be monotonic.
-     */
-    public static PlotCanvas plot(String id, double[]... data) {
-        if (data[0].length != 2) {
-            throw new IllegalArgumentException("Dataset is not 2-dimensional.");
-        }
-
-        double[] lowerBound = MathEx.colMin(data);
-        double[] upperBound = MathEx.colMax(data);
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.getAxis(0).setGridVisible(false);
-        BarPlot plot = new BarPlot(data);
-        plot.setID(id);
-        canvas.add(plot);
-
-        return canvas;
+        return new BarPlot(bars, legends);
     }
 }

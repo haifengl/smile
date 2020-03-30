@@ -13,82 +13,64 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
+import java.util.Optional;
 import javax.swing.JComponent;
 
 /**
- * This is the abstract base class of plots.
+ * The abstract base class of plots.
  *
  * @author Haifeng Li
  */
 public abstract class Plot extends Shape {
-    /**
-     * The id of plot.
-     */
-    private String id;
-
-    /**
-     * Constructor.
-     */
+    /** Constructor. */
     public Plot() {
+        this(Color.BLACK);
     }
 
-    /**
-     * Constructor.
-     */
-    public Plot(String id) {
-        this.id = id;
-    }
-
-    /**
-     * Constructor.
-     */
+    /** Constructor. */
     public Plot(Color color) {
         super(color);
     }
 
-    /**
-     * Constructor.
-     */
-    public Plot(String id, Color color) {
-        super(color);
-        this.id = id;
+    /** Returns the lower bound of data. */
+    public abstract double[] getLowerBound();
+    /** Returns the upper bound of data. */
+    public abstract double[] getUpperBound();
+
+    /** Returns a canvas of the plot. */
+    public Canvas canvas() {
+        Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
+        canvas.add(this);
+        return canvas;
     }
 
     /**
-     * Set the id of plot.
+     * Returns the optional name of shape, which will be used to
+     * draw a legend outside the box.
      */
-    public Plot setID(String id) {
-        this.id = id;
-        return this;
-    }
-
-    /**
-     * Returns the id of plot.
-     */
-    public String getID() {
-        return id;
+    public Optional<Legend[]> legends() {
+        return Optional.empty();
     }
 
     /**
      * Returns a optional tool tip for the object at given coordinates.
      * @param coord the logical coordinates of current mouse position.
      * @return a string if an object with label close to the given coordinates.
-     * Otherwise null.
      */
-    public String getToolTip(double[] coord) {
-        return null;
+    public Optional<String> tooltip(double[] coord) {
+        return Optional.empty();
     }
     
     /**
      * Returns an optional list of components in tool bar to control the plot.
-     * @return an optional list of toolbar components, may be null.
+     * @return an optional list of toolbar components.
      */
-    public JComponent[] getToolBar() {
-        return null;
+    public Optional<JComponent[]> toolbar() {
+        return Optional.empty();
     }
 }
