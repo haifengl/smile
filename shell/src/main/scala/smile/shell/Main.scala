@@ -22,7 +22,6 @@ import ammonite.ops.{Path, pwd}
 import ammonite.util.Res
 
 /** An object that runs Smile script or interactive shell.
-  * Based on Scala MainGenericRunner.
   *
   * @author Haifeng Li
   */
@@ -30,12 +29,12 @@ object Main extends App {
 
   val help =
     s"""
-      |Smile REPL & Script-Runner, ${BuildInfo.version}
+      |Smile Shell & Script-Runner, ${BuildInfo.version}
       |usage: smile [smile-options] [script-file [script-options]]
       |
-      |  --predef-code        Any commands you want to execute at the start of the REPL session
-      |  -c, --code           Pass in code to be run immediately in the REPL
-      |  -h, --home           The home directory of the REPL; where it looks for config and caches
+      |  --predef-code        Any commands you want to execute at the start of the Shell session
+      |  -c, --code           Pass in code to be run immediately in the Shell
+      |  -h, --home           The home directory of the Shell; where it looks for config and caches
       |  -p, --predef         Lets you load your predef from a custom location, rather than the
       |                       default location in your Smile home
       |  --no-home-predef     Disables the default behavior of loading predef files from your
@@ -43,23 +42,7 @@ object Main extends App {
       |                       choose an additional predef to use using `--predef
       |  --no-default-predef  Disable the default predef and run Smile with the minimal predef
       |                       possible
-      |  -s, --silent         Make ivy logs go silent instead of printing though failures will
-      |                       still throw exception
       |  --help               Print this message
-      |  --color              Enable or disable colored output; by default colors are enabled
-      |                       in both REPL and scripts if the console is interactive, and disabled
-      |                       otherwise
-      |  -w, --watch          Watch and re-run your scripts when they change
-      |  --thin               Hide parts of the core of Smile and some of its dependencies. By default, the core of
-      |                       Smile and all of its dependencies can be seen by users from the Smile session. This
-      |                       option mitigates that via class loader isolation.
-      |
-      |REPL-specific args:
-      |  -b, --banner         Customize the welcome banner that gets shown when Smile starts
-      |  --no-remote-logging  Disable remote logging of the number of times a REPL starts and runs
-      |                       commands
-      |  --class-based        Wrap user code in classes rather than singletons, typically for Java serialization
-      |                       friendliness.
     """.stripMargin
 
   val imports =
