@@ -283,7 +283,8 @@ fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: D
  * @param alpha the momentum factor.
  * @param lambda the weight decay for regularization.
  */
-fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epochs: Int = 10, eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP {
+fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epochs: Int = 10,
+        eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP {
     val net = MLP(x[0].size, *builders)
     net.setLearningRate(eta)
     net.setMomentum(alpha)
@@ -489,7 +490,8 @@ fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: D
  * @param splitRule the splitting rule.
  * @return Decision tree model.
  */
-fun cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree {
+fun cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI,
+         maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): DecisionTree {
     return DecisionTree.fit(formula, data, splitRule, maxDepth, if (maxNodes > 0) maxNodes else data.size() / nodeSize, nodeSize)
 }
 
@@ -627,7 +629,8 @@ fun randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int
  *
  * @return Gradient boosted trees.
  */
-fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost {
+fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6,
+        nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost {
     return GradientTreeBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
 }
 
@@ -667,7 +670,8 @@ fun gbm(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20
  *
  * @return AdaBoost model.
  */
-fun adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost {
+fun adaboost(formula: Formula, data: DataFrame, ntrees: Int = 500, maxDepth: Int = 20,
+             maxNodes: Int = 6, nodeSize: Int = 1): AdaBoost {
     return AdaBoost.fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize)
 }
 

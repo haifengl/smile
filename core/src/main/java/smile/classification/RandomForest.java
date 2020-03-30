@@ -206,7 +206,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
      *                  sampling without replacement.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
+                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, null);
     }
 
@@ -232,7 +233,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *                    be [1, 4] (assuming label 0 is of negative, label 1 is of
      *                    positive).
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
+                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize,
+                                   double subsample, int[] classWeight) {
         return fit(formula, data, ntrees, mtry, rule, maxDepth, maxNodes, nodeSize, subsample, classWeight, null);
     }
 
@@ -259,7 +262,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *                    positive).
      * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample, int[] classWeight, LongStream seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
+                                   SplitRule rule, int maxDepth, int maxNodes, int nodeSize,
+                                   double subsample, int[] classWeight, LongStream seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
