@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
@@ -32,21 +32,11 @@ public class Wireframe extends Plot {
     /**
      * The coordinates of vertices in the wire frame.
      */
-    private double[][] vertices;
+    final double[][] vertices;
     /**
      * The vertex indices of two end points of each edge in the wire frame.
      */
-    private int[][] edges;
-
-    /**
-     * Constructor.
-     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
-     * @param edges an m-by-2 array of which each row is the vertex indices of two
-     * end points of each edge.
-     */
-    public Wireframe(double[][] vertices, int[][] edges) {
-        this(vertices, edges, Color.BLACK);
-    }
+    final int[][] edges;
 
     /**
      * Constructor.
@@ -61,50 +51,31 @@ public class Wireframe extends Plot {
     }
 
     @Override
+    public double[] getLowerBound() {
+        return MathEx.colMin(vertices);
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        return MathEx.colMax(vertices);
+    }
+
+    @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
-        for (int i = 0; i < edges.length; i++) {
-            g.drawLine(vertices[edges[i][0]], vertices[edges[i][1]]);
+        for (int[] edge : edges) {
+            g.drawLine(vertices[edge[0]], vertices[edge[1]]);
         }
-
-        g.setColor(c);
     }
-    
+
     /**
-     * Create a wire frame plot canvas.
-     * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
-     */
-    public static PlotCanvas plot(double[][] vertices, int[][] edges) {
-        double[] lowerBound = MathEx.colMin(vertices);
-        double[] upperBound = MathEx.colMax(vertices);
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Wireframe frame = new Wireframe(vertices, edges);
-        canvas.add(frame);
-
-        return canvas;
-    }
-    
-    /**
-     * Create a 2D grid plot canvas.
-     * @param id the id of the plot.
+     * Constructor.
      * @param vertices a n-by-2 or n-by-3 array which are coordinates of n vertices.
      * @param edges an m-by-2 array of which each row is the vertex indices of two
      * end points of each edge.
      */
-    public static PlotCanvas plot(String id, double[][] vertices, int[][] edges) {
-        double[] lowerBound = MathEx.colMin(vertices);
-        double[] upperBound = MathEx.colMax(vertices);
-
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-
-        Wireframe frame = new Wireframe(vertices, edges);
-        frame.setID(id);
-        canvas.add(frame);
-
-        return canvas;
+    public static Wireframe of(double[][] vertices, int[][] edges) {
+        return new Wireframe(vertices, edges, Color.BLACK);
     }
 }

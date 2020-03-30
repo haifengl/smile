@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile
 
@@ -29,7 +29,7 @@ import smile.data.`type`.StructType
 import smile.io.{Read, Write, JSON}
 import smile.util.SparseArray
 
-/** Output operators. */
+/** Data saving utilities. */
 object write {
   /** Serializes a `Serializable` object/model to a file. */
   def apply[T <: Serializable](x: T, file: String): Unit = apply(x, Paths.get(file))
@@ -128,7 +128,7 @@ object write {
   }
 }
 
-/** Input operators. */
+/** Data loading utilities. */
 object read {
   /** Reads a `Serializable` object/model. */
   def apply(file: String): AnyRef = apply(Paths.get(file))

@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.clustering;
 
@@ -93,7 +93,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
     private JTextField clusterNumberField;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = '.';
+    char mark = '.';
 
     /**
      * Constructor.
@@ -127,7 +127,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
 
-        canvas = ScatterPlot.plot(dataset[datasetIndex], '.');
+        canvas = ScatterPlot.of(dataset[datasetIndex], '.').canvas().panel();
         add(canvas, BorderLayout.CENTER);
     }
 
@@ -185,11 +185,11 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
 
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -203,11 +203,11 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             datasetBox.setSelectedIndex(datasetIndex);
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }

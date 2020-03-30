@@ -13,12 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
 import java.awt.Color;
-import java.awt.Font;
 import java.util.Arrays;
 import java.util.HashMap;
 import smile.math.MathEx;
@@ -30,15 +29,6 @@ import smile.sort.QuickSort;
  * @author Haifeng Li
  */
 public class Axis {
-
-    /**
-     * The font for axis label.
-     */
-    private static final Font axisLabelFont = new Font("Arial", Font.BOLD, 14);
-    /**
-     * The font for axis label.
-     */
-    private static final Font gridLabelFont = new Font("BitStream Vera Sans", Font.PLAIN, 12);
     /**
      * The base coordinate space.
      */
@@ -48,34 +38,29 @@ public class Axis {
      */
     private int index;
     /**
-     * Mapping of the data on this axis, which is the association between values
-     * along this axis as String and double numbers.
+     * The tick mark label.
      */
-    private HashMap<String, Double> labels;
+    private String[] ticks;
     /**
-     * Visibility of label and tick marks.
+     * The tick mark location.
      */
-    private boolean labelVisible = true;
+    private double[] location;
+    /**
+     * Visibility of ticks.
+     */
+    private boolean isTickVisible = true;
     /**
      * Visibility of the grid.
      */
-    private boolean gridVisible = true;
+    private boolean isGridVisible = true;
     /**
      * Visibility of the frame.
      */
-    private boolean frameVisible = true;
+    private boolean isFrameVisible = true;
     /**
      * The number of slices in linear scale.
      */
-    private int linearSlices = 10;
-    /**
-     * The slicing location.
-     */
-    private double[] linesSlicing;
-    /**
-     * The slicing labels.
-     */
-    private double[] labelsSlicing;
+    private int slices = 10;
     /**
      * The coordinates of origin point.
      */
@@ -91,11 +76,7 @@ public class Axis {
     /**
      * The grid labels.
      */
-    private Label[] gridLabels;
-    /**
-     * The grid label strings.
-     */
-    private String[] gridLabelStrings;
+    private GridLabel[] gridLabels;
     /**
      * The rotation degree of grid labels.
      */
@@ -105,16 +86,23 @@ public class Axis {
      * Constructor.
      */
     public Axis(Base base, int index) {
-        this(base, index, null);
-    }
-
-    /**
-     * Constructor.
-     */
-    public Axis(Base base, int index, String label) {
         this.base = base;
         this.index = index;
-        setAxisLabel(label);
+
+        String label = "";
+        switch (index) {
+            case 0:
+                label = "X";
+                break;
+            case 1:
+                label = "Y";
+                break;
+            case 2:
+                label = "Z";
+                break;
+        }
+        setLabel(label);
+
         init();
     }
 
@@ -123,9 +111,7 @@ public class Axis {
      */
     private void init() {
         initOrigin();
-        setSlice();
-        initGridLines();
-        initGridLabels();
+        setTicks();
     }
 
     /**
@@ -138,60 +124,54 @@ public class Axis {
     /**
      * Set the slices of axis.
      */
-    private void setSlice() {
+    private void setTicks() {
         // slicing initialisation
-        if (labels == null) {
+        double[] gridLocation;
+        double[] tickLocation;
+        String[] marks = null;
+
+        if (ticks == null || location == null) {
             double min = base.getPrecisionUnit()[index] * Math.ceil(base.getLowerBounds()[index] / base.getPrecisionUnit()[index]);
             double max = base.getPrecisionUnit()[index] * Math.floor(base.getUpperBounds()[index] / base.getPrecisionUnit()[index]);
-            linearSlices = (int) Math.ceil(MathEx.round((max - min) / base.getPrecisionUnit()[index], 1));
-            if (linearSlices <= 0) {
-                linearSlices = 1;
-            }
+            slices = (int) Math.ceil(MathEx.round((max - min) / base.getPrecisionUnit()[index], 1));
 
-            if (linearSlices < 3) {
-                linearSlices *= 2;
-            }
+            if (slices <= 0) slices = 1;
+            if (slices < 3) slices *= 2;
 
-            linesSlicing = new double[linearSlices + 3];
-            labelsSlicing = new double[linearSlices + 3];
+            gridLocation = new double[slices + 3];
+            tickLocation = new double[slices + 3];
 
-            double pitch = (max - min) / linearSlices;
-            for (int i = 1; i <= linearSlices + 1; i++) {
+            double pitch = (max - min) / slices;
+            for (int i = 1; i <= slices + 1; i++) {
                 // lines and labels slicing are the same
-                linesSlicing[i] = min + (i - 1) * pitch;
-                labelsSlicing[i] = min + (i - 1) * pitch;
+                gridLocation[i] = min + (i - 1) * pitch;
+                tickLocation[i] = min + (i - 1) * pitch;
             }
 
-            linesSlicing[0] = base.getLowerBounds()[index];
-            labelsSlicing[0] = base.getLowerBounds()[index];
-            linesSlicing[linearSlices + 2] = base.getUpperBounds()[index];
-            labelsSlicing[linearSlices + 2] = base.getUpperBounds()[index];
+            gridLocation[0] = base.getLowerBounds()[index];
+            tickLocation[0] = base.getLowerBounds()[index];
+            gridLocation[slices + 2] = base.getUpperBounds()[index];
+            tickLocation[slices + 2] = base.getUpperBounds()[index];
 
         } else {
-            linesSlicing = new double[labels.size() + 2];
-            labelsSlicing = new double[labels.size()];
-            gridLabelStrings = new String[labels.size()];
+            gridLocation = new double[ticks.length + 2];
+            tickLocation = new double[ticks.length];
+            marks = new String[ticks.length];
 
-            linesSlicing[0] = base.getLowerBounds()[index];
+            gridLocation[0] = base.getLowerBounds()[index];
+            gridLocation[gridLocation.length - 1] = base.getUpperBounds()[index];
 
-            int i = 1;
-            for (String string : labels.keySet()) {
-                linesSlicing[i] = labels.get(string);
-                labelsSlicing[i - 1] = labels.get(string);
-                gridLabelStrings[i - 1] = string;
-                i++;
+            for (int i = 0; i < ticks.length; i++) {
+                gridLocation[i+1] = location[i];
+                tickLocation[i] = location[i];
+                marks[i] = ticks[i];
             }
 
-            linesSlicing[i] = base.getUpperBounds()[index];
-            Arrays.sort(linesSlicing);
-            QuickSort.sort(labelsSlicing, gridLabelStrings);
+            Arrays.sort(gridLocation);
+            QuickSort.sort(tickLocation, marks);
         }
-    }
 
-    /**
-     * Initialize grid line labels.
-     */
-    private void initGridLabels() {
+        // Initialize grid line labels.
         int dim = base.getDimension();
         double[] offset = new double[dim];
         for (int j = 0; j < dim; j++) {
@@ -200,78 +180,63 @@ public class Axis {
             }
         }
 
-        int decimal = 0;
-        String label;
-
-        gridLabels = new Label[labelsSlicing.length];
-
+        gridLabels = new GridLabel[tickLocation.length];
         for (int i = 0; i < gridLabels.length; i++) {
-
-            double[] labelCoord = new double[base.getDimension()];
-            System.arraycopy(base.getCoordinateSpace()[index + 1], 0, labelCoord, 0, base.getDimension());
-            labelCoord[index] = labelsSlicing[i];
+            double[] coord = new double[base.getDimension()];
+            System.arraycopy(base.getCoordinateSpace()[index + 1], 0, coord, 0, base.getDimension());
+            coord[index] = tickLocation[i];
 
             if (dim == 3) {
                 if (index == 0) {
-                    labelCoord[2] = base.getUpperBounds()[2] - 2 * offset[2];
+                    coord[2] = base.getUpperBounds()[2] - 2 * offset[2];
                 } else if (index == 1) {
-                    labelCoord[0] = base.getUpperBounds()[0] - 2 * offset[0];
+                    coord[0] = base.getUpperBounds()[0] - 2 * offset[0];
                 } else if (index == 2) {
-                    labelCoord[1] = base.getUpperBounds()[1] - 2 * offset[1];
+                    coord[1] = base.getUpperBounds()[1] - 2 * offset[1];
                 }
             }
 
-            decimal = base.getPrecisionDigits()[index];
-
-            if (gridLabelStrings != null) {
-                label = gridLabelStrings[i % gridLabelStrings.length];
+            String label;
+            if (marks != null) {
+                label = marks[i % marks.length];
             } else {
+                int decimal = base.getPrecisionDigits()[index];
+                if (ticks == null) {
+                    if ((i == 0 && tickLocation[0] != tickLocation[1]) || (i == gridLabels.length - 1 && tickLocation[gridLabels.length - 1] != tickLocation[gridLabels.length - 2]))
+                    decimal -= 1;
+                }
+
                 String format = "%.0f";
                 if (decimal < 0) {
                     format = String.format("%%.%df", -decimal);
                 }
-                label = String.format(format, labelsSlicing[i]);
+                label = String.format(format, tickLocation[i]);
             }
 
             for (int j = 0; j < dim; j++) {
-                labelCoord[j] += offset[j];
+                coord[j] += offset[j];
             }
 
             if (base.getDimension() == 2) {
-                if (index == 0) {
-                    if (rotation == 0.0) {
-                        gridLabels[i] = new Label(label, 0.5, 1.0, labelCoord);
-                    } else {
-                        gridLabels[i] = new Label(label, 1.0, 0.5, rotation, labelCoord);
-                    }
+                if (index == 0 && rotation == 0.0) {
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, 1.0, rotation);
                 } else {
-                    gridLabels[i] = new Label(label, 1.0, 0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, coord, 1.0, 0.5, rotation);
                 }
             } else {
                 if (index == 0) {
-                    gridLabels[i] = new Label(label, 0.5, -0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, -0.5, rotation);
                 } else if (index == 1) {
-                    gridLabels[i] = new Label(label, 0.5, 1.0, labelCoord);
+                    gridLabels[i] = new GridLabel(label, coord, 0.5, 1.0, rotation);
                 } else if (index == 2) {
-                    gridLabels[i] = new Label(label, 0.0, 0.5, labelCoord);
+                    gridLabels[i] = new GridLabel(label, coord, 0.0, 0.5, rotation);
                 }
             }
-
-            gridLabels[i].setFont(gridLabelFont);
         }
 
-        gridLabelStrings = null;
-    }
-
-    /**
-     * Initialize grid lines.
-     */
-    private void initGridLines() {
-        gridLines = new Line[base.getDimension() - 1][linesSlicing.length];
-
-        int i2 = 0;
-
-        for (int i = 0; i < base.getDimension() - 1; i++) {
+        // Initialize grid lines.
+        gridLines = new Line[base.getDimension() - 1][gridLocation.length];
+        for (int i = 0, i2 = 0; i < base.getDimension() - 1; i++) {
             if (i2 == index) {
                 i2++;
             }
@@ -284,13 +249,14 @@ public class Axis {
                 System.arraycopy(origin, 0, endBase, 0, base.getDimension());
 
                 endBase[i2] = base.getCoordinateSpace()[i2 + 1][i2];
-                originBase[index] = linesSlicing[j];
-                endBase[index] = linesSlicing[j];
+                originBase[index] = gridLocation[j];
+                endBase[index] = gridLocation[j];
 
-                if (j == 0 || j == gridLines[i].length - 1) {
-                    gridLines[i][j] = new Line(originBase, endBase);
+                double[][] points = {originBase, endBase};
+                if (j > 0 && j < gridLines[i].length - 1) {
+                    gridLines[i][j] = new Line(points, Line.Style.DOT, ' ', Color.LIGHT_GRAY);
                 } else {
-                    gridLines[i][j] = new Line(Line.Style.DOT, Color.lightGray, originBase, endBase);
+                    gridLines[i][j] = new Line(points, Line.Style.SOLID, ' ', Color.BLACK);
                 }
             }
             i2++;
@@ -300,17 +266,12 @@ public class Axis {
     /**
      * Set the base coordinate space.
      */
-    public Axis setBase(Base base) {
-        this.base = base;
-        if (getAxisLabel() != null) {
-            setAxisLabel(getAxisLabel());
-        }
+    public void reset() {
         init();
-        return this;
     }
     
     /**
-     * Sets the rotation degree of grid label strings.
+     * Sets the rotation degree of tick strings.
      * @param rotation rotation degree.
      */
     public Axis setRotation(double rotation) {
@@ -321,66 +282,29 @@ public class Axis {
     /**
      * Add a label to the axis at given location.
      */
-    public Axis addLabel(String label, double location) {
-        if (labels == null) {
-            labels = new HashMap<>();
+    public void setTicks(String[] ticks, double[] location) {
+        if (ticks.length != location.length) {
+            throw new IllegalArgumentException("Tick and location size don't match.");
         }
 
-        labels.put(label, location);
-        setSlice();
-        initGridLines();
-        initGridLabels();
-        return this;
-    }
+        this.ticks = ticks;
+        this.location = location;
 
-    /**
-     * Add a label to the axis at given location.
-     */
-    public Axis addLabel(String[] label, double[] location) {
-        if (label.length != location.length) {
-            throw new IllegalArgumentException("Label size and location size don't match.");
-        }
-
-        if (labels == null) {
-            labels = new HashMap<>();
-        }
-
-        for (int i = 0; i < label.length; i++) {
-            labels.put(label[i], location[i]);
-        }
-
-        setSlice();
-        initGridLines();
-        initGridLabels();
-        return this;
-    }
-
-    /**
-     * Remove a label from the axis.
-     */
-    public Axis removeLabel(String label) {
-        if (labels == null) {
-            throw new IllegalStateException();
-        }
-
-        labels.remove(label);
-        setSlice();
-        initGridLabels();
-        return this;
+        setTicks();
     }
 
     /**
      * Returns the number of slices in linear scale.
      */
-    public int getLinearSlices() {
-        return linearSlices;
+    public int slices() {
+        return slices;
     }
 
     /**
      * Set the visibility of the grid lines and their labels.
      */
     public Axis setGridVisible(boolean v) {
-        gridVisible = v;
+        isGridVisible = v;
         return this;
     }
 
@@ -388,14 +312,14 @@ public class Axis {
      * Returns the visibility of the grid lines and their labels.
      */
     public boolean isGridVisible() {
-        return gridVisible;
+        return isGridVisible;
     }
 
     /**
      * Set the visibility of the frame grid lines and their labels.
      */
     public Axis setFrameVisible(boolean v) {
-        frameVisible = v;
+        isFrameVisible = v;
         return this;
     }
 
@@ -403,79 +327,68 @@ public class Axis {
      * Returns the visibility of the frame grid lines and their labels.
      */
     public boolean isFrameVisible() {
-        return frameVisible;
+        return isFrameVisible;
     }
 
     /**
      * Set the visibility of the axis label.
      */
-    public Axis setLabelVisible(boolean v) {
-        labelVisible = v;
+    public Axis setTickVisible(boolean v) {
+        isTickVisible = v;
         return this;
     }
 
     /**
      * Returns the visibility of the axis label.
      */
-    public boolean isLabelVisible() {
-        return labelVisible;
+    public boolean isTickVisible() {
+        return isTickVisible;
     }
 
     /**
-     * Sets the label of this axis.
+     * Sets the label.
      */
-    public Axis setAxisLabel(String label) {
+    public void setLabel(String label) {
         if (label == null) {
+            axisLabel = null;
+            return;
+        }
+
+        double[] position = new double[base.getDimension()];
+        if (base.getDimension() == 2) {
+            position[index] = 0.5;
             if (index == 0) {
-                label = "X";
-            } else if (index == 1) {
-                label = "Y";
-            } else if (index == 2) {
-                label = "Z";
-            }
-        }
-
-        if (label != null) {
-            double[] position = new double[base.getDimension()];
-
-            if (base.getDimension() == 2) {
-                position[index] = 0.5;
-                if (index == 0) {
-                    position[1] = -0.1;
-                    axisLabel = new BaseLabel(label, 0.5, 1.0, position);
-                } else {
-                    position[0] = -0.15;
-                    axisLabel = new BaseLabel(label, 0.5, 0.5, -Math.PI / 2, position);
-                }
+                position[1] = -0.1;
+                axisLabel = new BaseLabel(label, position,0.5, 1.0, 0.0);
             } else {
-                if (index == 0) {
-                    position[2] = 1.0;
-                    position[index] = 0.5;
-                    axisLabel = new BaseLabel(label, 0.5, -2.0, position);
-                } else if (index == 1) {
-                    position[0] = 1.0;
-                    position[index] = 0.5;
-                    axisLabel = new BaseLabel(label, 0.5, 3.0, position);
-                } else if (index == 2) {
-                    position[1] = 1.0;
-                    position[index] = 1.0;
-                    axisLabel = new BaseLabel(label, -0.5, -1.0, position);
-                }
+                position[0] = -0.15;
+                axisLabel = new BaseLabel(label, position,0.5, 0.5, -Math.PI / 2);
             }
-
-            axisLabel.setFont(axisLabelFont);
+        } else {
+            if (index == 0) {
+                position[2] = 1.0;
+                position[index] = 0.5;
+                axisLabel = new BaseLabel(label, position, 0.5, -2.0, 0.0);
+            } else if (index == 1) {
+                position[0] = 1.0;
+                position[index] = 0.5;
+                axisLabel = new BaseLabel(label, position, 0.5, 3.0, 0.0);
+            } else if (index == 2) {
+                position[1] = 1.0;
+                position[index] = 1.0;
+                axisLabel = new BaseLabel(label, position, -0.5, -1.0, 0.0);
+            }
         }
-        return this;
     }
 
     /**
      * Returns the label of the axis.
      */
-    public String getAxisLabel() {
+    public String getLabel() {
         if (axisLabel == null) {
             return null;
         } else {
-            return axisLabel.getText();
+            return axisLabel.text;
         }
     }
 
@@ -484,7 +397,7 @@ public class Axis {
      */
     public void paint(Graphics g) {
         if (gridLines != null) {
-            if (gridVisible) {
+            if (isGridVisible) {
                 for (int i = 0; i < gridLines.length; i++) {
                     for (int j = 1; j < gridLines[i].length - 1; j++) {
                         gridLines[i][j].paint(g);
@@ -492,7 +405,7 @@ public class Axis {
                 }
             }
 
-            if (frameVisible) {
+            if (isFrameVisible) {
                 for (int i = 0; i < gridLines.length; i++) {
                     gridLines[i][0].paint(g);
                     gridLines[i][gridLines[i].length - 1].paint(g);
@@ -500,14 +413,14 @@ public class Axis {
             }
         }
 
-        if (labelVisible) {
+        if (isTickVisible) {
             if (gridLabels != null) {
-                int[] xy = g.projection.screenProjection(gridLabels[1].getCoordinate());
+                int[] xy = g.projection.screenProjection(gridLabels[1].coordinates);
                 int prevx = xy[0];
                 int prevy = xy[1];
                 for (int i = 0; i < gridLabels.length; i++) {
                     if (!gridLabels[i].text.isEmpty()) {
-                        double[] coord = gridLabels[i].getCoordinate();
+                        double[] coord = gridLabels[i].coordinates;
                         xy = g.projection.screenProjection(coord);
                         int x = xy[0];
                         int y = xy[1];
@@ -528,7 +441,7 @@ public class Axis {
                             }
                         } else {
                             if ((prevx == x && prevy == y)
-                              || Math.abs(x - prevx) > g.g2d.getFontMetrics(gridLabels[i].font).stringWidth(gridLabels[i].text)
+                              || Math.abs(x - prevx) > g.getGraphics().getFontMetrics(gridLabels[i].font).stringWidth(gridLabels[i].text)
                               || Math.abs(prevy - y) > gridLabels[i].font.getSize()) {
                                 gridLabels[i].paint(g);
                                 prevx = x;
@@ -538,10 +451,10 @@ public class Axis {
                     }
                 }
             }
+        }
 
-            if (axisLabel != null) {
-                axisLabel.paint(g);
-            }
+        if (axisLabel != null) {
+            axisLabel.paint(g);
         }
     }
 }

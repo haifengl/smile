@@ -51,6 +51,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -67,6 +68,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static MDS of(double[][] proximity, int k, boolean positive);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun mds(proximity: Array&lt;DoubleArray&gt;, k: Int, add: Boolean = false): MDS
+    </code></pre>
             </div>
         </div>
     </div>
@@ -90,6 +98,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_2">
@@ -99,7 +108,7 @@ permalink: "{{ page.filePathStem }}.html"
     val dist = eurodist.drop(0).toArray
     val citys = eurodist.stringVector(0).toArray
     val x = mds(dist, 2).coordinates
-    show(plot(x, citys))
+    show(text(citys, x))
     </code></pre>
             </div>
         </div>
@@ -110,8 +119,18 @@ permalink: "{{ page.filePathStem }}.html"
     var dist = eurodist.drop(0).toArray();
     var citys = eurodist.stringVector(0).toArray();
     var x = MDS.of(dist, 2).coordinates;
-    ScatterPlot.plot(x, citys).window();
+    TextPlot.of(citys, x).canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val eurodist = read.csv("data/projection/eurodist.txt", delimiter = '\t', header = false)
+    val dist = eurodist.drop(0).toArray()
+    val citys = eurodist.stringVector(0).toArray()
+    val x = mds(dist, 2).coordinates
+    </code></pre>
             </div>
         </div>
     </div>
@@ -136,6 +155,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -154,6 +174,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun isomds(proximity: Array&lt;DoubleArray&gt;, k: Int, tol: Double = 0.0001, maxIter: Int = 200): IsotonicMDS
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>where <code>tol</code> is the tolerance for stopping iterations, and
@@ -162,13 +189,14 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = isomds(dist, 2).coordinates
-    show(plot(x, citys))
+    show(text(citys, x))
     </code></pre>
             </div>
         </div>
@@ -176,8 +204,15 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = IsotonicMDS.of(dist, 2).coordinates;
-    ScatterPlot.plot(x, citys).window();
+    TextPlot.plot(citys, x).canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane active" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    isomds(dist, 2)
+    </code></pre>
             </div>
         </div>
     </div>
@@ -220,6 +255,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -238,6 +274,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    fun sammon(proximity: Array&lt;DoubleArray&gt;, k: Int, lambda: Double = 0.2, tol: Double = 0.0001, maxIter: Int = 100): SammonMapping
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>where <code>lambda</code> is the initial value of the step size constant in diagonal Newton method.</p>
@@ -245,13 +288,14 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_6">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val x = sammon(dist, 2).coordinates
-    show(plot(x, citys))
+    show(plot(citys, x))
     </code></pre>
             </div>
         </div>
@@ -259,8 +303,15 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var x = SammonMapping.of(dist, 2).coordinates;
-    ScatterPlot.plot(x, citys).window();
+    TextPlot.of(citys, x).canvas().window();
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    sammon(dist, 2)
+    </code></pre>
             </div>
         </div>
     </div>

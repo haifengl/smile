@@ -61,6 +61,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -79,6 +80,15 @@ permalink: "{{ page.filePathStem }}.html"
         public static HierarchicalClustering fit(Linkage linkage);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun hclust(data: Array&lt;DoubleArray&gt;, method: String): HierarchicalClustering
+
+    fun &lt;T&gt; hclust(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, method: String): HierarchicalClustering
+    </code></pre>
             </div>
         </div>
     </div>
@@ -254,6 +264,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
@@ -270,6 +281,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static KMeans fit(double[][] data, int k, int maxIter, double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun kmeans(data: Array&lt;DoubleArray&gt;, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
+    </code></pre>
             </div>
         </div>
     </div>
@@ -360,6 +378,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
         <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_7">
@@ -376,6 +395,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static XMeans fit(double[][] data, int kmax, int maxIter, double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun xmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): XMeans
+    </code></pre>
             </div>
         </div>
     </div>
@@ -422,6 +448,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
         <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_9">
@@ -438,6 +465,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static GMeans fit(double[][] data, int kmax, int maxIter, double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun gmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): GMeans
+    </code></pre>
             </div>
         </div>
     </div>
@@ -539,6 +573,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
         <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_11">
@@ -555,6 +590,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun dac(data: Array&lt;DoubleArray&gt;, k: Int, alpha: Double): DeterministicAnnealing
+    </code></pre>
             </div>
         </div>
     </div>
@@ -655,13 +697,13 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
         <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_13">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def sib(data: Array[Array[Double]], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
-    def sib(data: SparseDataset, k: Int, maxIter: Int, runs: Int): SIB
+    def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
     </code></pre>
             </div>
         </div>
@@ -672,6 +714,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static SIB fit(SparseArray[] data, int k, int maxIter);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun sib(data: Array&lt;SparseArray&gt;, k: Int, maxIter: Int = 100, runs: Int = 1): SIB
+    </code></pre>
             </div>
         </div>
     </div>
@@ -735,6 +784,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
         <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_15">
@@ -751,6 +801,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static CLARANS&lt;T&gt; fit(T[] data, int k, int maxNeighbor, Distance&lt;T&gt; distance);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; clarans(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, maxNeighbor: Int, numLocal: Int): CLARANS&lt;T&gt;
+    </code></pre>
             </div>
         </div>
     </div>
@@ -800,6 +857,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
         <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_17">
@@ -824,6 +882,19 @@ permalink: "{{ page.filePathStem }}.html"
         public static DBSCAN&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int minPts, double radius);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    // DBSCAN with a customized data structure for neighborhood search
+    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
+
+    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, distance: Metric&lt;T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
+
+    // DBSCAN with Euclidean distance
+    fun dbscan(data: Array&lt;DoubleArray&gt;, minPts: Int, radius: Double): DBSCAN&lt;DoubleArray&gt;
+    </code></pre>
             </div>
         </div>
     </div>
@@ -927,6 +998,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
         <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_19">
@@ -943,6 +1015,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun denclue(data: Array&lt;DoubleArray&gt;, sigma: Double, m: Int): DENCLUE
+    </code></pre>
             </div>
         </div>
     </div>
@@ -1009,6 +1088,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
         <li><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_21">
@@ -1033,6 +1113,18 @@ permalink: "{{ page.filePathStem }}.html"
         public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun specc(W: Array&lt;DoubleArray&gt;, k: Int): SpectralClustering
+
+    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, sigma: Double): SpectralClustering
+
+    // Nystrom approximation
+    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, l: Int, sigma: Double): SpectralClustering
+    </code></pre>
             </div>
         </div>
     </div>
@@ -1102,6 +1194,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
         <li><a href="#java_23" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_23" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_23">
@@ -1121,6 +1214,15 @@ permalink: "{{ page.filePathStem }}.html"
         public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int k, double radius, int[] y, double tol);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun mec&lt;T&gt;(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, radius: Double): MEC&lt;T&gt;
+    fun mec&lt;T&gt;(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, k: Int, radius: Double, y: Array[Int]): MEC&lt;T&gt;
+    fun mec(data: Array&lt;DoubleArray&gt;, k: Int, radius: Double): MEC&lt;DoubleArray&gt;
+    </code></pre>
             </div>
         </div>
     </div>
