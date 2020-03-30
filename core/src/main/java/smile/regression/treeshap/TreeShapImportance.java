@@ -166,11 +166,7 @@ public class TreeShapImportance {
 		int treeLength = this.trees.size();
 		for (int tIdx = 0; tIdx < treeLength; tIdx++) {
 			try {
-				treeShap(this.trees.get(tIdx), x, phi, 0.0, 0, 
-						feature_indexes,
-						zero_fractions, 
-						one_fractions,
-						pweights);
+				treeShap(this.trees.get(tIdx), x, phi, 0.0, 0, feature_indexes, zero_fractions, one_fractions, pweights);
 			} catch (Exception e) {
 				String err = "error calculating shap for instance: " + x + " using " + tIdx + "th sub-tree.";
 				logger.error(err, e);
@@ -211,9 +207,9 @@ public class TreeShapImportance {
 			ForkJoinPool forkJoinPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
 
 			logger.info("--- start calculation for data ---");
-            forkJoinPool.submit(() -> 
-                 IntStream.rangeClosed(1, concurrencyLevel).parallel().forEach(
-					range -> {
+			forkJoinPool.submit(() -> 
+			     IntStream.rangeClosed(1, concurrencyLevel).parallel().forEach(
+				    range -> {
 				       int startIdx = (range - 1) * batchOperSize;
 				       int endIdx = (startIdx + batchOperSize);
 				       endIdx = (endIdx > data.size() ? data.size() : endIdx);
@@ -247,17 +243,17 @@ public class TreeShapImportance {
 							}
 					   }				   
 					   // update the final shap value result
-				       synchronized(meanShap){
-				    	   for (int i = 0; i < meanShap.length; i++) {
+					   synchronized(meanShap){
+						   for (int i = 0; i < meanShap.length; i++) {
 								meanShap[i] += means[i];
-				    	   }
-				       }
+						   }
+					   }
 					   logger.info("complete shap value calculation for data instances at indexes:[" + startIdx + "," + endIdx + ")");	
-					}
+				    }
 			     )
-            ).get();
+			).get();
 
-    		logger.info("--- complete calculation for " + data.size() + " data, took " + (System.currentTimeMillis() - startTime) / 1000 + " seconds -----");
+			logger.info("--- complete calculation for " + data.size() + " data, took " + (System.currentTimeMillis() - startTime) / 1000 + " seconds -----");
 			
 		} catch (Exception e) {
 			String err = "error calculating shap values for dataframe.";
@@ -415,7 +411,7 @@ public class TreeShapImportance {
 				   ((MutableDouble)original.get(i + uniqueDepthPlus1)).value = ((MutableDouble) original.get(i)).value;
 				}
 			} else {
-				if (original.get(i) != null && ((MutableInt) original.get(i)).value != Double.MIN_VALUE) {
+				if (original.get(i) != null && ((MutableInt) original.get(i)).value != Integer.MIN_VALUE) {
 				   ((MutableInt)original.get(i + uniqueDepthPlus1)).value = ((MutableInt) original.get(i)).value;
 				}
 			}
