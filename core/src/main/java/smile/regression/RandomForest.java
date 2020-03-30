@@ -18,11 +18,9 @@
 package smile.regression;
 
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
-import java.util.function.LongSupplier;
 import smile.base.cart.CART;
 import smile.base.cart.Loss;
 import smile.data.DataFrame;
@@ -158,28 +156,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      *                  replacement. < 1.0 means sampling without replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
-        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, Optional.empty());
-    }
-
-    /**
-     * Learns a random forest for regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param ntrees the number of trees.
-     * @param mtry the number of input variables to be used to determine the
-     *             decision at a node of the tree. p/3 generally give good
-     *             performance, where p is the number of variables.
-     * @param maxDepth the maximum depth of the tree.
-     * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. < 1.0 means sampling without replacement.
-     * @param seedGenerator RNG seed generator.
-     */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongSupplier seedGenerator) {
-        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, Optional.of(LongStream.generate(seedGenerator)));
+        return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
     }
 
     /**
@@ -199,7 +176,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
      *                  replacement. < 1.0 means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, Optional<LongStream> seeds) {
+    public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -225,7 +202,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
         final int[][] order = CART.order(x);
 
         // generate seeds with sequential stream
-        long[] seedArray = seeds.orElse(LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
+        long[] seedArray = (seeds != null ? seeds : LongStream.range(-ntrees, 0)).sequential().distinct().limit(ntrees).toArray();
         if (seedArray.length != ntrees) {
             throw new IllegalArgumentException(String.format("seed stream has only %d distinct values, expected %d", seedArray.length, ntrees));
         }

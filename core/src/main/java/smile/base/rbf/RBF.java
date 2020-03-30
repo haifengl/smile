@@ -291,7 +291,7 @@ public class RBF<T> implements Serializable {
      * @return a Gaussian RBF function with parameter learned from data.
      */
     public static <T> RBF<T>[] fit(T[] x, Metric<T> distance, int k) {
-        CLARANS<T> clarans = CLARANS.fit(x, k, distance::d);
+        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
         T[] centers = clarans.centroids;
 
         GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, distance));
@@ -316,7 +316,7 @@ public class RBF<T> implements Serializable {
             throw new IllegalArgumentException("Invalid number of nearest neighbors: " + p);
         }
 
-        CLARANS<T> clarans = CLARANS.fit(x, k, distance::d);
+        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
         T[] centers = clarans.centroids;
 
         double[] width = estimateWidth(centers, distance, p);
@@ -341,7 +341,7 @@ public class RBF<T> implements Serializable {
             throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
 
-        CLARANS<T> clarans = CLARANS.fit(x, k, distance::d);
+        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
         T[] centers = clarans.centroids;
 
         double[] width = estimateWidth(x, clarans.y, centers, clarans.size, distance, r);

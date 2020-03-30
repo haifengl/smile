@@ -51,7 +51,6 @@ val schema = DataTypes.struct(
 val formula: Formula = "dep_delayed_15min" ~
 val train = read.csv(Paths.getTestData("airline/train-1m.csv").toString, schema = schema)
 val test = read.csv(Paths.getTestData("airline/test.csv").toString, schema = schema)
-val testy = formula.y(test).toIntArray
 
 println("----- train data -----")
 println(train)
