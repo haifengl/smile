@@ -107,7 +107,7 @@ public class KNN<T> implements SoftClassifier<T> {
      * @param distance the distance measure for finding nearest neighbors.
      */
     public static <T> KNN<T> fit(T[] x, int[] y, Distance<T> distance) {
-        return fit(x, y, distance, 1);
+        return fit(x, y, 1, distance);
     }
 
     /**
@@ -117,7 +117,7 @@ public class KNN<T> implements SoftClassifier<T> {
      * @param y training labels.
      * @param distance the distance measure for finding nearest neighbors.
      */
-    public static <T> KNN<T> fit(T[] x, int[] y, Distance<T> distance, int k) {
+    public static <T> KNN<T> fit(T[] x, int[] y, int k, Distance<T> distance) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
