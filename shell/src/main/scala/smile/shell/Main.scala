@@ -1,17 +1,17 @@
 /*******************************************************************************
  * Copyright (c) 2010-2019 Haifeng Li
  *
- * Smile is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as
- * published by the Free Software Foundation, either version 3 of
- * the License, or (at your option) any later version.
+ * Smile Shell is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
  *
- * Smile is distributed in the hope that it will be useful,
+ * Smile Shell is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
+ * GNU General Public License for more details.
  *
- * You should have received a copy of the GNU Lesser General Public License
+ * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  *******************************************************************************/
 
@@ -109,6 +109,12 @@ object Main extends App {
     """
       |repl.prompt() = "smile> "
     """.stripMargin
+
+  if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+    // Change the terminal mode so that it accepts ANSI escape codes
+    if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
+      println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
+  }
 
   /** Handle the Ammonite results. */
   def isSuccess(res: Res[Any]): Boolean = res match {

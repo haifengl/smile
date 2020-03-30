@@ -49,25 +49,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.imageio.ImageIO;
-import javax.swing.AbstractAction;
-import javax.swing.Action;
-import javax.swing.ActionMap;
-import javax.swing.BorderFactory;
-import javax.swing.ImageIcon;
-import javax.swing.InputMap;
-import javax.swing.JButton;
-import javax.swing.JComponent;
-import javax.swing.JDialog;
-import javax.swing.JFileChooser;
-import javax.swing.JMenuItem;
-import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JPopupMenu;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.JToolBar;
-import javax.swing.KeyStroke;
-import javax.swing.SwingUtilities;
+import javax.swing.*;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
@@ -2292,5 +2274,32 @@ public class PlotCanvas extends JPanel {
         canvas.add(plot2);
 
         return canvas;
+    }
+
+    /**
+     * Shows the plot in a window.
+     * @return a new JFrame that contains the plot.
+     */
+    public JFrame window() throws InterruptedException, InvocationTargetException  {
+        JFrame frame = new JFrame();
+        if (title != null) frame.setTitle(title);
+
+        JPanel pane = new JPanel(new BorderLayout());
+        pane.add(this, BorderLayout.CENTER);
+        pane.add(toolbar, BorderLayout.NORTH);
+
+        frame.getContentPane().add(pane);
+        frame.setDefaultCloseOperation(javax.swing.WindowConstants.DISPOSE_ON_CLOSE);
+        frame.setSize(new java.awt.Dimension(1000, 1000));
+        frame.setLocationRelativeTo(null);
+        frame.setVisible(true);
+
+        javax.swing.SwingUtilities.invokeAndWait(() -> {
+            reset();
+            repaint();
+            frame.toFront();
+        });
+
+        return frame;
     }
 }

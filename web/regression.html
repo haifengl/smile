@@ -38,10 +38,29 @@ permalink: "{{ page.filePathStem }}.html"
         serially uncorrelated. Under these conditions, the method of OLS provides
         minimum-variance mean-unbiased estimation when the errors have finite
         variances.</p>
-        
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class OLS {
+        public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>There are several different frameworks in which the linear regression
         model can be cast in order to make the OLS technique applicable. Each
@@ -75,6 +94,13 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>It is straightforward to fit an OLS model.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
     smile> val model = ols("y" ~, planes)
@@ -105,13 +131,68 @@ permalink: "{{ page.filePathStem }}.html"
     Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
     F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var planes = Read.arff("data/weka/regression/2dplanes.arff")
+    jshell> var model = OLS.fit(Formula.lhs("y"), planes)
+    jshell> System.out.println(model)
+    Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402
+    x9                  0.0024     0.0145     0.1649     0.8690
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>We then can apply the regression model on a new data point.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> model.predict(planes(0))
     res1: Double = 5.073347387304475
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> model.predict(planes.get(0))
+    $238 ==> 5.073347388203141
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Once a regression model has been constructed, it may be important to
         confirm the goodness of fit of the model and the statistical significance
@@ -156,9 +237,28 @@ permalink: "{{ page.filePathStem }}.html"
         In this setting the belief that weight should be small is coded into a prior
         distribution.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RidgeRegression {
+        public static LinearModel fit(Formula formula, DataFrame data, double lambda);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values, and <code>lambda</code> is
@@ -169,6 +269,13 @@ permalink: "{{ page.filePathStem }}.html"
         observed yearly from 1947 to 1962. It is a well-known example for a highly
         collinear regression.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val longley = read.arff("data/weka/regression/longley.arff")
     smile> val model = ridge("employed" ~, longley, 0.0057)
@@ -191,6 +298,36 @@ permalink: "{{ page.filePathStem }}.html"
     Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
     F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var longley = Read.arff("data/weka/regression/longley.arff")
+    jshell> var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
+    jshell> System.out.println(model)
+    Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>When including an intercept term in the regression, we usually leave
         this coefficient unpenalized. Otherwise we could add some constant amount
@@ -233,9 +370,28 @@ permalink: "{{ page.filePathStem }}.html"
         quadratic programming or more general convex optimization methods, as well
         as by specific algorithms such as the least angle regression algorithm.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def lasso(formula: Formula, data: DataFrame, lambda: Double, tol: Double = 1E-3, maxIter: Int = 5000): LinearModel
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LASSO {
+        public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
         <code>y</code> is the response values,
@@ -255,12 +411,33 @@ permalink: "{{ page.filePathStem }}.html"
         standardized to have unit L2 norm in each column and zero mean.
         The data used in the below example has 64 columns that consists of basic
         data plus certain interactions.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val diabetes = read.csv("data/regression/diabetes.csv")
     lasso("y" ~, diabetes, 10)
     lasso("y" ~, diabetes, 100)
     lasso("y" ~, diabetes, 500)
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
+    var formula = Formula.lhs("y");
+    LASSO.fit(formula, diabetes, 10);
+    LASSO.fit(formula, diabetes, 100);
+    LASSO.fit(formula, diabetes, 500);
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>With large <code>lambda</code> values, we can observe that more and more
         parameters are regularized towards to 0.</p>
@@ -300,11 +477,30 @@ permalink: "{{ page.filePathStem }}.html"
     <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
         network's parameters.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
 
     def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RBFNetwork {
+        public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The popular choices for &phi; comprise the Gaussian function and the so
         called thin plate splines. The advantage of the thin plate splines is that
@@ -317,11 +513,30 @@ permalink: "{{ page.filePathStem }}.html"
         effect of better conditioning (the separation distance of the scaled points
         increases).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val y = diabetes("y").toDoubleArray
     val x = diabetes.select(1 until 11).toArray // use only the primary attributes
     cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var y = diabetes.column("y").toDoubleArray();
+    var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
+    CrossValidation.regression(10, x, y, (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Note that we use the fully qualified name <code>smile.regression.rbfnet</code>
         in above example.
@@ -352,9 +567,28 @@ permalink: "{{ page.filePathStem }}.html"
         function ignores any training data close to the model prediction (within
         the &epsilon; threshold).</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def svr[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], eps: Double, C: Double, tol: Double = 1E-3): KernelMachine[T]
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SVR {
+        public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double eps, double C, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -365,9 +599,26 @@ permalink: "{{ page.filePathStem }}.html"
         parameter for instance <i>i</i> will be <code>weight(i) * C</code>,
         and <code>tol</code> the tolerance of convergence test.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, x, y) { case (x, y) => svr(x, y, new GaussianKernel(0.06), 20, 10) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, x, y, (x, y) -> SVR.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Applying SVR to the diabetes data, we observe a smaller RMSE by 10-fold cross validation
         compared to the RBF networks in previous section. Note that we have not optimized the hyperparameters in both cases.</p>
@@ -399,10 +650,29 @@ permalink: "{{ page.filePathStem }}.html"
         information gain are biased in favor of those attributes with more levels.
         Instead, one may employ the information gain ratio, which solves the drawback
         of information gain.</p>
-        
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def cart(formula: Formula, data: DataFrame, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree
+    def cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GINI, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5): RegressionTree
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RegressionTree {
+         public static RegressionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -416,9 +686,26 @@ permalink: "{{ page.filePathStem }}.html"
     <p>Applying to the diabetes data, we get RMSE 67.9 for 10-fold cross validation
         with regression trees of 200 nodes.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.cart(formula, data, 200) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> RegressionTree.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Classification and Regression Tree techniques have a number of advantages
         over many of those alternative techniques.</p>
@@ -481,10 +768,29 @@ permalink: "{{ page.filePathStem }}.html"
 
         <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
     </ol>
-        
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def randomForest(formula: Formula, data: DataFrame, ntrees: Int = 500, mtry: Int = 0, maxDepth: Int = 20, maxNodes: Int = 0, nodeSize: Int = 5, subsample: Double = 1.0): RandomForest
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RandomForest {
+         public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where <code>ntrees</code> is the number of trees,
         <code>nodeSize</code> is the number of instances in a node below which the tree will
@@ -506,9 +812,26 @@ permalink: "{{ page.filePathStem }}.html"
         with 500 regression trees of 200 nodes, which significantly smaller than
         a single regression tree.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.randomForest(formula, data, maxNodes = 100) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.RandomForest.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>The advantages of random forest are:</p>
         
@@ -572,10 +895,29 @@ permalink: "{{ page.filePathStem }}.html"
         over gradient boosting without shrinking (&eta; = 1). However, it comes at
         the price of increasing computational time both during training and
         prediction: lower learning rate requires more iterations.</p>
-        
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20, maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05, subsample: Double = 0.7): GradientTreeBoost
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GradientTreeBoost {
+         public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -597,9 +939,26 @@ permalink: "{{ page.filePathStem }}.html"
         with 500 iterations. This is comparable to the result of random forest but
         uses only 6 nodes for each regression tree.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.gbm(formula, data) }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>Soon after the introduction of gradient boosting Friedman proposed a
         minor modification to the algorithm, motivated by Breiman's bagging method.
@@ -666,6 +1025,13 @@ permalink: "{{ page.filePathStem }}.html"
 
     <p>This function fits a regular Gaussian process model.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object gpr {
         // regular Gaussian process model
@@ -676,6 +1042,23 @@ permalink: "{{ page.filePathStem }}.html"
         def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GaussianProcessRegression {
+        // regular Gaussian process model
+         public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double lambda);
+        // approximate Gaussian process model
+        public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
+        // Nystrom approximation
+        public static KernelMachine&lt;T&gt; nystrom(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>where the parameter <code>x</code> is the training data,
         <code>y</code> is the response variable,
@@ -687,12 +1070,32 @@ permalink: "{{ page.filePathStem }}.html"
         acting as active set of regressors. In simple case, these can be chosen
         randomly from the training set or as the centers of k-means clustering.</p>
 
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     cv.regression(10, x, y) { (x, y) =>
         val t = kmeans(x, 20).centroids
         gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
     }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, x, y, (x, y) -> {
+        var t = KMeans.fit(x, 20).centroids;
+        return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), 0.01);
+    });
+          </code></pre>
+            </div>
+        </div>
+    </div>
 
     <p>In the above example, we train the approximate Gaussian Process models
         with inducing samples by k-means clustering. The hyperparameters are not
