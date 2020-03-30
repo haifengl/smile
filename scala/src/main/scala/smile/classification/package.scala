@@ -195,8 +195,8 @@ package object classification {
     * @param distance the distance measure for finding nearest neighbors.
     * @param k the number of neighbors for classification.
     */
-  def knn[T <: AnyRef](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T] = time("K-Nearest Neighbor") {
-    KNN.fit(x, y, distance, k)
+  def knn[T <: AnyRef](x: Array[T], y: Array[Int], k: Int, distance: Distance[T]): KNN[T] = time("K-Nearest Neighbor") {
+    KNN.fit(x, y, k, distance)
   }
 
   /** K-nearest neighbor classifier with Euclidean distance as the similarity measure.
@@ -267,7 +267,7 @@ package object classification {
     LogisticRegression.fit(x, y, lambda, tol, maxIter)
   }
 
-  /** Maximum Entropy Classifier.
+  /** Maximum entropy classifier.
     * Maximum entropy is a technique for learning
     * probability distributions from data. In maximum entropy models, the
     * observed data itself is assumed to be the testable information. Maximum

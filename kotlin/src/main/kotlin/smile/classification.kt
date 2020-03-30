@@ -85,8 +85,8 @@ fun <T> knn(x: KNNSearch<T, T>, y: IntArray, k: Int): KNN<T> {
  * @param distance the distance measure for finding nearest neighbors.
  * @param k the number of neighbors for classification.
  */
-fun <T> knn(x: Array<T>, y: IntArray, distance: Distance<T>, k: Int): KNN<T> {
-    return KNN.fit(x, y, distance, k)
+fun <T> knn(x: Array<T>, y: IntArray, k: Int, distance: Distance<T>): KNN<T> {
+    return KNN.fit(x, y, k, distance)
 }
 
 /**
@@ -160,7 +160,7 @@ fun logit(x: Array<DoubleArray>, y: IntArray, lambda: Double = 0.0, tol: Double 
 }
 
 /**
- * Maximum Entropy Classifier.
+ * Maximum entropy classifier.
  * Maximum entropy is a technique for learning
  * probability distributions from data. In maximum entropy models, the
  * observed data itself is assumed to be the testable information. Maximum
