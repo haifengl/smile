@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.regression.treeshap;
+package smile.feature;
 
 import java.util.Arrays;
 import java.util.Queue;
@@ -36,9 +36,9 @@ import smile.regression.RegressionTree;
  * 
  * @author ray
  */
-public class ShapTree {
+public class TreeSHAP {
 	
-  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ShapTree.class);
+  private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TreeSHAP.class);
 
   public boolean normalize = false;
   public int[] children_left;
@@ -50,11 +50,11 @@ public class ShapTree {
   public double[] node_sample_weight; // equals number of samples for a node divided by total number of samples
   public int max_depth;
 
-  public ShapTree(RegressionTree tree) {
+  public TreeSHAP(RegressionTree tree) {
     this(tree, false);
   }
 
-  public ShapTree(RegressionTree tree, boolean normalize) {
+  public TreeSHAP(RegressionTree tree, boolean normalize) {
     this.normalize = normalize;
 
     int totalSamples = tree.root().size();
