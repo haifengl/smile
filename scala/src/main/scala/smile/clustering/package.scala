@@ -195,7 +195,7 @@ package object clustering {
     * @param tol     tol the tolerance of convergence test.
     * @param runs    the number of runs of K-Means algorithm.
     */
-  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans = time("K-Means") {
+  def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans = time("K-Means") {
     PartitionClustering.run(runs, () => KMeans.fit(data, k, maxIter, tol))
   }
 
@@ -326,7 +326,7 @@ package object clustering {
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
     * @param numLocal    the number of local minima to search for.
     */
-  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T] = time("CLARANS") {
+  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS[T] = time("CLARANS") {
     PartitionClustering.run(numLocal, () => CLARANS.fit(data, distance, k, maxNeighbor))
   }
 

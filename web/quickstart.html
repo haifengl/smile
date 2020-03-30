@@ -71,8 +71,10 @@ permalink: "{{ page.filePathStem }}.html"
                 In the shell, you can run any valid Scala expressions.
                 In the simplest case, you can use it as a calculator.
                 Besides, all high-level Smile operators are predefined
-                in the shell. If you need more memory
-                to handle large data, use the option <code>-J-Xmx</code>. For example,</p>
+                in the shell. By default, the shell uses up to 75% memory.
+                If you need more memory to handle large data, use the option
+                <code>-J-Xmx</code> or <code>-XX:MaxRAMPercentage</code>.
+                For example,</p>
 
     <pre class="prettyprint lang-sh"><code>
     $ ./bin/smile -J-Xmx30G

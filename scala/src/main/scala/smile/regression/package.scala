@@ -383,7 +383,7 @@ package object regression {
     *
     * @return Gradient boosted trees.
     */
-  def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.ls(), ntrees: Int = 500, maxDepth: Int = 20,
+  def gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int = 500, maxDepth: Int = 20,
           maxNodes: Int = 6, nodeSize: Int = 5, shrinkage: Double = 0.05,
           subsample: Double = 0.7): GradientTreeBoost = time("Gradient Tree Boost") {
     GradientTreeBoost.fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample)
@@ -441,8 +441,7 @@ package object regression {
       GaussianProcessRegression.fit(x, y, kernel, lambda)
     }
 
-    /** This method fits an approximate Gaussian process model by the method
-      * of subset of regressors.
+    /** Fits an approximate Gaussian process model with a subset of regressors.
       *
       * @param x the training dataset.
       * @param y the response variable.
@@ -456,8 +455,7 @@ package object regression {
       GaussianProcessRegression.fit(x, y, t, kernel, lambda)
     }
 
-    /** This method fits an approximate Gaussian process model by the method
-      * of subset of regressors.
+    /** Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
       *
       * @param x the training dataset.
       * @param y the response variable.
