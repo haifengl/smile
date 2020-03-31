@@ -249,7 +249,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def knn[T](x: Array[T], y: Array[Int], distance: Distance[T], k: Int): KNN[T]
+    def knn[T](x: Array[T], y: Array[Int], k: Int, distance: Distance[T]): KNN[T]
     </code></pre>
             </div>
         </div>
@@ -257,7 +257,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class KNN {
-        public static KNN&lt;T&gt; fit(T[] x, int[] y, Distance&lt;T&gt; distance, int k);
+        public static KNN&lt;T&gt; fit(T[] x, int[] y, int k, Distance&lt;T&gt; distance);
     }
           </code></pre>
             </div>
@@ -265,7 +265,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="kotlin_3">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-   fun &lt;T&gt; knn(x: Array&lt;T&gt;, y: IntArray, distance: Distance&lt;T&gt;, k: Int): KNN&lt;T&gt;
+   fun &lt;T&gt; knn(x: Array&lt;T&gt;, y: IntArray, k: Int, distance: Distance&lt;T&gt;): KNN&lt;T&gt;
           </code></pre>
             </div>
         </div>

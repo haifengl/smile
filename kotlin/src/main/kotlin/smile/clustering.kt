@@ -157,7 +157,7 @@ fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): K
  * @param tol tol the tolerance of convergence test.
  * @param runs the number of runs of K-Means algorithm.
  */
-fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans {
+fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans {
     return PartitionClustering.run(runs, { KMeans.fit(data, k, maxIter, tol) })
 }
 
@@ -293,7 +293,7 @@ fun dac(data: Array<DoubleArray>, k: Int, alpha: Double = 0.9, maxIter: Int = 10
  * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
  * @param numLocal the number of local minima to search for.
  */
-fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int, maxNeighbor: Int, numLocal: Int): CLARANS<T> {
+fun <T> clarans(data: Array<T>, distance: Distance<T>, k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS<T> {
     return PartitionClustering.run(numLocal, { CLARANS.fit(data, distance, k, maxNeighbor) })
 }
 

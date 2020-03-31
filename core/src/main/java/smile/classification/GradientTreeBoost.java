@@ -245,7 +245,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
      */
-    public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth,
+                                        int maxNodes, int nodeSize, double shrinkage, double subsample) {
         if (ntrees < 1) {
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
@@ -344,7 +345,9 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Train L-k tree boost.
      */
-    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
+    private static GradientTreeBoost traink(Formula formula, DataFrame x, ClassLabels codec, int[][] order,
+                                            int ntrees, int maxDepth, int maxNodes, int nodeSize,
+                                            double shrinkage, double subsample) {
         int n = x.nrows();
         int k = codec.k;
         int[] y = codec.y;
