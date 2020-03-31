@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -34,7 +34,7 @@ import smile.sort.QuickSort;
  * distances is usually not possible. The relationship is typically found
  * using isotonic regression.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class IsotonicMDS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);

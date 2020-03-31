@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ package smile.util;
  *
  * Java 8 doesn't have ToFloatFunction interface in java.util.function.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 /**  */
 public interface ToFloatFunction<T> {

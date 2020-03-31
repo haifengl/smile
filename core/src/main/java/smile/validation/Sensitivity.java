@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -32,7 +32,7 @@ package smile.validation;
  * In this implementation, the class label 1 is regarded as positive and 0
  * is regarded as negative.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Sensitivity implements ClassificationMeasure {
     public final static Sensitivity instance = new Sensitivity();

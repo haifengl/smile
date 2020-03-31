@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -42,7 +42,7 @@ import smile.math.matrix.SVD;
  * obtained matrix, until the total change in the matrix falls below the
  * empirically determined threshold (say 0.01).
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class SVDImputation implements MissingValueImputation {
 

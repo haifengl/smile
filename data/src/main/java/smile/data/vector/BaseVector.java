@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import smile.data.type.StructField;
  * @param <TS> the type of stream elements.
  * @param <S>  the type of stream.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializable {
     /** Return the (optional) name associated with vector. */

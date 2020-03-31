@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -41,7 +41,7 @@ import smile.association.TotalSupportTree.Node;
  * Association rules are usually required to satisfy a user-specified minimum
  * support and a user-specified minimum confidence at the same time.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class ARM implements Iterable<AssociationRule> {
 

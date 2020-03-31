@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -24,7 +24,7 @@ import smile.math.distance.Distance;
  * The distance between two clusters is the Euclidean distance between their
  * weighted centroids. Only valid for Euclidean distance based proximity matrix.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class WPGMCLinkage extends Linkage {
     /**

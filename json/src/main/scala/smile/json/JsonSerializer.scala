@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -36,7 +36,7 @@ import com.typesafe.scalalogging.LazyLogging
   * store the nano-of-second field to save the space. To preserve the high
   * precision of time, JsTimestamp should be employed and of course consumes more space.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024)) extends LazyLogging {
 

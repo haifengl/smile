@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -48,6 +48,6 @@
  * the shape of the curve of the experimental variogram to the shape of the curve
  * of the mathematical function.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 package smile.interpolation.variogram;

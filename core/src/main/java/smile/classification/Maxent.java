@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -47,7 +47,7 @@ import smile.util.IntSet;
  * <li> A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.</li>
  * </ol>
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
     private static final long serialVersionUID = 2L;

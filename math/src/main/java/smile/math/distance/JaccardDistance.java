@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -34,7 +34,7 @@ import java.util.Set;
  * of the sizes of the union and the intersection of two sets by the size of
  * the union.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class JaccardDistance<T> implements Distance<T[]> {
     private static final long serialVersionUID = 1L;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -43,7 +43,7 @@ import smile.math.MathEx;
  * occur very often, because then GA will in fact change to random search.
  * Best rates reported are about 0.5% - 1%.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class BitString implements Chromosome {
 

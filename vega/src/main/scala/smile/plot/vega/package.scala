@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ import smile.json._
 
 /** Vega-lite based data visualization.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 package object vega {
   implicit def pimpDataFrame(data: DataFrame): DataFrame2JSON = DataFrame2JSON(data)

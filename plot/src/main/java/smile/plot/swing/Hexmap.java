@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ import smile.math.MathEx;
 /**
  * Hexmap is a variant of heat map by replacing rectangle cells with hexagon cells.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Hexmap extends Plot {
     /** The lambda interface to retrieve the tooltip of cell. */

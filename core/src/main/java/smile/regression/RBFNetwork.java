@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -72,7 +72,7 @@ import smile.math.rbf.RadialBasisFunction;
  * @see RadialBasisFunction
  * @see SVR
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class RBFNetwork<T> implements Regression<T> {
     private static final long serialVersionUID = 2L;

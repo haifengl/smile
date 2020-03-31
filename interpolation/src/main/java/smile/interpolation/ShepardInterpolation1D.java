@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -31,7 +31,7 @@ package smile.interpolation;
  * other radial basis functions. However, it is simple, fast, and often jut the
  * thing for quick and dirty applications.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class ShepardInterpolation1D implements Interpolation {
 

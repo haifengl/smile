@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -68,7 +68,7 @@ import smile.swing.table.TableCopyPasteAdapter;
  * renderer and editor Color and Font. It also provides a renderer for
  * Float/Double of special values (such as NaN and Infinity).
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 @SuppressWarnings("serial")
 public class Table extends JXTable {

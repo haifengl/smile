@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -65,7 +65,7 @@ import smile.math.matrix.DenseMatrix;
  * even though it performs well in terms of prediction accuracy,
  * it does poorly in terms of offering a clear interpretation.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class RidgeRegression {
     /**
