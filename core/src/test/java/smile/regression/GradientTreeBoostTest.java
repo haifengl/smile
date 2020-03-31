@@ -126,7 +126,7 @@ public class GradientTreeBoostTest {
         test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
         test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
         test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
-        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
+        test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
     @Test
@@ -139,7 +139,7 @@ public class GradientTreeBoostTest {
         test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
         test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
         test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
-        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1815);
+        test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
     @Test
