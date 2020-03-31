@@ -13,23 +13,23 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile
 
-import scala.language.implicitConversions
 import javax.swing.JComponent
+import scala.language.implicitConversions
 import smile.json.JsObject
-import smile.plot.swing.{PlotCanvas, PlotGroup}
+import smile.plot.swing.{Canvas, PlotGroup}
 
 package object plot {
   /** Shows a swing component with implicit renderer. */
-  def show(canvas: PlotGroup)(implicit renderer: PlotGroup => Unit): Unit = {
+  def show(canvas: JComponent)(implicit renderer: JComponent => Unit): Unit = {
     renderer(canvas)
   }
 
   /** Shows a swing-based plot with implicit renderer. */
-  def show(canvas: PlotCanvas)(implicit renderer: PlotCanvas => Unit): Unit = {
+  def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
     renderer(canvas)
   }
 
@@ -44,8 +44,8 @@ package object plot {
   }
 
   /** Swing based plot renderer. */
-  implicit def desktop(canvas: PlotCanvas): Unit = {
-    swing.Window(canvas)
+  implicit def desktop(canvas: Canvas): Unit = {
+    canvas.window
   }
 
   /** Vega plot renderer with JavaFX. */
@@ -54,8 +54,13 @@ package object plot {
   }
 
   /** Swing component renderer in Apache Zeppelin Notebook. */
+  implicit def zeppelin(canvas: Canvas): Unit = {
+    print(s"%html ${swing.canvas2Image(canvas)}")
+  }
+
+  /** Swing component renderer in Apache Zeppelin Notebook. */
   implicit def zeppelin(canvas: JComponent): Unit = {
-    print(s"%html ${swing.img(canvas)}")
+    print(s"%html ${swing.component2Image(canvas)}")
   }
 
   /** Vega plot renderer in Apache Zeppelin Notebook. */

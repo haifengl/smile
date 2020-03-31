@@ -61,6 +61,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -77,6 +78,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static IsoMap of(double[][] data, int k, int d, boolean conformal);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun isomap(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
+    </code></pre>
             </div>
         </div>
     </div>
@@ -122,13 +130,10 @@ permalink: "{{ page.filePathStem }}.html"
     plot(swissroll, '.', BLUE)
 
     val map = isomap(swissroll.slice(0, 2000), 7)
-    val x = map.coordinates
-    val window = plot(x, '.', BLUE)
+    val vertices = map.coordinates
+    val edges = map.graph.getEdges.asScala.map(edge => Array(edge.v1, edge.v2)).toArray
 
-    for (i <- 0 until x.length)
-      for (j <- 0 until i)
-        if (map.graph.hasEdge(i, j))
-          window.canvas.line(x(i), x(j))
+    wireframe(vertices, edges).window()
     </code></pre>
             </div>
         </div>
@@ -136,20 +141,13 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var swissroll = Read.csv("data/manifold/swissroll.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
-    ScatterPlot.plot(swissroll, '.', Color.BLUE);
+    ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
 
     var map = IsoMap.of(Arrays.copyOf(swissroll, 2000), 7);
-    var x = map.coordinates;
+    var vertices = map.coordinates;
+    var edges = map.graph.getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new);
 
-    var canvas = ScatterPlot.plot(x, '.', Color.BLUE);
-    for (int i = 0; i < x.length; i++) {
-        for (int j = 0; j < i; j++) {
-            if (map.graph.hasEdge(i, j)) {
-                canvas.line(x[i], x[j]);
-            }
-        }
-    }
-    canvas.window();
+    Wireframe.of(vertices, edges).canvas().window();
           </code></pre>
             </div>
         </div>
@@ -183,6 +181,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -199,6 +198,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static LLE of(double[][] data, int k, int d);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lle(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2): LLE
+    </code></pre>
             </div>
         </div>
     </div>
@@ -243,6 +249,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -259,6 +266,13 @@ permalink: "{{ page.filePathStem }}.html"
         public static LaplacianEigenmap of(double[][] data, int k, int d, double t);
     }
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun laplacian(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
+    </code></pre>
             </div>
         </div>
     </div>
@@ -311,12 +325,28 @@ permalink: "{{ page.filePathStem }}.html"
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_7">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE
+    def tsne(X: Array[Array[Double]],
+             d: Int = 2,
+             perplexity: Double = 20.0,
+             eta: Double = 200.0,
+             iterations: Int = 1000): TSNE
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun tsne(X: Array&lt;DoubleArray&gt;,
+             d: Int = 2,
+             perplexity: Double = 20.0,
+             eta: Double = 200.0,
+             iterations: Int = 1000): TSNE
     </code></pre>
             </div>
         </div>
@@ -362,9 +392,9 @@ permalink: "{{ page.filePathStem }}.html"
     var perplexity = 20;
     var tsne = new TSNE(X, 2, perplexity, 200, 1000);
 
-    var plot = ScatterPlot.plot(tsne.coordinates, labels, '@', Palette.COLORS);
-    plot.setTitle("t-SNE of MNIST");
-    plot.window();
+    var canvas = ScatterPlot.of(tsne.coordinates, labels, '@', Palette.COLORS).canvas();
+    canvas.setTitle("t-SNE of MNIST");
+    canvas.window();
           </code></pre>
             </div>
         </div>

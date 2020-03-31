@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.clustering;
 
@@ -22,8 +22,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 
 import smile.clustering.KMeans;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
 /**
@@ -41,9 +40,9 @@ public class KMeansDemo extends ClusteringDemo {
         KMeans kmeans = KMeans.fit(dataset[datasetIndex], clusterNumber, 100, 4);
         System.out.format("K-Means clusterings %d samples in %dms\n", dataset[datasetIndex].length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(dataset[datasetIndex], kmeans.y, pointLegend, Palette.COLORS);
-        plot.points(kmeans.centroids, '@');
-        return plot;
+        Canvas plot = ScatterPlot.of(dataset[datasetIndex], kmeans.y, mark).canvas();
+        plot.add(ScatterPlot.of(kmeans.centroids, '@'));
+        return plot.panel();
     }
 
     @Override

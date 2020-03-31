@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.classification;
 
@@ -203,7 +203,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
                 int yi = y[o];
                 double xij = xj.getDouble(o);
 
-                if (yi != prevy && xij != prevx) {
+                if (yi != prevy && !MathEx.isZero(xij - prevx, 1E-7)) {
                     tc = (int) MathEx.sum(trueCount);
                     fc = node.size() - tc;
                 }

@@ -1,5 +1,4 @@
-Smile
-=====
+# Smile
 
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
@@ -47,12 +46,10 @@ and also make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
 available as shared libraries at runtime. This module employs the highly efficient
 [netlib-java](https://github.com/fommil/netlib-java#netlib-java) library.
 
-OS X
-----
+#### OS X
 Apple OS X requires no further setup as it ships with the veclib framework.
 
-Linux
------
+#### Linux
 Generically-tuned ATLAS and OpenBLAS are available with most distributions
 and must be enabled explicitly using the package-manager. For example,
 
@@ -66,16 +63,14 @@ However, these are only generic pre-tuned builds. If you have Intel MKL installe
 you could also create symbolic links from libblas.so.3 and liblapack.so.3 to libmkl_rt.so
 or use Debian's alternatives system.
 
-Windows
--------
+#### Windows
 The native_system builds expect to find libblas3.dll and liblapack3.dll
 on the %PATH% (or current working directory). Smile ships a prebuilt
 [OpenBLAS](http://www.openblas.net/).
 The users can also install vendor-supplied implementations, which may
 offer better performance.
 
-Shell
-=====
+## Shell
 Smile comes with an interactive shell. Download pre-packaged Smile from the [releases page](https://github.com/haifengl/smile/releases).
 In the home directory of Smile, type
 ```
@@ -124,8 +119,7 @@ Hidden Markov Model, Conditional Random Field.
 * **Natural Language Processing**
 Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
-Model Serialization
-===================
+## Model Serialization
 Most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface) so that
 you can use them in Spark. For reading/writing the models in non-Java code, we suggest [XStream](https://github.com/x-stream/xstream) to serialize the trained models.
 XStream is a simple library to serialize objects to XML and back again. XStream is easy to use and doesn't require mappings
@@ -136,9 +130,7 @@ we look forward to supporting PMML (Predictive Model Markup Language), an XML-ba
 
 Smile Scala API provides `read()`, `read.xstream()`, `write()`, and `write.xstream()` functions in package smile.io.
 
-SmilePlot
-=========
-
+## Visualization
 Smile also has a Swing-based data visualization library SmilePlot, which provides scatter plot, line plot, staircase plot, bar plot, box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap, QQ plot, contour plot, surface, and wireframe. The class PlotCanvas provides builtin functions such as zoom in/out, export, print, customization, etc.
 
 SmilePlot requires SwingX library for JXTable. But if your environment cannot use SwingX, it is easy to remove this dependency by using JTable.
@@ -152,8 +144,7 @@ To use SmilePlot, add the following to dependencies
     </dependency>
 ```
 
-Demo Gallery
-============
+## Gallery
 <table class="center" width="100%">
     <tr>
         <td width="50%">

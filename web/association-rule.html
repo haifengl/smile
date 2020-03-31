@@ -110,6 +110,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -133,6 +134,13 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun fpgrowth(minSupport: Int, itemsets: Array&lt;IntArray&gt;): Stream&lt;ItemSet&gt;
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>In practice, even the raw input is often too big to fit into the memory. To conquer this
@@ -145,6 +153,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
         <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_2">
@@ -166,12 +175,22 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    fun fptree(minSupport: Int, supplier: Supplier&lt;Stream&lt;IntArray&gt;&gt;): FPTree
+
+    fun fpgrowth(tree: FPTree): Stream&lt;ItemSet&gt;
+          </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>In the below example, we apply FP-Growth to a toy data.</p>
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
         <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
@@ -236,6 +255,34 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val itemsets = arrayOf(
+        intArrayOf(1, 3),
+        intArrayOf(2),
+        intArrayOf(4),
+        intArrayOf(2, 3, 4),
+        intArrayOf(2, 3),
+        intArrayOf(2, 3),
+        intArrayOf(1, 2, 3, 4),
+        intArrayOf(1, 3),
+        intArrayOf(1, 2, 3),
+        intArrayOf(1, 2, 3)
+    )
+
+    >>> fpgrowth(3, itemsets).forEach { itemset -> println(itemset) }
+    4 (3)
+    1 (5)
+    2 1 (3)
+    3 2 1 (3)
+    3 1 (5)
+    2 (7)
+    3 2 (6)
+    3 (8)
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>Each row is a frequent item set, ending with the frequency in parenthesis.
@@ -245,6 +292,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
         <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_4">
@@ -302,6 +350,32 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> class Parser : Supplier&lt;Stream&lt;IntArray&gt;&gt; {
+            override fun get(): Stream&lt;IntArray&gt; {  
+               return smile.util.Paths.getTestDataLines("transaction/kosarak.dat").map { line ->
+                   line.split(" ").map({ w -> w.toInt() }).toIntArray()
+               }
+            }
+        }
+    >>> val tree = fptree(1000, Parser())
+
+    >>> fpgrowth(tree).limit(10).forEach { itemset -> println(itemset) }
+    5634 (1000)
+    3805 (1001)
+    3376 (1001)
+    2279 (1001)
+    6333 (1002)
+    243 (1002)
+    808 (1003)
+    3875 (1004)
+    2265 (1004)
+    996 (1004)
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The data <code>kosarak.data</code> has 990,002 transactions.
@@ -318,6 +392,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
         <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_5">
@@ -338,6 +413,15 @@ permalink: "{{ page.filePathStem }}.html"
           </code></pre>
             </div>
         </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    def arm(minSupport: Int, confidence: Double, itemsets: Array&lt;IntArray&gt;): Stream&lt;AssociationRule&gt;
+
+    def arm(confidence: Double, tree: FPTree): Stream&lt;AssociationRule&gt;
+    </code></pre>
+            </div>
+        </div>
     </div>
 
     <p>The API is similar to <code>fpgrowth</code> except the additional parameter <code>confidence</code>.</p>
@@ -345,6 +429,7 @@ permalink: "{{ page.filePathStem }}.html"
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
         <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_6">
@@ -379,6 +464,23 @@ permalink: "{{ page.filePathStem }}.html"
     (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
     (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
           </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> arm(0.6, tree).limit(10).forEach { rule -> println(rule) }
+    (11) => (6) support = 32.73% confidence = 89.00% lift = 1.47 leverage = 0.1039
+    (3, 11) => (6) support = 14.51% confidence = 89.09% lift = 1.47 leverage = 0.0462
+    (1) => (6) support = 13.34% confidence = 66.89% lift = 1.10 leverage = 0.0123
+    (3, 1) => (6) support = 5.84% confidence = 68.28% lift = 1.12 leverage = 0.0064
+    (6, 1) => (11) support = 8.70% confidence = 65.17% lift = 1.77 leverage = 0.0379
+    (11, 1) => (6) support = 8.70% confidence = 93.70% lift = 1.54 leverage = 0.0306
+    (6, 3, 1) => (11) support = 3.81% confidence = 65.30% lift = 1.78 leverage = 0.0167
+    (3, 11, 1) => (6) support = 3.81% confidence = 93.73% lift = 1.54 leverage = 0.0134
+    (218) => (6) support = 7.85% confidence = 87.67% lift = 1.44 leverage = 0.0241
+    (3, 218) => (6) support = 3.43% confidence = 87.86% lift = 1.45 leverage = 0.0106
+    </code></pre>
             </div>
         </div>
     </div>
