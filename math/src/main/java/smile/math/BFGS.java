@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -61,7 +61,7 @@ import java.util.Arrays;
  * <li>D. Liu and J. Nocedal. On the limited memory BFGS method for large scale optimization. Mathematical Programming B 45 (1989) 503-528.</li>
  * </ol>
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class BFGS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);

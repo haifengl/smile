@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -27,7 +27,7 @@ import static smile.math.special.Gamma.lgamma;
  * <p>
  * for x, y &gt; 0 and the integration is over [0,1].The beta function is symmetric, i.e. B(x,y) = B(y,x).
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Beta {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Beta.class);

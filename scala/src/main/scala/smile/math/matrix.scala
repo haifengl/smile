@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -19,7 +19,7 @@ package smile.math.matrix
 
 /** Matrix companion object.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 object matrix {
   /** Creates a matrix filled with given value. */

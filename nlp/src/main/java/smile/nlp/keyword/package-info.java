@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -20,6 +20,6 @@
  * produce a list of keywords or keyphrases that capture the primary topics
  * discussed in the text.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 package smile.nlp.keyword;

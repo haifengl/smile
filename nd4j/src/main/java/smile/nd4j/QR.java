@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -34,7 +34,7 @@ import smile.math.matrix.Cholesky;
  * QR decomposition is also the basis for a particular eigenvalue algorithm,
  * the QR algorithm.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class QR extends smile.math.matrix.QR {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(QR.class);

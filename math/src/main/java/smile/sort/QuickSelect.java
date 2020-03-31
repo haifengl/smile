@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -26,7 +26,7 @@ package smile.sort;
  * a set of data. One often wants to know the median element (quantile p = 1/2)
  * in an array or the top and bottom quartile elements (quantile p = 1/4, 3/4).
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface QuickSelect {
     /**

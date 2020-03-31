@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -35,7 +35,7 @@ import smile.math.MathEx;
  * <li> S. Dudoit, J. Fridlyand and T. Speed. Comparison of discrimination methods for the classification of tumors using gene expression data. J Am Stat Assoc, 97:77-87, 2002.</li>
  * </ol>
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class SumSquaresRatio implements FeatureRanking {
     public static final SumSquaresRatio instance = new SumSquaresRatio();

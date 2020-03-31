@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -53,7 +53,7 @@ import smile.sort.DoubleHeapSelect;
  *
  * @param <E> the type of data objects in the tree.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E>, RNNSearch<E, E>, Serializable {
     private static final long serialVersionUID = 2L;

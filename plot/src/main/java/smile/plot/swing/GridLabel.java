@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ import java.awt.Font;
 /**
  * This is specialized label for axis grid labels.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class GridLabel extends Label {
     /**

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile Shell is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -22,7 +22,7 @@ import ammonite.runtime.Storage
 
 /** Ammonite REPL based shell.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 case class AmmoniteREPL(predefCode: String) {
   val home = Path(System.getProperty("user.home")) / ".smile"

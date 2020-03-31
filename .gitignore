@@ -14,6 +14,13 @@ web/_site/
 # Mobile Tools for Java (J2ME)
 .mtj.tmp/
 
+#clojure
+.lein-repl-*
+
+#gradle
+.gradle
+build
+
 # Package Files #
 *.jar
 *.war

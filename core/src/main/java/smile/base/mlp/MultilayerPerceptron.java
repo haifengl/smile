@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public abstract class MultilayerPerceptron implements Serializable {
     private static final long serialVersionUID = 2L;

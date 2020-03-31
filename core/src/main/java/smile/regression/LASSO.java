@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -64,7 +64,7 @@ import smile.math.matrix.Preconditioner;
  * <li> Seung-Jean Kim, K. Koh, M. Lustig, Stephen Boyd, and Dimitry Gorinevsky. An Interior-Point Method for Large-Scale L1-Regularized Least Squares. IEEE JOURNAL OF SELECTED TOPICS IN SIGNAL PROCESSING, VOL. 1, NO. 4, 2007.</li>
  * </ol>
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);

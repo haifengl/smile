@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -31,7 +31,7 @@ package smile.validation;
  * the effectiveness of retrieval with respect to a user who attaches &beta; times
  * as much importance to recall as precision.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class FMeasure implements ClassificationMeasure {
     public final static FMeasure instance = new FMeasure();
