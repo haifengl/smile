@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -30,7 +30,7 @@ package smile.cas
   * The shape of tensor (the number of dimensions and the size of each dimension)
   * might be only partially known.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 trait Tensor {
   /** The rank of tensor, i.e. the number of dimensions. */

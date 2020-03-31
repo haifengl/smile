@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import smile.util.time
   * variables called the regression function. Regression analysis is widely
   * used for prediction and forecasting.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 package object regression {
   /** Ordinary least squares. In linear regression,

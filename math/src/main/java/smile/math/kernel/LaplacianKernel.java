@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ import smile.math.MathEx;
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
  * where &sigma; &gt; 0 is the scale parameter of the kernel.
 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LaplacianKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;

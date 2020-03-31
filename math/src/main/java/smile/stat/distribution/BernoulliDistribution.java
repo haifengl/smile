@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -28,7 +28,7 @@ import smile.math.MathEx;
  * implement DiscreteExponentialFamily interface here since it is impossible
  * and meaningless to estimate a mixture of Bernoulli distributions.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class BernoulliDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

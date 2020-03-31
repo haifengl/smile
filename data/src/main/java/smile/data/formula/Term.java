@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -32,7 +32,7 @@ import java.util.Optional;
  * variables and function symbols. A term returns a single value
  * when applied to a data object (e.g. Tuple).
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface Term extends HyperTerm {
     @Override

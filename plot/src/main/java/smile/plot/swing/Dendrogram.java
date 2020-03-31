@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ import java.awt.Color;
  * A dendrogram is a tree diagram frequently used to illustrate the arrangement
  * of the clusters produced by hierarchical clustering.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Dendrogram extends Plot {
 

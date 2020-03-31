@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -139,7 +139,7 @@ import smile.util.{time, toJavaBiFunction}
   * the variance. However, this is not trivial. Therefore, there is a tradeoff
   * between bias and variance.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 package object classification {
   /** K-nearest neighbor classifier.

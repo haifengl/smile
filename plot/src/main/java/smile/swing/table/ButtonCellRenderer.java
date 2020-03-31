@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -50,7 +50,7 @@ import javax.swing.table.TableColumnModel;
  * source of the Action will be the table. The action command will contain
  * the model row number of the button that was clicked.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 @SuppressWarnings("serial")
 public class ButtonCellRenderer extends AbstractCellEditor implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener

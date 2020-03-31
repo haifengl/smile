@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -47,7 +47,7 @@ import smile.math.Function;
  * of nonlinear systems exhibiting sufficiently simple chaotic behavior,
  * 3D reconstruction in computer graphics (for example, hierarchical RBF).
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface RadialBasisFunction extends Function {
 

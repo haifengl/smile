@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -47,7 +47,7 @@ import smile.sort.HeapSelect;
  *
  * @param <E> the type of data objects in the hash table.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
     private static final long serialVersionUID = 2L;
