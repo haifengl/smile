@@ -51,7 +51,7 @@
 
 (defn random-forest
   "Random forest."
-  ([formula data] (random-forest formula data 500 0 SplitRule/GINI 20 0 5 1.0))
+  ([formula data] (random-forest formula data 500 0 SplitRule/GINI 20 500 5 1.0))
   ([formula data ntrees mtry split-rule max-depth max-nodes node-size subsample]
    (RandomForest/fit formula data ntrees mtry split-rule max-depth max-nodes node-size subsample)))
 
