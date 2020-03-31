@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ import java.util.Arrays;
  * produces the smoothest possible interpolant, which are obtained by solving
  * a very sparse linear equations with biconjugate gradient method.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LaplaceInterpolation {
 

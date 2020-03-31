@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import smile.data.type.DataTypes;
  * Both integer and string variables can be made into discrete measure,
  * but a discrete measure's levels will always be string values.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public abstract class DiscreteMeasure implements Measure {
     /**

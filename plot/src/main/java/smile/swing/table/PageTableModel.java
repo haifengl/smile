@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -35,7 +35,7 @@ import smile.swing.Button;
  * dictated by other GUI elements such as up/down buttons, or maybe a text
  * field that allows you to enter the page number you want to display.
  * 
- * @author Haifeng LI
+ * @author Haifeng Li. All rights reserved.
  */
 @SuppressWarnings("serial")
 public abstract class PageTableModel extends AbstractTableModel {

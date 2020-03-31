@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ import smile.data.type.StructType;
 /**
  * The generic term of applying a double function.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class DoubleFunction extends AbstractFunction {
     /** The function on a double. */

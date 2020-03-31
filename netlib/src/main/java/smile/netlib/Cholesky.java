@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -49,7 +49,7 @@ import org.netlib.util.intW;
  * If the matrix is not positive definite, an exception will be thrown out from
  * the method decompose().
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class Cholesky extends smile.math.matrix.Cholesky {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cholesky.class);

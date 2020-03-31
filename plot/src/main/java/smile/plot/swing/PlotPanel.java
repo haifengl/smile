@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -45,7 +45,7 @@ import smile.swing.Table;
  * user can also select an area by mouse for detailed view. For 3D plot, the user
  * can rotate the view by dragging mouse.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 @SuppressWarnings("serial")
 public class PlotPanel extends JPanel {

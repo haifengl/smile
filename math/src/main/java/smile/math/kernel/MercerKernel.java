@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import java.util.function.ToDoubleBiFunction;
  * a kernel matrix created using a particular kernel is positive semi-definite.
  * A matrix is positive semi-definite if its associated eigenvalues are nonnegative.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
 

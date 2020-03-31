@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -23,7 +23,7 @@ import java.io.Serializable;
  * The neighborhood function for 2-dimensional lattice topology (e.g. SOM).
  * It determines the rate of change around the winner neuron.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface Neighborhood extends Serializable {
     /**

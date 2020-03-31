@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -27,7 +27,7 @@ import smile.util.SparseArray;
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being over used.
 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class SparseGaussianKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

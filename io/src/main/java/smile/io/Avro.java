@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -50,7 +50,7 @@ import smile.data.type.StructType;
  * Avro relies on schemas. When Avro data is stored in a file, its schema
  * is stored with it. Avro schemas are defined with JSON.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Avro {
     /**

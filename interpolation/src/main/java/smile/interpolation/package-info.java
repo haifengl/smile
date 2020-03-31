@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,6 +25,6 @@
  * variable. A different problem which is closely related to interpolation is
  * the approximation of a complicated function by a simple function. 
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 package smile.interpolation;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -19,6 +19,6 @@
  * High quality random number generators as a replacement of
  * the standard Random class of Java system.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 package smile.math.random;

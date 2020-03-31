@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -51,7 +51,7 @@ import smile.nlp.dictionary.EnglishDictionary;
  * <li> Paul Clough. A Perl program for sentence splitting using rules. <li>
  * </ol>
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class SimpleSentenceSplitter implements SentenceSplitter {
 

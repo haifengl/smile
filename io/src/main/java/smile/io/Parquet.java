@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -57,7 +57,7 @@ import smile.data.type.*;
  * nested data structures. It uses the record shredding and
  * assembly algorithm described in the Dremel paper.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Parquet {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Parquet.class);

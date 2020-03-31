@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -30,7 +30,7 @@ import smile.data.type.StructType;
  * multiple binary dummy variables to indicate the presence or absence of
  * a characteristic.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class OneHot implements HyperTerm {
     /** The name of variable. */

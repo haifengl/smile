@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -28,7 +28,7 @@ import java.util.function.ToDoubleFunction;
  * Regression analysis is widely used for prediction and forecasting, where
  * its use has substantial overlap with the field of machine learning. 
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
     /**

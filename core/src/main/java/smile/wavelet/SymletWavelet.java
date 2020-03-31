@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -21,7 +21,7 @@ package smile.wavelet;
  * Symlet wavelets. The symlets have compact support and were constructed to
  * be as nearly symmetric (least asymmetric) as possible.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class SymletWavelet extends Wavelet {
     /**

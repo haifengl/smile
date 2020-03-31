@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2020 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -435,7 +435,7 @@ fun denclue(data: Array<DoubleArray>, sigma: Double, m: Int): DENCLUE {
  * etc. Note that a random initialization is NOT appropriate.
  *
  * ====References:====
- *  - Haifeng Li, Keshu Zhang, and Tao Jiang. Minimum Entropy Clustering and Applications to Gene Expression Analysis. CSB, 2004.
+ *  - Haifeng Li. All rights reserved., Keshu Zhang, and Tao Jiang. Minimum Entropy Clustering and Applications to Gene Expression Analysis. CSB, 2004.
  *
  * @param data the data set.
  * @param distance the distance measure for neighborhood search.

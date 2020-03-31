@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -30,7 +30,7 @@ import smile.stat.distribution.ChiSquareDistribution;
  * A bigram collocation is a pair of words w1 w2 that appear together with
  * statistically significance.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 

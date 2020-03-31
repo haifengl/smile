@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -32,7 +32,7 @@ import smile.math.special.Gamma;
  * where U1 and U2 have chi-square distributions with d1 and d2 degrees of
  * freedom respectively, and U1 and U2 are independent.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class FDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

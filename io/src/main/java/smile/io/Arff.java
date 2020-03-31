@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -58,7 +58,7 @@ import smile.data.type.*;
  * about the data set, including how it was derived, where it came from, and
  * how it might be cited.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Arff implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arff.class);

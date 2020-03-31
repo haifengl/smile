@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -114,7 +114,7 @@ import java.util.Arrays;
  * t is very small, then we're spending more time in the outer algorithm and
  * thus doing more exploring.
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class GeneticAlgorithm <T extends Chromosome> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneticAlgorithm.class);
