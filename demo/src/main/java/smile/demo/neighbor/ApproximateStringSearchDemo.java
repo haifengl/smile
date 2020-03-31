@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.neighbor;
 
@@ -41,7 +41,7 @@ import smile.neighbor.CoverTree;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 import smile.plot.swing.BarPlot;
-import smile.plot.swing.PlotCanvas;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -121,9 +121,10 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
             int coverBuild = (int) (System.currentTimeMillis() - time) / 1000;
 
             double[] buildTime = {naiveBuild, bktreeBuild, coverBuild};
-            PlotCanvas build = BarPlot.plot(buildTime, label);
+            Canvas build = BarPlot.of(buildTime).canvas();
             build.setTitle("Build Time");
-            canvas.add(build);
+            build.setAxisLabels(label);
+            canvas.add(build.panel());
             validate();
         }
 
@@ -153,9 +154,10 @@ public class ApproximateStringSearchDemo extends JPanel implements Runnable, Act
         int coverSearch = (int) (System.currentTimeMillis() - time) / 1000;
 
         double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch};
-        PlotCanvas search = BarPlot.plot(searchTime, label);
+        Canvas search = BarPlot.of(searchTime).canvas();
         search.setTitle("Search Time of k = " + knn);
-        canvas.add(search);
+        search.setAxisLabels(label);
+        canvas.add(search.panel());
         if (canvas.getComponentCount() > 3)
             canvas.setLayout(new GridLayout(2,2));
         validate();

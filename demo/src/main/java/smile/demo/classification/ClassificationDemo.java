@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.demo.classification;
 
@@ -37,10 +37,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 import smile.data.type.StructField;
 import smile.io.Read;
-import smile.plot.swing.Contour;
-import smile.plot.swing.Palette;
-import smile.plot.swing.PlotCanvas;
-import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.*;
 
 @SuppressWarnings("serial")
 public abstract class ClassificationDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
@@ -68,7 +65,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
     JPanel optionPane;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = 'o';
+    char mark = 'o';
 
     /**
      * Constructor.
@@ -102,13 +99,13 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         if (data.length < 500) {
-            pointLegend = 'o';
+            mark = 'o';
         } else {
-            pointLegend = '.';
+            mark = '.';
         }
-        
-        PlotCanvas canvas = paintOnCanvas(data, label);
-        add(canvas, BorderLayout.CENTER);
+
+        Canvas canvas = paintOnCanvas(data, label);
+        add(canvas.panel(), BorderLayout.CENTER);
     }
     
     /**
@@ -116,12 +113,8 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
      * @param data the data point(s) to paint, only support 2D or 3D features
      * @param label the data label for classification
      */
-    protected PlotCanvas paintOnCanvas(double[][] data, int[] label) {
-        PlotCanvas canvas = ScatterPlot.plot(data, pointLegend);
-        for (int i = 0; i < data.length; i++) {
-            canvas.point(pointLegend, Palette.COLORS[label[i]], data[i]);
-        }
-        return canvas;
+    protected Canvas paintOnCanvas(double[][] data, int[] label) {
+        return ScatterPlot.of(data, label, mark).canvas();
     }
     
     /**
@@ -161,24 +154,24 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         if (data.length < 500) {
-            pointLegend = 'o';
+            mark = 'o';
         } else {
-            pointLegend = '.';
+            mark = '.';
         }
-        
-        PlotCanvas canvas = paintOnCanvas(data, label);
+
+        Canvas canvas = paintOnCanvas(data, label);
 
         double[] lower = canvas.getLowerBounds();
         double[] upper = canvas.getUpperBounds();
 
         double[] x = new double[50];
-        double step = (upper[0] - lower[0]) / x.length;
-        for (int i = 0; i < x.length; i++) {
+        double step = (upper[0] - lower[0]) / (x.length + 1);
+        for (int i = 0; i < 50; i++) {
             x[i] = lower[0] + step * (i+1);
         }
 
         double[] y = new double[50];
-        step = (upper[1] - lower[1]) / y.length;
+        step = (upper[1] - lower[1]) / (y.length + 1);
         for (int i = 0; i < y.length; i++) {
             y[i] = lower[1] + step * (i+1);
         }
@@ -187,21 +180,27 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             double[][] f = learn(x, y);
 
             if (f != null) {
-                for (int i = 0; i < y.length; i++) {
-                    for (int j = 0; j < x.length; j++) {
+                /*
+                double[][] grid = new double[y.length * x.length][];
+                int[] clazz = new int[y.length * x.length];
+                for (int i = 0, k = 0; i < y.length; i++) {
+                    for (int j = 0; j < x.length; j++, k++) {
                         double[] p = {x[j], y[i]};
-                        canvas.point('.', Palette.COLORS[(int) f[i][j]], p);
+                        grid[k] = p;
+                        clazz[k] = (int) f[i][j];
                     }
                 }
 
+                canvas.add(ScatterPlot.of(grid, '.', clazz));
+                 */
+
                 double[] levels = getContourLevels();
                 Contour contour = new Contour(x, y, f, levels);
-                contour.showLevelValue(false);
                 canvas.add(contour);
                 
                 BorderLayout layout = (BorderLayout) getLayout();
                 remove(layout.getLayoutComponent(BorderLayout.CENTER));
-                add(canvas, BorderLayout.CENTER);
+                add(canvas.panel(), BorderLayout.CENTER);
                 validate();
             }
         } catch (Exception ex) {
@@ -225,18 +224,14 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
             if (data.length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            PlotCanvas canvas = ScatterPlot.plot(data, pointLegend);
-            for (int i = 0; i < data.length; i++) {
-                canvas.point(pointLegend, Palette.COLORS[label[i]], data[i]);
-            }
-
+            Canvas canvas = ScatterPlot.of(data, label, mark).canvas();
             BorderLayout layout = (BorderLayout) getLayout();
             remove(layout.getLayoutComponent(BorderLayout.CENTER));
-            add(canvas, BorderLayout.CENTER);
+            add(canvas.panel(), BorderLayout.CENTER);
             validate();
         }
     }
@@ -249,14 +244,10 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             double[][] data = formula.x(dataset[datasetIndex]).toArray();
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-            PlotCanvas canvas = ScatterPlot.plot(data, 'o');
-            for (int i = 0; i < data.length; i++) {
-                canvas.point('o', Palette.COLORS[label[i]], data[i]);
-            }
-
+            Canvas canvas = ScatterPlot.of(data, label, mark).canvas();
             BorderLayout layout = (BorderLayout) getLayout();
             remove(layout.getLayoutComponent(BorderLayout.CENTER));
-            add(canvas, BorderLayout.CENTER);
+            add(canvas.panel(), BorderLayout.CENTER);
             validate();
         }
     }

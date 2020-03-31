@@ -13,11 +13,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.plot.swing;
 
-import java.awt.Color;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
@@ -30,7 +29,7 @@ import smile.stat.distribution.GaussianDistribution;
  * plotting their quantiles against each other. In addition, Q-Q plots
  * can be used as a graphical means of estimating parameters in a
  * location-scale family of distributions.
-
+ *
  * @author Haifeng Li
  */
 public class QQPlot extends Plot {
@@ -38,119 +37,22 @@ public class QQPlot extends Plot {
     /**
      * The coordinates of points.
      */
-    private double[][] data;
+    private double[][] points;
 
     /**
-     * Constructor of one sample Q-Q plot to standard normal distribution.
+     * Constructor.
+     * @param points the points in the plot. A point (x, y) on the plot
+     *               corresponds to one of the quantiles of the second
+     *               distribution (y-coordinate) plotted against the
+     *               same quantile of the first distribution (x-coordinate).
      */
-    public QQPlot(double[] x) {
-        data = quantile(x, GaussianDistribution.getInstance());
-    }
-
-    /**
-     * Constructor of one sample Q-Q plot to given distribution.
-     */
-    public QQPlot(double[] x, Distribution d) {
-        data = quantile(x, d);
-    }
-
-    /**
-     * Constructor of one sample Q-Q plot to given distribution.
-     */
-    public QQPlot(int[] x, DiscreteDistribution d) {
-        data = quantile(x, d);
-    }
-
-    /**
-     * Constructor of two sample Q-Q plot.
-     */
-    public QQPlot(double[] x, double[] y) {
-        data = quantile(x, y);
-    }
-
-    /**
-     * Constructor of two sample Q-Q plot.
-     */
-    public QQPlot(int[] x, int[] y) {
-        data = quantile(x, y);
-    }
-
-    /**
-     * Generate the quantile-quantile pairs.
-     */
-    private static double[][] quantile(double[] x, double[] y) {
-        Arrays.sort(x);
-        Arrays.sort(y);
-
-        int n = Math.min(x.length, y.length);
-
-        double[][] q = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            double p = (i + 1) / (n + 1.0);
-            q[i][0] = x[(int) Math.round(p * x.length)];
-            q[i][1] = y[(int) Math.round(p * y.length)];
-        }
-
-        return q;
-    }
-
-    /**
-     * Generate the quantile-quantile pairs.
-     */
-    private static double[][] quantile(int[] x, int[] y) {
-        Arrays.sort(x);
-        Arrays.sort(y);
-
-        int n = Math.min(x.length, y.length);
-
-        double[][] q = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            double p = (i + 1) / (n + 1.0);
-            q[i][0] = x[(int) Math.round(p * x.length)];
-            q[i][1] = y[(int) Math.round(p * y.length)];
-        }
-
-        return q;
-    }
-
-    /**
-     * Generate the quantile-quantile pairs.
-     */
-    private static double[][] quantile(double[] x, Distribution d) {
-        Arrays.sort(x);
-
-        int n = x.length;
-        double[][] q = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            double p = (i + 1) / (n + 1.0);
-            q[i][0] = x[(int) Math.round(p * x.length)];
-            q[i][1] = d.quantile(p);
-        }
-
-        return q;
-    }
-
-    /**
-     * Generate the quantile-quantile pairs.
-     */
-    private static double[][] quantile(int[] x, DiscreteDistribution d) {
-        Arrays.sort(x);
-
-        int n = x.length;
-        double[][] q = new double[n][2];
-        for (int i = 0; i < n; i++) {
-            double p = (i + 1) / (n + 1.0);
-            q[i][0] = x[(int) Math.round(p * x.length)];
-            q[i][1] = d.quantile(p);
-        }
-
-        return q;
+    public QQPlot(double[][] points) {
+        this.points = points;
     }
 
     @Override
     public void paint(Graphics g) {
-        Color c = g.getColor();
-        g.setColor(getColor());
+        g.setColor(color);
 
         double[] lowerEnd = g.getLowerBound();
         lowerEnd[0] = Math.min(lowerEnd[0], lowerEnd[1]);
@@ -161,82 +63,97 @@ public class QQPlot extends Plot {
         upperEnd[1] = upperEnd[0];
         g.drawLine(lowerEnd, upperEnd);
 
-        for (int i = 0; i < data.length; i++) {
-            g.drawPoint('o', data[i]);
+        for (double[] point : points) {
+            g.drawPoint('o', point);
+        }
+    }
+
+    @Override
+    public double[] getLowerBound() {
+        return MathEx.colMin(points);
+    }
+
+    @Override
+    public double[] getUpperBound() {
+        return MathEx.colMax(points);
+    }
+
+    /**
+     * One sample Q-Q plot to standard normal distribution.
+     */
+    public static QQPlot of(double[] x) {
+        return of(x, GaussianDistribution.getInstance());
+    }
+
+    /**
+     * One sample Q-Q plot to given distribution.
+     */
+    public static QQPlot of(double[] x, Distribution d) {
+        Arrays.sort(x);
+
+        int n = x.length;
+        double[][] q = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            double p = (i + 1) / (n + 1.0);
+            q[i][0] = x[(int) Math.round(p * x.length)];
+            q[i][1] = d.quantile(p);
         }
 
-        g.setColor(c);
-    }
-    
-    /**
-     * Create a plot canvas with the one sample Q-Q plot to standard normal
-     * distribution. The x-axis is the quantiles of x and the y-axis is the
-     * quantiles of normal distribution.
-     * @param x a sample set.
-     */
-    public static PlotCanvas plot(double[] x) {
-        double[] lowerBound = {MathEx.min(x), GaussianDistribution.getInstance().quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), GaussianDistribution.getInstance().quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x));
-        return canvas;
+        return new QQPlot(q);
     }
 
     /**
-     * Create a plot canvas with the one sample Q-Q plot to given distribution.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of
-     * given distribution.
-     * @param x a sample set.
-     * @param d a distribution.
+     * One sample Q-Q plot to given discrete distribution.
      */
-    public static PlotCanvas plot(double[] x, Distribution d) {
-        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, d));
-        return canvas;
+    public static QQPlot of(int[] x, DiscreteDistribution d) {
+        Arrays.sort(x);
+
+        int n = x.length;
+        double[][] q = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            double p = (i + 1) / (n + 1.0);
+            q[i][0] = x[(int) Math.round(p * x.length)];
+            q[i][1] = d.quantile(p);
+        }
+
+        return new QQPlot(q);
     }
 
     /**
-     * Create a plot canvas with the two sample Q-Q plot.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
-     * @param x a sample set.
-     * @param y a sample set.
+     * Two sample Q-Q plot.
      */
-    public static PlotCanvas plot(double[] x, double[] y) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, y));
-        return canvas;
+    public static QQPlot of(double[] x, double[] y) {
+        Arrays.sort(x);
+        Arrays.sort(y);
+
+        int n = Math.min(x.length, y.length);
+
+        double[][] q = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            double p = (i + 1) / (n + 1.0);
+            q[i][0] = x[(int) Math.round(p * x.length)];
+            q[i][1] = y[(int) Math.round(p * y.length)];
+        }
+
+        return new QQPlot(q);
     }
 
     /**
-     * Create a plot canvas with the one sample Q-Q plot to given distribution.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of
-     * given distribution.
-     * @param x a sample set.
-     * @param d a distribution.
+     * Two sample Q-Q plot.
      */
-    public static PlotCanvas plot(int[] x, DiscreteDistribution d) {
-        double[] lowerBound = {MathEx.min(x), d.quantile(1 / (x.length + 1.0))};
-        double[] upperBound = {MathEx.max(x), d.quantile(x.length / (x.length + 1.0))};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, d));
-        return canvas;
-    }
+    public static QQPlot of(int[] x, int[] y) {
+        Arrays.sort(x);
+        Arrays.sort(y);
 
-    /**
-     * Create a plot canvas with the two sample Q-Q plot.
-     * The x-axis is the quantiles of x and the y-axis is the quantiles of y.
-     * @param x a sample set.
-     * @param y a sample set.
-     */
-    public static PlotCanvas plot(int[] x, int[] y) {
-        double[] lowerBound = {MathEx.min(x), MathEx.min(y)};
-        double[] upperBound = {MathEx.max(x), MathEx.max(y)};
-        PlotCanvas canvas = new PlotCanvas(lowerBound, upperBound);
-        canvas.add(new QQPlot(x, y));
-        return canvas;
+        int n = Math.min(x.length, y.length);
+
+        double[][] q = new double[n][2];
+        for (int i = 0; i < n; i++) {
+            double p = (i + 1) / (n + 1.0);
+            q[i][0] = x[(int) Math.round(p * x.length)];
+            q[i][1] = y[(int) Math.round(p * y.length)];
+        }
+
+        return new QQPlot(q);
     }
 }
