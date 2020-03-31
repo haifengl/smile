@@ -445,8 +445,10 @@ println("OOB error = ${rf.error()}")
         <div class="tab-pane" id="clojure_1">
           <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-clj"><code>
-(let [iris (read-arff "data/weka/iris.arff")
-      model (random-forest (Formula/lhs "class") iris)]
+(let [iris (read-arff
+            "data/weka/iris.arff")
+      model (random-forest
+             (Formula/lhs "class") iris)]
   (.error model))
           </code></pre>
           </div>
