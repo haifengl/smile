@@ -1,4 +1,4 @@
-(defproject smile "2.2.2"
+(defproject org.clojars.haifengl/smile "2.2.2"
   :description "Smile - Statistical Machine Intelligence and Learning Engine"
   :url "https://haifengl.github.io"
   :license {:name "GNU Lesser General Public License, Version 3"
