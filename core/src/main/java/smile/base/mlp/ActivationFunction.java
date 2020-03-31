@@ -92,7 +92,7 @@ public interface ActivationFunction extends Serializable {
             @Override
             public void g(double[] g, double[] y) {
                 for (int i = 0; i < g.length; i++) {
-                    g[i] = y[i] > 0 ? 1 : 0;
+                    g[i] *= y[i] > 0 ? 1 : 0;
                 }
 
             }

@@ -38,8 +38,7 @@ case class AmmoniteREPL(predefCode: String) {
        |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
        |                                                       ``::,,,,::''
        |
-       |  Welcome to Smile Shell; enter 'help<RETURN>' for the list of commands.
-       |  Type "exit<RETURN>" to leave the Smile Shell
+       |  Welcome to Smile Shell! Type "exit<RETURN>" to leave the Smile Shell.
        |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
