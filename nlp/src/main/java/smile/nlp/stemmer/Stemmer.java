@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package smile.nlp.stemmer;
  * for removing the commoner morphological and inflexional endings from words
  * (in English). Its main use is as part of a term normalisation process.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface Stemmer {
     /**

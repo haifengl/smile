@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -28,7 +28,7 @@ import smile.sort.QuickSort;
  * a linear combination of similar instances, which are selected by k-nearest
  * neighbors method. 
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LLSImputation implements MissingValueImputation {
     /**

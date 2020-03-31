@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ package smile.math.distance;
  * sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
  * <p>
  * If q = 2 or q = 3 the Lee distance coincides with the Hamming distance.
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class LeeDistance implements Metric<int[]> {
     private static final long serialVersionUID = 1L;

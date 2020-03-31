@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -38,7 +38,7 @@ import smile.util.IntArray2D;
  * For weighted cost, this implements the regular dynamic programming algorithm,
  * which takes O(mn) time and O(m) space.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class EditDistance implements Metric<String> {
     private static final long serialVersionUID = 1L;

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -22,7 +22,7 @@ package smile.wavelet;
  * Note that this class uses the different centering method from the one used in
  * the Daubechies class.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class D4Wavelet extends Wavelet {
 

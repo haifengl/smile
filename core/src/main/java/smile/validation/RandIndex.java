@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,7 @@ import smile.math.MathEx;
  * between two partitions. The adjusted Rand index is recommended for measuring
  * agreement even when the partitions compared have different numbers of clusters.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class RandIndex implements ClusterMeasure {
     public final static RandIndex instance = new RandIndex();

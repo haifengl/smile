@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -52,7 +52,7 @@ import smile.util.time
   * surface, GMDS allows finding the minimum-distortion embedding of one surface
   * into another.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 package object mds {
   /** Classical multidimensional scaling, also known as principal coordinates

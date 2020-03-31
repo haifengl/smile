@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -27,7 +27,7 @@ import smile.math.matrix.SparseMatrix;
  * Binary sparse dataset. Each item is stored as an integer array, which
  * are the indices of nonzero elements in ascending order.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class BinarySparseDatasetImpl implements BinarySparseDataset {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDatasetImpl.class);

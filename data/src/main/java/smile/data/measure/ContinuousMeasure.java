@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ import java.text.ParseException;
  * in infinitely small units. The statistical analysis of continuous data
  * is more powerful than that of categorical data.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public abstract class ContinuousMeasure implements Measure {
     /** For formatting and parsing numbers. */

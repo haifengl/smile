@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -52,7 +52,7 @@ import smile.stat.distribution.GaussianDistribution;
  * <li> Chinmay Hegde, Michael Wakin, and Richard Baraniuk. Random projections for manifold learning. NIPS, 2007.</li>
  * </ol>
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class RandomProjection implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;

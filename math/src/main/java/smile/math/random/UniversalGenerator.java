@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -26,7 +26,7 @@ package smile.math.random;
  * completely portable (gives bit identical results on all machines with at
  * least 24-bit mantissas in the floating point representation).
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class UniversalGenerator implements RandomNumberGenerator {
 

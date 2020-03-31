@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -39,7 +39,7 @@ import static java.lang.Math.log;
  * <li> John Platt. Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods. Advances in large margin classifiers. 10 (3): 61–74.</li>
  * </ol>
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class PlattScaling implements Serializable {
     private static final long serialVersionUID = 2L;

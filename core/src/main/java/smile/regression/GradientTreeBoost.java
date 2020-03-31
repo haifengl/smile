@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -101,7 +101,7 @@ import smile.util.Strings;
  * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
  * </ol>
  * 
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;

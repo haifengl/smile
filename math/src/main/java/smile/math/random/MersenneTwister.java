@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -39,7 +39,7 @@ package smile.math.random;
  * January 1998, pp 3--30.</li>
  * </ul>
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class MersenneTwister implements RandomNumberGenerator {
 

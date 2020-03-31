@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ package smile
   * The wavelet transform is invertible and in fact orthogonal. Both FFT and DWT
   * can be viewed as a rotation in function space.
   *
-  * @author Haifeng Li
+  * @author Haifeng Li. All rights reserved.
   */
 package object wavelet {
   /** Creates a wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:

@@ -1,28 +1,61 @@
 # Smile
 
-[![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge) [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
+[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XKU5BZX7XHPQ6)
+[![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
 Smile (Statistical Machine Intelligence and Learning Engine) is
 a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms,
 Smile delivers state-of-art performance.
+Smile is well documented and please check out the
+[project website](http://haifengl.github.io/)
+for programming guides and more information.
 
 Smile covers every aspect of machine learning, including classification,
 regression, clustering, association rule mining, feature selection,
 manifold learning, multidimensional scaling, genetic algorithms,
 missing value imputation, efficient nearest neighbor search, etc.
 
-Smile is well documented and please check out the
-[project website](http://haifengl.github.io/)
-for programming guides and more information.
+Smile implements the following major machine learning algorithms:
+
+- **Classification:**
+Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
+
+- **Regression:**
+Support Vector Regression, Gaussian Process, Regression Trees, Gradient Boosting, Random Forest, RBF Networks, OLS, LASSO, ElasticNet, Ridge Regression.
+
+- **Feature Selection:**
+Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selection, Signal Noise ratio, Sum Squares ratio.
+
+- **Clustering:**
+BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
+
+- **Association Rule & Frequent Itemset Mining:**
+FP-growth mining algorithm.
+
+- **Manifold Learning:**
+IsoMap, LLE, Laplacian Eigenmap, t-SNE, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA.
+
+- **Multi-Dimensional Scaling:**
+Classical MDS, Isotonic MDS, Sammon Mapping.
+
+- **Nearest Neighbor Search:**
+BK-Tree, Cover Tree, KD-Tree, LSH.
+
+- **Sequence Learning:**
+Hidden Markov Model, Conditional Random Field.
+
+- **Natural Language Processing:**
+Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
 You can use the libraries through Maven central repository by adding the following to your project pom.xml file.
 ```
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>2.2.2</version>
+      <version>2.3.0</version>
     </dependency>
 ```
 
@@ -30,19 +63,22 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.2.2"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.3.0"
 ```
 
-To enable machine optimized matrix computation, the users should add
-the dependency of smile-netlib:
+For Kotlin API, add the below into the `dependencies` section
+of Gradle build script.
 ```
-    <dependency>
-      <groupId>com.github.haifengl</groupId>
-      <artifactId>smile-netlib</artifactId>
-      <version>2.2.2</version>
-    </dependency>
+    implementation("com.github.haifengl:smile-kotlin:2.3.0")
 ```
-and also make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
+
+For Clojure API, add the following dependency to your project or build file:
+```
+    [org.clojars.haifengl/smile "2.3.0"]
+```
+
+To enable machine optimized matrix computation, the users should
+make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
 available as shared libraries at runtime. This module employs the highly efficient
 [netlib-java](https://github.com/fommil/netlib-java#netlib-java) library.
 
@@ -78,46 +114,13 @@ In the home directory of Smile, type
 ```
 to enter the shell, which is based on Ammonite-REPL. You can run any valid Scala expressions in the shell.
 In the simplest case, you can use it as a calculator. Besides, all high-level Smile operators are predefined
-in the shell. By default, the shell uses up to 4GB memory. If you need more memory to handle large data,
-use the option `-J-Xmx`. For example,
-
+in the shell. By default, the shell uses up to 75% memory. If you need more memory to handle large data,
+use the option `-J-Xmx` or `-XX:MaxRAMPercentage`. For example,
 ```
-    ./bin/smile -J-Xmx8192M
+    ./bin/smile -J-Xmx30G
 ```
 You can also modify the configuration file `./conf/smile.ini` for the memory and other JVM settings.
 For detailed help, checkout the [project website](http://haifengl.github.io/smile/).
-
-Smile implements the following major machine learning algorithms:
-
-* **Classification**
-Support Vector Machines, Decision Trees, AdaBoost, Gradient Boosting, Random Forest, Logistic Regression, Neural Networks, RBF Networks, Maximum Entropy Classifier, KNN, Naïve Bayesian, Fisher/Linear/Quadratic/Regularized Discriminant Analysis.
-
-* **Regression**
-Support Vector Regression, Gaussian Process, Regression Trees, Gradient Boosting, Random Forest, RBF Networks, OLS, LASSO, ElasticNet, Ridge Regression.
-
-* **Feature Selection**
-Genetic Algorithm based Feature Selection, Ensemble Learning based Feature Selection, Signal Noise ratio, Sum Squares ratio.
-
-* **Clustering**
-BIRCH, CLARANS, DBSCAN, DENCLUE, Deterministic Annealing, K-Means, X-Means, G-Means, Neural Gas, Growing Neural Gas, Hierarchical Clustering, Sequential Information Bottleneck, Self-Organizing Maps, Spectral Clustering, Minimum Entropy Clustering.
-
-* **Association Rule & Frequent Itemset Mining**
-FP-growth mining algorithm.
-
-* **Manifold learning**
-IsoMap, LLE, Laplacian Eigenmap, t-SNE, PCA, Kernel PCA, Probabilistic PCA, GHA, Random Projection, ICA.
-
-* **Multi-Dimensional Scaling**
-Classical MDS, Isotonic MDS, Sammon Mapping.
-
-* **Nearest Neighbor Search**
-BK-Tree, Cover Tree, KD-Tree, LSH.
-
-* **Sequence Learning**
-Hidden Markov Model, Conditional Random Field.
-
-* **Natural Language Processing**
-Sentence Splitter and Tokenizer, Bigram Statistical Test, Phrase Extractor, Keyword Extractor, Stemmer, POS Tagging, Relevance Ranking
 
 ## Model Serialization
 Most models support the Java `Serializable` interface (all classifiers do support `Serializable` interface) so that

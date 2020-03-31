@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -44,7 +44,7 @@ import smile.math.special.Gamma;
  * normally distributed with expected value of about &lambda;<sup>1/2</sup>
  * and variance of about 1/4.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class PoissonDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
     private static final long serialVersionUID = 2L;
