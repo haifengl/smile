@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -29,7 +29,7 @@ import smile.data.Tuple;
  * of primitive data types in the struct. An instance of a struct type
  * will be a tuple.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class StructType implements DataType {
 

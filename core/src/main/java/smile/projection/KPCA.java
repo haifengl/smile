@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -57,7 +57,7 @@ import smile.math.matrix.EVD;
  * @see smile.manifold.LaplacianEigenmap
  * @see smile.mds.SammonMapping
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class KPCA<T> implements Projection<T>, Serializable {
     private static final long serialVersionUID = 2L;

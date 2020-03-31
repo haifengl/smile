@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -28,7 +28,7 @@ import static java.lang.Math.log;
  * <li>X. Vinh, J. Epps, J. Bailey. Information Theoretic Measures for Clusterings Comparison: Variants, Properties, Normalization and Correction for Chance. JMLR, 2010.</li>
  * </ol>
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class MutualInformation implements ClusterMeasure {
     public final static MutualInformation instance = new MutualInformation();

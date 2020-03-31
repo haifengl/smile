@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -25,7 +25,7 @@ import java.util.HashMap;
 /**
  * An English lexicon with part-of-speech tags.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class EnglishPOSLexicon {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishPOSLexicon.class);

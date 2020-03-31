@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -38,7 +38,7 @@ import smile.data.type.StructType;
  * specified range is indicate in terms of percentiles of the original
  * distribution (like the 5th and 95th percentile).
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Scaler implements FeatureTransform {
     private static final long serialVersionUID = 2L;

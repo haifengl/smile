@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -43,7 +43,7 @@ import java.text.NumberFormat;
  * unlike the standard deviation, which is (the square root of) a central
  * moment.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class IntervalScale extends ContinuousMeasure {
 

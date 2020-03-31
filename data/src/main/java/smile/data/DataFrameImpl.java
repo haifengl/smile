@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -34,7 +34,7 @@ import smile.math.matrix.Matrix;
 /**
  * A simple implementation of DataFrame that store columnar data in single machine's memory.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 class DataFrameImpl implements DataFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);

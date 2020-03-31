@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -53,7 +53,7 @@ import smile.data.type.*;
  * for flat and hierarchical data, organized for efficient analytic
  * operations on modern hardware.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public class Arrow {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arrow.class);

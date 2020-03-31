@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -24,7 +24,7 @@ import smile.data.type.StructType;
 /**
  * This class provides a skeletal implementation of the bi-function term.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public abstract class AbstractBiFunction extends AbstractTerm {
     /** The name of function. */

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  * of terms. To be concise, we also allow HyperTerms that can be
  * can be expanded to multiple simple terms.
  *
- * @author Haifeng Li
+ * @author Haifeng Li. All rights reserved.
  */
 public interface HyperTerm extends Serializable {
     /** Binds the term to a schema. */
