@@ -52,7 +52,7 @@ import smile.util.time
   * surface, GMDS allows finding the minimum-distortion embedding of one surface
   * into another.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object mds {
   /** Classical multidimensional scaling, also known as principal coordinates
@@ -139,4 +139,8 @@ package object mds {
   def sammon(proximity: Array[Array[Double]], k: Int, lambda: Double = 0.2, tol: Double = 0.0001, stepTol: Double = 0.001, maxIter: Int = 100): SammonMapping = time("Sammon's Mapping") {
     SammonMapping.of(proximity, k, lambda, tol, stepTol, maxIter)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

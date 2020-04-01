@@ -26,7 +26,7 @@ import smile.plot.swing.Surface;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class SurfaceDemo extends JPanel {

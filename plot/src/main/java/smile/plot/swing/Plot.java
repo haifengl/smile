@@ -24,7 +24,7 @@ import javax.swing.JComponent;
 /**
  * The abstract base class of plots.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class Plot extends Shape {
     /** Constructor. */

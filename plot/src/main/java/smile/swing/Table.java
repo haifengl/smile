@@ -68,7 +68,7 @@ import smile.swing.table.TableCopyPasteAdapter;
  * renderer and editor Color and Font. It also provides a renderer for
  * Float/Double of special values (such as NaN and Infinity).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class Table extends JXTable {

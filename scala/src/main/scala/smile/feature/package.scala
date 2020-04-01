@@ -51,7 +51,7 @@ import smile.data.formula.Formula
   * numbers of features are available. Commonly, heuristic methods such as
   * genetic algorithms are employed for subset selection.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object feature {
   /** The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
@@ -115,4 +115,8 @@ package object feature {
     val y = formula.y(data).toIntArray
     SumSquaresRatio.of(x, y)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

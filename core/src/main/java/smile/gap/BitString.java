@@ -43,7 +43,7 @@ import smile.math.MathEx;
  * occur very often, because then GA will in fact change to random search.
  * Best rates reported are about 0.5% - 1%.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BitString implements Chromosome {
 

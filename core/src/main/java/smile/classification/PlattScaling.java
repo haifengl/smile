@@ -39,7 +39,7 @@ import static java.lang.Math.log;
  * <li> John Platt. Probabilistic Outputs for Support Vector Machines and Comparisons to Regularized Likelihood Methods. Advances in large margin classifiers. 10 (3): 61–74.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PlattScaling implements Serializable {
     private static final long serialVersionUID = 2L;

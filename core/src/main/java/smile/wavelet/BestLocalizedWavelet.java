@@ -20,7 +20,7 @@ package smile.wavelet;
 /**
  * Best localized wavelets.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BestLocalizedWavelet extends Wavelet {
     /**

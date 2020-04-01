@@ -51,7 +51,7 @@ import smile.stat.distribution.Distribution;
  * is less powerful than the Shapiro-Wilk test or Anderson-Darling test for
  * testing normality.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KSTest {
     /**

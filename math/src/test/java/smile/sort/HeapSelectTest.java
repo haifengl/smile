@@ -27,7 +27,7 @@ import smile.math.MathEx;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HeapSelectTest {
 

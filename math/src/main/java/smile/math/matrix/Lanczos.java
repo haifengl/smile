@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * implementation, we use partial reorthogonalization to make the method
  * numerically stable.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Lanczos {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Lanczos.class);

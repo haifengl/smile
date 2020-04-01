@@ -32,7 +32,7 @@ import java.util.Arrays;
  * <li> John M. Chambers, David A. James, Diane Lambert and Scott Vander Wiel. Monitoring Networked Applications With Incremental Quantile Estimation. Statistical Sciencec21(4):463–475, 2006.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IQAgent {
 

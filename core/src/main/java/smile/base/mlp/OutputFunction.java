@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * The output function of neural networks.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public enum OutputFunction {
     /**

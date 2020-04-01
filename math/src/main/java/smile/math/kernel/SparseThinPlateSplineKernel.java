@@ -25,7 +25,7 @@ import smile.util.SparseArray;
  * The Thin Plate Spline Kernel. k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;),
  * where &sigma; &gt; 0 is the scale parameter of the kernel.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

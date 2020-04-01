@@ -29,7 +29,7 @@ import smile.math.distance.Distance;
  * produces a weighted result, and the proportional averaging in UPGMA produces
  * an unweighted result.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class WPGMALinkage extends Linkage {
     /**

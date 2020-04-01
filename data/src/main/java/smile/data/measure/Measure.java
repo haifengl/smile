@@ -29,7 +29,7 @@ import java.text.NumberFormat;
  * properties which in turn determines the appropriateness for use of
  * certain statistical analyses.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Measure extends Serializable {
     /** Currency. */

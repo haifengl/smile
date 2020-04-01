@@ -27,7 +27,7 @@ import smile.util.SparseArray;
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being over used.
 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseGaussianKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

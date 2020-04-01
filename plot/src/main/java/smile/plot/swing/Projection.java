@@ -21,7 +21,7 @@ package smile.plot.swing;
  * Projection provides methods to map logical coordinates to Java2D coordinates.
  * Both 2D and 3D logical coordinates are supported.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 abstract class Projection {
     /**

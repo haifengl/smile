@@ -22,6 +22,10 @@ import scala.language.implicitConversions
 import smile.json.JsObject
 import smile.plot.swing.{Canvas, PlotGroup}
 
+/** Data visualization.
+  *
+  * @author Haifeng Li
+  */
 package object plot {
   /** Shows a swing component with implicit renderer. */
   def show(canvas: JComponent)(implicit renderer: JComponent => Unit): Unit = {

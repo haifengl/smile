@@ -40,7 +40,7 @@ import smile.neighbor.LinearSearch;
  * <li> Alexander Hinneburg and Hans-Henning Gabriel. DENCLUE 2.0: Fast Clustering based on Kernel Density Estimation. IDA, 2007.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DENCLUE extends PartitionClustering {
     private static final long serialVersionUID = 2L;

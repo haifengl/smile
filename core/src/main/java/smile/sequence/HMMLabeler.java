@@ -23,7 +23,7 @@ import java.util.function.ToIntFunction;
 /**
  * First-order Hidden Markov Model sequence labeler.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HMMLabeler<T> implements SequenceLabeler<T> {
     private static final long serialVersionUID = 2L;

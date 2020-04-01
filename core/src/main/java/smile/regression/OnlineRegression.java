@@ -24,7 +24,7 @@ package smile.regression;
  * 
  * @param <T> the type of input object
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface OnlineRegression <T> extends Regression<T> {
     /**

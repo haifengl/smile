@@ -34,7 +34,7 @@ import smile.nlp.collocation.NGram;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CooccurrenceKeywordsTest {
 

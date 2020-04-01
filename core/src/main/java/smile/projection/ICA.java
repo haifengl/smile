@@ -56,7 +56,7 @@ import smile.stat.distribution.GaussianDistribution;
  * <li>Aapo Hyvärinen, Erkki Oja: Independent component analysis: Algorithms and applications, 2000</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ICA implements Serializable {
     private static final long serialVersionUID = 2L;

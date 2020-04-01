@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable integer vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     @Override

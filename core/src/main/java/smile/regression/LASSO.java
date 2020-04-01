@@ -64,7 +64,7 @@ import smile.math.matrix.Preconditioner;
  * <li> Seung-Jean Kim, K. Koh, M. Lustig, Stephen Boyd, and Dimitry Gorinevsky. An Interior-Point Method for Large-Scale L1-Regularized Least Squares. IEEE JOURNAL OF SELECTED TOPICS IN SIGNAL PROCESSING, VOL. 1, NO. 4, 2007.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LASSO {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);

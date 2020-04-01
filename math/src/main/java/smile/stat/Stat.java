@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * Statistical functions or tests.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Stat {
     /**

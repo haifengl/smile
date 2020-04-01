@@ -23,7 +23,7 @@ import smile.json._
 
 /** Vega-lite based data visualization.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object vega {
   implicit def pimpDataFrame(data: DataFrame): DataFrame2JSON = DataFrame2JSON(data)

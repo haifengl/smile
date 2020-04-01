@@ -44,7 +44,7 @@ import smile.math.special.Gamma;
  * normally distributed with expected value of about &lambda;<sup>1/2</sup>
  * and variance of about 1/4.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PoissonDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
     private static final long serialVersionUID = 2L;

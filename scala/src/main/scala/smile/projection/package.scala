@@ -84,7 +84,7 @@ import smile.util.time
   * Restricted Boltzmann machines) that is followed by a finetuning stage based
   * on backpropagation.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object projection {
   /** Principal component analysis. PCA is an orthogonal
@@ -228,4 +228,8 @@ package object projection {
     data.foreach(model.update(_))
     model
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

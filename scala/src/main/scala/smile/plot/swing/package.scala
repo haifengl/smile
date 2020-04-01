@@ -32,7 +32,7 @@ import smile.projection.PCA
 
 /** Swing based data visualization.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object swing {
   /** Returns the HTML img tag with the canvas is encoded by BASE64. */

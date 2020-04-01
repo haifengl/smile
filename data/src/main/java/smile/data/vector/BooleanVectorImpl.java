@@ -23,7 +23,7 @@ import smile.data.type.StructField;
 /**
  * An immutable boolean vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class BooleanVectorImpl implements BooleanVector {
     /** The name of vector. */

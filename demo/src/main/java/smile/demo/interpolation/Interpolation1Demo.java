@@ -34,7 +34,7 @@ import smile.plot.swing.ScatterPlot;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class Interpolation1Demo extends JPanel {

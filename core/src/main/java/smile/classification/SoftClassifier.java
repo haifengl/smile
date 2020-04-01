@@ -23,7 +23,7 @@ package smile.classification;
  *
  * @param <T> the type of input object
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface SoftClassifier<T> extends Classifier<T> {
     /**

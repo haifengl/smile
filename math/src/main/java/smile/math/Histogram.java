@@ -34,7 +34,7 @@ import java.util.Arrays;
  * number of bins and frequency counting. It does NOT providing plotting
  * services.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Histogram {
     /**

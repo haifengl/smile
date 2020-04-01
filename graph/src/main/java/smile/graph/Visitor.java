@@ -21,7 +21,7 @@ package smile.graph;
  * A visitor is encapsulation of some operation on graph vertices during
  * traveling graph (DFS or BFS).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Visitor {
     /**

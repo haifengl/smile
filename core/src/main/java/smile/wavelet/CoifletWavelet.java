@@ -23,7 +23,7 @@ package smile.wavelet;
  * vanishing moments and scaling functions N / 3 ? 1, and has been used in
  * many applications using Calderon-Zygmund Operators.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CoifletWavelet extends Wavelet {
     /**

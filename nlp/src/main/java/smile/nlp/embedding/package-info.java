@@ -33,6 +33,6 @@
  * representation, have been shown to boost the performance in
  * NLP tasks such as syntactic parsing and sentiment analysis.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.embedding;

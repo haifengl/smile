@@ -36,7 +36,7 @@ import smile.util.SparseArray;
 /**
  * Interface to read data from external storage systems.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Read {
     /** Reads a CSV file. */

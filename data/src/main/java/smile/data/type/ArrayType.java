@@ -22,7 +22,7 @@ import java.util.Arrays;
 /**
  * Array of primitive data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ArrayType implements DataType {
     /** Boolean array type. */

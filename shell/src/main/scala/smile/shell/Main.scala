@@ -23,7 +23,7 @@ import ammonite.util.Res
 
 /** An object that runs Smile script or interactive shell.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 object Main extends App {
 

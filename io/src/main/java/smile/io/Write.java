@@ -25,7 +25,7 @@ import smile.data.DataFrame;
 /**
  * Interface to write data to external storage systems.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Write {
     /** Writes a CSV file. */

@@ -25,7 +25,7 @@ import smile.classification.QDA;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class QDADemo extends ClassificationDemo {

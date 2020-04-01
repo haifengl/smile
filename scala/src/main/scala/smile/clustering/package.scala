@@ -58,7 +58,7 @@ import smile.util.{SparseArray, time}
   * usually do not however work with arbitrary feature combinations as in general
   * subspace methods.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object clustering {
   /** Agglomerative Hierarchical Clustering. This method
@@ -559,4 +559,8 @@ package object clustering {
   def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
     SpectralClustering.fit(data, k, l, sigma)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

@@ -99,7 +99,7 @@ import smile.util.IntSet;
  * @see GradientTreeBoost
  * @see RandomForest
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;

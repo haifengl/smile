@@ -57,7 +57,7 @@ import smile.util.Strings;
  * @see RDA
  * @see NaiveBayes
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LDA implements SoftClassifier<double[]> {
     private static final long serialVersionUID = 2L;

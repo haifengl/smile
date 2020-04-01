@@ -33,7 +33,7 @@ import smile.math.distance.Distance;
  * trees what matters is the set of pairs of points that form distances chosen
  * by the algorithm.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SingleLinkage extends Linkage {
     /**

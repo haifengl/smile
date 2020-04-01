@@ -22,7 +22,7 @@ package smile.nlp;
  * This provides an interface to all the anchor text in the corpus
  * pointing to a text.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface AnchorText {
     

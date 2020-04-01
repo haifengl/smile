@@ -51,7 +51,7 @@ import smile.util.time
   * minimizes the divergence between distributions over pairs of points),
   * and curvilinear component analysis.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object manifold {
   /** Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -168,4 +168,8 @@ package object manifold {
   def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = time("t-SNE") {
     new TSNE(X, d, perplexity, eta, iterations)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

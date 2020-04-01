@@ -40,7 +40,7 @@ import smile.stat.distribution.WeibullDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class WeibullDistributionDemo extends JPanel implements ChangeListener {

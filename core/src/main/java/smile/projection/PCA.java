@@ -60,7 +60,7 @@ import smile.math.matrix.SVD;
  * @see PPCA
  * @see GHA
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PCA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;

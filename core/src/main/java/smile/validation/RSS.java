@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * Residual sum of squares.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RSS implements RegressionMeasure {
     public final static RSS instance = new RSS();

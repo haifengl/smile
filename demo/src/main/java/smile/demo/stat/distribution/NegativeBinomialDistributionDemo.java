@@ -39,7 +39,7 @@ import smile.stat.distribution.NegativeBinomialDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class NegativeBinomialDistributionDemo extends JPanel implements ChangeListener {

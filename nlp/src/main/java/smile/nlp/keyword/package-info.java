@@ -20,6 +20,6 @@
  * produce a list of keywords or keyphrases that capture the primary topics
  * discussed in the text.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.keyword;

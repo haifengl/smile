@@ -35,7 +35,7 @@ import smile.math.MathEx;
  * A robust alternative is to subtract the median and divide by the IQR
  * by <code>RobustStandardizer</code>.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Standardizer implements FeatureTransform {
     private static final long serialVersionUID = 2L;

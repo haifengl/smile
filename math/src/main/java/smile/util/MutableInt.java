@@ -21,7 +21,7 @@ package smile.util;
 /**
  * A mutable int wrapper. It is efficient as counter in HashMap.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MutableInt {
 

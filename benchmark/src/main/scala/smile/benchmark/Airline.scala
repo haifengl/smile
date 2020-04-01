@@ -30,7 +30,7 @@ import smile.validation._
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 object Airline {
 

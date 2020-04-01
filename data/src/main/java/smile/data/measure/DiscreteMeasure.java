@@ -33,7 +33,7 @@ import smile.data.type.DataTypes;
  * Both integer and string variables can be made into discrete measure,
  * but a discrete measure's levels will always be string values.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class DiscreteMeasure implements Measure {
     /**

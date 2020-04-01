@@ -24,7 +24,7 @@ import smile.data.type.StructType;
 /**
  * This class provides a skeletal implementation of the bi-function term.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class AbstractBiFunction extends AbstractTerm {
     /** The name of function. */

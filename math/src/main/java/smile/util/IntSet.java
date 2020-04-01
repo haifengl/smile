@@ -27,7 +27,7 @@ import smile.math.MathEx;
 /**
  * A set of integers.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IntSet implements Serializable {
     private static final long serialVersionUID = 2L;

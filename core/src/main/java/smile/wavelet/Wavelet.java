@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * The wavelet transform is invertible and in fact orthogonal. Both FFT and DWT
  * can be viewed as a rotation in function space.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Wavelet {
 

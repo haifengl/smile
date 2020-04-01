@@ -68,7 +68,7 @@ import smile.math.MathEx;
  * not reliable for this type of data.
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RandomForest implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;

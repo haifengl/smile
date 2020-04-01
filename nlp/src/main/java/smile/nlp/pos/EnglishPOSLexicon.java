@@ -25,7 +25,7 @@ import java.util.HashMap;
 /**
  * An English lexicon with part-of-speech tags.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EnglishPOSLexicon {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(EnglishPOSLexicon.class);

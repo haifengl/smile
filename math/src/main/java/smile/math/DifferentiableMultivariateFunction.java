@@ -21,7 +21,7 @@ package smile.math;
  * A differentiable function is a function whose derivative exists at each point
  * in its domain.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DifferentiableMultivariateFunction extends MultivariateFunction {
 

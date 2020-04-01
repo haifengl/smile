@@ -38,7 +38,7 @@ import smile.math.MathEx;
  * estimates are then used to determine the distribution of the latent variables
  * in the next E step.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Mixture extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

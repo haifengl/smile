@@ -24,7 +24,7 @@ package smile.imputation;
  * non-missing attributes in the same instance. Note that this is not the
  * average of same attribute across different instances.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AverageImputation implements MissingValueImputation {
     /**

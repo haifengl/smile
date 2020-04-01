@@ -80,6 +80,6 @@
  * -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK
  * </code></pre>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.netlib;

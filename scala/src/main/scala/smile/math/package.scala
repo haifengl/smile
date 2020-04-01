@@ -25,7 +25,7 @@ import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
 
 /** Mathematical and statistical functions.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object math {
   implicit def pimpDouble(x: Double) = new PimpedDouble(x)

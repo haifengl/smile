@@ -34,7 +34,7 @@ import smile.math.matrix.Matrix;
 /**
  * A simple implementation of DataFrame that store columnar data in single machine's memory.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class DataFrameImpl implements DataFrame {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);

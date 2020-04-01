@@ -29,7 +29,7 @@ import smile.data.Tuple;
  * of primitive data types in the struct. An instance of a struct type
  * will be a tuple.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class StructType implements DataType {
 

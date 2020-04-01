@@ -50,7 +50,7 @@ import smile.swing.Printer;
 /**
  * PlotGroup organizes multiple plots in a grid layout.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class PlotGroup extends JPanel implements ActionListener, Printable {

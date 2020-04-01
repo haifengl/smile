@@ -102,7 +102,7 @@ import smile.util.IntSet;
  * the neural network for categorical target variables, the outputs
  * can be interpreted as posterior probabilities, which are very useful.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;

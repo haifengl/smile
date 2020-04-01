@@ -32,7 +32,7 @@ import smile.regression.RegressionTree;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BootstrapTest {
 

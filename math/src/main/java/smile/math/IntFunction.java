@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * An interface representing a univariate int function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface IntFunction extends Serializable {
     /**

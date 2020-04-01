@@ -40,7 +40,7 @@ package smile.interpolation.variogram;
  * to the value of the variogram at extremely small separation distances is
  * called the nugget effect.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SphericalVariogram implements Variogram {
     private double a;

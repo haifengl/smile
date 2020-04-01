@@ -30,7 +30,7 @@ import smile.math.distance.Distance;
  * 
  * @see smile.clustering.HierarchicalClustering
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class Linkage {
     /** The data size. */

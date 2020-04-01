@@ -26,7 +26,7 @@ import java.util.Arrays;
  * The user need supply the lower and upper bounds for each axis. These bounds
  * usually are extended (a little) internally for better view purpose.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Base {
 

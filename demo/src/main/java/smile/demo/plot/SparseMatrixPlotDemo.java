@@ -27,7 +27,7 @@ import smile.plot.swing.SparseMatrixPlot;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class SparseMatrixPlotDemo extends JPanel {

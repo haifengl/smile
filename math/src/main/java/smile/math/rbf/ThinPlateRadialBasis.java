@@ -33,7 +33,7 @@ package smile.math.rbf;
  * experiment is to construct an RBF interpolator omitting one data point
  * at a time and measuring the interpolation error at the omitted point.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ThinPlateRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;

@@ -23,7 +23,7 @@ import smile.nlp.Text;
  * In the context of information retrieval, relevance denotes how well a
  * retrieved set of documents meets the information need of the user.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Relevance implements Comparable<Relevance> {
 

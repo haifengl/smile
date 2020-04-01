@@ -37,7 +37,7 @@ import smile.data.type.StructType;
  * that is null, instead a user must check `isNullAt` before attempting
  * to retrieve a value that might be null.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Tuple extends Serializable {
     /** Returns the schema of tuple. */

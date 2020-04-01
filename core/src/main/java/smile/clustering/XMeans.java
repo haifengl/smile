@@ -41,7 +41,7 @@ import smile.sort.QuickSort;
  * @see KMeans
  * @see GMeans
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class XMeans extends CentroidClustering<double[], double[]> {
     private static final long serialVersionUID = 2L;

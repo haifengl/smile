@@ -54,6 +54,6 @@
  * doubling constant. The bound on search time is O(c12 log n) where c is
  * the expansion constant of the dataset.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.neighbor;

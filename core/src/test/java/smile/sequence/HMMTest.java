@@ -31,7 +31,7 @@ import smile.stat.distribution.EmpiricalDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class HMMTest {

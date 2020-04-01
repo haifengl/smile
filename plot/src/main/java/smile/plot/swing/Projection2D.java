@@ -20,7 +20,7 @@ package smile.plot.swing;
 /**
  * Project 2D logical coordinates to Java2D coordinates.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Projection2D extends Projection {
 

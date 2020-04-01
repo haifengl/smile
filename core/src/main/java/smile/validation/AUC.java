@@ -37,7 +37,7 @@ import smile.sort.QuickSort;
  * We calculate AUC based on Mann-Whitney U test
  * (https://en.wikipedia.org/wiki/Mann-Whitney_U_test).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AUC {
     /**

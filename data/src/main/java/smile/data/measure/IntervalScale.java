@@ -43,7 +43,7 @@ import java.text.NumberFormat;
  * unlike the standard deviation, which is (the square root of) a central
  * moment.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IntervalScale extends ContinuousMeasure {
 

@@ -44,7 +44,7 @@ import smile.math.matrix.EVD;
  *
  * @see PCA
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PPCA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;

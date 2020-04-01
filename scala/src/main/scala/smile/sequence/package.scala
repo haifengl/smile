@@ -23,7 +23,7 @@ import smile.util.time
 
 /** Sequence labeling algorithms.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object sequence {
   /** First-order Hidden Markov Model. A hidden Markov model (HMM) is a statistical
@@ -108,4 +108,8 @@ package object sequence {
   def gcrf[T <: Object](sequences: Array[Array[T]], labels: Array[Array[Int]], features: Function[T, Tuple], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRFLabeler[T] = time("CRF") {
     CRFLabeler.fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

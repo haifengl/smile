@@ -24,7 +24,7 @@ import java.util.function.ToDoubleBiFunction;
 /**
  * Correlation distance is defined as 1 - correlation coefficient.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CorrelationDistance implements Distance<double[]> {
     private static final long serialVersionUID = 1L;

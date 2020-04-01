@@ -36,7 +36,7 @@ import smile.math.special.Gamma;
  * Many other statistical tests also lead to a use of this distribution,
  * like Friedman's analysis of variance by ranks.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ChiSquareDistribution extends AbstractDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;

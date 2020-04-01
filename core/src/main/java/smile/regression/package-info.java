@@ -26,6 +26,6 @@
  * used for prediction and forecasting, where its use has substantial overlap
  * with the field of machine learning. 
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.regression;

@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable float vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     @Override

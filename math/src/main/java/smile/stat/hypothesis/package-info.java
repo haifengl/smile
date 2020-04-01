@@ -41,6 +41,6 @@
  * a decision based on data are available via decision theory and optimal
  * decisions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.stat.hypothesis;

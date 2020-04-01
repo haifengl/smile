@@ -29,7 +29,7 @@ import org.apache.hadoop.fs.FileSystem;
 /**
  * Static methods that return the InputStream/Reader of a file or URL.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Input {
     /** Returns the reader of a file path or URI. */

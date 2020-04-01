@@ -21,7 +21,7 @@ package smile.nlp.tokenizer;
  * A sentence splitter segments text into sentences (a string of words
  * satisfying the grammatical rules of a language).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface SentenceSplitter {
     /**

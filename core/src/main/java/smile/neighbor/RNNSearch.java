@@ -27,7 +27,7 @@ import java.util.List;
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface RNNSearch<K, V> {
     /**

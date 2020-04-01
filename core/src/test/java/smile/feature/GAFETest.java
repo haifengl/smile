@@ -37,7 +37,7 @@ import smile.validation.RMSE;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GAFETest {
     

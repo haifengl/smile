@@ -37,7 +37,7 @@ import smile.regression.Regression;
  * usually very expensive from a computational point of view because of the
  * large number of times the training process is repeated.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LOOCV {
     /**

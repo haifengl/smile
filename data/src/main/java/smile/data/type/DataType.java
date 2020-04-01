@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
 /**
  * The interface of data types.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DataType extends Serializable {
     /**

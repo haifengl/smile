@@ -39,7 +39,7 @@ import smile.stat.distribution.ShiftedGeometricDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ShiftedGeometricDistributionDemo extends JPanel implements ChangeListener {

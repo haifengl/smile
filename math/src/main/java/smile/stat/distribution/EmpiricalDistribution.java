@@ -30,7 +30,7 @@ import smile.util.IntSet;
  * Empirical distribution is a very important estimator in Statistics. In
  * particular, the Bootstrap method rely heavily on the empirical distribution.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EmpiricalDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;
