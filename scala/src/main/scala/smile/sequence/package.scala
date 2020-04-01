@@ -109,7 +109,7 @@ package object sequence {
     CRFLabeler.fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
   }
 
-  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
     * The user should ignore this object. */
   object $dummy
 }

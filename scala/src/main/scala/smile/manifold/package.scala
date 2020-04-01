@@ -169,7 +169,7 @@ package object manifold {
     new TSNE(X, d, perplexity, eta, iterations)
   }
 
-  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
     * The user should ignore this object. */
   object $dummy
 }
