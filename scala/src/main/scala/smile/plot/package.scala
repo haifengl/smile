@@ -52,11 +52,6 @@ package object plot {
     canvas.window
   }
 
-  /** Vega plot renderer with JavaFX. */
-  implicit def javafx(spec: JsObject): Unit = {
-    vega.Window(spec)
-  }
-
   /** Swing component renderer in Apache Zeppelin Notebook. */
   implicit def zeppelin(canvas: Canvas): Unit = {
     print(s"%html ${swing.canvas2Image(canvas)}")
