@@ -148,7 +148,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         double out, x, y, r, z;
 
         if (boxMuller != null) {
-            out = boxMuller.doubleValue();
+            out = boxMuller;
             boxMuller = null;
 
         } else {
@@ -159,7 +159,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
             } while (r >= 1.0);
 
             z = Math.sqrt(-2.0 * Math.log(r) / r);
-            boxMuller = new Double(x * z);
+            boxMuller = x * z;
             out = y * z;
         }
 
