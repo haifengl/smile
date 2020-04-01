@@ -299,7 +299,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
     buffer.put(TYPE_DOCUMENT)
     serialize(buffer, ename)
 
-    val start = buffer.position
+    val start = buffer.position()
     buffer.putInt(0) // placeholder for document size
 
     json.fields.toSeq.sortBy(_._1).foreach { case (field, value) =>
@@ -307,14 +307,14 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
     }
 
     buffer.put(END_OF_DOCUMENT)
-    buffer.putInt(start, buffer.position - start) // update document size
+    buffer.putInt(start, buffer.position() - start) // update document size
   }
 
   private def serialize(buffer: ByteBuffer, json: JsArray, ename: Option[String]): Unit = {
     buffer.put(TYPE_ARRAY)
     serialize(buffer, ename)
 
-    val start = buffer.position
+    val start = buffer.position()
     buffer.putInt(0) // placeholder for document size
 
     json.elements.zipWithIndex.foreach { case (value, index) =>
@@ -322,7 +322,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
     }
 
     buffer.put(END_OF_DOCUMENT)
-    buffer.putInt(start, buffer.position - start) // update document size
+    buffer.putInt(start, buffer.position() - start) // update document size
   }
 
   private def serialize(buffer: ByteBuffer, json: JsValue, ename: Option[String]): Unit = {
@@ -349,7 +349,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   }
 
   private def deserialize(buffer: ByteBuffer, json: JsObject): JsObject = {
-    val start = buffer.position
+    val start = buffer.position()
     val size = buffer.getInt // document size
 
     val loop = new scala.util.control.Breaks
@@ -386,8 +386,8 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
       }
     }
 
-    if (buffer.position - start != size)
-      logger.warn(s"BSON size $size but deserialize finishes at ${buffer.position}, starts at $start")
+    if (buffer.position() - start != size)
+      logger.warn(s"BSON size $size but deserialize finishes at ${buffer.position()}, starts at $start")
 
     json
   }
