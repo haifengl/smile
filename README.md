@@ -9,8 +9,8 @@ a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms,
 Smile delivers state-of-art performance.
-Smile is well documented and please check out the
-[project website](http://haifengl.github.io/)
+Smile is well documented and please check out the project
+[website](http://haifengl.github.io/)
 for programming guides and more information.
 
 Smile covers every aspect of machine learning, including classification,
