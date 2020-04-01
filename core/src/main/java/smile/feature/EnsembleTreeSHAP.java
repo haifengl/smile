@@ -204,7 +204,7 @@ public class EnsembleTreeSHAP {
 
 		try {
 			// avoid contending for default common forkjoin pool used in stream parallel
-			ForkJoinPool forkJoinPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+			ForkJoinPool forkJoinPool = new ForkJoinPool(Runtime.getRuntime().availableProcessors() / 2);
 
 			logger.info("--- start calculation for data ---");
 			forkJoinPool.submit(() -> 
@@ -216,14 +216,14 @@ public class EnsembleTreeSHAP {
 					   logger.info("start shap value calculation for data instances at indexes:[" + startIdx + "," + endIdx + ") using thread: " 
 				                   + Thread.currentThread().getName());
 				       
-					   double[] means = new double[data.schema().length()];
-					   Arrays.setAll(means, num -> 0.0);
-				       
 					   int s = maxd * (maxd + 1);
 					   List<MutableInt> feature_indexes = initMutableList(s, false);
 					   List<MutableDouble> zero_fractions = initMutableList(s, true); 
 					   List<MutableDouble> one_fractions = initMutableList(s, true);
 					   List<MutableDouble> pweight = initMutableList(s, true);
+				       
+					   double[] means = new double[data.schema().length()];
+					   Arrays.setAll(means, num -> 0.0);
 					   
 					   for (int xi = startIdx; xi < endIdx; xi++) {
 							if (((xi - startIdx) + 1) % batchOperSize == 0) {
@@ -241,7 +241,13 @@ public class EnsembleTreeSHAP {
 								String err = "error calculating shap values for instance: " + xx;
 								logger.error(err, e);
 							}
-					   }				   
+					   }	
+					   
+					   feature_indexes.clear();
+					   zero_fractions.clear(); 
+					   one_fractions.clear();
+					   pweight.clear();
+					   
 					   // update the final shap value result
 					   synchronized(meanShap){
 						   for (int i = 0; i < meanShap.length; i++) {
@@ -306,7 +312,8 @@ public class EnsembleTreeSHAP {
 				one_fractions, 
 				pweights, 
 				1, 1, -1, condition,
-				condition_feature, 1);
+				condition_feature, 1,
+				tree.totalSamples);
 
 		// reset following mutables for another tuples
 		for (int i = 0; i < feature_indexes.size(); i++) {
@@ -423,14 +430,15 @@ public class EnsembleTreeSHAP {
 	 * recursive computation of SHAP values for a decision tree
 	 */
 	private static void treeShapRecursive(int[] children_left, int[] children_right, int[] children_default,
-			int[] features, Node[] thresholds, double[] values, double[] node_sample_weight, Tuple x, double[] phi,
+			Node[] features, Node[] thresholds, double[] values, Node[] node_sample_weight, Tuple x, double[] phi,
 			int node_index, int unique_depth, 
 			List<MutableInt> parent_feature_indexes,
 			List<MutableDouble> parent_zero_fractions, 
 			List<MutableDouble> parent_one_fractions,
 			List<MutableDouble> parent_pweights, 
 			double parent_zero_fraction, double parent_one_fraction,
-			int parent_feature_index, double condition, int condition_feature, double condition_fraction) {
+			int parent_feature_index, double condition, int condition_feature, double condition_fraction,
+			int totalSamples) {
 
 		// stop if we have no weight coming down to us
 		if (condition_fraction == 0) {
@@ -448,7 +456,7 @@ public class EnsembleTreeSHAP {
 					parent_one_fraction, parent_feature_index);
 		}
 
-		int split_index = features[node_index];
+		int split_index = (features[node_index] instanceof InternalNode)? ((InternalNode)features[node_index]).feature() : -1;
 
 		// leaf node
 		if (children_right[node_index] == -1) {
@@ -474,9 +482,9 @@ public class EnsembleTreeSHAP {
 			}
 
 			int cold_index = hot_index == cleft ? cright : cleft;
-			double w = node_sample_weight[node_index];
-			double hot_zero_fraction = node_sample_weight[hot_index] / w;
-			double cold_zero_fraction = node_sample_weight[cold_index] / w;
+			double w = (double)(node_sample_weight[node_index]).size() / (double)totalSamples;
+			double hot_zero_fraction = ((double)(node_sample_weight[hot_index].size()) / (double) totalSamples) / w;
+			double cold_zero_fraction = ((double)(node_sample_weight[cold_index].size()) / (double) totalSamples) / w;
 			double incoming_zero_fraction = 1;
 			double incoming_one_fraction = 1;
 
@@ -511,12 +519,12 @@ public class EnsembleTreeSHAP {
 			treeShapRecursive(children_left, children_right, children_default, features, thresholds, values,
 					node_sample_weight, x, phi, hot_index, unique_depth + 1, feature_indexes, zero_fractions,
 					one_fractions, pweights, hot_zero_fraction * incoming_zero_fraction, incoming_one_fraction,
-					split_index, condition, condition_feature, hot_condition_fraction);
+					split_index, condition, condition_feature, hot_condition_fraction, totalSamples);
 
 			treeShapRecursive(children_left, children_right, children_default, features, thresholds, values,
 					node_sample_weight, x, phi, cold_index, unique_depth + 1, feature_indexes, zero_fractions,
 					one_fractions, pweights, cold_zero_fraction * incoming_zero_fraction, 0, split_index, condition,
-					condition_feature, cold_condition_fraction);
+					condition_feature, cold_condition_fraction, totalSamples);
 		} // end else internal node
 	}
 
