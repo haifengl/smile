@@ -88,6 +88,7 @@ fun hclust(data: Array<DoubleArray>, method: String): HierarchicalClustering {
  *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
  *
  * @param data The data set.
+ * @param distance the distance/dissimilarity measure.
  * @param method the agglomeration method to merge clusters. This should be one of
  *                "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
  */
@@ -154,7 +155,7 @@ fun kmodes(data: Array<IntArray>, k: Int, maxIter: Int = 100, runs: Int = 10): K
  * @param data the data set.
  * @param k the number of clusters.
  * @param maxIter the maximum number of iterations for each running.
- * @param tol tol the tolerance of convergence test.
+ * @param tol the tolerance of convergence test.
  * @param runs the number of runs of K-Means algorithm.
  */
 fun kmeans(data: Array<DoubleArray>, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans {

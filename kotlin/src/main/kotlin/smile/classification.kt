@@ -421,7 +421,7 @@ fun <T> svm(x: Array<T>, y: IntArray, kernel: MercerKernel<T>, C: Double, tol: D
 }
 
 /**
- * Decision tree. A decision tree can be learned by
+ * Decision tree. A classification/regression tree can be learned by
  * splitting the training set into subsets based on an attribute value
  * test. This process is repeated on each derived subset in a recursive
  * manner called recursive partitioning. The recursion is completed when
@@ -503,14 +503,14 @@ fun cart(formula: Formula, data: DataFrame, splitRule: SplitRule = SplitRule.GIN
  *
  * Each tree is constructed using the following algorithm:
  *
- *  i. If the number of cases in the training set is N, randomly sample N cases
+ *  1. If the number of cases in the training set is N, randomly sample N cases
  * with replacement from the original data. This sample will
  * be the training set for growing the tree.
- *  i. If there are M input variables, a number m &lt;&lt; M is specified such
+ *  2. If there are M input variables, a number m &lt;&lt; M is specified such
  * that at each node, m variables are selected at random out of the M and
  * the best split on these m is used to split the node. The value of m is
  * held constant during the forest growing.
- *  i. Each tree is grown to the largest extent possible. There is no pruning.
+ *  3. Each tree is grown to the largest extent possible. There is no pruning.
  *
  * The advantages of random forest are:
  *

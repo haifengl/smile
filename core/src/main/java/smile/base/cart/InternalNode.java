@@ -196,7 +196,7 @@ public abstract class InternalNode implements Node {
 
         if (k == 1) {
             // fitted value
-            double output = (sumy()) / size;
+            double output = sumy() / size;
             line.append(String.format("%g", output)).append(" ");
         } else {
             // fitted value

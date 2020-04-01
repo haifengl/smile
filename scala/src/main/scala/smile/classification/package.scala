@@ -524,7 +524,7 @@ package object classification {
     SVM.fit(x, y, kernel, C, tol)
   }
 
-  /** Decision tree. A decision tree can be learned by
+  /** Decision tree. A classification/regression tree can be learned by
     * splitting the training set into subsets based on an attribute value
     * test. This process is repeated on each derived subset in a recursive
     * manner called recursive partitioning. The recursion is completed when
