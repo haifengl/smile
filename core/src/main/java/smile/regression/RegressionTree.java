@@ -31,7 +31,7 @@ import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 
 /**
- * Decision tree for regression. A decision tree can be learned by
+ * Regression tree. A classification/regression tree can be learned by
  * splitting the training set into subsets based on an attribute value
  * test. This process is repeated on each derived subset in a recursive
  * manner called recursive partitioning.
