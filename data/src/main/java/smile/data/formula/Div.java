@@ -23,7 +23,7 @@ import smile.data.type.StructType;
 /**
  * The term of a / b expression.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Div extends Operator {
     /**

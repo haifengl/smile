@@ -33,7 +33,7 @@ import smile.math.MathEx;
  * between two partitions. The adjusted Rand index is recommended for measuring
  * agreement even when the partitions compared have different numbers of clusters.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RandIndex implements ClusterMeasure {
     public final static RandIndex instance = new RandIndex();

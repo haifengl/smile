@@ -24,7 +24,7 @@ import smile.math.MathEx;
 /**
  * Label is a single line text.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Label extends Shape {
     /** The default JLabel font may vary on different systems. */

@@ -32,7 +32,7 @@ import smile.swing.FontChooser;
 /**
  * Font editor in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FontCellEditor extends AbstractCellEditor implements TableCellEditor, ActionListener {

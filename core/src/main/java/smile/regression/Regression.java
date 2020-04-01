@@ -28,7 +28,7 @@ import java.util.function.ToDoubleFunction;
  * Regression analysis is widely used for prediction and forecasting, where
  * its use has substantial overlap with the field of machine learning. 
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
     /**

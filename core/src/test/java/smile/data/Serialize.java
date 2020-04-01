@@ -24,7 +24,7 @@ import java.nio.file.Path;
 /**
  * Serialization help functions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Serialize {
     /**

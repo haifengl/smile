@@ -25,7 +25,7 @@ import smile.math.matrix.Matrix;
 /**
  * The hash function for Euclidean spaces.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Hash implements Serializable {
     private static final long serialVersionUID = 2L;

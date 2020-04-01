@@ -27,7 +27,7 @@ import smile.math.matrix.LU;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LUTest {
     double[][] A = {

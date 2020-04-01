@@ -101,7 +101,7 @@ import smile.util.Strings;
  * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
     private static final long serialVersionUID = 2L;

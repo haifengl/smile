@@ -40,7 +40,7 @@ import smile.stat.distribution.LogNormalDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class LogNormalDistributionDemo extends JPanel implements ChangeListener {

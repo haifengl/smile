@@ -54,7 +54,7 @@ import smile.math.MathEx;
  * <li> Indicate outliers by dots.
  * </ul>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BoxPlot extends Plot {
     /**

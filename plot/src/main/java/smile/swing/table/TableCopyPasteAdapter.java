@@ -38,7 +38,7 @@ import javax.swing.KeyStroke;
  * the clipboard format used by Excel. This provides for clipboard
  * inter-operability between enabled JTables and Excel.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class TableCopyPasteAdapter implements ActionListener {
     private final static Logger LOGGER = Logger.getLogger(TableCopyPasteAdapter.class.getName()); 

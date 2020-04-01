@@ -23,7 +23,7 @@ import java.io.IOException;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NeuralGasData {
 

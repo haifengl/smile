@@ -24,7 +24,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable char vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class CharVectorImpl implements CharVector {
     /** The name of vector. */

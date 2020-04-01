@@ -75,7 +75,7 @@ import smile.math.distance.EuclideanDistance;
  * @see smile.vq.NeuralGas
  * @see BBDTree
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KMeans extends CentroidClustering<double[], double[]> {
     private static final long serialVersionUID = 2L;

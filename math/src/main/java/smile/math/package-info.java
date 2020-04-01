@@ -20,6 +20,6 @@
  * random number generators, unconstrained optimization, and raw data type
  * (int and double) array lists, etc.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.math;

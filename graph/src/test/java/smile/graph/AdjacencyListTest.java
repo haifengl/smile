@@ -30,7 +30,7 @@ import java.util.Arrays;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("unused")
 public class AdjacencyListTest {

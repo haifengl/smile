@@ -37,6 +37,6 @@
  * function, it is often regarded as the neuronal basis of unsupervised
  * learning.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.vq.hebb;

@@ -52,7 +52,7 @@ import smile.util.IntPair;
  * 
  * @see smile.clustering.HierarchicalClustering
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BIRCH implements VectorQuantizer {
     private static final long serialVersionUID = 2L;

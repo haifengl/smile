@@ -22,7 +22,7 @@ package smile.gap;
  * solutions to an optimization problem. Note that chromosomes have to
  * implement Comparable interface to support comparison of their fitness.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Chromosome extends Comparable<Chromosome> {
 

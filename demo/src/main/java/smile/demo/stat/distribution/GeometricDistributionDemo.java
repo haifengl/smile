@@ -37,7 +37,7 @@ import smile.stat.distribution.GeometricDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class GeometricDistributionDemo extends JPanel implements ChangeListener {

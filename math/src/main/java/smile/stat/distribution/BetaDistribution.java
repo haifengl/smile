@@ -34,7 +34,7 @@ import smile.math.special.Gamma;
  * The probability density function of the beta distribution is
  * f(x;&alpha;,&beta;) = x<sup>&alpha;-1</sup>(1-x)<sup>&beta;-1</sup> / B(&alpha;,&beta;)
  * where B(&alpha;,&beta;) is the beta function.
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BetaDistribution extends AbstractDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;

@@ -35,7 +35,7 @@ import smile.math.MathEx;
  *
  * @see RandIndex
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AdjustedRandIndex implements ClusterMeasure {
     public final static AdjustedRandIndex instance = new AdjustedRandIndex();

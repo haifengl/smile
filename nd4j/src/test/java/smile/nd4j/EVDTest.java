@@ -28,7 +28,7 @@ import smile.math.matrix.EVD;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EVDTest {
     double[][] A = {

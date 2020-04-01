@@ -25,7 +25,7 @@ import smile.data.type.DataTypes;
 /**
  * Predefined terms.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Terms {
     /** Returns a variable. */

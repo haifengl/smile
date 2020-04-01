@@ -25,7 +25,7 @@ import smile.util.IntArrayList;
  * function g (function g is a vector of k LSH functions). A bucket is specified
  * by a vector in integers of length k.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bucket implements Serializable {
     private static final long serialVersionUID = 2L;

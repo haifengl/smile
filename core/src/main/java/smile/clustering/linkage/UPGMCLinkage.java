@@ -25,7 +25,7 @@ import smile.math.distance.Distance;
  * centroids, as calculated by arithmetic mean. Only valid for Euclidean
  * distance based proximity matrix.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class UPGMCLinkage extends Linkage {
     /**

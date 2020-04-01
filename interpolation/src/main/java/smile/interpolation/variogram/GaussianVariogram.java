@@ -38,7 +38,7 @@ import smile.math.MathEx;
  * to the value of the variogram at extremely small separation distances is
  * called the nugget effect.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianVariogram implements Variogram {
     private double a;

@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable byte vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class ByteVectorImpl implements ByteVector {
     /** The name of vector. */

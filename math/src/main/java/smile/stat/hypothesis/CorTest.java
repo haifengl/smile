@@ -82,7 +82,7 @@ import smile.sort.QuickSort;
  * variable, and whose entries are nonnegative integers giving the number of
  * observed events for each combination of row and column.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CorTest {
     /**

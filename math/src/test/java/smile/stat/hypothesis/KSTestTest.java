@@ -27,7 +27,7 @@ import smile.stat.distribution.GaussianDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KSTestTest {
 

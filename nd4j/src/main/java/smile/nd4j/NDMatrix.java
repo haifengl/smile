@@ -29,7 +29,7 @@ import org.nd4j.linalg.inverse.InvertMatrix;
 /**
  * ND4j matrix wrapper.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NDMatrix implements DenseMatrix {
     private static final long serialVersionUID = 1L;

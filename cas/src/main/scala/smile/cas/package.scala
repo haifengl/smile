@@ -21,7 +21,7 @@ import scala.language.implicitConversions
 
 /** Computer algebra system.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object cas {
   implicit def pimpString(x: String) = Var(x)

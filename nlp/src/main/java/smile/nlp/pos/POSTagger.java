@@ -23,7 +23,7 @@ package smile.nlp.pos;
  * tagging is hard because some words can represent more than one part of speech
  * at different times, and because some parts of speech are complex or unspoken.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface POSTagger {
 

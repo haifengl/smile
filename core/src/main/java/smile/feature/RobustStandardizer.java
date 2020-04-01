@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  * Robustly standardizes numeric feature by subtracting
  * the median and dividing by the IQR.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RobustStandardizer extends Standardizer {
     private static final long serialVersionUID = 2L;

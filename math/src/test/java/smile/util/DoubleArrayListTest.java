@@ -24,7 +24,7 @@ import static org.junit.Assert.assertArrayEquals;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DoubleArrayListTest {
     public DoubleArrayListTest() {

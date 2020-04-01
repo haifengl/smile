@@ -44,7 +44,7 @@ package smile.math.distance;
  * (planar warping) is NP-complete, while the problem for one-dimensional
  * signals like time series can be solved in polynomial time.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DynamicTimeWarping<T> implements Distance<T[]> {
     private static final long serialVersionUID = 1L;

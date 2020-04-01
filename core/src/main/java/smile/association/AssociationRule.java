@@ -36,7 +36,7 @@ import java.util.Arrays;
  * the probability of finding the RHS of the rule in transactions under the
  * condition that these transactions also contain the LHS.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AssociationRule {
 

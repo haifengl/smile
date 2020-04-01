@@ -27,7 +27,7 @@ import smile.sort.QuickSort;
 
 /**
  * Sparse array of double values.
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  *
  */
 public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {

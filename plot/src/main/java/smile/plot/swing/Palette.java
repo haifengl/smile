@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * Color palette generator.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Palette {
     Color WHITE = Color.WHITE;

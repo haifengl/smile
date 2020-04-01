@@ -25,7 +25,7 @@ import java.util.Map;
 /**
  * A simple utility to parse command line parameters.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ParameterParser {
 

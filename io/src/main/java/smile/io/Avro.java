@@ -50,7 +50,7 @@ import smile.data.type.StructType;
  * Avro relies on schemas. When Avro data is stored in a file, its schema
  * is stored with it. Avro schemas are defined with JSON.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Avro {
     /**

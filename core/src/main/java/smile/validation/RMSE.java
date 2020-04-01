@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * Root mean squared error.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RMSE implements RegressionMeasure {
     public final static RMSE instance = new RMSE();

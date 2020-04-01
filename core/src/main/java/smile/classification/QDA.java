@@ -46,7 +46,7 @@ import smile.util.Strings;
  * @see RDA
  * @see NaiveBayes
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class QDA implements SoftClassifier<double[]> {
     private static final long serialVersionUID = 2L;

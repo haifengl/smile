@@ -25,7 +25,7 @@ package smile
   * The wavelet transform is invertible and in fact orthogonal. Both FFT and DWT
   * can be viewed as a rotation in function space.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object wavelet {
   /** Creates a wavelet filter. The filter name is derived from one of four classes of wavelet transform filters:
@@ -129,4 +129,8 @@ package object wavelet {
   def wsdenoise(t: Array[Double], filter: String, soft: Boolean = false): Unit = {
     WaveletShrinkage.denoise(t, wavelet(filter), soft)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

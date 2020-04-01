@@ -25,7 +25,7 @@ import scala.language.implicitConversions
 import scala.collection.immutable.ArraySeq
 
 /**
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package object json {
   type JsTopLevel = Either[JsObject, JsArray]

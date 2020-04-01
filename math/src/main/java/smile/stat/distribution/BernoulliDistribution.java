@@ -28,7 +28,7 @@ import smile.math.MathEx;
  * implement DiscreteExponentialFamily interface here since it is impossible
  * and meaningless to estimate a mixture of Bernoulli distributions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BernoulliDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

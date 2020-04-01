@@ -28,7 +28,7 @@ import smile.math.matrix.Matrix;
  * into account the correlations of the data set and is scale-invariant,
  * i.e. not dependent on the scale of measurements.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;

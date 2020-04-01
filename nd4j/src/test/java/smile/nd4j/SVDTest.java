@@ -29,7 +29,7 @@ import smile.math.matrix.SVD;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SVDTest {
 

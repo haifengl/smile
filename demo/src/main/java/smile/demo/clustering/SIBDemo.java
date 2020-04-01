@@ -42,7 +42,7 @@ import smile.util.SparseArray;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class SIBDemo extends JPanel implements Runnable, ActionListener {

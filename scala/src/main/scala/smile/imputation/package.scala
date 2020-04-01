@@ -99,7 +99,7 @@ import smile.util.time
   * better performance in cases where the missing data is structurally absent,
   * rather than missing due to measurement noise.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object imputation {
   /** Impute missing values with the average of other attributes in the instance.
@@ -180,4 +180,8 @@ package object imputation {
   def svdimpute(data: Array[Array[Double]], k: Int, maxIter: Int = 10): Unit = time("Missing value imputation by SVD") {
     new SVDImputation(k).impute(data)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

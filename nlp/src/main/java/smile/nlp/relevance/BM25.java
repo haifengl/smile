@@ -39,7 +39,7 @@ import smile.nlp.TextTerms;
  *
  * @see TFIDF
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BM25 implements RelevanceRanker {
 

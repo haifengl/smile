@@ -26,7 +26,7 @@ import smile.util.time
 
 /** Natural language processing.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object nlp {
   implicit def pimpString(string: String) = new PimpedString(string)
@@ -374,4 +374,8 @@ package nlp {
       smile.nlp.keyword.CooccurrenceKeywords.of(text, k)
     }
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

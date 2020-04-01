@@ -50,7 +50,7 @@ import smile.plot.swing.BarPlot;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class KNNDemo extends JPanel implements Runnable, ActionListener {

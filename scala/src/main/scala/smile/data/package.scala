@@ -23,7 +23,7 @@ import scala.language.implicitConversions
 
 /** Data manipulation functions.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object data {
 

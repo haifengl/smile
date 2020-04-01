@@ -20,7 +20,7 @@ package smile.feature;
 /**
  * Univariate feature ranking metric.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface FeatureRanking {
     

@@ -37,7 +37,7 @@ import java.util.function.ToIntFunction;
  * 
  * @param <T> the type of input object
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Serializable {
     /**

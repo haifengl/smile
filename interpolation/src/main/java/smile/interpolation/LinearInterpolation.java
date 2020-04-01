@@ -22,7 +22,7 @@ package smile.interpolation;
  * lerp, is quick and easy, but it is not very precise. Another disadvantage
  * is that the interpolant is not differentiable at the control points x.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LinearInterpolation extends AbstractInterpolation {
 

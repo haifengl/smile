@@ -24,7 +24,7 @@ package smile.math.kernel;
  * The kernel works on sparse binary array as int[], which are the indices of
  * nonzero elements.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BinarySparsePolynomialKernel implements MercerKernel<int[]> {
     private static final long serialVersionUID = 1L;

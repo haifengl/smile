@@ -72,7 +72,7 @@ import smile.math.MathEx;
  * Some techniques such as bagging, boosting, and random forest use more than
  * one decision tree for their analysis.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  * @see GradientTreeBoost
  * @see RandomForest
  */

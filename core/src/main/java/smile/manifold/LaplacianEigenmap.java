@@ -50,7 +50,7 @@ import smile.util.SparseArray;
  * <li> Mikhail Belkin and Partha Niyogi. Laplacian Eigenmaps and Spectral Techniques for Embedding and Clustering. NIPS, 2001. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LaplacianEigenmap implements Serializable {
     private static final long serialVersionUID = 2L;

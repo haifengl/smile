@@ -57,7 +57,7 @@ import smile.data.type.*;
  * nested data structures. It uses the record shredding and
  * assembly algorithm described in the Dremel paper.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Parquet {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Parquet.class);

@@ -20,7 +20,7 @@ package smile.gap;
 /**
  * A measure to evaluate the fitness of chromosomes.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface FitnessMeasure <T extends Chromosome> {
 

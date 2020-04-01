@@ -47,7 +47,7 @@ import smile.sort.HeapSelect;
  *
  * @param <T> the type of data objects.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,T>, RNNSearch<T,T>, Serializable {
     private static final long serialVersionUID = 2L;

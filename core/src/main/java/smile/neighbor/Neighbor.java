@@ -30,7 +30,7 @@ import smile.util.Strings;
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
     /**

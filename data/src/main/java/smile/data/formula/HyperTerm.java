@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  * of terms. To be concise, we also allow HyperTerms that can be
  * can be expanded to multiple simple terms.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface HyperTerm extends Serializable {
     /** Binds the term to a schema. */

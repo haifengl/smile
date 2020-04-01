@@ -29,7 +29,7 @@ package smile.math.matrix;
  * <p>
  * This decomposition can also be used to calculate the determinant.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LU {
     /**

@@ -33,7 +33,7 @@ import smile.util.time
   * variables called the regression function. Regression analysis is widely
   * used for prediction and forecasting.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object regression {
   /** Ordinary least squares. In linear regression,

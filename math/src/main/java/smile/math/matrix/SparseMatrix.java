@@ -57,7 +57,7 @@ import static java.util.Spliterator.*;
  * low-level loops against the internals of the matrix itself) while the
  * streaming interface is more flexible.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix>, Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
@@ -647,7 +647,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @param path the input file path.
      *
-     * @author Haifeng Li. All rights reserved.
+     * @author Haifeng Li
      */
     public static SparseMatrix harwell(Path path) throws IOException {
         logger.info("Reads sparse matrix file '{}'", path.toAbsolutePath());
@@ -712,7 +712,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @param path the input file path.
      *
-     * @author Haifeng Li. All rights reserved.
+     * @author Haifeng Li
      */
     public static SparseMatrix rutherford(Path path) throws IOException {
         // As we ignore the supplementary data, the parsing process
@@ -733,7 +733,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      *
      * @param path the input file path.
      *
-     * @author Haifeng Li. All rights reserved.
+     * @author Haifeng Li
      */
     public static SparseMatrix text(Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path);

@@ -28,7 +28,7 @@ import java.io.Serializable;
  * regression analysis. Interpolation is a specific case of curve fitting,
  * in which the function must go exactly through the data points.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Interpolation extends Serializable {
 

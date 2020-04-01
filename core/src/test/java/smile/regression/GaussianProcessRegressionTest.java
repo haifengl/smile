@@ -40,7 +40,7 @@ import static org.junit.Assert.fail;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianProcessRegressionTest {
     public GaussianProcessRegressionTest() {

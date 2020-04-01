@@ -48,6 +48,6 @@
  * minimizes the divergence between distributions over pairs of points),
  * and curvilinear component analysis.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.manifold;

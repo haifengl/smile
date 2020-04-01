@@ -126,6 +126,6 @@
  * between bias and variance.</dd>
  * </dl>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.classification;

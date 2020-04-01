@@ -29,7 +29,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable char vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface CharVector extends BaseVector<Character, Integer, IntStream> {
     @Override

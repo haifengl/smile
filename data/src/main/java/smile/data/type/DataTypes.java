@@ -31,7 +31,7 @@ import java.util.List;
  * To get a specific data type, users should use singleton objects
  * and factory methods in this class.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DataTypes {
     /** Boolean data type. */

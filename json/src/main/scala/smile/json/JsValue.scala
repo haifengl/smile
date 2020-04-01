@@ -27,7 +27,7 @@ import scala.language.implicitConversions
 /**
  * JSON value.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 sealed trait JsValue extends Dynamic {
   override def toString: String = compactPrint

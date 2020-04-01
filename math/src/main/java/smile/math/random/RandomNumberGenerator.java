@@ -20,7 +20,7 @@ package smile.math.random;
 /**
  * Random number generator interface.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface RandomNumberGenerator {
     /**

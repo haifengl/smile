@@ -44,7 +44,7 @@ import smile.math.MathEx;
  * so-called scaled median absolute deviation (MAD) computed from the high-pass
  * wavelet coefficients of the first level of the transform. 
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface WaveletShrinkage {
     /**

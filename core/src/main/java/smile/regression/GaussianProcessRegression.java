@@ -66,7 +66,7 @@ import smile.math.matrix.EVD;
  * <li> Kai Zhang and James T. Kwok. Clustered Nystrom Method for Large Scale Manifold Learning and Dimension Reduction. IEEE Transactions on Neural Networks, 2010. </li>
  * <li> </li>
  * </ol>
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianProcessRegression {
     /**

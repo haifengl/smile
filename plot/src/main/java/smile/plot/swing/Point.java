@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * One more more points in the plot.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Point extends Shape {
 

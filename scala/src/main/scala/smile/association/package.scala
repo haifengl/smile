@@ -93,7 +93,7 @@ import java.util.stream.Stream
   *  - Mohammed J. Zaki. Scalable algorithms for association mining. IEEE Transactions on Knowledge and Data Engineering, 12(3):372-390, 2000.
   *  - Jiawei Han, Jian Pei, Yiwen Yin, and Runying Mao. Mining frequent patterns without candidate generation. Data Mining and Knowledge Discovery 8:53-87, 2004.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object association {
   /** Builds a FP-tree.
@@ -236,4 +236,8 @@ package object association {
   def arm(confidence: Double, tree: FPTree): Stream[AssociationRule] = {
     ARM.apply(confidence, tree)
   }
+
+  /** Hacking scaladoc [issue-8124](https://github.com/scala/bug/issues/8124).
+    * The user should ignore this object. */
+  object $dummy
 }

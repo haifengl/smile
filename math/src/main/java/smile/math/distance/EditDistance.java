@@ -38,7 +38,7 @@ import smile.util.IntArray2D;
  * For weighted cost, this implements the regular dynamic programming algorithm,
  * which takes O(mn) time and O(m) space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EditDistance implements Metric<String> {
     private static final long serialVersionUID = 1L;

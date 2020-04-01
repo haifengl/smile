@@ -34,7 +34,7 @@ import java.util.Set;
  * of the sizes of the union and the intersection of two sets by the size of
  * the union.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class JaccardDistance<T> implements Distance<T[]> {
     private static final long serialVersionUID = 1L;

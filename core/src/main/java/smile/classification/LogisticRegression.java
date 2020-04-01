@@ -74,7 +74,7 @@ import smile.util.IntSet;
  * @see Maxent
  * @see LDA
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 2L;

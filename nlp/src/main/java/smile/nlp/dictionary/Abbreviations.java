@@ -20,7 +20,7 @@ package smile.nlp.dictionary;
 /**
  * A dictionary interface for abbreviations.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Abbreviations extends Dictionary {
 

@@ -23,7 +23,7 @@ import java.io.Serializable;
  * The neighborhood function for 2-dimensional lattice topology (e.g. SOM).
  * It determines the rate of change around the winner neuron.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Neighborhood extends Serializable {
     /**

@@ -38,7 +38,7 @@ import smile.math.kernel.GaussianKernel;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class KPCADemo extends ProjectionDemo {

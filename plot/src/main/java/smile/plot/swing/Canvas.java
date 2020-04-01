@@ -35,7 +35,7 @@ import javax.swing.event.SwingPropertyChangeSupport;
 /**
  * Canvas for mathematical plots.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Canvas {
 

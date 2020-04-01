@@ -20,7 +20,7 @@ package smile.validation;
 /**
  * The number of errors in the population.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Error implements ClassificationMeasure {
     public final static Error instance = new Error();

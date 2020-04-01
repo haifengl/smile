@@ -23,7 +23,7 @@ import java.util.Map;
 /**
  * The Penn Treebank Tag set.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public enum PennTreebankPOS {
 

@@ -26,7 +26,7 @@ import smile.math.matrix.SparseMatrix;
  * A graphical representation of sparse matrix data. Optionally, the values
  * in the matrix can be represented as colors.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseMatrixPlot extends Plot {
 

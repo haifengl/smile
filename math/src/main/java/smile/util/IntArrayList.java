@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 /**
  * A resizeable, array-backed list of integer primitives.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 
 public final class IntArrayList implements Serializable {

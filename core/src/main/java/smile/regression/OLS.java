@@ -73,7 +73,7 @@ import smile.math.special.Beta;
  * however, a central limit theorem can be invoked such that hypothesis
  * testing may proceed using asymptotic approximations.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class OLS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OLS.class);

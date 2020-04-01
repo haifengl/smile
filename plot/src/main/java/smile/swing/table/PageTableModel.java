@@ -35,7 +35,7 @@ import smile.swing.Button;
  * dictated by other GUI elements such as up/down buttons, or maybe a text
  * field that allows you to enter the page number you want to display.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public abstract class PageTableModel extends AbstractTableModel {

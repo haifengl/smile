@@ -27,7 +27,7 @@ import smile.math.matrix.Matrix;
 /**
  * The finite mixture of multivariate distributions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MultivariateMixture implements MultivariateDistribution {
     private static final long serialVersionUID = 2L;

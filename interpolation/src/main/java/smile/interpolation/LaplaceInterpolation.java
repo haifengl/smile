@@ -25,7 +25,7 @@ import java.util.Arrays;
  * produces the smoothest possible interpolant, which are obtained by solving
  * a very sparse linear equations with biconjugate gradient method.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LaplaceInterpolation {
 

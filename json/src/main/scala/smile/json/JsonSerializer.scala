@@ -36,7 +36,7 @@ import com.typesafe.scalalogging.LazyLogging
   * store the nano-of-second field to save the space. To preserve the high
   * precision of time, JsTimestamp should be employed and of course consumes more space.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024)) extends LazyLogging {
 

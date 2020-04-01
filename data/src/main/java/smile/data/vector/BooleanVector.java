@@ -29,7 +29,7 @@ import smile.data.type.StructField;
 /**
  * An immutable boolean vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
     @Override

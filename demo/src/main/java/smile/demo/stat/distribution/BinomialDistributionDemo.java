@@ -39,7 +39,7 @@ import smile.stat.distribution.BinomialDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class BinomialDistributionDemo extends JPanel implements ChangeListener {

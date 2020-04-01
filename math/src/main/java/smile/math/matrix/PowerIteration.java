@@ -24,7 +24,7 @@ import smile.math.MathEx;
  * that will produce the greatest (in absolute value) eigenvalue and a nonzero
  * vector the corresponding eigenvector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PowerIteration {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PowerIteration.class);

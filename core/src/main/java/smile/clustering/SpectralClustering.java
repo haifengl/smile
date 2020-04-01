@@ -43,7 +43,7 @@ import smile.math.matrix.EVD;
  * <li> Deepak Verma and Marina Meila. A Comparison of Spectral Clustering Algorithms. 2003. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SpectralClustering extends PartitionClustering implements Serializable {
     private static final long serialVersionUID = 2L;

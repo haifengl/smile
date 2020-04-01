@@ -56,7 +56,7 @@ import smile.association.FPTree.Node;
  * <li> Christian Borgelt. An Implementation of the FP-growth Algorithm. OSDM, 1-5, 2005.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FPGrowth implements Iterable<ItemSet> {
     /**

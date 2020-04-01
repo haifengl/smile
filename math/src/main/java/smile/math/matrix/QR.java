@@ -30,7 +30,7 @@ package smile.math.matrix;
  * QR decomposition is also the basis for a particular eigenvalue algorithm,
  * the QR algorithm.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class QR {
 
