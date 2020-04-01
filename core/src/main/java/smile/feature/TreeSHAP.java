@@ -44,11 +44,12 @@ public class TreeSHAP {
   public int[] children_left;
   public int[] children_right;
   public int[] children_default;
-  public int[] features;
+  public Node[] features;
   public Node[] thresholds;
   public double[] values;
-  public double[] node_sample_weight; // equals number of samples for a node divided by total number of samples
+  public Node[] node_sample_weight; // equals number of samples for a node divided by total number of samples
   public int max_depth;
+  public int totalSamples;
 
   public TreeSHAP(RegressionTree tree) {
     this(tree, false);
@@ -57,13 +58,11 @@ public class TreeSHAP {
   public TreeSHAP(RegressionTree tree, boolean normalize) {
     this.normalize = normalize;
 
-    int totalSamples = tree.root().size();
+    totalSamples = tree.root().size();
     children_left = new int[totalSamples];
     children_right = new int[totalSamples];
-    features = new int[totalSamples];
     thresholds = new Node[totalSamples];
     values = new double[totalSamples];
-    node_sample_weight = new double[totalSamples];
     //
     // we convert smile tree structure to sth favored by shap calculation
     //
@@ -73,23 +72,20 @@ public class TreeSHAP {
     q.add(tree.root());
     Node n = q.poll();
 
-    while (n != null) {
-      node_sample_weight[idx] = (double) n.size() / (double) totalSamples;
-      
+    double valueSum = 0;
+    while (n != null) {      
       values[idx] = subtreeValues(n);
+      valueSum += values[idx];
       
       thresholds[idx] = n;
 
-      if (n instanceof InternalNode) {
-    	  features[idx] = ((InternalNode) n).feature();
-          
+      if (n instanceof InternalNode) {          
           q.add(((InternalNode) n).trueChild());
           children_left[idx] = (++nodeNum);
           
           q.add(((InternalNode) n).falseChild());
           children_right[idx] = (++nodeNum);
       } else if (n instanceof LeafNode) {
-    	  features[idx] = -1;
           children_left[idx] = -1;
           children_right[idx] = -1;
       } else {
@@ -103,14 +99,17 @@ public class TreeSHAP {
     }
 
     this.children_default = this.children_left; // missing values...
+    this.features = this.thresholds;
+    this.node_sample_weight = this.thresholds;
 
     if (this.normalize) {
-        double valueSum = Arrays.stream(values).sum();
-        this.values = Arrays.stream(values).map(num -> num / valueSum).toArray();
+    	for(int i = 0;i < values.length;i++) {
+    		values[i] /= valueSum;
+    	}
     } 
 
     // we recompute the expectations to make sure they follow the SHAP logic
-    this.max_depth = computeExpectations(this.children_left, this.children_right, this.node_sample_weight, this.values, 0, 0);
+    this.max_depth = computeExpectations(this.children_left, this.children_right, this.node_sample_weight, this.values, 0, 0, this.totalSamples);
     // tracking progress for shap tree construction 
     System.out.print(".");
   }
@@ -137,10 +136,11 @@ public class TreeSHAP {
   private int computeExpectations(
       int[] children_left,
       int[] children_right,
-      double[] node_sample_weight,
+      Node[] node_sample_weight,
       double[] values,
       int i,
-      int depth) {
+      int depth,
+      int totalSamples) {
 	  
     if (depth < 0) {
         depth = 0;
@@ -151,10 +151,10 @@ public class TreeSHAP {
     } else {
         int li = children_left[i];
         int ri = children_right[i];
-        int depth_left = computeExpectations(children_left, children_right, node_sample_weight, values, li, depth + 1);
-        int depth_right = computeExpectations(children_left, children_right, node_sample_weight, values, ri, depth + 1);
-        double left_weight = node_sample_weight[li];
-        double right_weight = node_sample_weight[ri];
+        int depth_left = computeExpectations(children_left, children_right, node_sample_weight, values, li, depth + 1, totalSamples);
+        int depth_right = computeExpectations(children_left, children_right, node_sample_weight, values, ri, depth + 1, totalSamples);
+        double left_weight = (double)(node_sample_weight[li].size()) / (double) totalSamples;
+        double right_weight = (double)(node_sample_weight[ri].size()) / (double) totalSamples;
         double v = (left_weight * values[li] + right_weight * values[ri]) / (left_weight + right_weight);
         values[i] = v;
         return Math.max(depth_left, depth_right) + 1;
