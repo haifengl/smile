@@ -35,8 +35,8 @@ import smile.projection.PCA
   * @author Haifeng Li
   */
 package object swing {
-  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def canvas2Image(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
+  /** Returns the HTML img tag of the canvas encoded by BASE64. */
+  def canvas2HtmlImg(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
     val bi = canvas.toBufferedImage(width, height)
 
     val os = new ByteArrayOutputStream
@@ -46,8 +46,8 @@ package object swing {
     s"""<img src="data:image/png;base64,${base64}">"""
   }
 
-  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def component2Image(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
+  /** Returns the HTML img tag of the swing component encoded by BASE64. */
+  def swing2HtmlImg(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
     val headless = new Headless(canvas, width, height)
     headless.pack
     headless.setVisible(true)
@@ -175,8 +175,8 @@ package object swing {
     * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, mark: Char, color: Color): PlotGroup = {
-    PlotGroup.of(data, mark, color)
+  def plot(data: DataFrame, mark: Char, color: Color): PlotGrid = {
+    PlotGrid.of(data, mark, color)
   }
 
   /** Plot a grid of scatter plots of for all attribute pairs in the data frame
@@ -186,8 +186,8 @@ package object swing {
     * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, mark: Char): PlotGroup = {
-    PlotGroup.of(data, category, mark);
+  def plot(data: DataFrame, category: String, mark: Char): PlotGrid = {
+    PlotGrid.of(data, category, mark);
   }
 
   /**

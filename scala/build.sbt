@@ -16,6 +16,8 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machi
 
 target in Compile in doc := baseDirectory.value / "../docs/2.0/api/scala"
 
+libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
+
 libraryDependencies += "com.thoughtworks.xstream" % "xstream" % "1.4.11.1"
 
 // read.avro() needs org.apache.avro.Schema defintion

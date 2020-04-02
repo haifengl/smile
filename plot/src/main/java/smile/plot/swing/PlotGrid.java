@@ -48,13 +48,13 @@ import smile.swing.FileChooser;
 import smile.swing.Printer;
 
 /**
- * PlotGroup organizes multiple plots in a grid layout.
+ * PlotGrid organizes multiple plots in a grid layout.
  *
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class PlotGroup extends JPanel implements ActionListener, Printable {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotGroup.class);
+public class PlotGrid extends JPanel implements ActionListener, Printable {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlotGrid.class);
 
     /**
      * Toolbar command.
@@ -78,14 +78,14 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * @param nrows the number of rows.
      * @param ncols the number of columns.
      */
-    public PlotGroup(int nrows, int ncols) {
+    public PlotGrid(int nrows, int ncols) {
         init(layout(nrows, ncols));
     }
     /**
      * Constructor.
      * @param plots the plots to add into the frame.
      */
-    public PlotGroup(PlotPanel... plots) {
+    public PlotGrid(PlotPanel... plots) {
         init(layout(plots.length));
         for (PlotPanel plot : plots) {
             contentPane.add(plot);
@@ -293,18 +293,18 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * Creates pairwise scatter plots from a data frame.
      * @param data the data frame.
      */
-    public static PlotGroup of(DataFrame data, char mark, Color color) {
+    public static PlotGrid of(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
         int p = columns.length;
-        PlotGroup group = new PlotGroup(p, p);
+        PlotGrid grid = new PlotGrid(p, p);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < p; j++) {
                 Plot plot = ScatterPlot.of(data, columns[i], columns[j], mark, color);
-                group.add(plot.canvas().panel());
+                grid.add(plot.canvas().panel());
             }
         }
 
-        return group;
+        return grid;
     }
 
     /**
@@ -312,11 +312,11 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
      * @param data the data frame.
      * @param category the category column for coloring.
      */
-    public static PlotGroup of(DataFrame data, String category, char mark) {
+    public static PlotGrid of(DataFrame data, String category, char mark) {
         int clazz = data.columnIndex(category);
         String[] columns = data.names();
         int p = columns.length;
-        PlotGroup group = new PlotGroup(p, p);
+        PlotGrid grid = new PlotGrid(p, p);
         for (int i = 0; i < p; i++) {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
@@ -324,10 +324,10 @@ public class PlotGroup extends JPanel implements ActionListener, Printable {
                 Canvas canvas = ScatterPlot.of(data, columns[i], columns[j], category, mark).canvas();
                 canvas.setLegendVisible(false);
                 canvas.setAxisLabels(columns[i], columns[j]);
-                group.add(canvas.panel());
+                grid.add(canvas.panel());
             }
         }
 
-        return group;
+        return grid;
     }
 }
