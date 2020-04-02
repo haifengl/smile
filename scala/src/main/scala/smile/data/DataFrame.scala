@@ -19,10 +19,12 @@ package smile.data
 
 import java.util.Optional
 import java.util.stream.IntStream
+import smile.json._
+import smile.data.measure.DiscreteMeasure
 
 /**
-  * Pimped data frame with Scala style operations.
-  * @param data underlying data frame.
+  * Pimped data frame with Scala style methods.
+  * @param data a data frame.
   */
 case class DataFrameOps(data: DataFrame) {
   /** Selects a new DataFrame with given column indices. */
@@ -79,5 +81,47 @@ case class DataFrameOps(data: DataFrame) {
   def groupBy[K](f: (Tuple) => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
     groups.view.mapValues(index => data.of(index: _*)).toMap
+  }
+
+  /** Converts the tuple to a JSON array. */
+  def toJSON: JsArray = {
+    JsArray(
+      (0 until data.size).map(i => data(i).toJSON): _*
+    )
+  }
+}
+
+/**
+  * Pimped tuple with additional methods.
+  * @param t a tuple.
+  */
+case class TupleOps(t: Tuple) {
+  /** Converts the tuple to a JSON object. */
+  def toJSON: JsObject = {
+    JsObject((0 until t.length()).map(valueOf(_)): _*)
+  }
+
+  /** Returns the name value pair of a field. */
+  private def valueOf(i: Int): (String, JsValue) = {
+    val schema = t.schema()
+    val field = schema.field(i)
+
+    val value =
+      if (field.measure != null && field.measure.isInstanceOf[measure.DiscreteMeasure])
+        if (t.isNullAt(i)) JsNull else JsString(t.getString(i))
+      else
+        t.get(i) match {
+        case null => JsNull
+        case x: java.lang.Boolean => JsBoolean(x)
+        case x: java.lang.Byte => JsInt(x: Byte)
+        case x: java.lang.Short => JsInt(x: Short)
+        case x: java.lang.Integer => JsInt(x)
+        case x: java.lang.Long => JsLong(x)
+        case x: java.lang.Float => JsDouble(x: Float)
+        case x: java.lang.Double => JsDouble(x)
+        case _ => JsString(t.getString(i))
+      }
+
+    (field.name, value)
   }
 }
