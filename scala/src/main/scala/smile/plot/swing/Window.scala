@@ -21,7 +21,7 @@ import java.awt.event.WindowEvent
 import javax.swing.JFrame
 
 /** JFrame window. */
-trait Window {
+trait JWindow extends smile.plot.Window {
   val frame: JFrame
 
   /** Closes the window programmatically. */
@@ -31,12 +31,12 @@ trait Window {
 }
 
 /** Plot canvas window. */
-case class CanvasWindow(override val frame: JFrame, canvas: Canvas) extends Window
+case class CanvasWindow(override val frame: JFrame, canvas: Canvas) extends JWindow
 
 /** Plot grid window. */
-case class PlotGridWindow(override val frame: JFrame, canvas: PlotGrid) extends Window
+case class PlotGridWindow(override val frame: JFrame, canvas: PlotGrid) extends JWindow
 
-object Window {
+object JWindow {
   /** Opens a plot window. */
   def apply(canvas: Canvas): CanvasWindow = {
     CanvasWindow(canvas.window, canvas)

@@ -26,19 +26,19 @@ import javafx.scene.layout.StackPane
 import javafx.stage.Stage
 import com.sun.javafx.webkit.WebConsoleListener
 import com.typesafe.scalalogging.LazyLogging
-import smile.json.{JsNull, JsObject, JsUndefined}
+import smile.json.{JsNull, JsUndefined}
 
 /** JavaFX WebView with vega-lite plot. */
-case class Window(stage: Stage, spec: VegaLite) {
+case class WindowFX(stage: Stage, spec: VegaLite) extends smile.plot.Window {
   /** Closes the window programmatically. */
   def close: Unit = {
-    Window.onUIThread { stage.close }
+    WindowFX.onUIThread { stage.close }
   }
 
   Platform.runLater { () => stage.showAndWait }
 }
 
-object Window extends LazyLogging {
+object WindowFX extends LazyLogging {
   /** The number of created windows, as the default window title. */
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
   /** Creates a JFXPanel to avoid the error of 'Internal graphics not initialized yet' */
@@ -55,7 +55,7 @@ object Window extends LazyLogging {
   })
 
   /** Creates a plot window/stage. */
-  def apply(spec: VegaLite): Window = onUIThread {
+  def apply(spec: VegaLite): WindowFX = onUIThread {
     val plot = spec.spec
     if (plot.width == JsUndefined) plot.width = 800
     if (plot.height == JsUndefined) plot.height = 600
@@ -72,7 +72,7 @@ object Window extends LazyLogging {
     }
     stage.setTitle(title)
 
-    Window(stage, spec)
+    WindowFX(stage, spec)
   }
 
   /** Returns the WebView scene of plot. */
@@ -102,3 +102,6 @@ object Window extends LazyLogging {
     task.get()
   }
 }
+
+/** Dummy window wrapper. */
+case class VegaWindow(spec: VegaLite) extends smile.plot.Window

@@ -83,8 +83,6 @@ lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _
 
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
-lazy val vega = project.in(file("vega")).settings(commonSettings: _*).dependsOn(json, data)
-
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
 lazy val cas = project.in(file("cas")).settings(commonSettings: _*)
