@@ -27,54 +27,55 @@ import smile.plot.vega.VegaLite
   */
 package object plot {
   /** Shows a plot canvas with implicit renderer. */
-  def show[R](canvas: Canvas)(implicit renderer: Canvas => R): R = {
+  def show(canvas: Canvas)(implicit renderer: Canvas => Window): Window = {
     renderer(canvas)
   }
 
   /** Shows a plot grid with implicit renderer. */
-  def show[R](canvas: PlotGrid)(implicit renderer: PlotGrid => R): R = {
-    renderer(canvas)
+  def show(grid: PlotGrid)(implicit renderer: PlotGrid => Window): Window = {
+    renderer(grid)
   }
 
   /** Shows a vega-lite plot with implicit renderer. */
-  def show[R](spec: VegaLite)(implicit renderer: VegaLite => R): R = {
+  def show(spec: VegaLite)(implicit renderer: VegaLite => Window): Window = {
     renderer(spec)
   }
 
   /** Desktop renderer of plot canvas. */
   implicit def desktop(canvas: Canvas): smile.plot.swing.CanvasWindow = {
-    smile.plot.swing.Window(canvas)
+    smile.plot.swing.JWindow(canvas)
   }
 
   /** Desktop renderer of plot grid. */
-  implicit def desktop(canvas: PlotGrid): smile.plot.swing.PlotGridWindow = {
-    smile.plot.swing.Window(canvas)
+  implicit def desktop(grid: PlotGrid): smile.plot.swing.PlotGridWindow = {
+    smile.plot.swing.JWindow(grid)
   }
 
   /** Desktop renderer of vega-lite plot with the default browser. */
-  implicit def desktop(spec: VegaLite): Unit = {
+  implicit def desktop(spec: VegaLite): Window = {
     import java.nio.file.Files
     val path = Files.createTempFile("smile-plot-", ".html")
     path.toFile.deleteOnExit()
     Files.write(path, spec.embed.getBytes(java.nio.charset.StandardCharsets.UTF_8))
     java.awt.Desktop.getDesktop.browse(path.toUri)
+    smile.plot.vega.VegaWindow(spec)
   }
-
+  /*
   /** Apache Zeppelin Notebook renderer of plot canvas. */
   implicit def zeppelin(canvas: Canvas): Unit = {
     print(s"%html ${smile.plot.swing.canvas2HtmlImg(canvas)}")
   }
 
   /** Apache Zeppelin Notebook renderer of plot grid. */
-  implicit def zeppelin(canvas: PlotGrid): Unit = {
-    print(s"%html ${smile.plot.swing.swing2HtmlImg(canvas)}")
+  implicit def zeppelin(grid: PlotGrid): Unit = {
+    print(s"%html ${smile.plot.swing.swing2HtmlImg(grid)}")
   }
 
   /** Apache Zeppelin Notebook renderer of vega-lite plot. */
   implicit def zeppelin(spec: VegaLite): Unit = {
     print(s"%html ${spec.iframe()}")
   }
-  /*
+
   /** Apache Toree Notebook renderer of plot canvas. */
   implicit def toree(canvas: Canvas): Unit = {
     kernel.display.content("text/html", smile.plot.swing.canvas2HtmlImg(canvas))
