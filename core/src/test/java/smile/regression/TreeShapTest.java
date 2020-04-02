@@ -29,7 +29,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -56,35 +60,34 @@ public class TreeShapTest {
     public void tearDown() {
     }
 
-    public void test(Loss loss, String name, Formula formula, DataFrame data, String mostImportantByShap, 
+    public double[] test(Loss loss, String name, Formula formula, DataFrame data, List<String> shapSortedFields, 
     		         int ntrees, double shrinkage, double subsample) {
         System.out.println(name + "\t" + loss);
 
         MathEx.setSeed(19650218); // to get repeatable results.
         GradientTreeBoost model = GradientTreeBoost.fit(formula, data, loss, ntrees, 3, 10, 5, shrinkage, subsample);
         
-        EnsembleTreeSHAP shapExplainer = new EnsembleTreeSHAP(model.trees(), true);        
+        EnsembleTreeSHAP shapExplainer = new EnsembleTreeSHAP(model.trees());        
         double[] meanShap = shapExplainer.shapImportance(model.schema(), data);
 		int[] shapAsc = smile.sort.QuickSort.sort(meanShap);
-        System.out.println("----- tree shap importance (sorted) -----");
+        System.out.println("----- GraidentTreeBoost model shap importance (sorted) -----");
         for (int i = meanShap.length - 1;i >= 0;i--) {
-             System.out.format("%-15s %.4f%n", model.schema().fieldName(shapAsc[i]), (meanShap[i] / data.size()));
+        	 String fn = model.schema().fieldName(shapAsc[i]);
+             System.out.format("%-15s %.4f%n", fn, meanShap[i]);
+             shapSortedFields.add(fn);
         }
-        assertTrue(model.schema().fieldName(shapAsc[meanShap.length - 1]).equalsIgnoreCase(mostImportantByShap));
-
-        // as comparison, also check split importance
-        double[] importance = model.importance();
-        System.out.println("----- tree split importance (sorted) -----");
-        int[] splitImportanceAsc = smile.sort.QuickSort.sort(importance);
-        for (int i = importance.length - 1;i >= 0;i--) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(splitImportanceAsc[i]), importance[i]);
-        }        
+        return meanShap;      
     }
 
     @Test
-    public void testLS() {
-        test(Loss.ls(), "cervicalCancer", CervicalCancer.formula, CervicalCancer.data, "Hormonal Contraceptives (years)", 5000, 0.001, 0.5);
-        test(Loss.ls(), "NHANES-I", NHANES.formula, NHANES.data, "Age", 5000, 0.001, 0.5);
-        test(Loss.ls(), "Boston Housing", BostonHousing.formula, BostonHousing.data, "LSTAT", 100, 0.01, 1);
+    public void testBostonHousing() {
+    	List<String> sortedFields = new ArrayList<String>();
+        double[] shaps = test(Loss.ls(), "Boston Housing", BostonHousing.formula, BostonHousing.data, sortedFields, 100, 0.01, 1);
+        assertTrue(sortedFields.get(0).equals("LSTAT"));
+        assertEquals(2.3119, shaps[shaps.length - 1], 1E-4);
+        assertTrue(sortedFields.get(1).equals("RM"));
+        assertEquals(1.5829, shaps[shaps.length - 2], 1E-4);
+        assertTrue(sortedFields.get(2).equals("NOX"));
+        assertEquals(0.2043, shaps[shaps.length - 3], 1E-4);
     }
 }
