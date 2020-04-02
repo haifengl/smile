@@ -21,27 +21,27 @@ import smile.data.formula.Formula;
 import smile.io.Read;
 import smile.util.Paths;
 
-/** 
+/**
  * 
- * @author ray 
+ * @author ray
  */
 public class BostonHousing {
 
-  public static DataFrame data;
-  public static Formula formula = Formula.lhs("class");
+	public static DataFrame data;
+	public static Formula formula = Formula.lhs("class");
 
-  public static double[][] x;
-  public static double[] y;
+	public static double[][] x;
+	public static double[] y;
 
-  static {
-    try {
-      data = Read.arff(Paths.getTestData("weka/regression/housing.arff"));
+	static {
+		try {
+			data = Read.arff(Paths.getTestData("weka/regression/housing.arff"));
 
-      x = formula.x(data).toArray();
-      y = formula.y(data).toDoubleArray();
-    } catch (Exception ex) {
-      System.err.println("Failed to load 'cal_housing': " + ex);
-      System.exit(-1);
-    }
-  }
+			x = formula.x(data).toArray();
+			y = formula.y(data).toDoubleArray();
+		} catch (Exception ex) {
+			System.err.println("Failed to load 'boston housing': " + ex);
+			System.exit(-1);
+		}
+	}
 }
