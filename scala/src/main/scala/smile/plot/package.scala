@@ -17,79 +17,92 @@
 
 package smile
 
-import javax.swing.JComponent
 import scala.language.implicitConversions
-import smile.json.JsObject
-import smile.plot.swing.{Canvas, PlotGroup}
+import smile.plot.swing.{Canvas, PlotGrid}
+import smile.plot.vega.VegaLite
 
 /** Data visualization.
   *
   * @author Haifeng Li
   */
 package object plot {
-  /** Shows a swing component with implicit renderer. */
-  def show(canvas: JComponent)(implicit renderer: JComponent => Unit): Unit = {
+  /** Shows a plot canvas with implicit renderer. */
+  def show[R](canvas: Canvas)(implicit renderer: Canvas => R): R = {
     renderer(canvas)
   }
 
-  /** Shows a swing-based plot with implicit renderer. */
-  def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
+  /** Shows a plot grid with implicit renderer. */
+  def show[R](canvas: PlotGrid)(implicit renderer: PlotGrid => R): R = {
     renderer(canvas)
   }
 
-  /** Shows a vega-based plot with implicit renderer. */
-  def show(spec: JsObject)(implicit renderer: JsObject => Unit): Unit = {
+  /** Shows a vega-lite plot with implicit renderer. */
+  def show[R](spec: VegaLite)(implicit renderer: VegaLite => R): R = {
     renderer(spec)
   }
 
-  /** Swing component renderer. */
-  implicit def desktop(canvas: PlotGroup): Unit = {
-    canvas.window
+  /** Desktop renderer of plot canvas. */
+  implicit def desktop(canvas: Canvas): smile.plot.swing.CanvasWindow = {
+    smile.plot.swing.Window(canvas)
   }
 
-  /** Swing based plot renderer. */
-  implicit def desktop(canvas: Canvas): Unit = {
-    canvas.window
+  /** Desktop renderer of plot grid. */
+  implicit def desktop(canvas: PlotGrid): smile.plot.swing.PlotGridWindow = {
+    smile.plot.swing.Window(canvas)
   }
 
-  /** Vega plot renderer with JavaFX. */
-  implicit def javafx(spec: JsObject): Unit = {
-    vega.Window(spec)
+  /** Desktop renderer of vega-lite plot with the default browser. */
+  implicit def desktop(spec: VegaLite): Unit = {
+    import java.nio.file.Files
+    val path = Files.createTempFile("smile-plot-", ".html")
+    path.toFile.deleteOnExit()
+    Files.write(path, spec.embed.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+    java.awt.Desktop.getDesktop.browse(path.toUri)
   }
 
-  /** Swing component renderer in Apache Zeppelin Notebook. */
+  /** Apache Zeppelin Notebook renderer of plot canvas. */
   implicit def zeppelin(canvas: Canvas): Unit = {
-    print(s"%html ${swing.canvas2Image(canvas)}")
+    print(s"%html ${smile.plot.swing.canvas2HtmlImg(canvas)}")
   }
 
-  /** Swing component renderer in Apache Zeppelin Notebook. */
-  implicit def zeppelin(canvas: JComponent): Unit = {
-    print(s"%html ${swing.component2Image(canvas)}")
+  /** Apache Zeppelin Notebook renderer of plot grid. */
+  implicit def zeppelin(canvas: PlotGrid): Unit = {
+    print(s"%html ${smile.plot.swing.swing2HtmlImg(canvas)}")
   }
 
-  /** Vega plot renderer in Apache Zeppelin Notebook. */
-  implicit def zeppelin(spec: JsObject): Unit = {
-    print(s"%html ${vega.iframe(spec)}")
+  /** Apache Zeppelin Notebook renderer of vega-lite plot. */
+  implicit def zeppelin(spec: VegaLite): Unit = {
+    print(s"%html ${spec.iframe()}")
   }
-/*
-  /** Swing component renderer in Apache Toree Notebook. */
-  implicit def toree(canvas: JComponent): Unit = {
-    kernel.display.content("text/html", swing.img(canvas))
-  }
-
-  /** Vega plot renderer in Apache Toree Notebook. */
-  implicit def toree(spec: JsObject): Unit = {
-    kernel.display.content("text/html", iframe(spec))
+  /*
+  /** Apache Toree Notebook renderer of plot canvas. */
+  implicit def toree(canvas: Canvas): Unit = {
+    kernel.display.content("text/html", smile.plot.swing.canvas2HtmlImg(canvas))
   }
 
-  /** Swing component renderer in Jupyter-scala (Almond) Notebook. */
-  implicit def almond(canvas: JComponent): Unit = {
-    publish.html(swing.img(canvas))
+  /** Apache Toree Notebook renderer of plot grid. */
+  implicit def toree(canvas: PlotGrid): Unit = {
+    kernel.display.content("text/html", smile.plot.swing.swing2HtmlImg(canvas))
   }
 
-  /** Vega plot renderer in Jupyter-scala (Almond) Notebook. */
-  implicit def almond(spec: JsObject): Unit = {
-    publish.html(iframe(spec))
+  /** Apache Toree Notebook renderer of vega-lite plot. */
+  implicit def toree(spec: VegaLite): Unit = {
+    kernel.display.content("text/html", spec.iframe())
   }
- */
+
+  /** Jupyter Notebook (Almond) renderer of plot canvas. */
+  implicit def almond(canvas: Canvas): Unit = {
+    publish.html(smile.plot.swing.canvas2HtmlImg(canvas))
+  }
+
+  /** Jupyter Notebook (Almond) renderer of plot grid. */
+  implicit def almond(canvas: PlotGrid): Unit = {
+    publish.html(smile.plot.swing.swing2HtmlImg(canvas))
+  }
+
+  /** Jupyter Notebook (Almond) renderer of vega-lite plot. */
+  implicit def almond(spec: VegaLite): Unit = {
+    publish.html(spec.iframe())
+  }
+  */
 }

@@ -20,17 +20,30 @@ package smile.plot.swing
 import java.awt.event.WindowEvent
 import javax.swing.JFrame
 
-/** A window/JFrame with plot canvas. */
-case class Window(frame: JFrame, canvas: Canvas) {
+/** JFrame window. */
+trait Window {
+  val frame: JFrame
+
   /** Closes the window programmatically. */
   def close: Unit = {
     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
   }
 }
 
+/** Plot canvas window. */
+case class CanvasWindow(override val frame: JFrame, canvas: Canvas) extends Window
+
+/** Plot grid window. */
+case class PlotGridWindow(override val frame: JFrame, canvas: PlotGrid) extends Window
+
 object Window {
-  /** Create a plot window frame. */
-  def apply(canvas: Canvas): Window = {
-    Window(canvas.window, canvas)
+  /** Opens a plot window. */
+  def apply(canvas: Canvas): CanvasWindow = {
+    CanvasWindow(canvas.window, canvas)
+  }
+
+  /** Opens a plot grid window. */
+  def apply(canvas: PlotGrid): PlotGridWindow = {
+    PlotGridWindow(canvas.window, canvas)
   }
 }
