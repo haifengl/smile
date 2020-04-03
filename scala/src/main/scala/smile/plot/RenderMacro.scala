@@ -42,10 +42,10 @@ class RenderMacro(val c: whitebox.Context) {
   /** Materialize the canvas renderer. */
   def renderCanvas: Tree = {
     val possibilities: Try[Tree] =
-      compile(q"""(canvas: Canvas) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.canvas2HtmlImg(canvas))) }""") orElse
-        compile(q"""(canvas: Canvas) => { publish.html(smile.plot.swing.canvas2HtmlImg(canvas)) }""") orElse
-        compile(q"""(canvas: Canvas) => { display.html(smile.plot.swing.canvas2HtmlImg(canvas)) }""") orElse
-        compile(q"""(canvas: Canvas) => { kernel.display.content("text/html", smile.plot.swing.canvas2HtmlImg(canvas)) }""") orElse
+      compile(q"""(canvas: Canvas) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.Html.canvas(canvas))) }""") orElse
+        compile(q"""(canvas: Canvas) => { publish.html(smile.plot.swing.Html.canvas(canvas)) }""") orElse
+        compile(q"""(canvas: Canvas) => { display.html(smile.plot.swing.Html.canvas(canvas)) }""") orElse
+        compile(q"""(canvas: Canvas) => { kernel.display.content("text/html", smile.plot.swing.Html.canvas(canvas)) }""") orElse
         compile(q"""(canvas: Canvas) => { smile.plot.Render.desktop(canvas) }""")
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default Canvas renderer could be materialized"))
@@ -54,10 +54,10 @@ class RenderMacro(val c: whitebox.Context) {
   /** Materialize the plot grid renderer. */
   def renderPlotGrid: Tree = {
     val possibilities: Try[Tree] =
-      compile(q"""(grid: PlotGrid) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.swing2HtmlImg(grid))) }""") orElse
-        compile(q"""(grid: PlotGrid) => { publish.html(smile.plot.swing.swing2HtmlImg(grid)) }""") orElse
-        compile(q"""(grid: PlotGrid) => { display.html(smile.plot.swing.swing2HtmlImg(grid)) }""") orElse
-        compile(q"""(grid: PlotGrid) => { kernel.display.content("text/html", smile.plot.swing.swing2HtmlImg(grid)) }""") orElse
+      compile(q"""(grid: PlotGrid) => { println(org.apache.zeppelin.spark.utils.DisplayUtils.html(smile.plot.swing.Html.of(grid))) }""") orElse
+        compile(q"""(grid: PlotGrid) => { publish.html(smile.plot.swing.Html.of(grid)) }""") orElse
+        compile(q"""(grid: PlotGrid) => { display.html(smile.plot.swing.Html.of(grid)) }""") orElse
+        compile(q"""(grid: PlotGrid) => { kernel.display.content("text/html", smile.plot.swing.Html.of(grid)) }""") orElse
         compile(q"""(grid: PlotGrid) => { smile.plot.Render.desktop(grid) }""")
 
     possibilities.getOrElse(c.abort(c.enclosingPosition, "No default PlotGrid renderer could be materialized"))

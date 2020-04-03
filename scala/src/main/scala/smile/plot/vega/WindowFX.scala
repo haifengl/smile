@@ -29,7 +29,7 @@ import com.typesafe.scalalogging.LazyLogging
 import smile.json.{JsNull, JsUndefined}
 
 /** JavaFX WebView with vega-lite plot. */
-case class WindowFX(stage: Stage, spec: VegaLite) extends smile.plot.Window {
+case class WindowFX(stage: Stage, spec: VegaLite) {
   /** Closes the window programmatically. */
   def close: Unit = {
     WindowFX.onUIThread { stage.close }
@@ -102,6 +102,3 @@ object WindowFX extends LazyLogging {
     task.get()
   }
 }
-
-/** Dummy window wrapper. */
-case class VegaWindow(spec: VegaLite) extends smile.plot.Window
