@@ -172,9 +172,9 @@ trait VegaLite {
        |<!DOCTYPE html>
        |<html>
        |<head>
-       |  <script src="https://cdn.jsdelivr.net/npm/vega@5"></script>
-       |  <script src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
-       |  <script src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
+       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega@5"></script>
+       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-lite@4"></script>
+       |  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/vega-embed@6"></script>
        |</head>
        |<body>
        |
@@ -244,10 +244,12 @@ object VegaLite {
     }
   }
 
-  /** Returns a view to be used in a composition.  */
-  def view: View = {
+  /** Returns a view to be used in a composition.
+    * @param init Initial specification.
+    */
+  def view(init: JsObject = JsObject()): View = {
     new View {
-      override val spec = JsObject()
+      override val spec = init
     }
   }
 
@@ -257,6 +259,92 @@ object VegaLite {
       override val spec = of(df)
       layer(layers: _*)
     }
+  }
+
+  /** Horizontal concatenation. Put multiple views into a column.  */
+  def hconcat(df: DataFrame, views: VegaLite*): VegaLite = {
+    new VegaLite {
+      override val spec = of(df)
+      spec.hconcat = JsArray(views.map(_.spec))
+    }
+  }
+
+  /** Vertical concatenation. Put multiple views into a row.  */
+  def vconcat(df: DataFrame, views: VegaLite*): VegaLite = {
+    new VegaLite {
+      override val spec = of(df)
+      spec.vconcat = JsArray(views.map(_.spec))
+    }
+  }
+
+  /** General (wrappable) concatenation. Put multiple views into
+    * a flexible flow layout.
+    */
+  def concat(df: DataFrame, columns: Int, views: VegaLite*): VegaLite = {
+    new VegaLite {
+      override val spec = of(df)
+      spec.columns = columns
+      spec.concat = JsArray(views.map(_.spec))
+    }
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param fields The fields that should be used for each entry.
+    */
+  def repeat(df: DataFrame, view: VegaLite, fields: String*): VegaLite = {
+    new VegaLite {
+      override val spec = of(df)
+      spec.repeat = JsArray(fields.map(JsString(_)))
+      spec.spec = view.spec
+    }
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param row An array of fields to be repeated vertically.
+    * @param column An array of fields to be repeated horizontally.
+    */
+  def repeat(df: DataFrame, view: VegaLite, row: Seq[String], column: Seq[String]): VegaLite = {
+    new VegaLite {
+      override val spec = of(df)
+      spec.repeat = JsObject(
+        "row" -> JsArray(row.map(JsString(_)): _*),
+        "column" -> JsArray(column.map(JsString(_)): _*)
+      )
+      spec.spec = view.spec
+    }
+  }
+
+  /** Scatterplot Matrix (SPLOM). */
+  def splom(df: DataFrame, color: String = ""): VegaLite = {
+    val fields = df.names.filter(_ != color).toIndexedSeq
+    val spec = json"""{
+                     |  "mark": "point",
+                     |  "encoding": {
+                     |    "x": {
+                     |      "field": {"repeat": "column"},
+                     |      "type": "quantitative",
+                     |      "scale": {"zero": false}
+                     |    },
+                     |    "y": {
+                     |      "field": {"repeat": "row"},
+                     |      "type": "quantitative",
+                     |      "scale": {"zero": false}
+                     |    }
+                     |  }
+                     |}"""
+    if (!color.isEmpty)
+      spec.encoding.color = JsObject(
+        "field" -> color,
+        "type" -> "nominal"
+      )
+
+    repeat(df, view(spec), fields.reverse, fields)
   }
 
   /** Returns a specification.
