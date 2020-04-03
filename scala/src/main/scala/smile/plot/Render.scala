@@ -18,7 +18,7 @@
 package smile.plot
 
 import scala.language.experimental.macros
-import smile.plot.swing.{Canvas, CanvasWindow, PlotGrid, PlotGridWindow}
+import smile.plot.swing.{Canvas, PlotGrid}
 import smile.plot.vega.VegaLite
 
 /** Implicit renderers. */
