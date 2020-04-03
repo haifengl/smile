@@ -32,6 +32,7 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.Arrays;
 
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
@@ -290,17 +291,18 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     }
 
     /**
-     * Creates pairwise scatter plots from a data frame.
+     * Scatterplot Matrix (SPLOM).
      * @param data the data frame.
      */
-    public static PlotGrid of(DataFrame data, char mark, Color color) {
+    public static PlotGrid splom(DataFrame data, char mark, Color color) {
         String[] columns = data.names();
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);
-        for (int i = 0; i < p; i++) {
+        for (int i = p; i-- > 0;) {
             for (int j = 0; j < p; j++) {
-                Plot plot = ScatterPlot.of(data, columns[i], columns[j], mark, color);
-                grid.add(plot.canvas().panel());
+                Canvas canvas = ScatterPlot.of(data, columns[j], columns[i], mark, color).canvas();
+                canvas.setAxisLabels(columns[j], columns[i]);
+                grid.add(canvas.panel());
             }
         }
 
@@ -308,22 +310,22 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     }
 
     /**
-     * Creates pairwise scatter plots from a data frame.
+     * Scatterplot Matrix (SPLOM).
      * @param data the data frame.
      * @param category the category column for coloring.
      */
-    public static PlotGrid of(DataFrame data, String category, char mark) {
+    public static PlotGrid splom(DataFrame data, char mark, String category) {
         int clazz = data.columnIndex(category);
         String[] columns = data.names();
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);
-        for (int i = 0; i < p; i++) {
+        for (int i = p; i-- > 0;) {
             if (i == clazz) continue;
             for (int j = 0; j < p; j++) {
                 if (j == clazz) continue;
-                Canvas canvas = ScatterPlot.of(data, columns[i], columns[j], category, mark).canvas();
+                Canvas canvas = ScatterPlot.of(data, columns[j], columns[i], category, mark).canvas();
                 canvas.setLegendVisible(false);
-                canvas.setAxisLabels(columns[i], columns[j]);
+                canvas.setAxisLabels(columns[j], columns[i]);
                 grid.add(canvas.panel());
             }
         }

@@ -140,25 +140,25 @@ package object swing {
     canvas
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the data frame.
+  /** Scatterplot Matrix (SPLOM).
     *
     * @param data a data frame.
     * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, mark: Char, color: Color): PlotGrid = {
-    PlotGrid.of(data, mark, color)
+  def splom(data: DataFrame, mark: Char, color: Color): PlotGrid = {
+    PlotGrid.splom(data, mark, color)
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the data frame
-    * of which the response variable is integer.
+  /** Scatterplot Matrix (SPLOM).
     *
     * @param data an attribute frame.
     * @param mark the legend for all classes.
+    * @param category the category column for coloring.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, mark: Char): PlotGrid = {
-    PlotGrid.of(data, category, mark);
+  def splom(data: DataFrame, mark: Char, category: String): PlotGrid = {
+    PlotGrid.splom(data, mark, category);
   }
 
   /**
