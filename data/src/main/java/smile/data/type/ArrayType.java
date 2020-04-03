@@ -77,7 +77,26 @@ public class ArrayType implements DataType {
 
     @Override
     public String toString(Object o) {
-        return Arrays.toString((Object[]) o);
+        switch (type.id()) {
+            case Boolean:
+                return Arrays.toString((boolean[]) o);
+            case Byte:
+                return Arrays.toString((byte[]) o);
+            case Char:
+                return Arrays.toString((char[]) o);
+            case Short:
+                return Arrays.toString((short[]) o);
+            case Integer:
+                return Arrays.toString((int[]) o);
+            case Long:
+                return Arrays.toString((long[]) o);
+            case Float:
+                return Arrays.toString((float[]) o);
+            case Double:
+                return Arrays.toString((double[]) o);
+            default:
+                return Arrays.toString((Object[]) o);
+        }
     }
 
     @Override
