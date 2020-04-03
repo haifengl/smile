@@ -35,35 +35,6 @@ import smile.projection.PCA
   * @author Haifeng Li
   */
 package object swing {
-  /** Returns the HTML img tag of the canvas encoded by BASE64. */
-  def canvas2HtmlImg(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
-    val bi = canvas.toBufferedImage(width, height)
-
-    val os = new ByteArrayOutputStream
-    ImageIO.write(bi, "png", os)
-    val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
-
-    s"""<img src="data:image/png;base64,${base64}">"""
-  }
-
-  /** Returns the HTML img tag of the swing component encoded by BASE64. */
-  def swing2HtmlImg(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
-    val headless = new Headless(canvas, width, height)
-    headless.pack
-    headless.setVisible(true)
-    SwingUtilities.invokeAndWait(() => {})
-
-    val bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-    val g2d = bi.createGraphics
-    canvas.print(g2d)
-
-    val os = new ByteArrayOutputStream
-    ImageIO.write(bi, "png", os)
-    val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
-
-    s"""<img src="data:image/png;base64,${base64}">"""
-  }
-
   /** Scatter plot.
     *
     * @param x a n-by-2 or n-by-3 matrix that describes coordinates of points.

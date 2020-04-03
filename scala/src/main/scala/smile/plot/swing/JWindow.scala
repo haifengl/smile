@@ -21,7 +21,7 @@ import java.awt.event.WindowEvent
 import javax.swing.JFrame
 
 /** JFrame window. */
-trait JWindow extends smile.plot.Window {
+trait JWindow {
   val frame: JFrame
 
   /** Closes the window programmatically. */
