@@ -17,7 +17,6 @@
 
 package smile
 
-import scala.language.implicitConversions
 import smile.plot.swing.{Canvas, PlotGrid}
 import smile.plot.vega.VegaLite
 
@@ -40,51 +39,4 @@ package object plot {
   def show(spec: VegaLite)(implicit renderer: VegaLite => Unit): Unit = {
     renderer(spec)
   }
-
-  /*
-  /** Apache Zeppelin Notebook renderer of plot canvas. */
-  implicit def zeppelin(canvas: Canvas): Window = {
-    print(s"%html ${smile.plot.swing.canvas2HtmlImg(canvas)}")
-  }
-
-  /** Apache Zeppelin Notebook renderer of plot grid. */
-  implicit def zeppelin(grid: PlotGrid): Window = {
-    print(s"%html ${smile.plot.swing.swing2HtmlImg(grid)}")
-  }
-
-  /** Apache Zeppelin Notebook renderer of vega-lite plot. */
-  implicit def zeppelin(spec: VegaLite): Window = {
-    print(s"%html ${spec.iframe()}")
-  }
-
-  /** Apache Toree Notebook renderer of plot canvas. */
-  implicit def toree(canvas: Canvas): Window = {
-    kernel.display.content("text/html", smile.plot.swing.canvas2HtmlImg(canvas))
-  }
-
-  /** Apache Toree Notebook renderer of plot grid. */
-  implicit def toree(canvas: PlotGrid): Window = {
-    kernel.display.content("text/html", smile.plot.swing.swing2HtmlImg(canvas))
-  }
-
-  /** Apache Toree Notebook renderer of vega-lite plot. */
-  implicit def toree(spec: VegaLite): Window = {
-    kernel.display.content("text/html", spec.iframe())
-  }
-
-  /** Jupyter Notebook (Almond) renderer of plot canvas. */
-  implicit def almond(canvas: Canvas): Window = {
-    publish.html(smile.plot.swing.canvas2HtmlImg(canvas))
-  }
-
-  /** Jupyter Notebook (Almond) renderer of plot grid. */
-  implicit def almond(canvas: PlotGrid): Window = {
-    publish.html(smile.plot.swing.swing2HtmlImg(canvas))
-  }
-
-  /** Jupyter Notebook (Almond) renderer of vega-lite plot. */
-  implicit def almond(spec: VegaLite): Window = {
-    publish.html(spec.iframe())
-  }
-  */
 }
