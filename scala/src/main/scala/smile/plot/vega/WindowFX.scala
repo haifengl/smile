@@ -26,19 +26,19 @@ import javafx.scene.layout.StackPane
 import javafx.stage.Stage
 import com.sun.javafx.webkit.WebConsoleListener
 import com.typesafe.scalalogging.LazyLogging
-import smile.json.{JsNull, JsObject, JsUndefined}
+import smile.json.{JsNull, JsUndefined}
 
-/** A JavaFX WebView with plot canvas. */
-case class Window(stage: Stage) {
+/** JavaFX WebView with vega-lite plot. */
+case class WindowFX(stage: Stage, spec: VegaLite) {
   /** Closes the window programmatically. */
   def close: Unit = {
-    Window.onUIThread { stage.close }
+    WindowFX.onUIThread { stage.close }
   }
 
   Platform.runLater { () => stage.showAndWait }
 }
 
-object Window extends LazyLogging {
+object WindowFX extends LazyLogging {
   /** The number of created windows, as the default window title. */
   private val windowCount = new java.util.concurrent.atomic.AtomicInteger
   /** Creates a JFXPanel to avoid the error of 'Internal graphics not initialized yet' */
@@ -55,11 +55,12 @@ object Window extends LazyLogging {
   })
 
   /** Creates a plot window/stage. */
-  def apply(plot: JsObject): Window = onUIThread {
+  def apply(spec: VegaLite): WindowFX = onUIThread {
+    val plot = spec.spec
     if (plot.width == JsUndefined) plot.width = 800
     if (plot.height == JsUndefined) plot.height = 600
 
-    val scene = sceneOf(plot)
+    val scene = sceneOf(spec)
     val stage = new Stage
     stage.setWidth(1200)
     stage.setHeight(800)
@@ -71,14 +72,14 @@ object Window extends LazyLogging {
     }
     stage.setTitle(title)
 
-    Window(stage)
+    WindowFX(stage, spec)
   }
 
   /** Returns the WebView scene of plot. */
-  def sceneOf(plot: JsObject): Scene = onUIThread {
+  def sceneOf(spec: VegaLite): Scene = onUIThread {
     val webView = new WebView
     val webEngine = webView.getEngine
-    webEngine.loadContent(embed(plot))
+    webEngine.loadContent(spec.embed)
 
     val root = new StackPane
     // Very large size so that StackPane tries to resize its children/WebView

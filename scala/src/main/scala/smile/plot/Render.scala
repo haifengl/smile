@@ -15,28 +15,34 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile
+package smile.plot
 
+import scala.language.experimental.macros
 import smile.plot.swing.{Canvas, PlotGrid}
 import smile.plot.vega.VegaLite
 
-/** Data visualization.
-  *
-  * @author Haifeng Li
-  */
-package object plot {
-  /** Shows a plot canvas with implicit renderer. */
-  def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
-    renderer(canvas)
+/** Implicit renderers. */
+object Render {
+  implicit def renderVega: VegaLite => Unit = macro RenderMacro.renderVega
+  implicit def renderCanvas: Canvas => Unit = macro RenderMacro.renderCanvas
+  implicit def renderPlotGrid: PlotGrid => Unit = macro RenderMacro.renderPlotGrid
+
+  /** Desktop renderer of plot canvas. */
+  def desktop(canvas: Canvas): Unit = {
+    smile.plot.swing.JWindow(canvas)
   }
 
-  /** Shows a plot grid with implicit renderer. */
-  def show(grid: PlotGrid)(implicit renderer: PlotGrid => Unit): Unit = {
-    renderer(grid)
+  /** Desktop renderer of plot grid. */
+  def desktop(grid: PlotGrid): Unit = {
+    smile.plot.swing.JWindow(grid)
   }
 
-  /** Shows a vega-lite plot with implicit renderer. */
-  def show(spec: VegaLite)(implicit renderer: VegaLite => Unit): Unit = {
-    renderer(spec)
+  /** Desktop renderer of vega-lite plot with the default browser. */
+  def desktop(spec: VegaLite): Unit = {
+    import java.nio.file.Files
+    val path = Files.createTempFile("smile-plot-", ".html")
+    path.toFile.deleteOnExit()
+    Files.write(path, spec.embed.getBytes(java.nio.charset.StandardCharsets.UTF_8))
+    java.awt.Desktop.getDesktop.browse(path.toUri)
   }
 }

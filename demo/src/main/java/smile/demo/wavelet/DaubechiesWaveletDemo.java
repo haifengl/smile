@@ -23,7 +23,7 @@ import javax.swing.*;
 
 import smile.plot.swing.LinePlot;
 import smile.plot.swing.Canvas;
-import smile.plot.swing.PlotGroup;
+import smile.plot.swing.PlotGrid;
 import smile.wavelet.DaubechiesWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -33,7 +33,7 @@ import smile.wavelet.WaveletShrinkage;
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class DaubechiesWaveletDemo extends PlotGroup {
+public class DaubechiesWaveletDemo extends PlotGrid {
     public DaubechiesWaveletDemo() {
         for (int i = 4; i <= 18; i+=2) {
             double[] x = new double[1024];

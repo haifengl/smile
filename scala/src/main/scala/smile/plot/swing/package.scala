@@ -35,35 +35,6 @@ import smile.projection.PCA
   * @author Haifeng Li
   */
 package object swing {
-  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def canvas2Image(canvas: Canvas, width: Int = 600, height: Int = 600): String = {
-    val bi = canvas.toBufferedImage(width, height)
-
-    val os = new ByteArrayOutputStream
-    ImageIO.write(bi, "png", os)
-    val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
-
-    s"""<img src="data:image/png;base64,${base64}">"""
-  }
-
-  /** Returns the HTML img tag with the canvas is encoded by BASE64. */
-  def component2Image(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
-    val headless = new Headless(canvas, width, height)
-    headless.pack
-    headless.setVisible(true)
-    SwingUtilities.invokeAndWait(() => {})
-
-    val bi = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB)
-    val g2d = bi.createGraphics
-    canvas.print(g2d)
-
-    val os = new ByteArrayOutputStream
-    ImageIO.write(bi, "png", os)
-    val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
-
-    s"""<img src="data:image/png;base64,${base64}">"""
-  }
-
   /** Scatter plot.
     *
     * @param x a n-by-2 or n-by-3 matrix that describes coordinates of points.
@@ -169,25 +140,25 @@ package object swing {
     canvas
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the data frame.
+  /** Scatterplot Matrix (SPLOM).
     *
     * @param data a data frame.
     * @param mark the legend for all classes.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, mark: Char, color: Color): PlotGroup = {
-    PlotGroup.of(data, mark, color)
+  def splom(data: DataFrame, mark: Char, color: Color): PlotGrid = {
+    PlotGrid.splom(data, mark, color)
   }
 
-  /** Plot a grid of scatter plots of for all attribute pairs in the data frame
-    * of which the response variable is integer.
+  /** Scatterplot Matrix (SPLOM).
     *
     * @param data an attribute frame.
     * @param mark the legend for all classes.
+    * @param category the category column for coloring.
     * @return the plot panel.
     */
-  def plot(data: DataFrame, category: String, mark: Char): PlotGroup = {
-    PlotGroup.of(data, category, mark);
+  def splom(data: DataFrame, mark: Char, category: String): PlotGrid = {
+    PlotGrid.splom(data, mark, category);
   }
 
   /**

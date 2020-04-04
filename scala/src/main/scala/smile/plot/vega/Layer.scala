@@ -15,28 +15,20 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile
+package smile.plot.vega
 
-import smile.plot.swing.{Canvas, PlotGrid}
-import smile.plot.vega.VegaLite
+import smile.json._
 
-/** Data visualization.
-  *
-  * @author Haifeng Li
-  */
-package object plot {
-  /** Shows a plot canvas with implicit renderer. */
-  def show(canvas: Canvas)(implicit renderer: Canvas => Unit): Unit = {
-    renderer(canvas)
-  }
-
-  /** Shows a plot grid with implicit renderer. */
-  def show(grid: PlotGrid)(implicit renderer: PlotGrid => Unit): Unit = {
-    renderer(grid)
-  }
-
-  /** Shows a vega-lite plot with implicit renderer. */
-  def show(spec: VegaLite)(implicit renderer: VegaLite => Unit): Unit = {
-    renderer(spec)
+/** To superimpose one chart on top of another. */
+trait Layer extends View with ViewComposition {
+  /** Sets the Layer or single View specifications to be layered.
+    *
+    * Note: Specifications inside layer cannot use row and column
+    * channels as layering facet specifications is not allowed.
+    * Instead, use the facet operator and place a layer inside a facet.
+    */
+  def layer(layers: View*): Layer = {
+    spec.layer = JsArray(layers.map(_.spec): _*)
+    this
   }
 }
