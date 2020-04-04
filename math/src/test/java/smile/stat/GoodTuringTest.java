@@ -29,9 +29,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class StatTest {
+public class GoodTuringTest {
 
-    public StatTest() {
+    public GoodTuringTest() {
     }
 
     @BeforeClass
@@ -50,11 +50,8 @@ public class StatTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of GoodTuring method, of class Stat.
-     */
     @Test
-    public void testGoodTuring() {
+    public void test() {
         System.out.println("GoodTuring");
         int[] r = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 12};
         int[] Nr = {120, 40, 24, 13, 15, 5, 11, 2, 2, 1, 3};
@@ -63,10 +60,10 @@ public class StatTest {
                 0.0009267, 0.0024393, 0.0040945, 0.0058063, 0.0075464,
                 0.0093026, 0.0110689, 0.0128418, 0.0146194, 0.0164005, 0.0199696};
 
-        double[] result = new double[r.length];
-        assertEquals(p0, Stat.GoodTuring(r, Nr, result), 1E-7);
+        GoodTuring result = GoodTuring.of(r, Nr);
+        assertEquals(p0, result.p0, 1E-7);
         for (int i = 0; i < r.length; i++) {
-            assertEquals(p[i], result[i], 1E-7);
+            assertEquals(p[i], result.p[i], 1E-7);
         }
     }
 }
