@@ -1,7 +1,5 @@
 name := "smile-scala"
 
-crossScalaVersions := Seq("2.11.12", "2.12.11", "2.13.1")
-
 // Parent project disables Scala as most libraries are in Java.
 // Enable it as this is a Scala project.
 crossPaths := true
