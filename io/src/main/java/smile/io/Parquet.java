@@ -98,7 +98,7 @@ public class Parquet {
      * @param limit reads a limited number of records.
      */
     public static DataFrame read(String path, int limit) throws IOException, URISyntaxException {
-        return read(input(path), limit);
+        return read(HadoopInput.file(path), limit);
     }
 
     /**
@@ -137,28 +137,6 @@ public class Parquet {
             }
 
             return DataFrame.of(rows);
-        }
-    }
-
-    /** Returns the Parquet's InputFile instance of a file path or URI. */
-    private static InputFile input(String path) throws IOException, URISyntaxException {
-        URI uri = new URI(path);
-        if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));
-
-        switch (uri.getScheme().toLowerCase()) {
-            case "file":
-                return new LocalInputFile(Paths.get(path));
-
-            case "s3":
-            case "s3a":
-            case "s3n":
-            case "hdfs":
-                Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf);
-                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration());
-
-            default: // http, ftp, ...
-                throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);
         }
     }
 
