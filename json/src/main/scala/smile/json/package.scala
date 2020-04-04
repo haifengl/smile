@@ -120,6 +120,7 @@ package object json {
   implicit def json2UUID(x: JsUUID): UUID = x.value
   implicit def json2Binary(x: JsBinary): Array[Byte] = x.value
 
+  /*
   implicit def json2Boolean(json: JsValue): Boolean = json.asBoolean
   implicit def json2Int(json: JsValue): Int = json.asInt
   implicit def json2Long(json: JsValue): Long = json.asLong
@@ -135,6 +136,7 @@ package object json {
     case JsBinary(x) => x
     case _ => throw new UnsupportedOperationException("convert JsValue to Array[Byte]")
   }
+  */
 }
 
 package json {
