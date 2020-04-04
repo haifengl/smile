@@ -20,43 +20,34 @@ package smile.stat;
 import smile.math.MathEx;
 
 /**
- * Statistical functions or tests.
+ * Good–Turing frequency estimation. This technique is for estimating the
+ * probability of encountering an object of a hitherto unseen species,
+ * given a set of past observations of objects from different species.
+ * In drawing balls from an urn, the 'objects' would be balls and the
+ * 'species' would be the distinct colors of the balls (finite but
+ * unknown in number). After drawing R_red red balls, R_black black
+ * balls and , R_green green balls, we would ask what is the probability
+ * of drawing a red ball, a black ball, a green ball or one of a
+ * previously unseen color.
+ *
+ * This method takes a set of (frequency, frequency-of-frequency) pairs and
+ * estimate the probabilities corresponding to the observed frequencies,
+ * and P<sub>0</sub>, the joint probability of all unobserved species.
  *
  * @author Haifeng Li
  */
-public class Stat {
+public class GoodTuring {
+    /** The probabilities corresponding to the observed frequencies. */
+    public final double[] p;
+    /** The joint probability of all unobserved species. */
+    public final double p0;
+
     /**
      * Private constructor.
      */
-    private Stat() {
-    }
-
-    /**
-     * Bayesian information criterion (BIC). BIC or Schwarz Criterion is a criterion for
-     * model selection among a class of parametric models with different numbers
-     * of parameters. Choosing a model to optimize BIC is a form of regularization.
-     * <p>
-     * When estimating model parameters using maximum likelihood estimation, it
-     * is possible to increase the likelihood by adding additional parameters,
-     * which may result in over-fitting. The BIC resolves this problem by
-     * introducing a penalty term for the number of parameters in the model.
-     * BIC is very closely related to the Akaike information criterion (AIC).
-     * However, its penalty for additional parameters is stronger than that of AIC.
-     * <p>
-     * The formula for the BIC is BIC = L - 0.5 * v * log n where L is the
-     * log-likelihood of estimated model, v is the number of free parameters
-     * to be estimated in the model, and n is the number of samples.
-     * <p>
-     * Given any two estimated models, the model with the larger value of BIC is
-     * the one to be preferred.
-     *
-     * @param L the log-likelihood of estimated model.
-     * @param v the number of free parameters to be estimated in the model.
-     * @param n the number of samples.
-     * @return BIC score.
-     */
-    public static double bic(double L, int v, int n) {
-        return L - 0.5 * v * Math.log(n);
+    private GoodTuring(double[] p, double p0) {
+        this.p = p;
+        this.p0 = p0;
     }
 
     /**
@@ -83,26 +74,13 @@ public class Stat {
     }
 
     /**
-     * Good–Turing frequency estimation. This technique is for estimating the
-     * probability of encountering an object of a hitherto unseen species,
-     * given a set of past observations of objects from different species.
-     * In drawing balls from an urn, the 'objects' would be balls and the
-     * 'species' would be the distinct colors of the balls (finite but
-     * unknown in number). After drawing R_red red balls, R_black black
-     * balls and , R_green green balls, we would ask what is the probability
-     * of drawing a red ball, a black ball, a green ball or one of a
-     * previously unseen color.
-     *
-     * This method takes a set of (frequency, frequency-of-frequency) pairs and
-     * estimate the probabilities corresponding to the observed frequencies,
-     * and P<sub>0</sub>, the joint probability of all unobserved species.
+     * Good–Turing frequency estimation.
      *
      * @param r the frequency in ascending order.
      * @param Nr the frequency of frequencies.
-     * @param p on output, it is the estimated probabilities.
-     * @return P<sub>0</sub> for all unobserved species.
+     * @return the estimation object.
      */
-    public static double GoodTuring(int[] r, int[] Nr, double[] p) {
+    public static GoodTuring of(int[] r, int[] Nr) {
         final double CONFID_FACTOR = 1.96;
 
         if (r.length != Nr.length) {
@@ -110,6 +88,7 @@ public class Stat {
         }
 
         int len = r.length;
+        double[] p = new double[len];
         double[] logR = new double[len];
         double[] logZ = new double[len];
         double[] Z = new double[len];
@@ -178,6 +157,6 @@ public class Stat {
             p[j] = (1 - p0) * p[j] / Nprime;
         }
 
-        return p0;
+        return new GoodTuring(p, p0);
     }
 }
