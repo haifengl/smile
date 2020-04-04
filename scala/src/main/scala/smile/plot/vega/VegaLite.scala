@@ -162,7 +162,7 @@ trait VegaLite {
     * bin, timeUnit, aggregate, sort, and stack.
     */
   def transform(transforms: JsObject*): VegaLite = {
-    spec.transform = JsArray(transforms)
+    spec.transform = JsArray(transforms: _*)
     this
   }
 
@@ -178,7 +178,7 @@ trait VegaLite {
        |</head>
        |<body>
        |
-       |<div id="vega-lite" style="width: 100%; height: 100vh"></div>
+       |<div id="vega-lite"></div>
        |
        |<script type="text/javascript">
        |  var spec = ${spec};
@@ -187,9 +187,7 @@ trait VegaLite {
        |    "renderer": "canvas",
        |    "actions": {"editor": true, "source": true, "export": true}
        |  };
-       |  vegaEmbed('#vega-lite', spec, opt)
-       |    .then(result => console.log(result))
-       |    .catch(console.error);
+       |  vegaEmbed('#vega-lite', spec, opt).catch(console.error);
        |</script>
        |</body>
        |</html>
@@ -210,7 +208,7 @@ trait VegaLite {
        |        el.style.height = height + 'px';
        |        if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 1000 + (k * 250)) };
        |      }
-       |      resizeIFrame(document.querySelector('#${id}'), 1);
+       |      resizeIFrame(document.getElementById("${id}"), 1);
        |    })(); // IIFE
        |  </script>
     """.stripMargin
@@ -265,7 +263,7 @@ object VegaLite {
   def hconcat(df: DataFrame, views: VegaLite*): VegaLite = {
     new VegaLite {
       override val spec = of(df)
-      spec.hconcat = JsArray(views.map(_.spec))
+      spec.hconcat = JsArray(views.map(_.spec): _*)
     }
   }
 
@@ -273,7 +271,7 @@ object VegaLite {
   def vconcat(df: DataFrame, views: VegaLite*): VegaLite = {
     new VegaLite {
       override val spec = of(df)
-      spec.vconcat = JsArray(views.map(_.spec))
+      spec.vconcat = JsArray(views.map(_.spec): _*)
     }
   }
 
@@ -284,7 +282,7 @@ object VegaLite {
     new VegaLite {
       override val spec = of(df)
       spec.columns = columns
-      spec.concat = JsArray(views.map(_.spec))
+      spec.concat = JsArray(views.map(_.spec): _*)
     }
   }
 
@@ -297,7 +295,7 @@ object VegaLite {
   def repeat(df: DataFrame, view: VegaLite, fields: String*): VegaLite = {
     new VegaLite {
       override val spec = of(df)
-      spec.repeat = JsArray(fields.map(JsString(_)))
+      spec.repeat = JsArray(fields.map(JsString(_)): _*)
       spec.spec = view.spec
     }
   }
