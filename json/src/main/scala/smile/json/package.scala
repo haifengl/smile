@@ -42,7 +42,7 @@ package object json {
     }
 
     /** Parses JSON array. */
-    def jarr(args: Any*): JsArray = {
+    def jsan(args: Any*): JsArray = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsArray]
     }
   }
