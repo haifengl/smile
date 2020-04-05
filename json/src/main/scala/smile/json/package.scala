@@ -33,10 +33,17 @@ package object json {
   val JsTrue = new JsBoolean(true)
   val JsFalse = new JsBoolean(false)
 
-  /** Enable json''' '''. */
+  /** String interpolator for JSON.
+    * `json''' '''` for JSON Object and `jarr''' '''` for JSON Array. */
   implicit class JsonHelper(private val sc: StringContext) extends AnyVal {
+    /** Parses JSON object. */
     def json(args: Any*): JsObject = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsObject]
+    }
+
+    /** Parses JSON array. */
+    def jarr(args: Any*): JsArray = {
+      JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsArray]
     }
   }
 
