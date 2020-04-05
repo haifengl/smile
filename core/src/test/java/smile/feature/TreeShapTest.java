@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2010-2019 Haifeng Li
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as
@@ -13,14 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- *******************************************************************************/
+ ******************************************************************************/
 
 package smile.feature;
 
 import smile.base.cart.Loss;
 import smile.data.*;
-import smile.data.formula.Formula;
-import smile.feature.EnsembleTreeSHAP;
 import smile.math.MathEx;
 import smile.regression.GradientTreeBoost;
 
@@ -37,59 +35,50 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
  * @author ray
  */
 public class TreeShapTest {
 
-	public TreeShapTest() {
-	}
+    public TreeShapTest() {
+    }
 
-	@BeforeClass
-	public static void setUpClass() throws Exception {
-	}
+    @BeforeClass
+    public static void setUpClass() throws Exception {
+    }
 
-	@AfterClass
-	public static void tearDownClass() throws Exception {
-	}
+    @AfterClass
+    public static void tearDownClass() throws Exception {
+    }
 
-	@Before
-	public void setUp() {
-	}
+    @Before
+    public void setUp() {
+    }
 
-	@After
-	public void tearDown() {
-	}
+    @After
+    public void tearDown() {
+    }
 
-	public double[] test(Loss loss, String name, Formula formula,
-			DataFrame data, List<String> shapSortedFields, int ntrees,
-			double shrinkage, double subsample) {
-		System.out.println(name + "\t" + loss);
+    @Test
+    public void test() {
+        List<String> sortedFields = new ArrayList<>();
+        MathEx.setSeed(19650218); // to get repeatable results.
+        GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 3, 10, 5, 0.01, 0.7);
 
-		MathEx.setSeed(19650218); // to get repeatable results.
-		GradientTreeBoost model = GradientTreeBoost.fit(formula, data, loss, ntrees, 3, 10, 5, shrinkage, subsample);
+        EnsembleTreeSHAP shapExplainer = new EnsembleTreeSHAP(model.trees());
+        double[] shap = shapExplainer.shapImportance(model.schema(), BostonHousing.data);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(shap, fields);
 
-		EnsembleTreeSHAP shapExplainer = new EnsembleTreeSHAP(model.trees());
-		double[] meanShap = shapExplainer.shapImportance(model.schema(), data);
-		int[] shapAsc = smile.sort.QuickSort.sort(meanShap);
-		System.out.println("----- GradientTreeBoost regression model shap importance (sorted) -----");
-		for (int i = meanShap.length - 1; i >= 0; i--) {
-			String fn = model.schema().fieldName(shapAsc[i]);
-			System.out.format("%-15s %.4f%n", fn, meanShap[i]);
-			shapSortedFields.add(fn);
-		}
-		return meanShap;
-	}
+        System.out.println("----- SHAP importance -----");
+        for (int i = shap.length - 1; i >= 0; i--) {
+            System.out.format("%-15s %.4f%n", fields[i], shap[i]);
+        }
 
-	@Test
-	public void testBostonHousing() {
-		List<String> sortedFields = new ArrayList<String>();
-		double[] shaps = test(Loss.ls(), "Boston Housing", BostonHousing.formula, BostonHousing.data, sortedFields, 100, 0.01, 1);
-		assertTrue(sortedFields.get(0).equals("LSTAT"));
-		assertEquals(2.3119, shaps[shaps.length - 1], 1E-4);
-		assertTrue(sortedFields.get(1).equals("RM"));
-		assertEquals(1.5829, shaps[shaps.length - 2], 1E-4);
-		assertTrue(sortedFields.get(2).equals("NOX"));
-		assertEquals(0.2043, shaps[shaps.length - 3], 1E-4);
-	}
+        assertTrue(sortedFields.get(0).equals("LSTAT"));
+        assertEquals(2.3119, shap[shap.length - 1], 1E-4);
+        assertTrue(sortedFields.get(1).equals("RM"));
+        assertEquals(1.5829, shap[shap.length - 2], 1E-4);
+        assertTrue(sortedFields.get(2).equals("NOX"));
+        assertEquals(0.2043, shap[shap.length - 3], 1E-4);
+    }
 }
