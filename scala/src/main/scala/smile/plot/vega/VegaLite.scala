@@ -126,14 +126,26 @@ trait VegaLite {
     this
   }
 
-  /** Sets an object describing the data source. Set to null to ignore
+  /** Sets a JSON array describing the data source. Set to null to ignore
     * the parent’s data source. If no data is set, it is derived from
     * the parent.
     */
-  def data(df: DataFrame): VegaLite = {
-    if (df == null) spec.remove("data")
-    else spec.data = JsObject("values" -> df.toJSON)
+  def data(json: JsArray): VegaLite = {
+    if (json == null || json == JsNull || json == JsUndefined) spec.remove("data")
+    else spec.data = JsObject("values" -> json)
     this
+  }
+
+  /** Sets an array of objects describing the data source.
+    */
+  def data(rows: JsObject*): VegaLite = {
+    data(JsArray(rows: _*))
+  }
+
+  /** Sets a data frame describing the data source.
+    */
+  def data(df: DataFrame): VegaLite = {
+    data(df.toJSON)
   }
 
   /** Sets the url of the data source.
@@ -144,9 +156,29 @@ trait VegaLite {
     *               by the extension of the file URL. If no extension is
     *               detected, "json" will be used by default.
     */
-  def data(url: String, format: String = ""): VegaLite = {
+  def data(url: String, format: JsValue = JsUndefined): VegaLite = {
     spec.data = JsObject("url" -> JsString(url))
-    if (!format.isEmpty) spec.data.format = JsObject("type" -> JsString(format))
+    format match {
+      case format: JsObject => spec.data.format = format
+      case format: JsString => spec.data.format = JsObject("type" -> format)
+      case _ => ()
+    }
+    this
+  }
+
+  /** An array of data transformations such as filter and new field
+    * calculation. Data transformations in Vega-Lite are described
+    * via either view-level transforms (the transform property) or
+    * field transforms inside encoding (bin, timeUnit, aggregate,
+    * sort, and stack).
+    *
+    * When both types of transforms are specified, the view-level
+    * transforms are executed first based on the order in the
+    * array. Then the inline transforms are executed in this order:
+    * bin, timeUnit, aggregate, sort, and stack.
+    */
+  def transform(transforms: JsArray): VegaLite = {
+    spec.transform = transforms
     this
   }
 
@@ -181,7 +213,7 @@ trait VegaLite {
        |<div id="vega-lite"></div>
        |
        |<script type="text/javascript">
-       |  var spec = ${spec};
+       |  var spec = $spec;
        |  var opt = {
        |    "mode": "vega-lite",
        |    "renderer": "canvas",
@@ -200,15 +232,15 @@ trait VegaLite {
   def iframe(id: String = java.util.UUID.randomUUID.toString): String = {
     val src = xml.Utility.escape(embed)
     s"""
-       |  <iframe id="${id}" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="${src}"></iframe>
+       |  <iframe id="$id" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="${src}"></iframe>
        |  <script>
        |    (function() {
        |      function resizeIFrame(el, k) {
        |        var height = el.contentWindow.document.body.scrollHeight || '600'; // Fallback in case of no scroll height
        |        el.style.height = height + 'px';
-       |        if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 1000 + (k * 250)) };
+       |        if (k <= 10) { setTimeout(function() { resizeIFrame(el, k+1) }, 100 + (k * 250)) };
        |      }
-       |      resizeIFrame(document.getElementById("${id}"), 1);
+       |      resizeIFrame(document.getElementById("$id"), 1);
        |    })(); // IIFE
        |  </script>
     """.stripMargin
@@ -221,14 +253,28 @@ object VegaLite {
   /** The MIME type of Vega-Lite. */
   val mime: String = "application/vnd.vegalite.v4+json"
 
-  /** Returns a single view vega-lite specification with inline data. */
+  /** Returns a single view specification with inline data. */
+  def apply(rows: JsObject*): View = {
+    new View {
+      override val spec = of(JsArray(rows: _*))
+    }
+  }
+
+  /** Returns a single view specification with inline data. */
+  def apply(json: JsArray): View = {
+    new View {
+      override val spec = of(json)
+    }
+  }
+
+  /** Returns a single view specification with inline data. */
   def apply(df: DataFrame): View = {
     new View {
       override val spec = of(df)
     }
   }
 
-  /** Returns a single view vega-lite specification with data from from URL.
+  /** Returns a single view specification with data from from URL.
     *
     * @param url An URL from which to load the data set.
     * @param format Type of input data: "json", "csv", "tsv", "dsv".
@@ -236,13 +282,13 @@ object VegaLite {
     *               by the extension of the file URL. If no extension is
     *               detected, "json" will be used by default.
     */
-  def apply(url: String, format: String = ""): View = {
+  def apply(url: String, format: JsValue = JsUndefined): View = {
     new View {
       override val spec = of(url, format)
     }
   }
 
-  /** Returns a view to be used in a composition.
+  /** Returns a single view specification to be used in a composition.
     * @param init Initial specification.
     */
   def view(init: JsObject = JsObject()): View = {
@@ -251,26 +297,122 @@ object VegaLite {
     }
   }
 
-  /** Returns a layered view.  */
-  def layer(df: DataFrame, layers: View*): Layer = {
+  /** Returns a facet specification with inline data. */
+  def facet(rows: JsObject*): Facet = {
+    new Facet {
+      override val spec = of(JsArray(rows: _*))
+    }
+  }
+
+  /** Returns a facet specification with inline data. */
+  def facet(json: JsArray): Facet = {
+    new Facet {
+      override val spec = of(json)
+    }
+  }
+
+  /** Returns a facet specification with inline data. */
+  def facet(df: DataFrame): Facet = {
+    facet(df.toJSON)
+  }
+
+  /** Returns a facet specification with data from from URL.
+    *
+    * @param url An URL from which to load the data set.
+    * @param format Type of input data: "json", "csv", "tsv", "dsv".
+    *               Default value: The default format type is determined
+    *               by the extension of the file URL. If no extension is
+    *               detected, "json" will be used by default.
+    */
+  def facet(url: String, format: JsValue = JsUndefined): Facet = {
+    new Facet {
+      override val spec = of(url, format)
+    }
+  }
+
+  /** Returns a layered view specification.  */
+  def layer(layers: View*): Layer = {
     new Layer {
-      override val spec = of(df)
+      override val spec = of()
+      layer(layers: _*)
+    }
+  }
+
+  /** Returns a layered view specification.  */
+  def layer(json: JsArray, layers: View*): Layer = {
+    new Layer {
+      override val spec = of(json)
+      layer(layers: _*)
+    }
+  }
+
+  /** Returns a layered view specification.  */
+  def layer(df: DataFrame, layers: View*): Layer = {
+    layer(df.toJSON, layers: _*)
+  }
+
+  /** Returns a layered view specification.  */
+  def layer(url: String, format: JsValue, layers: View*): Layer = {
+    new Layer {
+      override val spec = of(url, format)
       layer(layers: _*)
     }
   }
 
   /** Horizontal concatenation. Put multiple views into a column.  */
-  def hconcat(df: DataFrame, views: VegaLite*): VegaLite = {
-    new VegaLite {
-      override val spec = of(df)
+  def hconcat(views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of()
+      spec.hconcat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** Horizontal concatenation. Put multiple views into a column.  */
+  def hconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(json)
+      spec.hconcat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** Horizontal concatenation. Put multiple views into a column.  */
+  def hconcat(df: DataFrame, views: VegaLite*): ViewLayoutComposition = {
+    hconcat(df.toJSON, views: _*)
+  }
+
+  /** Horizontal concatenation. Put multiple views into a column.  */
+  def hconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(url, format)
       spec.hconcat = JsArray(views.map(_.spec): _*)
     }
   }
 
   /** Vertical concatenation. Put multiple views into a row.  */
-  def vconcat(df: DataFrame, views: VegaLite*): VegaLite = {
-    new VegaLite {
-      override val spec = of(df)
+  def vconcat(views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of()
+      spec.vconcat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** Vertical concatenation. Put multiple views into a row.  */
+  def vconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(json)
+      spec.vconcat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** Vertical concatenation. Put multiple views into a row.  */
+  def vconcat(df: DataFrame, views: VegaLite*): ViewLayoutComposition = {
+    vconcat(df.toJSON, views: _*)
+  }
+
+  /** Vertical concatenation. Put multiple views into a row.  */
+  def vconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(url, format)
       spec.vconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -278,9 +420,38 @@ object VegaLite {
   /** General (wrappable) concatenation. Put multiple views into
     * a flexible flow layout.
     */
-  def concat(df: DataFrame, columns: Int, views: VegaLite*): VegaLite = {
-    new VegaLite {
-      override val spec = of(df)
+  def concat(columns: Int, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of()
+      spec.columns = columns
+      spec.concat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** General (wrappable) concatenation. Put multiple views into
+    * a flexible flow layout.
+    */
+  def concat(json: JsArray, columns: Int, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(json)
+      spec.columns = columns
+      spec.concat = JsArray(views.map(_.spec): _*)
+    }
+  }
+
+  /** General (wrappable) concatenation. Put multiple views into
+    * a flexible flow layout.
+    */
+  def concat(df: DataFrame, columns: Int, views: VegaLite*): ViewLayoutComposition = {
+    concat(df.toJSON, columns, views: _*)
+  }
+
+  /** General (wrappable) concatenation. Put multiple views into
+    * a flexible flow layout.
+    */
+  def concat(url: String, format: JsValue, columns: Int, views: VegaLite*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(url, format)
       spec.columns = columns
       spec.concat = JsArray(views.map(_.spec): _*)
     }
@@ -292,10 +463,34 @@ object VegaLite {
     *
     * @param fields The fields that should be used for each entry.
     */
-  def repeat(df: DataFrame, view: VegaLite, fields: String*): VegaLite = {
-    new VegaLite {
-      override val spec = of(df)
-      spec.repeat = JsArray(fields.map(JsString(_)): _*)
+  def repeat(json: JsArray, view: VegaLite, fields: String*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(json)
+      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
+      spec.spec = view.spec
+    }
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param fields The fields that should be used for each entry.
+    */
+  def repeat(df: DataFrame, view: VegaLite, fields: String*): ViewLayoutComposition = {
+    repeat(df.toJSON, view, fields: _*)
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param fields The fields that should be used for each entry.
+    */
+  def repeat(url: String, format: JsValue, view: VegaLite, fields: String*): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(url, format)
+      spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
       spec.spec = view.spec
     }
   }
@@ -307,9 +502,38 @@ object VegaLite {
     * @param row An array of fields to be repeated vertically.
     * @param column An array of fields to be repeated horizontally.
     */
-  def repeat(df: DataFrame, view: VegaLite, row: Seq[String], column: Seq[String]): VegaLite = {
-    new VegaLite {
-      override val spec = of(df)
+  def repeat(json: JsArray, view: VegaLite, row: Seq[String], column: Seq[String]): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(json)
+      spec.repeat = JsObject(
+        "row" -> JsArray(row.map(JsString(_)): _*),
+        "column" -> JsArray(column.map(JsString(_)): _*)
+      )
+      spec.spec = view.spec
+    }
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param row An array of fields to be repeated vertically.
+    * @param column An array of fields to be repeated horizontally.
+    */
+  def repeat(df: DataFrame, view: VegaLite, row: Seq[String], column: Seq[String]): ViewLayoutComposition = {
+    repeat(df.toJSON, view, row, column)
+  }
+
+  /** Creates a view for each entry in an array of fields. This operator
+    * generates multiple plots like facet. However, unlike facet it allows
+    * full replication of a data set in each view.
+    *
+    * @param row An array of fields to be repeated vertically.
+    * @param column An array of fields to be repeated horizontally.
+    */
+  def repeat(url: String, format: JsValue, view: VegaLite, row: Seq[String], column: Seq[String]): ViewLayoutComposition = {
+    new ViewLayoutComposition {
+      override val spec = of(url, format)
       spec.repeat = JsObject(
         "row" -> JsArray(row.map(JsString(_)): _*),
         "column" -> JsArray(column.map(JsString(_)): _*)
@@ -319,7 +543,7 @@ object VegaLite {
   }
 
   /** Scatterplot Matrix (SPLOM). */
-  def splom(df: DataFrame, color: String = ""): VegaLite = {
+  def splom(df: DataFrame, color: String = ""): ViewLayoutComposition = {
     val fields = df.names.filter(_ != color).toIndexedSeq
     val spec = json"""{
                      |  "mark": "point",
@@ -355,7 +579,7 @@ object VegaLite {
       "config" -> JsObject(
         "view" -> JsObject(
           "continuousWidth" -> 400,
-          "continuousHeight" -> 300
+          "continuousHeight" -> 400
         )
       )
     )
@@ -368,14 +592,23 @@ object VegaLite {
   }
 
   /** Returns a specification object. */
+  private def of(df: JsArray): JsObject = {
+    of("data" -> JsObject("values" -> df))
+  }
+
+  /** Returns a specification object. */
   private def of(df: DataFrame): JsObject = {
     of("data" -> JsObject("values" -> df.toJSON))
   }
 
   /** Returns a specification object. */
-  private def of(url: String, format: String = ""): JsObject = {
+  private def of(url: String, format: JsValue = JsUndefined): JsObject = {
     val data = JsObject("url" -> JsString(url))
-    if (!format.isEmpty) data.format = JsObject("type" -> JsString(format))
+    format match {
+      case format: JsObject => data.format = format
+      case format: JsString => data.format = JsObject("type" -> format)
+      case _ => ()
+    }
     of("data" -> data)
   }
 }

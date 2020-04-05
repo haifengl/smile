@@ -104,10 +104,37 @@ trait View extends VegaLite {
     this
   }
 
+  /** Sets the channels x and y (quantitative),
+    * and optional color with default properties.
+    */
+  def encode(x: String, y: String, color: Option[(String, String)] = None): View = {
+    this.x(x, "quantitative")
+    this.y(y, "quantitative")
+    color match {
+      case Some((field, t)) => this.color(field, t)
+      case None => ()
+    }
+    this
+  }
+
+  /** Sets the x channel as a datum field. */
+  def x(datum: JsValue): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding.x = JsObject("datum" -> datum)
+    this
+  }
+
+  /** Sets the y channel as a datum field. */
+  def y(datum: JsValue): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding.y = JsObject("datum" -> datum)
+    this
+  }
+
   /** Sets the x field. */
-  def x(field: String,
-        `type`: String = "quantitative",
-        bin: Boolean = false,
+  def x(field: JsValue,
+        `type`: String,
+        bin: Either[Boolean, JsObject] = Left(false),
         timeUnit: String = "",
         aggregate: String = "",
         title: String = "",
@@ -124,9 +151,9 @@ trait View extends VegaLite {
   }
 
   /** Sets the y field. */
-  def y(field: String,
-        `type`: String = "quantitative",
-        bin: Boolean = false,
+  def y(field: JsValue,
+        `type`: String,
+        bin: Either[Boolean, JsObject] = Left(false),
         timeUnit: String = "",
         aggregate: String = "",
         title: String = "",
@@ -143,8 +170,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the x2 field. */
-  def x2(field: String,
-         bin: Boolean = false,
+  def x2(field: JsValue,
+         bin: Either[Boolean, JsObject] = Left(false),
          timeUnit: String = "",
          aggregate: String = "",
          title: String = ""): View = {
@@ -154,8 +181,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the y2 field. */
-  def y2(field: String,
-         bin: Boolean = false,
+  def y2(field: JsValue,
+         bin: Either[Boolean, JsObject] = Left(false),
          timeUnit: String = "",
          aggregate: String = "",
          title: String = ""): View = {
@@ -165,8 +192,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the xError field. */
-  def xError(field: String,
-             bin: Boolean = false,
+  def xError(field: JsValue,
+             bin: Either[Boolean, JsObject] = Left(false),
              timeUnit: String = "",
              aggregate: String = "",
              title: String = ""): View = {
@@ -176,8 +203,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the yError field. */
-  def yError(field: String,
-             bin: Boolean = false,
+  def yError(field: JsValue,
+             bin: Either[Boolean, JsObject] = Left(false),
              timeUnit: String = "",
              aggregate: String = "",
              title: String = ""): View = {
@@ -187,8 +214,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the xError2 field. */
-  def xError2(field: String,
-              bin: Boolean = false,
+  def xError2(field: JsValue,
+              bin: Either[Boolean, JsObject] = Left(false),
               timeUnit: String = "",
               aggregate: String = "",
               title: String = ""): View = {
@@ -198,8 +225,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the yError2 field. */
-  def yError2(field: String,
-              bin: Boolean = false,
+  def yError2(field: JsValue,
+              bin: Either[Boolean, JsObject] = Left(false),
               timeUnit: String = "",
               aggregate: String = "",
               title: String = ""): View = {
@@ -209,9 +236,9 @@ trait View extends VegaLite {
   }
 
   /** Sets the longitude field. */
-  def longitude(field: String,
+  def longitude(field: JsValue,
                 `type`: String = "quantitative",
-                bin: Boolean = false,
+                bin: Either[Boolean, JsObject] = Left(false),
                 timeUnit: String = "",
                 aggregate: String = "",
                 title: String = ""): View = {
@@ -221,9 +248,9 @@ trait View extends VegaLite {
   }
 
   /** Sets the latitude field. */
-  def latitude(field: String,
+  def latitude(field: JsValue,
                `type`: String = "quantitative",
-               bin: Boolean = false,
+               bin: Either[Boolean, JsObject] = Left(false),
                timeUnit: String = "",
                aggregate: String = "",
                title: String = ""): View = {
@@ -233,8 +260,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the longitude2 field. */
-  def longitude2(field: String,
-                 bin: Boolean = false,
+  def longitude2(field: JsValue,
+                 bin: Either[Boolean, JsObject] = Left(false),
                  timeUnit: String = "",
                  aggregate: String = "",
                  title: String = ""): View = {
@@ -244,8 +271,8 @@ trait View extends VegaLite {
   }
 
   /** Sets the latitude2 field. */
-  def latitude2(field: String,
-                bin: Boolean = false,
+  def latitude2(field: JsValue,
+                bin: Either[Boolean, JsObject] = Left(false),
                 timeUnit: String = "",
                 aggregate: String = "",
                 title: String = ""): View = {
@@ -254,53 +281,229 @@ trait View extends VegaLite {
     this
   }
 
-  /** Sets the color property. */
-  def color(field: String,
-            `type`: String = "nominal",
-            bin: Boolean = false,
+  /** Sets the theta field. */
+  def theta(field: JsValue,
+            `type`: String = "quantitative",
+            bin: Either[Boolean, JsObject] = Left(false),
             timeUnit: String = "",
             aggregate: String = "",
-            title: String = ""): View = {
+            title: String = "",
+            scale: JsValue = JsUndefined,
+            sort: Option[String] = None,
+            stack: JsValue = JsUndefined): View = {
     if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.color = View.field(field, `type`, bin, timeUnit, aggregate, title)
-    this
-  }
-  /*
-    /** Sets the color value. */
-    def color(value: String): View = {
-      if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-      spec.encoding.color = JsObject("value" -> JsString(value))
-      this
-    }
-  */
-  /** Sets the shape property. */
-  def shape(field: String,
-            `type`: String = "nominal",
-            bin: Boolean = false,
-            timeUnit: String = "",
-            aggregate: String = "",
-            title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.shape = View.field(field, `type`, bin, timeUnit, aggregate, title)
-    this
-  }
-  /*
-    /** Sets the shape value. */
-    def shape(value: String): View = {
-      if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-      spec.encoding.shape = JsObject("value" -> JsString(value))
-      this
-    }
-  */
-  /** Sets the channels x, y, and optional color with default properties. */
-  def encode(x: String, y: String, color: String = ""): View = {
-    this.x(x)
-    this.y(y)
-    if (!color.isEmpty) this.color(color)
+    spec.encoding.theta = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
     this
   }
 
-  /** Sets the view background’s fill and stroke. */
+  /** Sets the radius field. */
+  def radius(field: JsValue,
+             `type`: String = "quantitative",
+             bin: Either[Boolean, JsObject] = Left(false),
+             timeUnit: String = "",
+             aggregate: String = "",
+             title: String = "",
+             scale: JsValue = JsUndefined,
+             sort: Option[String] = None,
+             stack: JsValue = JsUndefined): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding.radius = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
+    this
+  }
+
+  /** Sets the theta2 field. */
+  def theta2(field: JsValue,
+             bin: Either[Boolean, JsObject] = Left(false),
+             timeUnit: String = "",
+             aggregate: String = "",
+             title: String = ""): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding.theta2 = View.field(field, null, bin, timeUnit, aggregate, title)
+    this
+  }
+
+  /** Sets the radius2 field. */
+  def radius2(field: JsValue,
+              bin: Either[Boolean, JsObject] = Left(false),
+              timeUnit: String = "",
+              aggregate: String = "",
+              title: String = ""): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding.radius2 = View.field(field, null, bin, timeUnit, aggregate, title)
+    this
+  }
+
+  /** Sets a mark property. */
+  def set(prop: String,
+          field: JsValue,
+          `type`: String,
+          bin: Either[Boolean, JsObject] = Left(false),
+          timeUnit: String = "",
+          aggregate: String = "",
+          scale: JsValue = JsUndefined,
+          legend: JsValue = JsUndefined,
+          condition: JsValue = JsUndefined): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding(prop) = View.markPropField(field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    this
+  }
+
+  /** Sets a mark property by value. */
+  def set(prop: String, value: JsValue): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding(prop) = JsObject("value" -> value)
+    this
+  }
+
+  /** Sets a mark property by datum. */
+  def datum(prop: String, datum: JsValue): View = {
+    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    spec.encoding(prop) = JsObject("datum" -> datum)
+    this
+  }
+
+  /** Sets the color property. */
+  def color(field: JsValue,
+            `type`: String,
+            bin: Either[Boolean, JsObject] = Left(false),
+            timeUnit: String = "",
+            aggregate: String = "",
+            scale: JsValue = JsUndefined,
+            legend: JsValue = JsUndefined,
+            condition: JsValue = JsUndefined): View = {
+    set("color", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the color value. */
+  def color(value: JsValue): View = {
+    set("color", value)
+  }
+
+  /** Sets the angle property. */
+  def angle(field: JsValue,
+            `type`: String,
+            bin: Either[Boolean, JsObject] = Left(false),
+            timeUnit: String = "",
+            aggregate: String = "",
+            scale: JsValue = JsUndefined,
+            legend: JsValue = JsUndefined,
+            condition: JsValue = JsUndefined): View = {
+    set("angle", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the angle value. */
+  def angle(value: JsValue): View = {
+    set("angle", value)
+  }
+
+  /** Sets the fill property. */
+  def fill(field: JsValue,
+           `type`: String,
+           bin: Either[Boolean, JsObject] = Left(false),
+           timeUnit: String = "",
+           aggregate: String = "",
+           scale: JsValue = JsUndefined,
+           legend: JsValue = JsUndefined,
+           condition: JsValue = JsUndefined): View = {
+    set("fill", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the fill value. */
+  def fill(value: JsValue): View = {
+    set("fill", value)
+  }
+
+  /** Sets the stroke property. */
+  def stroke(field: JsValue,
+             `type`: String,
+             bin: Either[Boolean, JsObject] = Left(false),
+             timeUnit: String = "",
+             aggregate: String = "",
+             scale: JsValue = JsUndefined,
+             legend: JsValue = JsUndefined,
+             condition: JsValue = JsUndefined): View = {
+    set("stroke", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the stroke value. */
+  def stroke(value: JsValue): View = {
+    set("stroke", value)
+  }
+
+  /** Sets the shape property. */
+  def shape(field: JsValue,
+            `type`: String,
+            bin: Either[Boolean, JsObject] = Left(false),
+            timeUnit: String = "",
+            aggregate: String = "",
+            scale: JsValue = JsUndefined,
+            legend: JsValue = JsUndefined,
+            condition: JsValue = JsUndefined): View = {
+    set("shape", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the shape value. */
+  def shape(value: JsValue): View = {
+    set("shape", value)
+  }
+
+  /** Sets the size property. */
+  def size(field: JsValue,
+           `type`: String,
+           bin: Either[Boolean, JsObject] = Left(false),
+           timeUnit: String = "",
+           aggregate: String = "",
+           scale: JsValue = JsUndefined,
+           legend: JsValue = JsUndefined,
+           condition: JsValue = JsUndefined): View = {
+    set("size", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the size value. */
+  def size(value: JsValue): View = {
+    set("size", value)
+  }
+
+  /** Sets the text property. */
+  def text(field: JsValue,
+           `type`: String,
+           bin: Either[Boolean, JsObject] = Left(false),
+           timeUnit: String = "",
+           aggregate: String = "",
+           scale: JsValue = JsUndefined,
+           legend: JsValue = JsUndefined,
+           condition: JsValue = JsUndefined): View = {
+    set("text", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the text value. */
+  def text(value: JsValue): View = {
+    set("text", value)
+  }
+
+  /** Sets the opacity property. */
+  def opacity(field: JsValue,
+              `type`: String,
+              bin: Either[Boolean, JsObject] = Left(false),
+              timeUnit: String = "",
+              aggregate: String = "",
+              scale: JsValue = JsUndefined,
+              legend: JsValue = JsUndefined,
+              condition: JsValue = JsUndefined): View = {
+    set("opacity", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+  }
+
+  /** Sets the opacity value. */
+  def opacity(value: JsValue): View = {
+    set("opacity", value)
+  }
+
+  /** Sets the view background’s fill and stroke.
+    * The background property of a top-level view specification defines the
+    * background of the whole visualization canvas. Meanwhile, the view
+    * property of a single-view or layer specification can define the
+    * background of the view.
+    */
   def view(background: JsObject): View = {
     spec.view = background
     this
@@ -361,26 +564,30 @@ object View {
     *
     * @param field A string defining the name of the field from which to
     *              pull a data value or an object defining iterated values
-    *              from the repeat operator.
-    * @param `type` The encoded field’s type of measurement ("quantitative",
-    *               "temporal", "ordinal", or "nominal"). It can also be a
-    *               "geojson" type for encoding ‘geoshape’.
+    *              from the repeat operator. field is not required if
+    *              aggregate is count.
+    * @param `type`    The encoded field’s type of measurement ("quantitative",
+    *                  "temporal", "ordinal", or "nominal"). It can also be a
+    *                  "geojson" type for encoding ‘geoshape’.
     *
-    *               Data type describes the semantics of the data rather than
-    *               the primitive data types (number, string, etc.). The same
-    *               primitive data type can have different types of
+    *                  Data type describes the semantics of the data rather than
+    *                  the primitive data types (number, string, etc.). The same
+    *                  primitive data type can have different types of
     *               measurement. For example, numeric data can represent
-    *               quantitative, ordinal, or nominal data.
+    *                  quantitative, ordinal, or nominal data.
     *
-    *               Data values for a temporal field can be either a
-    *               date-time string (e.g., "2015-03-07 12:32:17",
-    *               "17:01", "2015-03-16", "2015") or a timestamp
-    *               number (e.g., 1552199579097).
+    *                  Data values for a temporal field can be either a
+    *                  date-time string (e.g., "2015-03-07 12:32:17",
+    *                  "17:01", "2015-03-16", "2015") or a timestamp
+    *                  number (e.g., 1552199579097).
     *
-    *              Secondary channels (e.g., x2, y2, xError, yError) do not
-    *              have type as they have exactly the same type as their
-    *              primary channels (e.g., x, y)
-    * @param bin A flag for binning a quantitative field.
+    *                  Secondary channels (e.g., x2, y2, xError, yError) do not
+    *                  have type as they have exactly the same type as their
+    *                  primary channels (e.g., x, y)
+    * @param bin       A flag for binning a quantitative field.
+    *                  - If true, default binning parameters will be applied.
+    *                  - If "binned", this indicates that the data for the x
+    *                    (or y) channel are already binned.
     * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
     *                  temporal field, or a temporal field that gets casted
     *                  as ordinal.
@@ -391,16 +598,26 @@ object View {
     *                  field’s name and transformation function (aggregate,
     *                  bin and timeUnit).
     */
-  def field(field: String,
-            `type`: String = "quantitative",
-            bin: Boolean = false,
+  def field(field: JsValue,
+            `type`: String,
+            bin: Either[Boolean, JsObject] = Left(false),
             timeUnit: String = "",
             aggregate: String = "",
             title: String = ""): JsObject = {
-    val json = JsObject("field" -> JsString(field))
+    val json = JsObject()
 
+    // field is not required if aggregate is count.
+    if (field == null && aggregate != "count")
+      throw new IllegalArgumentException("field is null while aggregate is not count")
+
+    if (field != null) json.field = field
     if (`type` != null) json("type") = `type`
-    if (bin && `type` == "quantitative") json.bin = bin
+
+    bin match {
+      case Left(flag) => if (flag && `type` == "quantitative") json.bin = flag
+      case Right(params) => json.bin = params
+    }
+
     if (!timeUnit.isEmpty) json.timeUnit = timeUnit
     if (!aggregate.isEmpty) json.aggregate = aggregate
     if (title == null) json.title = JsNull
@@ -417,7 +634,8 @@ object View {
     *
     * @param field A string defining the name of the field from which to
     *              pull a data value or an object defining iterated values
-    *              from the repeat operator.
+    *              from the repeat operator. field is not required if
+    *              aggregate is count
     * @param `type` The encoded field’s type of measurement ("quantitative",
     *               "temporal", "ordinal", or "nominal"). It can also be a
     *               "geojson" type for encoding ‘geoshape’.
@@ -432,10 +650,13 @@ object View {
     *               date-time string (e.g., "2015-03-07 12:32:17",
     *               "17:01", "2015-03-16", "2015") or a timestamp
     *               number (e.g., 1552199579097).
-    * @param bin A lag for binning a quantitative field.
-    * @param timeUnt  Time unit (e.g., year, yearmonth, month, hours) for a
-    *                 temporal field, or a temporal field that gets casted
-    *                 as ordinal.
+    * @param bin       A flag for binning a quantitative field.
+    *                  - If true, default binning parameters will be applied.
+    *                  - If "binned", this indicates that the data for the x
+    *                    (or y) channel are already binned.
+    * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
+    *                  temporal field, or a temporal field that gets casted
+    *                  as ordinal.
     * @param aggregate Aggregation function for the field (e.g., "mean",
     *                  "sum", "median", "min", "max", "count").
     * @param title     A title for the field. If null, the title will be
@@ -506,9 +727,9 @@ object View {
     *               - null or false: No-stacking. This will produce layered
     *               bar and area chart.
     */
-  def positionField(field: String,
-                    `type`: String = "quantitative",
-                    bin: Boolean = false,
+  def positionField(field: JsValue,
+                    `type`: String,
+                    bin: Either[Boolean, JsObject] = Left(false),
                     timeUnit: String = "",
                     aggregate: String = "",
                     title: String = "",
@@ -526,6 +747,169 @@ object View {
     if (band.isDefined) json.band = band.get
     if (impute != JsUndefined) json.impute = impute
     if (stack != JsUndefined) json.stack = stack
+
+    json
+  }
+
+  /** Returns a polar field definition.
+    * theta and radius position channels determine the position or interval
+    * on polar coordindates for arc and text marks.
+    *
+    * @param field A string defining the name of the field from which to
+    *              pull a data value or an object defining iterated values
+    *              from the repeat operator. field is not required if
+    *              aggregate is count
+    * @param `type` The encoded field’s type of measurement ("quantitative",
+    *               "temporal", "ordinal", or "nominal"). It can also be a
+    *               "geojson" type for encoding ‘geoshape’.
+    *
+    *               Data type describes the semantics of the data rather than
+    *               the primitive data types (number, string, etc.). The same
+    *               primitive data type can have different types of
+    *               measurement. For example, numeric data can represent
+    *               quantitative, ordinal, or nominal data.
+    *
+    *               Data values for a temporal field can be either a
+    *               date-time string (e.g., "2015-03-07 12:32:17",
+    *               "17:01", "2015-03-16", "2015") or a timestamp
+    *               number (e.g., 1552199579097).
+    * @param bin       A flag for binning a quantitative field.
+    *                  - If true, default binning parameters will be applied.
+    *                  - If "binned", this indicates that the data for the x
+    *                    (or y) channel are already binned.
+    * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
+    *                  temporal field, or a temporal field that gets casted
+    *                  as ordinal.
+    * @param aggregate Aggregation function for the field (e.g., "mean",
+    *                  "sum", "median", "min", "max", "count").
+    * @param title     A title for the field. If null, the title will be
+    *                  removed. The default value is derived from the
+    *                  field’s name and transformation function (aggregate,
+    *                  bin and timeUnit).
+    * @param scale An object defining properties of the channel’s scale,
+    *              which is the function that transforms values in the data
+    *              domain (numbers, dates, strings, etc) to visual values
+    *              (pixels, colors, sizes) of the encoding channels.
+    *
+    *              If null, the scale will be disabled and the data value
+    *              will be directly encoded.
+    *
+    *              If undefined, default scale properties are applied.
+    * @param sort  Sort order for the encoded field.
+    *
+    *              For continuous fields (quantitative or temporal), sort
+    *              can be either "ascending" or "descending".
+    *
+    *              For discrete fields, sort can be one of the following:
+    *              - "ascending" or "descending" – for sorting by the values’
+    *              natural order in JavaScript.
+    *              - A string indicating an encoding channel name to sort
+    *              by (e.g., "x" or "y") with an optional minus prefix for
+    *              descending sort (e.g., "-x" to sort by x-field, descending).
+    *              This channel string is short-form of a sort-by-encoding
+    *              definition. For example, "sort": "-x" is equivalent to
+    *              "sort": {"encoding": "x", "order": "descending"}.
+    * @param stack  Type of stacking offset if the field should be stacked.
+    *               stack is only applicable for x, y, theta, and radius
+    *               channels with continuous domains. For example, stack
+    *               of y can be used to customize stacking for a vertical
+    *               bar chart.
+    *
+    *               stack can be one of the following values:
+    *
+    *               - "zero" or true: stacking with baseline offset at zero
+    *                 value of the scale (for creating typical stacked bar
+    *                 and area chart).
+    *               - "normalize": stacking with normalized domain (for
+    *                 creating normalized stacked bar and area charts.
+    *               - "center": stacking with center baseline
+    *                 (for streamgraph).
+    *               - null or false: No-stacking. This will produce layered
+    *               bar and area chart.
+    */
+  def polarField(field: JsValue,
+                 `type`: String,
+                 bin: Either[Boolean, JsObject] = Left(false),
+                 timeUnit: String = "",
+                 aggregate: String = "",
+                 title: String = "",
+                 scale: JsValue = JsUndefined,
+                 sort: Option[String] = None,
+                 stack: JsValue = JsUndefined): JsObject = {
+    val json = this.field(field, `type`, bin, timeUnit, aggregate, title)
+
+    if (scale != JsUndefined) json.scale = scale
+    if (sort.isDefined) json.sort = sort.get
+    if (stack != JsUndefined) json.stack = stack
+
+    json
+  }
+
+  /** Returns a mark property field Definition.
+    * x and y position channels determine the position of the marks,
+    * or width/height of horizontal/vertical "area" and "bar".
+    * In addition, x2 and y2 can specify the span of ranged area, bar,
+    * rect, and rule.
+    *
+    * @param field A string defining the name of the field from which to
+    *              pull a data value or an object defining iterated values
+    *              from the repeat operator. field is not required if
+    *              aggregate is count
+    * @param `type` The encoded field’s type of measurement ("quantitative",
+    *               "temporal", "ordinal", or "nominal"). It can also be a
+    *               "geojson" type for encoding ‘geoshape’.
+    *
+    *               Data type describes the semantics of the data rather than
+    *               the primitive data types (number, string, etc.). The same
+    *               primitive data type can have different types of
+    *               measurement. For example, numeric data can represent
+    *               quantitative, ordinal, or nominal data.
+    *
+    *               Data values for a temporal field can be either a
+    *               date-time string (e.g., "2015-03-07 12:32:17",
+    *               "17:01", "2015-03-16", "2015") or a timestamp
+    *               number (e.g., 1552199579097).
+    * @param bin       A flag for binning a quantitative field.
+    *                  - If true, default binning parameters will be applied.
+    *                  - If "binned", this indicates that the data for the x
+    *                    (or y) channel are already binned.
+    * @param timeUnit  Time unit (e.g., year, yearmonth, month, hours) for a
+    *                  temporal field, or a temporal field that gets casted
+    *                  as ordinal.
+    * @param aggregate Aggregation function for the field (e.g., "mean",
+    *                  "sum", "median", "min", "max", "count").
+    * @param scale     An object defining properties of the channel’s scale,
+    *                  which is the function that transforms values in the data
+    *                  domain (numbers, dates, strings, etc) to visual values
+    *                  (pixels, colors, sizes) of the encoding channels.
+    *
+    *                  If null, the scale will be disabled and the data value
+    *                  will be directly encoded.
+    *
+    *                  If undefined, default scale properties are applied.
+    * @param legend    An object defining properties of the legend. If null,
+    *                  the legend for the encoding channel will be removed.
+    * @param condition One or more value definition(s) with a selection or
+    *                  a test predicate.
+    *
+    *                  Note: A field definition’s condition property can only
+    *                  contain conditional value definitions since Vega-Lite
+    *                  only allows at most one encoded field per encoding
+    *                  channel.
+    */
+  def markPropField(field: JsValue,
+                    `type`: String,
+                    bin: Either[Boolean, JsObject] = Left(false),
+                    timeUnit: String = "",
+                    aggregate: String = "",
+                    scale: JsValue = JsUndefined,
+                    legend: JsValue = JsUndefined,
+                    condition: JsValue = JsUndefined): JsObject = {
+    val json = this.field(field, `type`, bin, timeUnit, aggregate)
+
+    if (scale != JsUndefined) json.scale = scale
+    if (legend != JsUndefined) json.legend = legend
+    if (condition != JsUndefined) json.condition = condition
 
     json
   }
