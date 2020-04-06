@@ -17,21 +17,21 @@
 
 package smile.base.cart;
 
-import smile.data.Tuple;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.math.MathEx;
-import smile.regression.Regression;
-
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import smile.data.Tuple;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * An internal node in CART.
  */
 public abstract class InternalNode implements Node {
+    /** The number of samples in the node. */
+    int size;
 
     /**
      * Children node.
@@ -59,6 +59,7 @@ public abstract class InternalNode implements Node {
     double deviance;
 
     public InternalNode(int feature, double score, double deviance, Node trueChild, Node falseChild) {
+        this.size = trueChild.size() + falseChild.size();
         this.feature = feature;
         this.score = score;
         this.deviance = deviance;
@@ -101,7 +102,7 @@ public abstract class InternalNode implements Node {
 
     @Override
     public int size() {
-        return trueChild.size() + falseChild.size();
+        return size;
     }
 
     @Override
@@ -140,7 +141,6 @@ public abstract class InternalNode implements Node {
                 RegressionNode a = (RegressionNode) trueChild;
                 RegressionNode b = (RegressionNode) falseChild;
 
-                int size = a.size + b.size;
                 return new RegressionNode(size, a.output(), (a.size * a.mean() + b.size * b.mean()) / size, a.impurity() + b.impurity());
             }
         }
@@ -163,12 +163,10 @@ public abstract class InternalNode implements Node {
         int[] c1 = falseChild.toString(schema, response, this, depth + 1, falseId, lines);
         int[] c2 = trueChild. toString(schema, response, this, depth + 1, trueId,  lines);
 
-        int size;
         int k = c1.length;
         int[] count = new int[k];
         if (k == 1) {
             // regression
-            size = c1[0] + c2[0];
             count[0] = size;
         } else {
             // classification
@@ -176,7 +174,6 @@ public abstract class InternalNode implements Node {
             for (int i = 0; i < k; i++) {
                 count[i] = c1[i] + c2[i];
             }
-            size = (int) MathEx.sum(count);
         }
 
         StringBuilder line = new StringBuilder();
