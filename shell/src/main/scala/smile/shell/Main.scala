@@ -70,6 +70,7 @@ object Main extends App {
        |import smile.plot.vega._
        |import smile.plot.show
        |import smile.plot.Render.{renderVega, renderCanvas, renderPlotGrid}
+       |import smile.json._
        |import smile.interpolation._
        |import smile.validation._
        |import smile.association._
