@@ -159,7 +159,7 @@ public class GradientTreeBoostTest {
     @Test
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
-        GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 3, 10, 5, 0.01, 0.7);
+        GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 20, 10, 5, 0.05, 0.7);
         double[] shap = model.shap(BostonHousing.data.stream().parallel());
 
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
