@@ -333,112 +333,112 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         return schema;
     }
 
+    /**
+     * The path of unique features we have split
+     * on so far during SHAP recursive traverse.
+     */
+    private class Path {
+        /** The feature index. */
+        int[] d;
+        /**
+         * The fraction of zero paths (where this feature is not
+         * in the non-zero index set S) that flow through this path.
+         */
+        double[] z;
+        /**
+         * The fraction of one paths (where this feature is
+         * in the non-zero index set S) that flow through this path.
+         */
+        double[] o;
+        /**
+         * The proportion of sets of a given cardinality that are present.
+         */
+        double[] w;
+
+        /**
+         * Constructor.
+         */
+        Path(int[] d, double[] z, double[] o, double[] w) {
+            this.d = d;
+            this.z = z;
+            this.o = o;
+            this.w = w;
+        }
+
+        /**
+         * Return a copy with new length.
+         */
+        Path copy(int len) {
+            // Arrays.copyOf will truncate or pad with zeros.
+            return new Path(
+                    Arrays.copyOf(d, len),
+                    Arrays.copyOf(z, len),
+                    Arrays.copyOf(o, len),
+                    Arrays.copyOf(w, len));
+        }
+
+        /** Returns the length of path. */
+        int length() {
+            return d.length;
+        }
+
+        /**
+         * To keep track of each possible subset size during the recursion,
+         * grows all these subsets according to a given fraction of ones and
+         * zeros.
+         */
+        Path extend(double pz, double po, int pi) {
+            int l = length();
+            Path m = copy(l + 1);
+            m.d[l] = pi;
+            m.z[l] = pz;
+            m.o[l] = po;
+            m.w[l] = l == 0 ? 1 : 0;
+
+            for (int i = l; --i > 0;) {
+                m.w[i] += po * m.w[i-1] * i / l;
+                m.w[i-1] = pz * m.w[i-1] * (l - i) / l;
+            }
+
+            return m;
+        }
+
+        /**
+         * Undo previous extensions when we split on the same feature twice,
+         * and undo each extension of the path inside a leaf to compute
+         * weights for each feature in the path.
+         */
+        Path unwind(int i) {
+            int l = length();
+            Path m = copy(l - 1);
+
+            double n = w[l - 1];
+            for (int j = l - 1; j-- > 0;) {
+                if (m.o[i] != 0) {
+                    double t = m.w[j];
+                    m.w[j] = n * l / (j * m.o[j]);
+                    n = t - m.w[j] * m.z[i] * (l - j - 1) / l;
+                } else {
+                    m.w[j] = (m.w[j] * l) / (m.z[i] * (l - j - 1));
+                }
+            }
+
+            for (int j = i; j < l-1; j++) {
+                m.d[j] = d[j+1];
+                m.z[j] = z[j+1];
+                m.o[j] = o[j+1];
+            }
+
+            return m;
+        }
+    }
+
     @Override
     public double[] shap(Tuple x) {
-        int s = maxDepth * (maxDepth + 1);
-
-        // SHAP values
         double[] phi = new double[schema.length()];
-        // The split features along the tree traverse.
-        int[] d = new int[s];
-        Arrays.fill(d, Integer.MIN_VALUE);
-        // The fraction of zero paths (where this feature is not
-        // in the set S) that flow through this path.
-        double[] pz = new double[s];
-        // The fraction of one paths (where this feature is
-        // in the set S) that flow through this path.
-        double[] po = new double[s];
-        // The proportion of sets of a given cardinality that are present.
-        double[] pi = new double[s];
-
-        // start the recursive algorithm
-        recurse(root, x, phi, 0, d, pz, po, pi,
-                1, 1, -1, 0.0,
-                0, 1, root.size(), 0);
-
+        Path m = new Path(new int[0], new double[0], new double[0], new double[0]);
+        recurse(phi, x, root, m, 1, 1, 0);
         return phi;
-    }
-
-    /**
-     * To keep track of each possible subset size during the recursion,
-     * grows all these subsets according to a given fraction of ones and
-     * zeros.
-     *
-     * @param feature_indexes split feature array along the tree traverse
-     * @param pz  the fraction of zero paths (where this feature is not in the set S) that flow through this branch
-     * @param po   the fraction of one paths (where this feature is in the set S) that flow through this branch
-     * @param pi        hold the proportion of sets of a given cardinality that are present
-     * @param unique_depth    new depth deep down the tree
-     * @param zero_fraction   new fraction of zero paths (where this feature is not in the set S) that flow through this branch
-     * @param one_fraction    new fraction of one paths (where this feature is in the set S) that flow through this branch
-     * @param feature_index   new split feature along the tree traverse
-     * @param offsetDepth     indexing support sub-range operation
-     */
-    private void extend(int[] feature_indexes,
-                        double[] pz,
-                        double[] po,
-                        double[] pi,
-                        int unique_depth,
-                        double zero_fraction,
-                        double one_fraction,
-                        int feature_index,
-                        int offsetDepth) {
-
-        feature_indexes[unique_depth + offsetDepth] = feature_index;
-        pz[unique_depth + offsetDepth] = zero_fraction;
-        po[unique_depth + offsetDepth] = one_fraction;
-        pi[unique_depth + offsetDepth] = unique_depth == 0 ? 1.0 : 0.0;
-
-        double uniquePathPlus1 = (unique_depth + 1.0);
-        int startIdx = unique_depth - 1;
-        for (int i = startIdx; i > -1; i--) {
-            pi[i + 1 + offsetDepth] += (one_fraction * pi[i + offsetDepth] * (i + 1.0) / uniquePathPlus1);
-            pi[i + offsetDepth] = zero_fraction * pi[i + offsetDepth] * (unique_depth - i + 0.0) / uniquePathPlus1;
-        }
-    }
-
-    /**
-     * Undo previous extensions when we split on the same feature twice,
-     * and undo each extension of the path inside a leaf to compute
-     * weights for each feature in the path.
-     *
-     * @param feature_indexes split feature array along the tree traverse
-     * @param pz  the fraction of zero paths (where this feature is not in the set S) that flow through this branch
-     * @param po   the fraction of one paths (where this feature is in the set S) that flow through this branch
-     * @param pi        hold the proportion of sets of a given cardinality that are present
-     * @param unique_depth    new depth deep down the tree
-     * @param path_index      indexing for which is to unwind path value
-     * @param offsetDepth     indexing support sub-range operation
-     */
-    private void unwind(int[] feature_indexes,
-                        double[] pz,
-                        double[] po,
-                        double[] pi,
-                        int unique_depth,
-                        int path_index,
-                        int offsetDepth) {
-
-        double one_fraction = po[path_index + offsetDepth];
-        double zero_fraction = pz[path_index + offsetDepth];
-        double next_one_portion = pi[path_index + offsetDepth];
-
-        double uniquePathPlus1 = (unique_depth + 1.0);
-        int startIdx = unique_depth - 1;
-        for (int i = startIdx; i > -1; i--) {
-            if (one_fraction != 0) {
-                double tmp = pi[i + offsetDepth];
-                pi[i + offsetDepth] = next_one_portion * uniquePathPlus1 / ((i + 1.0) * one_fraction);
-                next_one_portion = tmp - pi[i + offsetDepth] * zero_fraction * (unique_depth - i + 0.0) / uniquePathPlus1;
-            } else {
-                pi[i + offsetDepth] = (pi[i + offsetDepth] * uniquePathPlus1) / (zero_fraction * (unique_depth - i + 0.0));
-            }
-        }
-
-        for (int i = path_index; i < unique_depth; i++) {
-            feature_indexes[i + offsetDepth] = feature_indexes[i + 1 + offsetDepth];
-            pz[i + offsetDepth] = pz[i + 1 + offsetDepth];
-            po[i + offsetDepth] = po[i + 1 + offsetDepth];
-        }
     }
 
     /**
@@ -479,163 +479,52 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     }
 
     /**
-     * replicate inside the given double array from [offsetDepth, offsetDepth + unique_depth + 1)
-     * to range with index starting at offsetDepth + unique_depth + 1
-     *
-     * @param original     double array to replicate in place
-     * @param unique_depth replicate size = unique_depth + 1
-     * @param offsetDepth  indexing support sub-range operation
-     * @return original array after in-place replication
+     * Recursively keep track of what proportion of all possible subsets
+     * flow down into each of the leaves of the tree.
      */
-    private double[] replicateInPlace(double[] original, int unique_depth, int offsetDepth) {
-        int uniqueDepthPlus1 = (unique_depth + 1);
-        for (int i = 0; i < uniqueDepthPlus1; i++) {
-            if (original[i + offsetDepth] != Double.MIN_VALUE) {
-                original[i + uniqueDepthPlus1 + offsetDepth] = original[i + offsetDepth];
+    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
+        m = m.extend(pz, po, pi);
+        int l = m.length();
+
+        if (node instanceof InternalNode) {
+            Node h, c;
+            int dj;
+            InternalNode split = (InternalNode) node;
+            dj = split.feature();
+            if (split.branch(x)) {
+                h = split.trueChild();
+                c = split.falseChild();
+            } else {
+                h = split.falseChild();
+                c = split.trueChild();
+            }
+
+            int rh = h.size();
+            int rc = c.size();
+            int rj = node.size();
+
+            double iz = 1.0;
+            double io = 1.0;
+            int k = 0;
+            for (; k < l; k++) {
+                if (m.d[k] == dj) break;
+            }
+
+            if (k < l) {
+                iz = m.z[k];
+                io = m.o[k];
+                m = m.unwind(k);
+            }
+
+            recurse(phi, x, h, m, iz * rh / rj, io, dj);
+            recurse(phi, x, c, m, iz * rc / rj, 0, dj);
+        } else {
+            double vj = ((RegressionNode) node).output();
+            for (int i = 1; i < l; i++) {
+                double w = MathEx.sum(m.unwind(i).w);
+                int mi = m.d[i];
+                phi[mi] += w * (m.o[i] - m.z[i]) * vj;
             }
         }
-        return original;
-    }
-
-    /**
-     * replicate inside the given integer array from [offsetDepth, offsetDepth + unique_depth + 1)
-     * to range with index starting at (offsetDepth + unique_depth + 1)
-     *
-     * @param original     integer array to replicate in place
-     * @param unique_depth replicate size = unique_depth + 1
-     * @param offsetDepth  indexing support sub-range operation
-     * @return original array after in-place replication
-     */
-    private int[] replicateInPlace(int[] original, int unique_depth, int offsetDepth) {
-        int uniqueDepthPlus1 = (unique_depth + 1);
-        for (int i = 0; i < uniqueDepthPlus1; i++) {
-            if (original[i + offsetDepth] != Integer.MIN_VALUE) {
-                original[i + uniqueDepthPlus1 + offsetDepth] = original[i + offsetDepth];
-            }
-        }
-        return original;
-    }
-
-    /**
-     * recursive computation of SHAP values for given tree and data tuple
-     *
-     * @param node                   current tree node during tree traverse
-     * @param x                      data tuple
-     * @param phi                    shap values
-     * @param unique_depth           new depth deep down the tree
-     * @param parent_feature_indexes split feature array along the tree traverse
-     * @param parent_pz  the fraction of zero paths (where this feature is not in the set S) that flow through this branch
-     * @param parent_po   the fraction of one paths (where this feature is in the set S) that flow through this branch
-     * @param parent_pi        hold the proportion of sets of a given cardinality that are present
-     * @param parent_zero_fraction   parent fraction of zero paths (where this feature is not in the set S) that flow through this branch
-     * @param parent_one_fraction    parent fraction of one paths (where this feature is in the set S) that flow through this branch
-     * @param parent_feature_index   parent split feature
-     * @param condition              default 0, used to divide up the condition_fraction among the recursive calls
-     * @param condition_feature      used to divide up the condition_fraction among the recursive calls
-     * @param condition_fraction     used to divide up the condition_fraction among the recursive calls
-     * @param totalSamples           total sample number in the tree
-     * @param offsetDepth            depth offset indexing into path fractions array
-     */
-    private void recurse(Node node,
-                         Tuple x, double[] phi,
-                         int unique_depth,
-                         int[] parent_feature_indexes,
-                         double[] parent_pz,
-                         double[] parent_po,
-                         double[] parent_pi,
-                         double parent_zero_fraction,
-                         double parent_one_fraction,
-                         int parent_feature_index,
-                         double condition,
-                         int condition_feature,
-                         double condition_fraction,
-                         int totalSamples,
-                         int offsetDepth) {
-
-        // stop if we have no weight coming down to us
-        if (condition_fraction == 0) {
-            return;
-        }
-
-        // extend the unique path
-        int[] feature_indexes = replicateInPlace(parent_feature_indexes, unique_depth, offsetDepth);
-        double[] pz = replicateInPlace(parent_pz, unique_depth, offsetDepth);
-        double[] po = replicateInPlace(parent_po, unique_depth, offsetDepth);
-        double[] pi = replicateInPlace(parent_pi, unique_depth, offsetDepth);
-
-        // update the depth offset indexing into path fractions
-        offsetDepth += (unique_depth + 1);
-
-        if (condition == 0 || condition_feature != parent_feature_index) {
-            extend(feature_indexes, pz, po, pi, unique_depth, parent_zero_fraction,
-                    parent_one_fraction, parent_feature_index, offsetDepth);
-        }
-
-        int split_index = (node instanceof InternalNode) ? ((InternalNode) node).feature() : -1;
-
-        // leaf node
-        if (node instanceof LeafNode) {
-            int loopLength = (unique_depth + 1);
-            for (int i = 1; i < loopLength; i++) {
-                double w = unwound(pz, po, pi, unique_depth, i, offsetDepth);
-                double val = ((RegressionNode) node).output();
-                phi[feature_indexes[i + offsetDepth]] += w * (po[i + offsetDepth] - pz[i + offsetDepth]) * val * condition_fraction;
-            }
-        } else {// internal node
-            // find which branch is "hot" (meaning x would follow it)
-            Node hot = ((InternalNode) node).trueChild();
-            Node cold = ((InternalNode) node).falseChild();
-            if (!((InternalNode) node).branch(x)) {
-                hot = ((InternalNode) node).falseChild();
-                cold = ((InternalNode) node).trueChild();
-            }
-
-            double w = (double) node.size() / (double) totalSamples;
-            double hot_zero_fraction = ((double) (hot.size()) / (double) totalSamples) / w;
-            double cold_zero_fraction = ((double) (cold.size()) / (double) totalSamples) / w;
-            double incoming_zero_fraction = 1;
-            double incoming_one_fraction = 1;
-
-            // see if we have already split on this feature,
-            // if so we undo that split so we can redo it for this node
-            int path_index = 0;
-            while (path_index <= unique_depth) {
-                if (feature_indexes[path_index + offsetDepth] == split_index) {
-                    break;
-                }
-                path_index += 1;
-            }
-            if (path_index != unique_depth + 1) {
-                incoming_zero_fraction = pz[path_index + offsetDepth];
-                incoming_one_fraction = po[path_index + offsetDepth];
-                unwind(feature_indexes, pz, po, pi, unique_depth, path_index, offsetDepth);
-                unique_depth -= 1;
-            }
-
-            // divide up the condition_fraction among the recursive calls
-            double hot_condition_fraction = condition_fraction;
-            double cold_condition_fraction = condition_fraction;
-            if (condition > 0 && split_index == condition_feature) {
-                cold_condition_fraction = 0;
-                unique_depth -= 1;
-            } else if (condition < 0 && split_index == condition_feature) {
-                hot_condition_fraction *= hot_zero_fraction;
-                cold_condition_fraction *= cold_zero_fraction;
-                unique_depth -= 1;
-            }
-
-            recurse(hot, x, phi, unique_depth + 1, feature_indexes,
-                    pz, po, pi,
-                    hot_zero_fraction * incoming_zero_fraction,
-                    incoming_one_fraction, split_index, condition,
-                    condition_feature, hot_condition_fraction, totalSamples,
-                    offsetDepth);
-
-            recurse(cold, x, phi, unique_depth + 1, feature_indexes,
-                    pz, po, pi,
-                    cold_zero_fraction * incoming_zero_fraction, 0, split_index,
-                    condition, condition_feature, cold_condition_fraction,
-                    totalSamples, offsetDepth);
-        } // end else internal node
     }
 }
