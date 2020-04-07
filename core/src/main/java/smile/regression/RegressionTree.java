@@ -437,13 +437,37 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
 
             return m;
         }
+
+        /**
+         * Return the total permutation weight if we unwind a previous
+         * extension in the decision path.
+         */
+        double unwoundPathSum(int i) {
+            int l = length();
+            double sum = 0.0;
+
+            double n = w[l];
+            if (o[i] != 0) {
+                for (int j = l - 1; j >= 1; j--) {
+                    double t =  n / (j * o[i]);
+                    sum += t;
+                    n = w[j] - t * z[i] * (l - j);
+                }
+            } else {
+                for (int j = l - 1; j >= 1; j--) {
+                    sum += w[j] / (z[i] * (l - j));
+                }
+            }
+
+            return sum;
+        }
     }
 
     @Override
     public double[] shap(Tuple x) {
         double[] phi = new double[schema.length()];
         Path m = new Path(new int[]{-2}, new double[1], new double[1], new double[1]);
-        recurse(phi, predictors(x), root, m, 1, 1, -1);
+        recurse(phi, predictors(x), root, m, 1, 1, -1, 1);
         return phi;
     }
 
@@ -451,7 +475,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * Recursively keep track of what proportion of all possible subsets
      * flow down into each of the leaves of the tree.
      */
-    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
+    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi, double f) {
         m = m.extend(pz, po, pi);
         int l = m.length();
 
@@ -484,13 +508,15 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
                 m = m.unwind(k);
             }
 
-            recurse(phi, x, h, m, iz * rh / rj, io, dj);
-            recurse(phi, x, c, m, iz * rc / rj, 0, dj);
+            f = (double) rh / rj;
+            recurse(phi, x, h, m, iz * f, io, dj, f);
+            f = (double) rc /rj;
+            recurse(phi, x, c, m, iz * f, 0, dj, f);
         } else {
             double vj = ((RegressionNode) node).output();
             for (int i = 2; i <= l; i++) {
-                double w = MathEx.sum(m.unwind(i).w);
-                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
+                double w = m.unwoundPathSum(i);
+                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * f * vj;
             }
         }
     }
