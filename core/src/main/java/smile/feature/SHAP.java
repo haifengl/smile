@@ -64,10 +64,10 @@ public interface SHAP<T> {
     default double[] shap(Stream<T> data) {
         return smile.math.MathEx.colMeans(
                 data.map(x -> {
-                    double[] shap = shap(x);
-                    for (int i = 0; i < shap.length; i++)
-                        shap[i] = Math.abs(shap[i]);
-                    return shap;
+                    double[] values = shap(x);
+                    for (int i = 0; i < values.length; i++)
+                        values[i] = Math.abs(values[i]);
+                    return values;
                 }).
                 toArray(double[][]::new));
     }
