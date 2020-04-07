@@ -338,7 +338,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * on so far during SHAP recursive traverse.
      */
     private class Path {
-        /** The feature index. */
+        /** The length of path. */
+        int length;
+        /** The unique feature index. */
         int[] d;
         /**
          * The fraction of zero paths (where this feature is not
@@ -359,31 +361,11 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
          * Constructor.
          */
         Path(int[] d, double[] z, double[] o, double[] w) {
+            this.length = d.length;
             this.d = d;
             this.z = z;
             this.o = o;
             this.w = w;
-        }
-
-        /**
-         * Returns a copy with new length.
-         */
-        Path copy(int len) {
-            // The array index starts with 1 as in the paper.
-            int l = len + 1;
-            // Arrays.copyOf will truncate or pad with zeros.
-            return new Path(
-                    Arrays.copyOf(d, l),
-                    Arrays.copyOf(z, l),
-                    Arrays.copyOf(o, l),
-                    Arrays.copyOf(w, l)
-            );
-        }
-
-        /** Returns the length of path. */
-        int length() {
-            // The array index starts with 1 as in the paper.
-            return d.length - 1;
         }
 
         /**
@@ -392,16 +374,23 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
          * zeros.
          */
         Path extend(double pz, double po, int pi) {
-            int l = length();
-            Path m = copy(l + 1);
-            m.d[l+1] = pi;
-            m.z[l+1] = pz;
-            m.o[l+1] = po;
-            m.w[l+1] = l == 0 ? 1 : 0;
+            int l = length;
+            Path m = new Path(
+                    // Arrays.copyOf will truncate or pad with zeros.
+                    Arrays.copyOf(d, l+1),
+                    Arrays.copyOf(z, l+1),
+                    Arrays.copyOf(o, l+1),
+                    Arrays.copyOf(w, l+1)
+            );
 
-            for (int i = l-1; i >= 1; i--) {
-                m.w[i+1] += po * m.w[i] * i / l;
-                m.w[i] = pz * m.w[i] * (l - i) / l;
+            m.d[l] = pi;
+            m.z[l] = pz;
+            m.o[l] = po;
+            m.w[l] = l == 0 ? 1 : 0;
+
+            for (int i = l-1; i >= 0; i--) {
+                m.w[i+1] += po * m.w[i] * (i+1) / (l+1);
+                m.w[i] = pz * m.w[i] * (l - i) / (l+1);
             }
 
             return m;
@@ -412,30 +401,27 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
          * and undo each extension of the path inside a leaf to compute
          * weights for each feature in the path.
          */
-        Path unwind(int i) {
-            int l = length();
-            Path m = copy(l - 1);
+        void unwind(int i) {
+            double po = o[i];
+            double pz = z[i];
+            int l = --length;
 
             double n = w[l];
-            if (o[i] != 0) {
-                for (int j = l - 1; j >= 1; j--) {
-                    double t = m.w[j];
-                    m.w[j] = n * l / (j * o[i]);
-                    n = t - m.w[j] * z[i] * (l - j) / l;
-                }
-            } else {
-                for (int j = l - 1; j >= 1; j--) {
-                    m.w[j] = (m.w[j] * l) / (z[i] * (l - j));
+            for (int j = l - 1; j >= 0; j--) {
+                if (po != 0) {
+                    double t = w[j];
+                    w[j] = n * (l+1) / ((j+1) * po);
+                    n = t - w[j] * pz * (l - j) / (l+1);
+                } else {
+                    w[j] = (w[j] * (l+1)) / (pz * (l - j));
                 }
             }
 
             for (int j = i; j < l; j++) {
-                m.d[j] = d[j+1];
-                m.z[j] = z[j+1];
-                m.o[j] = o[j+1];
+                d[j] = d[j+1];
+                z[j] = z[j+1];
+                o[j] = o[j+1];
             }
-
-            return m;
         }
 
         /**
@@ -443,31 +429,33 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
          * extension in the decision path.
          */
         double unwoundPathSum(int i) {
-            int l = length();
+            double po = o[i];
+            double pz = z[i];
+            int l = length - 1;
             double sum = 0.0;
 
             double n = w[l];
             if (o[i] != 0) {
-                for (int j = l - 1; j >= 1; j--) {
-                    double t =  n / (j * o[i]);
+                for (int j = l - 1; j >= 0; j--) {
+                    double t =  n / ((j+1) * po);
                     sum += t;
-                    n = w[j] - t * z[i] * (l - j);
+                    n = w[j] - t * pz * (l - j);
                 }
             } else {
-                for (int j = l - 1; j >= 1; j--) {
-                    sum += w[j] / (z[i] * (l - j));
+                for (int j = l - 1; j >= 0; j--) {
+                    sum += w[j] / (pz * (l - j));
                 }
             }
 
-            return sum;
+            return sum * (l + 1);
         }
     }
 
     @Override
     public double[] shap(Tuple x) {
         double[] phi = new double[schema.length()];
-        Path m = new Path(new int[]{-2}, new double[1], new double[1], new double[1]);
-        recurse(phi, predictors(x), root, m, 1, 1, -1, 1);
+        Path m = new Path(new int[0], new double[0], new double[0], new double[0]);
+        recurse(phi, predictors(x), root, m, 1, 1, -1);
         return phi;
     }
 
@@ -475,9 +463,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * Recursively keep track of what proportion of all possible subsets
      * flow down into each of the leaves of the tree.
      */
-    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi, double f) {
+    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
+        int l = m.length;
         m = m.extend(pz, po, pi);
-        int l = m.length();
 
         if (node instanceof InternalNode) {
             InternalNode split = (InternalNode) node;
@@ -495,28 +483,26 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             int rc = c.size();
             int rj = node.size();
 
-            double iz = 1.0;
-            double io = 1.0;
-            int k = 1;
+            int k = 0;
             for (; k <= l; k++) {
                 if (m.d[k] == dj) break;
             }
 
+            double iz = 1.0;
+            double io = 1.0;
             if (k <= l) {
                 iz = m.z[k];
                 io = m.o[k];
-                m = m.unwind(k);
+                m.unwind(k);
             }
 
-            f = (double) rh / rj;
-            recurse(phi, x, h, m, iz * f, io, dj, f);
-            f = (double) rc /rj;
-            recurse(phi, x, c, m, iz * f, 0, dj, f);
+            recurse(phi, x, h, m, iz * rh / rj, io, dj);
+            recurse(phi, x, c, m, iz * rc /rj, 0, dj);
         } else {
             double vj = ((RegressionNode) node).output();
-            for (int i = 2; i <= l; i++) {
+            for (int i = 1; i <= l; i++) {
                 double w = m.unwoundPathSum(i);
-                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * f * vj;
+                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
             }
         }
     }
