@@ -366,7 +366,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         }
 
         /**
-         * Return a copy with new length.
+         * Returns a copy with new length.
          */
         Path copy(int len) {
             // The array index starts with 1 as in the paper.
@@ -376,7 +376,8 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
                     Arrays.copyOf(d, l),
                     Arrays.copyOf(z, l),
                     Arrays.copyOf(o, l),
-                    Arrays.copyOf(w, l));
+                    Arrays.copyOf(w, l)
+            );
         }
 
         /** Returns the length of path. */
@@ -416,12 +417,14 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             Path m = copy(l - 1);
 
             double n = w[l];
-            for (int j = l - 1; j >= 1; j--) {
-                if (o[i] != 0) {
+            if (o[i] != 0) {
+                for (int j = l - 1; j >= 1; j--) {
                     double t = m.w[j];
                     m.w[j] = n * l / (j * o[i]);
                     n = t - m.w[j] * z[i] * (l - j) / l;
-                } else {
+                }
+            } else {
+                for (int j = l - 1; j >= 1; j--) {
                     m.w[j] = (m.w[j] * l) / (z[i] * (l - j));
                 }
             }
@@ -439,7 +442,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     @Override
     public double[] shap(Tuple x) {
         double[] phi = new double[schema.length()];
-        Path m = new Path(new int[]{-1}, new double[1], new double[1], new double[1]);
+        Path m = new Path(new int[]{-2}, new double[1], new double[1], new double[1]);
         recurse(phi, x, root, m, 1, 1, -1);
         return phi;
     }
@@ -466,16 +469,16 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
 
             int rh = h.size();
             int rc = c.size();
-            int rj = rh + rc;
+            int rj = node.size();
 
             double iz = 1.0;
             double io = 1.0;
-            int k = 0;
-            for (; k < l; k++) {
+            int k = 1;
+            for (; k <= l; k++) {
                 if (m.d[k] == dj) break;
             }
 
-            if (k < l) {
+            if (k <= l) {
                 iz = m.z[k];
                 io = m.o[k];
                 m = m.unwind(k);
@@ -487,8 +490,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             double vj = ((RegressionNode) node).output();
             for (int i = 2; i <= l; i++) {
                 double w = MathEx.sum(m.unwind(i).w);
-                int mi = m.d[i];
-                phi[mi] += w * (m.o[i] - m.z[i]) * vj;
+                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
             }
         }
     }
