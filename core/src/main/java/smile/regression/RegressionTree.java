@@ -443,7 +443,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     public double[] shap(Tuple x) {
         double[] phi = new double[schema.length()];
         Path m = new Path(new int[]{-2}, new double[1], new double[1], new double[1]);
-        recurse(phi, x, root, m, 1, 1, -1);
+        recurse(phi, predictors(x), root, m, 1, 1, -1);
         return phi;
     }
 
