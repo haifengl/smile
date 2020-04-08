@@ -383,7 +383,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         } else {
             double vj = ((RegressionNode) node).output();
             for (int i = 1; i <= l; i++) {
-                double w = m.unwoundPathSum(i);
+                double w = m.unwoundSum(i);
                 phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
             }
         }
@@ -463,12 +463,14 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             int l = --length;
 
             double n = w[l];
-            for (int j = l - 1; j >= 0; j--) {
-                if (po != 0) {
+            if (po != 0) {
+                for (int j = l - 1; j >= 0; j--) {
                     double t = w[j];
-                    w[j] = n * (l+1) / ((j+1) * po);
-                    n = t - w[j] * pz * (l - j) / (l+1);
-                } else {
+                    w[j] = n * (l + 1) / ((j + 1) * po);
+                    n = t - w[j] * pz * (l - j) / (l + 1);
+                }
+            } else {
+                for (int j = l - 1; j >= 0; j--) {
                     w[j] = (w[j] * (l+1)) / (pz * (l - j));
                 }
             }
@@ -484,7 +486,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
          * Return the total permutation weight if we unwind a previous
          * extension in the decision path.
          */
-        double unwoundPathSum(int i) {
+        double unwoundSum(int i) {
             double po = o[i];
             double pz = z[i];
             int l = length - 1;
@@ -493,7 +495,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             double n = w[l];
             if (po != 0) {
                 for (int j = l - 1; j >= 0; j--) {
-                    double t =  n / ((j+1) * po);
+                    double t = n / ((j+1) * po);
                     sum += t;
                     n = w[j] - t * pz * (l - j);
                 }
