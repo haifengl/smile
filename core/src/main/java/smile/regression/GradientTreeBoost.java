@@ -134,7 +134,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.005;
+    private double shrinkage = 0.05;
 
     /**
      * Constructor. Learns a gradient tree boosting for regression.
