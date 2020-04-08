@@ -333,6 +333,62 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         return schema;
     }
 
+    @Override
+    public double[] shap(Tuple x) {
+        double[] phi = new double[schema.length()];
+        Path m = new Path(new int[0], new double[0], new double[0], new double[0]);
+        recurse(phi, predictors(x), root, m, 1, 1, -1);
+        return phi;
+    }
+
+    /**
+     * Recursively keep track of what proportion of all possible subsets
+     * flow down into each of the leaves of the tree.
+     */
+    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
+        int l = m.length;
+        m = m.extend(pz, po, pi);
+
+        if (node instanceof InternalNode) {
+            InternalNode split = (InternalNode) node;
+            int dj = split.feature();
+            Node h, c;
+            if (split.branch(x)) {
+                h = split.trueChild();
+                c = split.falseChild();
+            } else {
+                h = split.falseChild();
+                c = split.trueChild();
+            }
+
+            int rh = h.size();
+            int rc = c.size();
+            int rj = node.size();
+
+            int k = 0;
+            for (; k <= l; k++) {
+                if (m.d[k] == dj) break;
+            }
+
+            double iz = 1.0;
+            double io = 1.0;
+            if (k <= l) {
+                iz = m.z[k];
+                io = m.o[k];
+                m.unwind(k);
+            }
+
+            recurse(phi, x, h, m, iz * rh / rj, io, dj);
+            recurse(phi, x, c, m, iz * rc /rj, 0, dj);
+        } else {
+            double vj = ((RegressionNode) node).output();
+            for (int i = 1; i <= l; i++) {
+                double w = m.unwoundPathSum(i);
+                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
+            }
+        }
+    }
+
     /**
      * The path of unique features we have split
      * on so far during SHAP recursive traverse.
@@ -435,7 +491,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             double sum = 0.0;
 
             double n = w[l];
-            if (o[i] != 0) {
+            if (po != 0) {
                 for (int j = l - 1; j >= 0; j--) {
                     double t =  n / ((j+1) * po);
                     sum += t;
@@ -448,62 +504,6 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             }
 
             return sum * (l + 1);
-        }
-    }
-
-    @Override
-    public double[] shap(Tuple x) {
-        double[] phi = new double[schema.length()];
-        Path m = new Path(new int[0], new double[0], new double[0], new double[0]);
-        recurse(phi, predictors(x), root, m, 1, 1, -1);
-        return phi;
-    }
-
-    /**
-     * Recursively keep track of what proportion of all possible subsets
-     * flow down into each of the leaves of the tree.
-     */
-    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
-        int l = m.length;
-        m = m.extend(pz, po, pi);
-
-        if (node instanceof InternalNode) {
-            InternalNode split = (InternalNode) node;
-            int dj = split.feature();
-            Node h, c;
-            if (split.branch(x)) {
-                h = split.trueChild();
-                c = split.falseChild();
-            } else {
-                h = split.falseChild();
-                c = split.trueChild();
-            }
-
-            int rh = h.size();
-            int rc = c.size();
-            int rj = node.size();
-
-            int k = 0;
-            for (; k <= l; k++) {
-                if (m.d[k] == dj) break;
-            }
-
-            double iz = 1.0;
-            double io = 1.0;
-            if (k <= l) {
-                iz = m.z[k];
-                io = m.o[k];
-                m.unwind(k);
-            }
-
-            recurse(phi, x, h, m, iz * rh / rj, io, dj);
-            recurse(phi, x, c, m, iz * rc /rj, 0, dj);
-        } else {
-            double vj = ((RegressionNode) node).output();
-            for (int i = 1; i <= l; i++) {
-                double w = m.unwoundPathSum(i);
-                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
-            }
         }
     }
 }
