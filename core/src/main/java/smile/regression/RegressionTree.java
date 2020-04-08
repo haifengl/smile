@@ -493,17 +493,18 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
             double n = w[l];
             if (po != 0) {
                 for (int j = l - 1; j >= 0; j--) {
-                    double t =  n / ((j+1) * po);
+                    double t =  (n * (l + 1)) / ((j+1) * po);
                     sum += t;
-                    n = w[j] - t * pz * (l - j);
-                }
+                    n = w[j] - t * pz * ((l - j) / (l + 1));
+                }                
+                return sum;
             } else {
                 for (int j = l - 1; j >= 0; j--) {
                     sum += w[j] / (pz * (l - j));
                 }
+                return sum * (l + 1);
             }
-
-            return sum * (l + 1);
+            
         }
     }
 }
