@@ -26,6 +26,7 @@ repositories {
 dependencies {
     implementation(kotlin("stdlib")) 
     implementation("com.github.haifengl:smile-core:2.3.0")
+    implementation("com.github.haifengl:smile-nlp:2.3.0")
     implementation("com.github.haifengl:smile-io:2.3.0")
 }
 
