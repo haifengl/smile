@@ -30,7 +30,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -153,5 +153,30 @@ public class GradientTreeBoostTest {
         test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
         test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
         test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
+    }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        GradientTreeBoost model = GradientTreeBoost.fit(BostonHousing.formula, BostonHousing.data, Loss.ls(), 100, 20, 100, 5, 0.05, 0.7);
+        double[] importance = model.importance();
+        double[] shap = model.shap(BostonHousing.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(importance, fields);
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(shap, fields);
+        for (int i = 0; i < shap.length; i++) {
+            System.out.format("%-15s %.4f%n", fields[i], shap[i]);
+        }
+
+        String[] expected = {"CHAS", "ZN", "RAD", "INDUS", "B", "TAX", "AGE", "PTRATIO", "NOX", "CRIM", "DIS", "RM", "LSTAT"};
+        assertArrayEquals(expected, fields);
     }
 }
