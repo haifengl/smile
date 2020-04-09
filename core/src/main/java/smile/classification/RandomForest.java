@@ -201,10 +201,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *             gives good performance, where p is the number of variables
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will
-     *                 not split, nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     * @param nodeSize the number of instances in a node below which the tree
+     *                 will not split, nodeSize = 5 generally gives good
+     *                 results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling
+     *                  with replacement. &lt; 1.0 means sampling without
+     *                  replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
                                    SplitRule rule, int maxDepth, int maxNodes, int nodeSize, double subsample) {
@@ -222,16 +224,18 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *             gives good performance, where p is the number of variables
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the number of instances in a node below which the tree will not split,
-     *                 nodeSize = 5 generally gives good results.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     * @param nodeSize the number of instances in a node below which the tree
+     *                 will not split, nodeSize = 5 generally gives good
+     *                 results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling
+     *                  with replacement. &lt; 1.0 means sampling without
+     *                  replacement.
      * @param classWeight Priors of the classes. The weight of each class
      *                    is roughly the ratio of samples in each class.
      *                    For example, if there are 400 positive samples
      *                    and 100 negative samples, the classWeight should
-     *                    be [1, 4] (assuming label 0 is of negative, label 1 is of
-     *                    positive).
+     *                    be [1, 4] (assuming label 0 is of negative, label
+     *                    1 is of positive).
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
                                    SplitRule rule, int maxDepth, int maxNodes, int nodeSize,
@@ -250,9 +254,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier 
      *             gives good performance, where p is the number of variables
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
-     * @param nodeSize the minimum size of leaf nodes.
-     * @param subsample the sampling rate for training tree. 1.0 means sampling with replacement. < 1.0 means
-     *                  sampling without replacement.
+     * @param nodeSize the number of instances in a node below which the tree
+     *                 will not split, nodeSize = 5 generally gives good
+     *                 results.
+     * @param subsample the sampling rate for training tree. 1.0 means sampling
+     *                  with replacement. &lt; 1.0 means sampling without
+     *                  replacement.
      * @param rule Decision tree split rule.
      * @param classWeight Priors of the classes. The weight of each class
      *                    is roughly the ratio of samples in each class.
