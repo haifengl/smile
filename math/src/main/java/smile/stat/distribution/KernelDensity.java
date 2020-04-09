@@ -41,7 +41,7 @@ public class KernelDensity implements Distribution {
      * integrates to one. Here we just Gaussian density function.
      */
     private GaussianDistribution gaussian;
-    /**
+    /*
      * h > 0 is a smoothing parameter called the bandwidth.
      */
     private double h;
