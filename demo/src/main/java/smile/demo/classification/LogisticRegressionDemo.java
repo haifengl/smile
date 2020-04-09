@@ -28,7 +28,7 @@ import smile.classification.LogisticRegression;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class LogisticRegressionDemo extends ClassificationDemo {

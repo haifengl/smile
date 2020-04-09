@@ -20,7 +20,7 @@ package smile.util;
 /**
  * Priority Queue for index items.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class PriorityQueue {
 

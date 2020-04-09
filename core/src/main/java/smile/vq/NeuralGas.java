@@ -62,7 +62,7 @@ import smile.math.TimeFunction;
  * @see GrowingNeuralGas
  * @see SOM
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NeuralGas implements VectorQuantizer {
     private static final long serialVersionUID = 2L;

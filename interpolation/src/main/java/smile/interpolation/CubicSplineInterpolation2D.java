@@ -24,7 +24,7 @@ package smile.interpolation;
  * derivatives. Note that bicubic spline guarantees continuity of only gradient and
  * cross-derivative.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CubicSplineInterpolation2D implements Interpolation2D {
     private int m;

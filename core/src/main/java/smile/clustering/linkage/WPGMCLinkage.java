@@ -24,7 +24,7 @@ import smile.math.distance.Distance;
  * The distance between two clusters is the Euclidean distance between their
  * weighted centroids. Only valid for Euclidean distance based proximity matrix.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class WPGMCLinkage extends Linkage {
     /**

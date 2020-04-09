@@ -26,7 +26,7 @@ import java.util.Iterator;
 /**
  * Several sets of English stop words.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public enum EnglishStopWords implements StopWords {
 

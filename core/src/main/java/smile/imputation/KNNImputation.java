@@ -31,7 +31,7 @@ import smile.sort.QuickSort;
  * In the weighted average, the contribution of each instance is weighted by
  * similarity between it and instance A.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KNNImputation implements MissingValueImputation {
 

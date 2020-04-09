@@ -28,7 +28,7 @@ import smile.sort.QuickSort;
  * a linear combination of similar instances, which are selected by k-nearest
  * neighbors method. 
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LLSImputation implements MissingValueImputation {
     /**

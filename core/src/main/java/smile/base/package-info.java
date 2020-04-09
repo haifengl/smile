@@ -18,6 +18,6 @@
 /**
  * Base classes used by both classification and regression.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.base;

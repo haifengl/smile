@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * Scaling inputs to unit norms is a common operation for text
  * classification or clustering for instance.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Normalizer implements FeatureTransform {
     private static final long serialVersionUID = 2L;

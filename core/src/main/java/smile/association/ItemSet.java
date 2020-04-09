@@ -25,7 +25,7 @@ import java.util.Arrays;
  * In this class, the support is actually the raw frequency rather than the
  * ratio.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ItemSet {
 

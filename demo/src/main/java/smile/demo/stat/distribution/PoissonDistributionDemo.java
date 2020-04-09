@@ -39,7 +39,7 @@ import smile.stat.distribution.PoissonDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class PoissonDistributionDemo extends JPanel implements ChangeListener {

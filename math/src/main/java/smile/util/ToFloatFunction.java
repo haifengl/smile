@@ -23,7 +23,7 @@ package smile.util;
  *
  * Java 8 doesn't have ToFloatFunction interface in java.util.function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 /**  */
 public interface ToFloatFunction<T> {

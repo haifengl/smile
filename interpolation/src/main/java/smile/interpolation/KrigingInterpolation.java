@@ -73,7 +73,7 @@ import smile.interpolation.variogram.Variogram;
  * The kriging weights of ordinary kriging fulfill the unbiasedness condition
  * &Sigma; &lambda;<sub>i</sub> = 1
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KrigingInterpolation {
 

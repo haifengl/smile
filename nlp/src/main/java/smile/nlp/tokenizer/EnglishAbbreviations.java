@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
  * A concise dictionary of common abbreviations (e.g. Mr., Mrs., etc.) in English.
  * Useful in sentence splitter and word tokenizer.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 interface EnglishAbbreviations {
     /**

@@ -27,7 +27,7 @@ import static smile.math.special.Gamma.lgamma;
  * <p>
  * for x, y &gt; 0 and the integration is over [0,1].The beta function is symmetric, i.e. B(x,y) = B(y,x).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Beta {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Beta.class);

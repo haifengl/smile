@@ -25,17 +25,15 @@ import org.junit.Test;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.sort.QuickSort;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
-import smile.validation.Validation;
 
 import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RegressionTreeTest {
     

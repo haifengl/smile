@@ -27,7 +27,7 @@ import smile.math.matrix.EVD;
 /**
  * ARPACK based eigen decomposition. Currently support only symmetric matrix.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ARPACK {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ARPACK.class);

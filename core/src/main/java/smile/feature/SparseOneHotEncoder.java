@@ -30,7 +30,7 @@ import smile.data.type.StructType;
  * elements are stored in an integer array. In Maximum Entropy Classifier,
  * the data are expected to store in this format.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseOneHotEncoder {
     /**

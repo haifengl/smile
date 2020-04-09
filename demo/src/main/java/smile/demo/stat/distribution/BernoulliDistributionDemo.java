@@ -36,7 +36,7 @@ import smile.stat.distribution.BernoulliDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class BernoulliDistributionDemo extends JPanel implements ChangeListener {

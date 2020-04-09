@@ -26,7 +26,7 @@ import java.util.ArrayList;
  * A taxonomy is a tree of terms (aka concept) where leaves
  * must be named but intermediary nodes can be anonymous.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Taxonomy {
 

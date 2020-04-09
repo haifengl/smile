@@ -59,7 +59,7 @@ import smile.math.special.Beta;
  * from 0.
  * </ul>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class TTest {
     /**

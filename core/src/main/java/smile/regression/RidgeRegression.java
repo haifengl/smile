@@ -65,7 +65,7 @@ import smile.math.matrix.DenseMatrix;
  * even though it performs well in terms of prediction accuracy,
  * it does poorly in terms of offering a clear interpretation.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RidgeRegression {
     /**

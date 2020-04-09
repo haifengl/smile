@@ -28,7 +28,7 @@ import javax.swing.table.TableColumnModel;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class TableColumnSettings implements TableColumnModelListener {
 

@@ -28,7 +28,7 @@ import smile.data.type.StructType;
  * in turn expands to a formula containing the main effects
  * for a, b and c together with their second-order interactions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class FactorCrossing implements HyperTerm {
     /** The order of interactions. */

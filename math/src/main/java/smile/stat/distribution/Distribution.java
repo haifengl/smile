@@ -31,7 +31,7 @@ import java.io.Serializable;
  *
  * @see MultivariateDistribution
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Distribution extends Serializable {
 

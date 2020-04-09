@@ -28,7 +28,7 @@ import smile.plot.swing.Palette;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ContourDemo extends JPanel {

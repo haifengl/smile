@@ -26,7 +26,7 @@ import java.util.Map;
  * sentence or a document) is represented as an unordered collection of words,
  * disregarding grammar and even word order.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bag {
     /**

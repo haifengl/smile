@@ -21,7 +21,7 @@ package smile.data.formula;
  * This class provides a skeletal implementation of the Term interface,
  * to minimize the effort required to implement this interface.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class AbstractTerm implements Term {
     /**

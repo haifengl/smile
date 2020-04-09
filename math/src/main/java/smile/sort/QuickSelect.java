@@ -26,7 +26,7 @@ package smile.sort;
  * a set of data. One often wants to know the median element (quantile p = 1/2)
  * in an array or the top and bottom quartile elements (quantile p = 1/4, 3/4).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface QuickSelect {
     /**

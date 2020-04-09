@@ -27,7 +27,7 @@ import smile.data.Iris;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SignalNoiseRatioTest {
     

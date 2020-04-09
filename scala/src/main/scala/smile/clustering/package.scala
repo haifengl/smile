@@ -60,7 +60,7 @@ import smile.util.{SparseArray, time}
   * usually do not however work with arbitrary feature combinations as in general
   * subspace methods.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object clustering {
   /** Agglomerative Hierarchical Clustering. This method
@@ -125,6 +125,7 @@ package object clustering {
     *  - David Eppstein. Fast hierarchical clustering and other applications of dynamic closest pairs. SODA 1998.
     *
     * @param data   The data set.
+    * @param distance the distance/dissimilarity measure.
     * @param method the agglomeration method to merge clusters. This should be one of
     *               "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
@@ -194,7 +195,7 @@ package object clustering {
     * @param data    the data set.
     * @param k       the number of clusters.
     * @param maxIter the maximum number of iterations for each running.
-    * @param tol     tol the tolerance of convergence test.
+    * @param tol     the tolerance of convergence test.
     * @param runs    the number of runs of K-Means algorithm.
     */
   def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 16): KMeans = time("K-Means") {
@@ -561,4 +562,8 @@ package object clustering {
   def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering = time("Spectral clustering") {
     SpectralClustering.fit(data, k, l, sigma)
   }
+
+  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
+    * The user should ignore this object. */
+  object $dummy
 }

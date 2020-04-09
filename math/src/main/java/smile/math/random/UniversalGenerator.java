@@ -26,7 +26,7 @@ package smile.math.random;
  * completely portable (gives bit identical results on all machines with at
  * least 24-bit mantissas in the floating point representation).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class UniversalGenerator implements RandomNumberGenerator {
 

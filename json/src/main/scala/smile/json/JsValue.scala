@@ -27,7 +27,7 @@ import scala.language.implicitConversions
 /**
  * JSON value.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 sealed trait JsValue extends Dynamic {
   override def toString: String = compactPrint
@@ -559,6 +559,11 @@ case class JsBinary(value: Array[Byte]) extends JsValue {
 }
 
 case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsValue {
+  /** Filter out undefined fields. */
+  fields.foreach { case (key, value) =>
+    if (value == JsUndefined) fields.remove(key)
+  }
+
   override def apply(key: String): JsValue = {
     if (fields.contains(key))
       fields(key)

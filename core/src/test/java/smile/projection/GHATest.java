@@ -30,7 +30,7 @@ import smile.math.matrix.Matrix;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("unused")
 public class GHATest {

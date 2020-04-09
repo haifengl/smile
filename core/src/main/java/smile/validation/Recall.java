@@ -22,7 +22,7 @@ package smile.validation;
  *
  * @see Sensitivity
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Recall implements ClassificationMeasure {
     public final static Recall instance = new Recall();

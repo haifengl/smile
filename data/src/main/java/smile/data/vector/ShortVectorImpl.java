@@ -27,7 +27,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable short vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class ShortVectorImpl implements ShortVector {
     /** The name of vector. */

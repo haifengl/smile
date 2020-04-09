@@ -22,7 +22,7 @@ import java.util.Arrays;
 /**
  * The scatter plot of texts.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class TextPlot extends Plot {
 

@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * Mean squared error.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MSE implements RegressionMeasure {
     public final static MSE instance = new MSE();

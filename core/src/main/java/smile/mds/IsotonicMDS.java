@@ -34,7 +34,7 @@ import smile.sort.QuickSort;
  * distances is usually not possible. The relationship is typically found
  * using isotonic regression.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IsotonicMDS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsotonicMDS.class);

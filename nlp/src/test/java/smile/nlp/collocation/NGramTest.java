@@ -36,7 +36,7 @@ import smile.nlp.tokenizer.SimpleTokenizer;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NGramTest {
 

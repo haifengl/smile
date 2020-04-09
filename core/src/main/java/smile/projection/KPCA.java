@@ -57,7 +57,7 @@ import smile.math.matrix.EVD;
  * @see smile.manifold.LaplacianEigenmap
  * @see smile.mds.SammonMapping
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KPCA<T> implements Projection<T>, Serializable {
     private static final long serialVersionUID = 2L;

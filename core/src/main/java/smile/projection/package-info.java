@@ -80,6 +80,6 @@
  * Restricted Boltzmann machines) that is followed by a finetuning stage based
  * on backpropagation.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.projection;

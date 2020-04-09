@@ -31,7 +31,7 @@ import smile.projection.PCA;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class GHADemo extends ProjectionDemo {

@@ -29,7 +29,7 @@ import org.netlib.util.intW;
  * Column-major matrix that employs netlib for matrix-vector and matrix-matrix
  * computation.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NLMatrix extends JMatrix {
     private static final long serialVersionUID = 1L;

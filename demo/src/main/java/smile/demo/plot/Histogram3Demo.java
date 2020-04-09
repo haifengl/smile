@@ -27,7 +27,7 @@ import smile.plot.swing.Canvas;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class Histogram3Demo extends JPanel {

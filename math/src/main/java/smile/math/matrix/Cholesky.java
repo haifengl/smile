@@ -44,7 +44,7 @@ package smile.math.matrix;
  * If the matrix is not positive definite, an exception will be thrown out from
  * the method decompose().
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Cholesky {
 

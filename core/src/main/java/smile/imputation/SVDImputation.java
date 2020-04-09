@@ -42,7 +42,7 @@ import smile.math.matrix.SVD;
  * obtained matrix, until the total change in the matrix falls below the
  * empirically determined threshold (say 0.01).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SVDImputation implements MissingValueImputation {
 

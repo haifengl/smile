@@ -83,7 +83,7 @@ import smile.math.TimeFunction;
  * <li> Teuvo KohonenDan. Self-organizing maps. Springer, 3rd edition, 2000. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SOM implements VectorQuantizer {
     private static final long serialVersionUID = 2L;

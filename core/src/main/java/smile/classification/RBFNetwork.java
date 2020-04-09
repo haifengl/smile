@@ -88,7 +88,7 @@ import smile.util.IntSet;
  * @see SVM
  * @see MLP
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Classifier<T> {
     private static final long serialVersionUID = 2L;

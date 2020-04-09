@@ -38,7 +38,7 @@ import smile.data.type.StructType;
  * specified range is indicate in terms of percentiles of the original
  * distribution (like the 5th and 95th percentile).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Scaler implements FeatureTransform {
     private static final long serialVersionUID = 2L;

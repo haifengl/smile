@@ -40,7 +40,7 @@ import smile.util.MutableInt;
 /**
  * An in-memory text corpus. Useful for text feature engineering.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleCorpus implements Corpus {
 

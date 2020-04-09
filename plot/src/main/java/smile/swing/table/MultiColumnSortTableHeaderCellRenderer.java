@@ -29,7 +29,7 @@ import smile.swing.AlphaIcon;
  * <code>DefaultTableHeaderCellRenderer</code> that paints sort icons on the
  * header of each sorted column with varying opacity.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class MultiColumnSortTableHeaderCellRenderer extends DefaultTableHeaderCellRenderer {

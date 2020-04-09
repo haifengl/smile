@@ -28,7 +28,7 @@ import java.util.stream.LongStream;
 /**
  * An immutable long vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class LongVectorImpl implements LongVector {
     /** The name of vector. */

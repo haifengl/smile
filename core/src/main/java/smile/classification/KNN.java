@@ -66,7 +66,7 @@ import smile.util.IntSet;
  * guaranteed to approach the Bayes error rate, for some value of k (where k
  * increases as a function of the number of data points).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KNN<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 2L;

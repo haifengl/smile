@@ -31,7 +31,7 @@ import smile.util.IntSet;
 /**
  * To support arbitrary class labels.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ClassLabels implements Serializable {
     private static final long serialVersionUID = 2L;

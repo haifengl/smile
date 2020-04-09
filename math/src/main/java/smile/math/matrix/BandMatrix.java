@@ -57,7 +57,7 @@ import java.util.Arrays;
  * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
  * with j &lt; n-1 appropriate to the number of elements on each superdiagonal.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BandMatrix implements Matrix, LinearSolver {
     private static final long serialVersionUID = 1L;

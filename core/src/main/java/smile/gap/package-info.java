@@ -104,6 +104,6 @@
  * a plateau such that successive iterations no longer produce better results</li>
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.gap;

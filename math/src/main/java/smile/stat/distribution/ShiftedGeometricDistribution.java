@@ -29,7 +29,7 @@ import smile.math.MathEx;
 
  * @see GeometricDistribution
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ShiftedGeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
     private static final long serialVersionUID = 2L;

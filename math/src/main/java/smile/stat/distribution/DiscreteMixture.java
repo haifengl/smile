@@ -24,7 +24,7 @@ import smile.math.MathEx;
 /**
  * The finite mixture of discrete distributions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DiscreteMixture extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

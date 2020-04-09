@@ -60,7 +60,7 @@ import smile.util.Strings;
  * <li> Thomas G. Dietterich, Guohua Hao, and Adam Ashenfelter. Gradient Tree Boosting for Training Conditional Random Fields. JMLR, 2008.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CRF implements Serializable {
     private static final long serialVersionUID = 2L;

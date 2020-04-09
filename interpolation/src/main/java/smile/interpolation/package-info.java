@@ -25,6 +25,6 @@
  * variable. A different problem which is closely related to interpolation is
  * the approximation of a complicated function by a simple function. 
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.interpolation;

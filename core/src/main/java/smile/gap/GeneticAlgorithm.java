@@ -114,7 +114,7 @@ import java.util.Arrays;
  * t is very small, then we're spending more time in the outer algorithm and
  * thus doing more exploring.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GeneticAlgorithm <T extends Chromosome> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneticAlgorithm.class);

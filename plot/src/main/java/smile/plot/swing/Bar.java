@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * Bars with heights proportional to the value.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bar extends Shape {
 

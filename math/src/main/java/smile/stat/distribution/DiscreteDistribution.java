@@ -25,7 +25,7 @@ import smile.math.MathEx;
  * beside float argument. A quantile function is provided based on bisection
  * searching. Likelihood and log likelihood functions are also implemented here.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class DiscreteDistribution extends AbstractDistribution {
     /**

@@ -25,7 +25,7 @@ package smile.sort;
  * or so worse than its average running time. Heapsort is an in-place algorithm,
  * but is not a stable sort.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface HeapSort {
     /**

@@ -67,7 +67,7 @@ import smile.math.matrix.EVD;
  * <li> J. B. Tenenbaum, V. de Silva and J. C. Langford  A Global Geometric Framework for Nonlinear Dimensionality Reduction. Science 290(5500):2319-2323, 2000. </li> 
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IsoMap implements Serializable {
     private static final long serialVersionUID = 2L;

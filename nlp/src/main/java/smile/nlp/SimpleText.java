@@ -25,7 +25,7 @@ import smile.util.Strings;
 /**
  * A list-of-words representation of documents.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleText extends Text implements TextTerms, AnchorText {
     /**

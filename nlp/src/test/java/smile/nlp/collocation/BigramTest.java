@@ -29,7 +29,7 @@ import smile.nlp.Text;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BigramTest {
     SimpleCorpus corpus = new SimpleCorpus();

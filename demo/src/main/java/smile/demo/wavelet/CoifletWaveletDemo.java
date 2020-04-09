@@ -30,7 +30,7 @@ import smile.wavelet.WaveletShrinkage;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class CoifletWaveletDemo extends JPanel {

@@ -21,7 +21,7 @@ import java.util.stream.Stream;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ItemSetTestData {
 

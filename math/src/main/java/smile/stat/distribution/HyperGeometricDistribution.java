@@ -40,7 +40,7 @@ import static smile.math.MathEx.lfactorial;
  * </pre>
  * where <sub>n</sub>C<sub>k</sub> is n choose k.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HyperGeometricDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

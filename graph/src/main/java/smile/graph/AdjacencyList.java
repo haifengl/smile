@@ -30,7 +30,7 @@ import smile.util.PriorityQueue;
 /**
  * An adjacency list representation of a graph. Multigraph is supported.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AdjacencyList implements Graph {
 

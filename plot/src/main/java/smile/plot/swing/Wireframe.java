@@ -25,7 +25,7 @@ import smile.math.MathEx;
  * mathematically continuous smooth surfaces meet, or by connecting an
  * object's constituent vertices using straight lines or curves.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Wireframe extends Plot {
 

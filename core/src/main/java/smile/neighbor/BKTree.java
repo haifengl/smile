@@ -52,7 +52,7 @@ import smile.math.distance.Metric;
  *
  * @param <E> the type of data objects in the tree.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BKTree<E> implements RNNSearch<E, E>, Serializable {
     private static final long serialVersionUID = 2L;

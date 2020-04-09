@@ -29,6 +29,6 @@
  * is not larger than a given value; it is the integral of the non-cumulative
  * distribution.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.stat.distribution;

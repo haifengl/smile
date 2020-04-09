@@ -32,7 +32,7 @@ import smile.math.special.Gamma;
  * where U1 and U2 have chi-square distributions with d1 and d2 degrees of
  * freedom respectively, and U1 and U2 are independent.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

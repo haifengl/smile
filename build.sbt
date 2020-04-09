@@ -4,10 +4,9 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.3.0",
+  version := "2.4.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
-  javaOptions in test += "-Dsmile.threads=1",
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
@@ -55,7 +54,7 @@ lazy val nonPubishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
-  .aggregate(core, data, io, math, netlib, nd4j, graph, interpolation, nlp, plot, json, vega, demo, benchmark, scala, cas, shell)
+  .aggregate(core, data, io, math, netlib, nd4j, graph, interpolation, nlp, plot, json, demo, benchmark, scala, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -83,10 +82,6 @@ lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _
 
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
-lazy val vega = project.in(file("vega")).settings(commonSettings: _*).dependsOn(json, data)
+lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
-lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json, vega)
-
-lazy val cas = project.in(file("cas")).settings(commonSettings: _*)
-
-lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, cas, scala)
+lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)

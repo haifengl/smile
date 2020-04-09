@@ -51,7 +51,7 @@ import smile.nlp.dictionary.EnglishDictionary;
  * <li> Paul Clough. A Perl program for sentence splitting using rules. <li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleSentenceSplitter implements SentenceSplitter {
 

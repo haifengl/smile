@@ -22,7 +22,7 @@ import java.text.DecimalFormat;
 /**
  * Double data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DoubleType implements DataType {
     /** Format for toString. */

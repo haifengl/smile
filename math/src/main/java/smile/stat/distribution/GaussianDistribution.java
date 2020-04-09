@@ -60,7 +60,7 @@ import smile.math.special.Erf;
  * <li> The Student's t-distribution t(&nu;) is approximately normal N(0, 1) when &nu; is large.
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;

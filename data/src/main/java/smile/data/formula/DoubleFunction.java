@@ -25,7 +25,7 @@ import smile.data.type.StructType;
 /**
  * The generic term of applying a double function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DoubleFunction extends AbstractFunction {
     /** The function on a double. */

@@ -24,7 +24,7 @@ import smile.util.SparseArray;
  * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
  * where &sigma; &gt; 0 is the scale parameter of the kernel.
 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

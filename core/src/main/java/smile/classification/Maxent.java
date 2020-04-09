@@ -47,7 +47,7 @@ import smile.util.IntSet;
  * <li> A. L. Berger, S. D. Pietra, and V. J. D. Pietra. A maximum entropy approach to natural language processing. Computational Linguistics 22(1):39-71, 1996.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Maxent implements SoftClassifier<int[]>, OnlineClassifier<int[]> {
     private static final long serialVersionUID = 2L;

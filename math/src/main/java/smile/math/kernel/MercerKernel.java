@@ -33,7 +33,7 @@ import java.util.function.ToDoubleBiFunction;
  * a kernel matrix created using a particular kernel is positive semi-definite.
  * A matrix is positive semi-definite if its associated eigenvalues are nonnegative.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
 

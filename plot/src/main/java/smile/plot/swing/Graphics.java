@@ -34,7 +34,7 @@ import java.awt.geom.AffineTransform;
  * coordinates based on suitable projection method. Both 2D and 3D shapes are
  * supported.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Graphics {
 

@@ -31,7 +31,7 @@ package smile.validation;
  * In this implementation, the class label 1 is regarded as positive and 0
  * is regarded as negative.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Specificity implements ClassificationMeasure {
     public final static Specificity instance = new Specificity();

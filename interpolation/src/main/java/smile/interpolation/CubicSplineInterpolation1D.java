@@ -32,7 +32,7 @@ package smile.interpolation;
  * used in polynomial interpolation. It also does not suffer from Runge's
  * phenomenon.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CubicSplineInterpolation1D extends AbstractInterpolation {
 

@@ -50,7 +50,7 @@ import smile.netlib.ARPACK;
  * <li> Sam T. Roweis and Lawrence K. Saul. Nonlinear Dimensionality Reduction by Locally Linear Embedding. Science 290(5500):2323-2326, 2000. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LLE implements Serializable {
     private static final long serialVersionUID = 2L;

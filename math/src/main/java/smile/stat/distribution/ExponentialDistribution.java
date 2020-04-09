@@ -53,7 +53,7 @@ import smile.math.MathEx;
  * rates" here are not constant: more failures occur for very young and for
  * very old systems.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ExponentialDistribution extends AbstractDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;

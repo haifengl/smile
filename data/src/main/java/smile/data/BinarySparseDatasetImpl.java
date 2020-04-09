@@ -27,7 +27,7 @@ import smile.math.matrix.SparseMatrix;
  * Binary sparse dataset. Each item is stored as an integer array, which
  * are the indices of nonzero elements in ascending order.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class BinarySparseDatasetImpl implements BinarySparseDataset {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BinarySparseDatasetImpl.class);

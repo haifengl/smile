@@ -26,7 +26,7 @@ import smile.data.type.StructType;
 /**
  * All columns in the input DataFrame.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class All implements HyperTerm {
     /** All columns in the schema. */

@@ -40,7 +40,7 @@ package smile.sort;
  * improved the bound to O(n log<sub><small>2</small></sub> n). This is
  * worse than the optimal comparison sorts, which are O(n log n).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ShellSort {
     /**
