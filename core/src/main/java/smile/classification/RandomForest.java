@@ -29,6 +29,7 @@ import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
+import smile.feature.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.Strings;
@@ -73,7 +74,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier {
+public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 

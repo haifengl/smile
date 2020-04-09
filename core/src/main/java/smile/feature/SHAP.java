@@ -52,7 +52,12 @@ import java.util.stream.Stream;
  */
 public interface SHAP<T> {
     /**
-     * Returns the SHAP values.
+     * Returns the SHAP values. For regression, the length of SHAP values
+     * is same as the number of features. For classification, SHAP values
+     * are of <code>p x k</code>, where <code>p</code> is the number of
+     * features and <code>k</code> is the classes. The first k elements are
+     * the SHAP values of first feature over k classes, respectively. The
+     * rest features follow accordingly.
      *
      * @param x an instance.
      * @return the SHAP values.
