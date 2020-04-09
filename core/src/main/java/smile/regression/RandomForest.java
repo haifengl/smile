@@ -154,7 +154,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. < 1.0 means sampling without replacement.
+     *                  replacement. &lt; 1.0 means sampling without replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
@@ -174,7 +174,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. < 1.0 means sampling without replacement.
+     *                  replacement. &lt; 1.0 means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {

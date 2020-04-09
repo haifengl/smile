@@ -71,7 +71,7 @@ public class LASVM<T> implements Serializable {
      * True if minmax() is already called after update.
      */
     private boolean minmaxflag = false;
-    /**
+    /*
      * Most violating pair.
      * argmin gi of m_i < alpha_i
      * argmax gi of alpha_i < M_i

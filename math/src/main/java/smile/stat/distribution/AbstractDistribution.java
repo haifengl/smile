@@ -23,33 +23,36 @@ import smile.math.MathEx;
  * The base class of univariate distributions. Both rejection
  * and inverse transform sampling methods are implemented to provide some
  * general approaches to generate random samples based on probability density
- * function or quantile function. Besides, a quantile function is also provided
- * based on bisection searching. Likelihood and log likelihood functions are
- * also implemented here.
+ * function or quantile function. Besides, a quantile function is also
+ * provided based on bisection searching. Likelihood and log likelihood
+ * functions are also implemented here.
  *
  * @author Haifeng Li
  */
 public abstract class AbstractDistribution implements Distribution {
     /**
-     * Use the rejection technique to draw a sample from the given distribution.
-     * WARNING : this simulation technique can take a very long time.
-     * Rejection sampling is also commonly called the acceptance-rejection
-     * method or "accept-reject algorithm".
+     * Use the rejection technique to draw a sample from the given
+     * distribution. <em>WARNING</em>: this simulation technique can
+     * take a very long time. Rejection sampling is also commonly
+     * called the acceptance-rejection method or "accept-reject algorithm".
      * It generates sampling values from an arbitrary probability distribution
      * function f(x) by using an instrumental distribution g(x), under the
-     * only restriction that f(x) < M g(x) where M > 1 is an appropriate
-     * bound on f(x) / g(x).
+     * only restriction that <code>f(x) &lt; M g(x)</code> where
+     * <code>M &gt; 1</code> is an appropriate bound on
+     * <code>f(x) / g(x)</code>.
      * <p>
-     * Rejection sampling is usually used in cases where the form of f(x)
-     * makes sampling difficult. Instead of sampling directly from the
-     * distribution f(x), we use an envelope distribution M g(x) where
-     * sampling is easier. These samples from M g(x) are probabilistically
+     * Rejection sampling is usually used in cases where the form of
+     * <code>f(x)</code> makes sampling difficult. Instead of sampling
+     * directly from the distribution <code>f(x)</code>, we use an envelope
+     * distribution <code>M g(x)</code> where sampling is easier. These
+     * samples from <code>M g(x)</code> are probabilistically
      * accepted or rejected.
      * <p>
      * This method relates to the general field of Monte Carlo techniques,
      * including Markov chain Monte Carlo algorithms that also use a proxy
-     * distribution to achieve simulation from the target distribution f(x).
-     * It forms the basis for algorithms such as the Metropolis algorithm.
+     * distribution to achieve simulation from the target distribution
+     * <code>f(x)</code>. It forms the basis for algorithms such as
+     * the Metropolis algorithm.
      */
     protected double rejection(double pmax, double xmin, double xmax) {
         double x;
