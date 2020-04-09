@@ -82,7 +82,7 @@ trait Facet extends View {
             center: Boolean = false,
             spacing: Option[Int] = None,
             columns: Option[Int] = None): Facet = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.facet = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
     if (columns.isDefined) spec.facet.columns = columns.get
     this
@@ -96,7 +96,7 @@ trait Facet extends View {
           align: String = "all",
           center: Boolean = false,
           spacing: Option[Int] = None): Facet = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.row = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
     this
   }
@@ -109,7 +109,7 @@ trait Facet extends View {
              align: String = "all",
              center: Boolean = false,
              spacing: Option[Int] = None): Facet = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.column = Facet.field(field, `type`, bin, timeUnit, align, center, spacing)
     this
   }
