@@ -61,7 +61,7 @@ import java.util.Arrays;
  * <li>D. Liu and J. Nocedal. On the limited memory BFGS method for large scale optimization. Mathematical Programming B 45 (1989) 503-528.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BFGS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);

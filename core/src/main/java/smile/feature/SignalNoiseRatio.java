@@ -34,7 +34,7 @@ import smile.math.MathEx;
  * <li> M. Shipp, et al. Diffuse large B-cell lymphoma outcome prediction by gene-expression profiling and supervised machine learning. Nature Medicine, 2002.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SignalNoiseRatio implements FeatureRanking {
     public static final SignalNoiseRatio instance = new SignalNoiseRatio();

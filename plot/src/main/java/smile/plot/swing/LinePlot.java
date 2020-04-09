@@ -24,7 +24,7 @@ import smile.math.MathEx;
 /**
  * Line plot is a special scatter plot which connects points by straight lines.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LinePlot extends Plot {
     /**

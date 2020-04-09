@@ -16,6 +16,7 @@ web/_site/
 
 #clojure
 .lein-repl-*
+clojure/pom.xml*
 
 #gradle
 .gradle

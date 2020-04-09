@@ -26,7 +26,7 @@ import java.util.Iterator;
 /**
  * A concise dictionary of common terms in English.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public enum EnglishDictionary implements Dictionary {
     /**

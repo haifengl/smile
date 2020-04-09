@@ -45,7 +45,7 @@ import smile.swing.Table;
  * user can also select an area by mouse for detailed view. For 3D plot, the user
  * can rotate the view by dragging mouse.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class PlotPanel extends JPanel {

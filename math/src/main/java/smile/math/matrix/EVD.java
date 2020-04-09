@@ -74,7 +74,7 @@ package smile.math.matrix;
  * positive entries, this vector is unique. In general, however, there may be
  * several such vectors.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EVD {
     /**

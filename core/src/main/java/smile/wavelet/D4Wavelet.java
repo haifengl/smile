@@ -22,7 +22,7 @@ package smile.wavelet;
  * Note that this class uses the different centering method from the one used in
  * the Daubechies class.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class D4Wavelet extends Wavelet {
 

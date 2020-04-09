@@ -22,7 +22,7 @@ import java.util.function.Function;
 /**
  * Object data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ObjectType implements DataType {
     /** Object type. */

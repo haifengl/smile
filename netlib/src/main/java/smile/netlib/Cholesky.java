@@ -49,7 +49,7 @@ import org.netlib.util.intW;
  * If the matrix is not positive definite, an exception will be thrown out from
  * the method decompose().
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Cholesky extends smile.math.matrix.Cholesky {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Cholesky.class);

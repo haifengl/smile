@@ -20,6 +20,6 @@
  * from within a statistical population to estimate characteristics of
  * the whole population.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.sampling;

@@ -30,7 +30,7 @@ import smile.plot.swing.Wireframe;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class IsoMapDemo extends ManifoldDemo {

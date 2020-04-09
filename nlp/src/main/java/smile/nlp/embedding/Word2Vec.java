@@ -55,7 +55,7 @@ import smile.data.vector.FloatVector;
  * note, CBOW is faster while skip-gram is slower but does a better job
  * for infrequent words.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Word2Vec {
     /** The vocabulary. */

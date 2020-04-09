@@ -39,7 +39,7 @@ import smile.util.Strings;
 /**
  * Reads JSON datasets. No nested objects are currently allowed.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class JSON {
     /** The schema of data structure. */

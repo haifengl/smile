@@ -25,7 +25,7 @@ import smile.math.MathEx;
  * Staircase plot is a special case of line which is most useful to display
  * empirical distribution.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class StaircasePlot extends Plot {
 

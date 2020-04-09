@@ -29,7 +29,7 @@ import smile.stat.distribution.GaussianDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class QQPlotDemo extends JPanel {

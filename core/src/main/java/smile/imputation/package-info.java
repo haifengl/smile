@@ -96,6 +96,6 @@
  * better performance in cases where the missing data is structurally absent,
  * rather than missing due to measurement noise.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.imputation;

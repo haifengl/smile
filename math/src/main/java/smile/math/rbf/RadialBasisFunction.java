@@ -47,7 +47,7 @@ import smile.math.Function;
  * of nonlinear systems exhibiting sufficiently simple chaotic behavior,
  * 3D reconstruction in computer graphics (for example, hierarchical RBF).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface RadialBasisFunction extends Function {
 

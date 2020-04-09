@@ -28,7 +28,7 @@ import java.util.stream.Stream;
  * Binary sparse dataset. Each item is stored as an integer array, which
  * are the indices of nonzero elements in ascending order.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface BinarySparseDataset extends Dataset<int[]> {
     /** Returns the number of nonzero entries. */

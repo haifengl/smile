@@ -24,7 +24,7 @@ import java.util.{Date, UUID}
 import scala.language.implicitConversions
 
 /**
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package object json {
   type JsTopLevel = Either[JsObject, JsArray]
@@ -32,10 +32,17 @@ package object json {
   val JsTrue = new JsBoolean(true)
   val JsFalse = new JsBoolean(false)
 
-  /** Enable json''' '''. */
+  /** String interpolator for JSON.
+    * `json''' '''` for JSON Object and `jarr''' '''` for JSON Array. */
   implicit class JsonHelper(private val sc: StringContext) extends AnyVal {
+    /** Parses JSON object. */
     def json(args: Any*): JsObject = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsObject]
+    }
+
+    /** Parses JSON array. */
+    def jsan(args: Any*): JsArray = {
+      JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsArray]
     }
   }
 
@@ -119,6 +126,7 @@ package object json {
   implicit def json2UUID(x: JsUUID): UUID = x.value
   implicit def json2Binary(x: JsBinary): Array[Byte] = x.value
 
+  /*
   implicit def json2Boolean(json: JsValue): Boolean = json.asBoolean
   implicit def json2Int(json: JsValue): Int = json.asInt
   implicit def json2Long(json: JsValue): Long = json.asLong
@@ -134,6 +142,7 @@ package object json {
     case JsBinary(x) => x
     case _ => throw new UnsupportedOperationException("convert JsValue to Array[Byte]")
   }
+  */
 }
 
 package json {

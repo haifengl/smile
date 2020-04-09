@@ -26,7 +26,7 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of data objects.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class DatasetImpl<T> implements Dataset<T> {
     /**

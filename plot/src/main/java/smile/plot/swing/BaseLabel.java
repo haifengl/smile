@@ -24,7 +24,7 @@ import java.awt.Font;
  * This is specialized label for axis labels. Coordinates used here are are
  * proportional to the base coordinates.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class BaseLabel extends Label {
     /**

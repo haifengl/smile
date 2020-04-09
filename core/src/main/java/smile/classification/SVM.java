@@ -81,7 +81,7 @@ import smile.math.kernel.SparseLinearKernel;
  * @see OneVersusOne
  * @see OneVersusRest
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
     /**

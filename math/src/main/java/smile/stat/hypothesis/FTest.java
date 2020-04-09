@@ -28,7 +28,7 @@ import smile.math.special.Beta;
  * only modest departures from the normal distribution, the test is unreliable
  * and should not be used.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FTest {
     /**

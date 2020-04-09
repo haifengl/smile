@@ -22,7 +22,7 @@ import smile.math.MathEx;
 /**
  * An abstract interface of dense matrix.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DenseMatrix extends Matrix, MatrixMultiplication<DenseMatrix, DenseMatrix> {
     /** Returns the array that backs this matrix (optional operation). */

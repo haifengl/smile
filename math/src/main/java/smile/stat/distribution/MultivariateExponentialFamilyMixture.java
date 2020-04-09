@@ -23,7 +23,7 @@ import smile.math.MathEx;
  * The finite mixture of distributions from multivariate exponential family.
  * The EM algorithm can be used to learn the mixture model from data.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
     private static final long serialVersionUID = 2L;

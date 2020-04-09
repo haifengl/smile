@@ -31,7 +31,7 @@ import java.util.LinkedList;
  * not associated with every node, only with leaves and some inner node
  * s that correspond to keys of interest.
  *  
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Trie<K, V> {
 

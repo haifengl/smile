@@ -75,7 +75,7 @@ import smile.util.SparseArray;
  * V is a suitable invertible matrix. If A can be written in this form, it is
  * called diagonalizable.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Matrix extends Serializable {
     /**
@@ -447,7 +447,7 @@ public interface Matrix extends Serializable {
      *
      * @param path the input file path.
      * @return a dense or sparse matrix.
-     * @author Haifeng Li. All rights reserved.
+     * @author Haifeng Li
      */
     static Matrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));

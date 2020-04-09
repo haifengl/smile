@@ -23,7 +23,7 @@ import java.awt.Color;
  * Legend is a single line text which coordinates are in
  * proportional to the base coordinates.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Legend {
     /**

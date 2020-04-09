@@ -29,6 +29,6 @@
  * A matrix is positive semi-definite if its associated eigenvalues are
  * nonnegative.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.math.kernel;

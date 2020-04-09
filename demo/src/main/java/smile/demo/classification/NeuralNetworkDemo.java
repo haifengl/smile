@@ -32,7 +32,7 @@ import smile.math.MathEx;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class NeuralNetworkDemo extends ClassificationDemo {

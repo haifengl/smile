@@ -35,7 +35,7 @@ import java.util.stream.IntStream;
  * of each feature in the training set will be 1.0. It does not shift/center
  * the data, and thus does not destroy any sparsity.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MaxAbsScaler implements FeatureTransform {
     private static final long serialVersionUID = 2L;

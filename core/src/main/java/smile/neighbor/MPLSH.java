@@ -48,7 +48,7 @@ import smile.sort.HeapSelect;
  *
  * @param <E> the type of data objects in the hash table.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MPLSH <E> extends LSH<E> {
     private static final long serialVersionUID = 2L;

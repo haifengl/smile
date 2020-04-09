@@ -20,7 +20,7 @@ package smile.data.type;
 /**
  * Boolean data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BooleanType implements DataType {
 

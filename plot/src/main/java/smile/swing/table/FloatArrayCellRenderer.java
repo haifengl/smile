@@ -22,7 +22,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 /**
  * Float array renderer in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FloatArrayCellRenderer extends DefaultTableCellRenderer {

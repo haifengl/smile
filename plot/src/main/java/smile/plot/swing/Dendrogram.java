@@ -23,7 +23,7 @@ import java.awt.Color;
  * A dendrogram is a tree diagram frequently used to illustrate the arrangement
  * of the clusters produced by hierarchical clustering.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Dendrogram extends Plot {
 

@@ -45,7 +45,7 @@ import smile.clustering.linkage.Linkage;
  * 
  * @see HierarchicalClustering
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class FastPair {
 

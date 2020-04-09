@@ -34,7 +34,7 @@ import smile.data.type.StructType;
  * analysis can test for an interaction between the two treatment
  * factors in their effect on the response.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class FactorInteraction implements HyperTerm {
     /** The factors of interaction. */

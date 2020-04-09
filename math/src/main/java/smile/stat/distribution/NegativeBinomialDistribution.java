@@ -50,7 +50,7 @@ import static smile.math.special.Gamma.lgamma;
  * Poisson(&lambda;) distribution, where &lambda; is itself a random variable,
  * distributed according to &Gamma;(r, p/(1 - p)).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NegativeBinomialDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

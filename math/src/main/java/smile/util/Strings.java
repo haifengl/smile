@@ -25,7 +25,7 @@ import java.util.stream.IntStream;
 /**
  * String utility functions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Strings {
 

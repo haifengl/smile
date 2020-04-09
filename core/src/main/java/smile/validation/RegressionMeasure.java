@@ -20,7 +20,7 @@ package smile.validation;
 /**
  * An abstract interface to measure the regression performance.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface RegressionMeasure {
 

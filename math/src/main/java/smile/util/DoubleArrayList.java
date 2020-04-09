@@ -26,7 +26,7 @@ import java.util.stream.DoubleStream;
 /**
  * A resizeable, array-backed list of double primitives.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 
 public final class DoubleArrayList implements Serializable {

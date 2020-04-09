@@ -30,7 +30,7 @@ import smile.stat.distribution.GaussianDistribution;
  * can be used as a graphical means of estimating parameters in a
  * location-scale family of distributions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class QQPlot extends Plot {
 

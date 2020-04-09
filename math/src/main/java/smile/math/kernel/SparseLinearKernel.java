@@ -24,7 +24,7 @@ import smile.util.SparseArray;
  * The linear dot product kernel on sparse arrays. When using a linear kernel, input space is
  * identical to feature space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseLinearKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

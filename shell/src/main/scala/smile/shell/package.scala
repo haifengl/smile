@@ -19,7 +19,7 @@ package smile
 
 /** Common shell commands.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object shell {
 

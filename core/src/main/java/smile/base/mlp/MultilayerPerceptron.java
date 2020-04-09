@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
  * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class MultilayerPerceptron implements Serializable {
     private static final long serialVersionUID = 2L;

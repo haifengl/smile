@@ -60,7 +60,7 @@ import smile.math.special.Gamma;
  * approaches the Dirac delta function.
  * </ul>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class WeibullDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

@@ -25,7 +25,7 @@ import smile.util.{time, toJavaBiFunction, toJavaFunction}
 
 /** Model validation.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object validation {
   /** Computes the confusion matrix. */

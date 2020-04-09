@@ -23,7 +23,7 @@ import smile.math.distance.{EuclideanDistance, Distance}
 
 /** Utility functions.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object util extends LazyLogging {
   /** Wraps Scala lambda as Java's. */

@@ -29,7 +29,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 /**
  * Color renderer in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ColorCellRenderer extends DefaultTableCellRenderer {

@@ -32,7 +32,7 @@ import java.util.Optional;
  * variables and function symbols. A term returns a single value
  * when applied to a data object (e.g. Tuple).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Term extends HyperTerm {
     @Override

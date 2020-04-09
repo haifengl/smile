@@ -31,7 +31,7 @@ import smile.math.special.Erf;
  * the multiplicative product of many independent random variables each of
  * which is positive.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LogNormalDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

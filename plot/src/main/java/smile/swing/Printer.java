@@ -27,7 +27,7 @@ import javax.swing.JOptionPane;
 /**
  * A printer controller object.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Printer {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Printer.class);

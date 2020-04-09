@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * Interpolation of 2-dimensional data.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Interpolation2D extends Serializable {
 

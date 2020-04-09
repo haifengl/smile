@@ -40,7 +40,7 @@ import smile.stat.distribution.FDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FDistributionDemo extends JPanel implements ChangeListener {

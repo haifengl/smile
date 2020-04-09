@@ -58,7 +58,7 @@ import smile.data.type.*;
  * about the data set, including how it was derived, where it came from, and
  * how it might be cited.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Arff implements AutoCloseable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Arff.class);

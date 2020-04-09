@@ -27,7 +27,7 @@ import smile.plot.swing.StaircasePlot;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class StaircasePlotDemo extends JPanel {

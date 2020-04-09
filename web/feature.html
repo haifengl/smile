@@ -324,6 +324,164 @@ permalink: "{{ page.filePathStem }}.html"
         levels. Therefore, the variable importance scores from random forest are
         not reliable for this type of data.</p>
 
+    <h3 id="tree-shap">TreeSHAP</h3>
+
+    <p>SHAP (SHapley Additive exPlanations) is a game theoretic approach to
+        explain the output of any machine learning model. It connects optimal
+        credit allocation with local explanations using the classic Shapley
+        values from game theory. In game theory, the Shapley value is the
+        average expected marginal contribution of one player after all
+        possible combinations have been considered.</p>
+
+    <p>SHAP leverages local methods designed to explain a prediction <code>f(x)</code>
+        based on a single input <code>x</code>. The local methods are defined
+        as any interpretable approximation of the original model. In particular,
+        SHAP employs additive feature attribution methods.
+
+        SHAP values attribute to each feature the change in the expected
+        model prediction when conditioning on that feature. They explain
+        how to get from the base value <code>E[f(z)]</code> that would be
+        predicted if we did not know any features to the current output
+        <code>f(x)</code>.</p>
+
+    <p>Tree SHAP is a fast and exact method to estimate SHAP values for
+        tree models and ensembles of trees, under several different possible
+        assumptions about feature dependence. </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+smile&gt; val housing = read.arff("data/weka/regression/housing.arff")
+[main] INFO smile.io.Arff - Read ARFF relation housing
+housing: DataFrame = [CRIM: float, ZN: float, INDUS: float, CHAS: byte nominal[0, 1], NOX: float, RM: float, AGE: float, DIS: float, RAD: float, TAX: float, PTRATIO: float, B: float, LSTAT: float, class: float]
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+|  CRIM|  ZN|INDUS|CHAS|  NOX|   RM| AGE|   DIS|RAD|TAX|PTRATIO|     B|LSTAT|class|
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+|0.0063|  18| 2.31|   0|0.538|6.575|65.2|  4.09|  1|296|   15.3| 396.9| 4.98|   24|
+|0.0273|   0| 7.07|   0|0.469|6.421|78.9|4.9671|  2|242|   17.8| 396.9| 9.14| 21.6|
+|0.0273|   0| 7.07|   0|0.469|7.185|61.1|4.9671|  2|242|   17.8|392.83| 4.03| 34.7|
+|0.0324|   0| 2.18|   0|0.458|6.998|45.8|6.0622|  3|222|   18.7|394.63| 2.94| 33.4|
+| 0.069|   0| 2.18|   0|0.458|7.147|54.2|6.0622|  3|222|   18.7| 396.9| 5.33| 36.2|
+|0.0299|   0| 2.18|   0|0.458| 6.43|58.7|6.0622|  3|222|   18.7|394.12| 5.21| 28.7|
+|0.0883|12.5| 7.87|   0|0.524|6.012|66.6|5.5605|  5|311|   15.2| 395.6|12.43| 22.9|
+|0.1445|12.5| 7.87|   0|0.524|6.172|96.1|5.9505|  5|311|   15.2| 396.9|19.15| 27.1|
+|0.2112|12.5| 7.87|   0|0.524|5.631| 100|6.0821|  5|311|   15.2|386.63|29.93| 16.5|
+|  0.17|12.5| 7.87|   0|0.524|6.004|85.9|6.5921|  5|311|   15.2|386.71| 17.1| 18.9|
++------+----+-----+----+-----+-----+----+------+---+---+-------+------+-----+-----+
+496 more rows...
+
+smile&gt; val model = smile.regression.randomForest("class" ~, housing)
+[main] INFO smile.util.package$ - Random Forest runtime: 0:00:00.495102
+model: regression.RandomForest = smile.regression.RandomForest@52d63b7e
+
+smile&gt; println(housing.names.slice(0, 13).zip(model.importance).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
+CHAS              87390.1358
+ZN               139917.2980
+RAD              142194.2660
+B                290043.4817
+AGE              442444.4313
+TAX              466142.1004
+DIS             1006704.7537
+CRIM            1067521.2371
+INDUS           1255337.3748
+NOX             1265518.8700
+PTRATIO         1402827.4712
+LSTAT           6001941.3822
+RM              6182463.1457
+
+smile&gt; println(housing.names.slice(0, 13).zip(model.shap(housing.stream.parallel)).sortBy(_._2).map(t => "%-15s %12.4f".format(t._1, t._2)).mkString("\n"))
+CHAS                  0.0483
+ZN                    0.0514
+RAD                   0.0601
+B                     0.1647
+AGE                   0.2303
+TAX                   0.2530
+DIS                   0.3403
+CRIM                  0.5217
+INDUS                 0.5734
+NOX                   0.6423
+PTRATIO               0.7819
+RM                    2.3272
+LSTAT                 2.6838
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+jshell&gt; import smile.io.*
+
+jshell&gt; import smile.data.formula.*
+
+jshell&gt; import smile.regression.*
+
+jshell&gt; var housing = Read.arff("data/weka/regression/housing.arff")
+[main] INFO smile.io.Arff - Read ARFF relation housing
+housing ==&gt; [CRIM: float, ZN: float, INDUS: float, CHAS: byte ... -+-----+
+496 more rows...
+
+jshell&gt; var model = RandomForest.fit(Formula.lhs("class"), housing)
+model ==&gt; smile.regression.RandomForest@6b419da
+
+jshell&gt; var importance = model.importance()
+importance ==&gt; double[13] { 1055236.1223483568, 140436.296249959 ... 12613, 5995848.431410795 }
+
+jshell&gt; var shap = model.shap(housing.stream().parallel())
+shap ==&gt; double[13] { 0.512298718958897, 0.053544797051652 ... 24552, 2.677155911786813 }
+
+jshell&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
+fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", "B", "LSTAT" }
+
+jshell&gt; smile.sort.QuickSort.sort(importance, fields);
+
+jshell&gt; for (int i = 0; i &lt; importance.length; i++) {
+   ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
+   ...&gt; }
+CHAS              86870.7977
+ZN               140436.2962
+RAD              150921.6370
+B                288337.2989
+AGE              451251.3294
+TAX              463902.6619
+DIS             1015965.9019
+CRIM            1055236.1223
+INDUS           1225992.4930
+NOX             1267797.6737
+PTRATIO         1406441.0265
+LSTAT           5995848.4314
+RM              6202612.7762
+
+jshell&gt; var fields = java.util.Arrays.copyOf(housing.names(), 13)
+fields ==&gt; String[13] { "CRIM", "ZN", "INDUS", "CHAS", "NOX" ...  "PTRATIO", "B", "LSTAT" }
+
+jshell&gt; smile.sort.QuickSort.sort(shap, fields);
+
+jshell&gt; for (int i = 0; i &lt; shap.length; i++) {
+   ...&gt;     System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
+   ...&gt; }
+CHAS                  0.0486
+ZN                    0.0535
+RAD                   0.0622
+B                     0.1621
+AGE                   0.2362
+TAX                   0.2591
+DIS                   0.3433
+CRIM                  0.5123
+INDUS                 0.5597
+NOX                   0.6409
+PTRATIO               0.7861
+RM                    2.3312
+LSTAT                 2.6772
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
     <h3 id="genetic-algorithm-feature-selection">Genetic Algorithm Based Feature Selection</h3>
 
     <p>Genetic algorithm (GA) is a search heuristic that mimics the process of

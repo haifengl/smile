@@ -26,7 +26,7 @@ import smile.data.Tuple;
  * standardization of the data set. If some outliers are present in the
  * set, robust transformers are more appropriate.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface FeatureTransform extends Serializable {
 

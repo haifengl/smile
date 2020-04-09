@@ -39,7 +39,7 @@ import smile.stat.distribution.TDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class TDistributionDemo extends JPanel implements ChangeListener {

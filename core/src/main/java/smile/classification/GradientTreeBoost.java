@@ -105,7 +105,7 @@ import smile.util.Strings;
  * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;
@@ -141,7 +141,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.005;
+    private double shrinkage = 0.05;
     /**
      * The class label encoder.
      */

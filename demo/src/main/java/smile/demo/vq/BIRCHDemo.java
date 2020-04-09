@@ -26,7 +26,7 @@ import smile.vq.BIRCH;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class BIRCHDemo extends VQDemo {

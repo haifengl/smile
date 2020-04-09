@@ -25,7 +25,7 @@ import java.util.stream.Stream;
 /**
  * Static methods that return a Path by converting a path string or URI.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Paths {
     /** Smile home directory. */

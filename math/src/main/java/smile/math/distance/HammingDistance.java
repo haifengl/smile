@@ -27,7 +27,7 @@ import java.util.BitSet;
  * transformed one string into the other. For a fixed length n, the Hamming
  * distance is a metric on the vector space of the words of that length.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HammingDistance implements Distance<BitSet> {
 

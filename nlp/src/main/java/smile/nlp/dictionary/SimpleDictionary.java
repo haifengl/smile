@@ -28,7 +28,7 @@ import java.util.Iterator;
 /**
  * A simple implementation of dictionary interface.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleDictionary implements Dictionary {
 

@@ -19,6 +19,6 @@
  * Enhanced and additional Swing components (FileChooser, FontChooser, Table,
  * Button, AlphaIcon, and Printer).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.swing;

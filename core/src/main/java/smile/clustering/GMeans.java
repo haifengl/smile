@@ -39,7 +39,7 @@ import smile.stat.distribution.GaussianDistribution;
  * @see KMeans
  * @see XMeans
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GMeans extends CentroidClustering<double[], double[]> {
     private static final long serialVersionUID = 2L;

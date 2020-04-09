@@ -25,7 +25,7 @@ import smile.clustering.PartitionClustering;
  * with missing values and then impute missing values with the average value of each attribute
  * in the clusters.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KMeansImputation implements MissingValueImputation {
 

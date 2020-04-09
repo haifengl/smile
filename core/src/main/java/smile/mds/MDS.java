@@ -34,7 +34,7 @@ import smile.math.matrix.EVD;
  * @see smile.projection.PCA
  * @see SammonMapping
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MDS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MDS.class);

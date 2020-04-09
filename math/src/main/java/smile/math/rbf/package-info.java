@@ -43,6 +43,6 @@
  * of nonlinear systems exhibiting sufficiently simple chaotic behavior,
  * 3D reconstruction in computer graphics (for example, hierarchical RBF).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.math.rbf;

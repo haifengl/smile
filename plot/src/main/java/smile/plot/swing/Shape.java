@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * Abstract rendering object in a PlotCanvas.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class Shape {
 

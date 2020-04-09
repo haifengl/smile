@@ -51,6 +51,6 @@
  * usually do not however work with arbitrary feature combinations as in general
  * subspace methods.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.clustering;

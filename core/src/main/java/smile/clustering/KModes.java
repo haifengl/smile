@@ -34,7 +34,7 @@ import smile.math.distance.HammingDistance;
  *
  * @see KMeans
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KModes extends CentroidClustering<int[], int[]> {
     private static final long serialVersionUID = 2L;

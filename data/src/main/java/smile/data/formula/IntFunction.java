@@ -25,7 +25,7 @@ import smile.data.type.StructType;
 /**
  * The generic term of applying an integer function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IntFunction extends AbstractFunction {
     /** The function on an integer. */

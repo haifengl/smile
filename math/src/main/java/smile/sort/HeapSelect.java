@@ -24,7 +24,7 @@ package smile.sort;
  * want to be able to report at any time, say after n values, the i-<i>th</i> smallest
  * value see so far.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HeapSelect<T extends Comparable<? super T>> {
 

@@ -27,7 +27,7 @@ import smile.math.distance.Distance;
  * clustering steps so as to minimize the increase in ESS at each step.
  * Note that it is only valid for Euclidean distance based proximity matrix.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class WardLinkage extends Linkage {
     /**

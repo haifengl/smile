@@ -22,7 +22,7 @@ package smile.data;
  *
  * @param <T> the type of instance.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Instance <T> {
     /**

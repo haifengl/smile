@@ -54,7 +54,7 @@ package smile.wavelet;
  * of shift-invariance, has led to the development of several different versions
  * of a shift-invariant (discrete) wavelet transform.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DaubechiesWavelet extends Wavelet {
     /**

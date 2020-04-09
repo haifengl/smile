@@ -28,7 +28,7 @@ import java.util.TreeSet;
  * Concept is a set of synonyms, i.e. group of words that are roughly
  * synonymous in a given context.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Concept {
 

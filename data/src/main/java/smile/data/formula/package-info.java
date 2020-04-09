@@ -20,6 +20,6 @@
  * and the response. It is commonly used to generate design matrices
  * for modeling.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.data.formula;

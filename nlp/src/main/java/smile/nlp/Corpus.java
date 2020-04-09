@@ -24,7 +24,7 @@ import smile.nlp.relevance.RelevanceRanker;
 /**
  * A corpus is a collection of documents.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Corpus {
 

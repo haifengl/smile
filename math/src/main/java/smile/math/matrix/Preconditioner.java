@@ -20,7 +20,7 @@ package smile.math.matrix;
 /**
  * The preconditioner matrix in the biconjugate gradient method.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Preconditioner {
     /**

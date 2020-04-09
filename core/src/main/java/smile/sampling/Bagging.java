@@ -26,7 +26,7 @@ import smile.math.MathEx;
  * Bagging (Bootstrap aggregating) is a way to improve the classification by
  * combining classifications of randomly generated training sets.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bagging {
 

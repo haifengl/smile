@@ -42,7 +42,7 @@ import smile.math.matrix.PowerIteration;
  * <li> Kenneth Rose. Deterministic Annealing for Clustering, Compression, Classification, Regression, and Speech Recognition. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DeterministicAnnealing extends CentroidClustering<double[], double[]> {
     private static final long serialVersionUID = 2L;

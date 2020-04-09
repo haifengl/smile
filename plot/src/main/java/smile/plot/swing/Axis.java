@@ -26,7 +26,7 @@ import smile.sort.QuickSort;
 /**
  * This class describes an axis of a coordinate system.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Axis {
     /**

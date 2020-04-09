@@ -23,6 +23,6 @@
  * The distance between two concepts a and b is defined by the length of the
  * path from a to their lowest common ancestor and then to b.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.taxonomy;

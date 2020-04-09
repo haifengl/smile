@@ -27,6 +27,6 @@
  * power iteration and Lanczos algorithm for eigen decomposition, which are
  * usually very efficient for very large and sparse matrices.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.math.matrix;

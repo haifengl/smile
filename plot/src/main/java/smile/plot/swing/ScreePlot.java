@@ -37,7 +37,7 @@ import smile.projection.PCA;
  * should be retained as significant. It is named after its resemblance
  * to scree after its elbow.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ScreePlot extends Plot {
     /** The line legends. */

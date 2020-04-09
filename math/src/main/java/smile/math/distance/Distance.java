@@ -31,7 +31,7 @@ import java.util.function.ToDoubleBiFunction;
  * Note that a distance function is not required to satisfy triangular inequality
  * |x - y| + |y - z| &ge; |x - z|, which is necessary for a metric.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     /**

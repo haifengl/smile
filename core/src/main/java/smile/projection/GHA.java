@@ -54,7 +54,7 @@ import smile.math.matrix.Matrix;
  * 
  * @see PCA
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GHA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;

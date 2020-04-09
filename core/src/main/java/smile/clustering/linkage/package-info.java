@@ -31,6 +31,6 @@
  * <li> Ward's linkage</li>
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.clustering.linkage;

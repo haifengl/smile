@@ -27,7 +27,7 @@ import smile.math.MathEx;
  * are made, based on a finite data sample. It is also known as the
  * Parzen window method.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KernelDensity implements Distribution {
     private static final long serialVersionUID = 2L;

@@ -18,6 +18,6 @@
 /**
  * Term-document relevance ranking algorithms.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.relevance;

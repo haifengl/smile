@@ -51,7 +51,7 @@ import smile.math.Function;
  * the shape of the curve of the experimental variogram to the shape of the curve
  * of the mathematical function.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Variogram extends Function {
 

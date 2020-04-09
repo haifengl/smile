@@ -23,7 +23,7 @@ import smile.math.MathEx;
  * The biconjugate gradient method is an algorithm to
  * solve systems of linear equations.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BiconjugateGradient {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BiconjugateGradient.class);

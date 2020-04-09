@@ -80,7 +80,7 @@ import java.util.Arrays;
  * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
     private static final long serialVersionUID = 2L;

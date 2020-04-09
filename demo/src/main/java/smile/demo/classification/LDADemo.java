@@ -25,7 +25,7 @@ import smile.classification.LDA;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class LDADemo extends ClassificationDemo {

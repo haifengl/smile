@@ -20,7 +20,7 @@ package smile.math;
 /**
  * Root finding algorithms.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Root {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);

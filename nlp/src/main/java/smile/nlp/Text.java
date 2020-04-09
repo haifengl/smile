@@ -22,7 +22,7 @@ import java.util.UUID;
 /**
  * A minimal interface of text in the corpus.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Text {
     /**

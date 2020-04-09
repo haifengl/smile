@@ -23,7 +23,7 @@ import smile.stat.hypothesis.*;
 /**
  * Hypothesis test functions.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Hypothesis {
     /** t-test. */

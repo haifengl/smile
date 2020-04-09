@@ -40,7 +40,7 @@ import smile.stat.distribution.BetaDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class BetaDistributionDemo extends JPanel implements ChangeListener {

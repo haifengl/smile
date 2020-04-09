@@ -48,7 +48,7 @@ import smile.math.MathEx;
  * statistics where it is related to principal component analysis. Yet another
  * usage is latent semantic indexing in natural language text processing.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SVD {
 

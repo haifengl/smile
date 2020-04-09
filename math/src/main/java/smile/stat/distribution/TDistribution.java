@@ -32,7 +32,7 @@ import smile.math.special.Gamma;
  * for the difference between two population means. The Student's
  * t-distribution is a special case of the generalised hyperbolic distribution.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class TDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

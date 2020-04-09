@@ -32,7 +32,7 @@ import smile.util.SparseArray;
  * column-compressed sparse matrix format, which is more efficient for matrix
  * operations.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class SparseDatasetImpl implements SparseDataset {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseDatasetImpl.class);

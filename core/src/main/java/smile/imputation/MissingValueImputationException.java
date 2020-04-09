@@ -20,7 +20,7 @@ package smile.imputation;
 /**
  * Exception of missing value imputation.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MissingValueImputationException extends Exception {
     private static final long serialVersionUID = 2L;

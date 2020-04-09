@@ -25,7 +25,7 @@ import smile.data.type.StructType;
 /**
  * The term of round function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Round extends AbstractFunction {
     /**

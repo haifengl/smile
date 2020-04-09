@@ -33,7 +33,7 @@ import smile.data.type.StructField;
  * @param <TS> the type of stream elements.
  * @param <S>  the type of stream.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializable {
     /** Return the (optional) name associated with vector. */

@@ -23,7 +23,7 @@ package smile.validation;
  * <p>
  * PPV = TP / (TP + FP)
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Precision implements ClassificationMeasure {
     public final static Precision instance = new Precision();

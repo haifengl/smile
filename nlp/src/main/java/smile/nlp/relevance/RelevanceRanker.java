@@ -23,7 +23,7 @@ import smile.nlp.TextTerms;
 /**
  * An interface to provide relevance ranking algorithm.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface RelevanceRanker {
     /**
