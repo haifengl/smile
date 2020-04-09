@@ -710,8 +710,6 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.
-     *
-     * @author Haifeng Li
      */
     public static SparseMatrix rutherford(Path path) throws IOException {
         // As we ignore the supplementary data, the parsing process
@@ -731,8 +729,6 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * entries.
      *
      * @param path the input file path.
-     *
-     * @author Haifeng Li
      */
     public static SparseMatrix text(Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path);
