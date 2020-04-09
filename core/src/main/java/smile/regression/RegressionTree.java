@@ -28,6 +28,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
+import smile.feature.SHAP;
 import smile.math.MathEx;
 
 /**
@@ -76,7 +77,7 @@ import smile.math.MathEx;
  * @see GradientTreeBoost
  * @see RandomForest
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression, SHAP<Tuple> {
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
@@ -330,5 +331,181 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     @Override
     public StructType schema() {
         return schema;
+    }
+
+    @Override
+    public double[] shap(Tuple x) {
+        double[] phi = new double[schema.length()];
+        Path m = new Path(new int[0], new double[0], new double[0], new double[0]);
+        recurse(phi, predictors(x), root, m, 1, 1, -1);
+        return phi;
+    }
+
+    /**
+     * Recursively keep track of what proportion of all possible subsets
+     * flow down into each of the leaves of the tree.
+     */
+    private void recurse(double[] phi, Tuple x, Node node, Path m, double pz, double po, int pi) {
+        int l = m.length;
+        m = m.extend(pz, po, pi);
+
+        if (node instanceof InternalNode) {
+            InternalNode split = (InternalNode) node;
+            int dj = split.feature();
+            Node h, c;
+            if (split.branch(x)) {
+                h = split.trueChild();
+                c = split.falseChild();
+            } else {
+                h = split.falseChild();
+                c = split.trueChild();
+            }
+
+            int rh = h.size();
+            int rc = c.size();
+            int rj = node.size();
+
+            int k = 0;
+            for (; k <= l; k++) {
+                if (m.d[k] == dj) break;
+            }
+
+            double iz = 1.0;
+            double io = 1.0;
+            if (k <= l) {
+                iz = m.z[k];
+                io = m.o[k];
+                m.unwind(k);
+            }
+
+            recurse(phi, x, h, m, iz * rh / rj, io, dj);
+            recurse(phi, x, c, m, iz * rc /rj, 0, dj);
+        } else {
+            double vj = ((RegressionNode) node).output();
+            for (int i = 1; i <= l; i++) {
+                double w = m.unwoundSum(i);
+                phi[m.d[i]] += w * (m.o[i] - m.z[i]) * vj;
+            }
+        }
+    }
+
+    /**
+     * The path of unique features we have split
+     * on so far during SHAP recursive traverse.
+     */
+    private class Path {
+        /** The length of path. */
+        int length;
+        /** The unique feature index. */
+        int[] d;
+        /**
+         * The fraction of zero paths (where this feature is not
+         * in the non-zero index set S) that flow through this path.
+         */
+        double[] z;
+        /**
+         * The fraction of one paths (where this feature is
+         * in the non-zero index set S) that flow through this path.
+         */
+        double[] o;
+        /**
+         * The proportion of sets of a given cardinality that are present.
+         */
+        double[] w;
+
+        /**
+         * Constructor.
+         */
+        Path(int[] d, double[] z, double[] o, double[] w) {
+            this.length = d.length;
+            this.d = d;
+            this.z = z;
+            this.o = o;
+            this.w = w;
+        }
+
+        /**
+         * To keep track of each possible subset size during the recursion,
+         * grows all these subsets according to a given fraction of ones and
+         * zeros.
+         */
+        Path extend(double pz, double po, int pi) {
+            int l = length;
+            Path m = new Path(
+                    // Arrays.copyOf will truncate or pad with zeros.
+                    Arrays.copyOf(d, l+1),
+                    Arrays.copyOf(z, l+1),
+                    Arrays.copyOf(o, l+1),
+                    Arrays.copyOf(w, l+1)
+            );
+
+            m.d[l] = pi;
+            m.z[l] = pz;
+            m.o[l] = po;
+            m.w[l] = l == 0 ? 1 : 0;
+
+            for (int i = l-1; i >= 0; i--) {
+                m.w[i+1] += po * m.w[i] * (i+1) / (l+1);
+                m.w[i] = pz * m.w[i] * (l - i) / (l+1);
+            }
+
+            return m;
+        }
+
+        /**
+         * Undo previous extensions when we split on the same feature twice,
+         * and undo each extension of the path inside a leaf to compute
+         * weights for each feature in the path.
+         */
+        void unwind(int i) {
+            double po = o[i];
+            double pz = z[i];
+            int l = --length;
+
+            double n = w[l];
+            if (po != 0) {
+                for (int j = l - 1; j >= 0; j--) {
+                    double t = w[j];
+                    w[j] = n * (l + 1) / ((j + 1) * po);
+                    n = t - w[j] * pz * (l - j) / (l + 1);
+                }
+            } else {
+                for (int j = l - 1; j >= 0; j--) {
+                    w[j] = (w[j] * (l+1)) / (pz * (l - j));
+                }
+            }
+
+            for (int j = i; j < l; j++) {
+                d[j] = d[j+1];
+                z[j] = z[j+1];
+                o[j] = o[j+1];
+            }
+        }
+
+        /**
+         * Return the total permutation weight if we unwind a previous
+         * extension in the decision path.
+         */
+        double unwoundSum(int i) {
+            double po = o[i];
+            double pz = z[i];
+            int l = length - 1;
+            double sum = 0.0;
+
+            double n = w[l];
+            if (po != 0) {
+                for (int j = l - 1; j >= 0; j--) {
+                    double t = n / ((j+1) * po);
+                    sum += t;
+                    n = w[j] - t * pz * (l - j);
+                }
+            } else {
+                for (int j = l - 1; j >= 0; j--) {
+                    sum += w[j] / (pz * (l - j));
+                }
+            }
+
+            return sum * (l + 1);
+        }
     }
 }

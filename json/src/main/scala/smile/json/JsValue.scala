@@ -564,11 +564,11 @@ case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsV
     if (value == JsUndefined) fields.remove(key)
   }
 
+  /** Tests whether this object contains a field. */
+  def contains(key: String): Boolean = fields.contains(key)
+
   override def apply(key: String): JsValue = {
-    if (fields.contains(key))
-      fields(key)
-    else
-      JsUndefined
+    fields.getOrElse(key, JsUndefined)
   }
 
   override def applyDynamic(key: String): JsValue = apply(key)
@@ -585,10 +585,7 @@ case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsV
   override def updateDynamic(key: String)(value: JsValue): JsValue = update(key, value)
 
   override def get(key: String): Option[JsValue] = {
-    if (fields.contains(key))
-      Some(fields(key))
-    else
-      None
+    fields.get(key)
   }
 
   /** Deep merge another object into this object.
