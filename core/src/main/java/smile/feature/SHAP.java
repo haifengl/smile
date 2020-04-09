@@ -25,10 +25,11 @@ import java.util.stream.Stream;
  * credit allocation with local explanations using the classic Shapley
  * values from game theory.
  *
- * SHAP leverages local methods designed to explain a prediction f(x)
- * based on a single input x. The local methods are defined as any
- * interpretable approximation of the original model. In particular,
- * SHAP employs additive feature attribution methods.
+ * SHAP leverages local methods designed to explain a prediction
+ * <code>f(x)</code> based on a single input <code>x</code>.
+ * The local methods are defined as any interpretable approximation
+ * of the original model. In particular, SHAP employs additive feature
+ * attribution methods.
  *
  * SHAP values attribute to each feature the change in the expected
  * model prediction when conditioning on that feature. They explain
