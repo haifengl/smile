@@ -43,11 +43,12 @@ import static java.util.Spliterator.*;
  * data storage usage.
  * <p>
  * This class employs Harwell-Boeing column-compressed sparse matrix format.
- * Nonzero values are stored in an array (top-to-bottom, then left-to-right-bottom).
- * The row indices corresponding to the values are also stored. Besides, a list
- * of pointers are indexes where each column starts. This format is efficient
- * for arithmetic operations, column slicing, and matrix-vector products.
- * One typically uses SparseDataset for construction of SparseMatrix.
+ * Nonzero values are stored in an array (top-to-bottom, then
+ * left-to-right-bottom). The row indices corresponding to the values are
+ * also stored. Besides, a list of pointers are indexes where each column
+ * starts. This format is efficient for arithmetic operations, column slicing,
+ * and matrix-vector products. One typically uses SparseDataset for
+ * construction of SparseMatrix.
  * <p>
  * For iteration through the elements of a matrix, this class provides
  * a functional API to iterate through the non-zero elements. This iteration
@@ -642,12 +643,10 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html">http://people.sc.fsu.edu/~jburkardt/data/hb/hb.html</a>.
      *
-     * Note that our implementation supports only real-valued matrix and we ignore
-     * the optional supplementary data (e.g. right hand side vectors).
+     * Note that our implementation supports only real-valued matrix and we
+     * ignore the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.
-     *
-     * @author Haifeng Li
      */
     public static SparseMatrix harwell(Path path) throws IOException {
         logger.info("Reads sparse matrix file '{}'", path.toAbsolutePath());
