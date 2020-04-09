@@ -119,15 +119,13 @@ trait View extends VegaLite {
 
   /** Sets the x channel as a datum field. */
   def x(datum: JsValue): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.x = JsObject("datum" -> datum)
+    setPropertyDatum("x", datum)
     this
   }
 
   /** Sets the y channel as a datum field. */
   def y(datum: JsValue): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
-    spec.encoding.y = JsObject("datum" -> datum)
+    setPropertyDatum("y", datum)
     this
   }
 
@@ -144,7 +142,7 @@ trait View extends VegaLite {
         band: Option[Double] = None,
         impute: JsValue = JsUndefined,
         stack: JsValue = JsUndefined): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x = View.positionField(field, `type`, bin, timeUnit,
       aggregate, title, scale, axis, sort, band, impute, stack)
     this
@@ -163,7 +161,7 @@ trait View extends VegaLite {
         band: Option[Double] = None,
         impute: JsValue = JsUndefined,
         stack: JsValue = JsUndefined): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y = View.positionField(field, `type`, bin, timeUnit,
       aggregate, title, scale, axis, sort, band, impute, stack)
     this
@@ -175,7 +173,7 @@ trait View extends VegaLite {
          timeUnit: String = "",
          aggregate: String = "",
          title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -186,7 +184,7 @@ trait View extends VegaLite {
          timeUnit: String = "",
          aggregate: String = "",
          title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -197,7 +195,7 @@ trait View extends VegaLite {
              timeUnit: String = "",
              aggregate: String = "",
              title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.x = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -208,7 +206,7 @@ trait View extends VegaLite {
              timeUnit: String = "",
              aggregate: String = "",
              title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.y = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -219,7 +217,7 @@ trait View extends VegaLite {
               timeUnit: String = "",
               aggregate: String = "",
               title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.xError2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -230,7 +228,7 @@ trait View extends VegaLite {
               timeUnit: String = "",
               aggregate: String = "",
               title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.yError2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -242,7 +240,7 @@ trait View extends VegaLite {
                 timeUnit: String = "",
                 aggregate: String = "",
                 title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.longitude = View.field(field, `type`, bin, timeUnit, aggregate, title)
     this
   }
@@ -254,7 +252,7 @@ trait View extends VegaLite {
                timeUnit: String = "",
                aggregate: String = "",
                title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.latitude = View.field(field, `type`, bin, timeUnit, aggregate, title)
     this
   }
@@ -265,7 +263,7 @@ trait View extends VegaLite {
                  timeUnit: String = "",
                  aggregate: String = "",
                  title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.longitude2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -276,7 +274,7 @@ trait View extends VegaLite {
                 timeUnit: String = "",
                 aggregate: String = "",
                 title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.latitude2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -291,7 +289,7 @@ trait View extends VegaLite {
             scale: JsValue = JsUndefined,
             sort: Option[String] = None,
             stack: JsValue = JsUndefined): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.theta = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
     this
   }
@@ -306,7 +304,7 @@ trait View extends VegaLite {
              scale: JsValue = JsUndefined,
              sort: Option[String] = None,
              stack: JsValue = JsUndefined): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.radius = View.polarField(field, `type`, bin, timeUnit, aggregate, title, scale, sort, stack)
     this
   }
@@ -317,7 +315,7 @@ trait View extends VegaLite {
              timeUnit: String = "",
              aggregate: String = "",
              title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.theta2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
@@ -328,13 +326,13 @@ trait View extends VegaLite {
               timeUnit: String = "",
               aggregate: String = "",
               title: String = ""): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding.radius2 = View.field(field, null, bin, timeUnit, aggregate, title)
     this
   }
 
   /** Sets a mark property. */
-  def set(prop: String,
+  def setProperty(prop: String,
           field: JsValue,
           `type`: String,
           bin: Either[Boolean, JsObject] = Left(false),
@@ -343,21 +341,21 @@ trait View extends VegaLite {
           scale: JsValue = JsUndefined,
           legend: JsValue = JsUndefined,
           condition: JsValue = JsUndefined): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = View.markPropField(field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
     this
   }
 
   /** Sets a mark property by value. */
-  def set(prop: String, value: JsValue): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+  def setPropertyValue(prop: String, value: JsValue): View = {
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = JsObject("value" -> value)
     this
   }
 
   /** Sets a mark property by datum. */
-  def datum(prop: String, datum: JsValue): View = {
-    if (!spec.fields.contains("encoding")) spec.encoding = JsObject()
+  def setPropertyDatum(prop: String, datum: JsValue): View = {
+    if (!spec.contains("encoding")) spec.encoding = JsObject()
     spec.encoding(prop) = JsObject("datum" -> datum)
     this
   }
@@ -371,12 +369,12 @@ trait View extends VegaLite {
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
             condition: JsValue = JsUndefined): View = {
-    set("color", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("color", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the color value. */
   def color(value: JsValue): View = {
-    set("color", value)
+    setPropertyValue("color", value)
   }
 
   /** Sets the angle property. */
@@ -388,12 +386,12 @@ trait View extends VegaLite {
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
             condition: JsValue = JsUndefined): View = {
-    set("angle", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("angle", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the angle value. */
   def angle(value: JsValue): View = {
-    set("angle", value)
+    setPropertyValue("angle", value)
   }
 
   /** Sets the fill property. */
@@ -405,12 +403,12 @@ trait View extends VegaLite {
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
            condition: JsValue = JsUndefined): View = {
-    set("fill", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("fill", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the fill value. */
   def fill(value: JsValue): View = {
-    set("fill", value)
+    setPropertyValue("fill", value)
   }
 
   /** Sets the stroke property. */
@@ -422,12 +420,12 @@ trait View extends VegaLite {
              scale: JsValue = JsUndefined,
              legend: JsValue = JsUndefined,
              condition: JsValue = JsUndefined): View = {
-    set("stroke", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("stroke", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the stroke value. */
   def stroke(value: JsValue): View = {
-    set("stroke", value)
+    setPropertyValue("stroke", value)
   }
 
   /** Sets the shape property. */
@@ -439,12 +437,12 @@ trait View extends VegaLite {
             scale: JsValue = JsUndefined,
             legend: JsValue = JsUndefined,
             condition: JsValue = JsUndefined): View = {
-    set("shape", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("shape", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the shape value. */
   def shape(value: JsValue): View = {
-    set("shape", value)
+    setPropertyValue("shape", value)
   }
 
   /** Sets the size property. */
@@ -456,12 +454,12 @@ trait View extends VegaLite {
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
            condition: JsValue = JsUndefined): View = {
-    set("size", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("size", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the size value. */
   def size(value: JsValue): View = {
-    set("size", value)
+    setPropertyValue("size", value)
   }
 
   /** Sets the text property. */
@@ -473,12 +471,12 @@ trait View extends VegaLite {
            scale: JsValue = JsUndefined,
            legend: JsValue = JsUndefined,
            condition: JsValue = JsUndefined): View = {
-    set("text", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("text", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the text value. */
   def text(value: JsValue): View = {
-    set("text", value)
+    setPropertyValue("text", value)
   }
 
   /** Sets the opacity property. */
@@ -490,12 +488,12 @@ trait View extends VegaLite {
               scale: JsValue = JsUndefined,
               legend: JsValue = JsUndefined,
               condition: JsValue = JsUndefined): View = {
-    set("opacity", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
+    setProperty("opacity", field, `type`, bin, timeUnit, aggregate, scale, legend, condition)
   }
 
   /** Sets the opacity value. */
   def opacity(value: JsValue): View = {
-    set("opacity", value)
+    setPropertyValue("opacity", value)
   }
 
   /** Sets the view background’s fill and stroke.
