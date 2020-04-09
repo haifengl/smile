@@ -84,7 +84,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 < k < N.
+     * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
      * @param ritz Specify which of the Ritz values to compute.
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
@@ -97,7 +97,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 < NEV < N.
+     * @param k Number of eigenvalues of OP to be computed. 0 &lt; NEV &lt; N.
      * @param which Specify which of the Ritz values to compute.
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
