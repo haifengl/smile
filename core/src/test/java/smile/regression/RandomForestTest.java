@@ -100,7 +100,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
@@ -139,7 +139,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
     }
 
@@ -185,14 +185,14 @@ public class RandomForestTest {
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         smile.sort.QuickSort.sort(importance, fields);
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+            System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
         }
 
         System.out.println("----- SHAP -----");
         fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         smile.sort.QuickSort.sort(shap, fields);
         for (int i = 0; i < shap.length; i++) {
-            System.out.format("%-15s %.4f%n", fields[i], shap[i]);
+            System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
         }
 
         String[] expected = {"CHAS", "RAD", "ZN", "B", "AGE", "TAX", "DIS", "CRIM", "INDUS", "NOX", "PTRATIO", "RM", "LSTAT"};

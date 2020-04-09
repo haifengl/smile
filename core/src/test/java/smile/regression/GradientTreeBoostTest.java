@@ -67,7 +67,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         System.out.println("----- Progressive RMSE -----");
@@ -94,7 +94,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> GradientTreeBoost.fit(f, x, loss, 100, 20, 6, 5, 0.05, 0.7));
@@ -166,14 +166,14 @@ public class GradientTreeBoostTest {
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         smile.sort.QuickSort.sort(importance, fields);
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+            System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
         }
 
         System.out.println("----- SHAP -----");
         fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         smile.sort.QuickSort.sort(shap, fields);
         for (int i = 0; i < shap.length; i++) {
-            System.out.format("%-15s %.4f%n", fields[i], shap[i]);
+            System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
         }
 
         String[] expected = {"CHAS", "ZN", "RAD", "INDUS", "B", "TAX", "AGE", "PTRATIO", "NOX", "CRIM", "DIS", "RM", "LSTAT"};

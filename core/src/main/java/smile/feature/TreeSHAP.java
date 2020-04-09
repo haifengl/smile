@@ -21,7 +21,9 @@ import smile.data.Tuple;
 import smile.regression.RegressionTree;
 
 /**
- * SHAP of ensemble tree methods.
+ * SHAP of ensemble tree methods. TreeSHAP is a fast and exact method to
+ * estimate SHAP values for tree models and ensembles of trees, under
+ * several different possible assumptions about feature dependence.
  *
  * @author Haifeng Li
  */
