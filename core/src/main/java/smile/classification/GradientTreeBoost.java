@@ -141,7 +141,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.005;
+    private double shrinkage = 0.05;
     /**
      * The class label encoder.
      */

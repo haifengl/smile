@@ -231,7 +231,7 @@ package nlp {
     val tokenizer = new SimpleTokenizer(true)
 
     /**
-      * Normalize Unicode text:
+      * Normalizes Unicode text.
       * <ul>
       * <li>Apply Unicode normalization form NFKC.</li>
       * <li>Strip, trim, normalize, and compress whitespace.</li>
@@ -243,8 +243,8 @@ package nlp {
       SimpleNormalizer.getInstance().normalize(text)
     }
 
-    /** A simple sentence splitter for English. Given a string, assumed to
-      * be English text, it returns a list of strings, where each element is an
+    /** Splits English text into sentences. Given an English text,
+      * it returns a list of strings, where each element is an
       * English sentence. By default, it treats occurrences of '.', '?' and '!' as
       * sentence delimiters, but does its best to determine when an occurrence of '.'
       * does not have this role (e.g. in abbreviations, URLs, numbers, etc.).
@@ -273,8 +273,8 @@ package nlp {
       SimpleSentenceSplitter.getInstance.split(text)
     }
 
-    /** A word tokenizer that tokenizes English sentences with some differences from
-      * TreebankWordTokenizer, noteably on handling not-contractions. If a period
+    /** Tokenizes English sentences with some differences from
+      * TreebankWordTokenizer, notably on handling not-contractions. If a period
       * serves as both the end of sentence and a part of abbreviation, e.g. etc. at
       * the end of sentence, it will generate tokens of "etc." and "." while
       * TreebankWordTokenizer will generate "etc" and ".".
@@ -346,9 +346,12 @@ package nlp {
 
     /** Returns the binary bag of words. Presence/absence is used instead
       * of frequencies.
+      *
+      * @param filter stop list for filtering.
+      * @param stemmer stemmer to transform a word into its root form.
       */
-    def bag2(stemmer: Option[Stemmer] = Some(new PorterStemmer())): Set[String] = {
-      val words = text.normalize.sentences.flatMap(_.words())
+    def bag2(filter: String = "default", stemmer: Option[Stemmer] = Some(new PorterStemmer())): Set[String] = {
+      val words = text.normalize.sentences.flatMap(_.words(filter))
 
       val tokens = stemmer.map { stemmer =>
         words.map(stemmer.stem(_))
@@ -365,7 +368,8 @@ package nlp {
       words.zip(HMMPOSTagger.getDefault.tag(words))
     }
 
-    /** Keyword extraction from a single document using word co-occurrence statistical information.
+    /** Keyword extraction from a single document using word co-occurrence
+      * statistical information.
       *
       * @param k the number of top keywords to return.
       * @return the top keywords.

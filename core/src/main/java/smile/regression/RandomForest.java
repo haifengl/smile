@@ -29,6 +29,7 @@ import smile.data.formula.Formula;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
+import smile.feature.TreeSHAP;
 import smile.math.MathEx;
 
 /**
@@ -70,7 +71,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple>, DataFrameRegression {
+public class RandomForest implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -333,9 +334,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression {
         return trees.length;
     }
 
-    /**
-     * Returns the regression trees.
-     */
+    @Override
     public RegressionTree[] trees() {
         return trees;
     }
