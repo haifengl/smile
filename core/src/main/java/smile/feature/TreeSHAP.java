@@ -17,8 +17,8 @@
 
 package smile.feature;
 
+import smile.base.cart.CART;
 import smile.data.Tuple;
-import smile.regression.RegressionTree;
 
 /**
  * SHAP of ensemble tree methods. TreeSHAP is a fast and exact method to
@@ -30,16 +30,16 @@ import smile.regression.RegressionTree;
 public interface TreeSHAP extends SHAP<Tuple> {
 
     /**
-     * Returns the regression trees.
+     * Returns the classification/regression trees.
      */
-    RegressionTree[] trees();
+    CART[] trees();
 
     @Override
     default double[] shap(Tuple x) {
-        RegressionTree[] forest = trees();
+        CART[] forest = trees();
 
         double[] phi = null;
-        for (RegressionTree tree : forest) {
+        for (CART tree : forest) {
             double[] phii = tree.shap(x);
 
             if (phi == null) phi = phii;
