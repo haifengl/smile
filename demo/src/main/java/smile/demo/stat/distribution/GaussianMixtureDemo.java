@@ -34,7 +34,7 @@ import smile.stat.distribution.GaussianMixture;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class GaussianMixtureDemo extends JPanel {

@@ -27,7 +27,7 @@ import smile.math.MathEx;
 /**
  * Part-of-speech tagging with hidden Markov model.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HMMPOSTagger implements POSTagger, Serializable {
     private static final long serialVersionUID = 2L;

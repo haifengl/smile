@@ -33,7 +33,7 @@ import static java.lang.Math.log;
  * <li>X. Vinh, J. Epps, J. Bailey. Information Theoretic Measures for Clusterings Comparison: Variants, Properties, Normalization and Correction for Chance. JMLR, 2010.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NormalizedMutualInformation implements ClusterMeasure {
     /** The normalization method. */

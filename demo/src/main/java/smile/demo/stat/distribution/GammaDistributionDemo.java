@@ -40,7 +40,7 @@ import smile.stat.distribution.GammaDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class GammaDistributionDemo extends JPanel implements ChangeListener {

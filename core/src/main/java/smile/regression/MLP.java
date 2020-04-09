@@ -31,7 +31,7 @@ import smile.base.mlp.*;
  * transformation, called activation function, is a bounded non-decreasing
  * (non-linear) function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
  public class MLP extends MultilayerPerceptron implements OnlineRegression<double[]> {
     private static final long serialVersionUID = 2L;

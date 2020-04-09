@@ -22,7 +22,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 /**
  * Byte array renderer in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ByteArrayCellRenderer extends DefaultTableCellRenderer {

@@ -22,7 +22,7 @@ package smile.nlp.stemmer;
  * for removing the commoner morphological and inflexional endings from words
  * (in English). Its main use is as part of a term normalisation process.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Stemmer {
     /**

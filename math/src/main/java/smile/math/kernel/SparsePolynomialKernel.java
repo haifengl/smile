@@ -25,7 +25,7 @@ import smile.util.SparseArray;
  * where &gamma; is the scale of the used inner product, &lambda; the offset of
  * the used inner product, and <i>d</i> the order of the polynomial kernel.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparsePolynomialKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

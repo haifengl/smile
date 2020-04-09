@@ -54,7 +54,7 @@ import smile.math.MathEx;
  * @see MDS
  * @see smile.projection.KPCA
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SammonMapping {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SammonMapping.class);

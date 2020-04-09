@@ -31,7 +31,7 @@ package smile.validation;
  * the effectiveness of retrieval with respect to a user who attaches &beta; times
  * as much importance to recall as precision.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FMeasure implements ClassificationMeasure {
     public final static FMeasure instance = new FMeasure();

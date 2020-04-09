@@ -41,7 +41,7 @@ import smile.regression.KernelMachine;
  * <li> Chih-Chung Chang and Chih-Jen Lin. LIBSVM: a Library for Support Vector Machines.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SVR<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SVR.class);

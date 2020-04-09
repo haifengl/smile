@@ -47,7 +47,7 @@ import smile.vq.hebb.Neuron;
  * @see NeuralGas
  * @see NeuralMap
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GrowingNeuralGas implements VectorQuantizer {
     private static final long serialVersionUID = 2L;

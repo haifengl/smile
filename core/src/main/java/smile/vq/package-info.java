@@ -24,6 +24,6 @@
  * into a set of non-overlapping regions. The vector is encoded by
  * the nearest reference vector (known as codevector) in the codebook.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.vq;

@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable integer vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class IntVectorImpl implements IntVector {
     /** The name of vector. */

@@ -20,7 +20,7 @@ package smile.data;
 /**
  * Abstract tuple base class.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class AbstractTuple implements Tuple {
     @Override

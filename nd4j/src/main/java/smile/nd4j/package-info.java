@@ -18,6 +18,6 @@
 /**
  * ND4j matrix wrapper.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nd4j;

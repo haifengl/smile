@@ -30,7 +30,7 @@ import smile.data.type.StructType;
  * multiple binary dummy variables to indicate the presence or absence of
  * a characteristic.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class OneHot implements HyperTerm {
     /** The name of variable. */

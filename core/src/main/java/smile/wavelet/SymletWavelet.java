@@ -21,7 +21,7 @@ package smile.wavelet;
  * Symlet wavelets. The symlets have compact support and were constructed to
  * be as nearly symmetric (least asymmetric) as possible.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SymletWavelet extends Wavelet {
     /**

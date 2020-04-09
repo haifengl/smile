@@ -44,7 +44,7 @@ import smile.data.type.StructType;
  * Reads and writes files in variations of the Comma Separated Value
  * (CSV) format.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CSV {
     /** The schema of data structure. */

@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * This class represents a poly line in the plot.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Staircase extends Shape {
 

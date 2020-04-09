@@ -34,7 +34,7 @@ import smile.math.kernel.MercerKernel;
  * a new representation) and learn for it a corresponding weight. Prediction
  * for unlabeled inputs is treated by the application of a similiarity function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KernelMachine<T> implements Serializable {
     private static final long serialVersionUID = 2L;

@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("rawtypes")
 public class MPLSHTest {

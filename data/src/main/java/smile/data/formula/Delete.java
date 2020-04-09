@@ -24,7 +24,7 @@ import smile.data.type.StructType;
 /**
  * Remove a factor from the formula.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Delete implements HyperTerm {
     /** The term to delete. */

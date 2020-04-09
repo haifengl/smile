@@ -24,7 +24,7 @@ import javax.swing.JButton;
  * Action initialized JButton. If the button has an icon, the text label
  * won't show on button.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class Button extends JButton {

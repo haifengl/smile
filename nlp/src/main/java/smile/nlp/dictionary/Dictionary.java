@@ -22,7 +22,7 @@ import java.util.Iterator;
 /**
  * A dictionary is a set of words in some natural language.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Dictionary {
 

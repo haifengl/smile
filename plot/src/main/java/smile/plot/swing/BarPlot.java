@@ -24,7 +24,7 @@ import smile.math.MathEx;
 /**
  * A barplot draws bars with heights proportional to the value.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BarPlot extends Plot {
     /**

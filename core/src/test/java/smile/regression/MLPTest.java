@@ -33,7 +33,7 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MLPTest {
     public MLPTest(){

@@ -20,7 +20,7 @@ package smile.math.matrix;
 /**
  * The interface of the solver of linear system.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface LinearSolver {
     /**

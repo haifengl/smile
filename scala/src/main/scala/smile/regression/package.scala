@@ -33,7 +33,7 @@ import smile.util.time
   * variables called the regression function. Regression analysis is widely
   * used for prediction and forecasting.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object regression {
   /** Ordinary least squares. In linear regression,
@@ -177,7 +177,7 @@ package object regression {
     SVR.fit(x, y, kernel, eps, C, tol)
   }
 
-  /** Regression tree. A decision tree can be learned by
+  /** Regression tree. A classification/regression tree can be learned by
     * splitting the training set into subsets based on an attribute value
     * test. This process is repeated on each derived subset in a recursive
     * manner called recursive partitioning. The recursion is completed when

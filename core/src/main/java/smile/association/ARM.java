@@ -41,7 +41,7 @@ import smile.association.TotalSupportTree.Node;
  * Association rules are usually required to satisfy a user-specified minimum
  * support and a user-specified minimum confidence at the same time.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ARM implements Iterable<AssociationRule> {
 

@@ -45,7 +45,7 @@ import smile.validation.*;
  * <li> Leping Li and Clarice R. Weinberg. Gene Selection and Sample Classification Using a Genetic Algorithm/k-Nearest Neighbor Method.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GAFE {
     /**

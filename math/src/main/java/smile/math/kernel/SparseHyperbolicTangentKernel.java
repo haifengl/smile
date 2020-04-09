@@ -36,7 +36,7 @@ import smile.util.SparseArray;
  * reported the hyperbolic tangent kernel is not better than the Gaussian kernel
  * in general..
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> {
     private static final long serialVersionUID = 1L;

@@ -21,7 +21,7 @@ package smile.validation;
  * The accuracy is the proportion of true results (both true positives and
  * true negatives) in the population.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Accuracy implements ClassificationMeasure {
     public final static Accuracy instance = new Accuracy();

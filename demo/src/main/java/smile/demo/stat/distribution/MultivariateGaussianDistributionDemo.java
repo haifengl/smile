@@ -35,7 +35,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class MultivariateGaussianDistributionDemo extends JPanel implements ChangeListener {

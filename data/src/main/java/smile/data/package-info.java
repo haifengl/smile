@@ -113,6 +113,6 @@
  * disrupting the benefit.
  *
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.data;

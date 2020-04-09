@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable long vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface LongVector extends BaseVector<Long, Long, LongStream> {
     @Override

@@ -71,7 +71,7 @@ import smile.util.Strings;
  * not reliable for this type of data.
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;

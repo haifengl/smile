@@ -19,7 +19,7 @@ package smile.benchmark
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
 */
 object Benchmark {
 

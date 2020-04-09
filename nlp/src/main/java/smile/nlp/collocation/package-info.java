@@ -18,6 +18,6 @@
 /**
  * Collocation finding algorithms.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.collocation;

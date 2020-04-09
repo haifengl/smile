@@ -24,7 +24,7 @@ import smile.math.MathEx;
  * the mixture model from data. BIC score is employed to estimate the number
  * of components.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianMixture extends ExponentialFamilyMixture {
     private static final long serialVersionUID = 2L;

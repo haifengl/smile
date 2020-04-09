@@ -20,7 +20,7 @@ package smile.data.type;
 /**
  * String data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class StringType implements DataType {
 

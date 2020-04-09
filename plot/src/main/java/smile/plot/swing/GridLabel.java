@@ -23,7 +23,7 @@ import java.awt.Font;
 /**
  * This is specialized label for axis grid labels.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class GridLabel extends Label {
     /**

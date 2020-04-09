@@ -25,7 +25,7 @@ package smile.math.kernel;
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being overused.
 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BinarySparseGaussianKernel implements MercerKernel<int[]> {
     private static final long serialVersionUID = 1L;

@@ -54,7 +54,7 @@ import smile.util.SparseArray;
  * <li>Jaakko Peltonen, Janne Sinkkonen, and Samuel Kaski. Sequential information bottleneck for finite data. ICML, 2004.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SIB extends CentroidClustering<double[], SparseArray> {
     private static final long serialVersionUID = 2L;

@@ -18,6 +18,6 @@
 /**
  * Enhancement to Swing JTable and cell components.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.swing.table;

@@ -32,7 +32,7 @@ package smile.interpolation;
  * an issue. Images resampled with bicubic interpolation are smoother and
  * have fewer interpolation artifacts.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BicubicInterpolation implements Interpolation2D {
 

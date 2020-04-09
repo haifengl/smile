@@ -36,7 +36,7 @@ import smile.util._
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 object USPS {
 

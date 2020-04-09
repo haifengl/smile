@@ -50,7 +50,7 @@ import static java.lang.Math.sqrt;
  * <li> Find the root of a univariate function with or without derivative.
  * </uL>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MathEx {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MathEx.class);

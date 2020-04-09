@@ -28,7 +28,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
  * A class to generate toy data for classification by the model in the book
  * The Elements of Statistical Learning, Section 2.3.3.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ToyData {
 

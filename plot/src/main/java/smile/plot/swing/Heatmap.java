@@ -26,7 +26,7 @@ import smile.math.MathEx;
  * A heat map is a graphical representation of data where the values taken by
  * a variable in a two-dimensional map are represented as colors.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Heatmap extends Plot {
 

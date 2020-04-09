@@ -59,7 +59,7 @@ import smile.util.Strings;
  * <li> Ji Zhu, Hui Zhou, Saharon Rosset and Trevor Hastie. Multi-class Adaboost, 2009.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;

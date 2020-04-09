@@ -29,7 +29,7 @@ import smile.sort.QuickSort;
  * be adjacent. The intervals (or bands, or bins) are generally of the same
  * size, and are most easily interpreted if they are.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Histogram3D extends Plot {
 

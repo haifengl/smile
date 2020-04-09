@@ -21,7 +21,7 @@ package smile.plot.swing;
  * Project 3D logical coordinates to Java2D coordinates. Also provide support
  * of rotation of plot, i.e. change the view point.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Projection3D extends Projection {
 

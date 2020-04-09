@@ -23,7 +23,7 @@ import smile.math.MathEx;
  * The linear dot product kernel. When using a linear kernel, input space is
  * identical to feature space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LinearKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;

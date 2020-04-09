@@ -26,7 +26,7 @@ package smile.stat.distribution;
  *
  * @see ExponentialFamilyMixture
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface MultivariateExponentialFamily {
 

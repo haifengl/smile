@@ -20,7 +20,7 @@ package smile.json
 import org.specs2.mutable._
 
 /**
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class JsonSerializerSpec extends Specification {
 

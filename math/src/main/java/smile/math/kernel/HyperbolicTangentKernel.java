@@ -35,7 +35,7 @@ import smile.math.MathEx;
  * reported the hyperbolic tangent kernel is not better than the Gaussian kernel
  * in general.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HyperbolicTangentKernel implements MercerKernel<double[]> {
     private static final long serialVersionUID = 1L;

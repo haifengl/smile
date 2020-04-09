@@ -27,11 +27,12 @@ import smile.validation.LOOCV;
 import smile.validation.RMSE;
 import smile.validation.Validation;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RandomForestTest {
     long[] seeds = {
@@ -99,7 +100,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
         assertEquals(39293.8193, importance[0], 1E-4);
@@ -138,7 +139,7 @@ public class RandomForestTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
     }
 
@@ -171,5 +172,30 @@ public class RandomForestTest {
         assertEquals(2.0858, rmse1, 1E-4);
         assertEquals(2.0630, rmse2, 1E-4);
         assertEquals(2.0691, rmse,  1E-4);
+    }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        RandomForest model = RandomForest.fit(BostonHousing.formula, BostonHousing.data,100, 3, 20, 100, 5, 1.0);
+        double[] importance = model.importance();
+        double[] shap = model.shap(BostonHousing.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(importance, fields);
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(shap, fields);
+        for (int i = 0; i < shap.length; i++) {
+            System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
+        }
+
+        String[] expected = {"CHAS", "RAD", "ZN", "B", "AGE", "TAX", "DIS", "CRIM", "INDUS", "NOX", "PTRATIO", "RM", "LSTAT"};
+        assertArrayEquals(expected, fields);
     }
 }

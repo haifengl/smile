@@ -22,7 +22,7 @@ import ammonite.runtime.Storage
 
 /** Ammonite REPL based shell.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 case class AmmoniteREPL(predefCode: String) {
   val home = Path(System.getProperty("user.home")) / ".smile"

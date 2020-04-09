@@ -32,7 +32,7 @@ import smile.data.type.StructType;
 /**
  * Date/time feature extractor.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Date implements HyperTerm {
     /** The name of variable. */

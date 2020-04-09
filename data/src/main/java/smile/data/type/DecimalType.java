@@ -22,7 +22,7 @@ import java.math.BigDecimal;
 /**
  * Arbitrary-precision decimal data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DecimalType implements DataType {
 

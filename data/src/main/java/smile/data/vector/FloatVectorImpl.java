@@ -28,7 +28,7 @@ import java.util.stream.IntStream;
 /**
  * An immutable float vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class FloatVectorImpl implements FloatVector {
     /** The name of vector. */

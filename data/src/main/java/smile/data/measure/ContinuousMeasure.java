@@ -25,7 +25,7 @@ import java.text.ParseException;
  * in infinitely small units. The statistical analysis of continuous data
  * is more powerful than that of categorical data.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class ContinuousMeasure implements Measure {
     /** For formatting and parsing numbers. */

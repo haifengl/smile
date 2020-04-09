@@ -27,7 +27,7 @@ package smile.stat.distribution;
  * @see ExponentialFamilyMixture
  * @see DiscreteExponentialFamilyMixture
 *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DiscreteExponentialFamily {
 

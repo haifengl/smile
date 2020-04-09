@@ -21,7 +21,7 @@ package smile.sort;
  * Sort algorithm trait that includes useful static functions
  * such as swap and swift up/down used in many sorting algorithms.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Sort {
 

@@ -27,7 +27,7 @@ import smile.math.matrix.QR;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class QRTest {
 

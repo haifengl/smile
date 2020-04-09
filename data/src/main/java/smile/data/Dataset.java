@@ -32,7 +32,7 @@ import java.util.stream.Stream;
  *
  * @param <T> the type of data objects.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Dataset<T> {
     /**

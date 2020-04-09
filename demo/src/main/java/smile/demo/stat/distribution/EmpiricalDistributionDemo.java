@@ -30,7 +30,7 @@ import smile.stat.distribution.EmpiricalDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class EmpiricalDistributionDemo extends JPanel {

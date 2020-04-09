@@ -35,7 +35,7 @@ import smile.math.MathEx;
  * <li> S. Dudoit, J. Fridlyand and T. Speed. Comparison of discrimination methods for the classification of tumors using gene expression data. J Am Stat Assoc, 97:77-87, 2002.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SumSquaresRatio implements FeatureRanking {
     public static final SumSquaresRatio instance = new SumSquaresRatio();

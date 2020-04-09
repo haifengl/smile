@@ -26,7 +26,7 @@ import smile.math.special.Gamma;
  * of bins have small numbers of counts (say, &lt; 10), then the statistic is
  * not well approximated by a chi-square probability function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ChiSqTest {
     /**

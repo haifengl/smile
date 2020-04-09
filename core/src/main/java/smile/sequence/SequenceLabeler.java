@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * A sequence labeler assigns a class label to each position of the sequence.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface SequenceLabeler<T> extends Serializable {
     /**

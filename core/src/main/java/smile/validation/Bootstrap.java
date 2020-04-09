@@ -35,7 +35,7 @@ import smile.regression.Regression;
  * to each of the bootstrap datasets and examine the behavior of the fits over
  * the k replications.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bootstrap {
     /**

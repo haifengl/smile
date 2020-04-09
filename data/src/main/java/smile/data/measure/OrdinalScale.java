@@ -35,7 +35,7 @@ import java.util.List;
  * absolute zero, and a 10-point difference may carry different meanings
  * at different points of the scale.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class OrdinalScale extends DiscreteMeasure {
     /**

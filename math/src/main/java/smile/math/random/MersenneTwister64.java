@@ -30,7 +30,7 @@ package smile.math.random;
  * January 1998, pp 3--30.</li>
  * </ul>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MersenneTwister64 implements RandomNumberGenerator {
     private static final int NN = 312;

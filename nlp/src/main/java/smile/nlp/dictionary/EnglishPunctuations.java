@@ -23,7 +23,7 @@ import java.util.Iterator;
 /**
  * Punctuation marks in English.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EnglishPunctuations implements Punctuations {
     /**

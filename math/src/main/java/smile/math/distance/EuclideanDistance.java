@@ -26,7 +26,7 @@ import java.util.Arrays;
  * are also handled. Also support sparse arrays of which zeros are excluded
  * to save space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class EuclideanDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;

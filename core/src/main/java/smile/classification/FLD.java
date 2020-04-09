@@ -63,7 +63,7 @@ import smile.util.IntSet;
  * @see LDA
  * @see smile.projection.PCA
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FLD implements Classifier<double[]>, Projection<double[]> {
     private static final long serialVersionUID = 2L;

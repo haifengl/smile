@@ -25,7 +25,7 @@ import smile.util.SparseArray;
  * is a metric defined on a vector space where the distance between two vectors
  * is the greatest of their differences along any coordinate dimension.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseChebyshevDistance implements Metric<SparseArray> {
     private static final long serialVersionUID = 1L;

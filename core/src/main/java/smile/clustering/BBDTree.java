@@ -47,7 +47,7 @@ import smile.math.MathEx;
  * @see KMeans
  * @see smile.vq.SOM
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BBDTree {
 

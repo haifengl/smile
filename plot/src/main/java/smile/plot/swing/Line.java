@@ -24,7 +24,7 @@ import java.awt.Stroke;
 /**
  * This class represents a poly line in the plot.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Line extends Shape {
     /**

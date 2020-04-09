@@ -25,7 +25,7 @@ import smile.math.random.UniversalGenerator;
  * This is a high quality random number generator as a replacement of
  * the standard Random class of Java system.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Random {
 

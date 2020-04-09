@@ -48,7 +48,7 @@ import smile.math.special.Gamma;
  * (with known mean), Pareto, gamma with known shape, and inverse gamma with
  * known shape parameter.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GammaDistribution extends AbstractDistribution implements ExponentialFamily {
     private static final long serialVersionUID = 2L;

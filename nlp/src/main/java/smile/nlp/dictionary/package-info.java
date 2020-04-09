@@ -18,6 +18,6 @@
 /**
  * Common dictionaries such as stop words, punctuation, common English words, etc.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.dictionary;

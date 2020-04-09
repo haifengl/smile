@@ -33,7 +33,7 @@ import smile.math.matrix.Matrix;
  * A formula extracts the variables from a context
  * (e.g. Java Class or DataFrame).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Formula implements Serializable {
     private static final long serialVersionUID = 2L;

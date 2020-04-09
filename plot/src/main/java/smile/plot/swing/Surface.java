@@ -24,7 +24,7 @@ import smile.sort.QuickSort;
 /**
  * A surface object gives 3D information e.g. a contour plots.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Surface extends Plot {
 

@@ -23,7 +23,7 @@ import java.time.format.DateTimeFormatter;
 /**
  * Date data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DateType implements DataType {
     /** Default instance. */

@@ -35,7 +35,7 @@ import smile.stat.distribution.Mixture;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ExponentialFamilyMixtureDemo extends JPanel {

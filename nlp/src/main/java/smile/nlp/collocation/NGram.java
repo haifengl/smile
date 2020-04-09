@@ -27,7 +27,7 @@ import smile.util.MutableInt;
  * An n-gram of size 1 is referred to as a unigram; size 2 is a bigram;
  * size 3 is a trigram.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NGram extends smile.nlp.NGram implements Comparable<NGram> {
 

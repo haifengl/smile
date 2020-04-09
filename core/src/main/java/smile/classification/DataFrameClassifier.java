@@ -25,7 +25,7 @@ import smile.data.type.StructType;
 /**
  * Classification trait on DataFrame.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DataFrameClassifier {
 

@@ -27,7 +27,7 @@ import smile.math.matrix.Matrix;
  *
  * @see GaussianDistribution
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MultivariateGaussianDistribution implements MultivariateDistribution, MultivariateExponentialFamily {
     private static final long serialVersionUID = 2L;

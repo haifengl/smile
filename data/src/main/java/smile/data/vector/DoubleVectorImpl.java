@@ -28,7 +28,7 @@ import java.util.stream.DoubleStream;
 /**
  * An immutable double vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class DoubleVectorImpl implements DoubleVector {
     /** The name of vector. */

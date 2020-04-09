@@ -72,7 +72,7 @@ import smile.math.rbf.RadialBasisFunction;
  * @see RadialBasisFunction
  * @see SVR
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Regression<T> {
     private static final long serialVersionUID = 2L;

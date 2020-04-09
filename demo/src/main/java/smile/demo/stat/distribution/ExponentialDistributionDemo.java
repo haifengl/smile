@@ -40,7 +40,7 @@ import smile.stat.distribution.ExponentialDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ExponentialDistributionDemo extends JPanel implements ChangeListener {

@@ -26,7 +26,7 @@ import smile.data.type.StructType;
 /**
  * The term of a + b add expression.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class Operator extends AbstractTerm {
     /** The operator name. */

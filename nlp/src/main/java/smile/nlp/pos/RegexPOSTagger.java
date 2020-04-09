@@ -22,7 +22,7 @@ import java.util.regex.Pattern;
 /**
  * Part-of-speech tagging by regular expression.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class RegexPOSTagger {
     /** Utility classes should not have public constructors. */

@@ -27,6 +27,7 @@ import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
+import smile.feature.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.Strings;
 
@@ -101,9 +102,9 @@ import smile.util.Strings;
  * <li> J. H. Friedman. Stochastic Gradient Boosting, 1999.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
-public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression {
+public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
@@ -133,7 +134,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.005;
+    private double shrinkage = 0.05;
 
     /**
      * Constructor. Learns a gradient tree boosting for regression.
@@ -281,9 +282,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
         return trees.length;
     }
 
-    /**
-     * Returns the regression trees.
-     */
+    @Override
     public RegressionTree[] trees() {
         return trees;
     }

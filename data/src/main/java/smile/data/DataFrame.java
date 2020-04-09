@@ -37,7 +37,7 @@ import smile.util.Strings;
 /**
  * An immutable collection of data organized into named columns.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     /** Returns the schema of DataFrame. */

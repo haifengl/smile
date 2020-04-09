@@ -34,7 +34,7 @@ import smile.vq.hebb.Edge;
  * @see GrowingNeuralGas
  * @see BIRCH
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NeuralMap implements VectorQuantizer {
     private static final long serialVersionUID = 2L;

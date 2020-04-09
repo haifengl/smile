@@ -25,7 +25,7 @@ import java.util.Locale;
  * A sentence splitter based on the java.text.BreakIterator, which supports
  * multiple natural languages (selected by locale setting).
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BreakIteratorSentenceSplitter implements SentenceSplitter {
 
