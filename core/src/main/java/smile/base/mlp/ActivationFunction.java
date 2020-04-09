@@ -24,7 +24,7 @@ import java.io.Serializable;
 /**
  * The activation function in hidden layers.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ActivationFunction extends Serializable {
 

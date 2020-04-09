@@ -29,7 +29,7 @@ import smile.util.PriorityQueue;
 /**
  * An adjacency matrix representation of a graph. Only simple graph is supported.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class AdjacencyMatrix implements Graph {
 

@@ -20,7 +20,7 @@ package smile.validation;
 /**
  * Mean absolute deviation error.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MeanAbsoluteDeviation implements RegressionMeasure {
     public final static MeanAbsoluteDeviation instance = new MeanAbsoluteDeviation();

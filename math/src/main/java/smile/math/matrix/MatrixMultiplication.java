@@ -20,7 +20,7 @@ package smile.math.matrix;
 /**
  * Matrix multiplication interface.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface MatrixMultiplication<A, B> {
     /**

@@ -33,7 +33,7 @@ import smile.math.MathEx;
 import smile.util.IntSet;
 
 /**
- * Decision tree for classification. A decision tree can be learned by
+ * Decision tree. A classification/regression tree can be learned by
  * splitting the training set into subsets based on an attribute value
  * test. This process is repeated on each derived subset in a recursive
  * manner called recursive partitioning. The recursion is completed when
@@ -99,7 +99,7 @@ import smile.util.IntSet;
  * @see GradientTreeBoost
  * @see RandomForest
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFrameClassifier {
     private static final long serialVersionUID = 2L;

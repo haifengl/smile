@@ -48,7 +48,7 @@ package smile.stat.distribution;
  * <li> Energy - the diffusion and substitution of primary energy sources.
  * </ul>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LogisticDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;

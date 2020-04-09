@@ -25,7 +25,7 @@ package smile.validation;
  * Fall-out is actually Type I error and closely related to specificity
  * (1 - specificity).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Fallout implements ClassificationMeasure {
     public final static Fallout instance = new Fallout();

@@ -20,7 +20,7 @@ package smile.nlp.normalizer;
 import java.util.regex.Pattern;
 
 /**
- * A baseline normalizer for processing Unicode text:
+ * A baseline normalizer for processing Unicode text.
  * <ul>
  * <li>Apply Unicode normalization form NFKC.</li>
  * <li>Strip, trim, normalize, and compress whitespace.</li>

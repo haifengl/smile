@@ -65,7 +65,7 @@ import smile.math.matrix.LU;
  * there is no evidence that either the NRBF method is consistently superior
  * to the RBF method, or vice versa.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RBFInterpolation {
 

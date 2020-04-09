@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable short vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
     @Override

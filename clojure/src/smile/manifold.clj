@@ -17,49 +17,109 @@
   "Manifold Learning"
   {:author "Haifeng Li"}
   (:import [smile.manifold IsoMap LLE LaplacianEigenmap TSNE]))
-  
+
 (defn isomap
-  "Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
-   where geodesic distances on a weighted graph are incorporated with the
-   classical multidimensional scaling. Isomap is used for computing a
-   quasi-isometric, low-dimensional embedding of a set of high-dimensional
-   data points. Isomap is highly efficient and generally applicable to a broad
-   range of data sources and dimensionalities."
+  "Isometric feature mapping.
+
+  Isomap is a widely used low-dimensional embedding methods,
+  where geodesic distances on a weighted graph are incorporated with the
+  classical multidimensional scaling. Isomap is used for computing a
+  quasi-isometric, low-dimensional embedding of a set of high-dimensional
+  data points. Isomap is highly efficient and generally applicable to a broad
+  range of data sources and dimensionalities.
+
+  To be specific, the classical MDS performs low-dimensional embedding based
+  on the pairwise distance between data points, which is generally measured
+  using straight-line Euclidean distance. Isomap is distinguished by
+  its use of the geodesic distance induced by a neighborhood graph
+  embedded in the classical scaling. This is done to incorporate manifold
+  structure in the resulting embedding. Isomap defines the geodesic distance
+  to be the sum of edge weights along the shortest path between two nodes.
+  The top n eigenvectors of the geodesic distance matrix, represent the
+  coordinates in the new n-dimensional Euclidean space.
+
+  The connectivity of each data point in the neighborhood graph is defined
+  as its nearest k Euclidean neighbors in the high-dimensional space. This
+  step is vulnerable to 'short-circuit errors' if k is too large with
+  respect to the manifold structure or if noise in the data moves the
+  points slightly off the manifold. Even a single short-circuit error
+  can alter many entries in the geodesic distance matrix, which in turn
+  can lead to a drastically different (and incorrect) low-dimensional
+  embedding. Conversely, if k is too small, the neighborhood graph may
+  become too sparse to approximate geodesic paths accurately.
+
+  This class implements C-Isomap that involves magnifying the regions
+  of high density and shrink the regions of low density of data points
+  in the manifold. Edge weights that are maximized in Multi-Dimensional
+  Scaling(MDS) are modified, with everything else remaining unaffected.
+
+  `data` is the data set.
+  `d` is the dimension of the manifold.
+  `k` is the number of nearest neighbors.
+  If `c-isomap` is true, run C-Isomap algorithm. Otherwise standard algorithm."
   ([data k] (isomap data k 2 true))
   ([data k d c-isomap] (IsoMap/of data k d c-isomap)))
 
 (defn lle
-  "Locally Linear Embedding. It has several advantages over Isomap, including
-   faster optimization when implemented to take advantage of sparse matrix
-   algorithms, and better results with many problems. LLE also begins by
-   finding a set of the nearest neighbors of each point. It then computes
-   a set of weights for each point that best describe the point as a linear
-   combination of its neighbors. Finally, it uses an eigenvector-based
-   optimization technique to find the low-dimensional embedding of points,
-   such that each point is still described with the same linear combination
-   of its neighbors. LLE tends to handle non-uniform sample densities poorly
-   because there is no fixed unit to prevent the weights from drifting as
-   various regions differ in sample densities."
+  "Locally Linear Embedding.
+
+  LLE has several advantages over Isomap, including faster optimization
+  when implemented to take advantage of sparse matrix algorithms, and better
+  results with many problems. LLE also begins by finding a set of the nearest
+  neighbors of each point. It then computes a set of weights for each point
+  that best describe the point as a linear combination of its neighbors.
+  Finally, it uses an eigenvector-based optimization technique to find the
+  low-dimensional embedding of points, such that each point is still described
+  with the same linear combination of its neighbors. LLE tends to handle
+  non-uniform sample densities poorly because there is no fixed unit to
+  prevent the weights from drifting as various regions differ in sample
+  densities.
+
+  `data` is the data set.
+  `d` is the dimension of the manifold.
+  `k` is the number of nearest neighbors."
   ([data k] (lle data k 2 true))
   ([data k d] (LLE/of data k d)))
 
 (defn laplacian
-  "Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
-   neighbor adjacency graph, Laplacian Eigenmap compute a low dimensional
-   representation of the dataset that optimally preserves local neighborhood
-   information in a certain sense. The representation map generated by the
-   algorithm may be viewed as a discrete approximation to a continuous map
-   that naturally arises from the geometry of the manifold."
+  "Laplacian Eigenmap.
+
+  Using the notion of the Laplacian of the nearest neighbor adjacency graph,
+  Laplacian Eigenmap compute a low dimensional representation of the dataset
+  that optimally preserves local neighborhood information in a certain sense.
+  The representation map generated by the algorithm may be viewed as a
+  discrete approximation to a continuous map that naturally arises from
+  the geometry of the manifold.
+
+  The locality preserving character of the Laplacian Eigenmap algorithm makes
+  it relatively insensitive to outliers and noise. It is also not prone to
+  'short circuiting' as only the local distances are used.
+
+  `data` is the data set.
+  `d` is the dimension of the manifold.
+  `k` is the number of nearest neighbors.
+  `t` is the smooth/width parameter of heat kernel
+  e<sup>-||x-y||<sup>2</sup> / t</sup>. Non-positive value means
+  discrete weights."
   ([data k] (laplacian data k 2 -1.0))
   ([data k d t] (LaplacianEigenmap/of data k d t)))
 
 (defn tsne
-  "t-distributed stochastic neighbor embedding. t-SNE is a nonlinear
-   dimensionality reduction technique that is particularly well suited
-   for embedding high-dimensional data into a space of two or three
-   dimensions, which can then be visualized in a scatter plot. Specifically,
-   it models each high-dimensional object by a two- or three-dimensional
-   point in such a way that similar objects are modeled by nearby points
-   and dissimilar objects are modeled by distant points."
+  "t-distributed stochastic neighbor embedding.
+
+  t-SNE is a nonlinear dimensionality reduction technique that is
+  particularly well suited for embedding high-dimensional data into
+  a space of two or three dimensions, which can then be visualized
+  in a scatter plot. Specifically, it models each high-dimensional
+  object by a two- or three-dimensional point in such a way that
+  similar objects are modeled by nearby points and dissimilar objects
+  are modeled by distant points.
+
+  `X` is input data. If X is a square matrix, it is assumed to be the
+  squared distance/dissimilarity matrix.
+  `d` is the dimension of the manifold.
+  `perplexity` is the perplexity of the conditional distribution.
+  `eta` is the learning rate.
+  `iterations` is the number of iterations."
   ([data] (tsne data 2 20.0 200.0 1000))
   ([data d perplexity eta iterations] (TSNE. data d perplexity eta iterations)))

@@ -34,7 +34,7 @@ import smile.math.matrix.Matrix;
  * <p>
  * This decomposition can also be used to calculate the determinant.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class LU extends smile.math.matrix.LU {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LU.class);

@@ -27,7 +27,7 @@ package smile.neighbor;
  * @param <K> the type of keys.
  * @param <V> the type of associated objects.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface KNNSearch<K, V> {
     /**

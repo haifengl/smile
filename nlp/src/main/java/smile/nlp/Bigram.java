@@ -22,7 +22,7 @@ package smile.nlp;
  * as the basis for simple statistical analysis of text. They are a special
  * case of N-gram.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bigram {
 

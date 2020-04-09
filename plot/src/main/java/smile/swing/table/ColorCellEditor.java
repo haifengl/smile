@@ -33,7 +33,7 @@ import javax.swing.table.TableCellEditor;
 /**
  * Color editor in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ColorCellEditor extends AbstractCellEditor implements TableCellEditor, ActionListener {

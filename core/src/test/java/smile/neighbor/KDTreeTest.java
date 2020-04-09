@@ -35,7 +35,7 @@ import smile.math.matrix.Matrix;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KDTreeTest {
 

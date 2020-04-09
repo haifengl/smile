@@ -24,7 +24,7 @@ import smile.data.type.StructType;
 /**
  * The term of abs function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class Abs extends AbstractFunction {
     /**

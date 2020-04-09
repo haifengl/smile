@@ -19,7 +19,7 @@ package smile.math.matrix
 
 /** Matrix companion object.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 object matrix {
   /** Creates a matrix filled with given value. */

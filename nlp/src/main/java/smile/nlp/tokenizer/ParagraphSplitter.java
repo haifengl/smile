@@ -22,7 +22,7 @@ package smile.nlp.tokenizer;
  * coherent block of text, such as a group of related sentences that develop
  * a single topic or a coherent part of a larger topic. 
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ParagraphSplitter {
     /**

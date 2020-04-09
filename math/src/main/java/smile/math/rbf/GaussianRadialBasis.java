@@ -39,7 +39,7 @@ package smile.math.rbf;
  * <li> Nabil Benoudjit and Michel Verleysen. On the kernel widths in radial-basis function networks. Neural Process, 2003.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GaussianRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;

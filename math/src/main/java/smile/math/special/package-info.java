@@ -23,6 +23,6 @@
  * Many special functions appear as solutions of differential equations or
  * integrals of elementary functions. 
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.math.special;

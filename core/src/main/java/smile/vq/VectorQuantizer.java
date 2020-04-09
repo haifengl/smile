@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * Vector quantizer with competitive learning.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface VectorQuantizer extends Serializable {
     /**

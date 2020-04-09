@@ -28,7 +28,7 @@ package smile.nlp.dictionary;
  * phrases that include them, particularly in names such as 'The Who',
  * 'The The', or 'Take That'.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface StopWords extends Dictionary {
 

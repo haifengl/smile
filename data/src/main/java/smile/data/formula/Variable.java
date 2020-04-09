@@ -32,7 +32,7 @@ import smile.data.type.StructType;
  * identity function that always returns the same value that was
  * used as its argument.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 final class Variable implements Term {
     /** Variable name. */

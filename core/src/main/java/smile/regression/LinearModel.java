@@ -51,7 +51,7 @@ import smile.math.special.Beta;
  * however, a central limit theorem can be invoked such that hypothesis
  * testing may proceed using asymptotic approximations.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LinearModel implements OnlineRegression<double[]>, DataFrameRegression {
     private static final long serialVersionUID = 2L;

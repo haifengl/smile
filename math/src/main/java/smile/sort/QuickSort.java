@@ -51,7 +51,7 @@ import java.util.Comparator;
  * 2 log<sub><small>2</small></sub> n. When a subarray has gotten down to size 7,
  * we sort it by straight insertion.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class QuickSort {
     /** Utility classes should not have public constructors. */

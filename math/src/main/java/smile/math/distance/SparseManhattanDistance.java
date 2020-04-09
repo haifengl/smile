@@ -29,7 +29,7 @@ import smile.util.SparseArray;
  * missing values (i.e. NaN) are also handled. Also support sparse arrays
  * of which zeros are excluded to save space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SparseManhattanDistance implements Metric<SparseArray> {
     private static final long serialVersionUID = 1L;

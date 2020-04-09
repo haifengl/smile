@@ -25,7 +25,7 @@ package smile.gap;
  * as it is being assessed. The revised individual replaces the original one
  * in the population.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface LamarckianChromosome extends Chromosome {
     /**

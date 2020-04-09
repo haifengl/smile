@@ -25,7 +25,7 @@ import smile.data.Tuple;
 /**
  * First-order CRF sequence labeler.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CRFLabeler<T> implements SequenceLabeler<T> {
     private static final long serialVersionUID = 2L;

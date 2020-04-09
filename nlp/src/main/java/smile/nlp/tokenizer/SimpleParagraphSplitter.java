@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
  * A blank line contains zero or more non-printing characters, such as
  * space or tab, followed by a new line.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleParagraphSplitter implements ParagraphSplitter {
     /**

@@ -23,11 +23,12 @@ import scala.language.implicitConversions
 
 /** Data manipulation functions.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object data {
 
   implicit def pimpDataFrame(data: DataFrame): DataFrameOps = DataFrameOps(data)
+  implicit def pimpTuple(data: Tuple): TupleOps = TupleOps(data)
 
   /** Prints the statistics of min, q1, median, mean, q3, and max. */
   def summary(x: Array[Int]): Unit = {

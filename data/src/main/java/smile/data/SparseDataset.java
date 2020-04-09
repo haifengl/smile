@@ -43,7 +43,7 @@ import smile.util.SparseArray;
  * column-compressed sparse matrix format, which is more efficient for matrix
  * operations.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface SparseDataset extends Dataset<SparseArray> {
     /** Returns the number of nonzero entries. */

@@ -18,6 +18,6 @@
 /**
  * Part-of-speech taggers.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.nlp.pos;

@@ -48,7 +48,7 @@ import smile.util.IntSet;
  * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NaiveBayes implements SoftClassifier<double[]> {
     private static final long serialVersionUID = 2L;

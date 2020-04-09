@@ -28,7 +28,7 @@ package smile.math.distance;
  * <li> triangular inequality: d(x, y) + d(y, z) &ge; d(x, z).
  * </ul>.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Metric<T> extends Distance<T> {
 

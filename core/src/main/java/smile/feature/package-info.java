@@ -47,6 +47,6 @@
  * numbers of features are available. Commonly, heuristic methods such as
  * genetic algorithms are employed for subset selection.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.feature;

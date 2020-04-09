@@ -35,7 +35,7 @@ import smile.math.MathEx;
  * The square root of the Jensen-Shannon divergence is a metric, which is
  * calculated by this class.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class JensenShannonDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;

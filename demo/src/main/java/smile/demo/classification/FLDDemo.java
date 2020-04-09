@@ -25,7 +25,7 @@ import smile.classification.FLD;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FLDDemo extends ClassificationDemo {

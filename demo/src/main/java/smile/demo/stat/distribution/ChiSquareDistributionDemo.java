@@ -40,7 +40,7 @@ import smile.stat.distribution.ChiSquareDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class ChiSquareDistributionDemo extends JPanel implements ChangeListener {

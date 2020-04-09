@@ -21,7 +21,7 @@ package smile.math;
  * An abstract implementation that uses finite differences to calculate the
  * partial derivatives instead of providing them analytically.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class AbstractDifferentiableMultivariateFunction implements DifferentiableMultivariateFunction {
 

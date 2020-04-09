@@ -29,7 +29,7 @@ package smile.nlp.tokenizer;
  * an abbreviation terminator at the same time. When should a single quote be
  * split from a word?
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Tokenizer {
     /**

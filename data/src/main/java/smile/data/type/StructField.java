@@ -26,7 +26,7 @@ import smile.data.measure.NominalScale;
 /**
  * A field in a Struct data type.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class StructField implements Serializable {
     private static final long serialVersionUID = 2L;

@@ -40,7 +40,7 @@ import smile.stat.distribution.LogisticDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class LogisticDistributionDemo extends JPanel implements ChangeListener {

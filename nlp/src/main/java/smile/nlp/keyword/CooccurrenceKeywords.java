@@ -46,7 +46,7 @@ import smile.sort.QuickSort;
  * <li> Output a given number of terms of largest refined χ2 values.
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface CooccurrenceKeywords {
 

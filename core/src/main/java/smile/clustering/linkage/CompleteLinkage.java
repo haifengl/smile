@@ -26,7 +26,7 @@ import java.util.Comparator;
  * groups is now defined as the distance between the most distant pair of
  * objects, one from each group.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CompleteLinkage extends Linkage {
     /**

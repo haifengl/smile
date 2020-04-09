@@ -31,7 +31,7 @@ package smile.interpolation;
  * other radial basis functions. However, it is simple, fast, and often jut the
  * thing for quick and dirty applications.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ShepardInterpolation1D implements Interpolation {
 

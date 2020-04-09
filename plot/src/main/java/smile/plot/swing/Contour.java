@@ -28,7 +28,7 @@ import smile.math.MathEx;
  * (x, y) coordinates where that z value occurs. The contour plot is an
  * alternative to a 3-D surface plot.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Contour extends Plot {
     /**

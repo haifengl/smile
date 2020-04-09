@@ -23,7 +23,7 @@ import java.util.function.ToDoubleFunction;
 /**
  * An interface representing a multivariate real function.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface MultivariateFunction extends ToDoubleFunction<double[]>, Serializable {
     /**

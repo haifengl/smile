@@ -42,7 +42,7 @@ package smile.stat.distribution;
 
  * @see ShiftedGeometricDistribution
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class GeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
     private static final long serialVersionUID = 2L;

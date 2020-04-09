@@ -24,7 +24,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class DateCellRenderer extends DefaultTableCellRenderer {

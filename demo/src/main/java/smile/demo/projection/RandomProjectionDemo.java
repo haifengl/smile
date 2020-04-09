@@ -34,7 +34,7 @@ import smile.projection.RandomProjection;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class RandomProjectionDemo extends ProjectionDemo {

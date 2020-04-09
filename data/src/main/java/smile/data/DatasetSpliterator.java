@@ -23,7 +23,7 @@ import java.util.Spliterator;
 /**
  * A spliterator traverse and partition a local dataset.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class DatasetSpliterator<T> implements Spliterator<T> {
     /** The underlying Dataset. */

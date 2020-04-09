@@ -26,7 +26,7 @@ import java.io.Serializable;
  * 
  * @see Distribution
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface MultivariateDistribution extends Serializable {
     /**

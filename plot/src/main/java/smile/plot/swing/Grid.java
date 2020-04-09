@@ -22,7 +22,7 @@ import java.awt.Color;
 /**
  * A 2D grid plot.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Grid extends Plot {
 

@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * Partition clustering. Partition methods classify the observations
  * into distinct non-overlapping groups.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class PartitionClustering implements Serializable {
     /**

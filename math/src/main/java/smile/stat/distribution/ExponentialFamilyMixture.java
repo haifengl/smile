@@ -27,7 +27,7 @@ import smile.math.MathEx;
  * M-step involves maximizing a linear function. In such a case, it is usually
  * possible to derive closed form updates for each step.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ExponentialFamilyMixture extends Mixture {
     private static final long serialVersionUID = 2L;

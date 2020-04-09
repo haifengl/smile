@@ -39,7 +39,7 @@ import java.util.Arrays;
  * allowed because all necessary mathematical operations are defined
  * for the ratio scale.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RatioScale extends ContinuousMeasure {
 

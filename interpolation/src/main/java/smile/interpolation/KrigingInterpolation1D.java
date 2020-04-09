@@ -28,7 +28,7 @@ import smile.math.matrix.LU;
  * also known as Gauss-Markov estimation or Gaussian process regression.
  * This class implements ordinary kriging for interpolation with power variogram.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class KrigingInterpolation1D implements Interpolation {
 

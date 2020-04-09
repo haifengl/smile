@@ -46,7 +46,7 @@ import java.util.stream.IntStream;
  * @param <U> the tpe of observations. Usually, T and U are the same.
  *            But in case of SIB, they are different.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class CentroidClustering<T, U> extends PartitionClustering implements Comparable<CentroidClustering<T, U>> {
     private static final long serialVersionUID = 2L;

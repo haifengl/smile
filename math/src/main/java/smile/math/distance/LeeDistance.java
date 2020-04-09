@@ -25,7 +25,7 @@ package smile.math.distance;
  * sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
  * <p>
  * If q = 2 or q = 3 the Lee distance coincides with the Hamming distance.
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LeeDistance implements Metric<int[]> {
     private static final long serialVersionUID = 1L;

@@ -30,7 +30,7 @@ import smile.math.distance.Distance;
  * relationships unless this assumption has been tested and justified
  * for the data set being used.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class UPGMALinkage extends Linkage {
     /**

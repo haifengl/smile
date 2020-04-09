@@ -52,7 +52,7 @@ import smile.stat.distribution.GaussianDistribution;
  * <li> Chinmay Hegde, Michael Wakin, and Richard Baraniuk. Random projections for manifold learning. NIPS, 2007.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RandomProjection implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;

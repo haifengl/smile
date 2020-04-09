@@ -30,7 +30,7 @@ import smile.stat.distribution.ChiSquareDistribution;
  * A bigram collocation is a pair of words w1 w2 that appear together with
  * statistically significance.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 

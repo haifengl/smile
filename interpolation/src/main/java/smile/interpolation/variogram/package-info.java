@@ -48,6 +48,6 @@
  * the shape of the curve of the experimental variogram to the shape of the curve
  * of the mathematical function.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 package smile.interpolation.variogram;

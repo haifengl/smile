@@ -29,7 +29,7 @@ import smile.math.matrix.Matrix;
  * if a number (weight) is assigned to each edge. Such weights might represent,
  * for example, costs, lengths or capacities, etc. depending on the problem.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Graph {
     /**

@@ -35,7 +35,7 @@ import smile.sort.QuickSort;
  * <li>Alexandru Niculescu-Mizil and Rich Caruana. Predicting Good Probabilities With Supervised Learning. ICML, 2005.</li>
  * </ol>
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class IsotonicRegressionScaling implements Serializable {
     private static final long serialVersionUID = 2L;

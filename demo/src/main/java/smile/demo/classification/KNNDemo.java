@@ -28,7 +28,7 @@ import smile.classification.KNN;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class KNNDemo extends ClassificationDemo {

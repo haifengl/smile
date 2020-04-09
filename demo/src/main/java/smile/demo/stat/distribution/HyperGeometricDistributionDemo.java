@@ -39,7 +39,7 @@ import smile.stat.distribution.HyperGeometricDistribution;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class HyperGeometricDistributionDemo extends JPanel implements ChangeListener {

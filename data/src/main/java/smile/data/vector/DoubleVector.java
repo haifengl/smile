@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable double vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
     @Override

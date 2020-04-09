@@ -23,7 +23,7 @@ package smile.validation;
  * <p>
  * FDR = FP / (TP + FP)
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FDR implements ClassificationMeasure {
     public final static FDR instance = new FDR();

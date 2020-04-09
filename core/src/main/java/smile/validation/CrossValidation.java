@@ -39,7 +39,7 @@ import smile.regression.Regression;
  * rounds of cross-validation are performed using different partitions, and the
  * validation results are averaged over the rounds.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class CrossValidation {
     /**

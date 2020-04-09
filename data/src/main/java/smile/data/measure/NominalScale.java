@@ -33,7 +33,7 @@ import java.util.List;
  * or meaning. No form of arithmetic computation (+, −, ×, etc.)
  * may be performed on nominal measures.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class NominalScale extends DiscreteMeasure {
     /**

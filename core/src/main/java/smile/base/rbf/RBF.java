@@ -48,7 +48,7 @@ import smile.math.rbf.GaussianRadialBasis;
  * with weight parameters undergo a supervised learning processing
  * (e.g. error-correction learning).
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RBF<T> implements Serializable {
     private static final long serialVersionUID = 2L;

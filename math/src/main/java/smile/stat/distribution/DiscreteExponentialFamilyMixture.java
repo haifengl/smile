@@ -23,7 +23,7 @@ import smile.math.MathEx;
  * The finite mixture of distributions from discrete exponential family.
  * The EM algorithm is provided to learn the mixture model from data.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
     private static final long serialVersionUID = 2L;

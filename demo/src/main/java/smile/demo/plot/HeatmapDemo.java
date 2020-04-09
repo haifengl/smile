@@ -28,7 +28,7 @@ import smile.plot.swing.Canvas;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class HeatmapDemo extends JPanel {

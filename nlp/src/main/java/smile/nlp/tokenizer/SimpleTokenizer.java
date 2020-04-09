@@ -49,7 +49,7 @@ import java.util.regex.Pattern;
  * newline -- are assumed to be part of the word they are attached to (e.g. for
  * abbreviations, etc), and are not separately tokenized.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class SimpleTokenizer implements Tokenizer {
     private static final Pattern WONT_CONTRACTION = Pattern.compile("(?i)\\b(w)(on't)\\b");

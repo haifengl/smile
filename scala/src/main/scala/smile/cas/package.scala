@@ -20,8 +20,28 @@ package smile
 import scala.language.implicitConversions
 
 /** Computer algebra system.
+  * A computer algebra system (CAS) has the ability to manipulate mathematical
+  * expressions in a way similar to the traditional manual computations of
+  * mathematicians and scientists.
   *
-  * @author Haifeng Li. All rights reserved.
+  * The symbolic manipulations supported include:
+  *
+  *   - simplification to a smaller expression or some standard form,
+  * including automatic simplification with assumptions and
+  * simplification with constraints
+  *
+  *   - substitution of symbols or numeric values for certain expressions
+  *
+  *   - change of form of expressions: expanding products and powers, partial
+  * and full factorization, rewriting as partial fractions, constraint
+  * satisfaction, rewriting trigonometric functions as exponentials,
+  * transforming logic expressions, etc.
+  *
+  *   - partial and total differentiation
+  *
+  *   - matrix operations including products, inverses, etc.
+  *
+  * @author Haifeng Li
   */
 package object cas {
   implicit def pimpString(x: String) = Var(x)

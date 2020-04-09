@@ -30,7 +30,7 @@ import static java.lang.Math.*;
  * The error function and complementary error function are special cases of the
  * incomplete gamma function.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Erf {
     /** Utility classes should not have public constructors. */

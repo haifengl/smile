@@ -86,7 +86,7 @@ import smile.math.distance.Distance;
  * 
  * @param <T> the type of input object.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class DBSCAN<T> extends PartitionClustering {
     private static final long serialVersionUID = 2L;

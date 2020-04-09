@@ -34,7 +34,7 @@ import java.util.ArrayList;
  * <p>
  * http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class LancasterStemmer implements Stemmer {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LancasterStemmer.class);

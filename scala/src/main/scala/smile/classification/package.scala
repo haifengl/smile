@@ -139,7 +139,7 @@ import smile.util.{time, toJavaBiFunction}
   * the variance. However, this is not trivial. Therefore, there is a tradeoff
   * between bias and variance.
   *
-  * @author Haifeng Li. All rights reserved.
+  * @author Haifeng Li
   */
 package object classification {
   /** K-nearest neighbor classifier.
@@ -524,7 +524,7 @@ package object classification {
     SVM.fit(x, y, kernel, C, tol)
   }
 
-  /** Decision tree. A decision tree can be learned by
+  /** Decision tree. A classification/regression tree can be learned by
     * splitting the training set into subsets based on an attribute value
     * test. This process is repeated on each derived subset in a recursive
     * manner called recursive partitioning. The recursion is completed when
@@ -973,4 +973,8 @@ package object classification {
   def ovr[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T] = time("One vs. Rest") {
     OneVersusRest.fit(x, y, trainer)
   }
+
+  /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
+    * The user should ignore this object. */
+  object $dummy
 }

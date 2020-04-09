@@ -23,13 +23,11 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 
 /**
  * Static methods that return the InputStream/Reader of a file or URL.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Input {
     /** Returns the reader of a file path or URI. */
@@ -50,14 +48,6 @@ public interface Input {
         switch (uri.getScheme().toLowerCase()) {
             case "file":
                 return Files.newInputStream(Paths.get(path));
-
-            case "s3":
-            case "s3a":
-            case "s3n":
-            case "hdfs":
-                Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf);
-                return fs.open(new org.apache.hadoop.fs.Path(path));
 
             default: // http, ftp, ...
                 return uri.toURL().openStream();

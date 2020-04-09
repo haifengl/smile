@@ -22,7 +22,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 /**
  * Long array renderer in JTable.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class LongArrayCellRenderer extends DefaultTableCellRenderer {

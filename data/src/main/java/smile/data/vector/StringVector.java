@@ -30,7 +30,7 @@ import smile.data.type.StructField;
 /**
  * An immutable string vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface StringVector extends Vector<String> {
 

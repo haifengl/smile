@@ -26,7 +26,7 @@ import smile.data.type.StructField;
 /**
  * An immutable byte vector.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
     @Override

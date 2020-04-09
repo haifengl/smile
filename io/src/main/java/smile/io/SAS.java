@@ -44,7 +44,7 @@ import smile.data.vector.Vector;
  * Leveraging the lightweight Java library Parso (https//github.com/epam/parso),
  * no proprietary SAS software is required.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface SAS {
     /**

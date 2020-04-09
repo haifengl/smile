@@ -24,7 +24,7 @@ package smile.projection;
  * projection. However, kernel-based methods, e.g. Kernel PCA, can actually map
  * the data into a much higher dimensional space.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Projection<T> {
     /**

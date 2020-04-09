@@ -25,7 +25,7 @@ import smile.math.MathEx;
 /**
  * Hexmap is a variant of heat map by replacing rectangle cells with hexagon cells.
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Hexmap extends Plot {
     /** The lambda interface to retrieve the tooltip of cell. */

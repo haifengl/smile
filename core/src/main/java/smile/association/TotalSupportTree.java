@@ -32,7 +32,7 @@ import java.util.stream.StreamSupport;
  * <li> Frans Coenen, Paul Leng, and Shakil Ahmed. Data Structure for Association Rule Mining: T-Trees and P-Trees. IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING, 16(6):774-778, 2004.</li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 class TotalSupportTree implements Iterable<ItemSet> {
 

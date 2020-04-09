@@ -36,7 +36,7 @@ import static org.junit.Assert.*;
 
 /**
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 @SuppressWarnings("unused")
 public class RBFNetworkTest {

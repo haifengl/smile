@@ -27,7 +27,7 @@ import smile.math.MathEx;
  * based on bisection searching. Likelihood and log likelihood functions are
  * also implemented here.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public abstract class AbstractDistribution implements Distribution {
     /**

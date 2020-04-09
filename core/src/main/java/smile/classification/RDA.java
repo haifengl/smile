@@ -40,7 +40,7 @@ import smile.util.Strings;
  * @see LDA
  * @see QDA
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class RDA extends QDA {
     private static final long serialVersionUID = 2L;

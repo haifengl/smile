@@ -53,7 +53,7 @@ import static smile.math.MathEx.lfactorial;
  *
  * @see HyperGeometricDistribution
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class BinomialDistribution extends DiscreteDistribution {
     private static final long serialVersionUID = 2L;

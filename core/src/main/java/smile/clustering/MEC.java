@@ -53,7 +53,7 @@ import smile.neighbor.RNNSearch;
  * <li> Haifeng Li. All rights reserved., Keshu Zhang, and Tao Jiang. Minimum Entropy Clustering and Applications to Gene Expression Analysis. CSB, 2004. </li>
  * </ol>
  * 
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     private static final long serialVersionUID = 2L;

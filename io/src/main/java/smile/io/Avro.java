@@ -24,7 +24,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import org.apache.avro.Schema;
 import org.apache.avro.file.DataFileStream;
@@ -50,7 +49,7 @@ import smile.data.type.StructType;
  * Avro relies on schemas. When Avro data is stored in a file, its schema
  * is stored with it. Avro schemas are defined with JSON.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class Avro {
     /**
@@ -95,7 +94,7 @@ public class Avro {
      * @param path an Apache Avro file path or URI.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
-        return read(Input.stream(path), Integer.MAX_VALUE);
+        return read(HadoopInput.stream(path), Integer.MAX_VALUE);
     }
 
     /**

@@ -31,7 +31,7 @@ import smile.math.MathEx;
 /**
  * The data is displayed as a collection of points.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class ScatterPlot extends Plot {
 

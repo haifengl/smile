@@ -27,7 +27,7 @@ package smile.wavelet;
  * for the analysis of signals with sudden transitions, such as monitoring
  * of tool failure in machines.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class HaarWavelet extends Wavelet {
 

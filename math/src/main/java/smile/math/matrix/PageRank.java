@@ -30,7 +30,7 @@ import smile.math.MathEx;
  * PageRank can be computed either iteratively or algebraically.
  * The iterative method can be viewed as the power iteration method.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface PageRank {
     org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);

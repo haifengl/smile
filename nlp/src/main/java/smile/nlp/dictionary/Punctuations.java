@@ -29,7 +29,7 @@ package smile.nlp.dictionary;
  * such as those used in online chat and text messages, may have wildly
  * different rules.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public interface Punctuations extends Dictionary {
 

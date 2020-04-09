@@ -35,7 +35,7 @@ import smile.sort.QuickSort;
  * states the total number of occurrences of the item in the
  * database.
  *
- * @author Haifeng Li. All rights reserved.
+ * @author Haifeng Li
  */
 public class FPTree {
 
