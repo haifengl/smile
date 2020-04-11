@@ -29,6 +29,7 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
+import smile.feature.SHAP;
 import smile.math.MathEx;
 import smile.regression.RegressionTree;
 import smile.util.IntSet;
@@ -107,7 +108,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier {
+public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier, SHAP<Tuple> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
@@ -428,17 +429,21 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * Returns the number of trees in the model.
      *
-     * @return the number of trees in the model
+     * @return the number of trees in the model.
      */
     public int size() {
-        return trees.length;
+        return trees().length;
     }
 
     /**
      * Returns the regression trees.
      */
     public RegressionTree[] trees() {
-        return trees;
+        if (trees != null) {
+            return trees;
+        } else {
+            return Arrays.stream(forest).flatMap(Arrays::stream).toArray(RegressionTree[]::new);
+        }
     }
 
     /**
@@ -588,5 +593,39 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         }
 
         return prediction;
+    }
+
+    @Override
+    public double[] shap(Tuple x) {
+        Tuple xt = formula.x(x);
+        int p = xt.length();
+        double[] phi = new double[p * k];
+        int ntrees;
+
+        if (trees != null) {
+            ntrees = trees.length;
+            for (RegressionTree tree : trees) {
+                double[] phii = tree.shap(xt);
+                for (int i = 0; i < phi.length; i++) {
+                    phi[i] += phii[i];
+                }
+            }
+        } else {
+            ntrees = forest[0].length;
+            for (int i = 0; i < k; i++) {
+                for (RegressionTree tree : forest[i]) {
+                    double[] phii = tree.shap(xt);
+                    for (int j = 0; j < p; j++) {
+                        phi[j*k + i] += phii[j];
+                    }
+                }
+            }
+        }
+
+        for (int i = 0; i < phi.length; i++) {
+            phi[i] /= ntrees;
+        }
+
+        return phi;
     }
 }

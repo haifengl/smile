@@ -201,4 +201,23 @@ public class DecisionTreeTest {
         assertEquals(743, lean.size());
         assertEquals(273, error);
     }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        DecisionTree model = DecisionTree.fit(Iris.formula, Iris.data, SplitRule.GINI, 20, 100, 5);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        double[] importance = model.importance();
+        double[] shap = model.shap(Iris.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1], shap[2*i+2]);
+        }
+    }
 }

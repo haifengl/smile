@@ -167,4 +167,23 @@ public class AdaBoostTest {
             System.out.format("Accuracy with %3d trees: %.4f%n", i+1, Accuracy.of(USPS.testy, test[i]));
         }
     }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        double[] importance = model.importance();
+        double[] shap = model.shap(Iris.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1], shap[2*i+2]);
+        }
+    }
 }

@@ -29,6 +29,7 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -56,9 +57,6 @@ public class RegressionTreeTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of predict method, of class RegressionTree.
-     */
     @Test(expected = Test.None.class)
     public void testLongley() throws Exception {
         System.out.println("longley");
@@ -104,9 +102,6 @@ public class RegressionTreeTest {
         assertEquals(expected, rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class RegressionTree.
-     */
     @Test
     public void testAll() {
         test("CPU", CPU.formula, CPU.data, 84.5224);
@@ -118,5 +113,30 @@ public class RegressionTreeTest {
         test("cal_housing", CalHousing.formula, CalHousing.data, 59979.0575);
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9136);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);
+    }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        RegressionTree model = RegressionTree.fit(BostonHousing.formula, BostonHousing.data, 20, 100, 5);
+        double[] importance = model.importance();
+        double[] shap = model.shap(BostonHousing.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(importance, fields);
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %12.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        smile.sort.QuickSort.sort(shap, fields);
+        for (int i = 0; i < shap.length; i++) {
+            System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
+        }
+
+        String[] expected = {"CHAS", "RAD", "ZN", "INDUS", "B", "TAX", "AGE", "PTRATIO", "DIS", "NOX", "CRIM", "LSTAT", "RM"};
+        assertArrayEquals(expected, fields);
     }
 }
