@@ -17,9 +17,7 @@
 
 package smile.classification;
 
-import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import smile.base.cart.SplitRule;
 import smile.data.*;
 import smile.math.MathEx;
@@ -242,5 +240,24 @@ public class RandomForestTest {
 
         System.out.println("Error of pruned model after pruning = " + error);
         assertEquals(86, error);
+    }
+
+    @Test
+    public void testShap() {
+        MathEx.setSeed(19650218); // to get repeatable results.
+        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 10, 2, SplitRule.GINI, 20, 100, 5, 1.0);
+        String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
+        double[] importance = model.importance();
+        double[] shap = model.shap(Iris.data.stream().parallel());
+
+        System.out.println("----- importance -----");
+        for (int i = 0; i < importance.length; i++) {
+            System.out.format("%-15s %.4f%n", fields[i], importance[i]);
+        }
+
+        System.out.println("----- SHAP -----");
+        for (int i = 0; i < fields.length; i++) {
+            System.out.format("%-15s %.4f    %.4f    %.4f%n", fields[i], shap[2*i], shap[2*i+1], shap[2*i+2]);
+        }
     }
 }
