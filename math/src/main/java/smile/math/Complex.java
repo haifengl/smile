@@ -197,7 +197,7 @@ public record Complex(double re, double im) implements Serializable {
         public void update(int i, double re) {
             set(i, re);
         }
- 
+
         public static Array of(Complex... x) {
             Array a = new Array(x.length);
             for (int i = 0; i < x.length; i++) {
