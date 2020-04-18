@@ -31,6 +31,21 @@ import static org.junit.Assert.*;
  * @author Haifeng Li
  */
 public class LevenbergMarquardtTest {
+    DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+        @Override
+        public double f(double[] x) {
+            return 1 / (1 + x[0] * Math.pow(x[2], x[1]));
+        }
+
+        @Override
+        public double g(double[] x, double[] g) {
+            double pow = Math.pow(x[2], x[1]);
+            double de = 1 + x[0] * pow;
+            g[0] = -pow / (de * de);
+            g[1] = -(x[0] * x[1] * Math.log(x[2]) * pow) / (de * de);
+            return 1 / de;
+        }
+    };
 
     public LevenbergMarquardtTest() {
     }
@@ -54,36 +69,21 @@ public class LevenbergMarquardtTest {
     @Test
     public void test() {
         System.out.println("LevenbergMarquardt");
-        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
-            @Override
-            public double f(double[] x) {
-                return 1 / (1 + x[0] * Math.pow(x[2], x[1]));
-            }
-
-            @Override
-            public double g(double[] x, double[] g) {
-                double pow = Math.pow(x[2], x[1]);
-                double de = 1 + x[0] * pow;
-                g[0] = -pow / (de * de);
-                g[1] = -(x[0] * x[1] * Math.pow(x[2], x[1]-1)) / (de * de);
-                return 1 / de;
-            }
-        };
-
+        MathEx.setSeed(19650218); // to get repeatable results.
         double[] x = new double[100];
         double[] y = new double[100];
-        GaussianDistribution d = new GaussianDistribution(0.0, 0.03);
+        GaussianDistribution d = new GaussianDistribution(0.0, 1);
         for (int i = 0; i < x.length; i++) {
             x[i] = (i+1) * 0.05;
-            y[i] = 1.0 / (1 + 1.2 * Math.pow(x[i], 1.8)) + d.rand();
+            y[i] = 1.0 / (1 + 1.2 * Math.pow(x[i], 1.8)) + d.rand() * 0.03;
         }
 
-        double[] p = {0.5, 1.1};
-        double ss = LevenbergMarquardt.fit(func, x, y, p);
-        assertEquals(3.2760, ss, 1E-4);
-        assertEquals(1.1962, p[0], 1E-4);
-        assertEquals(1.7955, p[1], 1E-4);
+        double[] p = {0.5, 0.0};
+        LevenbergMarquardt lma = LevenbergMarquardt.fit(func, x, y, p);
+        assertEquals(0.0863, lma.sse, 1E-4);
+        assertEquals(1.2260, lma.p[0], 1E-4);
+        assertEquals(1.8024, lma.p[1], 1E-4);
     }
 }
 
