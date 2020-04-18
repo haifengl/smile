@@ -39,7 +39,32 @@ import smile.math.matrix.SVD;
  *
  * @author Haifeng Li
  */
-public interface LevenbergMarquardt {
+public class LevenbergMarquardt {
+    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
+
+    /** The fitted parameters. */
+    public final double[] p;
+    /** The fitted values. */
+    public final double[] f;
+    /** The residuals. */
+    public final double[] r;
+    /** The sum of squares due to error. */
+    public final double sse;
+
+    /**
+     * Constructor.
+     * @param p The fitted parameters.
+     * @param f The fitted values.
+     * @param r The residuals.
+     * @param sse The sum of squares due to error.
+     */
+    LevenbergMarquardt(double[] p, double[] f, double[] r, double sse) {
+        this.p = p;
+        this.f = f;
+        this.r = r;
+        this.sse = sse;
+    }
+
     /**
      * Fits the nonlinear least squares.
      *
@@ -51,7 +76,7 @@ public interface LevenbergMarquardt {
      *
      * @return the sum of squared errors.
      */
-    static double fit(DifferentiableMultivariateFunction func, double[] x, double[] y, double[] p) {
+    public static LevenbergMarquardt fit(DifferentiableMultivariateFunction func, double[] x, double[] y, double[] p) {
         return fit(func, x, y, p, 0.0001, 20);
     }
 
@@ -63,14 +88,13 @@ public interface LevenbergMarquardt {
      *             independent variable.
      * @param x independent variable.
      * @param y the observations.
-     * @param p the initial parameters. On output, it will be overwritten with
-     *          the solution vector.
+     * @param p the initial parameters.
      * @param stol the scalar tolerances on fractional improvement in sum of squares
      * @param maxIter the maximum number of allowed iterations.
      *
      * @return the sum of squared errors.
      */
-    static double fit(DifferentiableMultivariateFunction func, double[] x, double[] y, double[] p, double stol, int maxIter) {
+    public static LevenbergMarquardt fit(DifferentiableMultivariateFunction func, double[] x, double[] y, double[] p, double stol, int maxIter) {
         if (stol <= 0.0) {
             throw new IllegalArgumentException("Invalid gradient tolerance: " + stol);
         }
@@ -78,8 +102,6 @@ public interface LevenbergMarquardt {
         if (maxIter <= 0) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
-
-        org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
 
         // set up for iterations
         int n = x.length;
@@ -89,7 +111,7 @@ public interface LevenbergMarquardt {
         double[] pnew = new double[d+1];
         System.arraycopy(p, 0, pbest, 0, d);
 
-        //double[] f = new double[n];
+        double[] f = new double[n];
         double[] r = new double[n];
         double[] g = new double[d];
         double[] gse = new double[d];
@@ -105,8 +127,7 @@ public interface LevenbergMarquardt {
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
 
         // iterations
-        double sbest = 0.0;
-        for (int iter = 0; iter < maxIter; iter++) {
+        for (int iter = 1; iter <= maxIter; iter++) {
             System.arraycopy(pbest, 0, pprev, 0, d);
 
             double ss = 0.0;
@@ -121,7 +142,7 @@ public interface LevenbergMarquardt {
                 }
             }
 
-            sbest = ss;
+            double sbest = ss;
             double sgoal = (1 - stol) * sbest;
 
             for (int j = 0; j < d; j++) {
@@ -185,12 +206,23 @@ public interface LevenbergMarquardt {
                 }
             }
 
-            if (ss < MathEx.EPSILON) break;
-
-            if (ss > sgoal) break;
+            logger.info(String.format("SSE after %3d iterations: %.5f", iter, sbest));
+            if (ss < MathEx.EPSILON || ss > sgoal) {
+                logger.info(String.format("converges on SSE after %d iterations", iter));
+                break;
+            }
         }
 
-        System.arraycopy(pbest, 0, p, 0, d);
-        return sbest;
+        double[] pfit = new double[d];
+        System.arraycopy(pbest, 0, pfit, 0, d);
+        double ss = 0.0;
+        for (int i = 0; i < n; i++) {
+            pbest[d] = x[i];
+            f[i] = func.f(pbest);
+            r[i] = y[i] - f[i];
+            ss += r[i] * r[i];
+        }
+
+        return new LevenbergMarquardt(pfit, f, r, ss);
     }
 }
