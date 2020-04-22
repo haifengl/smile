@@ -15,9 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.neighbor.lsh;
-
-import smile.hash.MurmurHash2;
+package smile.hash;
 
 import java.nio.ByteBuffer;
 
