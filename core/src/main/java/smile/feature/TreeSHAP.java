@@ -18,7 +18,9 @@
 package smile.feature;
 
 import smile.base.cart.CART;
+import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.formula.Formula;
 
 /**
  * SHAP of ensemble tree methods. TreeSHAP is a fast and exact method to
@@ -33,14 +35,17 @@ public interface TreeSHAP extends SHAP<Tuple> {
      * Returns the classification/regression trees.
      */
     CART[] trees();
+    /** Returns the formula associated with the model. */
+    Formula formula();
 
     @Override
     default double[] shap(Tuple x) {
         CART[] forest = trees();
+        Tuple xt = formula().x(x);
 
         double[] phi = null;
         for (CART tree : forest) {
-            double[] phii = tree.shap(x);
+            double[] phii = tree.shap(xt);
 
             if (phi == null) phi = phii;
             else {
@@ -54,5 +59,15 @@ public interface TreeSHAP extends SHAP<Tuple> {
         }
 
         return phi;
+    }
+
+    /**
+     * Returns the average of absolute SHAP values over a data frame.
+     */
+    default double[] shap(DataFrame data) {
+        // Binds the formula to the data frame's schema in case that
+        // it is different from that of training data.
+        formula().bind(data.schema());
+        return shap(data.stream().parallel());
     }
 }
