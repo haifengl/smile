@@ -139,8 +139,19 @@ public class DENCLUE extends PartitionClustering {
         logger.info("Hill-climbing of density function for each observation");
         IntStream.range(0, n).parallel().mapToDouble(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol)).toArray();
 
+        for (double[] a : attractors) {
+            System.out.println(Arrays.toString(a));
+        }
+        if (Arrays.stream(attractors).flatMapToDouble(a -> Arrays.stream(a)).anyMatch(ai -> !Double.isFinite(ai))) {
+            throw new IllegalStateException("Attractors contains NaN/infinity. sigma is likely too small.");
+        }
+
         double[] radius = Arrays.stream(steps).mapToDouble(step -> step[0] + step[1]).toArray();
         double r = MathEx.mean(radius);
+
+        if (!Double.isFinite(r)) {
+            throw new IllegalStateException("The average of last steps of hill-climbing is NaN/infinity. sigma is likely too small.");
+        }
 
         logger.info("Clustering attractors with DBSCAN (radius = {})", r);
         DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
