@@ -82,6 +82,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
     public PlotGrid(int nrows, int ncols) {
         init(layout(nrows, ncols));
     }
+
     /**
      * Constructor.
      * @param plots the plots to add into the frame.
@@ -158,19 +159,19 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * Creates a button for toolbar.
      */
     private JButton makeButton(String imageName, String actionCommand, String toolTipText, String altText) {
-        //Look for the image.
+        // Look for the image.
         String imgLocation = "images/" + imageName + "16.png";
-        URL imageURL = getClass().getResource(imgLocation);
+        URL imageURL = PlotGrid.class.getResource(imgLocation);
 
-        //Create and initialize the button.
+        // Create and initialize the button.
         JButton button = new JButton();
         button.setActionCommand(actionCommand);
         button.setToolTipText(toolTipText);
         button.addActionListener(this);
 
-        if (imageURL != null) {                      //image found
+        if (imageURL != null) {   // image found
             button.setIcon(new ImageIcon(imageURL, altText));
-        } else {                                     //no image found
+        } else {                  // no image found
             button.setText(altText);
             logger.error("Resource not found: {}", imgLocation);
         }
