@@ -63,18 +63,17 @@ class NearestNeighborGraph {
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
-     * @param sideEffect an optional lambda to perform some side effect operations.
+     * @param consumer an optional lambda to perform some side effect operations.
      */
-    public static Graph of(double[][] data, int k, Optional<EdgeConsumer> sideEffect) {
+    public static Graph of(double[][] data, int k, EdgeConsumer consumer) {
         // This is actually faster on many core systems.
         LinearSearch<double[]> knn = new LinearSearch<>(data, new EuclideanDistance());
 
         int n = data.length;
         Graph graph = new AdjacencyList(n);
 
-        if (sideEffect.isPresent()) {
+        if (consumer != null) {
             for (int i = 0; i < n; i++) {
-                EdgeConsumer consumer = sideEffect.get();
                 Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
 
                 int v1 = i;

@@ -107,9 +107,9 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        Graph graph = NearestNeighborGraph.of(data, k, Optional.of((v1, v2, weight, j) -> {
+        Graph graph = NearestNeighborGraph.of(data, k, (v1, v2, weight, j) -> {
             N[v1][j] = v2;
-        }));
+        });
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;
