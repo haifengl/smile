@@ -90,6 +90,9 @@ sealed trait JsValue extends Dynamic {
     throw new UnsupportedOperationException
   }
 
+  // The naming convention asXXX avoids the potential conflicts
+  // with Predef's toXXX. For example, implicit conversions StringOps
+  // and string2JsValue (in package object).
   def asBoolean: Boolean = {
     throw new UnsupportedOperationException
   }
@@ -324,7 +327,8 @@ case class JsString(value: String) extends JsValue with Ordered[JsString] {
     case JsString(that) => value == that
     case _ => false
   }
-  override def asBoolean: Boolean = !value.isEmpty
+
+  override def asBoolean: Boolean = java.lang.Boolean.valueOf(value)
   override def asInt: Int = Integer.parseInt(value)
   override def asLong: Long = java.lang.Long.parseLong(value)
   override def asDouble: Double = java.lang.Double.parseDouble(value)
@@ -448,6 +452,7 @@ case class JsDateTime(value: LocalDateTime) extends JsValue with Ordered[JsDateT
   override def asDate: LocalDate = value.toLocalDate
   override def asTime: LocalTime = value.toLocalTime
   override def asDateTime: LocalDateTime = value
+  override def asTimestamp: Timestamp = Timestamp.valueOf(value)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
   override def asLong: Long = value.toEpochSecond(ZoneOffset.UTC)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
@@ -483,6 +488,8 @@ case class JsTimestamp(value: Timestamp) extends JsValue with Ordered[JsTimestam
     case JsTimestamp(that) => value == that
     case _ => false
   }
+  override def asDate: LocalDate = value.toLocalDateTime.toLocalDate
+  override def asTime: LocalTime = value.toLocalDateTime.toLocalTime
   override def asDateTime: LocalDateTime = value.toLocalDateTime
   override def asLong: Long = value.getTime
   override def asDouble: Double = value.getTime.toDouble
