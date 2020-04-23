@@ -19,7 +19,7 @@ package smile.neighbor;
 
 import org.junit.Before;
 import org.junit.Test;
-import smile.neighbor.lsh.SimHash;
+import smile.hash.SimHash;
 
 import java.io.IOException;
 import java.util.ArrayList;
