@@ -36,12 +36,12 @@ package object json {
   /** String interpolator for JSON.
     * `json''' '''` for JSON Object and `jarr''' '''` for JSON Array. */
   implicit class JsonHelper(private val sc: StringContext) extends AnyVal {
-    /** Parses JSON object. */
+    /** JSON object string interpolation. */
     def json(args: Any*): JsObject = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsObject]
     }
 
-    /** Parses JSON array. */
+    /** JSON array string interpolation. */
     def jsan(args: Any*): JsArray = {
       JsonParser(sc.s(args: _*).stripMargin).asInstanceOf[JsArray]
     }
@@ -126,24 +126,6 @@ package object json {
   implicit def json2ObjectId(x: JsObjectId): ObjectId = x.value
   implicit def json2UUID(x: JsUUID): UUID = x.value
   implicit def json2Binary(x: JsBinary): Array[Byte] = x.value
-
-  /*
-  implicit def json2Boolean(json: JsValue): Boolean = json.asBoolean
-  implicit def json2Int(json: JsValue): Int = json.asInt
-  implicit def json2Long(json: JsValue): Long = json.asLong
-  implicit def json2Double(json: JsValue): Double = json.asDouble
-  implicit def json2BigDecimal(json: JsValue): BigDecimal = json.asDecimal
-  implicit def json2LocalDate(json: JsValue): LocalDate = json.asDate
-  implicit def json2LocalTime(json: JsValue): LocalTime = json.asTime
-  implicit def json2LocalDateTime(json: JsValue): LocalDateTime = json.asDateTime
-  implicit def json2Timestamp(json: JsValue): Timestamp = json.asTimestamp
-  implicit def json2Date(json: JsValue): Date = json.asTimestamp
-  implicit def json2String(json: JsValue): String = json.toString
-  implicit def json2ByteArray(json: JsValue): Array[Byte] = json match {
-    case JsBinary(x) => x
-    case _ => throw new UnsupportedOperationException("convert JsValue to Array[Byte]")
-  }
-  */
 }
 
 package json {
