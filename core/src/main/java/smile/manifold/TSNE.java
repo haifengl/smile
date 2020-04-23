@@ -23,7 +23,7 @@ import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
- * The t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
+ * The t-distributed stochastic neighbor embedding. The t-SNE is a nonlinear
  * dimensionality reduction technique that is particularly well suited
  * for embedding high-dimensional data into a space of two or three
  * dimensions, which can then be visualized in a scatter plot. Specifically,
@@ -44,10 +44,17 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * <h2>References</h2>
  * <ol>
- * <li>L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014. </li>
- * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing Non-Metric Similarities in Multiple Maps. Machine Learning 87(1):33-55, 2012. </li>
- * <li>L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving Local Structure. In Proceedings of the Twelfth International Conference on Artificial Intelligence & Statistics (AI-STATS), JMLR W&CP 5:384-391, 2009. </li>
- * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008. </li>
+ * <li>L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms.
+ *     Journal of Machine Learning Research 15(Oct):3221-3245, 2014. </li>
+ * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing Non-Metric
+ *     Similarities in Multiple Maps. Machine Learning 87(1):33-55, 2012. </li>
+ * <li>L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving
+ *     Local Structure. In Proceedings of the Twelfth International Conference
+ *     on Artificial Intelligence &amp; Statistics (AI-STATS),
+ *     JMLR W&amp;CP 5:384-391, 2009. </li>
+ * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional
+ *     Data Using t-SNE. Journal of Machine Learning Research
+ *     9(Nov):2579-2605, 2008. </li>
  * </ol>
  *
  * @author Haifeng Li

@@ -144,7 +144,7 @@ public class SOM implements VectorQuantizer {
      * The current iteration.
      */
     private int t = 0;
-    /**
+    /*
      * The threshold to update neuron if alpha * theta > eps.
      */
     private double eps = 1E-5;
