@@ -42,6 +42,9 @@ public interface DataFrameRegression {
      * @return the predicted values.
      */
     default double[] predict(DataFrame data) {
+        // Binds the formula to the data frame's schema in case that
+        // it is different from that of training data.
+        formula().bind(data.schema());
         int n = data.size();
         double[] y = new double[n];
         for (int i = 0; i < n; i++) {

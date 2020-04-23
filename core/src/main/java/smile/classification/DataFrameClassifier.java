@@ -43,6 +43,9 @@ public interface DataFrameClassifier {
      * @return the predicted class labels.
      */
     default int[] predict(DataFrame data) {
+        // Binds the formula to the data frame's schema in case that
+        // it is different from that of training data.
+        formula().bind(data.schema());
         int n = data.size();
         int[] y = new int[n];
         for (int i = 0; i < n; i++) {

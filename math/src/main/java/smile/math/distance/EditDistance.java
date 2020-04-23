@@ -61,7 +61,7 @@ public class EditDistance implements Metric<String> {
     /**
      * Cost matrix. Because Java automatically initialize arrays, it
      * takes O(mn) to declare this cost matrix every time before
-     * calculate edit distance. But the whole point of Berghel & Roach
+     * calculate edit distance. But the whole point of Berghel and Roach
      * algorithm is to calculate fewer cells than O(mn). Therefore,
      * we create this cost matrix here. Therefore, the methods using
      * this cost matrix is not multi-thread safe.

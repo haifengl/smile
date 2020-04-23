@@ -30,7 +30,7 @@ import org.apache.parquet.io.InputFile;
 
 /**
  * Static methods that return the InputStream/Reader of a HDFS/S3.
- * Local files, HTTP & FTP URLs are supported too.
+ * Local files, HTTP and FTP URLs are supported too.
  *
  * @author Haifeng Li
  */
