@@ -311,10 +311,10 @@ case class Log1pVector(x: VectorExpression) extends VectorExpression {
 
 case class RoundVector(x: VectorExpression) extends VectorExpression {
   override def length: Int = x.length
-  override def apply(i: Int): Double = Math.round(x(i))
+  override def apply(i: Int): Double = Math.round(x(i)).toDouble
   override lazy val toArray: Array[Double] = {
     val z = new Array[Double](x.length)
-    for (i <- 0 until x.length) z(i) = Math.round(x(i))
+    for (i <- 0 until x.length) z(i) = Math.round(x(i)).toDouble
     z
   }
 }

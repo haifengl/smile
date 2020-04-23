@@ -23,7 +23,7 @@ import smile.util.IntArrayList;
 /**
  * A bucket is a container for points that all have the same value for hash
  * function g (function g is a vector of k LSH functions). A bucket is specified
- * by a vector in integers of length k.
+ * by an integer vector of length k.
  *
  * @author Haifeng Li
  */
