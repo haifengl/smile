@@ -22,18 +22,24 @@ package smile.shell
   * @author Haifeng Li
   */
 object AmmoniteREPL {
-  def main(args0: Array[String]): Unit = {
-    /*
-    if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
-      // Change the terminal mode so that it accepts ANSI escape codes
-      if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
-        println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
-    }
-
+  def main(clazz: Class[_], args0: Array[String]): Unit = {
+    val code =
+      """
+        |repl.prompt() = "smile> "
+        |
+        |if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+        |  import $ivy.`io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3`
+        |  // Change the terminal mode so that it accepts ANSI escape codes
+        |  if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
+        |    println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
+        |}""".stripMargin
+    
     val args = "--predef" :: System.getProperty("scala.repl.autoruncode") ::
-               "--code "  :: """repl.prompt() = "smile> """" ::
+               "--code "  :: code ::
                "--banner" :: welcome("exit") :: args0.toList
-    ammonite.Main.main(args.toArray)
-     */
+
+    val method = clazz.getMethod("main", classOf[Array[String]])
+    val main = clazz.getField("MODULE$").get(null)
+    method.invoke(main, args.toArray)
   }
 }
