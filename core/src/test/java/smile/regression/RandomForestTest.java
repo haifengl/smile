@@ -177,9 +177,9 @@ public class RandomForestTest {
     @Test
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(BostonHousing.formula, BostonHousing.data, 100, 3, 20, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(BostonHousing.formula, BostonHousing.data, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         double[] importance = model.importance();
-        double[] shap = model.shap(BostonHousing.data.stream().parallel());
+        double[] shap = model.shap(BostonHousing.data);
 
         System.out.println("----- importance -----");
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
@@ -195,7 +195,7 @@ public class RandomForestTest {
             System.out.format("%-15s %12.4f%n", fields[i], shap[i]);
         }
 
-        String[] expected = {"CHAS", "ZN", "RAD", "B", "AGE", "DIS", "TAX", "NOX", "INDUS", "CRIM", "PTRATIO", "RM", "LSTAT"};
+        String[] expected = {"CHAS", "RAD", "B", "ZN", "AGE", "DIS", "TAX", "CRIM", "INDUS", "NOX", "PTRATIO", "RM", "LSTAT"};
         assertArrayEquals(expected, fields);
     }
 }

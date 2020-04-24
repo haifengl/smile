@@ -115,7 +115,7 @@ public class LaplacianEigenmap implements Serializable {
      */
     public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
         // Use largest connected component of nearest neighbor graph.
-        Graph graph = NearestNeighborGraph.of(data, k, Optional.empty());
+        Graph graph = NearestNeighborGraph.of(data, k, null);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;

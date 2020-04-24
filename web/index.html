@@ -6,8 +6,8 @@ permalink: "{{ page.filePathStem }}.html"
   <div class="news" style="margin-bottom: 20px;">
     <h5>Latest News</h5>
     <ul class="list-unstyled">
-      <li><a href="https://github.com/haifengl/smile/releases/tag/v2.3.0">Smile 2.3.0 Released!</a>
-        <span class="small">(Apr 1st, 2020)</span></li>
+      <li><a href="https://github.com/haifengl/smile/releases/tag/v2.4.0">Smile 2.4.0 Released!</a>
+        <span class="small">(May 1st, 2020)</span></li>
 
       <li><a href="https://sudonull.com/post/28015-ML-on-Scala-with-a-smile-for-those-who-are-not-afraid-of-experiments-Yulas-blog">ML on Scala with a Smile</a>
         <span class="small">(May 22, 2019)</span></li>
@@ -92,6 +92,7 @@ permalink: "{{ page.filePathStem }}.html"
       <dd><p>
         <a href="api/java/smile/regression/OLS.html">Linear Regression</a>,
         <a href="api/java/smile/regression/LASSO.html">LASSO</a>,
+        <a href="api/java/smile/regression/ElasticNet.html">ElasticNet</a>,
         <a href="api/java/smile/regression/RidgeRegression.html">Ridge Regression</a>,
         <a href="api/java/smile/regression/RegressionTree.html">Regression Trees</a>,
         <a href="api/java/smile/regression/GradientTreeBoost.html">Gradient Boosting</a>,
@@ -111,7 +112,8 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/feature/WinsorScaler.html">Winsor Scaler</a>,
         <a href="api/java/smile/feature/Normalizer.html">Normalizer</a>,
         <a href="api/java/smile/feature/GAFE.html">Genetic Algorithm based Feature Selection</a>,
-        <a href="api/java/smile/classification/RandomForest.html">Ensemble Learning based Feature Selection</a>,
+        <a href="api/java/smile/classification/RandomForest.html#importance--">Ensemble Learning based Feature Selection</a>,
+        <a href="api/java/smile/feature/TreeSHAP.html">TreeSHAP</a>,
         <a href="api/java/smile/feature/SignalNoiseRatio.html">Signal Noise ratio</a>,
         <a href="api/java/smile/feature/SumSquaresRatio.html">Sum Squares ratio</a>
       </p></dd>
@@ -140,6 +142,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/validation/Recall.html">Recall</a>,
         <a href="api/java/smile/validation/Sensitivity.html">Sensitivity</a>,
         <a href="api/java/smile/validation/Specificity.html">Specificity</a>,
+        <a href="api/java/smile/validation/MCC.html">Matthews Correlation Coefficient</a>,
         <a href="api/java/smile/validation/MSE.html">MSE</a>,
         <a href="api/java/smile/validation/RMSE.html">RMSE</a>,
         <a href="api/java/smile/validation/RSS.html">RSS</a>,
@@ -158,6 +161,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/clustering/KMeans.html">K-Means</a>,
         <a href="api/java/smile/clustering/XMeans.html">X-Means</a>,
         <a href="api/java/smile/clustering/GMeans.html">G-Means</a>,
+        <a href="api/java/smile/clustering/KModes.html">K-Modes</a>,
         <a href="api/java/smile/clustering/DeterministicAnnealing.html">Deterministic Annealing</a>,
         <a href="api/java/smile/clustering/SIB.html">Sequential Information Bottleneck</a>,
         <a href="api/java/smile/clustering/SpectralClustering.html">Spectral Clustering</a>,
@@ -202,7 +206,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/neighbor/KDTree.html">KD-Tree</a>,
         <a href="api/java/smile/neighbor/LSH.html">LSH</a>,
         <a href="api/java/smile/neighbor/MPLSH.html">Multi-Probe LSH</a>,
-        <a href="api/java/smile/neighbor/SNLSH.html">SimHash</a>
+        <a href="api/java/smile/neighbor/SimHash.html">SimHash</a>
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.sequence.package">Sequence Learning</a></dt>
@@ -221,7 +225,8 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/nlp/stemmer/PorterStemmer.html">Porter Stemmer</a>,
         <a href="api/java/smile/nlp/stemmer/LancasterStemmer.html.html">Lancaster Stemmer</a>,
         <a href="api/java/smile/nlp/pos/HMMPOSTagger.html">POS Tagging</a>,
-        <a href="api/java/smile/nlp/relevance/BM25.html">Relevance Ranking</a>
+        <a href="api/java/smile/nlp/relevance/BM25.html">Relevance Ranking</a>,
+        <a href="api/java/smile/nlp/embedding/Word2Vec.html">Word2Vec</a>
       </p></dd>
 
       <dt><a href="api/java/smile/interpolation/package-summary.html">Interpolation</a></dt>
@@ -497,7 +502,7 @@ println("OOB error = ${rf.error()}")
       <p class="lead">
         Understanding human language, and the intent behind our words.
       </p>
-      <p>Tokenizers, stemming, phrase detection, part-of-speech tagging, keyword extraction,
+      <p>Tokenizers, stemming, word2vec, phrase detection, part-of-speech tagging, keyword extraction,
         named entity recognition, sentiment analysis, relevance ranking, taxomony.
       </p>
     </div>
@@ -515,11 +520,32 @@ println("OOB error = ${rf.error()}")
       <p class="lead">
         Hidden gems in Smile.
       </p>
-      <p>Special functions, linear algebra including LU decomposition, Cholesky decomposition, QR decomposition,
-        eigen value decomposition, singular value decomposition, band matrix, and sparse matrix,
-        hypothesis tests including t-test, F-test, chi-square test, correlation test (Pearson, Spearman, and Kendall),
-        and Kolmogorov-Smirnov test, a variety of distributions and random number generators, interpolation,
-        sorting, wavelet, etc.
+      <p>Special functions (
+         <a href="api/java/smile/math/special/Beta.html">beta</a>,
+         <a href="api/java/smile/math/special/Erf.html">erf</a>, and
+         <a href="api/java/smile/math/special/Gamma.html">gamma</a>
+      ),
+         linear algebra including
+         <a href="api/java/smile/math/matrix/LU.html">LU decomposition</a>,
+         <a href="api/java/smile/math/matrix/Cholesky.html">Cholesky decomposition</a>,
+         <a href="api/java/smile/math/matrix/QR.html">QR decomposition</a>,
+         <a href="api/java/smile/math/matrix/EVD.html">eigen value decomposition</a>,
+         <a href="api/java/smile/math/matrix/SVD.html">singular value decomposition</a>,
+         <a href="api/java/smile/math/matrix/DenseMatrix.html">dense matrix</a>, and
+         <a href="api/java/smile/math/matrix/BandMatrix.html">band matrix</a>, and
+         <a href="api/java/smile/math/matrix/SparseMatrix.html">sparse matrix</a>,
+         hypothesis tests including
+         <a href="api/java/smile/stat/hypothesis/TTest.html">t-test</a>,
+         <a href="api/java/smile/stat/hypothesis/FTest.html">F-test</a>,
+         <a href="api/java/smile/stat/hypothesis/ChiSqTest.html">chi-square test</a>,
+         <a href="api/java/smile/stat/hypothesis/CorTest.html">correlation test (Pearson, Spearman, and Kendall)</a>,
+         and <a href="api/java/smile/stat/hypothesis/KSTest.html">Kolmogorov-Smirnov test</a>, a variety of
+         <a href="api/java/smile/stat/distribution/package-summary.html">distributions</a>
+         and <a href="api/java/smile/math/random/package-summary.html">random number generators</a>,
+         <a href="api/java/smile/interpolation/package-summary.html">interpolation</a>,
+         <a href="api/java/smile/sort/package-summary.html">sorting</a>,
+         <a href="api/java/smile/wavelet/package-summary.html">wavelet</a>,
+         <a href="api/scala/index.html#smile.cas.package">computer algebra system</a>, etc.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
@@ -537,7 +563,8 @@ println("OOB error = ${rf.error()}")
         Interactive 2D/3D math plot.
       </p>
       <p>Scatter plot, line plot, staircase plot, bar plot, box plot, heatmap, hexmap, histogram, qq plot, surface,
-        grid, contour, dendrogram, sparse matrix visualization, wireframe, etc.
+        grid, contour, dendrogram, sparse matrix visualization, wireframe, etc. Smile also supports declarative
+        data visualization that compiles to <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">

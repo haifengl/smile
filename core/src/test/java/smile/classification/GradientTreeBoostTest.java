@@ -175,7 +175,7 @@ public class GradientTreeBoostTest {
         GradientTreeBoost model = GradientTreeBoost.fit(Iris.formula, Iris.data, 100, 20, 6, 5, 0.05, 0.7);
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data.stream().parallel());
+        double[] shap = model.shap(Iris.data);
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

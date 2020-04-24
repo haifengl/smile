@@ -90,6 +90,9 @@ sealed trait JsValue extends Dynamic {
     throw new UnsupportedOperationException
   }
 
+  // The naming convention asXXX avoids the potential conflicts
+  // with Predef's toXXX. For example, implicit conversions StringOps
+  // and string2JsValue (in package object).
   def asBoolean: Boolean = {
     throw new UnsupportedOperationException
   }
@@ -222,7 +225,7 @@ case class JsLong(value: Long) extends JsValue with Ordered[JsLong] {
   override def asBoolean: Boolean = value != 0
   override def asInt: Int = value.toInt
   override def asLong: Long = value
-  override def asDouble: Double = value
+  override def asDouble: Double = value.toDouble
 
   override def compare(that: JsLong): Int = {
     value.compare(that.value)
@@ -254,7 +257,7 @@ case class JsCounter(value: Long) extends JsValue with Ordered[JsCounter] {
   override def asBoolean: Boolean = value != 0
   override def asInt: Int = value.toInt
   override def asLong: Long = value
-  override def asDouble: Double = value
+  override def asDouble: Double = value.toDouble
 
   override def compare(that: JsCounter): Int = {
     value.compare(that.value)
@@ -324,7 +327,8 @@ case class JsString(value: String) extends JsValue with Ordered[JsString] {
     case JsString(that) => value == that
     case _ => false
   }
-  override def asBoolean: Boolean = !value.isEmpty
+
+  override def asBoolean: Boolean = java.lang.Boolean.valueOf(value)
   override def asInt: Int = Integer.parseInt(value)
   override def asLong: Long = java.lang.Long.parseLong(value)
   override def asDouble: Double = java.lang.Double.parseDouble(value)
@@ -364,7 +368,7 @@ case class JsDate(value: LocalDate) extends JsValue with Ordered[JsDate] {
     * The Epoch Day count is a simple incrementing count of days
     * where day 0 is 1970-01-01 (ISO).
     */
-  override def asDouble: Double = value.toEpochDay
+  override def asDouble: Double = value.toEpochDay.toDouble
 
   override def compare(that: JsDate): Int = {
     value.compareTo(that.value)
@@ -408,7 +412,7 @@ case class JsTime(value: LocalTime) extends JsValue with Ordered[JsTime] {
   /** Converts this time as nanos of day, from 0 to 24 * 60 * 60 * 1,000,000,000 - 1. */
   override def asLong: Long = value.toNanoOfDay
   /** Converts this time as nanos of day, from 0 to 24 * 60 * 60 * 1,000,000,000 - 1. */
-  override def asDouble: Double = value.toNanoOfDay
+  override def asDouble: Double = value.toNanoOfDay.toDouble
 
   override def compare(that: JsTime): Int = {
     value.compareTo(that.value)
@@ -448,10 +452,11 @@ case class JsDateTime(value: LocalDateTime) extends JsValue with Ordered[JsDateT
   override def asDate: LocalDate = value.toLocalDate
   override def asTime: LocalTime = value.toLocalTime
   override def asDateTime: LocalDateTime = value
+  override def asTimestamp: Timestamp = Timestamp.valueOf(value)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
   override def asLong: Long = value.toEpochSecond(ZoneOffset.UTC)
   /** Converts this date-time to the number of seconds from the epoch of 1970-01-01T00:00:00Z. */
-  override def asDouble: Double = value.toEpochSecond(ZoneOffset.UTC)
+  override def asDouble: Double = value.toEpochSecond(ZoneOffset.UTC).toDouble
 
   override def compare(that: JsDateTime): Int = {
     value.compareTo(that.value)
@@ -483,9 +488,11 @@ case class JsTimestamp(value: Timestamp) extends JsValue with Ordered[JsTimestam
     case JsTimestamp(that) => value == that
     case _ => false
   }
+  override def asDate: LocalDate = value.toLocalDateTime.toLocalDate
+  override def asTime: LocalTime = value.toLocalDateTime.toLocalTime
   override def asDateTime: LocalDateTime = value.toLocalDateTime
   override def asLong: Long = value.getTime
-  override def asDouble: Double = value.getTime
+  override def asDouble: Double = value.getTime.toDouble
 
   override def compare(that: JsTimestamp): Int = {
     value.compareTo(that.value)

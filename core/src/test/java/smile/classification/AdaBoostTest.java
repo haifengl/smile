@@ -174,7 +174,7 @@ public class AdaBoostTest {
         AdaBoost model = AdaBoost.fit(Iris.formula, Iris.data, 200, 20, 4, 5);
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data.stream().parallel());
+        double[] shap = model.shap(Iris.data);
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

@@ -117,13 +117,13 @@ public class IsoMap implements Serializable {
     public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
         Graph graph;
         if (!conformal) {
-            graph = NearestNeighborGraph.of(data, k, Optional.empty());
+            graph = NearestNeighborGraph.of(data, k, null);
         } else {
             int n = data.length;
             double[] M = new double[n];
-            graph = NearestNeighborGraph.of(data, k, Optional.of((v1, v2, weight, j) -> {
+            graph = NearestNeighborGraph.of(data, k, (v1, v2, weight, j) -> {
                 M[v1] += weight;
-            }));
+            });
 
             for (int i = 0; i < n; i++) {
                 M[i] = Math.sqrt(M[i] / k);
