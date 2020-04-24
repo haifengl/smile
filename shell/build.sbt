@@ -52,11 +52,6 @@ buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.2"
-/*
-libraryDependencies ++= Seq(
-  "com.lihaoyi" %% "ammonite" % "2.0.5" cross CrossVersion.full % Provided,
-  "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3" % Provided
-)
-*/
+
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
 

@@ -24,8 +24,8 @@ package smile.shell
 object Main {
   def main(args: Array[String]): Unit = {
     try {
-      Class.forName("ammonite.Main")
-      AmmoniteREPL.main(args)
+      val clazz = Class.forName("ammonite.Main$")
+      AmmoniteREPL.main(clazz, args)
     } catch {
       case _: ClassNotFoundException => ScalaREPL.main(args)
     }
