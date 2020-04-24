@@ -245,10 +245,10 @@ public class RandomForestTest {
     @Test
     public void testShap() {
         MathEx.setSeed(19650218); // to get repeatable results.
-        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 10, 2, SplitRule.GINI, 20, 100, 5, 1.0);
+        RandomForest model = RandomForest.fit(Iris.formula, Iris.data, 10, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
         double[] importance = model.importance();
-        double[] shap = model.shap(Iris.data.stream().parallel());
+        double[] shap = model.shap(Iris.data);
 
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {

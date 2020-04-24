@@ -120,7 +120,7 @@ public class RegressionTreeTest {
         MathEx.setSeed(19650218); // to get repeatable results.
         RegressionTree model = RegressionTree.fit(BostonHousing.formula, BostonHousing.data, 20, 100, 5);
         double[] importance = model.importance();
-        double[] shap = model.shap(BostonHousing.data.stream().parallel());
+        double[] shap = model.shap(BostonHousing.data);
 
         System.out.println("----- importance -----");
         String[] fields = java.util.Arrays.stream(model.schema().fields()).map(field -> field.name).toArray(String[]::new);
