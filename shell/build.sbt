@@ -42,7 +42,7 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "com.lihaoyi" % "ammonite" % "2.0.4" cross CrossVersion.full
+libraryDependencies += "com.lihaoyi" % "ammonite" % "2.0.5" cross CrossVersion.full
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
 
