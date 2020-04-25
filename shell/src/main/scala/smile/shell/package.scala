@@ -22,6 +22,22 @@ package smile
   * @author Haifeng Li
   */
 package object shell {
+  def welcome(exit: String): String =
+    s"""
+       |                                                       ..::''''::..
+       |                                                     .;''        ``;.
+       |     ....                                           ::    ::  ::    ::
+       |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+       |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+       |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+       |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+       |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+       |                                                       ``::,,,,::''
+       |
+       |  Welcome to Smile Shell! Type "$exit<RETURN>" to leave the Smile Shell.
+       |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
+       |===============================================================================
+     """.stripMargin
 
   /** Built in benchmarks */
   def benchmark(tests: String*) = {
