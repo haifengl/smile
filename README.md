@@ -55,7 +55,7 @@ You can use the libraries through Maven central repository by adding the followi
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>2.3.0</version>
+      <version>2.4.0</version>
     </dependency>
 ```
 
@@ -63,18 +63,18 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.3.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.4.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:2.3.0")
+    implementation("com.github.haifengl:smile-kotlin:2.4.0")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "2.3.0"]
+    [org.clojars.haifengl/smile "2.4.0"]
 ```
 
 To enable machine optimized matrix computation, the users should
@@ -143,7 +143,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>2.2.2</version>
+      <version>2.4.0</version>
     </dependency>
 ```
 
