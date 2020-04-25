@@ -294,23 +294,6 @@ permalink: "{{ page.filePathStem }}.html"
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
-            LinkedIn used Smile to train its workforce on machine learning for its AI Academy.
-            Smile was chosen because it's a Java library with a friendly open source license
-            and supports a wide range of common algorithms. Using Smile with Tablesaw in Jupyter
-            notebooks meant that students had an interactive environment with immediate feedback
-            to make learning fast and intuitive.
-          </p>
-          <div class="testimonial-review">
-            <h3 class="testimonial-title">
-              - Ben McCann, <small>Head of Hire Matching at LinkedIn</small>
-            </h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial">
-        <div class="testimonial-content">
-          <p class="testimonial-description">
             Smile will amaze you with fast and extensive applications,
             efficient memory usage and a large set of machine learning algorithms for Classification,
             Regression, Nearest Neighbor Search, Feature Selection, etc.
@@ -318,25 +301,6 @@ permalink: "{{ page.filePathStem }}.html"
           <div class="testimonial-review">
             <h3 class="testimonial-title">
               - ActiveWizards
-            </h3>
-          </div>
-        </div>
-      </div>
-
-      <div class="testimonial">
-        <div class="testimonial-content">
-          <p class="testimonial-description">
-            We use Smile at moKredit to leverage its impressive capability in various machine
-            learning tasks: feature engineering, modeling, visualization, benchmark test, etc.
-            It is really an ideal tool for Java or Scala engineers and very friendly to be
-            integrated into Java-based platform. Also, Smile has unparalleled thorough
-            documentation as an open source project. Thanks Smile and strongly recommend it
-            to every engineer who is interested in machine learning.
-          </p>
-          <div class="testimonial-review">
-            <h3 class="testimonial-title">
-              - Ray Ma,
-              <small>Technology Manager at moKredit</small>
             </h3>
           </div>
         </div>
@@ -360,10 +324,41 @@ permalink: "{{ page.filePathStem }}.html"
       <div class="testimonial">
         <div class="testimonial-content">
           <p class="testimonial-description">
+            LinkedIn used Smile to train its workforce on machine learning for its AI Academy.
+            Smile was chosen because it's a Java library with a friendly open source license
+            and supports a wide range of common algorithms.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Ben McCann, <small>Head of Hire Matching at LinkedIn</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            We leverage Smile's impressive capability in various machine
+            learning tasks: feature engineering, modeling, visualization,
+            benchmark test, etc. Thanks Smile and strongly recommend it
+            to every engineer who is interested in machine learning.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Ray Ma,
+              <small>Technology Manager at moKredit</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
             SMILE is a great Java library for a wide range of AI tasks. Building bespoke methods atop
             SMILE run considerably faster than implementations in other languages more
-            associated with data science. Another big plus is excellent JavaDocs.
-            For linear algebra and unconstrained optimization, SMILE’s BFGS implementation proved extremely robust.
+            associated with data science.
           </p>
           <div class="testimonial-review">
             <h3 class="testimonial-title">
@@ -566,10 +561,51 @@ println("OOB error = ${rf.error()}")
         grid, contour, dendrogram, sparse matrix visualization, wireframe, etc. Smile also supports declarative
         data visualization that compiles to <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
       </p>
+    <div id="vegalite"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "width": 400,
+  "height": 300,
+  "title": "Choropleth of Unemployment Rate per County",
+  "data": {
+    "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+    "format": {
+      "type": "topojson",
+      "feature": "counties"
+    }
+  },
+  "transform": [{
+    "lookup": "id",
+    "from": {
+      "data": {
+        "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv"
+      },
+      "key": "id",
+      "fields": ["rate"]
+    }
+  }],
+  "projection": {
+    "type": "albersUsa"
+  },
+  "mark": "geoshape",
+  "encoding": {
+    "color": {
+      "field": "rate",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vegalite', spec);
+    </script>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
       <div style="width: 100%; display: inline-block; text-align: center;">
+        <figure>
         <img src="gallery/smile-demo-som.png" style="width: 100%;" />
+        <img src="gallery/smile-demo-ann.png" style="width: 100%;" />
+        <figcaption>Neural Networks</figcaption>
+        </figure>
       </div>
     </div>
   </div>
