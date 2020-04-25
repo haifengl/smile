@@ -32,7 +32,7 @@ bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
 bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}/..""""
 
 // Scala REPL needs this
-//bashScriptExtraDefines += """addJava "-Dscala.usejavacp=true""""
+bashScriptExtraDefines += """addJava "-Dscala.usejavacp=true""""
 
 bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc""""
 
@@ -51,12 +51,7 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.1"
-
-libraryDependencies ++= Seq(
-  "com.lihaoyi" % "ammonite" % "2.0.4" cross CrossVersion.full,
-  "io.github.alexarchambault.windows-ansi" % "windows-ansi" % "0.0.3"
-)
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.2"
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
 
