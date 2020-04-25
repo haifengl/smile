@@ -51,7 +51,7 @@ buildInfoPackage := "smile.shell"
 
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.2"
+libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.11"
 
 libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
 
