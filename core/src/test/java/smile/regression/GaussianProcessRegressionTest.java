@@ -24,19 +24,12 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.clustering.KMeans;
 import smile.data.*;
-import smile.data.formula.Formula;
-import smile.io.Arff;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.util.Paths;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
-
-import java.io.IOException;
-
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.fail;
 
 /**
  *

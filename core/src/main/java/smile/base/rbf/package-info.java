@@ -15,29 +15,9 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.projection.ica;
-
-import smile.math.DifferentiableFunction;
-
 /**
- * This function may be better than LogCosh when the independent
- * components are highly super-Gaussian, or when robustness is very important.
+ * RBF network base package.
+ *
+ * @author Haifeng Li
  */
-public class Gaussian implements DifferentiableFunction {
-
-    @Override
-    public double f(double x) {
-        return -Math.exp(-0.5 * x * x);
-    }
-
-    @Override
-    public double g(double x) {
-        return x * Math.exp(-0.5 * x * x);
-    }
-
-    @Override
-    public double g2(double x) {
-        double x2 = x * x;
-        return (1 - x2) * Math.exp(-0.5 * x2);
-    }
-}
+package smile.base.rbf;
