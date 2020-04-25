@@ -24,7 +24,7 @@ import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
-import smile.projection.ica.Gaussian;
+import smile.projection.ica.Exp;
 import smile.projection.ica.LogCosh;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -103,7 +103,7 @@ public class ICA implements Serializable {
                 f = new LogCosh();
                 break;
             case "Gaussian":
-                f = new Gaussian();
+                f = new Exp();
                 break;
             default:
                 throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
@@ -119,10 +119,10 @@ public class ICA implements Serializable {
      *
      * @param data training data.
      * @param p the number of independent components.
-     * @param contrast the contrast function is a(statistical) functions which
-     *                 is capable of separating or extracting independent
-     *                 sources from a linear mixture. It must be a non-quadratic
-     *                 non-linear function that has second-order derivative.
+     * @param contrast the contrast function which is capable of separating or
+     *                 extracting independent sources from a linear mixture.
+     *                 It must be a non-quadratic non-linear function that
+     *                 has second-order derivative.
      * @param tol the tolerance of convergence test.
      * @param maxIter the maximum number of iterations.
      */
