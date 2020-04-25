@@ -29,10 +29,6 @@ dependencies {
     implementation("com.github.haifengl:smile-core:2.4.0")
     implementation("com.github.haifengl:smile-nlp:2.4.0")
     implementation("com.github.haifengl:smile-io:2.4.0")
-    // read.avro() needs org.apache.avro.Schema defintion
-    compileOnly("org.apache.avro:avro:1.8.2") {
-      exclude("org.slf4j", "slf4j-log4j12")
-    }
 }
 
 // Copy jar to shell lib

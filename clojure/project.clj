@@ -6,8 +6,7 @@
             :url "https://opensource.org/licenses/LGPL-3.0"}
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [com.github.haifengl/smile-core "2.4.0"]
-                 [com.github.haifengl/smile-io "2.4.0"]
-                 [org.apache.avro/avro "1.8.2"]]
+                 [com.github.haifengl/smile-io "2.4.0"]]
   :plugins [[lein-codox "0.10.7"]]
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
