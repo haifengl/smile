@@ -6,9 +6,6 @@
 # Add additional jvm parameters
 -server
 
-# Performance optimization
--XX:+AggressiveOpts
-
 # G1 garbage collector
 -XX:+UseG1GC
 
