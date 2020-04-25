@@ -20,23 +20,24 @@ package smile.projection.ica;
 import smile.math.DifferentiableFunction;
 
 /**
- * A good general-purpose contrast function for ICA.
+ * The contrast function when the independent components are highly
+ * super-Gaussian, or when robustness is very important.
  */
-public class LogCosh implements DifferentiableFunction {
+public class Exp implements DifferentiableFunction {
 
     @Override
     public double f(double x) {
-        return Math.log(Math.cosh(x));
+        return -Math.exp(-0.5 * x * x);
     }
 
     @Override
     public double g(double x) {
-        return Math.tanh(x);
+        return x * Math.exp(-0.5 * x * x);
     }
 
     @Override
     public double g2(double x) {
-        double tanh = Math.tanh(x);
-        return 1 - tanh * tanh;
+        double x2 = x * x;
+        return (1 - x2) * Math.exp(-0.5 * x2);
     }
 }

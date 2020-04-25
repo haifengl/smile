@@ -67,7 +67,10 @@ permalink: "{{ page.filePathStem }}.html"
     $ bin/smile
     </code></pre>
 
-            <p>to enter the shell, which is based on <a href="http://ammonite.io">Ammonite REPL</a>.
+            <p>to enter the shell, which is based on Scala REPL.
+                If you prefer <a href="http://ammonite.io">Ammonite REPL</a>,
+                copy its jar to Smile's <code>lib</code> directory. Smile Shell
+                will switch to Ammonite once restarted.
                 In the shell, you can run any valid Scala expressions.
                 In the simplest case, you can use it as a calculator.
                 Besides, all high-level Smile operators are predefined
@@ -155,8 +158,8 @@ smile&gt;
 
             <h3 id="calculator">Calculator</h3>
 
-            <p>Smile Shell is based on <a href="http://ammonite.io">Ammonite REPL</a>. We can run any valid Scala
-                expressions in the shell. In the simplest case, you can use it as a calculator.</p>
+            <p>We can run any valid Scala expressions in the shell. In the
+                simplest case, you can use it as a calculator.</p>
 
     <pre class="prettyprint lang-scala"><code>
     smile&gt; "Hello, World"

@@ -15,28 +15,9 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.projection.ica;
-
-import smile.math.DifferentiableFunction;
-
 /**
- * A good general-purpose contrast function for ICA.
+ * Probability distributions and statistical hypothesis tests.
+ *
+ * @author Haifeng Li
  */
-public class LogCosh implements DifferentiableFunction {
-
-    @Override
-    public double f(double x) {
-        return Math.log(Math.cosh(x));
-    }
-
-    @Override
-    public double g(double x) {
-        return Math.tanh(x);
-    }
-
-    @Override
-    public double g2(double x) {
-        double tanh = Math.tanh(x);
-        return 1 - tanh * tanh;
-    }
-}
+package smile.stat;
