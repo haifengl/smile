@@ -23,6 +23,7 @@ package smile.shell
   */
 object AmmoniteREPL {
   def main(clazz: Class[_], args0: Array[String]): Unit = {
+    val home = System.getProperty("user.home") + "/.smile"
     val code =
       """
         |repl.prompt() = "smile> "
@@ -34,8 +35,9 @@ object AmmoniteREPL {
         |    println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
         |}""".stripMargin
     
-    val args = "--predef" :: System.getProperty("scala.repl.autoruncode") ::
-               "--code "  :: code ::
+    val args = "--home" :: home ::
+               "--predef" :: System.getProperty("scala.repl.autoruncode") ::
+               "--predef-code" :: code ::
                "--banner" :: welcome("exit") :: args0.toList
 
     val method = clazz.getMethod("main", classOf[Array[String]])
