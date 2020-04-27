@@ -19,7 +19,6 @@ package smile.manifold;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import smile.graph.Graph;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -44,6 +43,7 @@ import smile.netlib.ARPACK;
  * 
  * @see IsoMap
  * @see LaplacianEigenmap
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -61,7 +61,7 @@ public class LLE implements Serializable {
      */
     public final int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
     /**
@@ -83,7 +83,7 @@ public class LLE implements Serializable {
 
     /**
      * Runs the LLE algorithm.
-     * @param data the dataset.
+     * @param data the input data.
      * @param k k-nearest neighbor.
      */
     public static LLE of(double[][] data, int k) {
@@ -92,7 +92,7 @@ public class LLE implements Serializable {
 
     /**
      * Runs the LLE algorithm.
-     * @param data the dataset.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      */
@@ -107,7 +107,7 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        Graph graph = NearestNeighborGraph.of(data, k, (v1, v2, weight, j) -> {
+        Graph graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
             N[v1][j] = v2;
         });
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);

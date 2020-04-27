@@ -20,10 +20,11 @@ package smile.manifold;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Optional;
 import smile.data.SparseDataset;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
+import smile.math.distance.Distance;
+import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
 import smile.math.matrix.SparseMatrix;
@@ -44,6 +45,7 @@ import smile.util.SparseArray;
  *
  * @see IsoMap
  * @see LLE
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -64,7 +66,7 @@ public class LaplacianEigenmap implements Serializable {
      */
     public final int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
     /**
@@ -98,7 +100,7 @@ public class LaplacianEigenmap implements Serializable {
 
     /**
      * Laplacian Eigenmaps with discrete weights.
-     * @param data the dataset.
+     * @param data the input data.
      * @param k k-nearest neighbor.
      */
     public static LaplacianEigenmap of(double[][] data, int k) {
@@ -107,15 +109,38 @@ public class LaplacianEigenmap implements Serializable {
 
     /**
      * Laplacian Eigenmap with Gaussian kernel.
-     * @param data the dataset.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
-     * Non-positive value means discrete weights.
+     *          Non-positive value means discrete weights.
      */
     public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
+        return of(data, new EuclideanDistance(), k, d, t);
+    }
+
+    /**
+     * Laplacian Eigenmaps with discrete weights.
+     * @param data the input data.
+     * @param distance the distance measure.
+     * @param k k-nearest neighbor.
+     */
+    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k) {
+        return of(data, distance, k, 2, -1);
+    }
+
+    /**
+     * Laplacian Eigenmap with Gaussian kernel.
+     * @param data the input data.
+     * @param distance the distance measure.
+     * @param k k-nearest neighbor.
+     * @param d the dimension of the manifold.
+     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
+     *          Non-positive value means discrete weights.
+     */
+    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
         // Use largest connected component of nearest neighbor graph.
-        Graph graph = NearestNeighborGraph.of(data, k, null);
+        Graph graph = NearestNeighborGraph.of(data, distance, k, false, null);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;
