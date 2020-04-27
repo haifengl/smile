@@ -18,10 +18,11 @@
 package smile.manifold;
 
 import java.io.Serializable;
-import java.util.Optional;
 import smile.graph.Graph;
 import smile.graph.Graph.Edge;
 import smile.math.MathEx;
+import smile.math.distance.Distance;
+import smile.math.distance.EuclideanDistance;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.EVD;
@@ -61,6 +62,7 @@ import smile.math.matrix.EVD;
  * 
  * @see LLE
  * @see LaplacianEigenmap
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -78,7 +80,7 @@ public class IsoMap implements Serializable {
      */
     public final int[] index;
     /**
-     * The coordinates.
+     * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
     /**
@@ -99,29 +101,50 @@ public class IsoMap implements Serializable {
     }
 
     /**
-     * Runs the C-Isomap algorithm.
-     * @param data the dataset.
+     * Runs the C-Isomap algorithm with Euclidean distance.
+     * @param data the input data.
      * @param k k-nearest neighbor.
      */
     public static IsoMap of(double[][] data, int k) {
         return of(data, k, 2, true);
     }
-    
+
     /**
      * Runs the Isomap algorithm.
-     * @param data the dataset.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
     public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
+        return of(data, new EuclideanDistance(), k, d, conformal);
+    }
+
+    /**
+     * Runs the C-Isomap algorithm.
+     * @param data the input data.
+     * @param k k-nearest neighbor.
+     */
+    public static <T> IsoMap of(T[] data, Distance<T> distance, int k) {
+        return of(data, distance, k, 2, true);
+    }
+    
+    /**
+     * Runs the Isomap algorithm.
+     * @param data the input data.
+     * @param distance the distance measure.
+     * @param k k-nearest neighbor.
+     * @param d the dimension of the manifold.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     */
+    public static <T> IsoMap of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
         Graph graph;
         if (!conformal) {
-            graph = NearestNeighborGraph.of(data, k, null);
+            graph = NearestNeighborGraph.of(data, distance, k, false, null);
         } else {
             int n = data.length;
             double[] M = new double[n];
-            graph = NearestNeighborGraph.of(data, k, (v1, v2, weight, j) -> {
+            graph = NearestNeighborGraph.of(data, distance, k, false, (v1, v2, weight, j) -> {
                 M[v1] += weight;
             });
 
