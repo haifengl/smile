@@ -34,14 +34,14 @@ class NearestNeighborGraph {
     /**
      * Nearest neighbor graph.
      */
-    public final Graph graph;
+    public final AdjacencyList graph;
 
     /**
      * Constructor.
      * @param index the original sample index.
      * @param graph the nearest neighbor graph.
      */
-    public NearestNeighborGraph(int[] index, Graph graph) {
+    public NearestNeighborGraph(int[] index, AdjacencyList graph) {
         this.index = index;
         this.graph = graph;
     }
@@ -116,7 +116,7 @@ class NearestNeighborGraph {
      *
      * @param graph the nearest neighbor graph.
      */
-    public static NearestNeighborGraph largest(Graph graph) {
+    public static NearestNeighborGraph largest(AdjacencyList graph) {
         int n = graph.getNumVertices();
 
         // Use largest connected component.
