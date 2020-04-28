@@ -604,11 +604,7 @@ public class AdjacencyList implements Graph {
         for (int i = 0; i < v.length; i++) {
             Collection<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
-                int j = edge.v2;
-                if (j == i) {
-                    j = edge.v1;
-                }
-
+                int j = edge.v1 == v[i] ? edge.v2 : edge.v1;
                 j = Arrays.binarySearch(v, j);
                 if (j >= 0) {
                     g.addEdge(i, j, edge.weight);
@@ -623,7 +619,6 @@ public class AdjacencyList implements Graph {
     public SparseMatrix toMatrix() {
         int size = 0;
         int[] colSize = new int[n];
-        int[] pos = new int[n];
         int[] colIndex = new int[n + 1];
         for (int i = 0; i < n; i++) {
             LinkedList<Edge> edges = graph[i];
