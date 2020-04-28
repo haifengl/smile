@@ -163,7 +163,7 @@ fun tsne(X: Array<DoubleArray>, d: Int = 2, perplexity: Double = 20.0, eta: Doub
  *                           in the range 2 to 100.
  * @param iterations         The number of iterations to optimize the
  *                           low-dimensional representation. Larger values result in more
- *                           accurate embedding. Muse be at least 10, choose wise value
+ *                           accurate embedding. Muse be at least 10. Choose wise value
  *                           based on the size of the input data, e.g, 200 for large
  *                           data (1000+ samples), 500 for small.
  * @param learningRate       The initial learning rate for the embedding optimization,
@@ -219,7 +219,7 @@ fun umap(data: Array<DoubleArray>, k: Int = 15, d: Int = 2, iterations: Int = 0,
  *                           in the range 2 to 100.
  * @param iterations         The number of iterations to optimize the
  *                           low-dimensional representation. Larger values result in more
- *                           accurate embedding. Muse be at least 10, choose wise value
+ *                           accurate embedding. Muse be at least 10. Choose wise value
  *                           based on the size of the input data, e.g, 200 for large
  *                           data (1000+ samples), 500 for small.
  * @param learningRate       The initial learning rate for the embedding optimization,
