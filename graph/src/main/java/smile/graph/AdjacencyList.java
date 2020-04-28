@@ -599,7 +599,7 @@ public class AdjacencyList implements Graph {
         int[] v = vertices.clone();
         Arrays.sort(v);
         
-        AdjacencyList g = new AdjacencyList(v.length);
+        AdjacencyList g = new AdjacencyList(v.length, digraph);
         for (int i = 0; i < v.length; i++) {
             Collection<Edge> edges = getEdges(v[i]);
             for (Edge edge : edges) {
