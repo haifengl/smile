@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -61,7 +62,8 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-public class TSNE {
+public class TSNE implements Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
