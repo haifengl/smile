@@ -37,7 +37,7 @@ import smile.plot.swing.ScatterPlot;
 @SuppressWarnings("serial")
 public class UMAPDemo extends JPanel implements Runnable, ActionListener {
 
-    private static final int DEFAULT_NEIGHBORS = 7;
+    private static final int DEFAULT_NEIGHBORS = 15;
     int neighbors = DEFAULT_NEIGHBORS;
     JTextField neighborsField;
 

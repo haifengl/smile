@@ -236,13 +236,16 @@ public class UMAP {
 
         // Spectral embedding initialization
         double[][] coordinates = spectralLayout(strength.laplacian, d);
+        logger.info("Finish initialization with spectral layout");
 
         // parameters for the differentiable curve used in lower
         // dimensional fuzzy simplicial complex construction.
         double[] curve = fitCurve(spread, minDist);
+        logger.info("Finish fitting the curve parameters");
 
         // Optimizing the embedding
         SparseMatrix epochs = computeEpochPerSample(strength.conorm, iterations);
+        logger.info("Start optimizing the layout");
         optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
         return new UMAP(coordinates);
     }
@@ -502,14 +505,11 @@ public class UMAP {
      *                           strength will have more epochs between being sampled.
      * @param negativeSamples    The number of negative samples (with membership strength 0).
      * @param initialAlpha       The initial learning rate for the SGD
-     * @param gamma              THe weight of negative samples
+     * @param gamma              The weight of negative samples
      * @param iterations         The number of iterations.
      */
-    private static void optimizeLayout(double[][] embedding, double[] curve,
-                                       SparseMatrix epochsPerSample, int iterations,
-                                       double initialAlpha, int negativeSamples,
-                                       double gamma) {
-
+    private static void optimizeLayout(double[][] embedding, double[] curve, SparseMatrix epochsPerSample,
+                                       int iterations, double initialAlpha, int negativeSamples, double gamma) {
         int n = embedding.length;
         int d = embedding[0].length;
         double a = curve[0];
@@ -531,17 +531,16 @@ public class UMAP {
                     double[] current = embedding[j];
                     double[] other = embedding[k];
 
-                    double gradCoeff = 0.0;
                     double distSquared = MathEx.squaredDistance(current, other);
                     if (distSquared > 0.0) {
-                        gradCoeff = -2.0 * a * b * Math.pow(distSquared, b - 1.0);
+                        double gradCoeff = -2.0 * a * b * Math.pow(distSquared, b - 1.0);
                         gradCoeff /= a * Math.pow(distSquared, b) + 1.0;
-                    }
 
-                    for (int i = 0; i < d; i++) {
-                        double gradD = clamp(gradCoeff * (current[i] - other[i]));
-                        current[i] += gradD * alpha;
-                        other[i] += -gradD * alpha;
+                        for (int i = 0; i < d; i++) {
+                            double gradD = clamp(gradCoeff * (current[i] - other[i]));
+                            current[i] += gradD * alpha;
+                            other[i]   -= gradD * alpha;
+                        }
                     }
 
                     edge.update(edge.x + epochsPerSample.get(index));
@@ -551,16 +550,14 @@ public class UMAP {
 
                     for (int p = 0; p < negSamples; p++) {
                         k = MathEx.randomInt(n);
+                        if (j == k) continue;
                         other = embedding[k];
                         distSquared = MathEx.squaredDistance(current, other);
 
+                        double gradCoeff = 0.0;
                         if (distSquared > 0.0) {
                             gradCoeff = 2.0 * gamma * b;
                             gradCoeff /= (0.001 + distSquared) * (a * Math.pow(distSquared, b) + 1);
-                        } else if (j == k) {
-                            continue;
-                        } else {
-                            gradCoeff = 0.0;
                         }
 
                         for (int i = 0; i < d; i++) {
@@ -576,6 +573,7 @@ public class UMAP {
                 }
             }
 
+            logger.info(String.format("The learning rate at %3d iterations: %.5f", iter, alpha));
             alpha = initialAlpha * (1.0 - (double) iter / iterations);
         }
     }
