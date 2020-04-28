@@ -40,12 +40,12 @@ import smile.stat.distribution.GaussianDistribution;
  * similarly to t-SNE, but also for general non-linear dimension reduction.
  * The algorithm is founded on three assumptions about the data:
  *
- * <ol>
+ * <ul>
  * <li>The data is uniformly distributed on a Riemannian manifold;</li>
  * <li>The Riemannian metric is locally constant (or can be approximated as
  * such);</li>
  * <li>The manifold is locally connected.</li>
- * </ol>
+ * </ul>
  *
  * From these assumptions it is possible to model the manifold with a fuzzy
  * topological structure. The embedding is found by searching for a low
