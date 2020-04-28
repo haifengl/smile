@@ -373,7 +373,7 @@ public class AdjacencyListTest {
      */
     @Test
     public void testToMatrix() {
-        System.out.println("toMatrix");
+        System.out.println("toMatrix digraph = false");
 
         AdjacencyList graph = new AdjacencyList(8, false);
         graph.addEdge(0, 2);
@@ -388,7 +388,7 @@ public class AdjacencyListTest {
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                System.out.print(matrix.get(i, j)+ " ");
+                System.out.print(matrix.get(i, j) + " ");
             }
             System.out.println();
         }
@@ -415,8 +415,8 @@ public class AdjacencyListTest {
      * Test of toSparseMatrix method, of class AdjacencyList.
      */
     @Test
-    public void testToMatrix2() {
-        System.out.println("toMatrix2");
+    public void testToMatrixDigraph() {
+        System.out.println("toMatrix digraph = true");
 
         AdjacencyList graph = new AdjacencyList(8, true);
         graph.addEdge(0, 2);
@@ -431,7 +431,7 @@ public class AdjacencyListTest {
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
-                System.out.print(matrix.get(i, j)+ " ");
+                System.out.print(matrix.get(i, j) + " ");
             }
             System.out.println();
         }
@@ -452,6 +452,65 @@ public class AdjacencyListTest {
         assertEquals(0.0, matrix.get(4, 3), 1E-10);
         assertEquals(0.0, matrix.get(5, 3), 1E-10);
         assertEquals(0.0, matrix.get(4, 5), 1E-10);
+    }
+
+    /**
+     * Test of subgraph method, of class AdjacencyList.
+     */
+    @Test
+    public void testSubgraph() {
+        System.out.println("subgraph digraph = false");
+
+        AdjacencyList graph = new AdjacencyList(8, false);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        int[] v = {1, 3, 7};
+        AdjacencyList sub = graph.subgraph(v);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print(sub.getWeight(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, sub.getWeight(0, 2), 1E-10);
+        assertEquals(1.0, sub.getWeight(2, 0), 1E-10);
+    }
+
+    /**
+     * Test of subgraph method, of class AdjacencyList.
+     */
+    @Test
+    public void testSubgraphDigraph() {
+        System.out.println("subgraph digraph = true");
+
+        AdjacencyList graph = new AdjacencyList(8, true);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        int[] v = {1, 3, 7};
+        AdjacencyList sub = graph.subgraph(v);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print(sub.getWeight(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, sub.getWeight(0, 2), 1E-10);
     }
 
     /**
