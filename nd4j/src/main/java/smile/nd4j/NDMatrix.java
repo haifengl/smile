@@ -31,7 +31,7 @@ import org.nd4j.linalg.inverse.InvertMatrix;
  *
  * @author Haifeng Li
  */
-public class NDMatrix implements DenseMatrix {
+public class NDMatrix implements DenseMatrix, Cloneable {
     private static final long serialVersionUID = 1L;
 
     static {
@@ -128,7 +128,7 @@ public class NDMatrix implements DenseMatrix {
     }
 
     @Override
-    public NDMatrix copy() {
+    public NDMatrix clone() {
         return new NDMatrix(A.dup());
     }
 
