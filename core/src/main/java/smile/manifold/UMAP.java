@@ -254,7 +254,7 @@ public class UMAP implements Serializable {
         // Optimizing the embedding
         SparseMatrix epochs = computeEpochPerSample(conorm, iterations);
         logger.info("Start optimizing the layout");
-        //optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
+        optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
         return new UMAP(nng.index, coordinates, graph);
     }
 
@@ -457,7 +457,6 @@ public class UMAP implements Serializable {
         // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
         // Our Lanczos class has no such issue.
         EVD eigen = ARPACK.eigen(L, Math.min(10*(d+1), n-1), "SM");
-        System.out.println(java.util.Arrays.toString(eigen.getEigenValues()));
 
         double absMax = 0;
         DenseMatrix V = eigen.getEigenVectors();
@@ -526,7 +525,7 @@ public class UMAP implements Serializable {
         double b = curve[1];
         double alpha = initialAlpha;
 
-        SparseMatrix epochsPerNegativeSample = epochsPerSample;
+        SparseMatrix epochsPerNegativeSample = epochsPerSample.clone();
         epochsPerNegativeSample.nonzeros().forEach(w -> w.update(w.x / negativeSamples));
         SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.clone();
         SparseMatrix epochNextSample = epochsPerSample.clone();
