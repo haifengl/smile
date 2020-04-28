@@ -18,6 +18,7 @@
 package smile.math.matrix;
 
 import java.util.Arrays;
+import smile.math.MathEx;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -129,6 +130,25 @@ public class BandMatrix implements Matrix, LinearSolver {
         this.m1 = m1;
         this.m2 = m2;
         A = new double[n][m1+m2+1];
+    }
+
+    @Override
+    public BandMatrix clone() {
+        BandMatrix copy = new BandMatrix(n, m1, m2);
+        for (int i = 0; i < n; i++) {
+            System.arraycopy(A[i], 0, copy.A[i], 0, A[i].length);
+        }
+
+        copy.symmetric = symmetric;
+
+        if (au != null) {
+            copy.au = MathEx.clone(au);
+            copy.al = MathEx.clone(al);
+            copy.index = index.clone();
+            copy.d = d;
+        }
+
+        return copy;
     }
 
     @Override

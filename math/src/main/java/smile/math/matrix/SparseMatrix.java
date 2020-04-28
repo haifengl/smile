@@ -205,6 +205,14 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             }
         }
     }
+
+    @Override
+    public SparseMatrix clone() {
+        SparseMatrix copy = new SparseMatrix(nrows, ncols, x.clone(), rowIndex.clone(), colIndex.clone());
+        copy.symmetric = symmetric;
+        return copy;
+    }
+
     /**
      * Returns an iterator of nonzero entries.
      * @return an iterator of nonzero entries
