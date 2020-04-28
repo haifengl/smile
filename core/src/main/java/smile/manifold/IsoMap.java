@@ -18,7 +18,7 @@
 package smile.manifold;
 
 import java.io.Serializable;
-import smile.graph.Graph;
+import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
@@ -86,7 +86,7 @@ public class IsoMap implements Serializable {
     /**
      * The nearest neighbor graph.
      */
-    public final Graph graph;
+    public final AdjacencyList graph;
 
     /**
      * Constructor.
@@ -94,7 +94,7 @@ public class IsoMap implements Serializable {
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public IsoMap(int[] index, double[][] coordinates, Graph graph) {
+    public IsoMap(int[] index, double[][] coordinates, AdjacencyList graph) {
         this.index = index;
         this.coordinates = coordinates;
         this.graph = graph;
@@ -138,7 +138,7 @@ public class IsoMap implements Serializable {
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
      */
     public static <T> IsoMap of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
-        Graph graph;
+        AdjacencyList graph;
         if (!conformal) {
             graph = NearestNeighborGraph.of(data, distance, k, false, null);
         } else {

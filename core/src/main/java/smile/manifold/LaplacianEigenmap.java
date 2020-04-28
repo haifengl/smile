@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import smile.data.SparseDataset;
-import smile.graph.Graph;
+import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
@@ -72,7 +72,7 @@ public class LaplacianEigenmap implements Serializable {
     /**
      * Nearest neighbor graph.
      */
-    public final Graph graph;
+    public final AdjacencyList graph;
 
     /**
      * Constructor with discrete weights.
@@ -80,7 +80,7 @@ public class LaplacianEigenmap implements Serializable {
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public LaplacianEigenmap(int[] index, double[][] coordinates, Graph graph) {
+    public LaplacianEigenmap(int[] index, double[][] coordinates, AdjacencyList graph) {
         this(-1, index, coordinates, graph);
     }
 
@@ -91,7 +91,7 @@ public class LaplacianEigenmap implements Serializable {
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public LaplacianEigenmap(double width, int[] index, double[][] coordinates, Graph graph) {
+    public LaplacianEigenmap(double width, int[] index, double[][] coordinates, AdjacencyList graph) {
         this.width = width;
         this.index = index;
         this.coordinates = coordinates;
@@ -140,7 +140,7 @@ public class LaplacianEigenmap implements Serializable {
      */
     public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
         // Use largest connected component of nearest neighbor graph.
-        Graph graph = NearestNeighborGraph.of(data, distance, k, false, null);
+        AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, false, null);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;

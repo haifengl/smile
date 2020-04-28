@@ -19,7 +19,7 @@ package smile.manifold;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import smile.graph.Graph;
+import smile.graph.AdjacencyList;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -67,7 +67,7 @@ public class LLE implements Serializable {
     /**
      * Nearest neighbor graph.
      */
-    public Graph graph;
+    public AdjacencyList graph;
 
     /**
      * Constructor.
@@ -75,7 +75,7 @@ public class LLE implements Serializable {
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public LLE(int[] index, double[][] coordinates, Graph graph) {
+    public LLE(int[] index, double[][] coordinates, AdjacencyList graph) {
         this.index = index;
         this.coordinates = coordinates;
         this.graph = graph;
@@ -107,7 +107,7 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        Graph graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
+        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
             N[v1][j] = v2;
         });
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
