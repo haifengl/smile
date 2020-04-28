@@ -17,6 +17,7 @@
 
 package smile
 
+import smile.math.distance.Distance
 import smile.util.time
 
 /** Manifold learning finds a low-dimensional basis for describing
@@ -167,6 +168,60 @@ package object manifold {
     */
   def tsne(X: Array[Array[Double]], d: Int = 2, perplexity: Double = 20.0, eta: Double = 200.0, iterations: Int = 1000): TSNE = time("t-SNE") {
     new TSNE(X, d, perplexity, eta, iterations)
+  }
+
+  /**
+    * Uniform Manifold Approximation and Projection.
+    *
+    * UMAP is a dimension reduction technique that can be used for visualization
+    * similarly to t-SNE, but also for general non-linear dimension reduction.
+    * The algorithm is founded on three assumptions about the data:
+    *
+    *  - The data is uniformly distributed on a Riemannian manifold;
+    *  - The Riemannian metric is locally constant (or can be approximated as such);
+    *  - The manifold is locally connected.
+    *
+    * From these assumptions it is possible to model the manifold with a fuzzy
+    * topological structure. The embedding is found by searching for a low
+    * dimensional projection of the data that has the closest possible equivalent
+    * fuzzy topological structure.
+    *
+    * @param data               the input data.
+    * @param k                  k-nearest neighbors. Larger values result in more global views
+    *                           of the manifold, while smaller values result in more local data
+    *                           being preserved. Generally in the range 2 to 100.
+    * @param d                  The target embedding dimensions. defaults to 2 to provide easy
+    *                           visualization, but can reasonably be set to any integer value
+    *                           in the range 2 to 100.
+    * @param iterations         The number of iterations to optimize the
+    *                           low-dimensional representation. Larger values result in more
+    *                           accurate embedding. Muse be greater than 10, choose wise value
+    *                           based on the size of the input data, e.g, 200 for large
+    *                           data (1000+ samples), 500 for small.
+    * @param learningRate       The initial learning rate for the embedding optimization,
+    *                           default 1.
+    * @param minDist            The desired separation between close points in the embedding
+    *                           space. Smaller values will result in a more clustered/clumped
+    *                           embedding where nearby points on the manifold are drawn closer
+    *                           together, while larger values will result on a more even
+    *                           disperse of points. The value should be set no-greater than
+    *                           and relative to the spread value, which determines the scale
+    *                           at which embedded points will be spread out. default 0.1.
+    * @param spread             The effective scale of embedded points. In combination with
+    *                           minDist, this determines how clustered/clumped the embedded
+    *                           points are. default 1.0.
+    * @param negativeSamples    The number of negative samples to select per positive sample
+    *                           in the optimization process. Increasing this value will result
+    *                           in greater repulsive force being applied, greater optimization
+    *                           cost, but slightly more accuracy, default 5.
+    * @param repulsionStrength  Weighting applied to negative samples in low dimensional
+    *                           embedding optimization. Values higher than one will result in
+    *                           greater weight being given to negative samples, default 1.0.
+    */
+  def umap(data: Array[Array[Double]], k: Int = 15, d: Int = 2, iterations: Int = 0, learningRate: Double = 1.0, minDist: Double = 0.1, spread: Double = 1.0, negativeSamples: Int = 5, repulsionStrength: Double = 1.0): UMAP = time("UMAP") {
+    return UMAP.of(data, k, d,
+      if (iterations >= 10) iterations else if (data.length > 10000) 200 else 500,
+      learningRate, minDist, spread, negativeSamples, repulsionStrength)
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
