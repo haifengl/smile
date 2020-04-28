@@ -38,6 +38,8 @@ while true; do
             check_error "sbt ++2.12.11 scala/publishSigned"
             sbt ++2.12.11 json/publishSigned
             check_error "sbt ++2.12.11 json/publishSigned"
+            #sbt ++2.12.11 spark/publishSigned
+            #check_error "sbt ++2.12.11 spark/publishSigned"
 
             git checkout scala-2.11
             check_error "git checkout scala-2.11"
@@ -49,10 +51,40 @@ while true; do
             check_error "sbt ++2.11.12 scala/publishSigned"
             sbt ++2.11.12 json/publishSigned
             check_error "sbt ++2.11.12 json/publishSigned"
+            #sbt ++2.11.12 spark/publishSigned
+            #check_error "sbt ++2.11.12 spark/publishSigned"
 
             git checkout master
             break;;
-        [Nn]* ) exit;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+while true; do
+    read -p "Do you want to publish smile-kotlin? " ans
+    case $ans in
+        [Yy]* )
+            cd kotlin
+            gradle publish
+            check_error "gradle publish"
+            cd ..
+            break;;
+        [Nn]* ) break;;
+        * ) echo "Please answer yes or no.";;
+    esac
+done
+
+while true; do
+    read -p "Do you want to publish smile-clojure? " ans
+    case $ans in
+        [Yy]* )
+            cd ../clojure
+            lein deploy clojars
+            check_error "lein deploy clojars"
+            cd ..
+            break;;
+        [Nn]* ) break;;
         * ) echo "Please answer yes or no.";;
     esac
 done
