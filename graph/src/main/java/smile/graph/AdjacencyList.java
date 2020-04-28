@@ -619,7 +619,7 @@ public class AdjacencyList implements Graph {
     }
     
     @Override
-    public Matrix toMatrix() {
+    public SparseMatrix toMatrix() {
         int size = 0;
         int[] colSize = new int[n];
         int[] pos = new int[n];
