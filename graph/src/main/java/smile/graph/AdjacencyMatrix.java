@@ -529,7 +529,7 @@ public class AdjacencyMatrix implements Graph {
         int[] v = vertices.clone();
         Arrays.sort(v);
         
-        AdjacencyMatrix g = new AdjacencyMatrix(v.length);
+        AdjacencyMatrix g = new AdjacencyMatrix(v.length, digraph);
         for (int i = 0; i < v.length; i++) {
             for (int j = 0; j < v.length; j++) {
                 g.graph[i][j] = graph[v[i]][v[j]];
