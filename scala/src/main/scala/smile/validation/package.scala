@@ -346,7 +346,7 @@ package object validation {
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return measure results.
       */
-    def classification[T <: Object](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
       val prediction = LOOCV.classification(x, y, trainer)
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
@@ -385,7 +385,7 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return measure results.
       */
-    def regression[T <: Object](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = LOOCV.regression(x, y, trainer)
 
       measuresOrRMSE(measures).map { measure =>
@@ -435,7 +435,7 @@ package object validation {
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return measure results.
       */
-    def classification[T <: Object](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
       val prediction = CrossValidation.classification(k, x, y, trainer)
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
@@ -476,7 +476,7 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return measure results.
       */
-    def regression[T <: Object](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = CrossValidation.regression(k, x, y, trainer)
 
       measuresOrRMSE(measures).map { measure =>
@@ -522,7 +522,7 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the error rates of each round.
       */
-    def classification[T <: Object](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
       Bootstrap.classification(k, x, y, trainer)
     }
 
@@ -546,7 +546,7 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return the root mean squared error of each round.
       */
-    def regression[T <: Object](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       Bootstrap.regression(k, x, y, trainer)
     }
 
