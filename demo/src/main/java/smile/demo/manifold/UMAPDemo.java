@@ -28,6 +28,7 @@ import smile.io.Read;
 import smile.manifold.UMAP;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.Wireframe;
 
 /**
  * Visualization Demo for {@link UMAP} algorithm
@@ -86,9 +87,16 @@ public class UMAPDemo extends JPanel implements Runnable, ActionListener {
         UMAP umap = UMAP.of(data, neighbors);
         System.out.format("Learn UMAP from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        double[][] y = umap.coordinates;
+        int[] y = new int[umap.index.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = labels[umap.index[i]];
+        }
 
-        Canvas plot = ScatterPlot.of(y, labels, '@').canvas();
+        double[][] vertices = umap.coordinates;
+        int[][] edges = umap.graph.getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new);
+
+        Canvas plot = Wireframe.of(vertices, edges).canvas();
+        plot.add(ScatterPlot.of(vertices, y, '@'));
 
         plot.setTitle("UMAP");
         pane.add(plot.panel());
