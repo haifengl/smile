@@ -42,10 +42,10 @@ object write {
   }
 
   /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: Object](x: T, file: String): Unit = xstream(x, Paths.get(file))
+  def xstream[T <: AnyRef](x: T, file: String): Unit = xstream(x, Paths.get(file))
 
   /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: Object](x: T, file: Path): Unit = {
+  def xstream[T <: AnyRef](x: T, file: Path): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
     new PrintWriter(file.toFile) {

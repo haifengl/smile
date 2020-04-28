@@ -195,7 +195,7 @@ package object manifold {
     *                           in the range 2 to 100.
     * @param iterations         The number of iterations to optimize the
     *                           low-dimensional representation. Larger values result in more
-    *                           accurate embedding. Muse be greater than 10, choose wise value
+    *                           accurate embedding. Muse be greater than 10. Choose wise value
     *                           based on the size of the input data, e.g, 200 for large
     *                           data (1000+ samples), 500 for small.
     * @param learningRate       The initial learning rate for the embedding optimization,

@@ -176,7 +176,7 @@ package object projection {
     * @param threshold only principal components with eigenvalues larger than
     *                  the given threshold will be kept.
     */
-  def kpca[T <: Object](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = time("Kernel PCA") {
+  def kpca[T <: AnyRef](data: Array[T], kernel: MercerKernel[T], k: Int, threshold: Double = 0.0001): KPCA[T] = time("Kernel PCA") {
     KPCA.fit(data, kernel, k, threshold)
   }
 
