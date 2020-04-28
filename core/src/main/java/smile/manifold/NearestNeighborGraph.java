@@ -66,7 +66,7 @@ class NearestNeighborGraph {
      * @param digraph flag to create a directed graph.
      * @param consumer an optional lambda to perform some side effect operations.
      */
-    public static Graph of(double[][] data, int k, boolean digraph, EdgeConsumer consumer) {
+    public static AdjacencyList of(double[][] data, int k, boolean digraph, EdgeConsumer consumer) {
         return of(data, new EuclideanDistance(), k, digraph ,consumer);
     }
 
@@ -79,12 +79,12 @@ class NearestNeighborGraph {
      * @param digraph flag to create a directed graph.
      * @param consumer an optional lambda to perform some side effect operations.
      */
-    public static <T> Graph of(T[] data, Distance<T> distance, int k, boolean digraph, EdgeConsumer consumer) {
+    public static <T> AdjacencyList of(T[] data, Distance<T> distance, int k, boolean digraph, EdgeConsumer consumer) {
         // This is actually faster on many core systems.
         LinearSearch<T> knn = new LinearSearch<>(data, distance);
 
         int n = data.length;
-        Graph graph = new AdjacencyList(n, digraph);
+        AdjacencyList graph = new AdjacencyList(n, digraph);
 
         if (consumer != null) {
             for (int i = 0; i < n; i++) {
