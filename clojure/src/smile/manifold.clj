@@ -123,3 +123,56 @@
   `iterations` is the number of iterations."
   ([data] (tsne data 2 20.0 200.0 1000))
   ([data d perplexity eta iterations] (TSNE. data d perplexity eta iterations)))
+
+(defn umap
+  "Unnifold Approximation and Projection.
+
+  UMAP is a dimension reduction technique that can be used for visualization
+  similarly to t-SNE, but also for general non-linear dimension reduction.
+  The algorithm is founded on three assumptions about the data:
+  
+   - The data is uniformly distributed on a Riemannian manifold;
+   - The Riemannian metric is locally constant (or can be approximated as such);
+   - The manifold is locally connected.
+  
+  From these assumptions it is possible to model the manifold with a fuzzy
+  topological structure. The embedding is found by searching for a low
+  dimensional projection of the data that has the closest possible equivalent
+  fuzzy topological structure.
+
+  `data` is the input data.
+  `distance` is the distance measure.
+  `k` is of k-nearest neighbors. Larger values result in more global views
+  of the manifold, while smaller values result in more local data
+  being preserved. Generally in the range 2 to 100.
+  `d` is the target embedding dimensions. defaults to 2 to provide easy
+  visualization, but can reasonably be set to any integer value
+  in the range 2 to 100.
+  `iterations` is the number of iterations to optimize the
+  low-dimensional representation. Larger values result in more
+  accurate embedding. Muse be greater than 10, choose wise value
+  based on the size of the input data, e.g, 200 for large
+  data (1000+ samples), 500 for small.
+  `learningRate` is the initial learning rate for the embedding optimization,
+  default 1.
+  `minDist` is the desired separation between close points in the embedding
+  space. Smaller values will result in a more clustered/clumped
+  embedding where nearby points on the manifold are drawn closer
+  together, while larger values will result on a more even
+  disperse of points. The value should be set no-greater than
+  and relative to the spread value, which determines the scale
+  at which embedded points will be spread out. default 0.1.
+  `spread` is the effective scale of embedded points. In combination with
+  minDist, this determines how clustered/clumped the embedded
+  points are. default 1.0.
+  `negativeSamples` is the number of negative samples to select per positive
+  sample in the optimization process. Increasing this value will result
+  in greater repulsive force being applied, greater optimization
+  cost, but slightly more accuracy, default 5.
+  `repulsionStrength` is the weight applied to negative samples in low
+  dimensional embedding optimization. Values higher than one will result in
+  greater weight being given to negative samples, default 1.0."
+  ([data] (UMAP/of data))
+  ([data distance] (UMAP/of data distance))
+  ([data k d iterations learningRate minDist spread negativeSamples repulsionStrength] (UMAP/of data k d iterations learningRate minDist spread negativeSamples repulsionStrength))
+  ([data distance k d iterations learningRate minDist spread negativeSamples repulsionStrength] (UMAP/of data distance k d iterations learningRate minDist spread negativeSamples repulsionStrength)))
