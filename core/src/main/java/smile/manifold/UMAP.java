@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.stream.IntStream;
 import smile.graph.AdjacencyList;
@@ -61,20 +62,33 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author rayeaster
  */
-public class UMAP {
+public class UMAP implements Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(UMAP.class);
 
     /**
      * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
+    /**
+     * The original sample index.
+     */
+    public final int[] index;
+    /**
+     * The nearest neighbor graph.
+     */
+    public final AdjacencyList graph;
 
     /**
      * Constructor.
+     * @param index the original sample index.
      * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
      */
-    public UMAP(double[][] coordinates) {
+    public UMAP(int[] index, double[][] coordinates, AdjacencyList graph) {
+        this.index = index;
         this.coordinates = coordinates;
+        this.graph = graph;
     }
 
     /**
@@ -221,21 +235,15 @@ public class UMAP {
         // Construct the local fuzzy simplicial set by locally approximating
         // geodesic distance at each point, and then combining all the local
         // fuzzy simplicial sets into a global one via a fuzzy union.
-        AdjacencyList nng = NearestNeighborGraph.of(data, distance, k, true,null);
+        AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, true,null);
+        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
-        int n = data.length;
-        // The smooth approximator to knn-distance
-        double[] sigma = new double[n];
-        // The distance to nearest neighbor
-        double[] rho = new double[n];
-
-        smoothKnnDistance(nng, k, sigma, rho, 64);
-        // The matrix entry (i, j) is the membership strength
-        // between the i-th and j-th samples.
-        Strength strength = computeMembershipStrengths(nng, sigma, rho);
+        graph = computeFuzzySimplicialSet(nng.graph, k, 64);
+        SparseMatrix conorm = graph.toMatrix();
+        conorm.setSymmetric(true);
 
         // Spectral embedding initialization
-        double[][] coordinates = spectralLayout(strength.laplacian, d);
+        double[][] coordinates = spectralLayout(graph, d);
         logger.info("Finish initialization with spectral layout");
 
         // parameters for the differentiable curve used in lower
@@ -244,10 +252,10 @@ public class UMAP {
         logger.info("Finish fitting the curve parameters");
 
         // Optimizing the embedding
-        SparseMatrix epochs = computeEpochPerSample(strength.conorm, iterations);
+        SparseMatrix epochs = computeEpochPerSample(conorm, iterations);
         logger.info("Start optimizing the layout");
-        optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
-        return new UMAP(coordinates);
+        //optimizeLayout(coordinates, curve, epochs, iterations, learningRate, negativeSamples, repulsionStrength);
+        return new UMAP(nng.index, coordinates, graph);
     }
 
     /**
@@ -275,10 +283,9 @@ public class UMAP {
     };
 
     /**
-     * Fits the differentiable curve used in lower dimensional
-     * fuzzy simplicial complex construction. We want the smooth curve (from a
-     * pre-defined family with simple gradient) that best matches an offset
-     * exponential decay.
+     * Fits the differentiable curve used in lower dimensional fuzzy simplicial
+     * complex construction. We want the smooth curve (from a pre-defined
+     * family with simple gradient) that best matches an offset exponential decay.
      *
      * @param spread  The effective scale of embedded points. In combination with
      *                minDist, this determines how clustered/clumped the embedded
@@ -305,22 +312,30 @@ public class UMAP {
     }
 
     /**
-     * Computes a continuous version of the distance to the kth nearest neighbor.
-     * That is, this is similar to knn-distance but allows continuous k values
-     * rather than requiring an integral k. In essence we are simply computing
-     * the distance such that the cardinality of fuzzy set we generate is k.
+     * Computes the fuzzy simplicial set as a fuzzy graph with the
+     * probabilistic t-conorm. This is done by locally approximating
+     * geodesic distance at each point, creating a fuzzy simplicial
+     * set for each such point, and then combining all the local
+     * fuzzy simplicial sets into a global one via a fuzzy union.
      *
      * @param nng        The nearest neighbor graph.
      * @param k          k-nearest neighbor.
-     * @param sigma      The smooth approximator to knn-distance
-     * @param rho        The distance to nearest neighbor
-     * @param iterations The max number of iterations of the binary search for the correct distance value.
-     *                   default 64
+     * @param iterations The max number of iterations of the binary search
+     *                   for the correct distance value. default 64
+     * @return A fuzzy simplicial set represented as a sparse matrix. The (i, j)
+     * entry of the matrix represents the membership strength of the
+     * 1-simplex between the ith and jth sample points.
      */
-    private static void smoothKnnDistance(AdjacencyList nng, int k, double[] sigma, double[] rho, int iterations) {
+    private static AdjacencyList computeFuzzySimplicialSet(AdjacencyList nng, int k, int iterations) {
+        // Algorithm 2 Constructing a local fuzzy simplicial set
         double target = MathEx.log2(k);
 
         int n = nng.getNumVertices();
+        // The smooth approximator to knn-distance
+        double[] sigma = new double[n];
+        // The distance to nearest neighbor
+        double[] rho = new double[n];
+
         double avg = IntStream.range(0, n).mapToObj(i -> nng.getEdges(i))
                 .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
                 .filter(w -> !MathEx.isZero(w, 1E-10))
@@ -337,6 +352,8 @@ public class UMAP {
                     .filter(w -> !MathEx.isZero(w, 1E-10))
                     .min().orElse(0);
 
+            // Algorithm 3 Compute the normalizing factor for distances σ
+            // function SmoothKNNDist() by binary search
             for (int iter = 0; iter < iterations; iter++) {
                 double psum = 0.0;
                 for (Edge edge : knn) {
@@ -377,27 +394,11 @@ public class UMAP {
                 sigma[i] = Math.max(sigma[i], 1E-3 * avg);
             }
         }
-    }
 
-    private static class Strength {
-        SparseMatrix conorm;
-        SparseMatrix laplacian;
-    }
-
-    /**
-     * Construct the membership strength data for the 1-skeleton of each local
-     * fuzzy simplicial set.
-     *
-     * @param nng       The nearest neighbor graph.
-     * @param sigma     The smooth approximator to knn-distance
-     * @param rho       The distance to nearest neighbor
-     * @return A fuzzy simplicial set represented as a sparse matrix. The (i, j)
-     * entry of the matrix represents the membership strength of the
-     * 1-simplex between the ith and jth sample points.
-     */
-    private static Strength computeMembershipStrengths(AdjacencyList nng, double[] sigma, double[] rho) {
-        int n = nng.getNumVertices();
-
+        // Computes a continuous version of the distance to the kth nearest neighbor.
+        // That is, this is similar to knn-distance but allows continuous k values
+        // rather than requiring an integral k. In essence we are simply computing
+        // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
                 edge.weight = Math.exp(-Math.max(0.0, (edge.weight - rho[i])) / (sigma[i]));
@@ -405,49 +406,56 @@ public class UMAP {
         }
 
         // probabilistic t-conorm: (a + a' - a .* a')
-        double[] D = new double[n];
+        AdjacencyList G = new AdjacencyList(n, false);
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
                 double w = edge.weight;
                 double w2 = nng.getWeight(edge.v2, edge.v1); // weight of reverse arc.
                 w = w + w2 - w * w2;
-                edge.weight = w;
-                D[i] += w;
+                G.setWeight(edge.v1, edge.v2, w);
             }
-
-            D[i] = 1.0 / Math.sqrt(D[i]);
         }
 
-        Strength g = new Strength();
-        g.conorm = nng.toMatrix();
-
-        for (int i = 0; i < n; i++) {
-            for (Edge edge : nng.getEdges(i)) {
-                edge.weight = -D[i] * edge.weight * D[edge.v2];
-            }
-            nng.setWeight(i, i, 1.0);
-        }
-
-        // Laplacian of graph.
-        SparseMatrix laplacian = nng.toMatrix();
-        laplacian.setSymmetric(true);
-        g.laplacian =  laplacian;
-        return g;
+        return G;
     }
 
     /**
      * Computes the spectral embedding of the graph, which is
      * the eigenvectors of the (normalized) Laplacian of the graph.
      *
-     * @param L The Laplacian of graph.
+     * @param nng The nearest neighbor graph.
      * @param d The dimension of the embedding space.
      */
-    private static double[][] spectralLayout(SparseMatrix L, int d) {
-        int n = L.ncols();
+    private static double[][] spectralLayout(AdjacencyList nng, int d) {
+        // Algorithm 4 Spectral embedding for initialization
+        int n = nng.getNumVertices();
+        double[] D = new double[n];
+        for (int i = 0; i < n; i++) {
+            for (Edge edge : nng.getEdges(i)) {
+                D[i] += edge.weight;
+            }
+
+            D[i] = 1.0 / Math.sqrt(D[i]);
+        }
+
+        // Laplacian of graph.
+        AdjacencyList laplacian = new AdjacencyList(n, false);
+        for (int i = 0; i < n; i++) {
+            laplacian.setWeight(i, i, 1.0);
+            for (Edge edge : nng.getEdges(i)) {
+                double w = -D[edge.v1] * edge.weight * D[edge.v2];
+                laplacian.setWeight(edge.v1, edge.v2, w);
+            }
+        }
+
+        SparseMatrix L = laplacian.toMatrix();
+        L.setSymmetric(true);
+
         // ARPACK may not find all needed eigen values for k = d + 1.
         // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
         // Our Lanczos class has no such issue.
         EVD eigen = ARPACK.eigen(L, Math.min(10*(d+1), n-1), "SM");
+        System.out.println(java.util.Arrays.toString(eigen.getEigenValues()));
 
         double absMax = 0;
         DenseMatrix V = eigen.getEigenVectors();
@@ -523,7 +531,7 @@ public class UMAP {
 
         for (int iter = 1; iter <= iterations; iter++) {
             for (SparseMatrix.Entry edge : epochNextSample) {
-                if (edge.x <= iter) {
+                if (edge.x > 0 && edge.x <= iter) {
                     int j = edge.i;
                     int k = edge.j;
                     int index = edge.index;
