@@ -16,7 +16,7 @@
 (ns smile.manifold
   "Manifold Learning"
   {:author "Haifeng Li"}
-  (:import [smile.manifold IsoMap LLE LaplacianEigenmap TSNE]))
+  (:import [smile.manifold IsoMap LLE LaplacianEigenmap TSNE UMAP]))
 
 (defn isomap
   "Isometric feature mapping.
@@ -150,7 +150,7 @@
   in the range 2 to 100.
   `iterations` is the number of iterations to optimize the
   low-dimensional representation. Larger values result in more
-  accurate embedding. Muse be greater than 10, choose wise value
+  accurate embedding. Muse be at least 10. Choose wise value
   based on the size of the input data, e.g, 200 for large
   data (1000+ samples), 500 for small.
   `learningRate` is the initial learning rate for the embedding optimization,

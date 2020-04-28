@@ -105,7 +105,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         public final double x;
 
         /** The index to the internal storage. */
-        private final int index;
+        public final int index;
 
         /**
          * Private constructor. Only the enclosure matrix can creates
@@ -317,6 +317,16 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     public Stream<Entry> nonzeros(int beginColumn, int endColumn) {
         Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(beginColumn, endColumn), colIndex[endColumn] - colIndex[beginColumn], ORDERED | SIZED | IMMUTABLE);
         return StreamSupport.stream(spliterator, false);
+    }
+
+    /** Returns the value at the index of internal storage. */
+    public double get(int index) {
+        return x[index];
+    }
+
+    /** Sets the value at the index of internal storage. */
+    public double set(int index, double value) {
+        return x[index] = value;
     }
 
     @Override

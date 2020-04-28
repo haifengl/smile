@@ -19,7 +19,6 @@ package smile.manifold;
 
 import java.util.Collection;
 import java.util.stream.IntStream;
-
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.DifferentiableMultivariateFunction;
@@ -133,7 +132,7 @@ public class UMAP {
      *                           in the range 2 to 100.
      * @param iterations         The number of iterations to optimize the
      *                           low-dimensional representation. Larger values result in more
-     *                           accurate embedding. Muse be at least 10, choose wise value
+     *                           accurate embedding. Muse be at least 10. Choose wise value
      *                           based on the size of the input data, e.g, 200 for large
      *                           data (10000+ samples), 500 for small.
      * @param learningRate       The initial learning rate for the embedding optimization,
@@ -173,7 +172,7 @@ public class UMAP {
      *                           in the range 2 to 100.
      * @param iterations         The number of iterations to optimize the
      *                           low-dimensional representation. Larger values result in more
-     *                           accurate embedding. Muse be at least 10, choose wise value
+     *                           accurate embedding. Muse be at least 10. Choose wise value
      *                           based on the size of the input data, e.g, 200 for large
      *                           data (1000+ samples), 500 for small.
      * @param learningRate       The initial learning rate for the embedding optimization,
@@ -511,85 +510,71 @@ public class UMAP {
                                        double initialAlpha, int negativeSamples,
                                        double gamma) {
 
-        int n2 = embedding.length;
+        int n = embedding.length;
+        int d = embedding[0].length;
         double a = curve[0];
         double b = curve[1];
         double alpha = initialAlpha;
 
+        SparseMatrix epochsPerNegativeSample = epochsPerSample;
+        epochsPerNegativeSample.nonzeros().forEach(w -> w.update(w.x / negativeSamples));
+        SparseMatrix epochNextNegativeSample = epochsPerNegativeSample.clone();
+        SparseMatrix epochNextSample = epochsPerSample.clone();
+
         for (int iter = 1; iter <= iterations; iter++) {
-            int i = iter;
-            epochsPerSample.nonzeros().forEach(epoch -> {
-                int j = epoch.i;
-                int k = epoch.j;
-                double prob = epoch.x;
-                if (prob <= i) {
+            for (SparseMatrix.Entry edge : epochNextSample) {
+                if (edge.x <= iter) {
+                    int j = edge.i;
+                    int k = edge.j;
+                    int index = edge.index;
+
                     double[] current = embedding[j];
                     double[] other = embedding[k];
 
+                    double gradCoeff = 0.0;
                     double distSquared = MathEx.squaredDistance(current, other);
-                }
-            });
-            /*
-            for (Entry<Integer, Map<Integer, Double>> ent : epochsPerSample.entrySet()) {
-                int j = ent.getKey();
-                for (Entry<Integer, Double> samp : ent.getValue().entrySet()) {
-                    int k = samp.getKey();
-                    double prob = getDoubleValueFrom(epochNextSample, j, k);
-                    if (prob <= n) {
-                        double[] current = embedding[j];
-                        double[] other = embedding[k];
+                    if (distSquared > 0.0) {
+                        gradCoeff = -2.0 * a * b * Math.pow(distSquared, b - 1.0);
+                        gradCoeff /= a * Math.pow(distSquared, b) + 1.0;
+                    }
 
-                        double distSquared = metric.d(current, other);
-                        double gradCoeff = 0;
+                    for (int i = 0; i < d; i++) {
+                        double gradD = clamp(gradCoeff * (current[i] - other[i]));
+                        current[i] += gradD * alpha;
+                        other[i] += -gradD * alpha;
+                    }
+
+                    edge.update(edge.x + epochsPerSample.get(index));
+
+                    // negative sampling
+                    int negSamples = (int) ((iter - epochNextNegativeSample.get(index)) / epochsPerNegativeSample.get(index));
+
+                    for (int p = 0; p < negSamples; p++) {
+                        k = MathEx.randomInt(n);
+                        other = embedding[k];
+                        distSquared = MathEx.squaredDistance(current, other);
+
                         if (distSquared > 0.0) {
-                            gradCoeff = -2.0 * a * b * Math.pow(distSquared, b - 1.0);
-                            gradCoeff /= a * Math.pow(distSquared, b) + 1.0;
+                            gradCoeff = 2.0 * gamma * b;
+                            gradCoeff /= (0.001 + distSquared) * (a * Math.pow(distSquared, b) + 1);
+                        } else if (j == k) {
+                            continue;
                         } else {
                             gradCoeff = 0.0;
                         }
 
-                        double gradD = 0;
-                        for (int d = 0; d < dim; d++) {
-                            gradD = clamp(gradCoeff * (current[d] - other[d]));
-                            current[d] += gradD * alpha;
-                            other[d] += -gradD * alpha;
-                        }
-                        epochNextSample.get(j).put(k, samp.getValue() + getDoubleValueFrom(epochNextSample, j, k));
-
-                        // negative sampling
-                        int nNegSamples = (int) ((n - epochNextNegativeSample.get(j).get(k)) / epochPerNegativeSample.get(j).get(k));
-                        for (int p = 0; p < nNegSamples; p++) {
-                            k = MathEx.randomInt(Integer.MAX_VALUE) % N;
-
-                            other = embedding[k];
-
-                            distSquared = metric.d(current, other);
-
-                            if (distSquared > 0.0) {
-                                gradCoeff = 2.0 * gamma * b;
-                                gradCoeff /= (0.001 + distSquared) * (a * Math.pow(distSquared, b) + 1);
-                            } else if (j == k) {
-                                continue;
-                            } else {
-                                gradCoeff = 0.0;
+                        for (int i = 0; i < d; i++) {
+                            double gradD = 4.0;
+                            if (gradCoeff > 0.0) {
+                                gradD = clamp(gradCoeff * (current[i] - other[i]));
                             }
-
-                            for (int d = 0; d < dim; d++) {
-                                if (gradCoeff > 0.0) {
-                                    gradD = clamp(gradCoeff * (current[d] - other[d]));
-                                } else {
-                                    gradD = 4.0;
-                                }
-                                current[d] += gradD * alpha;
-                            }
+                            current[i] += gradD * alpha;
                         }
-
-                        epochNextNegativeSample.get(j).put(k, getDoubleValueFrom(epochNextNegativeSample, j, k)
-                                + getDoubleValueFrom(epochPerNegativeSample, j, k) * nNegSamples);
                     }
+
+                    epochNextNegativeSample.set(index, epochNextNegativeSample.get(index) + epochsPerNegativeSample.get(index) * negSamples);
                 }
             }
-             */
 
             alpha = initialAlpha * (1.0 - (double) iter / iterations);
         }
