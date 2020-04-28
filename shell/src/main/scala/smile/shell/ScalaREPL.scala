@@ -17,17 +17,15 @@
 
 package smile.shell
 
-/** An object that runs Smile script or interactive shell.
+/** Scala REPL based shell.
   *
   * @author Haifeng Li
   */
-object Main {
+object ScalaREPL extends scala.tools.nsc.MainGenericRunner {
   def main(args: Array[String]): Unit = {
-    try {
-      val clazz = Class.forName("ammonite.Main$")
-      AmmoniteREPL.main(clazz, args)
-    } catch {
-      case _: ClassNotFoundException => ScalaREPL.main(args)
-    }
+    System.setProperty("scala.repl.prompt", "%nsmile> ")
+    System.setProperty("scala.repl.welcome", welcome(":quit"))
+    
+    if (!process(args)) System.exit(1)
   }
 }

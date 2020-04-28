@@ -18,6 +18,7 @@
 package smile.io;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
@@ -25,7 +26,6 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
-import org.apache.avro.Schema;
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
@@ -210,9 +210,10 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input file path.
+     * @param path the input data file path.
+     * @param schema the input stream of schema.
      */
-    static DataFrame avro(String path, Schema schema) throws IOException, URISyntaxException {
+    static DataFrame avro(String path, InputStream schema) throws IOException, URISyntaxException {
         Avro avro = new Avro(schema);
         return avro.read(path);
     }
@@ -220,9 +221,32 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input file path.
+     * @param path the input data file path.
+     * @param schema the input schema file path.
      */
-    static DataFrame avro(Path path, Schema schema) throws IOException {
+    static DataFrame avro(String path, String schema) throws IOException, URISyntaxException {
+        Avro avro = new Avro(HadoopInput.stream(schema));
+        return avro.read(path);
+    }
+
+    /**
+     * Reads an Apache Avro file.
+     *
+     * @param path the input data file path.
+     * @param schema the input stream of schema.
+     */
+    static DataFrame avro(Path path, InputStream schema) throws IOException {
+        Avro avro = new Avro(schema);
+        return avro.read(path);
+    }
+
+    /**
+     * Reads an Apache Avro file.
+     *
+     * @param path the input data file path.
+     * @param schema the input schema file path.
+     */
+    static DataFrame avro(Path path, Path schema) throws IOException {
         Avro avro = new Avro(schema);
         return avro.read(path);
     }
