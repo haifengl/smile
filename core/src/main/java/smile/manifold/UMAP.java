@@ -328,7 +328,10 @@ public class UMAP implements Serializable {
      */
     private static AdjacencyList computeFuzzySimplicialSet(AdjacencyList nng, int k, int iterations) {
         // Algorithm 2 Constructing a local fuzzy simplicial set
-        double target = MathEx.log2(k);
+        final double LogK = MathEx.log2(k);
+        final double EPSILON = 1E-8;
+        final double TOLERANCE = 1E-5;
+        final double MIN_SCALE = 1E-3;
 
         int n = nng.getNumVertices();
         // The smooth approximator to knn-distance
@@ -338,43 +341,43 @@ public class UMAP implements Serializable {
 
         double avg = IntStream.range(0, n).mapToObj(i -> nng.getEdges(i))
                 .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
-                .filter(w -> !MathEx.isZero(w, 1E-10))
+                .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
 
         for (int i = 0; i < n; i++) {
             double lo = 0.0;
-            double hi = Double.MAX_VALUE;
+            double hi = Double.POSITIVE_INFINITY;
             double mid = 1.0;
 
             Collection<Edge> knn = nng.getEdges(i);
             rho[i] = knn.stream()
                     .mapToDouble(edge -> edge.weight)
-                    .filter(w -> !MathEx.isZero(w, 1E-10))
-                    .min().orElse(0);
+                    .filter(w -> !MathEx.isZero(w, EPSILON))
+                    .min().orElse(0.0);
 
-            // Algorithm 3 Compute the normalizing factor for distances σ
+            // Algorithm 3 Compute the normalizing factor for distances
             // function SmoothKNNDist() by binary search
             for (int iter = 0; iter < iterations; iter++) {
                 double psum = 0.0;
                 for (Edge edge : knn) {
-                    if (!MathEx.isZero(edge.weight, 1E-10)) {
+                    if (!MathEx.isZero(edge.weight, EPSILON)) {
                         double d = edge.weight - rho[i];
-                        psum += Math.exp(-(d / mid));
+                        psum += d > 0.0 ? Math.exp(-d / mid) : 1.0;
                     }
                 }
 
-                if (Math.abs(psum - target) < 1E-5) {
+                if (Math.abs(psum - LogK) < TOLERANCE) {
                     break;
                 }
                 // Given that it is a parameterized function
                 // and the whole thing is monotonic
                 // a simply binary search is actually quite efficient.
-                if (psum > target) {
+                if (psum > LogK) {
                     hi = mid;
                     mid = (lo + hi) / 2.0;
                 } else {
                     lo = mid;
-                    if (hi == Double.MAX_VALUE) {
+                    if (Double.isInfinite(hi)) {
                         mid *= 2;
                     } else {
                         mid = (lo + hi) / 2.0;
@@ -387,11 +390,11 @@ public class UMAP implements Serializable {
             if (rho[i] > 0.0) {
                 double avgi = knn.stream()
                         .mapToDouble(edge -> edge.weight)
-                        .filter(w -> !MathEx.isZero(w, 1E-10))
+                        .filter(w -> !MathEx.isZero(w, EPSILON))
                         .average().orElse(0.0);
-                sigma[i] = Math.max(sigma[i], 1E-3 * avgi);
+                sigma[i] = Math.max(sigma[i], MIN_SCALE * avgi);
             } else {
-                sigma[i] = Math.max(sigma[i], 1E-3 * avg);
+                sigma[i] = Math.max(sigma[i], MIN_SCALE * avg);
             }
         }
 
@@ -401,7 +404,7 @@ public class UMAP implements Serializable {
         // the distance such that the cardinality of fuzzy set we generate is k.
         for (int i = 0; i < n; i++) {
             for (Edge edge : nng.getEdges(i)) {
-                edge.weight = Math.exp(-Math.max(0.0, (edge.weight - rho[i])) / (sigma[i]));
+                edge.weight = Math.exp(-Math.max(0.0, (edge.weight - rho[i])) / sigma[i]);
             }
         }
 
@@ -411,8 +414,7 @@ public class UMAP implements Serializable {
             for (Edge edge : nng.getEdges(i)) {
                 double w = edge.weight;
                 double w2 = nng.getWeight(edge.v2, edge.v1); // weight of reverse arc.
-                w = w + w2 - w * w2;
-                G.setWeight(edge.v1, edge.v2, w);
+                G.setWeight(edge.v1, edge.v2, w + w2 - w * w2);
             }
         }
 
