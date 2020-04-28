@@ -237,16 +237,6 @@ public class LLE implements Serializable {
         }
 
         @Override
-        public M ata() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public M aat() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public double[] ax(double[] x, double[] y) {
             Wt.atx(x, Wx);
             Wt.ax(x, Wtx);
@@ -266,32 +256,7 @@ public class LLE implements Serializable {
         }
 
         @Override
-        public double[] axpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double apply(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y, double b) {
+        public Matrix clone() {
             throw new UnsupportedOperationException();
         }
     }
