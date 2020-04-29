@@ -1003,7 +1003,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Creates a DataFrame from a stream of tuples.
      * @param data The data stream.
      */
-    static DataFrame of(Stream<Tuple> data) {
+    static DataFrame of(Stream<? extends Tuple> data) {
         return new DataFrameImpl(data);
     }
 
@@ -1011,7 +1011,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Creates a DataFrame from a stream of tuples.
      * @param data The data stream.
      */
-    static DataFrame of(Stream<Tuple> data, StructType schema) {
+    static DataFrame of(Stream<? extends Tuple> data, StructType schema) {
         return new DataFrameImpl(data, schema);
     }
 
@@ -1019,7 +1019,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Creates a DataFrame from a set of tuples.
      * @param data The data collection.
      */
-    static DataFrame of(List<Tuple> data) {
+    static DataFrame of(List<? extends Tuple> data) {
         return new DataFrameImpl(data);
     }
 
@@ -1027,7 +1027,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Creates a DataFrame from a set of tuples.
      * @param data The data collection.
      */
-    static DataFrame of(List<Tuple> data, StructType schema) {
+    static DataFrame of(List<? extends Tuple> data, StructType schema) {
         return new DataFrameImpl(data, schema);
     }
 

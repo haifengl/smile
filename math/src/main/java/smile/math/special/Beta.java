@@ -60,11 +60,11 @@ public class Beta {
         // greater than 1 or less than 0. We allow tiny slack here to avoid brute exception.
         final double EPS = 1E-8;
 
-        if (abs(x) < EPS) {
+        if (x < 0.0 && abs(x) < EPS) {
             return 0.0;
         }
 
-        if (abs(x - 1.0) < EPS) {
+        if (x > 1.0 && abs(x - 1.0) < EPS) {
             return 1.0;
         }
 

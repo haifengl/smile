@@ -16,4 +16,4 @@ target in Compile in doc := baseDirectory.value / "../docs/2.0/api/json"
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 
-libraryDependencies += "org.specs2" %% "specs2-core" % "4.9.2" % "test",
+libraryDependencies += "org.specs2" %% "specs2-core" % "4.9.3" % "test",

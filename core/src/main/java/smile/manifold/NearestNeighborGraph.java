@@ -17,9 +17,9 @@
 
 package smile.manifold;
 
-import java.util.Optional;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
@@ -34,14 +34,14 @@ class NearestNeighborGraph {
     /**
      * Nearest neighbor graph.
      */
-    public final Graph graph;
+    public final AdjacencyList graph;
 
     /**
      * Constructor.
      * @param index the original sample index.
      * @param graph the nearest neighbor graph.
      */
-    public NearestNeighborGraph(int[] index, Graph graph) {
+    public NearestNeighborGraph(int[] index, AdjacencyList graph) {
         this.index = index;
         this.graph = graph;
     }
@@ -59,23 +59,36 @@ class NearestNeighborGraph {
     }
 
     /**
+     * Creates a nearest neighbor graph with Euclidean distance.
+     *
+     * @param data the dataset.
+     * @param k k-nearest neighbor.
+     * @param digraph flag to create a directed graph.
+     * @param consumer an optional lambda to perform some side effect operations.
+     */
+    public static AdjacencyList of(double[][] data, int k, boolean digraph, EdgeConsumer consumer) {
+        return of(data, new EuclideanDistance(), k, digraph ,consumer);
+    }
+
+    /**
      * Creates a nearest neighbor graph.
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
-     * @param sideEffect an optional lambda to perform some side effect operations.
+     * @param distance the distance measure.
+     * @param digraph flag to create a directed graph.
+     * @param consumer an optional lambda to perform some side effect operations.
      */
-    public static Graph of(double[][] data, int k, Optional<EdgeConsumer> sideEffect) {
+    public static <T> AdjacencyList of(T[] data, Distance<T> distance, int k, boolean digraph, EdgeConsumer consumer) {
         // This is actually faster on many core systems.
-        LinearSearch<double[]> knn = new LinearSearch<>(data, new EuclideanDistance());
+        LinearSearch<T> knn = new LinearSearch<>(data, distance);
 
         int n = data.length;
-        Graph graph = new AdjacencyList(n);
+        AdjacencyList graph = new AdjacencyList(n, digraph);
 
-        if (sideEffect.isPresent()) {
+        if (consumer != null) {
             for (int i = 0; i < n; i++) {
-                EdgeConsumer consumer = sideEffect.get();
-                Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
+                Neighbor<T, T>[] neighbors = knn.knn(data[i], k);
 
                 int v1 = i;
                 for (int j = 0; j < neighbors.length; j++) {
@@ -87,7 +100,7 @@ class NearestNeighborGraph {
             }
         } else {
             for (int i = 0; i < n; i++) {
-                for (Neighbor<double[], double[]> neighbor : knn.knn(data[i], k)) {
+                for (Neighbor<T, T> neighbor : knn.knn(data[i], k)) {
                     graph.setWeight(i, neighbor.index, neighbor.distance);
                 }
             }
@@ -103,7 +116,7 @@ class NearestNeighborGraph {
      *
      * @param graph the nearest neighbor graph.
      */
-    public static NearestNeighborGraph largest(Graph graph) {
+    public static NearestNeighborGraph largest(AdjacencyList graph) {
         int n = graph.getNumVertices();
 
         // Use largest connected component.
