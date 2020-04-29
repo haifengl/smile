@@ -69,7 +69,7 @@ package object validation {
     * The traditional or balanced F-score (F1 score) is the harmonic mean of
     * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
     */
-  def f1(truth: Array[Int], prediction: Array[Int]): Double = FMeasure.of(truth, prediction)
+  def f1(truth: Array[Int], prediction: Array[Int]): Double = FMeasure.of(1.0, truth, prediction)
 
   /** The area under the curve (AUC). When using normalized units, the area under
     * the curve is equal to the probability that a classifier will rank a
@@ -138,7 +138,7 @@ package object validation {
       testx.map(classifier.predict(_))
     }
 
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
@@ -164,7 +164,7 @@ package object validation {
     }
 
     val testy = formula.y(test).toIntArray
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
@@ -193,13 +193,13 @@ package object validation {
       testx.map(classifier.predict(_))
     }
 
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
-    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
-    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, pred)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, pred)))
+    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, pred)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, pred)))
+    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, pred)))
+    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, pred)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
@@ -226,13 +226,13 @@ package object validation {
     }
 
     val testy = formula.y(test).toIntArray
-    println("Accuracy = %.2f%%" format (100.0 * new Accuracy().measure(testy, pred)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * new Sensitivity().measure(testy, pred)))
-    println("Specificity = %.2f%%" format (100.0 * new Specificity().measure(testy, pred)))
-    println("Precision = %.2f%%" format (100.0 * new Precision().measure(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * new FMeasure().measure(testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, pred)))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, pred)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, pred)))
+    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, pred)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, pred)))
+    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, pred)))
+    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, pred)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
 
     classifier
@@ -271,9 +271,9 @@ package object validation {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
     println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
     println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(testy, prediction)))
-    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, prediction)))
+    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, prediction)))
+    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.of(testy, probability)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
@@ -313,9 +313,9 @@ package object validation {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
     println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
     println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(testy, prediction)))
-    println("F2-Score = %.2f%%" format (100.0 * new FMeasure(2).measure(testy, prediction)))
-    println("F0.5-Score = %.2f%%" format (100.0 * new FMeasure(0.5).measure(testy, prediction)))
+    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, prediction)))
+    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, prediction)))
+    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.of(testy, probability)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
