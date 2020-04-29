@@ -188,7 +188,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         }
 
         // If the max spread is 0, make this a leaf node
-        if (maxRadius == 0) {
+        if (MathEx.isZero(maxRadius, 1E-8)) {
             node.lower = node.upper = null;
             return node;
         }
@@ -216,6 +216,12 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             if (i2Good) {
                 i2--;
             }
+        }
+
+        // If either side is empty, make this a leaf node.
+        if (size == 0 || size == node.count) {
+            node.lower = node.upper = null;
+            return node;
         }
 
         // Create the child nodes

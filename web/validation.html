@@ -12,6 +12,8 @@ permalink: "{{ page.filePathStem }}.html"
         First of all, we should note that the error of the model as measured
         on the training data is likely to be lower than the actual generalization error.</p>
 
+    <h2 id="metrics">Evaluation Metrics</h2>
+
     <p>Although most supervised learning algorithms try to minimize the empirical error
         (regularized or not), we should not use only error rate or accuracy as the objective
         measure. For example, if a highly unbalanced data contains 99% positive sample, a naive
@@ -696,6 +698,99 @@ permalink: "{{ page.filePathStem }}.html"
     <p>The bootstrap distribution and the sample may disagree systematically,
         in which case bias may occur. Bias in the
         bootstrap distribution will lead to bias in the confidence-interval.</p>
+
+    <h2 id="hyperparameter-tuning">Hyperparameter Tuning</h2>
+
+    <p>A hyperparameter is a parameter whose value is set before the
+        learning process begins. By contrast, the values of other
+        parameters are derived via training. Hyperparameters can be
+        classified as model hyperparameters, that cannot be inferred
+        while fitting the machine to the training set because they
+        refer to the model selection task, or algorithm hyperparameters, that
+        in principle have no influence on the performance of the model but
+        affect the speed and quality of the learning process. For example,
+        the topology and size of a neural network are model hyperparameters,
+        while learning rate and mini-batch size are algorithm hyperparameters.</p>
+
+    <p>In Smile, <code>Hyperparameters</code> class provides two generic
+        approaches to sampling search candidates. With <code>add()</code>
+        methods, the user can define a parameter space with a specified
+        distribution (a fixed value, an array of values, or a range).
+        The method <code>grid()</code> exhaustively considers all parameter
+        combinations, while <code>random()</code> generates a stream of
+        random candidates.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    import smile.io.*;
+    import smile.data.formula.Formula;
+    import smile.validation.*;
+    import smile.classification.RandomForest;
+
+    var hp = new Hyperparameters()
+        .add("smile.random.forest.trees", 100) // a fixed value
+        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
+        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
+
+
+    var train = Read.arff("data/weka/segment-challenge.arff");
+    var test = Read.arff("data/weka/segment-test.arff");
+    var formula = Formula.lhs("class");
+    var testy = formula.y(test).toIntArray();
+
+    hp.grid().forEach(prop -&gt; {
+        var model = RandomForest.fit(formula, train, prop);
+        var pred = model.predict(test);
+        System.out.println(prop);
+        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+        System.out.println(ConfusionMatrix.of(testy, pred));
+    });
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>While grid search is popular, random search has the benefit to choose
+        a budget independent of the number of parameters and possible values.
+        Note that <code>rand()</code> returns a stream that never ends.
+        Therefore, one should use the <code>limit()</code> method to decide
+        how many configurations to test.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    hp.random().limit(20).forEach(prop -&gt; {
+        var model = RandomForest.fit(formula, train, prop);
+        var pred = model.predict(test);
+        System.out.println(prop);
+        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+        System.out.println(ConfusionMatrix.of(testy, pred));
+    });
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the lambda of hyperparameter tuning, the user is free to train any
+        model (or even multiple algorithms), to evaluate with one or more
+        metrics. The evaluation approach can also be cross validation and
+        boosting besides on the test data as in above examples.</p>
+
+    <p>Both grid search and random search evaluate each parameter setting
+        independently. Therefore, computations may be run in parallel with
+        parallel stream (enable with <code>parallel()</code>). Note that
+        some algorithms already run in parallel (e.g. random forest, logistic
+        regression, etc.). In those cases, we should NOT use parallel stream
+        to avoid potential deadlock.</p>
 
     <div id="btnv">
         <span class="btn-arrow-left">&larr; &nbsp;</span>

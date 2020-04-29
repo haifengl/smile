@@ -10,7 +10,7 @@ lazy val commonSettings = Seq(
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
-  scalaVersion := "2.13.1",
+  scalaVersion := "2.13.2",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
   testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
   parallelExecution in Test := false,
@@ -83,5 +83,7 @@ lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
+
+lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(data)
 
 lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)

@@ -204,7 +204,7 @@ class DataFrameImpl implements DataFrame {
      * Constructor.
      * @param data The data stream.
      */
-    public DataFrameImpl(Stream<Tuple> data) {
+    public DataFrameImpl(Stream<? extends Tuple> data) {
         this(data.collect(Collectors.toList()));
     }
 
@@ -212,14 +212,14 @@ class DataFrameImpl implements DataFrame {
      * Constructor.
      * @param data The data stream.
      */
-    public DataFrameImpl(Stream<Tuple> data, StructType schema) {
+    public DataFrameImpl(Stream<? extends Tuple> data, StructType schema) {
         this(data.collect(Collectors.toList()), schema);
     }
     /**
      * Constructor.
      * @param data The data collection.
      */
-    public DataFrameImpl(List<Tuple> data) {
+    public DataFrameImpl(List<? extends Tuple> data) {
         this(data, data.get(0).schema());
     }
 
@@ -227,7 +227,7 @@ class DataFrameImpl implements DataFrame {
      * Constructor.
      * @param data The data collection.
      */
-    public DataFrameImpl(List<Tuple> data, StructType schema) {
+    public DataFrameImpl(List<? extends Tuple> data, StructType schema) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Empty tuple collections");
         }

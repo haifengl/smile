@@ -20,7 +20,7 @@ package smile.projection.ica;
 import smile.math.DifferentiableFunction;
 
 /**
- * A good general-purpose function for ICA.
+ * A good general-purpose contrast function for ICA.
  */
 public class LogCosh implements DifferentiableFunction {
 

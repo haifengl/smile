@@ -20,8 +20,8 @@ package smile.projection.ica;
 import smile.math.DifferentiableFunction;
 
 /**
- * This function is justified on statistical grounds only for
- * estimating sub-Gaussian independent components when there are no outliers.
+ * The kurtosis of the probability density function of a signal.
+ * Note that kurtosis is very sensitive to outliers.
  */
 public class Kurtosis implements DifferentiableFunction {
 

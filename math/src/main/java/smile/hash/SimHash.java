@@ -15,9 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.neighbor.lsh;
-
-import smile.hash.MurmurHash2;
+package smile.hash;
 
 import java.nio.ByteBuffer;
 
@@ -28,7 +26,7 @@ import java.nio.ByteBuffer;
 public interface SimHash<T> {
     long hash(T x);
 
-    /** Returns the simhash for a set of generic features (represented as byte[]). */
+    /** Returns the SimHash for a set of generic features (represented as byte[]). */
     static SimHash<int[]> of(byte[][] features) {
         int n = features.length;
         long[] hash = new long[n];
@@ -73,7 +71,7 @@ public interface SimHash<T> {
         };
     }
 
-    /** Returns the simhash for string tokens. */
+    /** Returns the SimHash for string tokens. */
     static SimHash<String[]> text() {
         return tokens -> {
                 final int BITS = 64;

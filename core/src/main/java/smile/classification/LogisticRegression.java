@@ -180,6 +180,53 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     }
 
     /**
+     * Returns an array of size (p+1) containing the linear weights
+     * of binary logistic regression, where p is the dimension of
+     * feature vectors. If the weights fits in the specified array,
+     * it is returned therein. Otherwise, a new array is allocated.
+     * The last element is the weight of bias.
+     */
+    public double[] coefficients(double[] w) {
+        if (this.w == null) {
+            throw new UnsupportedOperationException("Call coefficients(double[]) on multi-class logistic regression");
+        }
+
+        if (w.length < p+1) {
+            w = new double[p+1];
+        }
+
+        System.arraycopy(this.w, 0, w, 0, p+1);
+
+        return w;
+    }
+
+    /**
+     * Returns a 2d-array of size (k-1) x (p+1), containing the linear weights
+     * of multi-class logistic regression, where k is the number of classes
+     * and p is the dimension of feature vectors. If the weights fits in
+     * the specified array, it is returned therein. Otherwise, a new array
+     * is allocated. The last element of each row is the weight of bias.
+     */
+    public double[][] coefficients(double[][] W) {
+        if (this.W == null) {
+            throw new UnsupportedOperationException("Call coefficients(double[][]) on binary logistic regression");
+        }
+
+        if (W.length < this.W.length) {
+            W = new double[k-1][p+1];
+        }
+
+        for (int i = 0; i < k-1; i++) {
+            if (W[i] == null || W[i].length < p+1) {
+                W[i] = new double[p+1];
+            }
+            System.arraycopy(this.W[i], 0, W[i], 0, p+1);
+        }
+
+        return W;
+    }
+
+    /**
      * Learn logistic regression.
      *
      * @param formula a symbolic description of the model to be fitted.

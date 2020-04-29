@@ -17,41 +17,31 @@
 
 package smile.shell
 
-import ammonite.ops.Path
-import ammonite.runtime.Storage
-
 /** Ammonite REPL based shell.
   *
   * @author Haifeng Li
   */
-case class AmmoniteREPL(predefCode: String) {
-  val home = Path(System.getProperty("user.home")) / ".smile"
-  val welcome =
-    s"""
-       |                                                       ..::''''::..
-       |                                                     .;''        ``;.
-       |     ....                                           ::    ::  ::    ::
-       |   ,;' .;:                ()  ..:                  ::     ::  ::     ::
-       |   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
-       |    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
-       |  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
-       |  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
-       |                                                       ``::,,,,::''
-       |
-       |  Welcome to Smile Shell! Type "exit<RETURN>" to leave the Smile Shell.
-       |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
-       |===============================================================================
-     """.stripMargin
+object AmmoniteREPL {
+  def main(clazz: Class[_], args0: Array[String]): Unit = {
+    val home = System.getProperty("user.home") + "/.smile"
+    val code =
+      """
+        |repl.prompt() = "smile> "
+        |/*
+        |if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
+        |  import $ivy.`io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3`
+        |  // Change the terminal mode so that it accepts ANSI escape codes
+        |  if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
+        |    println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
+        |}*/""".stripMargin
+    
+    val args = "--home" :: home ::
+               "--predef" :: System.getProperty("scala.repl.autoruncode") ::
+               "--predef-code" :: code ::
+               "--banner" :: welcome("exit") :: args0.toList
 
-  val repl = ammonite.Main(
-    predefCode = predefCode,
-    defaultPredef = true,
-    storageBackend = new Storage.Folder(home),
-    welcomeBanner = Some(welcome),
-    verboseOutput = false
-  )
-
-  def run() = repl.run()
-  def runCode(code: String) = repl.runCode(code)
-  def runScript(path: Path, args: Seq[(String, Option[String])]) = repl.runScript(path, args)
+    val method = clazz.getMethod("main", classOf[Array[String]])
+    val main = clazz.getField("MODULE$").get(null)
+    method.invoke(main, args.toArray)
+  }
 }

@@ -595,6 +595,16 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
         return prediction;
     }
 
+    /**
+     * Returns the average of absolute SHAP values over a data frame.
+     */
+    public double[] shap(DataFrame data) {
+        // Binds the formula to the data frame's schema in case that
+        // it is different from that of training data.
+        formula.bind(data.schema());
+        return shap(data.stream().parallel());
+    }
+
     @Override
     public double[] shap(Tuple x) {
         Tuple xt = formula.x(x);
