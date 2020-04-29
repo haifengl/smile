@@ -25,6 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.math.MathEx;
+import smile.math.matrix.Matrix;
 
 import java.util.Arrays;
 
@@ -313,6 +314,150 @@ public class AdjacencyMatrixTest {
         assertEquals(2, g7.getOutdegree(3));
 
         assertEquals(2, g8.getOutdegree(4));
+    }
+    /**
+     * Test of toSparseMatrix method, of class AdjacencyList.
+     */
+    @Test
+    public void testToMatrix() {
+        System.out.println("toMatrix digraph = false");
+
+        AdjacencyList graph = new AdjacencyList(8, false);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        Matrix matrix = graph.toMatrix();
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                System.out.print(matrix.get(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, matrix.get(0, 2), 1E-10);
+        assertEquals(1.0, matrix.get(1, 7), 1E-10);
+        assertEquals(1.0, matrix.get(2, 6), 1E-10);
+        assertEquals(1.0, matrix.get(7, 4), 1E-10);
+        assertEquals(1.0, matrix.get(3, 4), 1E-10);
+        assertEquals(1.0, matrix.get(3, 5), 1E-10);
+        assertEquals(1.0, matrix.get(5, 4), 1E-10);
+
+        // Graph is undirected.
+        assertEquals(1.0, matrix.get(2, 0), 1E-10);
+        assertEquals(1.0, matrix.get(7, 1), 1E-10);
+        assertEquals(1.0, matrix.get(6, 2), 1E-10);
+        assertEquals(1.0, matrix.get(4, 7), 1E-10);
+        assertEquals(1.0, matrix.get(4, 3), 1E-10);
+        assertEquals(1.0, matrix.get(5, 3), 1E-10);
+        assertEquals(1.0, matrix.get(4, 5), 1E-10);
+    }
+
+    /**
+     * Test of toSparseMatrix method, of class AdjacencyList.
+     */
+    @Test
+    public void testToMatrixDigraph() {
+        System.out.println("toMatrix digraph = true");
+
+        AdjacencyList graph = new AdjacencyList(8, true);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        Matrix matrix = graph.toMatrix();
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                System.out.print(matrix.get(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, matrix.get(0, 2), 1E-10);
+        assertEquals(1.0, matrix.get(1, 7), 1E-10);
+        assertEquals(1.0, matrix.get(2, 6), 1E-10);
+        assertEquals(1.0, matrix.get(7, 4), 1E-10);
+        assertEquals(1.0, matrix.get(3, 4), 1E-10);
+        assertEquals(1.0, matrix.get(3, 5), 1E-10);
+        assertEquals(1.0, matrix.get(5, 4), 1E-10);
+
+        // Graph is directed.
+        assertEquals(0.0, matrix.get(2, 0), 1E-10);
+        assertEquals(0.0, matrix.get(7, 1), 1E-10);
+        assertEquals(0.0, matrix.get(6, 2), 1E-10);
+        assertEquals(0.0, matrix.get(4, 7), 1E-10);
+        assertEquals(0.0, matrix.get(4, 3), 1E-10);
+        assertEquals(0.0, matrix.get(5, 3), 1E-10);
+        assertEquals(0.0, matrix.get(4, 5), 1E-10);
+    }
+
+    /**
+     * Test of subgraph method, of class AdjacencyMatrix.
+     */
+    @Test
+    public void testSubgraph() {
+        System.out.println("subgraph digraph = false");
+
+        AdjacencyMatrix graph = new AdjacencyMatrix(8, false);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        int[] v = {1, 3, 7};
+        AdjacencyMatrix sub = graph.subgraph(v);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print(sub.getWeight(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, sub.getWeight(0, 2), 1E-10);
+        assertEquals(1.0, sub.getWeight(2, 0), 1E-10);
+    }
+
+    /**
+     * Test of subgraph method, of class AdjacencyMatrix.
+     */
+    @Test
+    public void testSubgraphDigraph() {
+        System.out.println("subgraph digraph = true");
+
+        AdjacencyMatrix graph = new AdjacencyMatrix(8, true);
+        graph.addEdge(0, 2);
+        graph.addEdge(1, 7);
+        graph.addEdge(2, 6);
+        graph.addEdge(7, 4);
+        graph.addEdge(3, 4);
+        graph.addEdge(3, 5);
+        graph.addEdge(5, 4);
+
+        int[] v = {1, 3, 7};
+        AdjacencyMatrix sub = graph.subgraph(v);
+
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                System.out.print(sub.getWeight(i, j) + " ");
+            }
+            System.out.println();
+        }
+
+        assertEquals(1.0, sub.getWeight(0, 2), 1E-10);
     }
 
     /**
