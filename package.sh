@@ -38,8 +38,8 @@ while true; do
             check_error "sbt ++2.12.11 scala/publishSigned"
             sbt ++2.12.11 json/publishSigned
             check_error "sbt ++2.12.11 json/publishSigned"
-            #sbt ++2.12.11 spark/publishSigned
-            #check_error "sbt ++2.12.11 spark/publishSigned"
+            sbt ++2.12.11 spark/publishSigned
+            check_error "sbt ++2.12.11 spark/publishSigned"
 
             git checkout scala-2.11
             check_error "git checkout scala-2.11"
@@ -51,8 +51,8 @@ while true; do
             check_error "sbt ++2.11.12 scala/publishSigned"
             sbt ++2.11.12 json/publishSigned
             check_error "sbt ++2.11.12 json/publishSigned"
-            #sbt ++2.11.12 spark/publishSigned
-            #check_error "sbt ++2.11.12 spark/publishSigned"
+            sbt ++2.11.12 spark/publishSigned
+            check_error "sbt ++2.11.12 spark/publishSigned"
 
             git checkout master
             break;;
