@@ -12,7 +12,7 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - Statistical Machine Intelligence and Learning Engine")
 
-target in Compile in doc := baseDirectory.value / "../docs/2.0/api/scala"
+target in Compile in doc := baseDirectory.value / "../doc/api/scala"
 
 libraryDependencies += "org.scala-lang.modules" %% "scala-xml" % "1.3.0"
 
