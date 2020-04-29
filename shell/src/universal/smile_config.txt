@@ -4,8 +4,7 @@
 -J-XX:MaxRAMPercentage=75.0
 
 # Or explicit heap size – Xms and Xmx Options
-#-J-Xmx24G
-#-J-Xms4G
+#-J-Xmx24G -J-Xms4G
 
 ### Add additional jvm parameters
 
@@ -19,14 +18,13 @@
 ### Performance optimization
 
 # Enable the large page size to optimize processor TLB.
-#-J-XX:+UseLargePages
-#-J-XX:LargePageSizeInBytes=2M
+#-J-XX:+UseLargePages -J-XX:LargePageSizeInBytes=2M
 
 # G1 garbage collector
 -J-XX:+UseG1GC
 
 # If you have very large RAM and use Java11+, try ZGC instead.
-#-J-XX:+UnlockExperimentalVMOptions -J-XX:+UseZGC -J-Xmx200G
+#-J-XX:+UnlockExperimentalVMOptions -J-XX:+UseZGC
 
 # UseCompressedOop is on by default for up to 32GB heap.
 # The below tuning enables it up to 64GB with object alignment at 16.
