@@ -468,48 +468,13 @@ public class LASSO {
         }
 
         @Override
+        public Matrix clone() {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public Matrix transpose() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Matrix aat() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public Matrix ata() {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double apply(int i, int j) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException();
         }
     }
 }

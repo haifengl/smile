@@ -99,7 +99,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
         }
 
         if (k > data.length) {
-            throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
+            throw new IllegalArgumentException("Neighbor array length is larger than the data size");
         }
 
         double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();

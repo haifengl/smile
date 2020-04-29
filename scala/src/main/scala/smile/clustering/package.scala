@@ -129,7 +129,7 @@ package object clustering {
     * @param method the agglomeration method to merge clusters. This should be one of
     *               "single", "complete", "upgma", "upgmc", "wpgma", "wpgmc", and "ward".
     */
-  def hclust[T <: Object](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering = {
+  def hclust[T <: AnyRef](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering = {
     val linkage = time(s"$method linkage") {
       method match {
         case "single" => SingleLinkage.of(data, distance)
@@ -329,7 +329,7 @@ package object clustering {
     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
     * @param numLocal    the number of local minima to search for.
     */
-  def clarans[T <: Object](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS[T] = time("CLARANS") {
+  def clarans[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int = 16): CLARANS[T] = time("CLARANS") {
     PartitionClustering.run(numLocal, (() => CLARANS.fit(data, distance, k, maxNeighbor)).asJava)
   }
 
@@ -390,7 +390,7 @@ package object clustering {
     * @param minPts the minimum number of neighbors for a core data point.
     * @param radius the neighborhood radius.
     */
-  def dbscan[T <: Object](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
+  def dbscan[T <: AnyRef](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
     DBSCAN.fit(data, nns, minPts, radius)
   }
 
@@ -403,7 +403,7 @@ package object clustering {
     * @param minPts   the minimum number of neighbors for a core data point.
     * @param radius   the neighborhood radius.
     */
-  def dbscan[T <: Object](data: Array[T], distance: Distance[T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
+  def dbscan[T <: AnyRef](data: Array[T], distance: Distance[T], minPts: Int, radius: Double): DBSCAN[T] = time("DBSCAN") {
     DBSCAN.fit(data, distance, minPts, radius)
   }
 
@@ -474,7 +474,7 @@ package object clustering {
     *                 number of clusters may be less.
     * @param radius   the neighborhood radius.
     */
-  def mec[T <: Object](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T] = time("MEC") {
+  def mec[T <: AnyRef](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T] = time("MEC") {
     MEC.fit(data, distance, k, radius)
   }
 
@@ -486,7 +486,7 @@ package object clustering {
     *                 number of clusters may be less.
     * @param radius   the neighborhood radius.
     */
-  def mec[T <: Object](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T] = time("MEC") {
+  def mec[T <: AnyRef](data: Array[T], distance: Metric[T], k: Int, radius: Double): MEC[T] = time("MEC") {
     MEC.fit(data, distance, k, radius)
   }
 
@@ -510,7 +510,7 @@ package object clustering {
     * @param radius the neighborhood radius.
     * @param tol    the tolerance of convergence test.
     */
-  def mec[T <: Object](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
+  def mec[T <: AnyRef](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int], tol: Double = 1E-4): MEC[T] = time("MEC") {
     MEC.fit(data, nns, k, radius, y, tol)
   }
 

@@ -98,7 +98,7 @@ public class NLMatrix extends JMatrix {
     }
 
     @Override
-    public NLMatrix copy() {
+    public NLMatrix clone() {
         return new NLMatrix(nrows(), ncols(), data().clone());
     }
 
