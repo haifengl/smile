@@ -42,10 +42,10 @@ object write {
   }
 
   /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: Object](x: T, file: String): Unit = xstream(x, Paths.get(file))
+  def xstream[T <: AnyRef](x: T, file: String): Unit = xstream(x, Paths.get(file))
 
   /** Serializes an object/model to a file by XStream. */
-  def xstream[T <: Object](x: T, file: Path): Unit = {
+  def xstream[T <: AnyRef](x: T, file: Path): Unit = {
     val xstream = new XStream
     val xml = xstream.toXML(x)
     new PrintWriter(file.toFile) {
@@ -207,10 +207,16 @@ object read {
   def arrow(file: Path): DataFrame = Read.arrow(file)
 
   /** Reads an Apache Avro file. */
-  def avro(file: String, schema: org.apache.avro.Schema): DataFrame = Read.avro(file, schema)
+  def avro(file: String, schema: InputStream): DataFrame = Read.avro(file, schema)
 
   /** Reads an Apache Avro file. */
-  def avro(file: Path, schema: org.apache.avro.Schema): DataFrame = Read.avro(file, schema)
+  def avro(file: String, schema: String): DataFrame = Read.avro(file, schema)
+
+  /** Reads an Apache Avro file. */
+  def avro(file: Path, schema: InputStream): DataFrame = Read.avro(file, schema)
+
+  /** Reads an Apache Avro file. */
+  def avro(file: Path, schema: Path): DataFrame = Read.avro(file, schema)
 
   /** Reads an Apache Parquet file. */
   def parquet(file: String): DataFrame = Read.parquet(file)

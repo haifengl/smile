@@ -70,13 +70,19 @@ public class Avro {
     /**
      * Constructor.
      *
-     * @param schemaFile Avro schema file path.
+     * @param schema the input stream of schema.
      */
-    public Avro(Path schemaFile) throws IOException {
-        schema = new Schema.Parser().parse(Files.newInputStream(schemaFile));
-        if (schema.getType() != Schema.Type.RECORD) {
-            throw new IllegalArgumentException("The type of schema is not Record");
-        }
+    public Avro(InputStream schema) throws IOException {
+        this(new Schema.Parser().parse(schema));
+    }
+
+    /**
+     * Constructor.
+     *
+     * @param schema Avro schema file path.
+     */
+    public Avro(Path schema) throws IOException {
+        this(Files.newInputStream(schema));
     }
 
     /**

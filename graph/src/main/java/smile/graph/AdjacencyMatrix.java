@@ -23,6 +23,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.math.MathEx;
+import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.util.PriorityQueue;
 
@@ -529,7 +530,7 @@ public class AdjacencyMatrix implements Graph {
         int[] v = vertices.clone();
         Arrays.sort(v);
         
-        AdjacencyMatrix g = new AdjacencyMatrix(v.length);
+        AdjacencyMatrix g = new AdjacencyMatrix(v.length, digraph);
         for (int i = 0; i < v.length; i++) {
             for (int j = 0; j < v.length; j++) {
                 g.graph[i][j] = graph[v[i]][v[j]];
@@ -636,7 +637,7 @@ public class AdjacencyMatrix implements Graph {
     }
 
     @Override
-    public Matrix toMatrix() {
+    public DenseMatrix toMatrix() {
         return Matrix.of(graph);
     }
 }

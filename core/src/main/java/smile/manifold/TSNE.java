@@ -17,6 +17,7 @@
 
 package smile.manifold;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
@@ -57,13 +58,16 @@ import smile.stat.distribution.GaussianDistribution;
  *     9(Nov):2579-2605, 2008. </li>
  * </ol>
  *
+ * @see UMAP
+ *
  * @author Haifeng Li
  */
-public class TSNE {
+public class TSNE implements Serializable {
+    private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
 
@@ -85,7 +89,8 @@ public class TSNE {
 
     /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
-     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
+     * @param X the input data. If X is a square matrix, it is assumed to be
+     *          the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
@@ -94,7 +99,8 @@ public class TSNE {
 
     /** Constructor. Train t-SNE for given number of iterations.
      *
-     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
+     * @param X the input data. If X is a square matrix, it is assumed to be
+     *         the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param eta the learning rate.

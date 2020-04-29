@@ -77,7 +77,7 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public interface Matrix extends Serializable {
+public interface Matrix extends Serializable, Cloneable {
     /**
      * Returns an matrix initialized by given two-dimensional array.
      */
@@ -219,13 +219,16 @@ public interface Matrix extends Serializable {
     }
 
     /**
-     * Sets if the matrix is symmetric. It is the caller's responability to
+     * Sets if the matrix is symmetric. It is the caller's responsibility to
      * make sure if the matrix symmetric. Also the matrix won't update this
      * property if the matrix values are changed.
      */
     default void setSymmetric(boolean symmetric) {
         throw new UnsupportedOperationException();
     }
+
+    /** Returns a deep copy of this matrix. */
+    Matrix clone();
 
     /**
      * Returns the number of rows.
@@ -245,7 +248,9 @@ public interface Matrix extends Serializable {
     /**
      * Returns the entry value at row i and column j.
      */
-    double get(int i, int j);
+    default double get(int i, int j) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns the entry value at row i and column j. For Scala users.
@@ -285,12 +290,16 @@ public interface Matrix extends Serializable {
     /**
      * Returns A' * A
      */
-    Matrix ata();
+    default Matrix ata() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Returns A * A'
      */
-    Matrix aat();
+    default Matrix aat() {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * y = A * x
@@ -302,31 +311,41 @@ public interface Matrix extends Serializable {
      * y = A * x + y
      * @return y
      */
-    double[] axpy(double[] x, double[] y);
+    default double[] axpy(double[] x, double[] y) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * y = A * x + b * y
      * @return y
      */
-    double[] axpy(double[] x, double[] y, double b);
+    default double[] axpy(double[] x, double[] y, double b) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * y = A' * x
      * @return y
      */
-    double[] atx(double[] x, double[] y);
+    default double[] atx(double[] x, double[] y) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * y = A' * x + y
      * @return y
      */
-    double[] atxpy(double[] x, double[] y);
+    default double[] atxpy(double[] x, double[] y) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * y = A' * x + b * y
      * @return y
      */
-    double[] atxpy(double[] x, double[] y, double b);
+    default double[] atxpy(double[] x, double[] y, double b) {
+        throw new UnsupportedOperationException();
+    }
 
     /**
      * Find k largest approximate eigen pairs of a symmetric matrix by the

@@ -53,7 +53,7 @@ package object sequence {
     * @param labels the state labels of observations, of which states take
     *               values in [0, p), where p is the number of hidden states.
     */
-  def hmm[T <: Object](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T] = time("Hidden Markov Model") {
+  def hmm[T <: AnyRef](observations: Array[Array[T]], labels: Array[Array[Int]], ordinal: ToIntFunction[T]): HMMLabeler[T] = time("Hidden Markov Model") {
     HMMLabeler.fit(observations, labels, ordinal)
   }
 
@@ -105,7 +105,7 @@ package object sequence {
     * not split, setting nodeSize = 5 generally gives good results.
     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
     */
-  def gcrf[T <: Object](sequences: Array[Array[T]], labels: Array[Array[Int]], features: Function[T, Tuple], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRFLabeler[T] = time("CRF") {
+  def gcrf[T <: AnyRef](sequences: Array[Array[T]], labels: Array[Array[Int]], features: Function[T, Tuple], ntrees: Int = 100, maxDepth: Int = 20, maxNodes: Int = 100, nodeSize: Int = 5, shrinkage: Double = 1.0): CRFLabeler[T] = time("CRF") {
     CRFLabeler.fit(sequences, labels, features, ntrees, maxDepth, maxNodes, nodeSize, shrinkage)
   }
 
