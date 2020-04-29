@@ -12,7 +12,7 @@ scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value
 
 scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - JSON")
 
-target in Compile in doc := baseDirectory.value / "../docs/2.0/api/json"
+target in Compile in doc := baseDirectory.value / "../doc/api/json"
 
 libraryDependencies += "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2"
 

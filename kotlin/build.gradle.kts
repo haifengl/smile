@@ -46,7 +46,7 @@ tasks.build {
 tasks {
     val dokka by getting(DokkaTask::class) {
         outputFormat = "html"
-        outputDirectory = "../docs/2.0/api/kotlin"
+        outputDirectory = "../doc/api/kotlin"
         configuration {
             includes = listOf("packages.md")
             externalDocumentationLink {
