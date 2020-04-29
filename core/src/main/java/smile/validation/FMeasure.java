@@ -34,13 +34,9 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class FMeasure implements ClassificationMeasure {
-    public final static FMeasure instance = new FMeasure();
-
     @Override
     public double measure(int[] truth, int[] prediction) {
-        double p = new Precision().measure(truth, prediction);
-        double r = new Recall().measure(truth, prediction);
-        return (1 + beta2) * (p * r) / (beta2 * p + r);
+        return of(beta, truth, prediction);
     }
 
     /**
@@ -49,27 +45,39 @@ public class FMeasure implements ClassificationMeasure {
      * as much importance to recall as precision. The default value 1.0
      * corresponds to F1-score.
      */
-    private double beta2 = 1.0;
+    private double beta = 1.0;
 
     /** Constructor of F1 score. */
     public FMeasure() {
-
+        this(1.0);
     }
 
     /** Constructor of general F-score.
      *
      * @param beta a positive value such that F-score measures
-     * the effectiveness of retrieval with respect to a user who attaches &beta; times
-     * as much importance to recall as precision.
+     *             the effectiveness of retrieval with respect
+     *             to a user who attaches &beta; times as much
+     *             importance to recall as precision.
      */
     public FMeasure(double beta) {
-        if (beta <= 0.0)
+        if (beta <= 0.0) {
             throw new IllegalArgumentException("Negative beta");
-        this.beta2 = beta * beta;
+        }
+
+        this.beta = beta;
     }
 
-    /** Calculates the F1 score. */
-    public static double of(int[] truth, int[] prediction) {
-        return instance.measure(truth, prediction);
+    /**
+     * Calculates the F1 score.
+     * @param beta a positive value such that F-score measures
+     *             the effectiveness of retrieval with respect
+     *             to a user who attaches &beta; times as much
+     *             importance to recall as precision.
+     */
+    public static double of(double beta, int[] truth, int[] prediction) {
+        double beta2 = beta * beta;
+        double p = new Precision().measure(truth, prediction);
+        double r = new Recall().measure(truth, prediction);
+        return (1 + beta2) * (p * r) / (beta2 * p + r);
     }
 }

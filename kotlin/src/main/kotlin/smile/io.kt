@@ -155,12 +155,22 @@ object read {
     }
 
     /** Reads an Apache Avro file. */
-    fun avro(file: String, schema: org.apache.avro.Schema): DataFrame {
+    fun avro(file: String, schema: InputStream): DataFrame {
         return Read.avro(file, schema)
     }
 
     /** Reads an Apache Avro file. */
-    fun avro(file: Path, schema: org.apache.avro.Schema): DataFrame {
+    fun avro(file: String, schema: String): DataFrame {
+        return Read.avro(file, schema)
+    }
+
+    /** Reads an Apache Avro file. */
+    fun avro(file: Path, schema: InputStream): DataFrame {
+        return Read.avro(file, schema)
+    }
+
+    /** Reads an Apache Avro file. */
+    fun avro(file: Path, schema: Path): DataFrame {
         return Read.avro(file, schema)
     }
 

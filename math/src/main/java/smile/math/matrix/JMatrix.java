@@ -109,7 +109,7 @@ public class JMatrix implements DenseMatrix {
     }
 
     @Override
-    public JMatrix copy() {
+    public JMatrix clone() {
         JMatrix a = new JMatrix(nrows, ncols, A.clone());
         a.setSymmetric(isSymmetric());
         return a;

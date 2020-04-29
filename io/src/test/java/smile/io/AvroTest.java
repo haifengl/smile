@@ -22,16 +22,11 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.apache.avro.Schema;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.math.matrix.DenseMatrix;
 import smile.util.Paths;
-
-import java.io.InputStream;
-import java.nio.file.Files;
-
 import static org.junit.Assert.*;
 
 /**
@@ -44,9 +39,7 @@ public class AvroTest {
 
     public AvroTest() {
         try {
-            InputStream stream = Files.newInputStream(Paths.getTestData("avro/userdata.avsc"));
-            Schema schema = new Schema.Parser().parse(stream);
-            Avro avro = new Avro(schema);
+            Avro avro = new Avro(Paths.getTestData("avro/userdata.avsc"));
             df = avro.read(Paths.getTestData("avro/userdata1.avro"));
         } catch (Exception ex) {
             ex.printStackTrace();

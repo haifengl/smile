@@ -19,8 +19,7 @@ package smile.manifold;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
-import smile.graph.Graph;
+import smile.graph.AdjacencyList;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.matrix.DenseMatrix;
@@ -44,6 +43,7 @@ import smile.netlib.ARPACK;
  * 
  * @see IsoMap
  * @see LaplacianEigenmap
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -61,13 +61,13 @@ public class LLE implements Serializable {
      */
     public final int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
     public final double[][] coordinates;
     /**
      * Nearest neighbor graph.
      */
-    public Graph graph;
+    public AdjacencyList graph;
 
     /**
      * Constructor.
@@ -75,7 +75,7 @@ public class LLE implements Serializable {
      * @param coordinates the coordinates.
      * @param graph the nearest neighbor graph.
      */
-    public LLE(int[] index, double[][] coordinates, Graph graph) {
+    public LLE(int[] index, double[][] coordinates, AdjacencyList graph) {
         this.index = index;
         this.coordinates = coordinates;
         this.graph = graph;
@@ -83,7 +83,7 @@ public class LLE implements Serializable {
 
     /**
      * Runs the LLE algorithm.
-     * @param data the dataset.
+     * @param data the input data.
      * @param k k-nearest neighbor.
      */
     public static LLE of(double[][] data, int k) {
@@ -92,7 +92,7 @@ public class LLE implements Serializable {
 
     /**
      * Runs the LLE algorithm.
-     * @param data the dataset.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      */
@@ -107,7 +107,7 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        Graph graph = NearestNeighborGraph.of(data, k, (v1, v2, weight, j) -> {
+        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
             N[v1][j] = v2;
         });
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
@@ -237,16 +237,6 @@ public class LLE implements Serializable {
         }
 
         @Override
-        public M ata() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public M aat() {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
         public double[] ax(double[] x, double[] y) {
             Wt.atx(x, Wx);
             Wt.ax(x, Wtx);
@@ -266,32 +256,7 @@ public class LLE implements Serializable {
         }
 
         @Override
-        public double[] axpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double get(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double apply(int i, int j) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y, double b) {
+        public Matrix clone() {
             throw new UnsupportedOperationException();
         }
     }

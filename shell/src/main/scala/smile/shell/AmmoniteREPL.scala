@@ -27,13 +27,13 @@ object AmmoniteREPL {
     val code =
       """
         |repl.prompt() = "smile> "
-        |
+        |/*
         |if (System.getProperty("os.name").toLowerCase(java.util.Locale.ROOT).contains("windows")) {
         |  import $ivy.`io.github.alexarchambault.windows-ansi:windows-ansi:0.0.3`
         |  // Change the terminal mode so that it accepts ANSI escape codes
         |  if (!io.github.alexarchambault.windowsansi.WindowsAnsi.setup)
         |    println("Your Windows doesn't support ANSI escape codes. Please use Windows 10 build 10586 onwards.")
-        |}""".stripMargin
+        |}*/""".stripMargin
     
     val args = "--home" :: home ::
                "--predef" :: System.getProperty("scala.repl.autoruncode") ::
