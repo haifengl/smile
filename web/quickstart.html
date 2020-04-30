@@ -462,10 +462,7 @@ smile&gt;
     <pre class="prettyprint lang-scala"><code>
     import smile.plot.swing._
     import smile.plot.show
-
-    implicit def render(canvas: Canvas): Unit = {
-      publish.html(smile.plot.swing.canvas2Image(canvas))
-    }
+    import smile.plot.Render._
     </code></pre>
 
     <p>To use Vega based plot functions in Notebook, run the below code instead.</p>
@@ -473,10 +470,7 @@ smile&gt;
     <pre class="prettyprint lang-scala"><code>
     import smile.plot.vega._
     import smile.plot.show
-
-    implicit def render(spec: JsObject): Unit = {
-      publish.html(iframe(spec))
-    }
+    import smile.plot.Render._
     </code></pre>
 
     <div id="btnv">
