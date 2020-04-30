@@ -1,0 +1,11 @@
+name: smile-environment
+channels:
+  - conda-forge
+  - simplect
+  - jetbrains
+dependencies:
+  - nbdime
+  - jupyterlab-git
+  - kotlin-jupyter-kernel
+  - clojupyter
+  - scijava-jupyter-kernel
