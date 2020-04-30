@@ -18,34 +18,6 @@ SCALA_VERSION=2.13.1 ALMOND_VERSION=0.9.1
   --metabrowse
 rm -f almond-scala-2.13
 
-# Install almond for Scala 2.12
-SCALA_VERSION=2.12.10 ALMOND_VERSION=0.9.1
-./coursier bootstrap \
-  -r jitpack \
-  -i user -I user:sh.almond:scala-kernel-api_$SCALA_VERSION:$ALMOND_VERSION \
-  sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
-  --sources --default=true \
-  -o ./almond-scala-2.12
-./almond-scala-2.12 --install --id scala212 --display-name "Scala (2.12)" \
-  --command "java -XX:MaxRAMPercentage=80.0 -jar almond-scala-2.12 --id scala212 --display-name 'Scala (2.12)'" \
-  --copy-launcher \
-  --metabrowse
-rm -f almond-scala-2.12
-
-# Install almond 0.6.0 for Scala 2.11
-SCALA_VERSION=2.11.12 ALMOND_VERSION=0.6.0
-./coursier bootstrap \
-  -r jitpack \
-  -i user -I user:sh.almond:scala-kernel-api_$SCALA_VERSION:$ALMOND_VERSION \
-  sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
-  --sources --default=true \
-  -o almond-scala-2.11
-./almond-scala-2.11 --install --id scala211 --display-name "Scala (2.11)" \
-  --command "java -XX:MaxRAMPercentage=80.0 -jar almond-scala-2.11 --id scala211 --display-name 'Scala (2.11)'" \
-  --copy-launcher \
-  --metabrowse
-rm -f almond-scala-2.11
-
 # Clean up the directory. Keep only the notebooks and data.
 rm -f coursier
 
