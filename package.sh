@@ -66,7 +66,7 @@ while true; do
     case $ans in
         [Yy]* )
             cd kotlin
-            gradle publish
+            gradle publishMavenJavaPublicationToMavenRepository
             check_error "gradle publish"
             cd ..
             break;;
