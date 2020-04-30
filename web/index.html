@@ -232,6 +232,30 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/nlp/embedding/Word2Vec.html">Word2Vec</a>
       </p></dd>
 
+      <dt><a href="api/java/smile/math/package-summary.html">Linear Algebra</a></dt>
+      <dd><p>
+        <a href="api/java/smile/math/matrix/DenseMatrix.html">Dense Matrix</a>,
+        <a href="api/java/smile/math/matrix/BandMatrix.html">Band Matrix</a>,
+        <a href="api/java/smile/math/matrix/SparseMatrix.html">Sparse Matrix</a>,
+        <a href="api/java/smile/math/matrix/LU.html">LU</a>,
+        <a href="api/java/smile/math/matrix/Cholesky.html">Cholesky</a>,
+        <a href="api/java/smile/math/matrix/QR.html">QR</a>,
+        <a href="api/java/smile/math/matrix/EVD.html">EVD</a>,
+        <a href="api/java/smile/math/matrix/SVD.html">SVD</a>,
+        <a href="api/scala/index.html#smile.cas.package">Computer Algebra System</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/stat/package-summary.html">Statistics</a></dt>
+      <dd><p>
+        <a href="api/java/smile/stat/distribution/package-summary.html">Distributions</a>,
+        <a href="api/java/smile/math/random/package-summary.html">Random Number Generators</a>,
+        <a href="api/java/smile/stat/hypothesis/TTest.html">t-test</a>,
+        <a href="api/java/smile/stat/hypothesis/FTest.html">F-test</a>,
+        <a href="api/java/smile/stat/hypothesis/ChiSqTest.html">&Chi;<sup>2</sup>-test</a>,
+        <a href="api/java/smile/stat/hypothesis/CorTest.html">Correlation Test</a>,
+        <a href="api/java/smile/stat/hypothesis/KSTest.html">Kolmogorov-Smirnov Test</a>
+      </p></dd>
+
       <dt><a href="api/java/smile/interpolation/package-summary.html">Interpolation</a></dt>
       <dd><p>
         <a href="api/java/smile/interpolation/LinearInterpolation.html">Linear</a>,
@@ -518,37 +542,53 @@ println("OOB error = ${rf.error()}")
       <p class="lead">
         Hidden gems in Smile.
       </p>
-      <p>Special functions (
-         <a href="api/java/smile/math/special/Beta.html">beta</a>,
-         <a href="api/java/smile/math/special/Erf.html">erf</a>, and
-         <a href="api/java/smile/math/special/Gamma.html">gamma</a>
-      ),
-         linear algebra including
-         <a href="api/java/smile/math/matrix/LU.html">LU decomposition</a>,
-         <a href="api/java/smile/math/matrix/Cholesky.html">Cholesky decomposition</a>,
-         <a href="api/java/smile/math/matrix/QR.html">QR decomposition</a>,
-         <a href="api/java/smile/math/matrix/EVD.html">eigen value decomposition</a>,
-         <a href="api/java/smile/math/matrix/SVD.html">singular value decomposition</a>,
-         <a href="api/java/smile/math/matrix/DenseMatrix.html">dense matrix</a>, and
-         <a href="api/java/smile/math/matrix/BandMatrix.html">band matrix</a>, and
-         <a href="api/java/smile/math/matrix/SparseMatrix.html">sparse matrix</a>,
-         hypothesis tests including
-         <a href="api/java/smile/stat/hypothesis/TTest.html">t-test</a>,
-         <a href="api/java/smile/stat/hypothesis/FTest.html">F-test</a>,
-         <a href="api/java/smile/stat/hypothesis/ChiSqTest.html">chi-square test</a>,
-         <a href="api/java/smile/stat/hypothesis/CorTest.html">correlation test (Pearson, Spearman, and Kendall)</a>,
-         and <a href="api/java/smile/stat/hypothesis/KSTest.html">Kolmogorov-Smirnov test</a>, a variety of
-         <a href="api/java/smile/stat/distribution/package-summary.html">distributions</a>
-         and <a href="api/java/smile/math/random/package-summary.html">random number generators</a>,
-         <a href="api/java/smile/interpolation/package-summary.html">interpolation</a>,
-         <a href="api/java/smile/sort/package-summary.html">sorting</a>,
-         <a href="api/java/smile/wavelet/package-summary.html">wavelet</a>,
-         <a href="api/scala/index.html#smile.cas.package">computer algebra system</a>, etc.
+      <p>From special functions, linear algebra, to random number generators,
+          statistical distributions and hypothesis tests, Smile provides an
+          advanced numerical computing environment. In additions, graph,
+          wavlets, and a variety of interpolation algorithms are implemented.
+          Smile even includes a computer algerbra system.
       </p>
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
-      <div style="width: 100%; display: inline-block; text-align: center;">
-        <img src="images/math.png" style="width: 100%;" />
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Matrix</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Statistics</a></li>
+        <li><a href="#scala_4" data-toggle="tab">CAS</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val a = randn(3, 3)
+val x = c(1.0, 2.0, 3.0)
+a \ x
+inv(a) %*% a
+          </code></pre>
+          </div>
+          <div class="caption">Linear Algebra</div>
+        </div>
+        <div class="tab-pane" id="scala_3">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val bins1 = Array(8, 13, 16, 10, 3)
+val bins2 = Array(4,  9, 14, 16, 7)
+
+chisqtest2(bins1, bins2)
+          </code></pre>
+          </div>
+          <div class="caption">Statistics</div>
+        </div>
+        <div class="tab-pane" id="scala_4">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val x = Var("x")
+val y = Var("y")
+val e = x**2 + y**3 + x**2 * cot(y**3)
+println(e.d(x))
+          </code></pre>
+          </div>
+          <div class="caption">Computer Algebra System</div>
+        </div>
       </div>
     </div>
   </div>
@@ -604,11 +644,8 @@ println("OOB error = ${rf.error()}")
     </div>
     <div class="col-md-5 col-sm-5 col-padded-top col-center">
       <div style="width: 100%; display: inline-block; text-align: center;">
-        <figure>
-        <img src="gallery/smile-demo-som.png" style="width: 100%;" />
+        <img src="images/math.png" style="width: 100%;" />
         <img src="gallery/smile-demo-ann.png" style="width: 100%;" />
-        <figcaption>Neural Networks</figcaption>
-        </figure>
       </div>
     </div>
   </div>
