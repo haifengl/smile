@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.stat;
+package smile.validation;
 
 /**
  * Model selection criteria. Model selection is the task of selecting
