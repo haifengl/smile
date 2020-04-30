@@ -1,4 +1,4 @@
-name: smile-environment
+name: smile-env
 channels:
   - conda-forge
   - simplect
@@ -8,4 +8,3 @@ dependencies:
   - jupyterlab-git
   - kotlin-jupyter-kernel
   - clojupyter
-  - scijava-jupyter-kernel
