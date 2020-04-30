@@ -5,7 +5,10 @@ do
     arg="$1"
     case "$arg" in
         --install)
-            install=true
+            installJupyter=true
+            installAlmond=true
+            installKotlin=true
+            installClojure=true
             ;;
         --install-almond)
             installAlmond=true
@@ -26,7 +29,7 @@ do
     shift
 done
 
-if [ "$install" == true ]
+if [ "$installJupyter" == true ]
 then
     conda create --name smile-env
     conda install --name smile-env -c conda-forge jupyterlab
