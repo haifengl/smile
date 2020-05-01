@@ -6,6 +6,7 @@ Help() {
   echo "Syntax: jupyterlab.sh [options]"
   echo "options:"
   echo "--update           Update conda environment smile-env."
+  echo "--remove           Remove conda environment smile-env."
   echo "--install-beakerx  Intall BeakerX."
   echo "                   CAUTION: will break Almond (Scala kernel)."
   echo "--help             Print this Help."
@@ -74,19 +75,19 @@ install_almond() {
 conda_auto_env() {
   if [ -e "$1/environment.yml" ]; then
     # echo "$1/environment.yml file found"
-    ENV=$(head -n 1 "$1/environment.yml" | cut -f2 -d ' ')
+    SMILE_ENV=$(head -n 1 "$1/environment.yml" | cut -f2 -d ' ')
     # Check if you are already in the environment
-    if [[ $PATH != *$ENV* ]]; then
+    if [[ $PATH != *$SMILE_ENV* ]]; then
       # Check if the environment exists
-      source activate $ENV
+      source activate $SMILE_ENV
       if [ $? -eq 0 ]; then
         :
       else
         # Create the environment and activate
-        echo "Creating '$ENV'..."
+        echo "Creating conda environment $SMILE_ENV..."
         conda env create -f "$1/environment.yml"
         install_almond
-        source activate $ENV
+        source activate $SMILE_ENV
       fi
     fi
   fi
@@ -101,6 +102,9 @@ do
             exit;;
         --update)
             updateSmileEnv=true
+            ;;
+        --remove)
+            removeSmileEnv=true
             ;;
         --install-beakerx)
             installBeakerX=true
@@ -128,11 +132,17 @@ then
     exit
 fi
 
+if [ "$removeSmileEnv" == true ]
+then
+    conda activate
+    conda remove --name $SMILE_ENV --all
+    exit
+fi
 
 if [ "$installBeakerX" == true ]
 then
     conda config --env --add pinned_packages 'openjdk>8.0.121'
-    conda install --name smile-env -c conda-forge beakerx
+    conda install --name $SMILE_ENV -c conda-forge beakerx
     jupyter labextension install @jupyter-widgets/jupyterlab-manager
     jupyter labextension install beakerx-jupyterlab
     exit
