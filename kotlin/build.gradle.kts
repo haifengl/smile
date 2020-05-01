@@ -26,9 +26,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    implementation("com.github.haifengl:smile-core:2.4.0")
-    implementation("com.github.haifengl:smile-nlp:2.4.0")
-    implementation("com.github.haifengl:smile-io:2.4.0")
+    api("com.github.haifengl:smile-core:2.4.0")
+    api("com.github.haifengl:smile-nlp:2.4.0")
+    api("com.github.haifengl:smile-io:2.4.0")
 }
 
 // Copy jar to shell lib
