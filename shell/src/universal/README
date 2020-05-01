@@ -103,32 +103,45 @@ and must be enabled explicitly using the package-manager. For example,
  - sudo update-alternatives --config liblapack.so
  - sudo update-alternatives --config liblapack.so.3
 
-However, these are only generic pre-tuned builds. If you have Intel MKL
-installed, you could also create symbolic links from libblas.so.3 and
-liblapack.so.3 to libmkl_rt.so or use Debian's alternatives system.
+However, these are only generic pre-tuned builds. If you have [Intel MKL]
+(https://software.intel.com/en-us/mkl) installed, you could also create
+symbolic links from libblas.so.3 and liblapack.so.3 to libmkl_rt.so or
+use Debian's alternatives system.
 
 #### Windows
 The native_system builds expect to find libblas3.dll and liblapack3.dll
-on the %PATH% (or current working directory). Smile ships a prebuilt
-OpenBLAS (http://www.openblas.net/). The users can also install
-vendor-supplied implementations, which may offer better performance.
+on the %PATH% (or current working directory). Smile prebuilt package
+ships [Intel MKL](https://software.intel.com/en-us/mkl), which features
+highly optimized, threaded, and vectorized math functions that maximize
+performance on each processor family.
 
 ## Shell
-Smile comes with an interactive shell. In the home directory of Smile, type
+Smile comes with interactive shells for Java, Scala and Kotlin.
+In the home directory of Smile, type
 ```
     ./bin/smile
 ```
-to enter the shell, which is based on Scala-REPL. You can run any valid
-Scala expressions in the shell. In the simplest case, you can use it as a
-calculator. Besides, all high-level Smile operators are predefined
-in the shell. By default, the shell uses up to 75% memory. If you need
-more memory to handle large data, use the option `-J-Xmx` or
-`-XX:MaxRAMPercentage`. For example,
+to enter the Scala shell. You can run any valid Scala expressions
+in the shell. In the simplest case, you can use it as a calculator.
+Besides, all high-level Smile operators are predefined in the shell.
+By default, the shell uses up to 75% memory. If you need more memory
+to handle large data, use the option `-J-Xmx` or `-XX:MaxRAMPercentage`.
+For example,
 ```
     ./bin/smile -J-Xmx30G
 ```
 You can also modify the configuration file `./conf/smile.ini` for the
 memory and other JVM settings.
+
+To use Java's JShell, type
+```
+    ./bin/jshell.sh
+```
+which has Smile's jars in the classpath. Similarly, run
+```
+    ./bin/kotlin.sh
+```
+to enter Kotlin REPL.
 
 ## Model Serialization
 Most models support the Java `Serializable` interface (all classifiers
@@ -143,7 +156,7 @@ is a nice alternative that supports forward-backward compatibility
 other formats such as JSON, YAML, protobuf, etc.
 
 ## Visualization
-Smile also has a Swing-based data visualization library SmilePlot,
+Smile provides a Swing-based data visualization library SmilePlot,
 which provides scatter plot, line plot, staircase plot, bar plot,
 box plot, histogram, 3D histogram, dendrogram, heatmap, hexmap,
 QQ plot, contour plot, surface, and wireframe.
@@ -156,4 +169,13 @@ To use SmilePlot, add the following to dependencies
       <version>2.4.0</version>
     </dependency>
 ```
+
+Smile also support data visualization in declarative approach.
+With `smile.plot.vega package`, we can create a specification
+that describes visualizations as mappings from data to properties
+of graphical marks (e.g., points or bars). The specification is
+based on [Vega-Lite](https://vega.github.io/vega-lite/). The
+Vega-Lite compiler automatically produces visualization components
+including axes, legends, and scales. It then determines properties
+of these components based on a set of carefully designed rules.
 
