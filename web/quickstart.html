@@ -413,13 +413,21 @@ smile&gt;
     <h2 id="notebook">Notebooks</h2>
 
     <p>You can also use Smile in your favorite Notebook.
-        We recommend JupyterLab with Almond kernel for Scala.
-        To use Smile's Scala API, it is helpful to add the following
-        code to the notebook or the <code>predef</code> code block of
-        Almond.</p>
+        We recommend JupyterLab and provide <code>jupyterlab.sh</code>
+        to setup the conda environment of Jupyter Lab for Smile with
+        kernels for Scala, Kotlin and Clojure. When you run
+        <code>jupyterlab.sh</code> first time, it will set up the environment
+        automatically. You can update the environment with the option
+        <code>--update</code> later when needed. You may install BeakerX
+        with <code>--install-beakerx</code> for other JVM kernels.
+        However, it may break the default Scala kernel (Almond).</p>
+
+    <p>In Scala notebooks, it is helpful to add the following
+        code to the notebook. We provides many notebook examples in
+        the <code>notebooks</code> directory.</p>
 
     <pre class="prettyprint lang-scala"><code>
-    import $ivy.`com.github.haifengl::smile-scala:2.2.2`
+    import $ivy.`com.github.haifengl::smile-scala:2.4.0`
 
     import scala.language.postfixOps
     import org.apache.commons.csv.CSVFormat
