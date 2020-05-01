@@ -82,7 +82,7 @@ conda_auto_env() {
       else
         # Create the environment and activate
         echo "Creating '$ENV'..."
-        conda env create -q -f "$1/environment.yml"
+        conda env create -f "$1/environment.yml"
         install_almond
         source activate $ENV
       fi
