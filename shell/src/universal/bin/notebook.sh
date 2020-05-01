@@ -3,9 +3,11 @@
 Help() {
   echo "Smile Notebooks - Statistical Machine Intelligence & Learning Engine"
   echo
-  echo "Syntax: notebook.sh [options]"
+  echo "Syntax: jupyterlab.sh [options]"
   echo "options:"
-  echo "--install-scijava  Intall SciJava kernel (requires Java 11+)."
+  echo "--update           Update conda environment smile-env."
+  echo "--install-beakerx  Intall BeakerX."
+  echo "                   CAUTION: will break Almond (Scala kernel)."
   echo "--help             Print this Help."
   echo
 }
@@ -71,7 +73,7 @@ install_almond() {
 
 conda_auto_env() {
   if [ -e "$1/environment.yml" ]; then
-    # echo "environment.yml file found"
+    # echo "$1/environment.yml file found"
     ENV=$(head -n 1 "$1/environment.yml" | cut -f2 -d ' ')
     # Check if you are already in the environment
     if [[ $PATH != *$ENV* ]]; then
@@ -97,8 +99,11 @@ do
         -h|--help)
             Help
             exit;;
-        --install-scijava)
-            installSciJava=true
+        --update)
+            updateSmileEnv=true
+            ;;
+        --install-beakerx)
+            installBeakerX=true
             ;;
         *)
             echo "Unknown argument $arg"
@@ -112,13 +117,25 @@ if ! type "conda" > /dev/null; then
   exit
 fi
 
-if [ "$installSciJava" == true ]
-then
-    conda install --name smile-env -c conda-forge scijava-jupyter-kernel
-fi
-
 declare -r real_script_path="$(realpath "$0")"
 declare -r app_home="$(realpath "$(dirname "$real_script_path")")"
 
 conda_auto_env $app_home
+
+if [ "$updateSmileEnv" == true ]
+then
+    conda env update --file $app_home/environment.yml --prune
+    exit
+fi
+
+
+if [ "$installBeakerX" == true ]
+then
+    conda config --env --add pinned_packages 'openjdk>8.0.121'
+    conda install --name smile-env -c conda-forge beakerx
+    jupyter labextension install @jupyter-widgets/jupyterlab-manager
+    jupyter labextension install beakerx-jupyterlab
+    exit
+fi
+
 jupyter lab --notebook-dir="$app_home/.."
