@@ -8,10 +8,6 @@ autoScalaLibrary := true
 
 mainClass in Compile := Some("smile.shell.Main")
 
-// In order to generate launch scripts only for specified mainClass,
-// we need to discard automatically found main classes.
-discoveredMainClasses in Compile := Seq()
-
 // native packager
 enablePlugins(JavaAppPackaging)
 // dealing with long classpaths
