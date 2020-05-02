@@ -256,8 +256,8 @@ package object classification {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-    *               weights which often has superior generalization performance, especially
-    *               when the dimensionality is high.
+    *               weights which often has superior generalization performance,
+    *               especially when the dimensionality is high.
     * @param tol the tolerance for stopping iterations.
     * @param maxIter the maximum number of iterations.
     *
