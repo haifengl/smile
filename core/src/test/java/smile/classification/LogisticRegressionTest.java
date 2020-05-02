@@ -95,7 +95,7 @@ public class LogisticRegressionTest {
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(28, error);
+        assertEquals(26, error);
     }
 
     @Test
