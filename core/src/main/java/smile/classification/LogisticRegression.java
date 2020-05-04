@@ -27,7 +27,12 @@ import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
+import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
+import smile.math.special.Erf;
 import smile.util.IntSet;
+import smile.stat.Hypothesis;
+import smile.validation.ModelSelection;
 
 /**
  * Logistic regression. Logistic regression (logit model) is a generalized
@@ -142,6 +147,18 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          * The linear weights for binary logistic regression.
          */
         private double[] w;
+        /**
+         * The coefficients, their standard errors, z-scores, and p-values.
+         */
+        double[][] ztest;
+        /**
+         * The fitted values.
+         */
+        double[] fittedValues;
+        /**
+         * The deviance residuals.
+         */
+        double[] residuals;
 
         /**
          * Constructor.
@@ -176,6 +193,31 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          */
         public double[] coefficients() {
             return w;
+        }
+
+        /**
+         * Returns the z-test of the coefficients (including intercept).
+         * The first column is the coefficients, the second column is the standard
+         * error of coefficients, the third column is the z-score of the hypothesis
+         * test if the coefficient is zero, the fourth column is the p-values of
+         * test. The last row is of intercept.
+         */
+        public double[][] ztest() {
+            return ztest;
+        }
+
+        /**
+         * Returns the deviance residuals.
+         */
+        public double[] residuals() {
+            return residuals;
+        }
+
+        /**
+         * Returns the fitted values.
+         */
+        public double[] fittedValues() {
+            return fittedValues;
         }
 
         @Override
@@ -226,6 +268,49 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                     w[j] -= eta * lambda * w[j];
                 }
             }
+        }
+
+        @Override
+        public String toString() {
+            StringBuilder builder = new StringBuilder();
+            builder.append("Linear Model:\n");
+
+            double[] r = residuals.clone();
+            builder.append("\nDeviance Residuals:\n");
+            builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
+            builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
+
+            builder.append("\nCoefficients:\n");
+            if (ztest != null) {
+                builder.append("                  Estimate Std. Error    z value   Pr(>|z|)\n");
+                if (ztest.length > p) {
+                    builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ztest[p][0], ztest[p][1], ztest[p][2], ztest[p][3], Hypothesis.significance(ztest[p][3])));
+                } else {
+                    builder.append(String.format("Intercept       %10.4f%n", w[p]));
+                }
+
+                for (int i = 0; i < p; i++) {
+                    builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", fields[i], ztest[i][0], ztest[i][1], ztest[i][2], ztest[i][3], Hypothesis.significance(ztest[i][3])));
+                }
+
+                builder.append("---------------------------------------------------------------------\n");
+                builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
+            } else {
+                builder.append(String.format("Intercept       %10.4f%n", w[p]));
+                for (int i = 0; i < p; i++) {
+                    builder.append(String.format("%-15s %10.4f%n", fields[i], w[i]));
+                }
+            }
+/*
+            builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+            builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
+            builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
+*/
+
+            //builder.append(String.format("Residual deviance: %.1f  on %d degrees of freedom");
+            builder.append(String.format("AIC: %.4f%n", ModelSelection.AIC(L, p+1)));
+
+            return builder.toString();
         }
     }
 
@@ -376,10 +461,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param y training labels.
      */
     public static Binomial binomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
-        return binomial(x, y, lambda, tol, maxIter);
+        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
+        boolean stderr = Boolean.valueOf(prop.getProperty("smile.logit.standard.error", "true"));
+        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        return binomial(x, y, lambda, stderr, tol, maxIter);
     }
 
     /**
@@ -390,10 +476,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
+     * @param stderr if true, compute the estimated standard errors of the estimate of parameters
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
      */
-    public static Binomial binomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Binomial binomial(double[][] x, int[] y, double lambda, boolean stderr, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -420,11 +507,72 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         BFGS bfgs = new BFGS(tol, maxIter);
-        BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
+        BinomialObjectiveFunction func = new BinomialObjectiveFunction(x, y, lambda);
         double[] w = new double[p + 1];
         double L = -bfgs.minimize(func, 5, w);
+
         Binomial model = new Binomial(L, w, lambda, codec.labels);
         model.setLearningRate(0.1 / x.length);
+
+        int n = x.length;
+        double[] fittedValues = new double[n];
+        double[] residuals = new double[n];
+        model.fittedValues = fittedValues;
+        model.residuals = residuals;
+
+        int[] y2 = y;
+        double[] g2 = new double[n]; // second partial derivatives of likelihood
+        IntStream.range(0, n).parallel().forEach(i -> {
+            double e = Math.exp(dot(x[i], w));
+            double e1 = 1.0 + e;
+            double fittedValue = e / e1;;
+            fittedValues[i] = fittedValue;
+            double d = y2[i] == 0 ? -Math.log(1.0 - fittedValue) : -Math.log(fittedValue);
+            residuals[i] = Math.signum(y2[i] - fittedValue) * 2.0 * Math.sqrt(d);
+
+            g2[i] = e / (e1 * e1);
+        });
+
+        if (stderr) {
+            DenseMatrix XGX = Matrix.zeros(p + 1, p + 1);
+            for (int i = 0; i < p; i++) {
+                for (int j = 0; j < p; j++) {
+                    double s = 0.0;
+                    for (int l = 0; l < n; l++) {
+                        s += x[l][i] * g2[l] * x[l][j];
+                    }
+                    XGX.set(i, j, s);
+                }
+
+                double s = 0.0;
+                for (int l = 0; l < n; l++) {
+                    s += x[l][i] * g2[l];
+                }
+                XGX.set(i, p, s);
+            }
+
+            for (int j = 0; j < p; j++) {
+                double s = 0.0;
+                for (int l = 0; l < n; l++) {
+                    s += g2[l] * x[l][j];
+                }
+                XGX.set(p, j, s);
+            }
+
+            XGX.set(p, p, MathEx.sum(g2));
+            XGX.setSymmetric(true);
+            DenseMatrix inv = XGX.cholesky(true).inverse();
+
+            double[][] ztest = new double[p + 1][4];
+            model.ztest = ztest;
+            for (int i = 0; i <= p; i++) {
+                ztest[i][0] = w[i];
+                ztest[i][1] = Math.sqrt(inv.get(i, i));
+                ztest[i][2] = ztest[i][0] / ztest[i][1];
+                ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
+            }
+        }
+
         return model;
     }
 
@@ -474,9 +622,10 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param y training labels.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
+        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
+        boolean stderr = Boolean.valueOf(prop.getProperty("smile.logit.standard.error", "true"));
+        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -518,7 +667,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         BFGS bfgs = new BFGS(tol, maxIter);
-        MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, lambda);
+        MultinomialObjectiveFunction func = new MultinomialObjectiveFunction(x, y, k, lambda);
         double[] w = new double[(k - 1) * (p + 1)];
         double L = -bfgs.minimize(func, 5, w);
 
@@ -599,8 +748,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      */
     public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
         ClassLabels codec = ClassLabels.fit(y);
+        System.out.println(codec.k);
         if (codec.k == 2)
-            return binomial(x, y, lambda, tol, maxIter);
+            return binomial(x, y, lambda, true, tol, maxIter);
         else
             return multinomial(x, y, lambda, tol, maxIter);
     }
@@ -608,7 +758,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /**
      * Binary-class logistic regression objective function.
      */
-    static class BinaryObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class BinomialObjectiveFunction implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -641,7 +791,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * Constructor.
          */
-        BinaryObjectiveFunction(double[][] x, int[] y, double lambda) {
+        BinomialObjectiveFunction(double[][] x, int[] y, double lambda) {
             this.x = x;
             this.y = y;
             this.lambda = lambda;
@@ -717,7 +867,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /**
      * Multi-class logistic regression objective function.
      */
-    static class MultiClassObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class MultinomialObjectiveFunction implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -758,7 +908,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * Constructor.
          */
-        MultiClassObjectiveFunction(double[][] x, int[] y, int k, double lambda) {
+        MultinomialObjectiveFunction(double[][] x, int[] y, int k, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
