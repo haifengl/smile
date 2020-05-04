@@ -100,6 +100,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     int k;
 
     /**
+     * The number of training samples.
+     */
+    int n;
+
+    /**
      * The log-likelihood of learned model.
      */
     double L;
@@ -156,13 +161,17 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          */
         double[] fittedValues;
         /**
-         * The deviance residuals.
+         * The null hypothesis deviance.
          */
-        double[] residuals;
+        double nullDeviance;
         /**
          * The residual deviance.
          */
-        double deviance;
+        double residualDeviance;
+        /**
+         * The deviance residuals.
+         */
+        double[] residuals;
         /**
          * The degrees of freedom of the residual deviance.
          */
@@ -281,12 +290,12 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         @Override
         public String toString() {
             StringBuilder builder = new StringBuilder();
-            builder.append("Linear Model:\n");
+            builder.append("Logistic Regression:\n");
 
             double[] r = residuals.clone();
             builder.append("\nDeviance Residuals:\n");
-            builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-            builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
+            builder.append("       Min          1Q      Median          3Q         Max\n");
+            builder.append(String.format("%10.4f  %10.4f  %10.4f  %10.4f  %10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
             builder.append("\nCoefficients:\n");
             if (ztest != null) {
@@ -310,8 +319,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                 }
             }
 
-            builder.append(String.format("%nResidual deviance: %.1f  on %d degrees of freedom%n", deviance, df));
-            builder.append(String.format("AIC: %.4f%n", ModelSelection.AIC(L, p+1)));
+            builder.append(String.format("%n    Null deviance: %.1f on %d degrees of freedom", nullDeviance, df+p));
+            builder.append(String.format("%nResidual deviance: %.1f on %d degrees of freedom", residualDeviance, df));
+            builder.append(String.format("%nAIC: %.4f     BIC: %.4f%n", AIC(), BIC()));
 
             return builder.toString();
         }
@@ -518,6 +528,8 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         model.setLearningRate(0.1 / x.length);
 
         int n = x.length;
+        model.n = n;
+
         double[] fittedValues = new double[n];
         double[] residuals = new double[n];
         model.fittedValues = fittedValues;
@@ -525,8 +537,13 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
         int[] y2 = y;
         double[] g2 = new double[n]; // second partial derivatives of likelihood
+
+        int pos = (int) MathEx.sum(y);
+        double ybar = (double) pos / n;
+        model.nullDeviance = -2.0 * (pos * Math.log(ybar) + (n - pos) * Math.log(1.0 - ybar));
+
         model.df = n - p - 1;
-        model.deviance = IntStream.range(0, n).parallel().mapToDouble(i -> {
+        model.residualDeviance = IntStream.range(0, n).parallel().mapToDouble(i -> {
             double e = Math.exp(dot(x[i], w));
             double e1 = 1.0 + e;
             double fittedValue = e / e1;;
@@ -695,7 +712,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param data the data frame of the explanatory and response variables.
      */
     public static LogisticRegression fit(Formula formula, DataFrame data) {
-        return multinomial(formula, data, new Properties());
+        return fit(formula, data, new Properties());
     }
 
     /**
@@ -708,7 +725,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         DataFrame X = formula.x(data);
         double[][] x = X.toArray();
         int[] y = formula.y(data).toIntArray();
-        Multinomial model = multinomial(x, y, prop);
+        LogisticRegression model = fit(x, y, prop);
 
         StructType schema = X.schema();
         int p = schema.length();
@@ -1072,5 +1089,19 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      */
     public double loglikelihood() {
         return L;
+    }
+
+    /**
+     * Returns the AIC score.
+     */
+    public double AIC() {
+        return ModelSelection.AIC(L, (k-1)*(p+1));
+    }
+
+    /**
+     * Returns the BIC score.
+     */
+    public double BIC() {
+        return ModelSelection.BIC(L, (k-1)*(p+1), n);
     }
 }
