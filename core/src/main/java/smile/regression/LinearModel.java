@@ -405,8 +405,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
         double[] r = residuals.clone();
         builder.append("\nResiduals:\n");
-        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
+        builder.append("       Min          1Q      Median          3Q         Max\n");
+        builder.append(String.format("%10.4f  %10.4f  %10.4f  %10.4f  %10.4f%n", MathEx.min(r), MathEx.q1(r), MathEx.median(r), MathEx.q3(r), MathEx.max(r)));
 
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
@@ -430,7 +430,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             }
         }
 
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
+        builder.append(String.format("%nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
         builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
         builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
 
