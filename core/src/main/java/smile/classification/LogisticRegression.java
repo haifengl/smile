@@ -159,6 +159,14 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          * The deviance residuals.
          */
         double[] residuals;
+        /**
+         * The residual deviance.
+         */
+        double deviance;
+        /**
+         * The degrees of freedom of the residual deviance.
+         */
+        int df;
 
         /**
          * Constructor.
@@ -301,13 +309,8 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                     builder.append(String.format("%-15s %10.4f%n", fields[i], w[i]));
                 }
             }
-/*
-            builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
-            builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
-            builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
-*/
 
-            //builder.append(String.format("Residual deviance: %.1f  on %d degrees of freedom");
+            builder.append(String.format("%nResidual deviance: %.1f  on %d degrees of freedom%n", deviance, df));
             builder.append(String.format("AIC: %.4f%n", ModelSelection.AIC(L, p+1)));
 
             return builder.toString();
@@ -522,16 +525,18 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
         int[] y2 = y;
         double[] g2 = new double[n]; // second partial derivatives of likelihood
-        IntStream.range(0, n).parallel().forEach(i -> {
+        model.df = n - p - 1;
+        model.deviance = IntStream.range(0, n).parallel().mapToDouble(i -> {
             double e = Math.exp(dot(x[i], w));
             double e1 = 1.0 + e;
             double fittedValue = e / e1;;
             fittedValues[i] = fittedValue;
-            double d = y2[i] == 0 ? -Math.log(1.0 - fittedValue) : -Math.log(fittedValue);
-            residuals[i] = Math.signum(y2[i] - fittedValue) * 2.0 * Math.sqrt(d);
+            double d = y2[i] == 0 ? -2.0 * Math.log(1.0 - fittedValue) : -2.0 * Math.log(fittedValue);
+            residuals[i] = Math.signum(y2[i] - fittedValue) * Math.sqrt(d);
 
             g2[i] = e / (e1 * e1);
-        });
+            return d;
+        }).sum();
 
         if (stderr) {
             DenseMatrix XGX = Matrix.zeros(p + 1, p + 1);
