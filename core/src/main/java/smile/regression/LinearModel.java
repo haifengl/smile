@@ -25,6 +25,7 @@ import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.matrix.DenseMatrix;
 import smile.math.special.Beta;
+import smile.stat.Hypothesis;
 
 /**
  * Linear model. In linear regression,
@@ -397,23 +398,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         b += Vx[p] * err;
     }
 
-    /**
-     * Returns the significance code given a p-value.
-     * Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
-     */
-    private String significance(double pvalue) {
-        if (pvalue < 0.001)
-            return "***";
-        else if (pvalue < 0.01)
-            return "**";
-        else if (pvalue < 0.05)
-            return "*";
-        else if (pvalue < 0.1)
-            return ".";
-        else
-            return "";
-    }
-
     @Override
     public String toString() {
         StringBuilder builder = new StringBuilder();
@@ -428,13 +412,13 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         if (ttest != null) {
             builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
             if (ttest.length > p) {
-                builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], significance(ttest[p][3])));
+                builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], Hypothesis.significance(ttest[p][3])));
             } else {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", schema.fieldName(i), ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], significance(ttest[i][3])));
+                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", schema.fieldName(i), ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], Hypothesis.significance(ttest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
