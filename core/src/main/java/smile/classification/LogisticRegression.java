@@ -112,7 +112,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /**
      * Regularization factor.
      */
-    double lambda = 0.1;
+    double lambda;
 
     /**
      * learning rate for stochastic gradient descent.
@@ -125,12 +125,12 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     final IntSet labels;
 
     /**
-     * Constructor of binary logistic regression.
+     * Constructor.
      * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
      * @param labels class labels
      */
     public LogisticRegression(int p, double L, double lambda, IntSet labels) {
@@ -149,7 +149,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /** Binomial logistic regression. The dependent variable is nominal of two levels. */
     public static class Binomial extends LogisticRegression {
         /**
-         * The linear weights for binary logistic regression.
+         * The linear weights.
          */
         private double[] w;
         /**
@@ -179,26 +179,14 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
         /**
          * Constructor.
-         * @param L the log-likelihood of learned model.
          * @param w the weights.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-         * weights which often has superior generalization performance, especially
-         * when the dimensionality is high.
-         */
-        public Binomial(double[] w, double L, double lambda) {
-            this(L, w, lambda, IntSet.of(2));
-        }
-
-        /**
-         * Constructor.
          * @param L the log-likelihood of learned model.
-         * @param w the weights.
          * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-         * weights which often has superior generalization performance, especially
-         * when the dimensionality is high.
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
          * @param labels class labels
          */
-        public Binomial(double L, double[] w, double lambda, IntSet labels) {
+        public Binomial(double[] w, double L, double lambda, IntSet labels) {
             super(w.length - 1, L, lambda, labels);
             this.w = w;
         }
@@ -330,34 +318,22 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /** Multinomial logistic regression. The dependent variable is nominal with more than two levels. */
     public static class Multinomial extends LogisticRegression {
         /**
-         * The linear weights for multi-class logistic regression.
+         * The linear weights.
          */
-        private double[][] W;
-
-        /**
-         * Constructor..
-         * @param L the log-likelihood of learned model.
-         * @param W the weights of first k - 1 classes.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-         * weights which often has superior generalization performance, especially
-         * when the dimensionality is high.
-         */
-        public Multinomial(double L, double[][] W, double lambda) {
-            this(L, W, lambda, IntSet.of(W.length+1));
-        }
+        private double[][] w;
 
         /**
          * Constructor.
+         * @param w the weights.
          * @param L the log-likelihood of learned model.
-         * @param W the weights.
          * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-         * weights which often has superior generalization performance, especially
-         * when the dimensionality is high.
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
          * @param labels class labels
          */
-        public Multinomial(double L, double[][] W, double lambda, IntSet labels) {
-            super(W[0].length - 1, L, lambda, labels);
-            this.W = W;
+        public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
+            super(w[0].length - 1, L, lambda, labels);
+            this.w = w;
         }
 
         /**
@@ -367,7 +343,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          * row is the weight of bias.
          */
         public double[][] coefficients() {
-            return W;
+            return w;
         }
 
         @Override
@@ -387,7 +363,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
             posteriori[k-1] = 0.0;
             for (int i = 0; i < k-1; i++) {
-                posteriori[i] = dot(x, W[i]);
+                posteriori[i] = dot(x, w[i]);
             }
 
             MathEx.softmax(posteriori);
@@ -404,24 +380,24 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
             double[] prob = new double[k];
             for (int j = 0; j < k-1; j++) {
-                prob[j] = dot(x, W[j]);
+                prob[j] = dot(x, w[j]);
             }
 
             MathEx.softmax(prob);
 
             // update the weights
             for (int i = 0; i < k-1; i++) {
-                double[] w = W[i];
+                double[] wi = w[i];
                 double err = (y == i ? 1.0 : 0.0) - prob[i];
-                w[p] += eta * err;
+                wi[p] += eta * err;
                 for (int j = 0; j < p; j++) {
-                    w[j] += eta * err * x[j];
+                    wi[j] += eta * err * x[j];
                 }
 
                 // add regularization part
                 if (lambda > 0.0) {
                     for (int j = 0; j < p; j++) {
-                        w[j] -= eta * lambda * w[j];
+                        wi[j] -= eta * lambda * wi[j];
                     }
                 }
             }
@@ -520,11 +496,11 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         BFGS bfgs = new BFGS(tol, maxIter);
-        BinomialObjectiveFunction func = new BinomialObjectiveFunction(x, y, lambda);
+        BinomialObjective objective = new BinomialObjective(x, y, lambda);
         double[] w = new double[p + 1];
-        double L = -bfgs.minimize(func, 5, w);
+        double L = -bfgs.minimize(objective, 5, w);
 
-        Binomial model = new Binomial(L, w, lambda, codec.labels);
+        Binomial model = new Binomial(w, L, lambda, codec.labels);
         model.setLearningRate(0.1 / x.length);
 
         int n = x.length;
@@ -689,9 +665,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         }
 
         BFGS bfgs = new BFGS(tol, maxIter);
-        MultinomialObjectiveFunction func = new MultinomialObjectiveFunction(x, y, k, lambda);
+        MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
         double[] w = new double[(k - 1) * (p + 1)];
-        double L = -bfgs.minimize(func, 5, w);
+        double L = -bfgs.minimize(objective, 5, w);
 
         double[][] W = new double[k-1][p+1];
         for (int i = 0, l = 0; i < k-1; i++) {
@@ -700,7 +676,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             }
         }
 
-        Multinomial model = new Multinomial(L, W, lambda, codec.labels);
+        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -770,7 +746,6 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      */
     public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
         ClassLabels codec = ClassLabels.fit(y);
-        System.out.println(codec.k);
         if (codec.k == 2)
             return binomial(x, y, lambda, true, tol, maxIter);
         else
@@ -780,7 +755,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /**
      * Binary-class logistic regression objective function.
      */
-    static class BinomialObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class BinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -813,7 +788,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * Constructor.
          */
-        BinomialObjectiveFunction(double[][] x, int[] y, double lambda) {
+        BinomialObjective(double[][] x, int[] y, double lambda) {
             this.x = x;
             this.y = y;
             this.lambda = lambda;
@@ -889,7 +864,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
     /**
      * Multi-class logistic regression objective function.
      */
-    static class MultinomialObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class MultinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -930,7 +905,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * Constructor.
          */
-        MultinomialObjectiveFunction(double[][] x, int[] y, int k, double lambda) {
+        MultinomialObjective(double[][] x, int[] y, int k, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
