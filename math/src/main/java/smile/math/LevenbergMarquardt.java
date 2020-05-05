@@ -43,25 +43,25 @@ public class LevenbergMarquardt {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
 
     /** The fitted parameters. */
-    public final double[] p;
+    public final double[] parameters;
     /** The fitted values. */
-    public final double[] f;
+    public final double[] fittedValues;
     /** The residuals. */
-    public final double[] r;
+    public final double[] residuals;
     /** The sum of squares due to error. */
     public final double sse;
 
     /**
      * Constructor.
-     * @param p The fitted parameters.
-     * @param f The fitted values.
-     * @param r The residuals.
+     * @param parameters The fitted parameters.
+     * @param fittedValues The fitted values.
+     * @param residuals The residuals.
      * @param sse The sum of squares due to error.
      */
-    LevenbergMarquardt(double[] p, double[] f, double[] r, double sse) {
-        this.p = p;
-        this.f = f;
-        this.r = r;
+    LevenbergMarquardt(double[] parameters, double[] fittedValues, double[] residuals, double sse) {
+        this.parameters = parameters;
+        this.fittedValues = fittedValues;
+        this.residuals = residuals;
         this.sse = sse;
     }
 

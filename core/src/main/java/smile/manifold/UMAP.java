@@ -308,7 +308,7 @@ public class UMAP implements Serializable {
         }
         double[] p = {0.5, 0.0};
         LevenbergMarquardt curveFit = LevenbergMarquardt.fit(func, x, y, p);
-        return curveFit.p;
+        return curveFit.parameters;
     }
 
     /**
