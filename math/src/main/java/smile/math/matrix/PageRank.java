@@ -36,29 +36,29 @@ public interface PageRank {
     org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
 
     /**
-     * Calculate the page rank vector.
+     * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @return the page rank vector.
      */
-    static double[] apply(Matrix A) {
+    static double[] of(Matrix A) {
         int n = A.nrows();
         double[] v = new double[n];
         Arrays.fill(v, 1.0 / n);
-        return apply(A, v);
+        return of(A, v);
     }
 
     /**
-     * Calculate the page rank vector.
+     * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    static double[] apply(Matrix A, double[] v) {
-        return apply(A, v, 0.85, 1E-7, 57);
+    static double[] of(Matrix A, double[] v) {
+        return of(A, v, 0.85, 1E-7, 57);
     }
 
     /**
-     * Calculate the page rank vector.
+     * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param v the teleportation vector.
      * @param damping the damper factor.
@@ -67,7 +67,7 @@ public interface PageRank {
      *                algorithm does not converge.
      * @return the page rank vector.
      */
-    static double[] apply(Matrix A, double[] v, double damping, double tol, int maxIter) {
+    static double[] of(Matrix A, double[] v, double damping, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }

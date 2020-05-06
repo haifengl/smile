@@ -64,42 +64,8 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class BFGS {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
-
-    /**
-     * The desired convergence tolerance.
-     */
-    private double gtol = 1E-5;
-    /**
-     * The maximum number of allowed iterations.
-     */
-    private int maxIter = 500;
-
-    /**
-     * Constructor with gtol = 1E-5 and maxIter = 500.
-     */
-    public BFGS() {
-        this(1E-5, 500);
-    }
-
-    /**
-     * Constructor.
-     * @param gtol the convergence requirement on zeroing the gradient.
-     * @param maxIter the maximum number of allowed iterations.
-     */
-    public BFGS(double gtol, int maxIter) {
-        if (gtol <= 0.0) {
-            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        this.gtol = gtol;
-        this.maxIter = maxIter;
-    }
+public interface BFGS {
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
 
     /**
      * This method solves the unconstrained minimization problem
@@ -127,9 +93,19 @@ public class BFGS {
      *          <code>iflag = 0</code>, it contains the values of the variables
      *          at the best point found (usually a solution).
      *
+     * @param gtol the convergence tolerance on zeroing the gradient.
+     * @param maxIter the maximum number of iterations.
+     *
      * @return the minimum value of the function.
      */
-    public double minimize(DifferentiableMultivariateFunction func, int m, double[] x) {
+    static double minimize(DifferentiableMultivariateFunction func, int m, double[] x, double gtol, int maxIter) {
+        if (gtol <= 0.0) {
+            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
         // Initialize.
         if (m <= 0) {
             throw new IllegalArgumentException("Invalid m: " + m);
@@ -279,9 +255,20 @@ public class BFGS {
      *          contains the values of the variables at the best point found
      *          (usually a solution).
      *
+     * @param gtol the convergence tolerance on zeroing the gradient.
+     * @param maxIter the maximum number of iterations.
+     *
      * @return the minimum value of the function.
      */
-    public double minimize(DifferentiableMultivariateFunction func, double[] x) {
+    static double minimize(DifferentiableMultivariateFunction func, double[] x, double gtol, int maxIter) {
+        if (gtol <= 0.0) {
+            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
         // The convergence criterion on x values.
         final double TOLX = 4 * MathEx.EPSILON;
         // The scaled maximum step length allowed in line searches.
@@ -462,7 +449,7 @@ public class BFGS {
      *
      * @return the new function value.
      */
-    private double linesearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
+    static double linesearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
         if (stpmax <= 0) {
             throw new IllegalArgumentException("Invalid upper bound of linear search step: " + stpmax);
         }
