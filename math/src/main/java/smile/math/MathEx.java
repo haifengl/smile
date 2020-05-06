@@ -94,15 +94,6 @@ public class MathEx {
      * except that negeps is bounded below by -(DIGITS+3)
      */
     public static final int NEGEP = fpu.NEGEP;
-    /**
-     * Root finding algorithms.
-     */
-    public static final Root root = new Root();
-    /**
-     * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm
-     * for unconstrained nonlinear optimization problems.
-     */
-    public static final BFGS BFGS = new BFGS();
 
     /**
      * This RNG is to generate the seeds for multi-threads.

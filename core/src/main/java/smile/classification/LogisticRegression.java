@@ -495,10 +495,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        BFGS bfgs = new BFGS(tol, maxIter);
         BinomialObjective objective = new BinomialObjective(x, y, lambda);
         double[] w = new double[p + 1];
-        double L = -bfgs.minimize(objective, 5, w);
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
         Binomial model = new Binomial(w, L, lambda, codec.labels);
         model.setLearningRate(0.1 / x.length);
@@ -664,10 +663,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             throw new IllegalArgumentException("Fits multinomial model on binary class data.");
         }
 
-        BFGS bfgs = new BFGS(tol, maxIter);
         MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
         double[] w = new double[(k - 1) * (p + 1)];
-        double L = -bfgs.minimize(objective, 5, w);
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
         double[][] W = new double[k-1][p+1];
         for (int i = 0, l = 0; i < k-1; i++) {
