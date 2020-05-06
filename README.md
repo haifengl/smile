@@ -4,12 +4,12 @@
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
-Smile (Statistical Machine Intelligence and Learning Engine) is
-a fast and comprehensive machine learning, NLP, linear algebra,
+[Smile (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
+is a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms, Smile delivers
 state-of-art performance. Smile is well documented and please
-check out the project [website](http://haifengl.github.io/)
+check out the project [website](https://haifengl.github.io/)
 for programming guides and more information.
 
 Smile covers every aspect of machine learning, including classification,
