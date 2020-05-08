@@ -21,6 +21,7 @@ package smile.math.matrix;
  * Eigen decomposition of a real matrix. Eigen decomposition is the factorization
  * of a matrix into a canonical form, whereby the matrix is represented in terms
  * of its eigenvalues and eigenvectors:
+ * <p>
  * <pre>
  *     A = V*D*V<sup>-1</sup>
  * </pre>
@@ -29,6 +30,7 @@ package smile.math.matrix;
  * <p>
  * Given a linear transformation A, a non-zero vector x is defined to be an
  * eigenvector of the transformation if it satisfies the eigenvalue equation
+ * <p>
  * <pre>
  *     A x = &lambda; x
  * </pre>

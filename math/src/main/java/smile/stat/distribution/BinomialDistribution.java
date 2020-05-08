@@ -28,13 +28,14 @@ import static smile.math.MathEx.lfactorial;
  * the number of successes in a sequence of n independent yes/no experiments,
  * each of which yields success with probability p. Such a success/failure
  * experiment is also called a Bernoulli experiment or Bernoulli trial.
- * In fact, when n = 1, the binomial distribution is a Bernoulli distribution.
- * The probability of getting exactly k successes in n trials is given by the
- * probability mass function:
+ * In fact, when <code>n = 1</code>, the binomial distribution is a Bernoulli
+ * distribution. The probability of getting exactly k successes in n trials
+ * is given by the probability mass function:
+ * <p>
  * <pre>
  *     Pr(K = k) = <sub>n</sub>C<sub>k</sub> p<sup>k</sup> (1-p)<sup>n-k</sup>
  * </pre>
- * where <sub>n</sub>C<sub>k</sub> is n choose k.
+ * where <code><sub>n</sub>C<sub>k</sub></code> is n choose k.
  * <p>
  * It is frequently used to model number of successes in a sample of size
  * n from a population of size N. Since the samples are not independent
@@ -44,10 +45,10 @@ import static smile.math.MathEx.lfactorial;
  * widely used.
  * <p>
  * Binomial distribution describes the number of successes for draws with
- * replacement. In constrast, the hypergeometric distribution describes the
+ * replacement. In contrast, the hypergeometric distribution describes the
  * number of successes for draws without replacement.
  * <p>
- * Although Binomial distribtuion belongs to exponential family, we don't
+ * Although Binomial distribution belongs to exponential family, we don't
  * implement DiscreteExponentialFamily interface here since it is impossible
  * and meaningless to estimate a mixture of Binomial distributions.
  *

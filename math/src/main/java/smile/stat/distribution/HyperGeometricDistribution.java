@@ -33,6 +33,7 @@ import static smile.math.MathEx.lfactorial;
  * describes the distribution of the number of white balls drawn from the urn.
  * A random variable X follows the hypergeometric distribution with parameters
  * N, m and n if the probability is given by
+ * <p>
  * <pre>
  *              <sub>m</sub>C<sub>k</sub> <sub>(N-m)</sub>C<sub>(n-k)</sub>
  * P(X = k) = ----------------

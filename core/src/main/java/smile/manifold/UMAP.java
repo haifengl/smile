@@ -259,7 +259,7 @@ public class UMAP implements Serializable {
 
     /**
      * The curve function:
-     *
+     * <p>
      * <pre>
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>

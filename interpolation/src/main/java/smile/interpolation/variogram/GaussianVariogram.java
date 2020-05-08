@@ -21,6 +21,7 @@ import smile.math.MathEx;
 
 /**
  * Gaussian variogram.
+ * <p>
  * <pre>
  *     v(r) = c + b * (1 - e<sup>-3r<sup>2</sup>/a<sup>2</sup></sup>)
  * </pre>

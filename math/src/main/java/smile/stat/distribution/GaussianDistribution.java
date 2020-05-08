@@ -29,15 +29,18 @@ import smile.math.special.Erf;
  * to cluster around the mean.
  * <p>
  * The family of normal distributions is closed under linear transformations.
- * That is, if X is normally distributed, then a linear transform aX + b
- * (for some real numbers a &ne; 0 and b) is also normally distributed.
- * If X<sub>1</sub>, X<sub>2</sub> are two independent normal random variables,
- * then their linear combination will also be normally distributed.
- * The converse is also true: if X<sub>1</sub> and X<sub>2</sub> are independent and their sum X<sub>1</sub> + X<sub>2</sub>
- * is distributed normally, then both X<sub>1</sub> and X<sub>2</sub> must also be normal, which is
- * known as the Cramer's theorem. Of all probability distributions over the
- * reals with mean &mu; and variance &sigma;<sup>2</sup>, the normal
- * distribution N(&mu;, &sigma;<sup>2</sup>) is the one with the maximum entropy.
+ * That is, if X is normally distributed, then a linear transform <code>aX + b</code>
+ * (for some real numbers <code>a &ne; 0 and b</code>) is also normally distributed.
+ * If <code>X<sub>1</sub></code>, <code>X<sub>2</sub></code> are two
+ * independent normal random variables, then their linear combination
+ * will also be normally distributed. The converse is also true: if
+ * <code>X<sub>1</sub></code> and <code>X<sub>2</sub></code> are independent
+ * and their sum <code>X<sub>1</sub> + X<sub>2</sub></code> is distributed
+ * normally, then both <code>X<sub>1</sub></code> and <code>X<sub>2</sub></code>
+ * must also be normal, which is known as the Cramer's theorem. Of all
+ * probability distributions over the real domain with mean <code>&mu;</code>
+ * and variance <code>&sigma;<sup>2</sup>, the normal
+ * distribution <code>N(&mu;, &sigma;<sup>2</sup>)</code> is the one with the maximum entropy.
  * <p>
  * The central limit theorem states that under certain, fairly common conditions,
  * the sum of a large number of random variables will have approximately normal
@@ -45,19 +48,25 @@ import smile.math.special.Erf;
  * sequence of iid random variables, each having mean &mu; and variance &sigma;<sup>2</sup>
  * but otherwise distributions of X<sub>i</sub>'s can be arbitrary, then the
  * central limit theorem states that
+ * <p>
  * <pre>
  *     &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n <big>&Sigma;</big> X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
  * </pre>
- * The theorem will hold even if the summands X<sub>i</sub> are not iid,
+ * The theorem will hold even if the summands <code>X<sub>i</sub></code> are not iid,
  * although some constraints on the degree of dependence and the growth rate
  * of moments still have to be imposed.
  * <p>
- * Therefore, certain other distributions can be approximated by the normal distribution, for example:
+ * Therefore, certain other distributions can be approximated by the normal
+ * distribution, for example:
  * <ul>
- * <li> The binomial distribution B(n, p) is approximately normal N(np, np(1-p)) for large n and for p not too close to zero or one.
- * <li> The Poisson(&lambda;) distribution is approximately normal N(&lambda;, &lambda;) for large values of &lambda;.
- * <li> The chi-squared distribution &Chi;<sup>2</sup>(k) is approximately normal N(k, 2k) for large k.
- * <li> The Student's t-distribution t(&nu;) is approximately normal N(0, 1) when &nu; is large.
+ * <li> The binomial distribution <code>B(n, p)</code> is approximately normal
+ * <code>N(np, np(1-p))</code> for large n and for p not too close to zero or one.
+ * <li> The <code>Poisson(&lambda;)</code> distribution is approximately normal
+ * <code>N(&lambda;, &lambda;)</code> for large values of &lambda;.
+ * <li> The chi-squared distribution <code>&Chi;<sup>2</sup>(k)</code> is
+ * approximately normal <code>N(k, 2k)</code> for large k.
+ * <li> The Student's t-distribution <code>t(&nu;)</code> is approximately normal
+ * <code>N(0, 1)</code> when &nu; is large.
  * </ul>
  * 
  * @author Haifeng Li

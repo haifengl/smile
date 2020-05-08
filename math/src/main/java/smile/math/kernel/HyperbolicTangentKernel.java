@@ -21,6 +21,7 @@ import smile.math.MathEx;
 
 /**
  * The hyperbolic tangent kernel.
+ * <p>
  * <pre>
  *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
  * </pre>

@@ -20,6 +20,7 @@ package smile.validation;
 /**
  * The precision or positive predictive value (PPV) is ratio of true positives
  * to combined true and false positives, which is different from sensitivity.
+ * <p>
  * <pre>
  *     PPV = TP / (TP + FP)
  * </pre>

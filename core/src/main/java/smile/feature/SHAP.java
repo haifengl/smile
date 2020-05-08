@@ -46,7 +46,6 @@ import java.util.stream.Stream;
  * <li>Lundberg, Scott M., and Su-In Lee. A unified approach to interpreting model predictions. NIPS, 2017.</li>
  * <li>Lundberg, Scott M., Gabriel G. Erion, and Su-In Lee. Consistent individualized feature attribution for tree ensembles.</li>
  * </ol>
- * <pre>
  *
  * @author Haifeng Li
  */

@@ -3738,15 +3738,20 @@ public class MathEx {
 
     /**
      * Solve the tridiagonal linear set which is of diagonal dominance
-     * |b<sub>i</sub>| &gt; |a<sub>i</sub>| + |c<sub>i</sub>|.
+     * <p>
      * <pre>
-     * | b0 c0  0  0  0 ...                        |
-     * | a1 b1 c1  0  0 ...                        |
-     * |  0 a2 b2 c2  0 ...                        |
-     * |                ...                        |
-     * |                ... a(n-2)  b(n-2)  c(n-2) |
-     * |                ... 0       a(n-1)  b(n-1) |
+     *     |b<sub>i</sub>| &gt; |a<sub>i</sub>| + |c<sub>i</sub>|.
      * </pre>
+     * <p>
+     * <pre>
+     *     | b0 c0  0  0  0 ...                        |
+     *     | a1 b1 c1  0  0 ...                        |
+     *     |  0 a2 b2 c2  0 ...                        |
+     *     |                ...                        |
+     *     |                ... a(n-2)  b(n-2)  c(n-2) |
+     *     |                ... 0       a(n-1)  b(n-1) |
+     * </pre>
+     *
      * @param a the lower part of tridiagonal matrix. a[0] is undefined and not
      * referenced by the method.
      * @param b the diagonal of tridiagonal matrix.

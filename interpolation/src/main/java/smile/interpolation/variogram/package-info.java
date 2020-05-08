@@ -17,17 +17,20 @@
 
 /**
  * Variogram functions. In spatial statistics the theoretical variogram
- * 2&gamma;(x,y) is a function
- * describing the degree of spatial dependence of a spatial random field
- * or stochastic process Z(x). It is defined as the expected squared increment
+ * <code>2&gamma;(x,y)</code> is a function describing the degree of
+ * spatial dependence of a spatial random field or stochastic process
+ * <code>Z(x) * <p>. It is defined as the expected squared increment
  * of the values between locations x and y:
+ * <p>
  * <pre>
  *     2&gamma;(x,y)=E(|Z(x)-Z(y)|<sup>2</sup>)
  * </pre>
- * where &gamma;(x,y) itself is called the semivariogram. In case of a stationary
- * process the variogram and semivariogram can be represented as a function
- * &gamma;<sub>s</sub>(h) = &gamma;(0, 0 + h) of the difference h = y - x
- * between locations only, by the following relation:
+ * where <code>&gamma;(x,y)</code> itself is called the semivariogram.
+ * In case of a stationary process the variogram and semivariogram can
+ * be represented as a function
+ * <code>&gamma;<sub>s</sub>(h) = &gamma;(0, 0 + h)</code> of the difference
+ * <code>h = y - x</code> between locations only, by the following relation:
+ * <p>
  * <pre>
  *     &gamma;(x,y) = &gamma;<sub>s</sub>(y - x).
  * </pre>
