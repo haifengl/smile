@@ -19,10 +19,12 @@ package smile.interpolation.variogram;
 
 /**
  * Spherical variogram.
+ * <p>
  * <pre>
  *     v(r) = c + b * (1.5 * r / a - 0.5 * (r / a)<sup>3</sup>) for 0 &le; r &le; a
  * </pre>
  * or
+ * <p>
  * <pre>
  *     v(r) = c + b for a &le; r
  * </pre>

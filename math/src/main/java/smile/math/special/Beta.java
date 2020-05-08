@@ -22,6 +22,7 @@ import static smile.math.special.Gamma.lgamma;
 
 /**
  * The beta function, also called the Euler integral of the first kind.
+ * <p>
  * <pre>
  *     B(x, y) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
  * </pre>

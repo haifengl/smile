@@ -18,10 +18,11 @@
 package smile.math.kernel;
 
 /**
- * The Gaussian Mercer Kernel.
+ * The Gaussian Kernel on binary sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
- * </pre>,
+ * </pre>
  * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel. The kernel works
  * on sparse binary array as int[], which are the indices of nonzero elements.
  * <p>

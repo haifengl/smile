@@ -18,10 +18,11 @@
 package smile.math.kernel;
 
 /**
- * The hyperbolic tangent kernel.
+ * The hyperbolic tangent kernel on binary sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
- * </pre>,
+ * </pre>
  * where &gamma; is the scale of the used inner product and &lambda; is
  * the offset of the used inner product. If the offset is negative the
  * likelihood of obtaining a kernel matrix that is not positive definite

@@ -24,6 +24,7 @@ import static java.lang.Math.*;
  * is a special function of sigmoid shape which occurs in probability,
  * statistics, materials science, and partial differential equations.
  * It is defined as:
+ * <p>
  * <pre>
  *     erf(x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t<sup>2</sup></sup>dt</i>
  * </pre>

@@ -18,7 +18,8 @@
 package smile.math.kernel;
 
 /**
- * The Laplacian Kernel.
+ * The Laplacian Kernel on binary sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
  * </pre>

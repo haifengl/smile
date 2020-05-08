@@ -21,7 +21,8 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The hyperbolic tangent kernel.
+ * The hyperbolic tangent kernel on sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
  * </pre>

@@ -22,7 +22,8 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Thin Plate Spline Kernel.
+ * The Thin Plate Spline Kernel on sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
  * </pre>

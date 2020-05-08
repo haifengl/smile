@@ -28,6 +28,7 @@ import smile.math.special.Gamma;
  * intervals such as distance, area or volume. If the expected number of
  * occurrences in this interval is &lambda;, then the probability that there
  * are exactly n occurrences (n = 0, 1, 2, ...) is equal to
+ * <p>
  * <pre>
  *             &lambda;<sup>n</sup> e<sup>-&lambda;</sup>
  * f(n; &lambda;) = ---------

@@ -20,12 +20,13 @@ package smile.stat.distribution;
 /**
  * The geometric distribution is a discrete probability distribution of the
  * number X of Bernoulli trials needed to get one success, supported on the set
- * {1, 2, 3, &hellip;}. Sometimes, people define that the probability distribution
- * of the number Y = X - 1 of failures before the first success, supported on
- * the set {0, 1, 2, 3, &hellip;}. To reduce the confusion, we denote the later as
- * shifted geometric distribution.
+ * <code>{1, 2, 3, &hellip;}</code>. Sometimes, people define that the probability
+ * distribution of the number <code>Y = X - 1</code> of failures before the first
+ * success, supported on the set <code>{0, 1, 2, 3, &hellip;}</code>. To reduce
+ * the confusion, we denote the later as shifted geometric distribution.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
+ * <p>
  * <pre>
  *     Pr(X = k) = (1 - p)<sup>k-1</sup> p
  * </pre>.
@@ -38,9 +39,10 @@ package smile.stat.distribution;
  * observed. The geometric distribution is in fact the only memoryless
  * discrete distribution.
  * <p>
- * Among all discrete probability distributions supported on {1, 2, 3, &hellip;}
- * with given expected value &mu;, the geometric distribution X with parameter
- * p = 1/&mu; is the one with the largest entropy.
+ * Among all discrete probability distributions supported on
+ * <code>{1, 2, 3, &hellip;}</code> with given expected value &mu;,
+ * the geometric distribution X with parameter
+ * <code>p = 1/&mu;</code> is the one with the largest entropy.
 
  * @see ShiftedGeometricDistribution
  *

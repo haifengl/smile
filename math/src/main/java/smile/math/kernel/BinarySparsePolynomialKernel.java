@@ -18,7 +18,8 @@
 package smile.math.kernel;
 
 /**
- * The polynomial kernel.
+ * The polynomial kernel on binary sparse data.
+ * <p>
  * <pre>
  *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
  * </pre>
