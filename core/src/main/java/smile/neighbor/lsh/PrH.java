@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 /**
  * Probability for given query object and hash function.
+ *
+ * @author Haifeng Li
  */
 public class PrH implements Comparable<PrH>, Serializable {
     private static final long serialVersionUID = 2L;

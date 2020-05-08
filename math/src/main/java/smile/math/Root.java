@@ -33,7 +33,7 @@ public interface Root {
      * fast-converging secant method or inverse quadratic interpolation
      * if possible, but it falls back to the more robust bisection method
      * if necessary.
-     *
+     * <p>
      * The method is guaranteed to converge as long as the function can be
      * evaluated within the initial interval known to contain a root.
      *

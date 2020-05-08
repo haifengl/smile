@@ -19,6 +19,8 @@ package smile.neighbor.lsh;
 
 /**
  * Probe to check for nearest neighbors.
+ *
+ * @author Haifeng Li
  */
 public class Probe implements Comparable<Probe> {
 

@@ -17,7 +17,11 @@
 
 package smile.nlp;
 
-/** The terms in a text. */
+/**
+ * The terms in a text.
+ *
+ * @author Haifeng Li
+ */
 public interface TextTerms {
     
     /**

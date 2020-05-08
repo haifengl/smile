@@ -26,7 +26,11 @@ import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
-/** The interaction of one-hot term. */
+/**
+ * The interaction of one-hot term.
+ *
+ * @author Haifeng Li
+ */
 class OneHotEncoderInteraction extends AbstractTerm {
     /** The one-hot encoders. */
     List<OneHotEncoder> encoders;

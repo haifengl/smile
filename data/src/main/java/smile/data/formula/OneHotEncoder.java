@@ -25,7 +25,11 @@ import smile.data.type.StructType;
 import java.util.Collections;
 import java.util.Set;
 
-/** The one-hot term. */
+/**
+ * The one-hot term.
+ *
+ * @author Haifeng Li
+ */
 class OneHotEncoder extends AbstractTerm {
     /** The name of variable. */
     final String name;

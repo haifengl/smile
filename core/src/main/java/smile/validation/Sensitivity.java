@@ -22,9 +22,9 @@ package smile.validation;
  * statistical measures of the performance of a binary classification test.
  * Sensitivity is the proportion of actual positives which are correctly
  * identified as such.
- * <p>
- * TPR = TP / P = TP / (TP + FN)
- * <p>
+ * <pre>
+ *     TPR = TP / P = TP / (TP + FN)
+ * </pre>
  * Sensitivity and specificity are closely related to the concepts of type
  * I and type II errors. For any test, there is usually a trade-off between
  * the measures. This trade-off can be represented graphically using an ROC curve.

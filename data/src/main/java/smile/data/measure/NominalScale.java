@@ -25,7 +25,7 @@ import java.util.List;
  * Such variables are often referred to as categorical variables.
  * Examples include gender, nationality, ethnicity, language,
  * genre, style, biological species, etc.
- *
+ * <p>
  * The nominal type differentiates between items or subjects based
  * only on their names or (meta-)categories and other qualitative
  * classifications they belong to. Numbers may be used to represent

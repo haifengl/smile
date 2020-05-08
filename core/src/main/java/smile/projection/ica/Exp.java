@@ -22,6 +22,8 @@ import smile.math.DifferentiableFunction;
 /**
  * The contrast function when the independent components are highly
  * super-Gaussian, or when robustness is very important.
+ *
+ * @author Haifeng Li
  */
 public class Exp implements DifferentiableFunction {
 

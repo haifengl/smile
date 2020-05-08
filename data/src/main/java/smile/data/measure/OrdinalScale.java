@@ -27,7 +27,7 @@ import java.util.List;
  * measurement of opinions, usually operates on ordinal scales.
  * For example, 'completely agree', 'mostly agree', 'mostly disagree',
  * 'completely disagree' when measuring opinion.
- *
+ * <p>
  * The median, i.e. middle-ranked, item is allowed as the measure of
  * central tendency. But means and standard deviations have no validity.
  * In particular, IQ scores reflect an ordinal scale,

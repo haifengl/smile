@@ -33,6 +33,8 @@ import java.util.stream.Collectors;
 
 /**
  * A node with a nominal split variable.
+ *
+ * @author Haifeng Li
  */
 public class NominalNode extends InternalNode {
     private static final long serialVersionUID = 2L;

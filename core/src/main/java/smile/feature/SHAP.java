@@ -24,23 +24,23 @@ import java.util.stream.Stream;
  * explain the output of any machine learning model. It connects optimal
  * credit allocation with local explanations using the classic Shapley
  * values from game theory.
- *
+ * <p>
  * SHAP leverages local methods designed to explain a prediction
  * <code>f(x)</code> based on a single input <code>x</code>.
  * The local methods are defined as any interpretable approximation
  * of the original model. In particular, SHAP employs additive feature
  * attribution methods.
- *
+ * <p>
  * SHAP values attribute to each feature the change in the expected
  * model prediction when conditioning on that feature. They explain
  * how to get from the base value <code>E[f(z)]</code> that would be
  * predicted if we did not know any features to the current output
  * <code>f(x)</code>.
- *
+ * <p>
  * In game theory, the Shapley value is the average expected marginal
  * contribution of one player after all possible combinations have
  * been considered.
- *
+ * <p>
  * <h2>References</h2>
  * <ol>
  * <li>Lundberg, Scott M., and Su-In Lee. A unified approach to interpreting model predictions. NIPS, 2017.</li>

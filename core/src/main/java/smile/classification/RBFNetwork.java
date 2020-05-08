@@ -75,7 +75,6 @@ import smile.util.IntSet;
  * network when the training data size is relatively small. On the other hand,
  * RBF network gives better generalization performance than SVM on large
  * training data.
- * <p>
  * 
  * <h2>References</h2>
  * <ol>

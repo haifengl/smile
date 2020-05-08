@@ -26,8 +26,10 @@ package smile.stat.distribution;
  * shifted geometric distribution.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
- * Pr(X = k) = (1 - p)<sup>k-1</sup> p.
- * <p>
+ * <pre>
+ *     Pr(X = k) = (1 - p)<sup>k-1</sup> p
+ * </pre>.
+ *
  * Like its continuous analogue (the exponential distribution), the geometric
  * distribution is memoryless. That means that if you intend to repeat an
  * experiment until the first success, then, given that the first success has

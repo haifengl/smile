@@ -45,7 +45,7 @@ import smile.stat.distribution.GaussianDistribution;
  * underlying speech signals are separated from a sample data consisting
  * of people talking simultaneously in a room. Usually the problem is
  * simplified by assuming no time delays or echoes.
- *
+ * <p>
  * An important note to consider is that if N sources are present,
  * at least N observations (e.g. microphones if the observed signal
  * is audio) are needed to recover the original signals.

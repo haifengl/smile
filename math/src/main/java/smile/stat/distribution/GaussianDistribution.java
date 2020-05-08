@@ -45,9 +45,9 @@ import smile.math.special.Erf;
  * sequence of iid random variables, each having mean &mu; and variance &sigma;<sup>2</sup>
  * but otherwise distributions of X<sub>i</sub>'s can be arbitrary, then the
  * central limit theorem states that
- * <p>
- * &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n <big>&Sigma;</big> X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
- * <p>
+ * <pre>
+ *     &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n <big>&Sigma;</big> X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
+ * </pre>
  * The theorem will hold even if the summands X<sub>i</sub> are not iid,
  * although some constraints on the degree of dependence and the growth rate
  * of moments still have to be imposed.

@@ -22,7 +22,11 @@ import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
 
-/** Common functions for various discriminant analysis. */
+/**
+ * Common functions for various discriminant analysis.
+ *
+ * @author Haifeng Li
+ */
 class DiscriminantAnalysis {
     /** The number of classes. */
     int k;

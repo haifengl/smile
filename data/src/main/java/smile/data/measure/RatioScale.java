@@ -32,7 +32,7 @@ import java.util.Arrays;
  * non-arbitrary zero point called absolute zero.
  * Most measurement in the physical sciences and engineering
  * is done on ratio scales.
- *
+ * <p>
  * The geometric mean and the harmonic mean are allowed to measure
  * the central tendency of ratio variables, in addition to the mode,
  * median, and arithmetic mean. In fact, all statistical measures are

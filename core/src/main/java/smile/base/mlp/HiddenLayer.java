@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * A hidden layer in the neural network.
+ *
+ * @author Haifeng Li
  */
 public class HiddenLayer extends Layer {
     private static final long serialVersionUID = 2L;

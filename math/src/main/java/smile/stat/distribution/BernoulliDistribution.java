@@ -24,7 +24,7 @@ import smile.math.MathEx;
  * value 1 with success probability p and value 0 with failure probability
  * q = 1 - p.
  * <p>
- * Although Bernoulli distribtuion belongs to exponential family, we don't
+ * Although Bernoulli distribution belongs to exponential family, we don't
  * implement DiscreteExponentialFamily interface here since it is impossible
  * and meaningless to estimate a mixture of Bernoulli distributions.
  *

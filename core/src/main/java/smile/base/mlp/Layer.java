@@ -25,6 +25,8 @@ import smile.math.matrix.DenseMatrix;
 
 /**
  * A layer in the neural network.
+ *
+ * @author Haifeng Li
  */
 public abstract class Layer implements Serializable {
     private static final long serialVersionUID = 2L;
