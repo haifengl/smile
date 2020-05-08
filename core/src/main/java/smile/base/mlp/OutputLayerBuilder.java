@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * The builder of output layers.
+ *
+ * @author Haifeng Li
  */
 class OutputLayerBuilder extends LayerBuilder {
 

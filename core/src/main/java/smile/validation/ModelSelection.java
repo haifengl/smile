@@ -23,7 +23,7 @@ package smile.validation;
  * In the simplest cases, a pre-existing set of data is considered.
  * Given candidate models of similar predictive or explanatory power,
  * the simplest model is most likely to be the best choice (Occam's razor).
- *
+ * <p>
  * A good model selection technique will balance goodness of fit with
  * simplicity. More complex models will be better able to adapt their
  * shape to fit the data, but the additional parameters may not represent
@@ -31,17 +31,17 @@ package smile.validation;
  * a likelihood ratio approach, or an approximation of this, leading
  * to a chi-squared test. The complexity is generally measured by
  * counting the number of parameters in the model.
- *
+ * <p>
  * The most commonly used criteria are the Akaike information criterion
  * and the Bayesian information criterion. The formula for BIC is similar
  * to the formula for AIC, but with a different penalty for the number of
- * parameters. With AIC the penalty is 2k, whereas with BIC the penalty
- * is log(n) * k.
- *
+ * parameters. With AIC the penalty is <code>2k</code>, whereas with BIC
+ * the penalty is <code>log(n) * k</code>.
+ * <p>
  * AIC and BIC are both approximately correct according to a different goal
  * and a different set of asymptotic assumptions. Both sets of assumptions
  * have been criticized as unrealistic.
- *
+ * <p>
  * AIC is better in situations when a false negative finding would be
  * considered more misleading than a false positive, and BIC is better
  * in situations where a false positive is as misleading as, or more

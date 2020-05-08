@@ -23,12 +23,14 @@ import java.nio.ByteBuffer;
  * MurmurHash is a very fast, non-cryptographic hash suitable for general hash-based
  * lookup. The name comes from two basic operations, multiply (MU) and rotate (R),
  * used in its inner loop. See http://murmurhash.googlepages.com/ for more details.
- *
+ * <p>
  * The current version is MurmurHash3, which yields a 32-bit or 128-bit hash value.
  * When using 128-bits, the x86 and x64 versions do not produce the same values,
  * as the algorithms are optimized for their respective platforms.
- *
+ * <p>
  * This class is adapted from Apache Cassandra.
+ *
+ * @author Haifeng Li
  */
 public class MurmurHash3 {
 

@@ -24,7 +24,7 @@ import smile.math.matrix.Matrix;
 import smile.math.matrix.SVD;
 
 /**
- * Levenberg–Marquardt algorithm.
+ * The Levenberg–Marquardt algorithm.
  * The Levenberg–Marquardt algorithm (LMA), also known as the Damped
  * least-squares method, is used to solve non-linear least squares
  * problems for generic curve-fitting problems. However,

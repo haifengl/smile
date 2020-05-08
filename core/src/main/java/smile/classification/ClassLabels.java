@@ -29,7 +29,7 @@ import smile.math.MathEx;
 import smile.util.IntSet;
 
 /**
- * To support arbitrary class labels.
+ * Map arbitrary class labels to [0, k), where k is the number of classes.
  *
  * @author Haifeng Li
  */

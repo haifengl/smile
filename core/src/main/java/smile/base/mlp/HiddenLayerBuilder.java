@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * The builder of hidden layers.
+ *
+ * @author Haifeng Li
  */
 class HiddenLayerBuilder extends LayerBuilder {
 

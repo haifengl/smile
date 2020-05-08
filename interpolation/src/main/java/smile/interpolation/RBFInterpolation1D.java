@@ -28,9 +28,9 @@ import smile.math.matrix.LU;
  * Radial basis function interpolation is a popular method for the data points are
  * irregularly distributed in space. In its basic form, radial basis function
  * interpolation is in the form
- * <p>
- * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
- * <p>
+ * <pre>
+ *     y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+ * </pre>
  * where the approximating function y(x) is represented as a sum of N radial
  * basis functions &phi;, each associated with a different center c<sub>i</sub>, and weighted
  * by an appropriate coefficient w<sub>i</sub>. For distance, one usually chooses

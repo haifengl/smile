@@ -19,14 +19,14 @@ package smile.interpolation.variogram;
 
 /**
  * Spherical variogram.
- * <p>
- * v(r) = c + b * (1.5 * r / a - 0.5 * (r / a)<sup>3</sup>) for 0 &le; r &le; a
- * <p>
+ * <pre>
+ *     v(r) = c + b * (1.5 * r / a - 0.5 * (r / a)<sup>3</sup>) for 0 &le; r &le; a
+ * </pre>
  * or
- * <p>
- * v(r) = c + b for a &le; r
- * <p>
- * where a is the range parameter and b is sill paramter. The distance of two
+ * <pre>
+ *     v(r) = c + b for a &le; r
+ * </pre>
+ * where a is the range parameter and b is sill parameter. The distance of two
  * pairs increase, the variogram of those two pairs also increase. Eventually,
  * the increase of the distance can not cause the variogram increase. The
  * distance which cause the variogram reach plateau is called range. The sill

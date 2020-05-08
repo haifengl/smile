@@ -19,6 +19,8 @@ package smile.sequence;
 
 /**
  * The dynamic programming table in CRF's Baum–Welch algorithm.
+ *
+ * @author Haifeng Li
  */
 class Trellis {
     public static class Cell {

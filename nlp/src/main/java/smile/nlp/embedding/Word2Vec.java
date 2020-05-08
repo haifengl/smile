@@ -42,7 +42,7 @@ import smile.data.vector.FloatVector;
  * corpus being assigned a corresponding vector in the space. Word vectors
  * are positioned in the vector space such that words that share common
  * contexts in the corpus are located close to one another in the space.
- *
+ * <p>
  * Word2vec can utilize either of two model architectures to produce
  * a distributed representation of words: continuous bag-of-words (CBOW)
  * or continuous skip-gram. In the continuous bag-of-words architecture,

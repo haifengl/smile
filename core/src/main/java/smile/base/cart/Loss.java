@@ -24,6 +24,8 @@ import java.util.Arrays;
 
 /**
  * Regression loss function.
+ *
+ * @author Haifeng Li
  */
 public interface Loss {
     /**

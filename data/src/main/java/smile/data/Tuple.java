@@ -32,7 +32,7 @@ import smile.data.type.StructType;
  * A tuple is an immutable finite ordered list (sequence) of elements.
  * Allows both generic access by ordinal, which will incur boxing overhead
  * for primitives, as well as native primitive access.
- *
+ * <p>
  * It is invalid to use the native primitive interface to retrieve a value
  * that is null, instead a user must check `isNullAt` before attempting
  * to retrieve a value that might be null.

@@ -20,6 +20,8 @@ package smile.math.matrix;
 /**
  * The matrix of A' * A. For SVD, we compute eigen decomposition of A' * A
  * when m >= n, or that of A * A' when m < n.
+ *
+ * @author Haifeng Li
  */
 class ATA implements Matrix {
 

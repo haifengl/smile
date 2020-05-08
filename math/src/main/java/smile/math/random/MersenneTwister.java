@@ -18,26 +18,26 @@
 package smile.math.random;
 
 /**
- * Mersenne Twister 32-bit.
+ * 32-bit Mersenne Twister. This implements the MT19937 (Mersenne Twister)
+ * pseudo random number generator algorithm based upon the original C code
+ * by Makoto Matsumoto and Takuji Nishimura (<a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">
+ * http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html</a>).
  * <p>
- * This implements the MT19937 (Mersenne Twister) pseudo random number generator
- * algorithm based upon the original C code by Makoto Matsumoto and Takuji
- * Nishimura (<a
- * href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html">
- * http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/emt.html</a>). <p> As a
- * subclass of java.util.Random this class provides a single canonical method
+ * As a subclass of java.util.Random this class provides a single canonical method
  * next() for generating bits in the pseudo random number sequence. Anyone using
  * this class should invoke the public inherited methods (nextInt(), nextFloat
  * etc.) to obtain values as normal. This class should provide a drop-in
  * replacement for the standard implementation of java.util.Random with the
  * additional advantage of having a far longer period and the ability to use a
  * far larger seed value.
- * <ul>
- * <li>  Makato Matsumoto and Takuji Nishimura,
+ *
+ * <h2>References</h2>
+ * <uol>
+ * <li> Makato Matsumoto and Takuji Nishimura,
  * <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/mt.pdf">"Mersenne Twister: A 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator"</a>,
  * <i>ACM Transactions on Modeling and Computer Simulation, </i> Vol. 8, No. 1,
  * January 1998, pp 3--30.</li>
- * </ul>
+ * </ol>
  *
  * @author Haifeng Li
  */

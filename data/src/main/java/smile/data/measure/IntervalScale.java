@@ -30,7 +30,7 @@ import java.text.NumberFormat;
  * multiplication/division cannot be carried out between any two dates
  * directly. However, ratios of differences can be expressed; for example,
  * one difference can be twice another.
- *
+ * <p>
  * The mode, median, and arithmetic mean are allowed to measure central
  * tendency of interval variables, while measures of statistical dispersion
  * include range and standard deviation. Since one can only divide by

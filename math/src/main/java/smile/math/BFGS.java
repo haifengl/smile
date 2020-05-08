@@ -22,7 +22,7 @@ import java.util.Arrays;
 /**
  * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm is an iterative
  * method for solving unconstrained nonlinear optimization problems.
- *
+ * <p>
  * The BFGS method belongs to quasi-Newton methods, a class of hill-climbing
  * optimization techniques that seek a stationary point of a (preferably
  * twice continuously differentiable) function. For such problems,
@@ -31,7 +31,7 @@ import java.util.Arrays;
  * unless the function has a quadratic Taylor expansion near an optimum.
  * However, BFGS has proven to have good performance even for non-smooth
  * optimizations.
- *
+ * <p>
  * In quasi-Newton methods, the Hessian matrix of second derivatives is
  * not computed. Instead, the Hessian matrix is approximated using
  * updates specified by gradient evaluations (or approximate gradient
@@ -41,7 +41,7 @@ import java.util.Arrays;
  * specify a unique solution, and quasi-Newton methods differ in how they
  * constrain the solution. The BFGS method is one of the most popular
  * members of this class.
- *
+ * <p>
  * Like the original BFGS, the limited-memory BFGS (L-BFGS) uses an
  * estimation to the inverse Hessian matrix to steer its search
  * through variable space, but where BFGS stores a dense <code>n × n</code>
@@ -429,7 +429,6 @@ public interface BFGS {
      * conditions, then the algorithm usually stops when rounding
      * errors prevent further progress. In this case <code>stp</code> only
      * satisfies the sufficient decrease condition.
-     * <p>
      *
      * @param xold on input this contains the base point for the line search.
      *

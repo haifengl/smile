@@ -34,7 +34,7 @@ import smile.sort.QuickSort;
  * Three common types of correlation are Pearson, Spearman (for ranked data)
  * and Kendall (for uneven or multiple rankings), and can be selected using
  * the table below.
- * <table summary="" border="1" style="border-collapse: collapse" width="95%" cellspacing="0" id="table3">
+ * <table summary="" border="1" style="border-collapse: collapse" cellspacing="0" id="table3">
  *   <tr>
  *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">

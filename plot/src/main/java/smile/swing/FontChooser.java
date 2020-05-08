@@ -74,6 +74,8 @@ import javax.swing.text.Position;
  *   }
  * }
  * </pre>
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FontChooser extends JComponent {

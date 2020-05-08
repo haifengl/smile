@@ -19,9 +19,9 @@ package smile.validation;
 
 /**
  * Fall-out, false alarm rate, or false positive rate (FPR)
- * <p>
- * FPR = FP / N = FP / (FP + TN)
- * <p>
+ * <pre>
+ *     FPR = FP / N = FP / (FP + TN)
+ * </pre>
  * Fall-out is actually Type I error and closely related to specificity
  * (1 - specificity).
  *

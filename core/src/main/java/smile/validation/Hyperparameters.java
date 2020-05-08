@@ -40,29 +40,30 @@ import smile.math.MathEx;
  * The below example shows how to tune the hyperparameters of random forest.
  * <p>
  * <pre>
- * import smile.io.*;
- * import smile.data.formula.Formula;
- * import smile.validation.*;
- * import smile.classification.RandomForest;
+ * {@code
+ *    import smile.io.*;
+ *    import smile.data.formula.Formula;
+ *    import smile.validation.*;
+ *    import smile.classification.RandomForest;
  *
- * var hp = new Hyperparameters()
- *     .add("smile.random.forest.trees", 100) // a fixed value
- *     .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
- *     .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
+ *    var hp = new Hyperparameters()
+ *        .add("smile.random.forest.trees", 100) // a fixed value
+ *        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
+ *        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
  *
+ *    var train = Read.arff("data/weka/segment-challenge.arff");
+ *    var test = Read.arff("data/weka/segment-test.arff");
+ *    var formula = Formula.lhs("class");
+ *    var testy = formula.y(test).toIntArray();
  *
- * var train = Read.arff("data/weka/segment-challenge.arff");
- * var test = Read.arff("data/weka/segment-test.arff");
- * var formula = Formula.lhs("class");
- * var testy = formula.y(test).toIntArray();
- *
- * hp.grid().forEach(prop -&gt; {
- *     var model = RandomForest.fit(formula, train, prop);
- *     var pred = model.predict(test);
- *     System.out.println(prop);
- *     System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
- *     System.out.println(ConfusionMatrix.of(testy, pred));
- * });
+ *    hp.grid().forEach(prop -&gt; {
+ *        var model = RandomForest.fit(formula, train, prop);
+ *        var pred = model.predict(test);
+ *        System.out.println(prop);
+ *        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+ *        System.out.println(ConfusionMatrix.of(testy, pred));
+ *    });
+ * }
  * </pre>
  * @author Haifeng Li
  */

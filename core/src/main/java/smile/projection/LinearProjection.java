@@ -19,7 +19,11 @@ package smile.projection;
 
 import smile.math.matrix.DenseMatrix;
 
-/** Linear projection. */
+/**
+ * Linear projection.
+ *
+ * @author Haifeng Li
+ */
 public interface LinearProjection extends Projection<double[]> {
 
     /**

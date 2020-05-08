@@ -21,7 +21,7 @@ import smile.data.Tuple;
 import smile.data.type.StructType;
 
 /**
- * The term of a * b expression.
+ * The term of <code>a * b</code> expression.
  *
  * @author Haifeng Li
  */

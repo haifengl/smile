@@ -21,6 +21,8 @@ import java.util.Arrays;
 
 /**
  * The hash function for data in Euclidean spaces.
+ *
+ * @author Haifeng Li
  */
 public class MultiProbeHash extends Hash {
     private static final long serialVersionUID = 2L;
