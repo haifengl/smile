@@ -113,9 +113,9 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param method the fitting method ("svd" or "qr")
-     * @param stderr if true, compute the estimated standard errors of the estimate of parameters
-     * @param recursive if true, the return model supports recursive least squares
+     * @param method the fitting method ("svd" or "qr").
+     * @param stderr if true, compute the estimated standard errors of the estimate of parameters.
+     * @param recursive if true, the return model supports recursive least squares.
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
         DenseMatrix X = formula.matrix(data, true);

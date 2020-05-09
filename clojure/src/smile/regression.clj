@@ -21,8 +21,8 @@
                              GaussianProcessRegression]
            [smile.base.cart Loss]))
 
-(defn ols
-  "Ordinary least squares.
+(defn lm
+  "Fitting linear models (ordinary least squares).
 
   In linear regression, the model specification is that the dependent
   variable is a linear combination of the parameters (but need not be
@@ -70,8 +70,9 @@
 
   `formula` is a symbolic description of the model to be fitted.
   `data` is the data frame of the explanatory and response variables.
-  `method` is 'qr' or 'svd'."
-  ([formula data] (ols formula data "qr" true true))
+  `method` is the fitting method ('qr' or 'svd').
+  `recursive` is the flag if the return model supports recursive least squares."
+  ([formula data] (lm formula data "qr" true true))
   ([formula data method, stderr recursive] (OLS/fit formula data method stderr recursive)))
 
 (defn ridge
