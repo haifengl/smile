@@ -74,7 +74,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/classification/GradientTreeBoost.html">Gradient Boosting</a>,
         <a href="api/java/smile/classification/RandomForest.html">Random Forest</a>,
         <a href="api/java/smile/classification/LogisticRegression.html">Logistic Regression</a>,
-        <a href="api/java/smile/classification/NeuralNetwork.html">Neural Networks</a>,
+        <a href="api/java/smile/classification/MLP.html">Neural Networks</a>,
         <a href="api/java/smile/classification/SVM.html">Support Vector Machines</a>,
         <a href="api/java/smile/classification/RBFNetwork.html">RBF Networks</a>,
         <a href="api/java/smile/classification/Maxent.html">Maximum Entropy Classifier</a>,
@@ -100,6 +100,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/regression/GradientTreeBoost.html">Gradient Boosting</a>,
         <a href="api/java/smile/regression/RandomForest.html">Random Forest</a>,
         <a href="api/java/smile/regression/RBFNetwork.html">RBF Networks</a>,
+        <a href="api/java/smile/regression/MLP.html">Neural Networks</a>,
         <a href="api/java/smile/regression/SVR.html">Support Vector Regression</a>,
         <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>
       </p></dd>
@@ -136,6 +137,8 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/validation/LOOCV.html">Leave-One-Out Validation</a>,
         <a href="api/java/smile/validation/Bootstrap.html">Bootstrap</a>,
         <a href="api/java/smile/validation/ConfusionMatrix.html">Confusion Matrix</a>,
+        <a href="api/java/smile/validation/Accuracy.html">Accuracy</a>,
+        <a href="api/java/smile/validation/Error.html">Error</a>,
         <a href="api/java/smile/validation/AUC.html">AUC</a>,
         <a href="api/java/smile/validation/Fallout.html">Fallout</a>,
         <a href="api/java/smile/validation/FDR.html">FDR</a>,
@@ -151,8 +154,8 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/validation/MeanAbsoluteDeviation.html">Mean Absolute Deviation</a>,
         <a href="api/java/smile/validation/RandIndex.html">Rand Index</a>,
         <a href="api/java/smile/validation/AdjustedRandIndex.html">Adjusted Rand Index</a>,
-        <a href="api/scala/smile/validation/MutualInformationScore.html">Mutual Information Score</a>,
-        <a href="api/scala/smile/validation/Hyperparameters.html">Hyperparameter Tuning</a>
+        <a href="api/java/smile/validation/MutualInformation.html">Mutual Information Score</a>,
+        <a href="api/java/smile/validation/Hyperparameters.html">Hyperparameter Tuning</a>
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.clustering.package">Clustering</a></dt>
@@ -210,7 +213,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/neighbor/KDTree.html">KD-Tree</a>,
         <a href="api/java/smile/neighbor/LSH.html">LSH</a>,
         <a href="api/java/smile/neighbor/MPLSH.html">Multi-Probe LSH</a>,
-        <a href="api/java/smile/neighbor/SimHash.html">SimHash</a>
+        <a href="api/java/smile/hash/SimHash.html">SimHash</a>
       </p></dd>
 
       <dt><a href="api/scala/index.html#smile.sequence.package">Sequence Learning</a></dt>
@@ -223,11 +226,11 @@ permalink: "{{ page.filePathStem }}.html"
       <dd><p>
         <a href="api/java/smile/nlp/tokenizer/SimpleSentenceSplitter.html">Sentence Splitter</a>,
         <a href="api/java/smile/nlp/tokenizer/SimpleTokenizer.html">Tokenizer</a>,
-        <a href="api/java/smile/nlp/collocation/BigramCollocationFinder.html">Bigram Statistical Test</a>,
-        <a href="api/java/smile/nlp/collocation/AprioriPhraseExtractor.html">Phrase Extractor</a>,
-        <a href="api/java/smile/nlp/keyword/CooccurrenceKeywordExtractor.html">Keyword Extractor</a>,
+        <a href="api/java/smile/nlp/collocation/Bigram.html">Bigram Extractor</a>,
+        <a href="api/java/smile/nlp/collocation/NGram.html">Phrase Extractor</a>,
+        <a href="api/java/smile/nlp/keyword/CooccurrenceKeywords.html">Keyword Extractor</a>,
         <a href="api/java/smile/nlp/stemmer/PorterStemmer.html">Porter Stemmer</a>,
-        <a href="api/java/smile/nlp/stemmer/LancasterStemmer.html.html">Lancaster Stemmer</a>,
+        <a href="api/java/smile/nlp/stemmer/LancasterStemmer.html">Lancaster Stemmer</a>,
         <a href="api/java/smile/nlp/pos/HMMPOSTagger.html">POS Tagging</a>,
         <a href="api/java/smile/nlp/relevance/BM25.html">Relevance Ranking</a>,
         <a href="api/java/smile/nlp/embedding/Word2Vec.html">Word2Vec</a>
@@ -278,7 +281,7 @@ permalink: "{{ page.filePathStem }}.html"
         <a href="api/java/smile/wavelet/D4Wavelet.html">D4</a>
         <a href="api/java/smile/wavelet/BestLocalizedWavelet.html">Best Localized Wavelet</a>,
         <a href="api/java/smile/wavelet/CoifletWavelet.html">Coiflet</a>,
-        <a href="api/java/smile/wavelet/SymmletWavelet.html">Symmlet</a>
+        <a href="api/java/smile/wavelet/SymletWavelet.html">Symlet</a>
       </p></dd>
     </dl>
   </div>
