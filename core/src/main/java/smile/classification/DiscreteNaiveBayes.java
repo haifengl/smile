@@ -66,12 +66,7 @@ import java.util.Arrays;
  * <p>
  * A third setting is Polya Urn model which simply
  * add twice for what is seen in training data instead of one time.
- * See reference for more detail.
- *
- * @see Distribution
- * @see LDA
- * @see QDA
- * @see RDA
+ * See reference for more details.
  *
  * <h2>References</h2>
  * <ol>
@@ -79,6 +74,11 @@ import java.util.Arrays;
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
  * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
+ *
+ * @see Distribution
+ * @see LDA
+ * @see QDA
+ * @see RDA
  *
  * @author Haifeng Li
  */
