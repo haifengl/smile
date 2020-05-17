@@ -57,7 +57,7 @@ import smile.util.IntSet;
  *
  * <h2>References</h2>
  * <ol>
- * <li> Robust and Accurate Cancer Classification with Gene Expression Profiling http://alumni.cs.ucr.edu/~hli/paper/hli05tumor.pdf.</li>
+ * <li> H. Li, K. Zhang, and T. Jiang. Robust and Accurate Cancer Classification with Gene Expression Profiling. CSB'05, pp 310-321.</li>
  * </ol>
  *
  * @see LDA
