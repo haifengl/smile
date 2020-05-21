@@ -32,11 +32,11 @@ bashScriptExtraDefines ++= Seq(
 )
 
 batScriptExtraDefines ++= Seq(
-  """call :add_java "-Dsmile.home=%APP_HOME%"""",
-  """call :add_java "-Dscala.usejavacp=true"""",
-  """call :add_java "-Dscala.repl.autoruncode=%APP_HOME%\\bin\\predef.sc"""",
-  """call :add_java "-Dconfig.file=%APP_HOME%\\conf\\smile.conf"""",
-  """call :add_java "-Djava.library.path=%APP_HOME%\\bin"""",
+  """call :add_java -Dsmile.home=%APP_HOME%""",
+  """call :add_java -Dscala.usejavacp=true""",
+  """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
+  """call :add_java -Dconfig.file=%APP_HOME%\conf\smile.conf""",
+  """call :add_java -Djava.library.path=%APP_HOME%\bin""",
   """set PATH=!PATH!;%~dp0"""
 )
 
