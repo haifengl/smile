@@ -19,12 +19,14 @@ package smile.data.formula;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
 
 /**
- * Encode categorical features using a one-hot aka one-of-K scheme.
+ * One-hot encoding of categorical features, aka one-of-K scheme.
  * Although some method such as decision trees can handle nominal variable
  * directly, other methods generally require nominal variables converted to
  * multiple binary dummy variables to indicate the presence or absence of
@@ -36,12 +38,12 @@ class OneHot implements HyperTerm {
     /** The name of variable. */
     private String[] variables;
     /** The terms after binding to the schema. */
-    private List<OneHotEncoder> terms;
+    private List<DummyVariable> terms;
 
     /**
      * Constructor.
      * @param variables the factor names. If empty, all nominal factors
-     *               in the schema will be one-hot encoded.
+     *                  in the schema will be one-hot encoded.
      */
     public OneHot(String... variables) {
         this.variables = variables;
@@ -57,7 +59,7 @@ class OneHot implements HyperTerm {
     }
 
     @Override
-    public List<OneHotEncoder> terms() {
+    public List<DummyVariable> terms() {
         return terms;
     }
 
@@ -76,7 +78,7 @@ class OneHot implements HyperTerm {
     public void bind(StructType schema) {
         if (variables == null || variables.length == 0) {
             variables = Arrays.stream(schema.fields())
-                    .filter(field -> field.measure instanceof NominalScale)
+                    .filter(field -> field.measure instanceof CategoricalMeasure)
                     .map(field -> field.name)
                     .toArray(String[]::new);
         }
@@ -91,8 +93,10 @@ class OneHot implements HyperTerm {
             }
 
             NominalScale scale = (NominalScale) measure;
-            for (int value : scale.values()) {
-                terms.add(new OneHotEncoder(name, column, value, scale.level(value)));
+            if (scale.size() > 2) {
+                for (int value : scale.values()) {
+                    terms.add(new DummyVariable(name, column, value, scale.level(value)));
+                }
             }
         }
     }

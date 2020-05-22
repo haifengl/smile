@@ -25,8 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 
-import smile.data.measure.ContinuousMeasure;
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -100,7 +99,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
     }
 
     @Override
-    public BaseVector factorize(DiscreteMeasure scale) {
+    public BaseVector factorize(CategoricalMeasure scale) {
         switch (scale.type().id()) {
             case Byte: {
                 byte[] data = new byte[size()];

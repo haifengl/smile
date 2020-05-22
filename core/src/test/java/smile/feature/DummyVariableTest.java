@@ -32,9 +32,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng
  */
-public class OneHotEncoderTest {
+public class DummyVariableTest {
     
-    public OneHotEncoderTest() {
+    public DummyVariableTest() {
     }
 
     @BeforeClass

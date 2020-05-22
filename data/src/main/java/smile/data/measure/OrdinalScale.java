@@ -37,7 +37,7 @@ import java.util.List;
  *
  * @author Haifeng Li
  */
-public class OrdinalScale extends DiscreteMeasure {
+public class OrdinalScale extends CategoricalMeasure {
     /**
      * Constructor.
      * @param levels the levels of ordinal values.

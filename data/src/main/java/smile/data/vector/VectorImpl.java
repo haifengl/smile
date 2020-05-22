@@ -27,8 +27,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import smile.data.measure.ContinuousMeasure;
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -69,8 +69,8 @@ class VectorImpl<T> implements Vector<T> {
     /** Constructor. */
     public VectorImpl(StructField field, T[] vector) {
         if (field.measure != null) {
-            if ((field.type.isIntegral() && field.measure instanceof ContinuousMeasure) ||
-                (field.type.isFloating() && field.measure instanceof DiscreteMeasure) ||
+            if ((field.type.isIntegral() && field.measure instanceof NumericalMeasure) ||
+                (field.type.isFloating() && field.measure instanceof CategoricalMeasure) ||
                 (!field.type.isIntegral() && !field.type.isFloating())) {
                 throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
             }

@@ -45,7 +45,7 @@ import java.text.NumberFormat;
  *
  * @author Haifeng Li
  */
-public class IntervalScale extends ContinuousMeasure {
+public class IntervalScale extends NumericalMeasure {
 
     /** Constructor. */
     public IntervalScale(NumberFormat format) {

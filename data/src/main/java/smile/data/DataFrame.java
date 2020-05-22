@@ -24,7 +24,8 @@ import java.util.stream.Collector;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import smile.data.measure.DiscreteMeasure;
+
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
@@ -419,7 +420,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     default String getScale(int i, int j) {
         int x = getInt(i, j);
         Measure measure = schema().field(j).measure;
-        return (measure instanceof DiscreteMeasure) ? ((DiscreteMeasure) measure).toString(x) : String.valueOf(x);
+        return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
     }
 
     /**
@@ -723,7 +724,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
         int k = 0;
         for (int j = 0; j < ncols; j++) {
-            if (measures[j] != null && measures[j] instanceof DiscreteMeasure) continue;
+            if (measures[j] != null && measures[j] instanceof CategoricalMeasure) continue;
 
             DataType type = types[j];
             if (type.isInt()) {

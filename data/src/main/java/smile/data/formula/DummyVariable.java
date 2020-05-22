@@ -17,29 +17,41 @@
 
 package smile.data.formula;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructType;
 
+import java.util.Collections;
+import java.util.Set;
+
 /**
- * The interaction of one-hot term.
+ * The dummy variable term.
  *
  * @author Haifeng Li
  */
-class OneHotEncoderInteraction extends AbstractTerm {
-    /** The one-hot encoders. */
-    List<OneHotEncoder> encoders;
+class DummyVariable extends AbstractTerm {
+    /** The name of variable. */
+    final String name;
+    /** The column index of variable. */
+    final int column;
+    /** The integer value of level. */
+    final int value;
+    /** The level of nominal scale. */
+    final String level;
 
     /**
      * Constructor.
+     * @param name the name of variable.
+     * @param column the column index of variable.
+     * @param value the integer value of level.
+     * @param level the level of nominal scale.
      */
-    public OneHotEncoderInteraction(List<OneHotEncoder> encoders) {
-        this.encoders = encoders;
+    public DummyVariable(String name, int column, int value, String level) {
+        this.name = name;
+        this.column = column;
+        this.value = value;
+        this.level = level;
     }
 
     @Override
@@ -49,11 +61,7 @@ class OneHotEncoderInteraction extends AbstractTerm {
 
     @Override
     public Set<String> variables() {
-        Set<String> set = new HashSet<>();
-        for (OneHotEncoder encoder : encoders) {
-            set.addAll(encoder.variables());
-        }
-        return set;
+        return Collections.singleton(name);
     }
 
     @Override
@@ -63,17 +71,12 @@ class OneHotEncoderInteraction extends AbstractTerm {
 
     @Override
     public byte applyAsByte(Tuple o) {
-        for (OneHotEncoder encoder : encoders) {
-            if (encoder.applyAsByte(o) == 0) return 0;
-        }
-        return 1;
+        return value == ((Number) o.get(column)).intValue() ? (byte) 1 : (byte) 0;
     }
 
     @Override
     public String name() {
-        return encoders.stream()
-                .map(encoder -> encoder.name())
-                .collect(Collectors.joining("-"));
+        return String.format("%s_%s", name, level);
     }
 
     @Override

@@ -27,15 +27,19 @@ import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 
 /**
- * Discrete data can only take particular values. There may potentially
- * be an infinite number of those values, but each is distinct.
+ * Categorical data can be stored into groups or categories with the aid of
+ * names or labels. Also known as qualitative data, each element of a
+ * categorical data can be placed in only one category according to
+ * its qualities, where each of the categories is mutually exclusive.
  * <p>
- * Both integer and string variables can be made into discrete measure,
- * but a discrete measure's levels will always be string values.
+ * Categorical data may be subdivided into nominal data and ordinal data.
+ * <p>
+ * Both integer and string variables can be made into categorical measure,
+ * but a categorical measure's levels will always be string values.
  *
  * @author Haifeng Li
  */
-public abstract class DiscreteMeasure implements Measure {
+public abstract class CategoricalMeasure implements Measure {
     /**
      * The valid values.
      */
@@ -57,7 +61,7 @@ public abstract class DiscreteMeasure implements Measure {
      * Constructor.
      * @param levels the levels of discrete values.
      */
-    public DiscreteMeasure(String... levels) {
+    public CategoricalMeasure(String... levels) {
         this(IntStream.range(0, levels.length).toArray(), levels);
     }
 
@@ -65,7 +69,7 @@ public abstract class DiscreteMeasure implements Measure {
      * Constructor.
      * @param levels the levels of discrete values.
      */
-    public DiscreteMeasure(List<String> levels) {
+    public CategoricalMeasure(List<String> levels) {
         this(levels.toArray(new String[levels.size()]));
     }
 
@@ -74,7 +78,7 @@ public abstract class DiscreteMeasure implements Measure {
      * @param values the valid values.
      * @param levels the levels of discrete values.
      */
-    public DiscreteMeasure(int[] values, String[] levels) {
+    public CategoricalMeasure(int[] values, String[] levels) {
         if (values.length != levels.length) {
             throw new IllegalArgumentException("The size of values and levels don't match");
         }
@@ -164,8 +168,8 @@ public abstract class DiscreteMeasure implements Measure {
 
     @Override
     public boolean equals(Object o) {
-        if (o instanceof DiscreteMeasure) {
-            DiscreteMeasure measure = (DiscreteMeasure) o;
+        if (o instanceof CategoricalMeasure) {
+            CategoricalMeasure measure = (CategoricalMeasure) o;
             return Arrays.equals(levels, measure.levels) && Arrays.equals(values, values);
         }
 

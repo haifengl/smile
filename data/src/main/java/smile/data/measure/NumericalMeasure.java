@@ -21,18 +21,18 @@ import java.text.NumberFormat;
 import java.text.ParseException;
 
 /**
- * Continuous data are numerical data that can theoretically be measured
- * in infinitely small units. The statistical analysis of continuous data
- * is more powerful than that of categorical data.
+ * Numerical data, also called quantitative data. Numerical data may be
+ * discrete or continuous. Continuous data may be subdivided into interval
+ * data and ratio data.
  *
  * @author Haifeng Li
  */
-public abstract class ContinuousMeasure implements Measure {
+public abstract class NumericalMeasure implements Measure {
     /** For formatting and parsing numbers. */
     private NumberFormat format;
 
     /** Constructor. */
-    public ContinuousMeasure(NumberFormat format) {
+    public NumericalMeasure(NumberFormat format) {
         this.format = format;
     }
 

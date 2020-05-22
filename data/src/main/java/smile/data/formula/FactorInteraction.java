@@ -40,7 +40,7 @@ class FactorInteraction implements HyperTerm {
     /** The factors of interaction. */
     private List<String> factors;
     /** The terms after binding. */
-    private List<OneHotEncoderInteraction> terms;
+    private List<DummyInteraction> terms;
 
     /**
      * Constructor.
@@ -72,7 +72,7 @@ class FactorInteraction implements HyperTerm {
 
     @Override
     public void bind(StructType schema) {
-        List<List<OneHotEncoder>> encoders = new ArrayList<>();
+        List<List<DummyVariable>> encoders = new ArrayList<>();
 
         OneHot factor = new OneHot(factors.get(factors.size() - 1));
         factor.bind(schema);
@@ -84,12 +84,12 @@ class FactorInteraction implements HyperTerm {
         for (int i = factors.size() - 2; i >= 0; i--) {
             factor = new OneHot(factors.get(i));
             factor.bind(schema);
-            List<OneHotEncoder> terms = factor.terms();
+            List<DummyVariable> terms = factor.terms();
 
             // combine terms with existing combinations
             encoders.addAll(encoders.stream().flatMap(list ->
                     terms.stream().map(term -> {
-                        List<OneHotEncoder> newList = new ArrayList<>();
+                        List<DummyVariable> newList = new ArrayList<>();
                         newList.add(term);
                         newList.addAll(list);
                         return newList;
@@ -105,7 +105,7 @@ class FactorInteraction implements HyperTerm {
 
         terms = encoders.stream()
                 .filter(list -> list.size() == factors.size())
-                .map(list -> new OneHotEncoderInteraction(list))
+                .map(list -> new DummyInteraction(list))
                 .collect(Collectors.toList());
     }
 }

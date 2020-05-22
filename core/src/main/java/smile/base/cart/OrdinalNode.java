@@ -18,17 +18,8 @@
 package smile.base.cart;
 
 import smile.data.Tuple;
-import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.math.MathEx;
-
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * A node with a ordinal split variable (real-valued or ordinal categorical value).
