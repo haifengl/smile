@@ -30,7 +30,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Dummy implements HyperTerm {
+class DummyEncoding implements HyperTerm {
     /** The name of variable. */
     private String[] variables;
     /** The terms after binding to the schema. */
@@ -41,7 +41,7 @@ class Dummy implements HyperTerm {
      * @param variables the factor names. If empty, all nominal factors
      *                  in the schema will be one-hot encoded.
      */
-    public Dummy(String... variables) {
+    public DummyEncoding(String... variables) {
         this.variables = variables;
     }
 
@@ -89,12 +89,10 @@ class Dummy implements HyperTerm {
             }
 
             NominalScale scale = (NominalScale) measure;
-            if (scale.size() > 2) {
-                int[] values = scale.values();
-                for (int i = 1; i < values.length; i++) {
-                    int value = values[i];
-                    terms.add(new DummyVariable(name, column, value, scale.level(value)));
-                }
+            int[] values = scale.values();
+            for (int i = 1; i < values.length; i++) {
+                int value = values[i];
+                terms.add(new DummyVariable(name, column, value, scale.level(value)));
             }
         }
     }

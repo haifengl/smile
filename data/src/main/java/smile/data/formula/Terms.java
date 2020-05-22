@@ -69,8 +69,8 @@ public interface Terms {
     }
 
     /** Dummy encoding of nominal factors. */
-    static Dummy dummy(String... factors) {
-        return new Dummy(factors);
+    static DummyEncoding dummy(String... factors) {
+        return new DummyEncoding(factors);
     }
 
     /** Extracts date/time features. */

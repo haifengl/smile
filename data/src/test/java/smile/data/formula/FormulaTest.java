@@ -307,6 +307,22 @@ public class FormulaTest {
     }
 
     @Test
+    public void testFormulaDummy() {
+        System.out.println("dummy");
+        Formula formula = Formula.rhs(dummy("gender"));
+        assertEquals(" ~ dummy(gender)", formula.toString());
+
+        DataFrame output = formula.apply(df);
+        System.out.println(output);
+        assertEquals(df.size(), output.size());
+        assertEquals(1, output.ncols());
+        assertEquals(0, output.getByte(0,0));
+        assertEquals(0, output.getByte(1,0));
+        assertEquals(1, output.getByte(2,0));
+        assertEquals(1, output.getByte(3,0));
+    }
+
+    @Test
     public void testFormulaDate() {
         System.out.println("date");
         Formula formula = Formula.rhs(date("birthday", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK));
