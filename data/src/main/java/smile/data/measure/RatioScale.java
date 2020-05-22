@@ -18,7 +18,6 @@
 package smile.data.measure;
 
 import java.text.NumberFormat;
-import java.util.Arrays;
 
 /**
  * The ratio scale allows for both difference and ratio of two values.
@@ -41,7 +40,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class RatioScale extends ContinuousMeasure {
+public class RatioScale extends NumericalMeasure {
 
     /** Constructor. */
     public RatioScale(NumberFormat format) {

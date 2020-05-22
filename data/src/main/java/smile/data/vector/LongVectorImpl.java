@@ -17,7 +17,7 @@
 
 package smile.data.vector;
 
-import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
@@ -47,7 +47,7 @@ class LongVectorImpl implements LongVector {
 
     /** Constructor. */
     public LongVectorImpl(StructField field, long[] vector) {
-        if (field.measure instanceof ContinuousMeasure) {
+        if (field.measure instanceof NumericalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 

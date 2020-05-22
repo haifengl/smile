@@ -35,7 +35,7 @@ import java.util.List;
  *
  * @author Haifeng Li
  */
-public class NominalScale extends DiscreteMeasure {
+public class NominalScale extends CategoricalMeasure {
     /**
      * Constructor.
      * @param levels the levels of nominal values.

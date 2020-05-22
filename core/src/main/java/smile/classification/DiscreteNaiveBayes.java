@@ -17,7 +17,6 @@
 
 package smile.classification;
 
-import smile.data.measure.DiscreteMeasure;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.SparseArray;
@@ -84,7 +83,7 @@ import java.util.Arrays;
  */
 public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteMeasure.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 
     /**
      * The generation models of naive Bayes classifier.

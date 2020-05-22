@@ -68,6 +68,11 @@ public interface Terms {
         return new OneHot(factors);
     }
 
+    /** Dummy encoding of nominal factors. */
+    static Dummy dummy(String... factors) {
+        return new Dummy(factors);
+    }
+
     /** Extracts date/time features. */
     static Date date(String x, DateFeature... features) {
         return new Date(x, features);

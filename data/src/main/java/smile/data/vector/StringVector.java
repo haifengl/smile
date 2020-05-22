@@ -23,7 +23,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
 
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
 
@@ -87,7 +87,7 @@ public interface StringVector extends Vector<String> {
      * in the nominal scale, the type of returned vector may be byte, short
      * or integer. The missing values/nulls will be converted to -1.
      */
-    BaseVector factorize(DiscreteMeasure scale);
+    BaseVector factorize(CategoricalMeasure scale);
 
     /**
      * Returns the string representation of vector.

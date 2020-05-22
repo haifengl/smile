@@ -17,7 +17,7 @@
 
 package smile.data.vector;
 
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
@@ -47,7 +47,7 @@ class FloatVectorImpl implements FloatVector {
 
     /** Constructor. */
     public FloatVectorImpl(StructField field, float[] vector) {
-        if (field.measure instanceof DiscreteMeasure) {
+        if (field.measure instanceof CategoricalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 

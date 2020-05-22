@@ -19,22 +19,18 @@ package smile.data.formula;
 
 import java.util.*;
 import java.util.stream.Collectors;
-
-import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
 
 /**
- * One-hot encoding of categorical features, aka one-of-K scheme.
- * Although some method such as decision trees can handle nominal variable
- * directly, other methods generally require nominal variables converted to
- * multiple binary dummy variables to indicate the presence or absence of
- * a characteristic.
+ * Dummy encoding of categorical features. Suppose one categorical variable
+ * has k levels. One-hot encoding converts it into k variables, while dummy
+ * encoding converts it into k-1 variables.
  *
  * @author Haifeng Li
  */
-class OneHot implements HyperTerm {
+class Dummy implements HyperTerm {
     /** The name of variable. */
     private String[] variables;
     /** The terms after binding to the schema. */
@@ -45,16 +41,16 @@ class OneHot implements HyperTerm {
      * @param variables the factor names. If empty, all nominal factors
      *                  in the schema will be one-hot encoded.
      */
-    public OneHot(String... variables) {
+    public Dummy(String... variables) {
         this.variables = variables;
     }
 
     @Override
     public String toString() {
         if (variables == null || variables.length == 0) {
-            return "one-hot";
+            return "dummy";
         } else {
-            return String.format("one-hot(%s)", Arrays.stream(variables).collect(Collectors.joining(", ")));
+            return String.format("dummy(%s)", Arrays.stream(variables).collect(Collectors.joining(", ")));
         }
     }
 
@@ -78,7 +74,7 @@ class OneHot implements HyperTerm {
     public void bind(StructType schema) {
         if (variables == null || variables.length == 0) {
             variables = Arrays.stream(schema.fields())
-                    .filter(field -> field.measure instanceof CategoricalMeasure)
+                    .filter(field -> field.measure instanceof NominalScale)
                     .map(field -> field.name)
                     .toArray(String[]::new);
         }
@@ -94,7 +90,9 @@ class OneHot implements HyperTerm {
 
             NominalScale scale = (NominalScale) measure;
             if (scale.size() > 2) {
-                for (int value : scale.values()) {
+                int[] values = scale.values();
+                for (int i = 1; i < values.length; i++) {
+                    int value = values[i];
                     terms.add(new DummyVariable(name, column, value, scale.level(value)));
                 }
             }

@@ -24,7 +24,8 @@ import java.sql.SQLException;
 import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.stream.IntStream;
-import smile.data.measure.DiscreteMeasure;
+
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructType;
 
@@ -378,7 +379,7 @@ public interface Tuple extends Serializable {
     default String getScale(int i) {
         int x = getInt(i);
         Measure measure = schema().field(i).measure;
-        return (measure instanceof DiscreteMeasure) ? ((DiscreteMeasure) measure).toString(x) : String.valueOf(x);
+        return (measure instanceof CategoricalMeasure) ? ((CategoricalMeasure) measure).toString(x) : String.valueOf(x);
     }
 
     /**
