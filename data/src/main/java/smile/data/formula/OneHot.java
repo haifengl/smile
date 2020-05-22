@@ -93,10 +93,8 @@ class OneHot implements HyperTerm {
             }
 
             NominalScale scale = (NominalScale) measure;
-            if (scale.size() > 2) {
-                for (int value : scale.values()) {
-                    terms.add(new DummyVariable(name, column, value, scale.level(value)));
-                }
+            for (int value : scale.values()) {
+                terms.add(new DummyVariable(name, column, value, scale.level(value)));
             }
         }
     }
