@@ -75,7 +75,8 @@ import smile.validation.ModelSelection;
  * Logistic regression estimation also obeys the maximum entropy principle, and
  * thus logistic regression is sometimes called "maximum entropy modeling",
  * and the resulting classifier the "maximum entropy classifier".
- * 
+ *
+ * @see smile.glm.GLM
  * @see MLP
  * @see Maxent
  * @see LDA
