@@ -67,8 +67,8 @@ public interface Binomial {
                     throw new IllegalArgumentException("Invalid argument (expected 0 <= y <= 1): " + y);
                 }
 
-                if (y == 0) return 0.0001;
-                if (y == 1.0) return 0.9999;
+                if (y == 0) return 0.1;
+                if (y == 1.0) return 0.9;
                 else return y;
             }
 

@@ -53,7 +53,7 @@ final class Variable implements Term {
         this.name = name;
     }
 
-    /** Returns the name of variable. */
+    @Override
     public String name() {
         return name;
     }

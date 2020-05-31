@@ -42,7 +42,7 @@ class OneHot implements HyperTerm {
 
     /**
      * Constructor.
-     * @param variables the factor names. If empty, all nominal factors
+     * @param variables the factor names. If empty, all categorical variables
      *                  in the schema will be one-hot encoded.
      */
     public OneHot(String... variables) {
@@ -88,11 +88,11 @@ class OneHot implements HyperTerm {
             int column = schema.fieldIndex(name);
 
             Measure measure = schema.field(column).measure;
-            if (measure instanceof NominalScale == false) {
-                throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
+            if (measure instanceof CategoricalMeasure == false) {
+                throw new UnsupportedOperationException(String.format("The variable %s is not categorical", name));
             }
 
-            NominalScale scale = (NominalScale) measure;
+            CategoricalMeasure scale = (CategoricalMeasure) measure;
             for (int value : scale.values()) {
                 terms.add(new DummyVariable(name, column, value, scale.level(value)));
             }

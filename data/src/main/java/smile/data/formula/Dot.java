@@ -24,18 +24,19 @@ import java.util.stream.Collectors;
 import smile.data.type.StructType;
 
 /**
- * All columns in the input DataFrame.
+ * The special term "." means all columns not otherwise in the formula
+ * in the context of a data frame.
  *
  * @author Haifeng Li
  */
-class All implements HyperTerm {
+class Dot implements HyperTerm {
     /** All columns in the schema. */
     private List<Variable> columns;
 
     /**
-     * Constructor. All columns not otherwise in the formula.
+     * Constructor.
      */
-    public All() {
+    public Dot() {
 
     }
 
