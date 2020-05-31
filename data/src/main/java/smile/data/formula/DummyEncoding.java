@@ -19,6 +19,8 @@ package smile.data.formula;
 
 import java.util.*;
 import java.util.stream.Collectors;
+
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
@@ -38,8 +40,8 @@ class DummyEncoding implements HyperTerm {
 
     /**
      * Constructor.
-     * @param variables the factor names. If empty, all nominal factors
-     *                  in the schema will be one-hot encoded.
+     * @param variables the factor names. If empty, all categorical variables
+     *                  in the schema will be dummy encoded.
      */
     public DummyEncoding(String... variables) {
         this.variables = variables;
@@ -74,7 +76,7 @@ class DummyEncoding implements HyperTerm {
     public void bind(StructType schema) {
         if (variables == null || variables.length == 0) {
             variables = Arrays.stream(schema.fields())
-                    .filter(field -> field.measure instanceof NominalScale)
+                    .filter(field -> field.measure instanceof CategoricalMeasure)
                     .map(field -> field.name)
                     .toArray(String[]::new);
         }
@@ -84,11 +86,11 @@ class DummyEncoding implements HyperTerm {
             int column = schema.fieldIndex(name);
 
             Measure measure = schema.field(column).measure;
-            if (measure instanceof NominalScale == false) {
-                throw new UnsupportedOperationException(String.format("The variable %s is not of nominal", name));
+            if (measure instanceof CategoricalMeasure == false) {
+                throw new UnsupportedOperationException(String.format("The variable %s is not categorical", name));
             }
 
-            NominalScale scale = (NominalScale) measure;
+            CategoricalMeasure scale = (CategoricalMeasure) measure;
             int[] values = scale.values();
             for (int i = 1; i < values.length; i++) {
                 int value = values[i];

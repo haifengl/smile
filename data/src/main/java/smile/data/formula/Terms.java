@@ -29,13 +29,21 @@ import smile.data.type.DataTypes;
  */
 public interface Terms {
     /** Returns a variable. */
-    static Variable $(String x) {
-        return new Variable(x);
+    static Term $(String x) {
+        if (x.equals("0"))
+            return new Intercept(false);
+        else if (x.equals("1"))
+            return new Intercept(true);
+        else
+            return new Variable(x);
     }
 
-    /** Returns all columns not otherwise in the formula. */
-    static All all() {
-        return new All();
+    /**
+     * Returns the special term "." that means all columns not otherwise
+     * in the formula in the context of a data frame.
+     */
+    static Dot dot() {
+        return new Dot();
     }
 
     /** Factor interaction of two or more factors. */
@@ -53,9 +61,12 @@ public interface Terms {
         return new FactorCrossing(order, factors);
     }
 
-    /** Deletes a variable from the formula. */
-    static Delete delete(String x) {
-        return delete($(x));
+    /** Deletes a variable or the intercept ("1") from the formula. */
+    static HyperTerm delete(String x) {
+        if (x.equals("1"))
+            return new Intercept(false);
+        else
+            return delete($(x));
     }
 
     /** Deletes a term from the formula. */

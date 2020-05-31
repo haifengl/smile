@@ -45,7 +45,7 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
   /** Builds the formula. */
   def toFormula: Formula = y match {
     case None => x.toList match {
-      case Nil => Formula.rhs(all)
+      case Nil => Formula.rhs(dot)
       case x => Formula.rhs(x: _*)
     }
 
@@ -60,7 +60,7 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
   * Use a different name to avoid clash.
   */
 private[formula] case class PimpedFormulaString(a: String) {
-  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) all else $(b)))
+  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) dot else $(b)))
   def ~ (b: HyperTerm) = FormulaBuilder(Option($(a)), ListBuffer(b))
   def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
   def unary_~ = FormulaBuilder(Option.empty, ListBuffer($(a)))

@@ -106,17 +106,21 @@ public class FormulaTest {
         formula = Formula.rhs($("salary"));
         assertEquals(" ~ salary", formula.toString());
 
-        formula = Formula.of("salary", all(), cross("a", "b", "c") , delete("d"));
+        formula = Formula.of("salary", dot(), cross("a", "b", "c") , delete("d"));
         assertEquals("salary ~ . + (a x b x c) - d", formula.toString());
     }
 
     @Test
     public void testAll() {
         System.out.println("all");
-        Formula formula = Formula.of("salary", all(), log("age"), onehot("gender"));
+        Formula formula = Formula.of("salary", dot(), log("age"), onehot("gender"));
         assertEquals("salary ~ . + log(age) + one-hot(gender)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        Formula expanded = formula.expand(df.schema());
+        System.out.println(expanded);
+        assertEquals("salary ~ age + birthday + gender + name + log(age) + one-hot(gender)", expanded.toString());
+
+        DataFrame output = formula.frame(df);
         System.out.println(output);
 
         StructType schema = DataTypes.struct(
@@ -138,7 +142,7 @@ public class FormulaTest {
         Formula formula = Formula.of("salary", $("age"));
         assertEquals("salary ~ age", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(2, output.ncols());
@@ -164,7 +168,7 @@ public class FormulaTest {
 
         DenseMatrix matrix = formula.matrix(df);
         assertEquals(df.size(), matrix.nrows());
-        assertEquals(1, matrix.ncols());
+        assertEquals(2, matrix.ncols());
     }
 
     @Test
@@ -261,7 +265,7 @@ public class FormulaTest {
     public void testBind() {
         System.out.println("bind");
 
-        Formula formula = Formula.of("revenue", all(), cross("water", "sowing_density") , mul("humidity", "wind"), delete("wind"));
+        Formula formula = Formula.of("revenue", dot(), cross("water", "sowing_density") , mul("humidity", "wind"), delete("wind"));
         StructType inputSchema = DataTypes.struct(
                 new StructField("revenue", DataTypes.DoubleType, Measure.Currency),
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
@@ -292,7 +296,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(onehot("gender"));
         assertEquals(" ~ one-hot(gender)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(2, output.ncols());
@@ -312,7 +316,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(dummy("gender"));
         assertEquals(" ~ dummy(gender)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -328,7 +332,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(date("birthday", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK));
         assertEquals(" ~ birthday[YEAR, MONTH, DAY_OF_MONTH, DAY_OF_WEEK]", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output.schema());
         System.out.println(output);
         assertEquals(df.size(), output.size());
@@ -349,7 +353,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(abs("age"));
         assertEquals(" ~ abs(age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -365,7 +369,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(abs("salary"));
         assertEquals(" ~ abs(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -381,7 +385,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(exp("age"));
         assertEquals(" ~ exp(age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -397,7 +401,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(exp(div("salary", val(10000))));
         assertEquals(" ~ exp(salary / 10000)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -413,7 +417,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(log("age"));
         assertEquals(" ~ log(age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -429,7 +433,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(log("salary"));
         assertEquals(" ~ log(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -445,7 +449,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(log10("age"));
         assertEquals(" ~ log10(age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -461,7 +465,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(log10("salary"));
         assertEquals(" ~ log10(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -477,7 +481,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(sqrt("age"));
         assertEquals(" ~ sqrt(age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -493,7 +497,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(sqrt("salary"));
         assertEquals(" ~ sqrt(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -509,7 +513,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(ceil("salary"));
         assertEquals(" ~ ceil(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -525,7 +529,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(floor("salary"));
         assertEquals(" ~ floor(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -541,7 +545,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(round("salary"));
         assertEquals(" ~ round(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -555,13 +559,13 @@ public class FormulaTest {
         System.out.println(matrix.nrows());
         System.out.println(matrix.ncols());
         assertEquals(df.size(), matrix.nrows());
-        assertEquals(1, matrix.ncols());
+        assertEquals(2, matrix.ncols());
         assertEquals(Math.round(10000.), matrix.get(0,0), 1E-10);
         assertEquals(Double.NaN, matrix.get(1,0), 1E-10);
         assertEquals(Math.round(230000.), matrix.get(2,0), 1E-10);
         assertEquals(Double.NaN, matrix.get(3,0), 1E-10);
 
-        DenseMatrix matrix1 = formula.matrix(df, true);
+        DenseMatrix matrix1 = formula.matrix(df);
         System.out.println(matrix1);
         assertEquals(df.size(), matrix1.nrows());
         assertEquals(2, matrix1.ncols());
@@ -582,7 +586,7 @@ public class FormulaTest {
         Formula formula = Formula.rhs(signum("salary"));
         assertEquals(" ~ signum(salary)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
@@ -595,10 +599,10 @@ public class FormulaTest {
     @Test
     public void testFormulaAddCst() {
         System.out.println("add cst");
-        Formula formula = Formula.rhs(all(), add("age", val(10)));
+        Formula formula = Formula.rhs(dot(), add("age", val(10)));
         assertEquals(" ~ . + (age + 10)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -611,10 +615,10 @@ public class FormulaTest {
     @Test
     public void testFormulaAddNullable() {
         System.out.println("add nullable");
-        Formula formula = Formula.rhs(all(), add("salary", "age"));
+        Formula formula = Formula.rhs(dot(), add("salary", "age"));
         assertEquals(" ~ . + (salary + age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -627,10 +631,10 @@ public class FormulaTest {
     @Test
     public void testFormulaSubCst() {
         System.out.println("sub cst");
-        Formula formula = Formula.rhs(all(), sub("age", val(10)));
+        Formula formula = Formula.rhs(dot(), sub("age", val(10)));
         assertEquals(" ~ . + (age - 10)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -643,10 +647,10 @@ public class FormulaTest {
     @Test
     public void testFormulaSubNullable() {
         System.out.println("sub nullable");
-        Formula formula = Formula.rhs(all(), sub("salary", "age"));
+        Formula formula = Formula.rhs(dot(), sub("salary", "age"));
         assertEquals(" ~ . + (salary - age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -659,10 +663,10 @@ public class FormulaTest {
     @Test
     public void testFormulaMulCst() {
         System.out.println("mul cst");
-        Formula formula = Formula.rhs(all(), mul("age", val(10)));
+        Formula formula = Formula.rhs(dot(), mul("age", val(10)));
         assertEquals(" ~ . + (age * 10)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -675,10 +679,10 @@ public class FormulaTest {
     @Test
     public void testFormulaMulNullable() {
         System.out.println("mul nullable");
-        Formula formula = Formula.rhs(all(), mul("salary", "age"));
+        Formula formula = Formula.rhs(dot(), mul("salary", "age"));
         assertEquals(" ~ . + (salary * age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -691,10 +695,10 @@ public class FormulaTest {
     @Test
     public void testFormulaDivCst() {
         System.out.println("div cst");
-        Formula formula = Formula.rhs(all(), div("age", val(10)));
+        Formula formula = Formula.rhs(dot(), div("age", val(10)));
         assertEquals(" ~ . + (age / 10)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
@@ -707,10 +711,10 @@ public class FormulaTest {
     @Test
     public void testFormulaDivNullable() {
         System.out.println("div nullable");
-        Formula formula = Formula.rhs(all(), div("salary", "age"));
+        Formula formula = Formula.rhs(dot(), div("salary", "age"));
         assertEquals(" ~ . + (salary / age)", formula.toString());
 
-        DataFrame output = formula.apply(df);
+        DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());

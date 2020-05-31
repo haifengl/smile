@@ -22,9 +22,7 @@ import java.util.Set;
 import smile.data.type.StructType;
 
 /**
- * A variable in the formula. A variable can be regarded as the
- * identity function that always returns the same value that was
- * used as its argument.
+ * A constant value in the formula.
  *
  * @author Haifeng Li
  */
