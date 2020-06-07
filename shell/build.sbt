@@ -46,7 +46,7 @@ buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
 buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.13.2"
-
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30"
-
+libraryDependencies ++= Seq(
+  "org.scala-lang" % "scala-compiler" % "2.13.2",
+  "org.slf4j" % "slf4j-simple" % "1.7.30"
+)
