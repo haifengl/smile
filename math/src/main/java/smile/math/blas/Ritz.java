@@ -17,23 +17,26 @@
 
 package smile.math.blas;
 
-/** Matrix transpose. */
-public enum Transpose {
-    /** Normal operation on the matrix. */
-    NoTrans((byte) 111),
-    /** Transpose operation on the matrix. */
-    Trans((byte) 112),
-    /** Conjugate transpose operation on the matrix. */
-    ConjTrans((byte) 113);
-
-    /** Byte value passed to CBLAS. */
-    private final byte value;
-
-    /** Constructor. */
-    Transpose(byte value) {
-        this.value = value;
-    }
-
-    /** Returns the integer value for BLAS. */
-    public byte getValue() { return value; }
+/** Specify which of the Ritz values of OP to compute. */
+public enum Ritz {
+    /**
+     * compute the NEV largest (algebraic) eigenvalues.
+     */
+    LA,
+    /**
+     * compute the NEV smallest (algebraic) eigenvalues.
+     */
+    SA,
+    /**
+     * compute the NEV largest (in magnitude) eigenvalues.
+     */
+    LM,
+    /**
+     * compute the NEV smallest (in magnitude) eigenvalues.
+     */
+    SM,
+    /**
+     * compute NEV eigenvalues, half from each end of the spectrum
+     */
+    BE
 }

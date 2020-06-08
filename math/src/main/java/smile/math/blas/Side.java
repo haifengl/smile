@@ -23,18 +23,18 @@ package smile.math.blas;
  */
 public enum Side {
     /** A * B */
-    Left(141),
+    Left((byte) 141),
     /** B * A */
-    Right(142);
+    Right((byte) 142);
 
     /** Integer value passed to CBLAS. */
-    private final int value;
+    private final byte value;
 
     /** Constructor. */
-    Side(int value) {
+    Side(byte value) {
         this.value = value;
     }
 
     /** Returns the integer value for BLAS. */
-    public int getValue() { return value; }
+    public byte getValue() { return value; }
 }
