@@ -18,7 +18,7 @@
 package smile.math.blas;
 
 /**
- * Basic Linear Algebra Subprograms (BLAS) is a specification that prescribes
+ * Basic Linear Algebra Subprograms. BLAS is a specification that prescribes
  * a set of low-level routines for performing common linear algebra operations
  * such as vector addition, scalar multiplication, dot products, linear
  * combinations, and matrix multiplication. They are the de facto standard

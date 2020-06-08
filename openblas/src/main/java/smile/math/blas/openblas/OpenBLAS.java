@@ -27,7 +27,7 @@ import static org.bytedeco.openblas.global.openblas.*;
  *
  * @author Haifeng Li
  */
-public class OpenBLAS implements BLAS {
+public class OpenBLAS implements BLAS, LAPACK {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OpenBLAS.class);
 
     @Override
@@ -218,5 +218,125 @@ public class OpenBLAS implements BLAS {
     @Override
     public void symm(Layout layout, Side side, UPLO uplo, int m, int n, float alpha, float[] A, int lda, float[] B, int ldb, float beta, float[] C, int ldc) {
         cblas_ssymm(layout.getValue(), side.getValue(), uplo.getValue(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
+    public int gesv(Layout layout, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dgesv(layout.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gesv(Layout layout, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_sgesv(layout.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int sysv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dsysv(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int sysv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_ssysv(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int spsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dspsv(layout.getValue(), uplo.getValue(), n, nrhs, A, ipiv, B, ldb);
+    }
+
+    @Override
+    public int spsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_sspsv(layout.getValue(), uplo.getValue(), n, nrhs, A, ipiv, B, ldb);
+    }
+
+    @Override
+    public int posv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        return LAPACKE_dposv(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int posv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_sposv(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int ppsv(Layout layout, UPLO uplo, int n, int nrhs, double[] A, double[] B, int ldb) {
+        return LAPACKE_dppsv(layout.getValue(), uplo.getValue(), n, nrhs, A, B, ldb);
+    }
+
+    @Override
+    public int ppsv(Layout layout, UPLO uplo, int n, int nrhs, float[] A, float[] B, int ldb) {
+        return LAPACKE_sppsv(layout.getValue(), uplo.getValue(), n, nrhs, A, B, ldb);
+    }
+
+    @Override
+    public int gbsv(Layout layout, int n, int kl, int ku, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dgbsv(layout.getValue(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gbsv(Layout layout, int n, int kl, int ku, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_sgbsv(layout.getValue(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gels(Layout layout, Transpose trans, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        return LAPACKE_dgels(layout.getValue(), trans.getValue(), m, n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int gels(Layout layout, Transpose trans, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_sgels(layout.getValue(), trans.getValue(), m, n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int gelsy(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, int[] jpvt, double rcond, int[] rank) {
+        return LAPACKE_dgelsy(layout.getValue(), m, n, nrhs, A, lda, B, ldb, jpvt, rcond, rank);
+    }
+
+    @Override
+    public int gelsy(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, int[] jpvt, float rcond, int[] rank) {
+        return LAPACKE_sgelsy(layout.getValue(), m, n, nrhs, A, lda, B, ldb, jpvt, rcond, rank);
+    }
+
+    @Override
+    public int gelss(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, double[] s, double rcond, int[] rank) {
+        return LAPACKE_dgelss(layout.getValue(), m, n, nrhs, A, lda, B, ldb, s, rcond, rank);
+    }
+
+    @Override
+    public int gelss(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, float[] s, float rcond, int[] rank) {
+        return LAPACKE_sgelss(layout.getValue(), m, n, nrhs, A, lda, B, ldb, s, rcond, rank);
+    }
+
+    @Override
+    public int gelsd(Layout layout, int m, int n, int nrhs, double[] A, int lda, double[] B, int ldb, double[] s, double rcond, int[] rank) {
+        return LAPACKE_dgelsd(layout.getValue(), m, n, nrhs, A, lda, B, ldb, s, rcond, rank);
+    }
+
+    @Override
+    public int gelsd(Layout layout, int m, int n, int nrhs, float[] A, int lda, float[] B, int ldb, float[] s, float rcond, int[] rank) {
+        return LAPACKE_sgelsd(layout.getValue(), m, n, nrhs, A, lda, B, ldb, s, rcond, rank);
+    }
+
+    @Override
+    public int gglse(Layout layout, int m, int n, int p, double[] A, int lda, double[] B, int ldb, double[] c, double[] d, double[] x) {
+        return LAPACKE_dgglse(layout.getValue(), m, n, p, A, lda, B, ldb, c, d, x);
+    }
+
+    @Override
+    public int gglse(Layout layout, int m, int n, int p, float[] A, int lda, float[] B, int ldb, float[] c, float[] d, float[] x) {
+        return LAPACKE_sgglse(layout.getValue(), m, n, p, A, lda, B, ldb, c, d, x);
+    }
+
+    @Override
+    public int ggglm(Layout layout, int n, int m, int p, double[] A, int lda, double[] B, int ldb, double[] d, double[] x, double[] y) {
+        return LAPACKE_dggglm(layout.getValue(), n, m, p, A, lda, B, ldb, d, x, y);
+    }
+
+    @Override
+    public int ggglm(Layout layout, int n, int m, int p, float[] A, int lda, float[] B, int ldb, float[] d, float[] x, float[] y) {
+        return LAPACKE_sggglm(layout.getValue(), n, m, p, A, lda, B, ldb, d, x, y);
     }
 }
