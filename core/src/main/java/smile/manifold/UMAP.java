@@ -582,7 +582,7 @@ public class UMAP implements Serializable {
                 }
             }
 
-            logger.info(String.format("The learning rate at %3d iterations: %.5f", iter, alpha));
+            logger.info(String.format("The learning rate at %3d iterations: %.5f", alpha, iter));
             alpha = initialAlpha * (1.0 - (double) iter / iterations);
         }
     }
