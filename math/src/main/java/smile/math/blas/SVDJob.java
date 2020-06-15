@@ -17,24 +17,25 @@
 
 package smile.math.blas;
 
-/**
- * The flag if the symmetric  matrix A appears on the left or right
- * in the matrix-matrix operation.
- */
-public enum Side {
-    /** A * B */
-    LEFT((byte) 141),
-    /** B * A */
-    RIGHT((byte) 142);
+/** The option if computing singular vectors. */
+public enum SVDJob {
+    /** All left (or right) singular vectors are returned in supplied  matrix U (or Vt). */
+    ALL((byte) 65),
+    /** The first min(m, n) singular vectors are returned in supplied matrix U (or Vt). */
+    REDUCED((byte) 83),
+    /** The first min(m, n) singular vectors are overwritten on the matrix A. */
+    OVERWRITE((byte) 79),
+    /** No singular vectors are computed. */
+    NO_VECTORS((byte) 78);
 
-    /** Integer value passed to CBLAS. */
+    /** Byte value passed to LAPACK. */
     private final byte value;
 
     /** Constructor. */
-    Side(byte value) {
+    SVDJob(byte value) {
         this.value = value;
     }
 
-    /** Returns the byte value for BLAS. */
+    /** Returns the byte value for LAPACK. */
     public byte getValue() { return value; }
 }

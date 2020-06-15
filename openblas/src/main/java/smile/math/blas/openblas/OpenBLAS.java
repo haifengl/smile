@@ -339,4 +339,164 @@ public class OpenBLAS implements BLAS, LAPACK {
     public int ggglm(Layout layout, int n, int m, int p, float[] A, int lda, float[] B, int ldb, float[] d, float[] x, float[] y) {
         return LAPACKE_sggglm(layout.getValue(), n, m, p, A, lda, B, ldb, d, x, y);
     }
+
+    @Override
+    public int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, double[] A, int lda, double[] wr, double[] wi, double[] Vl, int ldvl, double[] Vr, int ldvr) {
+        return LAPACKE_dgeev(layout.getValue(), jobvl.getValue(), jobvr.getValue(), n, A, lda, wr, wi, Vl, ldvl, Vr, ldvr);
+    }
+
+    @Override
+    public int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, float[] A, int lda, float[] wr, float[] wi, float[] Vl, int ldvl, float[] Vr, int ldvr) {
+        return LAPACKE_sgeev(layout.getValue(), jobvl.getValue(), jobvr.getValue(), n, A, lda, wr, wi, Vl, ldvl, Vr, ldvr);
+    }
+
+    @Override
+    public int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w) {
+        return LAPACKE_dsyev(layout.getValue(), jobz.getValue(), uplo.getValue(), n, A, lda, w);
+    }
+
+    @Override
+    public int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w) {
+        return LAPACKE_ssyev(layout.getValue(), jobz.getValue(), uplo.getValue(), n, A, lda, w);
+    }
+
+    @Override
+    public int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w) {
+        return LAPACKE_dsyevd(layout.getValue(), jobz.getValue(), uplo.getValue(), n, A, lda, w);
+    }
+
+    @Override
+    public int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w) {
+        return LAPACKE_ssyevd(layout.getValue(), jobz.getValue(), uplo.getValue(), n, A, lda, w);
+    }
+
+    @Override
+    public int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl, double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz) {
+        return LAPACKE_dsyevr(layout.getValue(), jobz.getValue(), range.getValue(), uplo.getValue(), n, A, lda, vl, vu, il, iu, abstol, m, w, Z, ldz, isuppz);
+    }
+
+    @Override
+    public int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl, float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz) {
+        return LAPACKE_ssyevr(layout.getValue(), jobz.getValue(), range.getValue(), uplo.getValue(), n, A, lda, vl, vu, il, iu, abstol, m, w, Z, ldz, isuppz);
+    }
+
+    @Override
+    public int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt, double[] superb) {
+        return LAPACKE_dgesvd(layout.getValue(), jobu.getValue(), jobvt.getValue(), m, n, A, lda, s, U, ldu, VT, ldvt, superb);
+    }
+
+    @Override
+    public int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt, float[] superb) {
+        return LAPACKE_sgesvd(layout.getValue(), jobu.getValue(), jobvt.getValue(), m, n, A, lda, s, U, ldu, VT, ldvt, superb);
+    }
+
+    @Override
+    public int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt) {
+        return LAPACKE_dgesdd(layout.getValue(), jobz.getValue(), m, n, A, lda, s, U, ldu, VT, ldvt);
+    }
+
+    @Override
+    public int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt) {
+        return LAPACKE_sgesdd(layout.getValue(), jobz.getValue(), m, n, A, lda, s, U, ldu, VT, ldvt);
+    }
+
+    @Override
+    public int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+        return LAPACKE_dgetrf(layout.getValue(), m, n, A, lda, ipiv);
+    }
+
+    @Override
+    public int getrf(Layout layout, int m, int n, float[] A, int lda, int[] ipiv) {
+        return LAPACKE_sgetrf(layout.getValue(), m, n, A, lda, ipiv);
+    }
+
+    @Override
+    public int getrf2(Layout layout, int m, int n, double[] A, int lda, int[] ipiv) {
+        return LAPACKE_dgetrf2(layout.getValue(), m, n, A, lda, ipiv);
+    }
+
+    @Override
+    public int getrf2(Layout layout, int m, int n, float[] A, int lda, int[] ipiv) {
+        return LAPACKE_sgetrf2(layout.getValue(), m, n, A, lda, ipiv);
+    }
+
+    @Override
+    public int getrs(Layout layout, Transpose trans, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dgetrs(layout.getValue(), trans.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int getrs(Layout layout, Transpose trans, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_sgetrs(layout.getValue(), trans.getValue(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int potrf(Layout layout, UPLO uplo, int n, double[] A, int lda) {
+        return LAPACKE_dpotrf(layout.getValue(), uplo.getValue(), n, A, lda);
+    }
+
+    @Override
+    public int potrf(Layout layout, UPLO uplo, int n, float[] A, int lda) {
+        return LAPACKE_spotrf(layout.getValue(), uplo.getValue(), n, A, lda);
+    }
+
+    @Override
+    public int potrf2(Layout layout, UPLO uplo, int n, double[] A, int lda) {
+        return LAPACKE_dpotrf2(layout.getValue(), uplo.getValue(), n, A, lda);
+    }
+
+    @Override
+    public int potrf2(Layout layout, UPLO uplo, int n, float[] A, int lda) {
+        return LAPACKE_spotrf2(layout.getValue(), uplo.getValue(), n, A, lda);
+    }
+
+    @Override
+    public int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_dpotrs(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_spotrs(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int geqrf(Layout layout, int m, int n, double[] A, int lda, double[] tau) {
+        return LAPACKE_dgeqrf(layout.getValue(), m, n, A, lda, tau);
+    }
+
+    @Override
+    public int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau) {
+        return LAPACKE_sgeqrf(layout.getValue(), m, n, A, lda, tau);
+    }
+
+    @Override
+    public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc) {
+        return LAPACKE_dormqr(layout.getValue(), side.getValue(), trans.getValue(), m, n, k, A, lda, tau, C, ldc);
+    }
+
+    @Override
+    public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, float[] A, int lda, float[] tau, float[] C, int ldc) {
+        return LAPACKE_sormqr(layout.getValue(), side.getValue(), trans.getValue(), m, n, k, A, lda, tau, C, ldc);
+    }
+
+    @Override
+    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        return LAPACKE_dtrtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_strtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
+        return LAPACKE_dtrtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+        return LAPACKE_strtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
+    }
 }

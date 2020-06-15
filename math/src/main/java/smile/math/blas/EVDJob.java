@@ -17,24 +17,21 @@
 
 package smile.math.blas;
 
-/**
- * The flag if the symmetric  matrix A appears on the left or right
- * in the matrix-matrix operation.
- */
-public enum Side {
-    /** A * B */
-    LEFT((byte) 141),
-    /** B * A */
-    RIGHT((byte) 142);
+/** The option if computing eigen vectors. */
+public enum EVDJob {
+    /** Eigenvalues only are computed. */
+    NO_VECTORS((byte) 78),
+    /** Both eigen values and vectors are computed. */
+    VECTORS((byte) 86);
 
-    /** Integer value passed to CBLAS. */
+    /** Byte value passed to LAPACK. */
     private final byte value;
 
     /** Constructor. */
-    Side(byte value) {
+    EVDJob(byte value) {
         this.value = value;
     }
 
-    /** Returns the byte value for BLAS. */
+    /** Returns the byte value for LAPACK. */
     public byte getValue() { return value; }
 }

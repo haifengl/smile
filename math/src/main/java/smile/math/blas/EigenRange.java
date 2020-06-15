@@ -17,24 +17,30 @@
 
 package smile.math.blas;
 
-/**
- * The flag if the symmetric  matrix A appears on the left or right
- * in the matrix-matrix operation.
- */
-public enum Side {
-    /** A * B */
-    LEFT((byte) 141),
-    /** B * A */
-    RIGHT((byte) 142);
+/** THe option of eigenvalue range. */
+public enum EigenRange {
+    /**
+     * All eigenvalues will be found.
+     */
+    ALL((byte) 65),
+    /**
+     * All eigenvalues in the half-open interval (VL,VU]
+     * will be found.
+     */
+    VALUE((byte) 86),
+    /**
+     * The IL-th through IU-th eigenvalues will be found.
+     */
+    INDEX((byte) 73);
 
-    /** Integer value passed to CBLAS. */
+    /** Byte value passed to LAPACK. */
     private final byte value;
 
     /** Constructor. */
-    Side(byte value) {
+    EigenRange(byte value) {
         this.value = value;
     }
 
-    /** Returns the byte value for BLAS. */
+    /** Returns the byte value for LAPACK. */
     public byte getValue() { return value; }
 }
