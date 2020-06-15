@@ -20,9 +20,9 @@ package smile.math.blas;
 /** Matrix layout. */
 public enum Layout {
     /** Row major layout. */
-    RowMajor(101),
+    ROW_MAJOR(101),
     /** Column major layout. */
-    ColMajor(102);
+    COL_MAJOR(102);
 
     /** Integer value passed to CBLAS. */
     private final int value;

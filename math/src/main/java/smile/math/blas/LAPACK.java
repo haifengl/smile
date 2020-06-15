@@ -43,7 +43,7 @@ public interface LAPACK {
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
      *
@@ -54,7 +54,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -62,7 +62,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -89,7 +89,7 @@ public interface LAPACK {
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
      *
@@ -100,7 +100,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -108,7 +108,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -139,9 +139,9 @@ public interface LAPACK {
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
      * used to solve the system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -153,12 +153,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -189,9 +189,9 @@ public interface LAPACK {
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
      * used to solve the system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -203,12 +203,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -239,9 +239,9 @@ public interface LAPACK {
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
      * used to solve the system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -256,7 +256,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -287,9 +287,9 @@ public interface LAPACK {
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
      * used to solve the system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -304,7 +304,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -334,9 +334,9 @@ public interface LAPACK {
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -348,12 +348,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -383,9 +383,9 @@ public interface LAPACK {
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -397,12 +397,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -432,9 +432,9 @@ public interface LAPACK {
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -449,7 +449,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -479,9 +479,9 @@ public interface LAPACK {
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param uplo the upper or lower triangular part of the matrix A is
+     * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
@@ -496,7 +496,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -523,7 +523,7 @@ public interface LAPACK {
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
      *
@@ -538,7 +538,7 @@ public interface LAPACK {
      *          On entry, the matrix A in band storage, in rows KL+1 to
      *          2*KL+KU+1; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
-     *          array AB as follows:
+     *          matrix AB as follows:
      *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
      *
      *          On exit, details of the factorization: U is stored as an
@@ -546,7 +546,7 @@ public interface LAPACK {
      *          rows 1 to KL+KU+1, and the multipliers used during the
      *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -554,7 +554,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -581,7 +581,7 @@ public interface LAPACK {
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of linear equations, i.e., the order of the matrix A.
      *
@@ -596,7 +596,7 @@ public interface LAPACK {
      *          On entry, the matrix A in band storage, in rows KL+1 to
      *          2*KL+KU+1; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
-     *          array AB as follows:
+     *          matrix AB as follows:
      *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
      *
      *          On exit, details of the factorization: U is stored as an
@@ -604,7 +604,7 @@ public interface LAPACK {
      *          rows 1 to KL+KU+1, and the multipliers used during the
      *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -612,7 +612,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -627,9 +627,9 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a QR or LQ
      * factorization of A. It is assumed that A has full rank.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param trans normal or transpose of the matrix A.
+     * @param trans The normal or transpose of the matrix A.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -642,12 +642,12 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -663,9 +663,9 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a QR or LQ
      * factorization of A. It is assumed that A has full rank.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
-     * @param trans normal or transpose of the matrix A.
+     * @param trans The normal or transpose of the matrix A.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -678,12 +678,12 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
      *         = 0:  successful exit
@@ -699,7 +699,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a complete
      * orthogonal factorization of A. A may be rank-deficient.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -711,13 +711,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -747,7 +747,7 @@ public interface LAPACK {
      * Solves an overdetermined or underdetermined system, using a complete
      * orthogonal factorization of A. A may be rank-deficient.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -759,13 +759,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -799,7 +799,7 @@ public interface LAPACK {
      * singular values which are less than RCOND times the largest singular
      * value.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -811,13 +811,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param s The singular values of A in decreasing order.
      *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
@@ -847,7 +847,7 @@ public interface LAPACK {
      * singular values which are less than RCOND times the largest singular
      * value.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -859,13 +859,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param s The singular values of A in decreasing order.
      *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
@@ -896,7 +896,7 @@ public interface LAPACK {
      * singular values which are less than RCOND times the largest singular
      * value.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -908,13 +908,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param s The singular values of A in decreasing order.
      *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
@@ -945,7 +945,7 @@ public interface LAPACK {
      * singular values which are less than RCOND times the largest singular
      * value.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -957,13 +957,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
      *
      * @param s The singular values of A in decreasing order.
      *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
@@ -1005,7 +1005,7 @@ public interface LAPACK {
      *     B = (0 R)*Q,   A = Z*T*Q
      * </code></pre>
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -1017,13 +1017,13 @@ public interface LAPACK {
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B On entry, the P-by-N matrix B.
-     *          On exit, the upper triangle of the subarray B(1:P,N-P+1:N)
+     *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -1075,7 +1075,7 @@ public interface LAPACK {
      *     B = (0 R)*Q,   A = Z*T*Q
      * </code></pre>
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -1087,13 +1087,13 @@ public interface LAPACK {
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
      *
      * @param B On entry, the P-by-N matrix B.
-     *          On exit, the upper triangle of the subarray B(1:P,N-P+1:N)
+     *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -1156,7 +1156,7 @@ public interface LAPACK {
      * </code></pre>
      * where inv(B) denotes the inverse of B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of rows of the matrix A and B.
      *
@@ -1165,10 +1165,10 @@ public interface LAPACK {
      * @param p The number of columns of the matrix B.  P >= N-M.
      *
      * @param A The matrix of dimension (LDA, M).
-     *          On exit, the upper triangular part of the array A contains
+     *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if N <= P, the upper triangle of the subarray
@@ -1176,7 +1176,7 @@ public interface LAPACK {
      *          if N > P, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -1234,7 +1234,7 @@ public interface LAPACK {
      * </code></pre>
      * where inv(B) denotes the inverse of B.
      *
-     * @param layout matrix layout.
+     * @param layout The matrix layout.
      *
      * @param n The number of rows of the matrix A and B.
      *
@@ -1243,10 +1243,10 @@ public interface LAPACK {
      * @param p The number of columns of the matrix B.  P >= N-M.
      *
      * @param A The matrix of dimension (LDA, M).
-     *          On exit, the upper triangular part of the array A contains
+     *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the array A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if N <= P, the upper triangle of the subarray
@@ -1254,7 +1254,7 @@ public interface LAPACK {
      *          if N > P, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the array B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -1281,4 +1281,1173 @@ public interface LAPACK {
      */
     int ggglm(Layout layout, int n, int m, int p, float[] A, int lda, float[] B, int ldb, float[] d, float[] x, float[] y);
 
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors. The computed eigenvectors are normalized to have
+     * Euclidean norm equal to 1 and largest component real.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobvl The option for computing all or part of the matrix U.
+     *
+     * @param jobvr The option for computing all or part of the matrix VT.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param wr Dimension N. WR and WI contain the real and imaginary parts,
+     *           respectively, of the computed eigenvalues.  Complex
+     *           conjugate pairs of eigenvalues appear consecutively
+     *           with the eigenvalue having the positive imaginary part first.
+     *
+     * @param wi Dimension N. WR and WI contain the real and imaginary parts,
+     *           respectively, of the computed eigenvalues.  Complex
+     *           conjugate pairs of eigenvalues appear consecutively
+     *           with the eigenvalue having the positive imaginary part first.
+     *
+     * @param Vl Left eigenvectors. If JOBVL = 'N', Vl is not referenced.
+     *
+     * @param ldvl The leading dimension of the matrix Vl.
+     *
+     * @param Vr Right eigenvectors. If JOBVR = 'N', Vr is not referenced.
+     *
+     * @param ldvr The leading dimension of the matrix Vr.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *               eigenvalues, and no eigenvectors have been computed;
+     *               elements i+1:N of WR and WI contain eigenvalues which
+     *               have converged.
+     */
+    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, double[] A, int lda, double[] wr, double[] wi, double[] Vl, int ldvl, double[] Vr, int ldvr);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors. The computed eigenvectors are normalized to have
+     * Euclidean norm equal to 1 and largest component real.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobvl The option for computing all or part of the matrix U.
+     *
+     * @param jobvr The option for computing all or part of the matrix VT.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param wr Dimension N. WR and WI contain the real and imaginary parts,
+     *           respectively, of the computed eigenvalues.  Complex
+     *           conjugate pairs of eigenvalues appear consecutively
+     *           with the eigenvalue having the positive imaginary part first.
+     *
+     * @param wi Dimension N. WR and WI contain the real and imaginary parts,
+     *           respectively, of the computed eigenvalues.  Complex
+     *           conjugate pairs of eigenvalues appear consecutively
+     *           with the eigenvalue having the positive imaginary part first.
+     *
+     * @param Vl Left eigenvectors. If JOBVL = 'N', Vl is not referenced.
+     *
+     * @param ldvl The leading dimension of the matrix Vl.
+     *
+     * @param Vr Right eigenvectors. If JOBVR = 'N', Vr is not referenced.
+     *
+     * @param ldvr The leading dimension of the matrix Vr.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *               eigenvalues, and no eigenvectors have been computed;
+     *               elements i+1:N of WR and WI contain eigenvalues which
+     *               have converged.
+     */
+    int geev(Layout layout, EVDJob jobvl, EVDJob jobvr, int n, float[] A, int lda, float[] wr, float[] wi, float[] Vl, int ldvl, float[] Vr, int ldvr);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *               off-diagonal elements of an intermediate tridiagonal
+     *               form did not converge to zero.
+     */
+    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *               off-diagonal elements of an intermediate tridiagonal
+     *               form did not converge to zero.
+     */
+    int syev(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A. If eigenvectors are
+     * desired, it uses a divide and conquer algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *               off-diagonal elements of an intermediate tridiagonal
+     *               form did not converge to zero.
+     */
+    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, double[] A, int lda, double[] w);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A. If eigenvectors are
+     * desired, it uses a divide and conquer algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *               off-diagonal elements of an intermediate tridiagonal
+     *               form did not converge to zero.
+     */
+    int syevd(Layout layout, EVDJob jobz, UPLO uplo, int n, float[] A, int lda, float[] w);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A. Eigenvalues and
+     * eigenvectors can be selected by specifying either a range of
+     * values or a range of indices for the desired eigenvalues.
+     *
+     * SYEVR first reduces the matrix A to tridiagonal form T with a call
+     * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
+     * the eigenspectrum using Relatively Robust Representations. DSTEMR
+     * computes eigenvalues by the dqds algorithm, while orthogonal
+     * eigenvectors are computed from various "good" L D L^T representations
+     * (also known as Relatively Robust Representations). Gram-Schmidt
+     * orthogonalization is avoided as far as possible. More specifically,
+     * the various steps of the algorithm are as follows.
+     *
+     * The desired accuracy of the output can be specified by the input
+     * parameter ABSTOL.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param range The range of eigenvalues to compute.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param vl The lower bound of the interval to be searched for eigenvalues.
+     *           Not referenced if RANGE = 'A' or 'I'.
+     *
+     * @param vu The upper bound of the interval to be searched for eigenvalues.
+     *           Not referenced if RANGE = 'A' or 'I'.
+     *
+     * @param il The index of the smallest eigenvalue to be returned.
+     *           Not referenced if RANGE = 'A' or 'V'.
+     *
+     * @param iu The index of the largest eigenvalue to be returned.
+     *           Not referenced if RANGE = 'A' or 'V'.
+     *
+     * @param abstol The absolute error tolerance for the eigenvalues.
+     *
+     * @param m The total number of eigenvalues found.
+     *
+     * @param w The first M elements contain the selected eigenvalues in
+     *          ascending order.
+     *
+     * @param Z Dimension (LDZ, max(1,M)).
+     *          If JOBZ = 'V', then if INFO = 0, the first M columns of Z
+     *          contain the orthonormal eigenvectors of the matrix A
+     *          corresponding to the selected eigenvalues, with the i-th
+     *          column of Z holding the eigenvector associated with W(i).
+     *          If JOBZ = 'N', then Z is not referenced.
+     *
+     * @param ldz The leading dimension of the matrix Z.
+     *
+     * @param isuppz Dimension 2 * max(1,M).
+     *               The support of the eigenvectors in Z, i.e., the indices
+     *               indicating the nonzero elements in Z. The i-th eigenvector
+     *               is nonzero only in elements ISUPPZ( 2*i-1 ) through
+     *               ISUPPZ( 2*i ). This is an output of DSTEMR (tridiagonal
+     *               matrix). The support of the eigenvectors of A is typically
+     *               1:N because of the orthogonal transformations applied by DORMTR.
+     *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  Internal error
+     */
+    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl, double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz);
+
+    /**
+     * Computes the eigenvalues and, optionally, the left and/or right
+     * eigenvectors of a real symmetric matrix A. Eigenvalues and
+     * eigenvectors can be selected by specifying either a range of
+     * values or a range of indices for the desired eigenvalues.
+     *
+     * SYEVR first reduces the matrix A to tridiagonal form T with a call
+     * to DSYTRD. Then, whenever possible, DSYEVR calls DSTEMR to compute
+     * the eigenspectrum using Relatively Robust Representations. DSTEMR
+     * computes eigenvalues by the dqds algorithm, while orthogonal
+     * eigenvectors are computed from various "good" L D L^T representations
+     * (also known as Relatively Robust Representations). Gram-Schmidt
+     * orthogonalization is avoided as far as possible. More specifically,
+     * the various steps of the algorithm are as follows.
+     *
+     * The desired accuracy of the output can be specified by the input
+     * parameter ABSTOL.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option if computing eigen vectors.
+     *
+     * @param range The range of eigenvalues to compute.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On entry, the N-by-N matrix A.
+     *          On exit, A has been overwritten.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param vl The lower bound of the interval to be searched for eigenvalues.
+     *           Not referenced if RANGE = 'A' or 'I'.
+     *
+     * @param vu The upper bound of the interval to be searched for eigenvalues.
+     *           Not referenced if RANGE = 'A' or 'I'.
+     *
+     * @param il The index of the smallest eigenvalue to be returned.
+     *           Not referenced if RANGE = 'A' or 'V'.
+     *
+     * @param iu The index of the largest eigenvalue to be returned.
+     *           Not referenced if RANGE = 'A' or 'V'.
+     *
+     * @param abstol The absolute error tolerance for the eigenvalues.
+     *
+     * @param m The total number of eigenvalues found.
+     *
+     * @param w The first M elements contain the selected eigenvalues in
+     *          ascending order.
+     *
+     * @param Z Dimension (LDZ, max(1,M)).
+     *          If JOBZ = 'V', then if INFO = 0, the first M columns of Z
+     *          contain the orthonormal eigenvectors of the matrix A
+     *          corresponding to the selected eigenvalues, with the i-th
+     *          column of Z holding the eigenvector associated with W(i).
+     *          If JOBZ = 'N', then Z is not referenced.
+     *
+     * @param ldz The leading dimension of the matrix Z.
+     *
+     * @param isuppz Dimension 2 * max(1,M).
+     *               The support of the eigenvectors in Z, i.e., the indices
+     *               indicating the nonzero elements in Z. The i-th eigenvector
+     *               is nonzero only in elements ISUPPZ( 2*i-1 ) through
+     *               ISUPPZ( 2*i ). This is an output of DSTEMR (tridiagonal
+     *               matrix). The support of the eigenvectors of A is typically
+     *               1:N because of the orthogonal transformations applied by DORMTR.
+     *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  Internal error
+     */
+    int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl, float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz);
+
+    /**
+     * Computes the singular value decomposition (SVD) of a real
+     * M-by-N matrix A, optionally computing the left and/or right singular
+     * vectors.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobu The option for computing all or part of the matrix U.
+     *
+     * @param jobvt The option for computing all or part of the matrix VT.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *
+     *          If JOBU = 'O', A is overwritten with the first min(m,n)
+     *          columns of U (the left singular vectors, stored columnwise).
+     *
+     *          If JOBVT = 'O',A is overwritten with the first min(m,n)
+     *          rows of VT (the right singular vectors, stored rowwise).
+     *
+     *          If JOBU != 'O' and JOBVT != 'O', the contents of A
+     *          are destroyed.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     *
+     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     *          Dimension min(M,N).
+     *
+     * @param U If JOBU = 'N' or 'O', U is not referenced.
+     *
+     * @param ldu The leading dimension of the matrix U.
+     *
+     * @param VT If JOBVT = 'N' or 'O', VT is not referenced.
+     *
+     * @param ldvt The leading dimension of the matrix VT.
+     *
+     * @param superb The superdiagonal of the upper bidiagonal matrix B.
+     *               Dimension min(M,N)-1.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *               superdiagonals of an intermediate bidiagonal form B
+     *               did not converge to zero.
+     */
+    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt, double[] superb);
+
+    /**
+     * Computes the singular value decomposition (SVD) of a real
+     * M-by-N matrix A, optionally computing the left and/or right singular
+     * vectors.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobu The option for computing all or part of the matrix U.
+     *
+     * @param jobvt The option for computing all or part of the matrix VT.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *
+     *          If JOBU = 'O', A is overwritten with the first min(m,n)
+     *          columns of U (the left singular vectors, stored columnwise).
+     *
+     *          If JOBVT = 'O',A is overwritten with the first min(m,n)
+     *          rows of VT (the right singular vectors, stored rowwise).
+     *
+     *          If JOBU != 'O' and JOBVT != 'O', the contents of A
+     *          are destroyed.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     *
+     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     *          Dimension min(M,N).
+     *
+     * @param U If JOBU = 'N' or 'O', U is not referenced.
+     *
+     * @param ldu The leading dimension of the matrix U.
+     *
+     * @param VT If JOBVT = 'N' or 'O', VT is not referenced.
+     *
+     * @param ldvt The leading dimension of the matrix VT.
+     *
+     * @param superb The superdiagonal of the upper bidiagonal matrix B.
+     *               Dimension min(M,N)-1.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *               superdiagonals of an intermediate bidiagonal form B
+     *               did not converge to zero.
+     */
+    int gesvd(Layout layout, SVDJob jobu, SVDJob jobvt, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt, float[] superb);
+
+    /**
+     * Computes the singular value decomposition (SVD) of a real
+     * M-by-N matrix A, optionally computing the left and/or right singular
+     * vectors. If singular vectors are desired, it uses a
+     * divide-and-conquer algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option for computing all or part of the matrix U.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *
+     *          If JOBZ = 'O', A is overwritten with the first N columns
+     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          A is overwritten with the first M rows of V**T (the right
+     *         singular vectors, stored rowwise) otherwise.
+     *
+     *          If JOBZ != 'O', the contents of A are destroyed.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     *
+     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     *          Dimension min(M,N).
+     *
+     * @param U If JOBU = 'N' or 'O', U is not referenced.
+     *
+     * @param ldu The leading dimension of the matrix U.
+     *
+     * @param VT If JOBVT = 'N' or 'O', VT is not referenced.
+     *
+     * @param ldvt The leading dimension of the matrix VT.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  DBDSDC did not converge, updating process failed.
+     */
+    int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt);
+
+    /**
+     * Computes the singular value decomposition (SVD) of a real
+     * M-by-N matrix A, optionally computing the left and/or right singular
+     * vectors. If singular vectors are desired, it uses a
+     * divide-and-conquer algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param jobz The option for computing all or part of the matrix U.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *
+     *          If JOBZ = 'O', A is overwritten with the first N columns
+     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          A is overwritten with the first M rows of V**T (the right
+     *         singular vectors, stored rowwise) otherwise.
+     *
+     *          If JOBZ != 'O', the contents of A are destroyed.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     *
+     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     *          Dimension min(M,N).
+     *
+     * @param U If JOBU = 'N' or 'O', U is not referenced.
+     *
+     * @param ldu The leading dimension of the matrix U.
+     *
+     * @param VT If JOBVT = 'N' or 'O', VT is not referenced.
+     *
+     * @param ldvt The leading dimension of the matrix VT.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit.
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         > 0:  DBDSDC did not converge, updating process failed.
+     */
+    int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt);
+
+    /**
+     * Computes an LU factorization of a general M-by-N matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int getrf(Layout layout, int m, int n, double[] A, int lda, int[] ipiv);
+
+    /**
+     * Computes an LU factorization of a general M-by-N matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int getrf(Layout layout, int m, int n, float[] A, int lda, int[] ipiv);
+
+    /**
+     * Computes an LU factorization of a general M-by-N matrix A
+     * using partial pivoting with row interchanges. This is the
+     * recursive version of the algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int getrf2(Layout layout, int m, int n, double[] A, int lda, int[] ipiv);
+
+    /**
+     * Computes an LU factorization of a general M-by-N matrix A
+     * using partial pivoting with row interchanges. This is the
+     * recursive version of the algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int getrf2(Layout layout, int m, int n, float[] A, int lda, int[] ipiv);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GETRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param A The LU factorization computed by GETRF.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int getrs(Layout layout, Transpose trans, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GETRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param A The LU factorization computed by GETRF.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int getrs(Layout layout, Transpose trans, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int potrf(Layout layout, UPLO uplo, int n, double[] A, int lda);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int potrf(Layout layout, UPLO uplo, int n, float[] A, int lda);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite matrix A using the recursive algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int potrf2(Layout layout, UPLO uplo, int n, double[] A, int lda);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite matrix A using the recursive algorithm.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int potrf2(Layout layout, UPLO uplo, int n, float[] A, int lda);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param A The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param A The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
+
+    /**
+     * Computes a QR factorization of a general M-by-N matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the elements on and above the diagonal of the array
+     *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+     *          upper triangular if m >= n); the elements below the diagonal,
+     *          with the array TAU, represent the orthogonal matrix Q as a
+     *          product of min(m,n) elementary reflectors.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int geqrf(Layout layout, int m, int n, double[] A, int lda, double[] tau);
+
+    /**
+     * Computes a QR factorization of a general M-by-N matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the elements on and above the diagonal of the array
+     *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+     *          upper triangular if m >= n); the elements below the diagonal,
+     *          with the array TAU, represent the orthogonal matrix Q as a
+     *          product of min(m,n) elementary reflectors.
+     *
+     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau);
+
+    /**
+     * Overwrites the general real M-by-N matrix C with
+     * <pre><code>
+     *                  SIDE = 'L'     SIDE = 'R'
+     *  TRANS = 'N':      Q * C          C * Q
+     *  TRANS = 'T':      Q**T * C       C * Q**T
+     * </code></pre>
+     * where Q is a real orthogonal matrix defined as the product of k
+     * elementary reflectors
+     * <pre><code>
+     *        Q = H(1) H(2) . . . H(k)
+     * </code></pre>
+     * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
+     * if SIDE = 'R'.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param side Apply Q or Q**T from the Left;
+     *             or apply Q or Q**T from the Right.
+     *
+     * @param trans No transpose, apply Q;
+     *              Transpose, apply Q**T.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param k The number of elementary reflectors whose product defines
+     *          the matrix Q.
+     *
+     * @param A The matrix of dimension (LDA, K).
+     *          The i-th column must contain the vector which defines the
+     *          elementary reflector H(i), for i = 1,2,...,k, as returned by
+     *          GEQRF in the first k columns of its array argument A.
+     *
+     * @param lda The leading dimension of the matrix A.
+     *            If SIDE = 'L', LDA >= max(1,M);
+     *            if SIDE = 'R', LDA >= max(1,N).
+     *
+     * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
+     *
+     * @param C On entry, the M-by-N matrix C.
+     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *
+     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc);
+
+    /**
+     * Overwrites the general real M-by-N matrix C with
+     * <pre><code>
+     *                  SIDE = 'L'     SIDE = 'R'
+     *  TRANS = 'N':      Q * C          C * Q
+     *  TRANS = 'T':      Q**T * C       C * Q**T
+     * </code></pre>
+     * where Q is a real orthogonal matrix defined as the product of k
+     * elementary reflectors
+     * <pre><code>
+     *        Q = H(1) H(2) . . . H(k)
+     * </code></pre>
+     * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
+     * if SIDE = 'R'.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param side Apply Q or Q**T from the Left;
+     *             or apply Q or Q**T from the Right.
+     *
+     * @param trans No transpose, apply Q;
+     *              Transpose, apply Q**T.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param k The number of elementary reflectors whose product defines
+     *          the matrix Q.
+     *
+     * @param A The matrix of dimension (LDA, K).
+     *          The i-th column must contain the vector which defines the
+     *          elementary reflector H(i), for i = 1,2,...,k, as returned by
+     *          GEQRF in the first k columns of its array argument A.
+     *
+     * @param lda The leading dimension of the matrix A.
+     *            If SIDE = 'L', LDA >= max(1,M);
+     *            if SIDE = 'R', LDA >= max(1,N).
+     *
+     * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
+     *
+     * @param C On entry, the M-by-N matrix C.
+     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *
+     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, float[] A, int lda, float[] tau, float[] C, int ldc);
+
+    /**
+     * Solves a triangular system of the form
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is a triangular matrix of order N, and B is an N-by-NRHS
+     * matrix. A check is made to verify that A is nonsingular.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param trans The normal or transpose of the matrix A.
+     *
+     * @param diag A is unit diagonal triangular or not.
+     *
+     * @param n The order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides.
+     *
+     * @param A The triangular matrix A.
+     *
+     * @param lda The leading dimension of the matrix A.
+     *
+     * @param B On entry, the right hand side matrix B.
+     *          On exit, if INFO = 0, the solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *              indicating that the matrix is singular and the solutions
+     *              X have not been computed.
+     */
+    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
+
+    /**
+     * Solves a triangular system of the form
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is a triangular matrix of order N, and B is an N-by-NRHS
+     * matrix. A check is made to verify that A is nonsingular.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param trans The normal or transpose of the matrix A.
+     *
+     * @param diag A is unit diagonal triangular or not.
+     *
+     * @param n The order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides.
+     *
+     * @param A The triangular matrix A.
+     *
+     * @param lda The leading dimension of the matrix A.
+     *
+     * @param B On entry, the right hand side matrix B.
+     *          On exit, if INFO = 0, the solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *              indicating that the matrix is singular and the solutions
+     *              X have not been computed.
+     */
+    int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
 }

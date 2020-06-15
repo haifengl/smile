@@ -20,11 +20,11 @@ package smile.math.blas;
 /** Matrix transpose. */
 public enum Transpose {
     /** Normal operation on the matrix. */
-    NoTrans((byte) 111),
+    NO_TRANSPOSE((byte) 111),
     /** Transpose operation on the matrix. */
-    Trans((byte) 112),
+    TRANSPOSE((byte) 112),
     /** Conjugate transpose operation on the matrix. */
-    ConjTrans((byte) 113);
+    CONJUGATE_TRANSPOSE((byte) 113);
 
     /** Byte value passed to CBLAS. */
     private final byte value;
@@ -34,6 +34,6 @@ public enum Transpose {
         this.value = value;
     }
 
-    /** Returns the integer value for BLAS. */
+    /** Returns the byte value for BLAS. */
     public byte getValue() { return value; }
 }

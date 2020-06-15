@@ -17,26 +17,26 @@
 
 package smile.math.blas;
 
-/** Specify which of the Ritz values of OP to compute. */
+/** The option which Ritz values to compute. */
 public enum Ritz {
     /**
-     * compute the NEV largest (algebraic) eigenvalues.
+     * compute the largest (algebraic) eigenvalues.
      */
     LA,
     /**
-     * compute the NEV smallest (algebraic) eigenvalues.
+     * compute the smallest (algebraic) eigenvalues.
      */
     SA,
     /**
-     * compute the NEV largest (in magnitude) eigenvalues.
+     * compute the largest (in magnitude) eigenvalues.
      */
     LM,
     /**
-     * compute the NEV smallest (in magnitude) eigenvalues.
+     * compute the smallest (in magnitude) eigenvalues.
      */
     SM,
     /**
-     * compute NEV eigenvalues, half from each end of the spectrum
+     * compute eigenvalues, half from each end of the spectrum
      */
     BE
 }
