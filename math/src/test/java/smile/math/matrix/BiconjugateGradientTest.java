@@ -72,7 +72,8 @@ public class BiconjugateGradientTest {
 
         DenseMatrix naive = Matrix.of(A);
         double[] result = new double[3];
-        BiconjugateGradient.getInstance().solve(naive, b, result);
+        BiconjugateGradient biconj = new BiconjugateGradient();
+        biconj.solve(naive, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
@@ -85,14 +86,15 @@ public class BiconjugateGradientTest {
      */
     @Test
     public void testSolveSparseMatrix() {
-        System.out.println("naive matrix");
+        System.out.println("sparse matrix");
         int[] rowIndex = {0, 1, 0, 1, 2, 1, 2};
         int[] colIndex = {0, 2, 5, 7};
         double[] val = {0.9, 0.4, 0.4, 0.5, 0.3, 0.3, 0.8};
         SparseMatrix sparse = new SparseMatrix(3, 3, val, rowIndex, colIndex);
 
         double[] result = new double[3];
-        BiconjugateGradient.getInstance().solve(sparse, b, result);
+        BiconjugateGradient biconj = new BiconjugateGradient();
+        biconj.solve(sparse, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
