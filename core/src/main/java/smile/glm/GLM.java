@@ -230,7 +230,7 @@ public class GLM implements Serializable {
 
     /** Predicts the mean response. */
     public double[] predict(DataFrame df) {
-        DenseMatrix X = formula.matrix(df, true);
+        DenseMatrix X = formula.matrix(df);
         int n = X.nrows();
         double[] y = new double[n];
         X.ax(beta, y);
@@ -319,7 +319,7 @@ public class GLM implements Serializable {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        DenseMatrix X = formula.matrix(data, true);
+        DenseMatrix X = formula.matrix(data);
         DenseMatrix XW = Matrix.zeros(X.nrows(), X.ncols());
         double[] y = formula.y(data).toDoubleArray();
 
