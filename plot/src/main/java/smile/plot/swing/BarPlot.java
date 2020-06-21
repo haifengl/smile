@@ -98,6 +98,11 @@ public class BarPlot extends Plot {
     }
 
     @Override
+    public Optional<Legend[]> legends() {
+        return legends;
+    }
+
+    @Override
     public Canvas canvas() {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
         canvas.add(this);
