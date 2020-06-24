@@ -31,34 +31,34 @@ public class BiconjugateGradient {
     /**
      * The desired convergence tolerance.
      */
-    private double tol = 1E-8;
+    private double tol = 1E-6;
     /**
-     * Which convergence test is applied. If itol = 1,
-     * iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
-     * If itol = 2, the stop criterion is
-     * |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
+     * Which convergence test is applied.
+     * If itol = 1, iteration stops when |Ax - b| / |b| is less than the parameter tolerance.
+     * If itol = 2, the stop criterion is |A<sup>-1</sup> (Ax - b)| / |A<sup>-1</sup>b| is less than tolerance.
      * If tol = 3, |x<sub>k+1</sub> - x<sub>k</sub>|<sub>2</sub> is less than
-     * tolerance. The setting of tol = 4 is same as tol = 3 except that the
+     * tolerance.
+     * The setting of tol = 4 is same as tol = 3 except that the
      * L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
      */
     private int itol = 1;
     /**
      * The maximum number of allowed iterations.
      */
-    private int maxIter = 0;
+    private int maxIter = 1000;
     /**
      * The preconditioner matrix.
      */
     private Preconditioner preconditioner;
 
     /**
-     * Constructor with itol = 1 and tol = 1E-8.
+     * Constructor with itol = 1 and tol = 1E-6.
      * The maximum number of iterations will be determined by
-     * the size of matrix. The preconditioner will be
-     * a trivial diagonal part of input matrix if not set.
+     * the size of matrix. If null, the preconditioner will be
+     * set as a trivial diagonal part of input matrix.
      */
     public BiconjugateGradient() {
-        this(1E-10, 1, 0, null);
+        this(1E-6, 1, 1000, null);
     }
 
     /**
@@ -85,7 +85,11 @@ public class BiconjugateGradient {
         }
 
         if (itol < 1 || itol > 4) {
-            throw new IllegalArgumentException(String.format("Invalid itol: %d", itol));
+            throw new IllegalArgumentException("Invalid itol: " + itol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum iterations: " + maxIter);
         }
 
         this.tol = tol;
@@ -98,7 +102,7 @@ public class BiconjugateGradient {
      * Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.
      */
-    private Preconditioner diagonalPreconditioner(Matrix A) {
+    private Preconditioner Jacobi(Matrix A) {
         return (b, x) -> {
                 double[] diag = A.diag();
                 int n = diag.length;
@@ -117,11 +121,13 @@ public class BiconjugateGradient {
      * @return the estimated error.
      */
     public double solve(Matrix A, double[] b, double[] x) {
-        if (maxIter <= 0)
+        if (maxIter <= 0) {
             maxIter = 2 * Math.max(A.nrows(), A.ncols());
+        }
 
-        if (preconditioner == null)
-            preconditioner = diagonalPreconditioner(A);
+        if (preconditioner == null) {
+            preconditioner = Jacobi(A);
+        }
 
         double err = 0.0;
         double ak, akden, bk, bkden = 1.0, bknum, bnrm, dxnrm, xnrm, zm1nrm, znrm = 0.0;
