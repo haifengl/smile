@@ -1018,10 +1018,9 @@ public class FloatMatrixTest {
         assertTrue(x.equals(a, 1E-5f));
     }
 
-/*
     @Test
     public void testSVDSolve() {
-        System.out.println("solve");
+        System.out.println("SVD solve");
         float[][] A = {
             {0.9000f, 0.4000f, 0.7000f},
             {0.4000f, 0.5000f, 0.3000f},
@@ -1031,31 +1030,11 @@ public class FloatMatrixTest {
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
 
         FloatMatrix a = new FloatMatrix(A);
-        SVD svd = a.svd();
+        FloatMatrix.SVD svd = a.svd();
         float[] x2 = svd.solve(b);
         assertEquals(x.length, x2.length);
         for (int i = 0; i < x.length; i++) {
             assertEquals(x[i], x2[i], 1E-6f);
         }
-
-        float[][] B = {
-            {0.5f, 0.2f},
-            {0.5f, 0.8f},
-            {0.5f, 0.3f}
-        };
-        float[][] X = {
-            {-0.2027027f, -1.2837838f},
-            { 0.8783784f,  2.2297297f},
-            { 0.4729730f,  0.6621622f}
-        };
-
-        FloatMatrix X2 = new FloatMatrix(B);
-        result.solve(X2);
-        for (int i = 0; i < X.nrows(); i++) {
-            for (int j = 0; j < X.ncols(); j++) {
-                assertEquals(X[i][j], X2.get(i, j), 1E-6f);
-            }
-        }
     }
- */
 }
