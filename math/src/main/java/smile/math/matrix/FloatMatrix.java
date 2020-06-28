@@ -24,9 +24,9 @@ import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
-
 import smile.math.MathEx;
 import smile.math.blas.*;
+import smile.sort.QuickSort;
 
 public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]>, Serializable {
     private static final long serialVersionUID = 2L;
@@ -131,8 +131,12 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @param A the matrix storage.
      */
     public FloatMatrix(int m, int n, int ld, FloatBuffer A) {
-        if (ld < m) {
-            throw new IllegalArgumentException(String.format("Invalid leading dimension: %d < %d", ld, m));
+        if (layout() == Layout.COL_MAJOR && ld < m) {
+            throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
+        }
+
+        if (layout() == Layout.ROW_MAJOR && ld < n) {
+            throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
         }
 
         this.m = m;
@@ -298,8 +302,11 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             }
         }
 
-        matrix.uplo(uplo);
-        matrix.diag(diag);
+        if (m == n) {
+            matrix.uplo(uplo);
+            matrix.diag(diag);
+        }
+
         return matrix;
     }
 
@@ -327,6 +334,11 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             @Override
             protected int index(int i , int j) {
                 return i * ld + j;
+            }
+
+            @Override
+            public FloatMatrix transpose() {
+                return new FloatMatrix(n, m, ld, A);
             }
         };
     }
@@ -1105,9 +1117,8 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
     /**
      * Cholesky decomposition for symmetric and positive definite matrix.
-     * Only the lower triangular part will be used in the decomposition.
      *
-     * @throws IllegalArgumentException if the matrix is not positive definite.
+     * @throws ArithmeticException if the matrix is not positive definite.
      */
     public Cholesky cholesky() {
         if (uplo == null) {
@@ -1188,7 +1199,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
-            return new SVD(s, U, VT);
+            return new SVD(s, U, VT.transpose());
         } else {
             FloatMatrix U = new FloatMatrix(1, 1);
             FloatMatrix VT = new FloatMatrix(1, 1);
@@ -1205,18 +1216,26 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
-     * Eigenvalue Decomposition. For a symmetric matrix, all eigen values are
-     * real values and the returned array is of size n. Otherwise, the eigen
-     * values may be complex numbers.
+     * Eigenvalue Decomposition. For a symmetric matrix, all eigenvalues are
+     * real values. Otherwise, the eigenvalues may be complex numbers.
+     * <p>
+     * By default <code>eigen</code> does not always return the eigenvalues
+     * and eigenvectors in sorted order. Use the <code>EVD.sort</code> function
+     * to put the eigenvalues in descending order and reorder the corresponding
+     * eigenvectors.
      */
     public EVD eigen() {
         return eigen(false, true);
     }
 
     /**
-     * Eigenvalue Decomposition. For a symmetric matrix, all eigen values are
-     * real values and the returned array is of size n. Otherwise, the eigen
-     * values may be complex numbers.
+     * Eigenvalue Decomposition. For a symmetric matrix, all eigenvalues are
+     * real values. Otherwise, the eigenvalues may be complex numbers.
+     * <p>
+     * By default <code>eigen</code> does not always return the eigenvalues
+     * and eigenvectors in sorted order. Use the <code>sort</code> function
+     * to put the eigenvalues in descending order and reorder the corresponding
+     * eigenvectors.
      *
      * @param vl The flag if computing the left eigenvectors.
      * @param vr The flag if computing the right eigenvectors.
@@ -1255,13 +1274,39 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
     /**
      * Singular Value Decomposition.
+     * <p>
+     * For an m-by-n matrix A with m &ge; n, the singular value decomposition is
+     * an m-by-n orthogonal matrix U, an n-by-n diagonal matrix &Sigma;, and
+     * an n-by-n orthogonal matrix V so that A = U*&Sigma;*V'.
+     * <p>
+     * For m &lt; n, only the first m columns of V are computed and &Sigma; is m-by-m.
+     * <p>
+     * The singular values, &sigma;<sub>k</sub> = &Sigma;<sub>kk</sub>, are ordered
+     * so that &sigma;<sub>0</sub> &ge; &sigma;<sub>1</sub> &ge; ... &ge; &sigma;<sub>n-1</sub>.
+     * <p>
+     * The singular value decomposition always exists. The matrix condition number
+     * and the effective numerical rank can be computed from this decomposition.
+     * <p>
+     * SVD is a very powerful technique for dealing with sets of equations or matrices
+     * that are either singular or else numerically very close to singular. In many
+     * cases where Gaussian elimination and LU decomposition fail to give satisfactory
+     * results, SVD will diagnose precisely what the problem is. SVD is also the
+     * method of choice for solving most linear least squares problems.
+     * <p>
+     * Applications which employ the SVD include computing the pseudo-inverse, least
+     * squares fitting of data, matrix approximation, and determining the rank,
+     * range and null space of a matrix. The SVD is also applied extensively to
+     * the study of linear inverse problems, and is useful in the analysis of
+     * regularization methods such as that of Tikhonov. It is widely used in
+     * statistics where it is related to principal component analysis. Yet another
+     * usage is latent semantic indexing in natural language text processing.
      *
      * @author Haifeng Li
      */
     public static class SVD {
 
         /**
-         * The singular values.
+         * The singular values in descending order.
          */
         public final float[] s;
         /**
@@ -1269,28 +1314,90 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          */
         public final FloatMatrix U;
         /**
-         * The transpose of right singular vectors V.
+         * The right singular vectors V.
          */
-        public final FloatMatrix VT;
+        public final FloatMatrix V;
 
         /**
          * Constructor.
          */
-        public SVD(float[] s, FloatMatrix U, FloatMatrix VT) {
+        public SVD(float[] s, FloatMatrix U, FloatMatrix V) {
             this.s = s;
             this.U = U;
-            this.VT = VT;
+            this.V = V;
         }
     }
 
     /**
-     * Eigenvalue decomposition.
+     * Eigenvalue decomposition. Eigen decomposition is the factorization
+     * of a matrix into a canonical form, whereby the matrix is represented in terms
+     * of its eigenvalues and eigenvectors:
+     * <p>
+     * <pre><code>
+     *     A = V*D*V<sup>-1</sup>
+     * </code></pre>
+     * If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is
+     * diagonal and the eigenvector matrix V is orthogonal.
+     * <p>
+     * Given a linear transformation A, a non-zero vector x is defined to be an
+     * eigenvector of the transformation if it satisfies the eigenvalue equation
+     * <p>
+     * <pre><code>
+     *     A x = &lambda; x
+     * </code></pre>
+     * for some scalar &lambda;. In this situation, the scalar &lambda; is called
+     * an eigenvalue of A corresponding to the eigenvector x.
+     * <p>
+     * The word eigenvector formally refers to the right eigenvector, which is
+     * defined by the above eigenvalue equation A x = &lambda; x, and is the most
+     * commonly used eigenvector. However, the left eigenvector exists as well, and
+     * is defined by x A = &lambda; x.
+     * <p>
+     * Let A be a real n-by-n matrix with strictly positive entries a<sub>ij</sub>
+     * &gt; 0. Then the following statements hold.
+     * <ol>
+     * <li> There is a positive real number r, called the Perron-Frobenius
+     * eigenvalue, such that r is an eigenvalue of A and any other eigenvalue &lambda;
+     * (possibly complex) is strictly smaller than r in absolute value,
+     * |&lambda;| &lt; r.
+     * <li> The Perron-Frobenius eigenvalue is simple: r is a simple root of the
+     *      characteristic polynomial of A. Consequently, both the right and the left
+     *      eigenspace associated to r is one-dimensional.
+     * </li>
+     * <li> There exists a left eigenvector v of A associated with r (row vector)
+     *      having strictly positive components. Likewise, there exists a right
+     *      eigenvector w associated with r (column vector) having strictly positive
+     *      components.
+     * </li>
+     * <li> The left eigenvector v (respectively right w) associated with r, is the
+     *      only eigenvector which has positive components, i.e. for all other
+     *      eigenvectors of A there exists a component which is not positive.
+     * </li>
+     * </ol>
+     * <p>
+     * A stochastic matrix, probability matrix, or transition matrix is used to
+     * describe the transitions of a Markov chain. A right stochastic matrix is
+     * a square matrix each of whose rows consists of nonnegative real numbers,
+     * with each row summing to 1. A left stochastic matrix is a square matrix
+     * whose columns consist of nonnegative real numbers whose sum is 1. A doubly
+     * stochastic matrix where all entries are nonnegative and all rows and all
+     * columns sum to 1. A stationary probability vector &pi; is defined as a
+     * vector that does not change under application of the transition matrix;
+     * that is, it is defined as a left eigenvector of the probability matrix,
+     * associated with eigenvalue 1: &pi;P = &pi;. The Perron-Frobenius theorem
+     * ensures that such a vector exists, and that the largest eigenvalue
+     * associated with a stochastic matrix is always 1. For a matrix with strictly
+     * positive entries, this vector is unique. In general, however, there may be
+     * several such vectors.
      *
      * @author Haifeng Li
      */
     public static class EVD {
         /**
          * The real part of eigenvalues.
+         * By default the eigenvalues and eigenvectors are not always in
+         * sorted order. The <code>sort</code> function puts the eigenvalues
+         * in descending order and reorder the corresponding eigenvectors.
          */
         public final float[] wr;
         /**
@@ -1305,7 +1412,6 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          * The right eigenvectors.
          */
         public final FloatMatrix Vr;
-
 
         /**
          * Constructor.
@@ -1356,10 +1462,69 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
             return D;
         }
+
+        /**
+         * Sorts the eigenvalues in descending order and reorders the
+         * corresponding eigenvectors.
+         */
+        public EVD sort() {
+            int n = wr.length;
+            float[] w = new float[n];
+            if (wi != null) {
+                for (int i = 0; i < n; i++) {
+                    w[i] = -(wr[i] * wr[i] + wi[i] * wi[i]);
+                }
+            } else {
+                for (int i = 0; i < n; i++) {
+                    w[i] = -(wr[i] * wr[i]);
+                }
+            }
+
+            int[] index = QuickSort.sort(w);
+            float[] wr2 = new float[n];
+            for (int j = 0; j < n; j++) {
+                wr2[j] = wr[index[j]];
+            }
+
+            float[] wi2 = null;
+            if (wi != null) {
+                wi2 = new float[n];
+                for (int j = 0; j < n; j++) {
+                    wi2[j] = wi[index[j]];
+                }
+            }
+
+            FloatMatrix Vl2 = null;
+            if (Vl != null) {
+                Vl2 = new FloatMatrix(n, n);
+                for (int j = 0; j < n; j++) {
+                    for (int i = 0; i < n; i++) {
+                        Vl2.set(i, j, Vl.get(i, index[j]));
+                    }
+                }
+            }
+
+            FloatMatrix Vr2 = null;
+            if (Vr != null) {
+                Vr2 = new FloatMatrix(n, n);
+                for (int j = 0; j < n; j++) {
+                    for (int i = 0; i < n; i++) {
+                        Vr2.set(i, j, Vr.get(i, index[j]));
+                    }
+                }
+
+            }
+
+            return new EVD(wr2, wi2, Vl2, Vr2);
+        }
     }
 
     /**
-     * The LU decomposition.
+     * The LU decomposition. For an m-by-n matrix A with m &ge; n, the LU
+     * decomposition is an m-by-n unit lower triangular matrix L, an n-by-n
+     * upper triangular matrix U, and a permutation vector piv of length m
+     * so that A(piv,:) = L*U. If m &lt; n, then L is m-by-m and U is m-by-n.
+     * <p>
      * The LU decomposition with pivoting always exists, even if the matrix is
      * singular. The primary use of the LU decomposition is in the solution of
      * square systems of simultaneous linear equations if it is not singular.
@@ -1397,6 +1562,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             this.lu = lu;
             this.ipiv = ipiv;
             this.info = info;
+        }
+
+        /**
+         * Returns if the matrix is singular.
+         */
+        public boolean isSingular() {
+            return info > 0;
         }
 
         /**
@@ -1569,9 +1741,9 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
-     * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
-     * orthogonal matrix Q and an n-by-n upper triangular matrix R such that
-     * A = Q*R.
+     * The QR decomposition. For an m-by-n matrix A with m &ge; n,
+     * the QR decomposition is an m-by-n orthogonal matrix Q and
+     * an n-by-n upper triangular matrix R such that A = Q*R.
      * <p>
      * The QR decomposition always exists, even if the matrix does not have
      * full rank. The primary use of the QR decomposition is in the least squares
@@ -1609,6 +1781,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 }
             }
 
+            L.uplo(UPLO.LOWER);
             return new Cholesky(L);
         }
 
