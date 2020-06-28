@@ -1439,8 +1439,10 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          *           On output, b will be overwritten with the solution matrix.
          * @exception  RuntimeException  if matrix is singular.
          */
-        public void solve(float[] b) {
-            solve(new FloatMatrix(b));
+        public float[] solve(float[] b) {
+            float[] x = b.clone();
+            solve(new FloatMatrix(x));
+            return x;
         }
 
         /**
@@ -1502,18 +1504,18 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         /**
          * The Cholesky decomposition.
          */
-        public final FloatMatrix L;
+        public final FloatMatrix lu;
 
         /**
          * Constructor.
-         * @param  L the lower triangular part of matrix contains the Cholesky
-         *          factorization.
+         * @param lu the lower/upper triangular part of matrix contains the Cholesky
+         *           factorization.
          */
-        public Cholesky(FloatMatrix L) {
-            if (L.nrows() != L.ncols()) {
+        public Cholesky(FloatMatrix lu) {
+            if (lu.nrows() != lu.ncols()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
-            this.L = L;
+            this.lu = lu;
         }
 
         /**
@@ -1521,8 +1523,8 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          */
         public float det() {
             float d = 1.0f;
-            for (int i = 0; i < L.n; i++) {
-                d *= L.get(i, i);
+            for (int i = 0; i < lu.n; i++) {
+                d *= lu.get(i, i);
             }
 
             return d * d;
@@ -1532,32 +1534,33 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          * Returns the matrix inverse.
          */
         public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(L.n);
+            FloatMatrix inv = FloatMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
 
         /**
-         * Solve the linear system A * x = b. On output, b will be overwritten with
-         * the solution vector.
-         * @param  b   the right hand side of linear systems. On output, b will be
-         * overwritten with solution vector.
+         * Solve the linear system A * x = b.
+         * @param b the right hand side of linear systems.
+         * @return the solution vector.
          */
-        public void solve(float[] b) {
-            solve(new FloatMatrix(b));
+        public float[] solve(float[] b) {
+            float[] x = b.clone();
+            solve(new FloatMatrix(x));
+            return x;
         }
 
         /**
-         * Solve the linear system A * X = B. On output, B will be overwritten with
-         * the solution matrix.
-         * @param  B   the right hand side of linear systems.
+         * Solve the linear system A * X = B.
+         * @param B the right hand side of linear systems. On output, B will
+         *          be overwritten with the solution matrix.
          */
         public void solve(FloatMatrix B) {
-            if (B.m != L.m) {
-                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", L.m, L.n, B.m, B.n));
+            if (B.m != lu.m) {
+                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.potrs(L.layout(), L.uplo, L.n, B.n, L.A, L.ld, B.A, B.ld);
+            int info = LAPACK.engine.potrs(lu.layout(), lu.uplo, lu.n, B.n, lu.A, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
@@ -1650,31 +1653,32 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         /**
-         * Solve the least squares A*x = b.
-         * @param b   right hand side of linear system.
-         * @param x   the output solution vector that minimizes the L2 norm of A*x - b.
+         * Solve the least squares min || B - A*X ||.
+         * @param b  the right hand side of overdetermined linear system.
+         * @return   the solution vector beta that minimizes ||Y - X*beta||.
          * @exception  RuntimeException if matrix is rank deficient.
          */
-        public void solve(float[] b, float[] x) {
+        public float[] solve(float[] b) {
             if (b.length != qr.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.m, qr.n, b.length));
             }
 
-            if (x.length != qr.n) {
+            if (b.length != qr.n) {
                 throw new IllegalArgumentException("A and x dimensions don't match.");
             }
 
-            float[] B = b.clone();
-            solve(new FloatMatrix(B));
-            System.arraycopy(B, 0, x, 0, x.length);
+            float[] y = b.clone();
+            solve(new FloatMatrix(y));
+            float[] x = new float[qr.n];
+            System.arraycopy(y, 0, x, 0, x.length);
+            return x;
         }
 
         /**
-         * Solve the least squares A * X = B. B will be overwritten with the solution
-         * matrix on output.
-         * @param B    right hand side of linear system. B will be overwritten with
-         * the solution matrix on output.
-         * @exception  RuntimeException  Matrix is rank deficient.
+         * Solve the least squares min || B - A*X ||.
+         * @param B the right hand side of overdetermined linear system.
+         *          B will be overwritten with the solution matrix on output.
+         * @exception  RuntimeException if matrix is rank deficient.
          */
         public void solve(FloatMatrix B) {
             if (B.m != qr.m) {
@@ -1685,7 +1689,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), Side.LEFT, Transpose.NO_TRANSPOSE, B.nrows(), B.ncols(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
+            int info = LAPACK.engine.ormqr(qr.layout(), Side.LEFT, Transpose.TRANSPOSE, B.nrows(), B.ncols(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
