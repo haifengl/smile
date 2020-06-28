@@ -20,25 +20,25 @@ package smile.math.blas;
 /** Matrix transpose. */
 public enum Transpose {
     /** Normal operation on the matrix. */
-    NO_TRANSPOSE((byte) 111, (byte) 'N'),
+    NO_TRANSPOSE(111, (byte) 'N'),
     /** Transpose operation on the matrix. */
-    TRANSPOSE((byte) 112, (byte) 'T'),
+    TRANSPOSE(112, (byte) 'T'),
     /** Conjugate transpose operation on the matrix. */
-    CONJUGATE_TRANSPOSE((byte) 113, (byte) 'C');
+    CONJUGATE_TRANSPOSE(113, (byte) 'C');
 
     /** Byte value passed to BLAS. */
-    private final byte blas;
+    private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
 
     /** Constructor. */
-    Transpose(byte blas, byte lapack) {
+    Transpose(int blas, byte lapack) {
         this.blas = blas;
         this.lapack = lapack;
     }
 
     /** Returns the byte value for BLAS. */
-    public byte blas() { return blas; }
+    public int blas() { return blas; }
 
     /** Returns the byte value for LAPACK. */
     public byte lapack() { return lapack; }

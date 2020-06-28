@@ -29,23 +29,23 @@ package smile.math.blas;
  */
 public enum Diag {
     /** Non-unit triangular. */
-    NON_UNIT((byte) 131, (byte) 'N'),
+    NON_UNIT(131, (byte) 'N'),
     /** Unit triangular. */
-    UNIT((byte) 132, (byte) 'U');
+    UNIT(132, (byte) 'U');
 
     /** Byte value passed to BLAS. */
-    private final byte blas;
+    private final int blas;
     /** Byte value passed to LAPACK. */
     private final byte lapack;
 
     /** Constructor. */
-    Diag(byte blas, byte lapack) {
+    Diag(int blas, byte lapack) {
         this.blas = blas;
         this.lapack = lapack;
     }
 
     /** Returns the byte value for BLAS. */
-    public byte blas() { return blas; }
+    public int blas() { return blas; }
 
     /** Returns the byte value for LAPACK. */
     public byte lapack() { return lapack; }
