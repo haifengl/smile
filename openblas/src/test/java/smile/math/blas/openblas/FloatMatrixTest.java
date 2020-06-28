@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.FloatMatrix;
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
@@ -259,34 +260,129 @@ public class FloatMatrixTest {
                 {0.4000f, 0.5000f, 0.3000f},
                 {0.7000f, 0.3000f, 0.8000f}
         };
-        float[] B = {0.5f, 0.5f, 0.5f};
-        float[] X = {-0.2027027f, 0.8783784f, 0.4729730f};
-        float[][] B2 = {
+
+        float[] b = {0.5f, 0.5f, 0.5f};
+        float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
+
+        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix.LU lu = a.lu();
+        float[] x2 = lu.solve(b);
+        assertEquals(x.length, x2.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], x2[i], 1E-6f);
+        }
+
+        float[][] B = {
                 {0.5f, 0.2f},
                 {0.5f, 0.8f},
                 {0.5f, 0.3f}
         };
-        float[][] X2 = {
+        float[][] X = {
                 {-0.2027027f, -1.2837838f},
                 { 0.8783784f,  2.2297297f},
                 { 0.4729730f,  0.6621622f}
         };
 
-        FloatMatrix a = new FloatMatrix(A);
-        FloatMatrix.LU lu = a.lu();
-        lu.solve(B);
-        assertEquals(X.length, B.length);
+        FloatMatrix X2 = new FloatMatrix(B);
+        lu.solve(X2);
+        assertEquals(X.length, X2.nrows());
+        assertEquals(X[0].length, X2.ncols());
         for (int i = 0; i < X.length; i++) {
-            assertEquals(X[i], B[i], 1E-6f);
+            for (int j = 0; j < X[i].length; j++) {
+                assertEquals(X[i][j], X2.get(i, j), 1E-6f);
+            }
+        }
+    }
+
+    @Test
+    public void testQR() {
+        System.out.println("QR");
+        float[][] A = {
+                {0.9000f, 0.4000f, 0.7000f},
+                {0.4000f, 0.5000f, 0.3000f},
+                {0.7000f, 0.3000f, 0.8000f}
+        };
+
+        float[] b = {0.5f, 0.5f, 0.5f};
+        float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
+
+        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix.QR qr = a.qr();
+        float[] x2 = qr.solve(b);
+        assertEquals(x.length, x2.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], x2[i], 1E-6f);
         }
 
-        FloatMatrix x = new FloatMatrix(B2);
-        lu.solve(x);
-        assertEquals(X2.length, x.nrows());
-        assertEquals(X2[0].length, x.ncols());
-        for (int i = 0; i < X2.length; i++) {
-            for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x.get(i, j), 1E-6f);
+        float[][] B = {
+                {0.5f, 0.2f},
+                {0.5f, 0.8f},
+                {0.5f, 0.3f}
+        };
+        float[][] X = {
+                {-0.2027027f, -1.2837838f},
+                { 0.8783784f,  2.2297297f},
+                { 0.4729730f,  0.6621622f}
+        };
+
+        FloatMatrix X2 = new FloatMatrix(B);
+        qr.solve(X2);
+        for (int i = 0; i < X.length; i++) {
+            for (int j = 0; j < X[i].length; j++) {
+                assertEquals(X[i][j], X2.get(i, j), 1E-6f);
+            }
+        }
+    }
+    @Test
+    public void testCholesky() {
+        System.out.println("Cholesky");
+        float[][] A = {
+                {0.9000f, 0.4000f, 0.7000f},
+                {0.4000f, 0.5000f, 0.3000f},
+                {0.7000f, 0.3000f, 0.8000f}
+        };
+        float[][] L = {
+                {0.9486833f,  0.00000000f, 0.0000000f},
+                {0.4216370f,  0.56764621f, 0.0000000f},
+                {0.7378648f, -0.01957401f, 0.5051459f}
+        };
+
+        FloatMatrix a = new FloatMatrix(A);
+        a.uplo(UPLO.LOWER);
+        FloatMatrix.Cholesky cholesky = a.cholesky();
+        for (int i = 0; i < a.nrows(); i++) {
+            for (int j = 0; j <= i; j++) {
+                assertEquals(Math.abs(L[i][j]), Math.abs(cholesky.lu.get(i, j)), 1E-6f);
+            }
+        }
+
+        float[] b = {0.5f, 0.5f, 0.5f};
+        float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};
+
+        float[] x2 = cholesky.solve(b);
+        assertEquals(x.length, x2.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], x2[i], 1E-6f);
+        }
+
+        float[][] B = {
+                {0.5f, 0.2f},
+                {0.5f, 0.8f},
+                {0.5f, 0.3f}
+        };
+        float[][] X = {
+                {-0.2027027f, -1.2837838f},
+                { 0.8783784f,  2.2297297f},
+                { 0.4729730f,  0.6621622f}
+        };
+
+        FloatMatrix X2 = new FloatMatrix(B);
+        cholesky.solve(X2);
+        assertEquals(X.length, X2.nrows());
+        assertEquals(X[0].length, X2.ncols());
+        for (int i = 0; i < X.length; i++) {
+            for (int j = 0; j < X[i].length; j++) {
+                assertEquals(X[i][j], X2.get(i, j), 1E-6f);
             }
         }
     }
