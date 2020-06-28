@@ -1690,32 +1690,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", m, n, b.length));
             }
 
-            float[] y = b.clone();
-            solve(new FloatMatrix(y));
-            float[] x = new float[n];
-            System.arraycopy(y, 0, x, 0, x.length);
-            return x;
-        }
-
-        /**
-         * Solves the least squares min || B - A*X ||.
-         * @param B the right hand side of overdetermined linear system.
-         *          B will be overwritten with the solution matrix on output.
-         * @exception  RuntimeException if matrix is rank deficient.
-         */
-        public void solve(FloatMatrix B) {
-            if (U == null || V == null) {
-                throw new IllegalStateException("The singular vectors are not available.");
+            int r = rank();
+            float[] Utb = new float[s.length];
+            U.submatrix(0, 0, m-1, r-1).mv(Transpose.TRANSPOSE, b, Utb);
+            for (int i = 0; i < r; i++) {
+                Utb[i] /= s[i];
             }
-
-            if (B.nrows() != m) {
-                throw new IllegalArgumentException("Dimensions do not agree.");
-            }
-
-            if (m < n) {
-                throw new UnsupportedOperationException("The matrix is not underdetermined");
-            }
-
+            return V.mv(Utb);
         }
     }
 
