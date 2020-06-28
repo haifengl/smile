@@ -27,6 +27,7 @@ import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
+import smile.stat.distribution.GaussianDistribution;
 
 public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]>, Serializable {
     private static final long serialVersionUID = 2L;
@@ -49,15 +50,16 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      */
     private int n;
     /**
-     * The packed storage format compactly stores matrix elements
-     * when only one part of the matrix, the upper or lower
-     * triangle, is necessary to determine all of the elements of the matrix.
-     * This is the case when the matrix is upper triangular, lower triangular,
-     * symmetric, or Hermitian.
+     * The packed storage format compactly stores matrix elements when only
+     * one part of the matrix, the upper or lower triangle, is necessary
+     * to determine all of the elements of the matrix. This is the case
+     * when the matrix is upper triangular, lower triangular, symmetric,
+     * or Hermitian.
      */
     private UPLO uplo = null;
     /**
-     * The flag if a triangular matrix has unit diagonal elements.
+     * If not null, the matrix is triangular. The flag specifies if a
+     * triangular matrix has unit diagonal elements.
      */
     private Diag diag = null;
 
@@ -77,11 +79,15 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @param a the initial value.
      */
     public FloatMatrix(int m, int n, float a) {
+        if (m <= 0 || n <= 0) {
+            throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
+        }
+
         this.m = m;
         this.n = n;
-        this.ld = m;
+        this.ld = ld(m);
 
-        float[] array = new float[m * n];
+        float[] array = new float[ld * n];
         if (a != 0.0) Arrays.fill(array, a);
         A = FloatBuffer.wrap(array);
     }
@@ -146,6 +152,45 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
+     * Creates a matrix.
+     * @param layout the matrix layout.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param ld the leading dimension.
+     * @param A the matrix storage.
+     */
+    public static FloatMatrix of(Layout layout, int m, int n, int ld, FloatBuffer A) {
+        if (layout == Layout.COL_MAJOR && ld < m) {
+            throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
+        }
+
+        if (layout == Layout.ROW_MAJOR && ld < n) {
+            throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
+        }
+
+        if (layout == Layout.COL_MAJOR) {
+            return new FloatMatrix(m, n, ld, A);
+        } else {
+            return new FloatMatrix(m, n, ld, A) {
+                @Override
+                public Layout layout() {
+                    return Layout.ROW_MAJOR;
+                }
+
+                @Override
+                protected int index(int i , int j) {
+                    return i * ld + j + A.position();
+                }
+
+                @Override
+                public FloatMatrix transpose() {
+                    return new FloatMatrix(n, m, ld, A);
+                }
+            };
+        }
+    }
+
+    /**
      * Returns an n-by-n identity matrix.
      * @param n the number of rows/columns.
      */
@@ -176,6 +221,32 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
+     * Returns a random matrix of standard normal distribution.
+     */
+    public static FloatMatrix randn(int m, int n) {
+        return randn(m, n, 0.0f, 1.0f);
+    }
+
+    /**
+     * Returns a random matrix of normal distribution.
+     *
+     * @param mu the mean of normal distribution.
+     * @param sigma the standard deviation of normal distribution.
+     */
+    public static FloatMatrix randn(int m, int n, float mu, float sigma) {
+        FloatMatrix matrix = new FloatMatrix(m, n);
+        GaussianDistribution g = new GaussianDistribution(mu, sigma);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, (float) g.rand());
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
      * Returns a square diagonal matrix with the elements of vector
      * v on the main diagonal.
      *
@@ -188,6 +259,37 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             D.set(i, i, v[i]);
         }
         return D;
+    }
+
+    /**
+     * Returns the optimal leading dimension. The present process have
+     * cascade caches. And read/write cache are 64 byte (multiple of 16
+     * for single precision) related on Intel CPUs. In order to avoid
+     * cache conflict, we expected the leading dimensions should be
+     * multiple of cache line (multiple of 16 for single precision),
+     * but not the power of 2, like not multiple of 256, not multiple
+     * of 128 etc.
+     * <p>
+     * To improve performance, ensure that the leading dimensions of
+     * the arrays are divisible by 64/element_size, where element_size
+     * is the number of bytes for the matrix elements (4 for
+     * single-precision real, 8 for double-precision real and
+     * single precision complex, and 16 for double-precision complex).
+     * <p>
+     * But as present processor use cache-cascading structure: set->cache
+     * line. In order to avoid the cache stall issue, we suggest to avoid
+     * leading dimension are multiples of 128, If ld % 128 = 0, then add
+     * 16 to the leading dimension.
+     * <p>
+     * Generally, set the leading dimension to the following integer expression:
+     * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
+     * where n is the matrix dimension along the leading dimension.
+     */
+    private int ld(int n) {
+        int elementSize = 4;
+        if (n <= 256 / elementSize) return n;
+
+        return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
     }
 
     /** Customized object serialization. */
@@ -249,11 +351,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * Returns if the matrix is a submatrix.
      */
     public boolean isSubmatrix() {
-        if (layout() == Layout.COL_MAJOR) {
-            return ld == m;
-        } else {
-            return ld == n;
-        }
+        return A.position() != 0 || A.limit() != A.capacity();
     }
 
     /**
@@ -278,8 +376,11 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return uplo;
     }
 
-    /** Sets the format if a triangular matrix has unit diagonal elements. */
-    public FloatMatrix diag(Diag diag) {
+    /**
+     * Sets/unsets if the matrix is triangular.
+     * @param diag if not null, it specifies if the triangular matrix has unit diagonal elements.
+     */
+    public FloatMatrix triangular(Diag diag) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -288,11 +389,42 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return this;
     }
 
-    /** Gets the flag if a triangular matrix has unit diagonal elements. */
-    public Diag diag() {
+    /**
+     * Gets the flag if a triangular matrix has unit diagonal elements.
+     * Returns null if the matrix is not triangular.
+     */
+    public Diag triangular() {
         return diag;
     }
 
+    /**
+     * Returns the diagonal elements.
+     */
+    public float[] diag() {
+        int k = Math.min(m, n);
+        float[] d = new float[k];
+        for (int i = 0; i < k; i++) {
+            d[i] = get(i, i);
+        }
+
+        return d;
+    }
+
+    /**
+     * Returns the matrix trace. The sum of the diagonal elements.
+     */
+    public float trace() {
+        int k = Math.min(m, n);
+
+        float t = 0.0f;
+        for (int i = 0; i < k; i++) {
+            t += get(i, i);
+        }
+
+        return t;
+    }
+
+    /** Returns a deep copy of matrix. */
     @Override
     public FloatMatrix clone() {
         FloatMatrix matrix = new FloatMatrix(m, n);
@@ -304,10 +436,46 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
         if (m == n) {
             matrix.uplo(uplo);
-            matrix.diag(diag);
+            matrix.triangular(diag);
         }
 
         return matrix;
+    }
+
+    /**
+     * Return the two-dimensional array of matrix.
+     * @return the two-dimensional array of matrix.
+     */
+    public float[][] toArray() {
+        float[][] array = new float[m][n];
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                array[i][j] = get(i, j);
+            }
+        }
+        return array;
+    }
+
+    /**
+     * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
+     * The content of the submatrix will be that of this matrix. Changes to this
+     * matrix's content will be visible in the submatrix, and vice versa.
+     *
+     * @param i the beginning row, inclusive.
+     * @param j the beginning column, inclusive,
+     * @param k the ending row, inclusive.
+     * @param l the ending column, inclusive.
+     */
+    public FloatMatrix submatrix(int i, int j, int k, int l) {
+        if (i < 0 || i >= m || k < i || k >= m || j < 0 || j >= n || l < j || l >= n) {
+            throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
+        }
+
+        int offset = index(i, j);
+        int length = index(k, l) - offset + 1;
+        FloatBuffer B = FloatBuffer.wrap(A.array(), offset, length);
+
+        return of(layout(),k - i + 1, l - j + 1, ld, B);
     }
 
     /**
@@ -325,27 +493,12 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * Returns the transposed matrix.
      */
     public FloatMatrix transpose() {
-        return new FloatMatrix(n, m, ld, A) {
-            @Override
-            public Layout layout() {
-                return Layout.ROW_MAJOR;
-            }
-
-            @Override
-            protected int index(int i , int j) {
-                return i * ld + j;
-            }
-
-            @Override
-            public FloatMatrix transpose() {
-                return new FloatMatrix(n, m, ld, A);
-            }
-        };
+        return of(Layout.ROW_MAJOR, n, m, ld, A);
     }
 
     /** Returns the linear index of matrix element. */
     protected int index(int i , int j) {
-        return j * ld + i;
+        return j * ld + i + A.position();
     }
 
     @Override
@@ -747,7 +900,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * The left upper submatrix of A is used in the computation based
      * on the size of x.
      */
-    public float xax(float[] x) {
+    public float xAx(float[] x) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -946,20 +1099,6 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         return inv;
-    }
-
-    /**
-     * Return the two-dimensional array of matrix.
-     * @return the two-dimensional array of matrix.
-     */
-    public float[][] toArray() {
-        float[][] array = new float[m][n];
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                array[i][j] = get(i, j);
-            }
-        }
-        return array;
     }
 
     /**
@@ -1211,7 +1350,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
             }
 
-            return new SVD(s, null, null);
+            return new SVD(m, n, s);
         }
     }
 
@@ -1304,7 +1443,14 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @author Haifeng Li
      */
     public static class SVD {
-
+        /**
+         * The number of rows of matrix.
+         */
+        public final int m;
+        /**
+         * The number of columns of matrix.
+         */
+        public final int n;
         /**
          * The singular values in descending order.
          */
@@ -1321,10 +1467,192 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         /**
          * Constructor.
          */
+        public SVD(int m, int n, float[] s) {
+            this.m = m;
+            this.n = n;
+            this.s = s;
+            this.U = null;
+            this.V = null;
+        }
+
+        /**
+         * Constructor.
+         */
         public SVD(float[] s, FloatMatrix U, FloatMatrix V) {
+            this.m = U.m;
+            this.n = V.n;
             this.s = s;
             this.U = U;
             this.V = V;
+        }
+
+        /**
+         * Returns the diagonal matrix of singular values.
+         */
+        public FloatMatrix diag() {
+            FloatMatrix S = new FloatMatrix(U.m, V.m);
+
+            for (int i = 0; i < s.length; i++) {
+                S.set(i, i, s[i]);
+            }
+
+            return S;
+        }
+
+        /**
+         * Returns the L2 matrix norm. The largest singular value.
+         */
+        public double norm() {
+            return s[0];
+        }
+
+        /**
+         * Returns the threshold to determine the effective rank.
+         * Singular values S(i) <= RCOND are treated as zero.
+         */
+        private float rcond() {
+            return 0.5f * (float) Math.sqrt(m + n + 1.0f) * MathEx.FLOAT_EPSILON * s[0];
+        }
+
+        /**
+         * Returns the effective numerical matrix rank. The number of non-negligible
+         * singular values.
+         */
+        public int rank() {
+            int r = 0;
+            float tol = rcond();
+
+            for (int i = 0; i < s.length; i++) {
+                if (s[i] > tol) {
+                    r++;
+                }
+            }
+            return r;
+        }
+
+        /**
+         * Returns the dimension of null space. The number of negligible
+         * singular values.
+         */
+        public int nullity() {
+            return Math.min(m, n) - rank();
+        }
+
+        /**
+         * Returns the L<sub>2</sub> norm condition number, which is max(S) / min(S).
+         * A system of equations is considered to be well-conditioned if a small
+         * change in the coefficient matrix or a small change in the right hand
+         * side results in a small change in the solution vector. Otherwise, it is
+         * called ill-conditioned. Condition number is defined as the product of
+         * the norm of A and the norm of A<sup>-1</sup>. If we use the usual
+         * L<sub>2</sub> norm on vectors and the associated matrix norm, then the
+         * condition number is the ratio of the largest singular value of matrix
+         * A to the smallest. The condition number depends on the underlying norm.
+         * However, regardless of the norm, it is always greater or equal to 1.
+         * If it is close to one, the matrix is well conditioned. If the condition
+         * number is large, then the matrix is said to be ill-conditioned. A matrix
+         * that is not invertible has the condition number equal to infinity.
+         */
+        public float condition() {
+            return (s[0] <= 0.0f || s[n - 1] <= 0.0f) ? Float.POSITIVE_INFINITY : s[0] / s[s.length - 1];
+        }
+
+        /**
+         * Returns the matrix which columns are the orthonormal basis for the range space.
+         * Returns null if the rank is zero (if and only if zero matrix).
+         */
+        public FloatMatrix range() {
+            if (U == null) {
+                throw new IllegalStateException("The left singular vectors are not available.");
+            }
+
+            int r = rank();
+            // zero rank, if and only if zero matrix.
+            if (r == 0) {
+                return null;
+            }
+
+            FloatMatrix R = new FloatMatrix(m, r);
+            for (int j = 0; j < r; j++) {
+                for (int i = 0; i < m; i++) {
+                    R.set(i, j, U.get(i, j));
+                }
+            }
+
+            return R;
+        }
+
+        /**
+         * Returns the matrix which columns are the orthonormal basis for the null space.
+         * Returns null if the matrix is of full rank.
+         */
+        public FloatMatrix nullspace() {
+            if (V == null) {
+                throw new IllegalStateException("The right singular vectors are not available.");
+            }
+
+            int nr = nullity();
+            // full rank
+            if (nr == 0) {
+                return null;
+            }
+
+            FloatMatrix N = new FloatMatrix(n, nr);
+            for (int j = 0; j < nr; j++) {
+                    for (int i = 0; i < n; i++) {
+                        N.set(i, j, V.get(i, n - j - 1));
+                    }
+            }
+            return N;
+        }
+
+        /** Returns the pseudo inverse. */
+        public FloatMatrix pinv() {
+            FloatMatrix inv = new FloatMatrix(n, m);
+            return inv;
+        }
+
+        /**
+         * Solves the least squares min || B - A*X ||.
+         * @param b  the right hand side of overdetermined linear system.
+         * @return   the solution vector beta that minimizes ||Y - X*beta||.
+         * @exception  RuntimeException if matrix is rank deficient.
+         */
+        public float[] solve(float[] b) {
+            if (U == null || V == null) {
+                throw new IllegalStateException("The singular vectors are not available.");
+            }
+
+            if (b.length != m) {
+                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", m, n, b.length));
+            }
+
+            float[] y = b.clone();
+            solve(new FloatMatrix(y));
+            float[] x = new float[n];
+            System.arraycopy(y, 0, x, 0, x.length);
+            return x;
+        }
+
+        /**
+         * Solves the least squares min || B - A*X ||.
+         * @param B the right hand side of overdetermined linear system.
+         *          B will be overwritten with the solution matrix on output.
+         * @exception  RuntimeException if matrix is rank deficient.
+         */
+        public void solve(FloatMatrix B) {
+            if (U == null || V == null) {
+                throw new IllegalStateException("The singular vectors are not available.");
+            }
+
+            if (B.nrows() != m) {
+                throw new IllegalArgumentException("Dimensions do not agree.");
+            }
+
+            if (m < n) {
+                throw new UnsupportedOperationException("The matrix is not underdetermined");
+            }
+
         }
     }
 
@@ -1712,7 +2040,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         /**
-         * Solve the linear system A * x = b.
+         * Solves the linear system A * x = b.
          * @param b the right hand side of linear systems.
          * @return the solution vector.
          */
@@ -1723,7 +2051,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         /**
-         * Solve the linear system A * X = B.
+         * Solves the linear system A * X = B.
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */
@@ -1826,7 +2154,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         /**
-         * Solve the least squares min || B - A*X ||.
+         * Solves the least squares min || B - A*X ||.
          * @param b  the right hand side of overdetermined linear system.
          * @return   the solution vector beta that minimizes ||Y - X*beta||.
          * @exception  RuntimeException if matrix is rank deficient.
@@ -1834,10 +2162,6 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         public float[] solve(float[] b) {
             if (b.length != qr.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.m, qr.n, b.length));
-            }
-
-            if (b.length != qr.n) {
-                throw new IllegalArgumentException("A and x dimensions don't match.");
             }
 
             float[] y = b.clone();
@@ -1848,7 +2172,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         /**
-         * Solve the least squares min || B - A*X ||.
+         * Solves the least squares min || B - A*X ||.
          * @param B the right hand side of overdetermined linear system.
          *          B will be overwritten with the solution matrix on output.
          * @exception  RuntimeException if matrix is rank deficient.

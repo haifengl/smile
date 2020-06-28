@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
 import smile.math.matrix.FloatMatrix;
 import static smile.math.blas.Transpose.*;
@@ -86,6 +87,61 @@ public class FloatMatrixTest {
         assertEquals(0.0f, matrix.get(2, 0), 1E-6f);
         assertEquals(0.0f, matrix.get(0, 2), 1E-6f);
         assertEquals(0.4f, matrix.get(0, 1), 1E-6f);
+    }
+
+    @Test
+    public void testTranspose() {
+        FloatMatrix t = matrix.transpose();
+        assertEquals(Layout.COL_MAJOR, matrix.layout());
+        assertEquals(Layout.ROW_MAJOR, t.layout());
+        assertEquals(false, t.isSubmatrix());
+        assertEquals(3, t.nrows());
+        assertEquals(3, t.ncols());
+
+        assertEquals(0.9f, matrix.get(0, 0), 1E-6f);
+        assertEquals(0.8f, matrix.get(2, 2), 1E-6f);
+        assertEquals(0.5f, matrix.get(1, 1), 1E-6f);
+        assertEquals(0.0f, matrix.get(0, 2), 1E-6f);
+        assertEquals(0.0f, matrix.get(2, 0), 1E-6f);
+        assertEquals(0.4f, matrix.get(1, 0), 1E-6f);
+    }
+
+    @Test
+    public void testSubmatrix() {
+        FloatMatrix sub = matrix.submatrix(0, 1, 2, 2);
+        assertEquals(false, matrix.isSubmatrix());
+        assertEquals(true, sub.isSubmatrix());
+        assertEquals(3, sub.nrows());
+        assertEquals(2, sub.ncols());
+        assertEquals(0.4f, sub.get(0,0), 1E-6f);
+        assertEquals(0.8f, sub.get(2,1), 1E-6f);
+
+        FloatMatrix sub2 = sub.submatrix(0, 0, 1, 1);
+        assertEquals(true, sub2.isSubmatrix());
+        assertEquals(2, sub2.nrows());
+        assertEquals(2, sub2.ncols());
+        assertEquals(0.4f, sub.get(0,0), 1E-6f);
+        assertEquals(0.3f, sub.get(1,1), 1E-6f);
+    }
+
+    @Test
+    public void testMvOffset() {
+        System.out.println("mv offfset ");
+        float[] d = new float[matrix.ncols() + matrix.nrows()];
+        System.arraycopy(b, 0, d, 0, b.length);
+        matrix.mv(d, 0, b.length);
+        assertEquals(0.65f, d[3], 1E-6f);
+        assertEquals(0.60f, d[4], 1E-6f);
+        assertEquals(0.55f, d[5], 1E-6f);
+    }
+
+    @Test
+    public void testSubAx() {
+        System.out.println("submatrix ax");
+        FloatMatrix sub = matrix.submatrix(1, 0, 2, 2);
+        float[] d = sub.mv(b);
+        assertEquals(0.60f, d[0], 1E-6f);
+        assertEquals(0.55f, d[1], 1E-6f);
     }
 
     @Test
