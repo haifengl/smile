@@ -24,14 +24,20 @@ public enum Layout {
     /** Column major layout. */
     COL_MAJOR(102);
 
-    /** Integer value passed to CBLAS. */
-    private final int value;
+    /** Byte value passed to BLAS. */
+    private final int blas;
+    /** Byte value passed to LAPACK. */
+    private final int lapack;
 
     /** Constructor. */
     Layout(int value) {
-        this.value = value;
+        this.blas = value;
+        this.lapack = value;
     }
 
-    /** Returns the integer value for BLAS. */
-    public int getValue() { return value; }
+    /** Returns the byte value for BLAS. */
+    public int blas() { return blas; }
+
+    /** Returns the byte value for LAPACK. */
+    public int lapack() { return lapack; }
 }

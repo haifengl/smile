@@ -28,7 +28,7 @@ import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.blas.*;
 
-public class FloatMatrix implements MatrixVectorMultiplication<float[]>, Serializable {
+public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]>, Serializable {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
 
@@ -242,6 +242,17 @@ public class FloatMatrix implements MatrixVectorMultiplication<float[]>, Seriali
     }
 
     /**
+     * Returns if the matrix is a submatrix.
+     */
+    public boolean isSubmatrix() {
+        if (layout() == Layout.COL_MAJOR) {
+            return ld == m;
+        } else {
+            return ld == n;
+        }
+    }
+
+    /**
      * Return if the matrix is symmetric (uplo != null && diag == null).
      */
     public boolean isSymmetric() {
@@ -326,43 +337,8 @@ public class FloatMatrix implements MatrixVectorMultiplication<float[]>, Seriali
     }
 
     @Override
-    public String toString() {
-        return toString(false);
-    }
-
-    /**
-     * Returns the string representation of matrix.
-     * @param full Print the full matrix if true. Otherwise,
-     *             print only top left 7 x 7 submatrix.
-     */
-    public String toString(boolean full) {
-        return full ? toString(nrows(), ncols()) : toString(7, 7);
-    }
-
-    /**
-     * Returns the string representation of matrix.
-     * @param m the number of rows to print.
-     * @param n the number of columns to print.
-     */
-    public String toString(int m, int n) {
-        StringBuilder sb = new StringBuilder(nrows() + " x " + ncols() + "\n");
-        m = Math.min(m, nrows());
-        n = Math.min(n, ncols());
-
-        String newline = n < ncols() ? "...\n" : "\n";
-
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sb.append(String.format("%8.4f  ", get(i, j)));
-            }
-            sb.append(newline);
-        }
-
-        if (m < nrows()) {
-            sb.append("  ...\n");
-        }
-
-        return sb.toString();
+    public String str(int i, int j) {
+        return String.format("%.4f", get(i, j));
     }
 
     /**
@@ -1452,14 +1428,7 @@ public class FloatMatrix implements MatrixVectorMultiplication<float[]>, Seriali
          * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
          */
         public FloatMatrix inverse() {
-            int m = lu.nrows();
-            int n = lu.ncols();
-
-            if (m != n) {
-                throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
-            }
-
-            FloatMatrix inv = FloatMatrix.eye(n);
+            FloatMatrix inv = FloatMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -1481,8 +1450,16 @@ public class FloatMatrix implements MatrixVectorMultiplication<float[]>, Seriali
          * @throws  RuntimeException  if matrix is singular.
          */
         public void solve(FloatMatrix B) {
+            if (lu.m != lu.n) {
+                throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
+            }
+
             if (B.m != lu.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
+            }
+
+            if (lu.layout() != B.layout()) {
+                throw new IllegalArgumentException("The matrix layout is inconsistent.");
             }
 
             if (info > 0) {

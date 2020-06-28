@@ -22,25 +22,25 @@ public enum EigenRange {
     /**
      * All eigenvalues will be found.
      */
-    ALL((byte) 65),
+    ALL((byte) 'A'),
     /**
      * All eigenvalues in the half-open interval (VL,VU]
      * will be found.
      */
-    VALUE((byte) 86),
+    VALUE((byte) 'V'),
     /**
      * The IL-th through IU-th eigenvalues will be found.
      */
-    INDEX((byte) 73);
+    INDEX((byte) 'I');
 
     /** Byte value passed to LAPACK. */
-    private final byte value;
+    private final byte lapack;
 
     /** Constructor. */
-    EigenRange(byte value) {
-        this.value = value;
+    EigenRange(byte lapack) {
+        this.lapack = lapack;
     }
 
     /** Returns the byte value for LAPACK. */
-    public byte getValue() { return value; }
+    public byte lapack() { return lapack; }
 }

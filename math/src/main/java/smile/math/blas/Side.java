@@ -23,18 +23,24 @@ package smile.math.blas;
  */
 public enum Side {
     /** A * B */
-    LEFT((byte) 141),
+    LEFT ((byte) 141, (byte) 'L'),
     /** B * A */
-    RIGHT((byte) 142);
+    RIGHT((byte) 142, (byte) 'R');
 
-    /** Integer value passed to CBLAS. */
-    private final byte value;
+    /** Byte value passed to BLAS. */
+    private final byte blas;
+    /** Byte value passed to LAPACK. */
+    private final byte lapack;
 
     /** Constructor. */
-    Side(byte value) {
-        this.value = value;
+    Side(byte blas, byte lapack) {
+        this.blas = blas;
+        this.lapack = lapack;
     }
 
     /** Returns the byte value for BLAS. */
-    public byte getValue() { return value; }
+    public byte blas() { return blas; }
+
+    /** Returns the byte value for LAPACK. */
+    public byte lapack() { return lapack; }
 }

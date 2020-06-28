@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.math.blas.openblas;
+package smile.math.blas.mkl;
 
 import org.junit.After;
 import org.junit.AfterClass;

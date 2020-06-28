@@ -73,11 +73,10 @@ public class LUTest {
         System.out.println("solve");
         FloatMatrix a = new FloatMatrix(A);
         LU result = a.lu();
-        float[] x = B.clone();
-        result.solve(x);
-        assertEquals(X.length, x.length);
+        result.solve(B);
+        assertEquals(X.length, B.length);
         for (int i = 0; i < X.length; i++) {
-            assertEquals(X[i], x[i], 1E-7f);
+            assertEquals(X[i], B[i], 1E-7f);
         }
     }
 
