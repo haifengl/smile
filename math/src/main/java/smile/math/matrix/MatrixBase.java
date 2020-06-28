@@ -43,6 +43,13 @@ public abstract class MatrixBase {
     public abstract int ncols();
 
     /**
+     * Returns the number of elements (nrows * ncols).
+     */
+    public long size() {
+        return (long) nrows() * ncols();
+    }
+
+    /**
      * Returns the string representation of A[i, j].
      */
     public abstract String str(int i, int j);

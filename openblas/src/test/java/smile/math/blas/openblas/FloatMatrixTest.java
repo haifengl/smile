@@ -989,6 +989,35 @@ public class FloatMatrixTest {
             }
         }
     }
+
+    @Test
+    public void testPinv() {
+        System.out.println("SVD pinv");
+        float[][] A = {
+                {1, 0, 0, 1, 0, 0, 0, 0, 0},
+                {1, 0, 1, 0, 0, 0, 0, 0, 0},
+                {1, 1, 0, 0, 0, 0, 0, 0, 0},
+                {0, 1, 1, 0, 1, 0, 0, 0, 0},
+                {0, 1, 1, 2, 0, 0, 0, 0, 0},
+                {0, 1, 0, 0, 1, 0, 0, 0, 0},
+                {0, 1, 0, 0, 1, 0, 0, 0, 0},
+                {0, 0, 1, 1, 0, 0, 0, 0, 0},
+                {0, 1, 0, 0, 0, 0, 0, 0, 1},
+                {0, 0, 0, 0, 0, 1, 1, 1, 0},
+                {0, 0, 0, 0, 0, 0, 1, 1, 1},
+                {0, 0, 0, 0, 0, 0, 0, 1, 1}
+        };
+
+        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix pinv = a.svd().pinv();
+
+        FloatMatrix x = pinv.abmm(a).abmm(pinv);
+        assertTrue(x.equals(pinv, 1E-5f));
+
+        x = a.abmm(pinv).abmm(a);
+        assertTrue(x.equals(a, 1E-5f));
+    }
+
 /*
     @Test
     public void testSVDSolve() {

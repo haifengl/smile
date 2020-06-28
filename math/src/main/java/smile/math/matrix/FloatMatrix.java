@@ -496,6 +496,37 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return of(Layout.ROW_MAJOR, n, m, ld, A);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof FloatMatrix)) {
+            return false;
+        }
+
+        return equals((FloatMatrix) o, 1E-7f);
+    }
+
+    /**
+     * Returns if two matrices equals given an error margin.
+     *
+     * @param o the other matrix.
+     * @param eps the error margin.
+     */
+    public boolean equals(FloatMatrix o, float eps) {
+        if (m != o.m || n != o.n) {
+            return false;
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                if (!MathEx.isZero(get(i, j) - o.get(i, j), eps)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
     /** Returns the linear index of matrix element. */
     protected int index(int i , int j) {
         return j * ld + i + A.position();
@@ -1195,6 +1226,32 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return C;
     }
 
+    /** Returns A * D * B, where D is a diagonal matrix. */
+    public FloatMatrix adb(Transpose transA, Transpose transB, FloatMatrix B, float[] diag) {
+        FloatMatrix C;
+        if (transA == Transpose.NO_TRANSPOSE) {
+            C = new FloatMatrix(m, n);
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    C.set(i, j, diag[j] * get(i, j));
+                }
+            }
+        } else {
+            C = new FloatMatrix(n, m);
+            for (int j = 0; j < m; j++) {
+                for (int i = 0; i < n; i++) {
+                    C.set(i, j, diag[j] * get(j, i));
+                }
+            }
+        }
+
+        if (transB == Transpose.NO_TRANSPOSE) {
+            return C.abmm(B);
+        } else {
+            return C.abtmm(B);
+        }
+    }
+
     /** Returns matrix multiplication A * B. */
     public FloatMatrix abmm(FloatMatrix B) {
         if (n != B.m) {
@@ -1291,13 +1348,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
     /**
      * Singular Value Decomposition.
-     * Returns an economy-size decomposition of m-by-n matrix A:
+     * Returns an compact SVD of m-by-n matrix A:
      * <ul>
      * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>m = n — Equivalent to full SVD.</li>
      * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
-     * The economy-size decomposition removes extra rows or columns of zeros from
+     * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
      * U or V that multiply those zeros in the expression A = U*S*V'. Removing these
      * zeros and columns can improve execution time and reduce storage requirements
@@ -1309,13 +1366,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
     /**
      * Singular Value Decomposition.
-     * Returns an economy-size decomposition of m-by-n matrix A:
+     * Returns an compact SVD of m-by-n matrix A:
      * <ul>
      * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
      * <li>m = n — Equivalent to full SVD.</li>
      * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
-     * The economy-size decomposition removes extra rows or columns of zeros from
+     * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
      * U or V that multiply those zeros in the expression A = U*S*V'. Removing these
      * zeros and columns can improve execution time and reduce storage requirements
@@ -1511,7 +1568,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
          * Singular values S(i) <= RCOND are treated as zero.
          */
         private float rcond() {
-            return 0.5f * (float) Math.sqrt(m + n + 1.0f) * MathEx.FLOAT_EPSILON * s[0];
+            return Math.max(m, n) * MathEx.FLOAT_EPSILON * s[0];
         }
 
         /**
@@ -1608,8 +1665,14 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
         /** Returns the pseudo inverse. */
         public FloatMatrix pinv() {
-            FloatMatrix inv = new FloatMatrix(n, m);
-            return inv;
+            int k = s.length;
+            float[] sigma = new float[k];
+            int r = rank();
+            for (int i = 0; i < r; i++) {
+                sigma[i] = 1.0f / s[i];
+            }
+
+            return V.adb(Transpose.NO_TRANSPOSE, Transpose.TRANSPOSE, U, sigma);
         }
 
         /**
