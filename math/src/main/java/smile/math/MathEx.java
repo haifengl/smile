@@ -65,13 +65,23 @@ public class MathEx {
      */
     public static final double EPSILON = fpu.EPSILON;
     /**
+     * The machine precision for the float type, which is the difference between 1
+     * and the smallest value greater than 1 that is representable for the float type.
+     */
+    public static final float FLOAT_EPSILON = fpu.FLOAT_EPSILON;
+    /**
      * The base of the exponent of the double type.
      */
     public static final int RADIX = fpu.RADIX;
     /**
      * The number of digits (in radix base) in the mantissa.
      */
-    public static final int DIGITS = fpu.RADIX;
+    public static final int DIGITS = fpu.DIGITS;
+    /**
+     * The number of digits (in radix base) in the mantissa.
+     */
+    public static final int FLOAT_DIGITS = fpu.FLOAT_DIGITS;
+
     /**
      * Rounding style.
      * <ul>
@@ -90,10 +100,20 @@ public class MathEx {
      */
     public static final int MACHEP = fpu.MACHEP;
     /**
+     * The largest negative integer such that 1.0 + RADIX<sup>MACHEP</sup> &ne; 1.0,
+     * except that machep is bounded below by -(DIGITS+3)
+     */
+    public static final int FLOAT_MACHEP = fpu.FLOAT_MACHEP;
+    /**
      * The largest negative integer such that 1.0 - RADIX<sup>NEGEP</sup> &ne; 1.0,
      * except that negeps is bounded below by -(DIGITS+3)
      */
     public static final int NEGEP = fpu.NEGEP;
+    /**
+     * The largest negative integer such that 1.0 - RADIX<sup>NEGEP</sup> &ne; 1.0,
+     * except that negeps is bounded below by -(DIGITS+3)
+     */
+    public static final int FLOAT_NEGEP = fpu.FLOAT_NEGEP;
 
     /**
      * This RNG is to generate the seeds for multi-threads.
@@ -136,12 +156,16 @@ public class MathEx {
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
     private static class FPU {
-        double EPSILON = Math.pow(2.0, -52.0);
         int RADIX = 2;
         int DIGITS = 53;
+        int FLOAT_DIGITS = 24;
         int ROUND_STYLE = 2;
         int MACHEP = -52;
+        int FLOAT_MACHEP = -23;
         int NEGEP = -53;
+        int FLOAT_NEGEP = -24;
+        float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
+        double EPSILON = Math.pow(2.0, MACHEP);
 
         FPU() {
             double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
