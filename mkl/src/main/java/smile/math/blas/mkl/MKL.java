@@ -106,7 +106,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void gemv(Layout layout, Transpose trans, int m, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dgemv(layout.getValue(), trans.getValue(), m, n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void gemv(Layout layout, Transpose trans, int m, int n, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy) {
+        cblas_sgemv(layout.getValue(), trans.getValue(), m, n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void gemv(Layout layout, Transpose trans, int m, int n, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         cblas_sgemv(layout.getValue(), trans.getValue(), m, n, alpha, A, lda, x, incx, beta, y, incy);
     }
 
@@ -116,7 +126,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void symv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dsymv(layout.getValue(), uplo.getValue(), n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void symv(Layout layout, UPLO uplo, int n, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy) {
+        cblas_ssymv(layout.getValue(), uplo.getValue(), n, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void symv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         cblas_ssymv(layout.getValue(), uplo.getValue(), n, alpha, A, lda, x, incx, beta, y, incy);
     }
 
@@ -126,7 +146,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void spmv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dspmv(layout.getValue(), uplo.getValue(), n, alpha, A, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void spmv(Layout layout, UPLO uplo, int n, float alpha, float[] A, float[] x, int incx, float beta, float[] y, int incy) {
+        cblas_sspmv(layout.getValue(), uplo.getValue(), n, alpha, A, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void spmv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         cblas_sspmv(layout.getValue(), uplo.getValue(), n, alpha, A, x, incx, beta, y, incy);
     }
 
@@ -136,7 +166,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, int lda, DoubleBuffer x, int incx) {
+        cblas_dtrmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, lda, x, incx);
+    }
+
+    @Override
     public void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, float[] A, int lda, float[] x, int incx) {
+        cblas_strmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, lda, x, incx);
+    }
+
+    @Override
+    public void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, FloatBuffer A, int lda, FloatBuffer x, int incx) {
         cblas_strmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, lda, x, incx);
     }
 
@@ -146,7 +186,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, DoubleBuffer x, int incx) {
+        cblas_dtpmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, x, incx);
+    }
+
+    @Override
     public void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, float[] A, float[] x, int incx) {
+        cblas_stpmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, x, incx);
+    }
+
+    @Override
+    public void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, FloatBuffer A, FloatBuffer x, int incx) {
         cblas_stpmv(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, A, x, incx);
     }
 
@@ -156,7 +206,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dgbmv(layout.getValue(), trans.getValue(), m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy) {
+        cblas_sgbmv(layout.getValue(), trans.getValue(), m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         cblas_sgbmv(layout.getValue(), trans.getValue(), m, n, kl, ku, alpha, A, lda, x, incx, beta, y, incy);
     }
 
@@ -166,7 +226,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void sbmv(Layout layout, UPLO uplo, int n, int k, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy) {
+        cblas_dsbmv(layout.getValue(), uplo.getValue(), n, k, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
     public void sbmv(Layout layout, UPLO uplo, int n, int k, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy) {
+        cblas_ssbmv(layout.getValue(), uplo.getValue(), n, k, alpha, A, lda, x, incx, beta, y, incy);
+    }
+
+    @Override
+    public void sbmv(Layout layout, UPLO uplo, int n, int k, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy) {
         cblas_ssbmv(layout.getValue(), uplo.getValue(), n, k, alpha, A, lda, x, incx, beta, y, incy);
     }
 
@@ -176,7 +246,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void ger(Layout layout, int m, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer y, int incy, DoubleBuffer A, int lda) {
+        cblas_dger(layout.getValue(), m, n, alpha, x, incx, y, incy, A, lda);
+    }
+
+    @Override
     public void ger(Layout layout, int m, int n, float alpha, float[] x, int incx, float[] y, int incy, float[] A, int lda) {
+        cblas_sger(layout.getValue(), m, n, alpha, x, incx, y, incy, A, lda);
+    }
+
+    @Override
+    public void ger(Layout layout, int m, int n, float alpha, FloatBuffer x, int incx, FloatBuffer y, int incy, FloatBuffer A, int lda) {
         cblas_sger(layout.getValue(), m, n, alpha, x, incx, y, incy, A, lda);
     }
 
@@ -186,7 +266,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void syr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A, int lda) {
+        cblas_dsyr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A, lda);
+    }
+
+    @Override
     public void syr(Layout layout, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A, int lda) {
+        cblas_ssyr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A, lda);
+    }
+
+    @Override
+    public void syr(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A, int lda) {
         cblas_ssyr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A, lda);
     }
 
@@ -196,7 +286,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void spr(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer x, int incx, DoubleBuffer A) {
+        cblas_dspr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A);
+    }
+
+    @Override
     public void spr(Layout layout, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A) {
+        cblas_sspr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A);
+    }
+
+    @Override
+    public void spr(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A) {
         cblas_sspr(layout.getValue(), uplo.getValue(), n, alpha, x, incx, A);
     }
 
@@ -206,7 +306,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, double beta, DoubleBuffer C, int ldc) {
+        cblas_dgemm(layout.getValue(), transA.getValue(), transB.getValue(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
     public void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, float alpha, float[] A, int lda, float[] B, int ldb, float beta, float[] C, int ldc) {
+        cblas_sgemm(layout.getValue(), transA.getValue(), transB.getValue(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
+    public void gemm(Layout layout, Transpose transA, Transpose transB, int m, int n, int k, float alpha, FloatBuffer A, int lda, FloatBuffer B, int ldb, float beta, FloatBuffer C, int ldc) {
         cblas_sgemm(layout.getValue(), transA.getValue(), transB.getValue(), m, n, k, alpha, A, lda, B, ldb, beta, C, ldc);
     }
 
@@ -216,7 +326,17 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
+    public void symm(Layout layout, Side side, UPLO uplo, int m, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, double beta, DoubleBuffer C, int ldc) {
+        cblas_dsymm(layout.getValue(), side.getValue(), uplo.getValue(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
     public void symm(Layout layout, Side side, UPLO uplo, int m, int n, float alpha, float[] A, int lda, float[] B, int ldb, float beta, float[] C, int ldc) {
+        cblas_ssymm(layout.getValue(), side.getValue(), uplo.getValue(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
+    }
+
+    @Override
+    public void symm(Layout layout, Side side, UPLO uplo, int m, int n, float alpha, FloatBuffer A, int lda, FloatBuffer B, int ldb, float beta, FloatBuffer C, int ldc) {
         cblas_ssymm(layout.getValue(), side.getValue(), uplo.getValue(), m, n, alpha, A, lda, B, ldb, beta, C, ldc);
     }
 
@@ -451,7 +571,7 @@ public class MKL implements BLAS, LAPACK {
     }
 
     @Override
-    public int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
+    public int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
         return LAPACKE_dpotrs(layout.getValue(), uplo.getValue(), n, nrhs, A, lda, B, ldb);
     }
 
@@ -478,16 +598,6 @@ public class MKL implements BLAS, LAPACK {
     @Override
     public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, float[] A, int lda, float[] tau, float[] C, int ldc) {
         return LAPACKE_sormqr(layout.getValue(), side.getValue(), trans.getValue(), m, n, k, A, lda, tau, C, ldc);
-    }
-
-    @Override
-    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
-        return LAPACKE_dtrtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
-    }
-
-    @Override
-    public int trtrs(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, int nrhs, float[] A, int lda, float[] B, int ldb) {
-        return LAPACKE_strtrs(layout.getValue(), uplo.getValue(), trans.getValue(), diag.getValue(), n, nrhs, A, lda, B, ldb);
     }
 
     @Override
