@@ -88,6 +88,6 @@ lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
-lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(data)
+//lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(data)
 
 lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)

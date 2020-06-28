@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.mkl;
+package smile.math.blas.openblas;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -23,28 +23,30 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import smile.math.matrix.FloatMatrix;
+import static smile.math.matrix.FloatMatrix.LU;
 
 /**
  *
  * @author Haifeng Li
  */
 public class LUTest {
-    double[][] A = {
-        {0.9000, 0.4000, 0.7000},
-        {0.4000, 0.5000, 0.3000},
-        {0.7000, 0.3000, 0.8000}
+    float[][] A = {
+        {0.9000f, 0.4000f, 0.7000f},
+        {0.4000f, 0.5000f, 0.3000f},
+        {0.7000f, 0.3000f, 0.8000f}
     };
-    double[] B = {0.5, 0.5, 0.5};
-    double[] X = {-0.2027027, 0.8783784, 0.4729730};
-    double[][] B2 = {
-        {0.5, 0.2},
-        {0.5, 0.8},
-        {0.5, 0.3}
+    float[] B = {0.5f, 0.5f, 0.5f};
+    float[] X = {-0.2027027f, 0.8783784f, 0.4729730f};
+    float[][] B2 = {
+        {0.5f, 0.2f},
+        {0.5f, 0.8f},
+        {0.5f, 0.3f}
     };
-    double[][] X2 = {
-        {-0.2027027, -1.2837838},
-        {0.8783784, 2.2297297},
-        {0.4729730, 0.6621622}
+    float[][] X2 = {
+        {-0.2027027f, -1.2837838f},
+        { 0.8783784f,  2.2297297f},
+        { 0.4729730f,  0.6621622f}
     };
 
     public LUTest() {
@@ -66,37 +68,31 @@ public class LUTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of solve method, of class LUDecomposition.
-     */
     @Test
     public void testSolve() {
         System.out.println("solve");
-        NLMatrix a = new NLMatrix(A);
+        FloatMatrix a = new FloatMatrix(A);
         LU result = a.lu();
-        double[] x = B.clone();
+        float[] x = B.clone();
         result.solve(x);
         assertEquals(X.length, x.length);
         for (int i = 0; i < X.length; i++) {
-            assertEquals(X[i], x[i], 1E-7);
+            assertEquals(X[i], x[i], 1E-7f);
         }
     }
 
-    /**
-     * Test of solve method, of class LUDecomposition.
-     */
     @Test
     public void testSolveMatrix() {
         System.out.println("solve");
-        NLMatrix a = new NLMatrix(A);
+        FloatMatrix a = new FloatMatrix(A);
         LU result = a.lu();
-        NLMatrix x = new NLMatrix(B2);
+        FloatMatrix x = new FloatMatrix(B2);
         result.solve(x);
         assertEquals(X2.length, x.nrows());
         assertEquals(X2[0].length, x.ncols());
         for (int i = 0; i < X2.length; i++) {
             for (int j = 0; j < X2[i].length; j++) {
-                assertEquals(X2[i][j], x.get(i, j), 1E-7);
+                assertEquals(X2[i][j], x.get(i, j), 1E-7f);
             }
         }
     }
