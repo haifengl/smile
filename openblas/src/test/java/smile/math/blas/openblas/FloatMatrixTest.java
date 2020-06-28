@@ -23,9 +23,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
-import static smile.math.blas.Transpose.*;
 import smile.math.matrix.FloatMatrix;
-
+import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
 /**
@@ -80,12 +79,12 @@ public class FloatMatrixTest {
     @Test
     public void testGet() {
         System.out.println("get");
-        assertEquals(0.9f, matrix.get(0, 0), 1E-7f);
-        assertEquals(0.8f, matrix.get(2, 2), 1E-7f);
-        assertEquals(0.5f, matrix.get(1, 1), 1E-7f);
-        assertEquals(0.0f, matrix.get(2, 0), 1E-7f);
-        assertEquals(0.0f, matrix.get(0, 2), 1E-7f);
-        assertEquals(0.4f, matrix.get(0, 1), 1E-7f);
+        assertEquals(0.9f, matrix.get(0, 0), 1E-6f);
+        assertEquals(0.8f, matrix.get(2, 2), 1E-6f);
+        assertEquals(0.5f, matrix.get(1, 1), 1E-6f);
+        assertEquals(0.0f, matrix.get(2, 0), 1E-6f);
+        assertEquals(0.0f, matrix.get(0, 2), 1E-6f);
+        assertEquals(0.4f, matrix.get(0, 1), 1E-6f);
     }
 
     @Test
@@ -93,9 +92,9 @@ public class FloatMatrixTest {
         System.out.println("ax");
         float[] d = new float[matrix.nrows()];
         matrix.mv(b, d);
-        assertEquals(0.65f, d[0], 1E-7f);
-        assertEquals(0.60f, d[1], 1E-7f);
-        assertEquals(0.55f, d[2], 1E-7f);
+        assertEquals(0.65f, d[0], 1E-6f);
+        assertEquals(0.60f, d[1], 1E-6f);
+        assertEquals(0.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -104,9 +103,9 @@ public class FloatMatrixTest {
         float[] d = new float[matrix.nrows()];
         for (int i = 0; i < d.length; i++) d[i] = 1.0f;
         matrix.mv(NO_TRANSPOSE, 1.0f, b, 1.0f, d);
-        assertEquals(1.65f, d[0], 1E-7f);
-        assertEquals(1.60f, d[1], 1E-7f);
-        assertEquals(1.55f, d[2], 1E-7f);
+        assertEquals(1.65f, d[0], 1E-6f);
+        assertEquals(1.60f, d[1], 1E-6f);
+        assertEquals(1.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -115,9 +114,9 @@ public class FloatMatrixTest {
         float[] d = new float[matrix.nrows()];
         for (int i = 0; i < d.length; i++) d[i] = 1.0f;
         matrix.mv(NO_TRANSPOSE, 1.0f, b, 2.0f, d);
-        assertEquals(2.65f, d[0], 1E-7f);
-        assertEquals(2.60f, d[1], 1E-7f);
-        assertEquals(2.55f, d[2], 1E-7f);
+        assertEquals(2.65f, d[0], 1E-6f);
+        assertEquals(2.60f, d[1], 1E-6f);
+        assertEquals(2.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -125,9 +124,9 @@ public class FloatMatrixTest {
         System.out.println("atx");
         float[] d = new float[matrix.nrows()];
         matrix.mv(TRANSPOSE, b, d);
-        assertEquals(0.65f, d[0], 1E-7f);
-        assertEquals(0.60f, d[1], 1E-7f);
-        assertEquals(0.55f, d[2], 1E-7f);
+        assertEquals(0.65f, d[0], 1E-6f);
+        assertEquals(0.60f, d[1], 1E-6f);
+        assertEquals(0.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -136,9 +135,9 @@ public class FloatMatrixTest {
         float[] d = new float[matrix.nrows()];
         for (int i = 0; i < d.length; i++) d[i] = 1.0f;
         matrix.mv(TRANSPOSE, 1.0f, b, 1.0f, d);
-        assertEquals(1.65f, d[0], 1E-7f);
-        assertEquals(1.60f, d[1], 1E-7f);
-        assertEquals(1.55f, d[2], 1E-7f);
+        assertEquals(1.65f, d[0], 1E-6f);
+        assertEquals(1.60f, d[1], 1E-6f);
+        assertEquals(1.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -147,9 +146,9 @@ public class FloatMatrixTest {
         float[] d = new float[matrix.nrows()];
         for (int i = 0; i < d.length; i++) d[i] = 1.0f;
         matrix.mv(TRANSPOSE, 1.0f, b, 2.0f, d);
-        assertEquals(2.65f, d[0], 1E-7f);
-        assertEquals(2.60f, d[1], 1E-7f);
-        assertEquals(2.55f, d[2], 1E-7f);
+        assertEquals(2.65f, d[0], 1E-6f);
+        assertEquals(2.60f, d[1], 1E-6f);
+        assertEquals(2.55f, d[2], 1E-6f);
     }
 
     @Test
@@ -160,7 +159,7 @@ public class FloatMatrixTest {
         assertEquals(c.ncols(), 3);
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
-                assertEquals(C[i][j], c.get(i, j), 1E-7f);
+                assertEquals(C[i][j], c.get(i, j), 1E-6f);
             }
         }
     }
@@ -250,5 +249,45 @@ public class FloatMatrixTest {
         assertTrue(MathEx.equals(a.abtmm(b).toArray(),  D, 1E-6f));
         assertTrue(MathEx.equals(a.atbmm(b).toArray(),  E, 1E-6f));
         assertTrue(MathEx.equals(a.atbtmm(b).toArray(), F, 1E-6f));
+    }
+
+    @Test
+    public void testLU() {
+        System.out.println("LU");
+        float[][] A = {
+                {0.9000f, 0.4000f, 0.7000f},
+                {0.4000f, 0.5000f, 0.3000f},
+                {0.7000f, 0.3000f, 0.8000f}
+        };
+        float[] B = {0.5f, 0.5f, 0.5f};
+        float[] X = {-0.2027027f, 0.8783784f, 0.4729730f};
+        float[][] B2 = {
+                {0.5f, 0.2f},
+                {0.5f, 0.8f},
+                {0.5f, 0.3f}
+        };
+        float[][] X2 = {
+                {-0.2027027f, -1.2837838f},
+                { 0.8783784f,  2.2297297f},
+                { 0.4729730f,  0.6621622f}
+        };
+
+        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix.LU lu = a.lu();
+        lu.solve(B);
+        assertEquals(X.length, B.length);
+        for (int i = 0; i < X.length; i++) {
+            assertEquals(X[i], B[i], 1E-6f);
+        }
+
+        FloatMatrix x = new FloatMatrix(B2);
+        lu.solve(x);
+        assertEquals(X2.length, x.nrows());
+        assertEquals(X2[0].length, x.ncols());
+        for (int i = 0; i < X2.length; i++) {
+            for (int j = 0; j < X2[i].length; j++) {
+                assertEquals(X2[i][j], x.get(i, j), 1E-6f);
+            }
+        }
     }
 }

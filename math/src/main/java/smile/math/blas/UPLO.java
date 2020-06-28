@@ -32,7 +32,7 @@ public enum UPLO {
      * This is the case when the matrix is upper triangular, lower triangular,
      * symmetric, or Hermitian.
      */
-    UPPER((byte) 121),
+    UPPER((byte) 121, (byte) 'U'),
     /**
      * Lower triangle is stored. The packed storage format compactly stores
      * matrix elements when only one part of the matrix, the upper or lower
@@ -40,16 +40,22 @@ public enum UPLO {
      * This is the case when the matrix is upper triangular, lower triangular,
      * symmetric, or Hermitian.
      */
-    LOWER((byte) 122);
+    LOWER((byte) 122, (byte) 'L');
 
-    /** Byte value passed to CBLAS/LAPACKE. */
-    private final byte value;
+    /** Byte value passed to BLAS. */
+    private final byte blas;
+    /** Byte value passed to LAPACK. */
+    private final byte lapack;
 
     /** Constructor. */
-    UPLO(byte value) {
-        this.value = value;
+    UPLO(byte blas, byte lapack) {
+        this.blas = blas;
+        this.lapack = lapack;
     }
 
     /** Returns the byte value for BLAS. */
-    public byte getValue() { return value; }
+    public byte blas() { return blas; }
+
+    /** Returns the byte value for LAPACK. */
+    public byte lapack() { return lapack; }
 }
