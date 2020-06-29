@@ -740,6 +740,26 @@ public class OpenBLAS implements BLAS, LAPACK {
     }
 
     @Override
+    public int gbtrf(Layout layout, int m, int n, int kl, int ku, double[] AB, int ldab, int[] ipiv) {
+        return LAPACKE_dgbtrf(layout.lapack(), m, n, kl, ku, AB, ldab, ipiv);
+    }
+
+    @Override
+    public int gbtrf(Layout layout, int m, int n, int kl, int ku, DoubleBuffer AB, int ldab, IntBuffer ipiv) {
+        return LAPACKE_dgbtrf(layout.lapack(), m, n, kl, ku, AB, ldab, ipiv);
+    }
+
+    @Override
+    public int gbtrf(Layout layout, int m, int n, int kl, int ku, float[] AB, int ldab, int[] ipiv) {
+        return LAPACKE_sgbtrf(layout.lapack(), m, n, kl, ku, AB, ldab, ipiv);
+    }
+
+    @Override
+    public int gbtrf(Layout layout, int m, int n, int kl, int ku, FloatBuffer AB, int ldab, IntBuffer ipiv) {
+        return LAPACKE_sgbtrf(layout.lapack(), m, n, kl, ku, AB, ldab, ipiv);
+    }
+
+    @Override
     public int getrs(Layout layout, Transpose trans, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
         return LAPACKE_dgetrs(layout.lapack(), trans.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
     }
@@ -757,6 +777,26 @@ public class OpenBLAS implements BLAS, LAPACK {
     @Override
     public int getrs(Layout layout, Transpose trans, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
         return LAPACKE_sgetrs(layout.lapack(), trans.lapack(), n, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb) {
+        return LAPACKE_dgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb) {
+        return LAPACKE_dgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb) {
+        return LAPACKE_sgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
+    }
+
+    @Override
+    public int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb) {
+        return LAPACKE_sgbtrs(layout.lapack(), trans.lapack(), n, kl, ku, nrhs, A, lda, ipiv, B, ldb);
     }
 
     @Override
@@ -800,6 +840,26 @@ public class OpenBLAS implements BLAS, LAPACK {
     }
 
     @Override
+    public int pbtrf(Layout layout, UPLO uplo, int n, int kd, double[] AB, int ldab) {
+        return LAPACKE_dpbtrf(layout.lapack(), uplo.lapack(), n, kd, AB, ldab);
+    }
+
+    @Override
+    public int pbtrf(Layout layout, UPLO uplo, int n, int kd, DoubleBuffer AB, int ldab) {
+        return LAPACKE_dpbtrf(layout.lapack(), uplo.lapack(), n, kd, AB, ldab);
+    }
+
+    @Override
+    public int pbtrf(Layout layout, UPLO uplo, int n, int kd, float[] AB, int ldab) {
+        return LAPACKE_spbtrf(layout.lapack(), uplo.lapack(), n, kd, AB, ldab);
+    }
+
+    @Override
+    public int pbtrf(Layout layout, UPLO uplo, int n, int kd, FloatBuffer AB, int ldab) {
+        return LAPACKE_spbtrf(layout.lapack(), uplo.lapack(), n, kd, AB, ldab);
+    }
+
+    @Override
     public int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb) {
         return LAPACKE_dpotrs(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, B, ldb);
     }
@@ -817,6 +877,26 @@ public class OpenBLAS implements BLAS, LAPACK {
     @Override
     public int potrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb) {
         return LAPACKE_spotrs(layout.lapack(), uplo.lapack(), n, nrhs, A, lda, B, ldb);
+    }
+
+    @Override
+    public int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, double[] AB, int ldab, double[] B, int ldb) {
+        return LAPACKE_dpbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB, ldab, B, ldb);
+    }
+
+    @Override
+    public int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, DoubleBuffer AB, int ldab, DoubleBuffer B, int ldb) {
+        return LAPACKE_dpbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB, ldab, B, ldb);
+    }
+
+    @Override
+    public int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, float[] AB, int ldab, float[] B, int ldb) {
+        return LAPACKE_spbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB, ldab, B, ldb);
+    }
+
+    @Override
+    public int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, FloatBuffer AB, int ldab, FloatBuffer B, int ldb) {
+        return LAPACKE_spbtrs(layout.lapack(), uplo.lapack(), n, kd, nrhs, AB, ldab, B, ldb);
     }
 
     @Override

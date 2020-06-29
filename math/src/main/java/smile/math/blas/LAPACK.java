@@ -3944,6 +3944,138 @@ public interface LAPACK {
     int getrf2(Layout layout, int m, int n, FloatBuffer A, int lda, IntBuffer ipiv);
 
     /**
+     * Computes an LU factorization of a band matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param AB The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int gbtrf(Layout layout, int m, int n, int kl, int ku, double[] AB, int ldab, int[] ipiv);
+
+    /**
+     * Computes an LU factorization of a band matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param AB The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int gbtrf(Layout layout, int m, int n, int kl, int ku, DoubleBuffer AB, int ldab, IntBuffer ipiv);
+
+    /**
+     * Computes an LU factorization of a band matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param AB The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int gbtrf(Layout layout, int m, int n, int kl, int ku, float[] AB, int ldab, int[] ipiv);
+
+    /**
+     * Computes an LU factorization of a band matrix A
+     * using partial pivoting with row interchanges.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param AB The matrix of dimension (LDA, N).
+     *          On exit, the factors L and U from the factorization
+     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *               has been completed, but the factor U is exactly
+     *               singular, and division by zero will occur if it is used
+     *               to solve a system of equations.
+     */
+    int gbtrf(Layout layout, int m, int n, int kl, int ku, FloatBuffer AB, int ldab, IntBuffer ipiv);
+
+    /**
      * Solves a system of linear equations
      * <pre><code>
      *     A * X = B
@@ -4090,6 +4222,170 @@ public interface LAPACK {
      *         < 0:  if INFO = -i, the i-th argument had an illegal value
      */
     int getrs(Layout layout, Transpose trans, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GBTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The LU factorization computed by GBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, double[] AB, int ldab, int[] ipiv, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GBTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The LU factorization computed by GBTRF.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, DoubleBuffer AB, int ldab, IntBuffer ipiv, DoubleBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GBTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The LU factorization computed by GBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, float[] AB, int ldab, int[] ipiv, float[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
+     * using the LU factorization computed by GBTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kl The number of subdiagonal elements of band matrix.
+     *
+     * @param ku The number of superdiagonal elements of band matrix.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The LU factorization computed by GBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, FloatBuffer AB, int ldab, IntBuffer ipiv, FloatBuffer B, int ldb);
 
     /**
      * Computes the Cholesky factorization of a real symmetric
@@ -4300,6 +4596,118 @@ public interface LAPACK {
     int potrf2(Layout layout, UPLO uplo, int n, FloatBuffer A, int lda);
 
     /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite band matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param AB The band matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pbtrf(Layout layout, UPLO uplo, int n, int kd, double[] AB, int ldab);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite band matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param AB The band matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pbtrf(Layout layout, UPLO uplo, int n, int kd, DoubleBuffer AB, int ldab);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite band matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param AB The band matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pbtrf(Layout layout, UPLO uplo, int n, int kd, float[] AB, int ldab);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite band matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of rows/columns of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param AB The band matrix of dimension (LDA, N).
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pbtrf(Layout layout, UPLO uplo, int n, int kd, FloatBuffer AB, int ldab);
+
+    /**
      * Solves a system of linear equations
      * <pre><code>
      *     A * X = B
@@ -4438,6 +4846,154 @@ public interface LAPACK {
      *         < 0:  if INFO = -i, the i-th argument had an illegal value
      */
     int potrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite band matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, double[] AB, int ldab, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite band matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, DoubleBuffer AB, int ldab, DoubleBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite band matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, float[] AB, int ldab, float[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite band matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by POTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param kd The number of superdiagonals/subdiagonals of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AB The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *
+     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, FloatBuffer AB, int ldab, FloatBuffer B, int ldb);
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
