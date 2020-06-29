@@ -90,4 +90,4 @@ lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsO
 
 //lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(data)
 
-lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)
+lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala, mkl)
