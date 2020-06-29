@@ -91,7 +91,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      */
     private transient int ld;
     /**
-     * The symmetric matrix format.
+     * The upper or lower triangle of the symmetric band matrix.
      */
     private UPLO uplo = null;
 
@@ -204,7 +204,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         return uplo != null;
     }
 
-    /** Sets the format of packed matrix. */
+    /** Sets the format of symmetric band matrix. */
     public BandMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
@@ -218,7 +218,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         return this;
     }
 
-    /** Gets the format of packed matrix. */
+    /** Gets the format of symmetric band matrix. */
     public UPLO uplo() {
         return uplo;
     }
@@ -417,12 +417,12 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      */
     public static class LU {
         /**
-         * Array for internal storage of decomposition.
+         * The LU decomposition.
          */
         public final BandMatrix lu;
 
         /**
-         * Internal storage of pivot vector.
+         * The pivot vector.
          */
         public final int[] ipiv;
 
