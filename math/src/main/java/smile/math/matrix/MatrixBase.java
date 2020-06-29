@@ -17,12 +17,14 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
+
 /**
  * Named matrix.
  *
  * @author Haifeng Li
  */
-public abstract class MatrixBase {
+public abstract class MatrixBase implements Cloneable, Serializable {
     /**
      * The row names.
      */
@@ -43,11 +45,9 @@ public abstract class MatrixBase {
     public abstract int ncols();
 
     /**
-     * Returns the number of elements (nrows * ncols).
+     * Returns the storage size.
      */
-    public long size() {
-        return (long) nrows() * ncols();
-    }
+    public abstract long size();
 
     /**
      * Returns the string representation of A[i, j].
