@@ -103,6 +103,14 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * @param ku the number of superdiagonals.
      */
     public BandMatrix(int m, int n, int kl, int ku) {
+        if (m <= 0 || n <= 0) {
+            throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
+        }
+
+        if (kl < 0 || ku < 0) {
+            throw new IllegalArgumentException(String.format("Invalid subdiagonals or superdiagonals: kl = %d, ku = %d", kl, ku));
+        }
+
         if (kl >= m) {
             throw new IllegalArgumentException(String.format("Invalid subdiagonals %d >= %d", kl, m));
         }
@@ -126,7 +134,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
      * @param AB the band matrix. A[i, j] is stored in
-     *           AB[ku+1+i-j, j] for max(1, j-ku) <= i <= min(m, j+kl).
+     *           AB[ku+i-j, j] for max(0, j-ku) <= i <= min(m-1, j+kl).
      */
     public BandMatrix(int m, int n, int kl, int ku, double[][] AB) {
         this(m, n, kl, ku);
@@ -275,15 +283,15 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
 
     @Override
     public String str(int i, int j) {
-        return String.format("%.4", get(i, j));
+        return String.format("%.4f", get(i, j));
     }
 
     /**
      * Gets A[i,j].
      */
     public double get(int i, int j) {
-        if (Math.max(1, j-ku) <= i && i <= Math.min(m, j+kl)) {
-            return AB[j * ld + ku+1+i-j];
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            return AB[j * ld + ku + i - j];
         } else {
             return 0.0;
         }
@@ -293,8 +301,8 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * Sets A[i,j] = x.
      */
     public BandMatrix set(int i, int j, double x) {
-        if (Math.max(1, j-ku) <= i && i <= Math.min(m, j+kl)) {
-            AB[j * ld + ku+1+i-j] = x;
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            AB[j * ld + ku + i - j] = x;
         } else {
             throw new UnsupportedOperationException(String.format("Set element at (%d, %d)", i, j));
         }
@@ -343,9 +351,14 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * LU decomposition.
      */
     public LU lu() {
-        BandMatrix lu = clone();
-        int[] ipiv = new int[Math.min(m, n)];
-        int info = LAPACK.engine.gbtrf(lu.layout(), lu.m, lu.n, lu.kl, lu.ku, lu.AB, lu.ld, ipiv);
+        BandMatrix lu = new BandMatrix(m, n, 2*kl, ku);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < ld; i++) {
+                lu.AB[j * lu.ld + kl + i] = AB[j * ld + i];
+            }
+        }
+        int[] ipiv = new int[n];
+        int info = LAPACK.engine.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK GBTRF error code: " + info);
@@ -364,14 +377,29 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        BandMatrix L = clone();
-        int info = LAPACK.engine.pbtrf(L.layout(), L.uplo, L.n, L.kl, L.AB, L.ld);
+        BandMatrix lu = new BandMatrix(m, n, uplo == UPLO.LOWER ? kl : 0, uplo == UPLO.LOWER ? 0 : ku);
+        lu.uplo = uplo;
+        if (uplo == UPLO.LOWER) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i <= kl; i++) {
+                    lu.AB[j * lu.ld + i] = get(j + i, j);
+                }
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i <= ku; i++) {
+                    lu.AB[j * lu.ld + ku - i] = get(j - i, j);
+                }
+            }
+        }
+
+        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
         if (info != 0) {
             logger.error("LAPACK PBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PBTRF error code: " + info);
         }
 
-        return new Cholesky(L);
+        return new Cholesky(lu);
     }
 
     /**
@@ -439,7 +467,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
 
             double d = 1.0;
             for (int j = 0; j < n; j++) {
-                d *= lu.get(j, j);
+                d *= lu.AB[j * lu.ld + lu.kl/2 + lu.ku];
             }
 
             for (int j = 0; j < n; j++){
@@ -496,7 +524,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl, lu.ku, B.n, lu.AB, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -591,7 +619,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.kl, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
