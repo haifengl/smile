@@ -91,7 +91,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
      */
     transient int ld;
     /**
-     * The symmetric matrix format.
+     * The upper or lower triangle of the symmetric band matrix.
      */
     UPLO uplo = null;
 
@@ -204,7 +204,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
         return uplo != null;
     }
 
-    /** Sets the format of packed matrix. */
+    /** Sets the format of symmetric band matrix. */
     public FloatBandMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
@@ -417,12 +417,12 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
      */
     public static class LU {
         /**
-         * Array for internal storage of decomposition.
+         * The LU decomposition.
          */
         public final FloatBandMatrix lu;
 
         /**
-         * Internal storage of pivot vector.
+         * The pivot vector.
          */
         public final int[] ipiv;
 

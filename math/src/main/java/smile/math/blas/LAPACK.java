@@ -2594,7 +2594,7 @@ public interface LAPACK {
      *
      * @param jobvr The option for computing all or part of the matrix VT.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2641,7 +2641,7 @@ public interface LAPACK {
      *
      * @param jobvr The option for computing all or part of the matrix VT.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2688,7 +2688,7 @@ public interface LAPACK {
      *
      * @param jobvr The option for computing all or part of the matrix VT.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2735,7 +2735,7 @@ public interface LAPACK {
      *
      * @param jobvr The option for computing all or part of the matrix VT.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2782,7 +2782,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2812,7 +2812,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2842,7 +2842,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2872,7 +2872,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2903,7 +2903,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2934,7 +2934,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2965,7 +2965,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -2996,7 +2996,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -3042,7 +3042,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -3121,7 +3121,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -3200,7 +3200,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -3279,7 +3279,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On entry, the N-by-N matrix A.
@@ -4076,6 +4076,106 @@ public interface LAPACK {
     int gbtrf(Layout layout, int m, int n, int kl, int ku, FloatBuffer AB, int ldab, IntBuffer ipiv);
 
     /**
+     * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *               has been completed, but the block diagonal matrix D is
+     *               exactly singular, and division by zero will occur if it
+     *               is used to solve a system of equations.
+     */
+    int sptrf(Layout layout, UPLO uplo, int n, double[] AP, int[] ipiv);
+
+    /**
+     * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *               has been completed, but the block diagonal matrix D is
+     *               exactly singular, and division by zero will occur if it
+     *               is used to solve a system of equations.
+     */
+    int sptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP, IntBuffer ipiv);
+
+    /**
+     * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *               has been completed, but the block diagonal matrix D is
+     *               exactly singular, and division by zero will occur if it
+     *               is used to solve a system of equations.
+     */
+    int sptrf(Layout layout, UPLO uplo, int n, float[] AP, int[] ipiv);
+
+    /**
+     * Computes the Bunch–Kaufman factorization of a symmetric packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *
+     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *               has been completed, but the block diagonal matrix D is
+     *               exactly singular, and division by zero will occur if it
+     *               is used to solve a system of equations.
+     */
+    int sptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP, IntBuffer ipiv);
+
+    /**
      * Solves a system of linear equations
      * <pre><code>
      *     A * X = B
@@ -4388,6 +4488,146 @@ public interface LAPACK {
     int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, FloatBuffer AB, int ldab, IntBuffer ipiv, FloatBuffer B, int ldb);
 
     /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
+     * using the Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, int[] ipiv, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
+     * using the Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, IntBuffer ipiv, DoubleBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
+     * using the Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, IntBuffer ipiv, FloatBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * or
+     * <pre><code>
+     *     A**T * X = B
+     * </code></pre>
+     * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
+     * using the Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The Bunch-Kaufman factorization computed by SPTRF.
+     *
+     * @param ipiv The pivot indices that define the permutation matrix P;
+     *             row i of the matrix was interchanged with row IPIV(i).
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int sptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, int[] ipiv, float[] B, int ldb);
+
+    /**
      * Computes the Cholesky factorization of a real symmetric
      * positive definite matrix A.
      *
@@ -4396,7 +4636,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4422,7 +4662,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4448,7 +4688,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4474,7 +4714,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4500,7 +4740,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4526,7 +4766,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4552,7 +4792,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4578,7 +4818,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
@@ -4604,7 +4844,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param kd The number of superdiagonals/subdiagonals of the matrix A.
      *
@@ -4632,7 +4872,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param kd The number of superdiagonals/subdiagonals of the matrix A.
      *
@@ -4660,7 +4900,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param kd The number of superdiagonals/subdiagonals of the matrix A.
      *
@@ -4688,7 +4928,7 @@ public interface LAPACK {
      * @param uplo The upper or lower triangular part of the matrix A is
      *             to be referenced.
      *
-     * @param n The number of rows/columns of the matrix A.
+     * @param n The dimension of the matrix A.
      *
      * @param kd The number of superdiagonals/subdiagonals of the matrix A.
      *
@@ -4706,6 +4946,103 @@ public interface LAPACK {
      *               completed.
      */
     int pbtrf(Layout layout, UPLO uplo, int n, int kd, FloatBuffer AB, int ldab);
+
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pptrf(Layout layout, UPLO uplo, int n, double[] AP);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pptrf(Layout layout, UPLO uplo, int n, DoubleBuffer AP);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pptrf(Layout layout, UPLO uplo, int n, float[] AP);
+
+    /**
+     * Computes the Cholesky factorization of a real symmetric
+     * positive definite packed matrix A.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The dimension of the matrix A.
+     *
+     * @param AP The packed matrix.
+     *          On exit, the factor U or L from the Cholesky
+     *          factorization A = U**T*U or A = L*L**T.
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         > 0:  if INFO = i, the leading minor of order i is not
+     *               positive definite, and the factorization could not be
+     *               completed.
+     */
+    int pptrf(Layout layout, UPLO uplo, int n, FloatBuffer AP);
 
     /**
      * Solves a system of linear equations
@@ -4994,6 +5331,138 @@ public interface LAPACK {
      *         < 0:  if INFO = -i, the i-th argument had an illegal value
      */
     int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, FloatBuffer AB, int ldab, FloatBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite packed matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by PPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, double[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite packed matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by PPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, DoubleBuffer B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite packed matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by PPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, float[] B, int ldb);
+
+    /**
+     * Solves a system of linear equations
+     * <pre><code>
+     *     A * X = B
+     * </code></pre>
+     * where A is an N-by-N symmetric positive definite packed matrix and
+     * X and B are N-by-NRHS matrices using the Cholesky factorization
+     * A = U**T*U or A = L*L**T computed by PPTRF.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param uplo The upper or lower triangular part of the matrix A is
+     *             to be referenced.
+     *
+     * @param n The number of linear equations, i.e., the order of the matrix A.
+     *
+     * @param nrhs The number of right hand sides, i.e., the number of columns
+     *             of the matrix B.
+     *
+     * @param AP The triangular factor U or L from the Cholesky factorization
+     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *
+     * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
+     *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
+     *
+     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     *
+     * @return INFO flag.
+     *         = 0:  successful exit
+     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     */
+    int pptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, FloatBuffer B, int ldb);
 
     /**
      * Computes a QR factorization of a general M-by-N matrix A.
