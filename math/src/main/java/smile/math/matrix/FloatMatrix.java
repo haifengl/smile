@@ -35,19 +35,19 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     /**
      * The matrix storage.
      */
-    private transient FloatBuffer A;
+    transient FloatBuffer A;
     /**
      * The leading dimension.
      */
-    private transient int ld;
+    transient int ld;
     /**
      * The number of rows.
      */
-    private int m;
+    int m;
     /**
      * The number of columns.
      */
-    private int n;
+    int n;
     /**
      * The packed storage format compactly stores matrix elements when only
      * one part of the matrix, the upper or lower triangle, is necessary
@@ -55,12 +55,12 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * when the matrix is upper triangular, lower triangular, symmetric,
      * or Hermitian.
      */
-    private UPLO uplo = null;
+    UPLO uplo = null;
     /**
      * If not null, the matrix is triangular. The flag specifies if a
      * triangular matrix has unit diagonal elements.
      */
-    private Diag diag = null;
+    Diag diag = null;
 
     /**
      * Constructor of zero matrix.
@@ -1344,14 +1344,14 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatMatrix L = clone();
-        int info = LAPACK.engine.potrf(L.layout(), L.uplo, L.n, L.A, L.ld);
+        FloatMatrix lu = clone();
+        int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK GETRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
         }
 
-        return new Cholesky(L);
+        return new Cholesky(lu);
     }
 
     /**

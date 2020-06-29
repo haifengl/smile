@@ -17,7 +17,7 @@
 
 package smile.math.matrix;
 
-import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
@@ -62,38 +62,38 @@ import smile.math.blas.*;
  * 
  * @author Haifeng Li
  */
-public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication<double[]> {
+public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]> {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatBandMatrix.class);
 
     /**
      * The band matrix storage.
      */
-    private final double[] AB;
+    final float[] AB;
     /**
      * The number of rows.
      */
-    private final int m;
+    final int m;
     /**
      * The number of columns.
      */
-    private final int n;
+    final int n;
     /**
      * The number of subdiagonal rows.
      */
-    private final int kl;
+    final int kl;
     /**
      * The number of superdiagonal rows.
      */
-    private final int ku;
+    final int ku;
     /**
      * The leading dimension.
      */
-    private transient int ld;
+    transient int ld;
     /**
      * The symmetric matrix format.
      */
-    private UPLO uplo = null;
+    UPLO uplo = null;
 
     /**
      * Constructor.
@@ -102,7 +102,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
      */
-    public BandMatrix(int m, int n, int kl, int ku) {
+    public FloatBandMatrix(int m, int n, int kl, int ku) {
         if (m <= 0 || n <= 0) {
             throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
         }
@@ -124,7 +124,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         this.kl = kl;
         this.ku = ku;
         this.ld = kl + ku + 1;
-        this.AB = new double[ld * n];
+        this.AB = new float[ld * n];
     }
 
     /**
@@ -136,7 +136,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * @param AB the band matrix. A[i, j] is stored in
      *           AB[ku+i-j, j] for max(0, j-ku) <= i <= min(m-1, j+kl).
      */
-    public BandMatrix(int m, int n, int kl, int ku, double[][] AB) {
+    public FloatBandMatrix(int m, int n, int kl, int ku, float[][] AB) {
         this(m, n, kl, ku);
 
         for (int j = 0; j < n; j++) {
@@ -147,8 +147,8 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     }
 
     @Override
-    public BandMatrix clone() {
-        BandMatrix matrix = new BandMatrix(m, n, kl, ku);
+    public FloatBandMatrix clone() {
+        FloatBandMatrix matrix = new FloatBandMatrix(m, n, kl, ku);
         System.arraycopy(AB, 0, matrix.AB, 0, AB.length);
 
         if (m == n && kl == ku) {
@@ -205,7 +205,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     }
 
     /** Sets the format of packed matrix. */
-    public BandMatrix uplo(UPLO uplo) {
+    public FloatBandMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -226,9 +226,9 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     /**
      * Returns the diagonal elements.
      */
-    public double[] diag() {
+    public float[] diag() {
         int k = Math.min(m, n);
-        double[] d = new double[k];
+        float[] d = new float[k];
         for (int i = 0; i < k; i++) {
             d[i] = get(i, i);
         }
@@ -239,10 +239,10 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     /**
      * Returns the matrix trace. The sum of the diagonal elements.
      */
-    public double trace() {
+    public float trace() {
         int k = Math.min(m, n);
 
-        double t = 0.0;
+        float t = 0.0f;
         for (int i = 0; i < k; i++) {
             t += get(i, i);
         }
@@ -252,11 +252,11 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof BandMatrix)) {
+        if (o == null || !(o instanceof FloatBandMatrix)) {
             return false;
         }
 
-        return equals((BandMatrix) o, 1E-7);
+        return equals((FloatBandMatrix) o, 1E-7f);
     }
 
     /**
@@ -265,7 +265,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * @param o the other matrix.
      * @param eps the error margin.
      */
-    public boolean equals(BandMatrix o, double eps) {
+    public boolean equals(FloatBandMatrix o, float eps) {
         if (m != o.m || n != o.n) {
             return false;
         }
@@ -289,18 +289,18 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     /**
      * Gets A[i,j].
      */
-    public double get(int i, int j) {
+    public float get(int i, int j) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             return AB[j * ld + ku + i - j];
         } else {
-            return 0.0;
+            return 0.0f;
         }
     }
 
     /**
      * Sets A[i,j] = x.
      */
-    public BandMatrix set(int i, int j, double x) {
+    public FloatBandMatrix set(int i, int j, float x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             AB[j * ld + ku + i - j] = x;
         } else {
@@ -316,7 +316,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      *     y = alpha * A * x + beta * y
      * </code></pre>
      */
-    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+    public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         if (uplo != null) {
             BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
         } else {
@@ -325,25 +325,25 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     }
 
     @Override
-    public double[] mv(Transpose trans, double[] x) {
-        double[] y = new double[trans == Transpose.NO_TRANSPOSE ? n : m];
+    public float[] mv(Transpose trans, float[] x) {
+        float[] y = new float[trans == Transpose.NO_TRANSPOSE ? n : m];
         mv(trans, x, y);
         return y;
     }
 
     @Override
-    public void mv(Transpose trans, double[] x, double[] y) {
-        mv(trans, 1.0, x, 0.0, y);
+    public void mv(Transpose trans, float[] x, float[] y) {
+        mv(trans, 1.0f, x, 0.0f, y);
     }
 
     @Override
-    public void mv(Transpose trans, double[] work, int inputOffset, int outputOffset) {
-        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, trans == Transpose.NO_TRANSPOSE ? n : m);
-        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, trans == Transpose.NO_TRANSPOSE ? m : n);
+    public void mv(Transpose trans, float[] work, int inputOffset, int outputOffset) {
+        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, trans == Transpose.NO_TRANSPOSE ? n : m);
+        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, trans == Transpose.NO_TRANSPOSE ? m : n);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -351,7 +351,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * LU decomposition.
      */
     public LU lu() {
-        BandMatrix lu = new BandMatrix(m, n, 2*kl, ku);
+        FloatBandMatrix lu = new FloatBandMatrix(m, n, 2*kl, ku);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < ld; i++) {
                 lu.AB[j * lu.ld + kl + i] = AB[j * ld + i];
@@ -377,7 +377,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        BandMatrix lu = new BandMatrix(m, n, uplo == UPLO.LOWER ? kl : 0, uplo == UPLO.LOWER ? 0 : ku);
+        FloatBandMatrix lu = new FloatBandMatrix(m, n, uplo == UPLO.LOWER ? kl : 0, uplo == UPLO.LOWER ? 0 : ku);
         lu.uplo = uplo;
         if (uplo == UPLO.LOWER) {
             for (int j = 0; j < n; j++) {
@@ -419,7 +419,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * Array for internal storage of decomposition.
          */
-        public final BandMatrix lu;
+        public final FloatBandMatrix lu;
 
         /**
          * Internal storage of pivot vector.
@@ -441,7 +441,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
          * @param ipiv     the pivot vector
          * @param info     info > 0 if the matrix is singular
          */
-        public LU(BandMatrix lu, int[] ipiv, int info) {
+        public LU(FloatBandMatrix lu, int[] ipiv, int info) {
             this.lu = lu;
             this.ipiv = ipiv;
             this.info = info;
@@ -457,7 +457,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * Returns the matrix determinant
          */
-        public double det() {
+        public float det() {
             int m = lu.m;
             int n = lu.n;
 
@@ -465,7 +465,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            double d = 1.0;
+            float d = 1.0f;
             for (int j = 0; j < n; j++) {
                 d *= lu.AB[j * lu.ld + lu.kl/2 + lu.ku];
             }
@@ -482,8 +482,8 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
          */
-        public Matrix inverse() {
-            Matrix inv = Matrix.eye(lu.n);
+        public FloatMatrix inverse() {
+            FloatMatrix inv = FloatMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -494,9 +494,9 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
          *           On output, b will be overwritten with the solution matrix.
          * @exception  RuntimeException  if matrix is singular.
          */
-        public double[] solve(double[] b) {
-            double[] x = b.clone();
-            //solve(new Matrix(x));
+        public float[] solve(float[] b) {
+            float[] x = b.clone();
+            solve(new FloatMatrix(x));
             return x;
         }
 
@@ -506,8 +506,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
          *           On output, B will be overwritten with the solution matrix.
          * @throws  RuntimeException  if matrix is singular.
          */
-        public void solve(Matrix B) {
-            /*
+        public void solve(FloatMatrix B) {
             if (lu.m != lu.n) {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
             }
@@ -524,13 +523,11 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
             }
-
-             */
         }
     }
 
@@ -562,14 +559,14 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * The Cholesky decomposition.
          */
-        public final BandMatrix lu;
+        public final FloatBandMatrix lu;
 
         /**
          * Constructor.
          * @param lu the lower/upper triangular part of matrix contains the Cholesky
          *           factorization.
          */
-        public Cholesky(BandMatrix lu) {
+        public Cholesky(FloatBandMatrix lu) {
             if (lu.nrows() != lu.ncols()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
@@ -579,8 +576,8 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * Returns the matrix determinant
          */
-        public double det() {
-            double d = 1.0;
+        public float det() {
+            float d = 1.0f;
             for (int i = 0; i < lu.n; i++) {
                 d *= lu.get(i, i);
             }
@@ -591,8 +588,8 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         /**
          * Returns the matrix inverse.
          */
-        public Matrix inverse() {
-            Matrix inv = Matrix.eye(lu.n);
+        public FloatMatrix inverse() {
+            FloatMatrix inv = FloatMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -602,9 +599,9 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
          * @param b the right hand side of linear systems.
          * @return the solution vector.
          */
-        public double[] solve(double[] b) {
-            double[] x = b.clone();
-            //solve(new Matrix(x));
+        public float[] solve(float[] b) {
+            float[] x = b.clone();
+            solve(new FloatMatrix(x));
             return x;
         }
 
@@ -613,19 +610,16 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */
-        public void solve(Matrix B) {
-            /*
+        public void solve(FloatMatrix B) {
             if (B.m != lu.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
             }
-
-             */
         }
     }
 }
