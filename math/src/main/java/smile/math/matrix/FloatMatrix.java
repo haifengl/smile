@@ -49,11 +49,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      */
     int n;
     /**
-     * The packed storage format compactly stores matrix elements when only
-     * one part of the matrix, the upper or lower triangle, is necessary
-     * to determine all of the elements of the matrix. This is the case
-     * when the matrix is upper triangular, lower triangular, symmetric,
-     * or Hermitian.
+     * If not null, the matrix is symmetric or triangular.
      */
     UPLO uplo = null;
     /**
@@ -575,6 +571,18 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
+     * Sets submatrix A[i,j] = B.
+     */
+    public FloatMatrix set(int i, int j, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                set(i+ii, j+jj, B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /**
      * A[i,j] += x
      */
     public float add(int i, int j, float x) {
@@ -643,6 +651,16 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return this;
     }
 
+    /** Element-wise submatrix addition A[i, j] += B */
+    public FloatMatrix add(int i, int j, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                add(i+ii, j+jj, B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
     /** Element-wise addition C = A + B */
     public FloatMatrix add(FloatMatrix B, FloatMatrix C) {
         if (m != B.m || n != B.n) {
@@ -670,6 +688,16 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 sub(i, j, B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise submatrix subtraction A[i, j] -= B */
+    public FloatMatrix sub(int i, int j, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                sub(i+ii, j+jj, B.get(ii, jj));
             }
         }
         return this;
@@ -707,6 +735,16 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         return this;
     }
 
+    /** Element-wise submatrix multiplication A[i, j] *= B */
+    public FloatMatrix mul(int i, int j, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                mul(i+ii, j+jj, B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
     /** Element-wise multiplication C = A * B */
     public FloatMatrix mul(FloatMatrix B, FloatMatrix C) {
         if (m != B.m || n != B.n) {
@@ -734,6 +772,16 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 div(i, j, B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise submatrix division A[i, j] /= B */
+    public FloatMatrix div(int i, int j, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                div(i+ii, j+jj, B.get(ii, jj));
             }
         }
         return this;
@@ -1929,12 +1977,12 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      */
     public static class LU {
         /**
-         * Array for internal storage of decomposition.
+         * The LU decomposition.
          */
         public final FloatMatrix lu;
 
         /**
-         * Internal storage of pivot vector.
+         * The pivot vector.
          */
         public final int[] ipiv;
 
