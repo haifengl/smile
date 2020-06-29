@@ -20,7 +20,6 @@ package smile.math.matrix;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
-import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -29,7 +28,7 @@ import smile.math.blas.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
 
-public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]>, Serializable {
+public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
 
@@ -149,6 +148,24 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         this.n = n;
         this.ld = ld;
         this.A = A;
+    }
+
+    /**
+     * Creates a matrix.
+     * @param layout the matrix layout.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     */
+    public static FloatMatrix of(Layout layout, int m, int n) {
+        if (layout == Layout.COL_MAJOR) {
+            int ld = ld(m);
+            int size = ld * n;
+            return of(layout, m, n, ld, FloatBuffer.allocate(size));
+        } else {
+            int ld = ld(n);
+            int size = ld * m;
+            return of(layout, m, n, ld, FloatBuffer.allocate(size));
+        }
     }
 
     /**
@@ -285,7 +302,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * (((n * element_size + 511) / 512) * 512 + 64) /element_size,
      * where n is the matrix dimension along the leading dimension.
      */
-    private int ld(int n) {
+    private static int ld(int n) {
         int elementSize = 4;
         if (n <= 256 / elementSize) return n;
 
@@ -331,6 +348,11 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     @Override
     public int ncols() {
         return n;
+    }
+
+    @Override
+    public long size() {
+        return A.capacity();
     }
 
     /**
@@ -547,8 +569,9 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     /**
      * Sets A[i,j] = x.
      */
-    public void set(int i, int j, float x) {
+    public FloatMatrix set(int i, int j, float x) {
         A.put(index(i, j), x);
+        return this;
     }
 
     /**
@@ -1118,12 +1141,12 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         FloatMatrix inv = eye(n);
         int[] ipiv = new int[n];
         if (isSymmetric()) {
-            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld(), IntBuffer.wrap(ipiv), inv.A, inv.ld());
+            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, IntBuffer.wrap(ipiv), inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("SYSV fails: " + info);
             }
         } else {
-            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld(), IntBuffer.wrap(ipiv), inv.A, inv.ld());
+            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, IntBuffer.wrap(ipiv), inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("GESV fails: " + info);
             }
@@ -1142,15 +1165,15 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
-                    BLAS.engine.trmv(layout(), uplo, trans, diag, m, A, ld(), y, 1);
+                    BLAS.engine.trmv(layout(), uplo, trans, diag, m, A, ld, y, 1);
                 } else {
-                    BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld(), x, 1, beta, y, 1);
+                    BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
                 }
             } else {
-                BLAS.engine.symv(layout(), uplo, m, alpha, A, ld(), x, 1, beta, y, 1);
+                BLAS.engine.symv(layout(), uplo, m, alpha, A, ld, x, 1, beta, y, 1);
             }
         } else {
-            BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld(), x, 1, beta, y, 1);
+            BLAS.engine.gemv(layout(), trans, m, n, alpha, A, ld, x, 1, beta, y, 1);
         }
     }
 
@@ -1200,9 +1223,9 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         if (isSymmetric()) {
-            BLAS.engine.symm(C.layout(), Side.LEFT, uplo, C.m, C.n, alpha, A, ld(), B.A, B.ld, beta, C.A, C.ld);
+            BLAS.engine.symm(C.layout(), Side.LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
         } else if (B.isSymmetric()) {
-            BLAS.engine.symm(C.layout(), Side.RIGHT, uplo, C.m, C.n, alpha, B.A, B.ld, A, ld(), beta, C.A, C.ld);
+            BLAS.engine.symm(C.layout(), Side.RIGHT, uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
         } else {
             if (C.layout() != layout()) transA = flip(transA);
             if (C.layout() != B.layout()) transB = flip(transB);
@@ -1322,7 +1345,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         FloatMatrix L = clone();
-        int info = LAPACK.engine.potrf(L.layout(), L.uplo, n, L.A, L.ld);
+        int info = LAPACK.engine.potrf(L.layout(), L.uplo, L.n, L.A, L.ld);
         if (info != 0) {
             logger.error("LAPACK GETRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
