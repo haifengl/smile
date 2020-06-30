@@ -29,7 +29,7 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class FloatSymmMatrix extends FMatrix {
+public class FloatSymmMatrix extends SMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatSymmMatrix.class);
 

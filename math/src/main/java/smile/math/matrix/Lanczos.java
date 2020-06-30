@@ -42,7 +42,7 @@ public class Lanczos {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static EVD eigen(Matrix A, int k) {
+    public static EVD eigen(DMatrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrows());
     }
 
@@ -56,13 +56,9 @@ public class Lanczos {
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
      */
-    public static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
+    public static EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
-        }
-
-        if (!A.isSymmetric()) {
-            throw new IllegalArgumentException("Matrix is not symmetric.");
         }
 
         if (k < 1 || k > A.nrows()) {
@@ -128,7 +124,7 @@ public class Lanczos {
         MathEx.scale(t, wptr[3]);
 
         // take the first step
-        A.ax(wptr[3], wptr[0]);
+        A.mv(wptr[3], wptr[0]);
         alf[0] = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-alf[0], wptr[1], wptr[0]);
         t = MathEx.dot(wptr[0], wptr[3]);
@@ -203,7 +199,7 @@ public class Lanczos {
                 t = 1.0 / rnm;
                 MathEx.scale(t, wptr[0], wptr[1]);
                 MathEx.scale(t, wptr[3]);
-                A.ax(wptr[3], wptr[0]);
+                A.mv(wptr[3], wptr[0]);
                 MathEx.axpy(-rnm, wptr[2], wptr[0]);
                 alf[j] = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-alf[j], wptr[1], wptr[0]);
@@ -318,7 +314,7 @@ public class Lanczos {
      * of operator can be found.
      * @param step   starting index for a Lanczos run
      */
-    private static double startv(Matrix A, double[][] q, double[][] wptr, int step) {
+    private static double startv(DMatrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
@@ -331,7 +327,7 @@ public class Lanczos {
             MathEx.copy(wptr[0], wptr[3]);
 
             // apply operator to put r in range (essential if m singular)
-            A.ax(wptr[3], wptr[0]);
+            A.mv(wptr[3], wptr[0]);
             MathEx.copy(wptr[0], wptr[3]);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {

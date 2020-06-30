@@ -40,7 +40,7 @@ public interface PageRank {
      * @param A the matrix supporting matrix vector multiplication operation.
      * @return the page rank vector.
      */
-    static double[] of(Matrix A) {
+    static double[] of(DMatrix A) {
         int n = A.nrows();
         double[] v = new double[n];
         Arrays.fill(v, 1.0 / n);
@@ -53,7 +53,7 @@ public interface PageRank {
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    static double[] of(Matrix A, double[] v) {
+    static double[] of(DMatrix A, double[] v) {
         return of(A, v, 0.85, 1E-7, 57);
     }
 
@@ -67,7 +67,7 @@ public interface PageRank {
      *                algorithm does not converge.
      * @return the page rank vector.
      */
-    static double[] of(Matrix A, double[] v, double damping, double tol, int maxIter) {
+    static double[] of(DMatrix A, double[] v, double damping, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -87,7 +87,7 @@ public interface PageRank {
         double[] p = Arrays.copyOf(v, n);
 
         for (int iter = 1; iter <= maxIter; iter++) {
-            A.ax(p, z);
+            A.mv(p, z);
             double beta = 1.0 - damping * MathEx.norm1(z);
 
             double delta = 0.0;

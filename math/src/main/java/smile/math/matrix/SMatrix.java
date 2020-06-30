@@ -20,15 +20,15 @@ package smile.math.matrix;
 import smile.math.blas.Transpose;
 
 /**
- * Single precision matrix.
+ * Single precision matrix base class.
  *
  * @author Haifeng Li
  */
-public abstract class FMatrix extends IMatrix<float[]> {
+public abstract class SMatrix extends IMatrix<float[]> {
     /**
      * Sets A[i,j] = x.
      */
-    public abstract FMatrix set(int i, int j, float x);
+    public abstract SMatrix set(int i, int j, float x);
 
     /**
      * Returns A[i, j].

@@ -20,7 +20,7 @@ package smile.math.matrix;
 import smile.math.blas.Transpose;
 
 /**
- * Double precision matrix.
+ * Double precision matrix base class.
  *
  * @author Haifeng Li
  */
