@@ -65,7 +65,7 @@ import static smile.math.blas.UPLO.*;
  * 
  * @author Haifeng Li
  */
-public class BandMatrix extends MatrixBase implements DMatrix {
+public class BandMatrix extends DMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
@@ -226,33 +226,6 @@ public class BandMatrix extends MatrixBase implements DMatrix {
         return uplo;
     }
 
-    /**
-     * Returns the diagonal elements.
-     */
-    public double[] diag() {
-        int k = Math.min(m, n);
-        double[] d = new double[k];
-        for (int i = 0; i < k; i++) {
-            d[i] = get(i, i);
-        }
-
-        return d;
-    }
-
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public double trace() {
-        int k = Math.min(m, n);
-
-        double t = 0.0;
-        for (int i = 0; i < k; i++) {
-            t += get(i, i);
-        }
-
-        return t;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof BandMatrix)) {
@@ -285,13 +258,6 @@ public class BandMatrix extends MatrixBase implements DMatrix {
     }
 
     @Override
-    public String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
-    }
-
-    /**
-     * Gets A[i,j].
-     */
     public double get(int i, int j) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             return AB[j * ld + ku + i - j];
@@ -300,9 +266,7 @@ public class BandMatrix extends MatrixBase implements DMatrix {
         }
     }
 
-    /**
-     * Sets A[i,j] = x.
-     */
+    @Override
     public BandMatrix set(int i, int j, double x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             AB[j * ld + ku + i - j] = x;

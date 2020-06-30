@@ -17,6 +17,8 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
+
 /**
  * An abstract interface of matrix. The most important method is the matrix vector
  * multiplication, which is the only operation needed in many iterative matrix
@@ -65,26 +67,124 @@ package smile.math.matrix;
  *
  * @author Haifeng Li
  */
-public interface IMatrix<T> {
+public abstract class IMatrix<T> implements Cloneable, Serializable {
+    /**
+     * The row names.
+     */
+    private String[] rowNames;
+    /**
+     * The column names.
+     */
+    private String[] colNames;
+
     /**
      * Returns the number of rows.
      */
-    int nrows();
+    public abstract int nrows();
 
     /**
      * Returns the number of columns.
      */
-    int ncols();
+    public abstract int ncols();
+
+    /**
+     * Returns the number of stored matrix elements. For conventional matrix,
+     * it is simplify nrows * ncols. But it is usually much less for band,
+     * packed or sparse matrix.
+     */
+    public abstract long size();
+
+    /** Returns the row names. */
+    public String[] rowNames() {
+        return rowNames;
+    }
+
+    /** Sets the row names. */
+    public void rowNames(String[] names) {
+        if (names != null && names.length != nrows()) {
+            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrows()));
+        }
+        rowNames = names;
+    }
+
+    /** Returns the column names. */
+    public String[] colNames() {
+        return colNames;
+    }
+
+    /** Sets the column names. */
+    public void colNames(String[] names) {
+        if (names != null && names.length != ncols()) {
+            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncols()));
+        }
+        colNames = names;
+    }
+
+    @Override
+    public String toString() {
+        return toString(false);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param full Print the full matrix if true. Otherwise,
+     *             print only top left 7 x 7 submatrix.
+     */
+    public String toString(boolean full) {
+        return full ? toString(nrows(), ncols()) : toString(7, 7);
+    }
+
+    /**
+     * Returns the string representation of matrix.
+     * @param m the number of rows to print.
+     * @param n the number of columns to print.
+     */
+    public String toString(int m, int n) {
+        StringBuilder sb = new StringBuilder(nrows() + " x " + ncols() + "\n");
+        m = Math.min(m, nrows());
+        n = Math.min(n, ncols());
+
+        String newline = n < ncols() ? "...\n" : "\n";
+
+        if (colNames != null) {
+            sb.append(rowNames == null ? "   " : "          ");
+
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format(" %10s", colNames[j]));
+            }
+            sb.append(newline);
+        }
+
+        for (int i = 0; i < m; i++) {
+            sb.append(rowNames == null ? "   " : String.format("%-10s", rowNames[i]));
+
+            for (int j = 0; j < n; j++) {
+                sb.append(String.format(" %10s", str(i, j)));
+            }
+            sb.append(newline);
+        }
+
+        if (m < nrows()) {
+            sb.append("  ...\n");
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Returns the string representation of A[i, j].
+     */
+    abstract String str(int i, int j);
 
     /**
      * Returns the matrix-vector multiplication A * x.
      */
-    T mv(T x);
+    public abstract T mv(T x);
 
     /**
      * Matrix-vector multiplication y = A * x.
      */
-    void mv(T x, T y);
+    public abstract void mv(T x, T y);
 
     /**
      * Matrix-vector multiplication A * x.
@@ -92,17 +192,17 @@ public interface IMatrix<T> {
      * @param inputOffset the offset of input vector in workspace.
      * @param outputOffset the offset of output vector in workspace.
      */
-    void mv(T work, int inputOffset, int outputOffset);
+    public abstract void mv(T work, int inputOffset, int outputOffset);
 
     /**
      * Returns Matrix-vector multiplication A' * x.
      */
-    T tv(T x);
+    public abstract T tv(T x);
 
     /**
      * Matrix-vector multiplication y = A' * x.
      */
-    void tv(T x, T y);
+    public abstract void tv(T x, T y);
 
     /**
      * Matrix-vector multiplication A' * x.
@@ -110,5 +210,5 @@ public interface IMatrix<T> {
      * @param inputOffset the offset of input vector in workspace.
      * @param outputOffset the offset of output vector in workspace.
      */
-    void tv(T work, int inputOffset, int outputOffset);
+    public abstract void tv(T work, int inputOffset, int outputOffset);
 }

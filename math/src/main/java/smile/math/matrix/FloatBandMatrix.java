@@ -65,7 +65,7 @@ import static smile.math.blas.UPLO.*;
  * 
  * @author Haifeng Li
  */
-public class FloatBandMatrix extends MatrixBase implements FMatrix {
+public class FloatBandMatrix extends FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatBandMatrix.class);
 
@@ -226,33 +226,6 @@ public class FloatBandMatrix extends MatrixBase implements FMatrix {
         return uplo;
     }
 
-    /**
-     * Returns the diagonal elements.
-     */
-    public float[] diag() {
-        int k = Math.min(m, n);
-        float[] d = new float[k];
-        for (int i = 0; i < k; i++) {
-            d[i] = get(i, i);
-        }
-
-        return d;
-    }
-
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public float trace() {
-        int k = Math.min(m, n);
-
-        float t = 0.0f;
-        for (int i = 0; i < k; i++) {
-            t += get(i, i);
-        }
-
-        return t;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof FloatBandMatrix)) {
@@ -285,13 +258,6 @@ public class FloatBandMatrix extends MatrixBase implements FMatrix {
     }
 
     @Override
-    public String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
-    }
-
-    /**
-     * Gets A[i,j].
-     */
     public float get(int i, int j) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             return AB[j * ld + ku + i - j];
@@ -300,9 +266,7 @@ public class FloatBandMatrix extends MatrixBase implements FMatrix {
         }
     }
 
-    /**
-     * Sets A[i,j] = x.
-     */
+    @Override
     public FloatBandMatrix set(int i, int j, float x) {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             AB[j * ld + ku + i - j] = x;
