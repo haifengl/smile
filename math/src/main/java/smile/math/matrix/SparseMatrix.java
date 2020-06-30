@@ -339,7 +339,12 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     @Override
     public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         int k = trans == Transpose.NO_TRANSPOSE ? m : n;
-        double[] ax = beta == 0.0 ? y : new double[k];
+        double[] ax = y;
+        if (beta == 0.0) {
+            Arrays.fill(y, 0.0);
+        } else {
+            ax = new double[k];
+        }
 
         if (trans == Transpose.NO_TRANSPOSE) {
             for (int j = 0; j < n; j++) {
@@ -355,8 +360,10 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
             }
         }
 
-        for (int i = 0; i < k; i++) {
-            y[i] = alpha * ax[i] + beta * y[i];
+        if (beta != 0.0 || alpha != 1.0) {
+            for (int i = 0; i < k; i++) {
+                y[i] = alpha * ax[i] + beta * y[i];
+            }
         }
     }
 
@@ -377,7 +384,7 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
 
         for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                work[outputOffset + i] += nonzeros[j] * work[rowIndex[inputOffset + j]];
+                work[outputOffset + i] += nonzeros[j] * work[inputOffset + rowIndex[j]];
             }
         }
     }

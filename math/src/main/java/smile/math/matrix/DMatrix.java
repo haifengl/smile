@@ -18,6 +18,7 @@
 package smile.math.matrix;
 
 import smile.math.blas.Transpose;
+import static smile.math.blas.Transpose.*;
 
 /**
  * Double precision matrix base class.
@@ -86,25 +87,25 @@ public abstract class DMatrix extends IMatrix<double[]> {
     @Override
     public double[] mv(double[] x) {
         double[] y = new double[nrows()];
-        mv(Transpose.NO_TRANSPOSE, 1.0, x, 0.0, y);
+        mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
 
     @Override
     public void mv(double[] x, double[] y) {
-        mv(Transpose.NO_TRANSPOSE, 1.0, x, 0.0, y);
+        mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
     }
 
     @Override
     public double[] tv(double[] x) {
         double[] y = new double[nrows()];
-        mv(Transpose.TRANSPOSE, 1.0, x, 0.0, y);
+        mv(TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
 
     @Override
     public void tv(double[] x, double[] y) {
-        mv(Transpose.TRANSPOSE, 1.0, x, 0.0, y);
+        mv(TRANSPOSE, 1.0, x, 0.0, y);
     }
 
     /**

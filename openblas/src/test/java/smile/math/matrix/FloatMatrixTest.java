@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.math.blas.openblas;
+package smile.math.matrix;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,7 +25,6 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-import smile.math.matrix.FloatMatrix;
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
