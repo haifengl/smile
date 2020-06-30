@@ -558,43 +558,242 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * A[i,j] += x
+     * A[i,j] += b
      */
-    public float add(int i, int j, float x) {
+    public float add(int i, int j, float b) {
         int k = index(i, j);
-        float y = A.get(k) + x;
+        float y = A.get(k) + b;
         A.put(k, y);
         return y;
     }
 
     /**
-     * A[i,j] -= x
+     * A[i,j] -= b
      */
-    public float sub(int i, int j, float x) {
+    public float sub(int i, int j, float b) {
         int k = index(i, j);
-        float y = A.get(k) - x;
+        float y = A.get(k) - b;
         A.put(k, y);
         return y;
     }
 
     /**
-     * A[i,j] *= x
+     * A[i,j] *= b
      */
-    public float mul(int i, int j, float x) {
+    public float mul(int i, int j, float b) {
         int k = index(i, j);
-        float y = A.get(k) * x;
+        float y = A.get(k) * b;
         A.put(k, y);
         return y;
     }
 
     /**
-     * A[i,j] /= x
+     * A[i,j] /= b
      */
-    public float div(int i, int j, float x) {
+    public float div(int i, int j, float b) {
         int k = index(i, j);
-        float y = A.get(k) / x;
+        float y = A.get(k) / b;
         A.put(k, y);
         return y;
+    }
+
+    /** A += b */
+    public FloatMatrix add(float b) {
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                add(i, j, b);
+            }
+        }
+
+        return this;
+    }
+
+    /** A -= b */
+    public FloatMatrix sub(float b) {
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sub(i, j, b);
+            }
+        }
+
+        return this;
+    }
+
+    /** A *= b */
+    public FloatMatrix mul(float b) {
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                mul(i, j, b);
+            }
+        }
+
+        return this;
+    }
+
+    /** A /= b */
+    public FloatMatrix div(float b) {
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                div(i, j, b);
+            }
+        }
+
+        return this;
+    }
+
+    /** Element-wise submatrix addition A[i, j] += alpha * B */
+    public FloatMatrix add(int i, int j, float alpha, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                add(i+ii, j+jj, alpha * B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise submatrix subtraction A[i, j] -= alpha * B */
+    public FloatMatrix sub(int i, int j, float alpha, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                sub(i+ii, j+jj, alpha * B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise submatrix multiplication A[i, j] *= alpha * B */
+    public FloatMatrix mul(int i, int j, float alpha, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                mul(i+ii, j+jj, alpha * B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise submatrix division A[i, j] /= alpha * B */
+    public FloatMatrix div(int i, int j, float alpha, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                div(i+ii, j+jj, alpha * B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise addition A += alpha * B */
+    public FloatMatrix add(float alpha, FloatMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                add(i, j, alpha * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise subtraction A -= alpha * B */
+    public FloatMatrix sub(float alpha, FloatMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                sub(i, j, alpha * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise multiplication A *= alpha * B */
+    public FloatMatrix mul(float alpha, FloatMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                mul(i, j, alpha * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise division A /= alpha * B */
+    public FloatMatrix div(float alpha, FloatMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                div(i, j, alpha * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise addition C = alpha * A + beta * B */
+    public FloatMatrix add(float alpha, FloatMatrix A, float beta, FloatMatrix B) {
+        if (m != A.m || n != A.n) {
+            throw new IllegalArgumentException("Matrix A is not of same size.");
+        }
+
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * A.get(i, j) + beta * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise subtraction C = alpha * A - beta * B */
+    public FloatMatrix sub(float alpha, FloatMatrix A, float beta, FloatMatrix B) {
+        return add(alpha, A, -beta, B);
+    }
+
+    /** Element-wise multiplication C = alpha * A * B */
+    public FloatMatrix mul(float alpha, FloatMatrix A, FloatMatrix B) {
+        if (m != A.m || n != A.n) {
+            throw new IllegalArgumentException("Matrix A is not of same size.");
+        }
+
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * A.get(i, j) * B.get(i, j));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise division C = alpha * A / B */
+    public FloatMatrix div(float alpha, FloatMatrix A, FloatMatrix B) {
+        if (m != A.m || n != A.n) {
+            throw new IllegalArgumentException("Matrix A is not of same size.");
+        }
+
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * A.get(i, j) / B.get(i, j));
+            }
+        }
+        return this;
     }
 
     /** Rank-1 update A += alpha * x * y' */
@@ -610,278 +809,6 @@ public class FloatMatrix extends SMatrix {
         }
 
         return this;
-    }
-
-    /** Element-wise addition A += B */
-    public FloatMatrix add(FloatMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                add(i, j, B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise submatrix addition A[i, j] += B */
-    public FloatMatrix add(int i, int j, FloatMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                add(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise addition C = A + B */
-    public FloatMatrix add(FloatMatrix B, FloatMatrix C) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix A and B are not of same size.");
-        }
-
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix A and C are not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) + B.get(i, j));
-            }
-        }
-        return C;
-    }
-
-    /** Element-wise subtraction A -= B */
-    public FloatMatrix sub(FloatMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                sub(i, j, B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise submatrix subtraction A[i, j] -= B */
-    public FloatMatrix sub(int i, int j, FloatMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                sub(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise subtraction C = A - B */
-    public FloatMatrix sub(FloatMatrix B, FloatMatrix C) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix A and B are not of same size.");
-        }
-
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix A and C are not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) - B.get(i, j));
-            }
-        }
-        return C;
-    }
-
-    /** Element-wise multiplication A *= B */
-    public FloatMatrix mul(FloatMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                mul(i, j, B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise submatrix multiplication A[i, j] *= B */
-    public FloatMatrix mul(int i, int j, FloatMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                mul(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise multiplication C = A * B */
-    public FloatMatrix mul(FloatMatrix B, FloatMatrix C) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix A and B are not of same size.");
-        }
-
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix A and C are not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) * B.get(i, j));
-            }
-        }
-        return C;
-    }
-
-    /** Element-wise division A /= B */
-    public FloatMatrix div(FloatMatrix B) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                div(i, j, B.get(i, j));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise submatrix division A[i, j] /= B */
-    public FloatMatrix div(int i, int j, FloatMatrix B) {
-        for (int jj = 0; jj < B.n; jj++) {
-            for (int ii = 0; ii < B.m; ii++) {
-                div(i+ii, j+jj, B.get(ii, jj));
-            }
-        }
-        return this;
-    }
-
-    /** Element-wise division C = A / B */
-    public FloatMatrix div(FloatMatrix B, FloatMatrix C) {
-        if (m != B.m || n != B.n) {
-            throw new IllegalArgumentException("Matrix A and B are not of same size.");
-        }
-
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix A and C are not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) / B.get(i, j));
-            }
-        }
-        return C;
-    }
-
-    /** A += b */
-    public FloatMatrix add(float b) {
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                add(i, j, b);
-            }
-        }
-
-        return this;
-    }
-
-    /** C = A + b */
-    public FloatMatrix add(float b, FloatMatrix C) {
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) + b);
-            }
-        }
-
-        return C;
-    }
-
-    /** A -= b */
-    public FloatMatrix sub(float b) {
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                sub(i, j, b);
-            }
-        }
-
-        return this;
-    }
-
-    /** C = A - b */
-    public FloatMatrix sub(float b, FloatMatrix C) {
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) - b);
-            }
-        }
-
-        return C;
-    }
-
-    /** A *= b */
-    public FloatMatrix mul(float b) {
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                mul(i, j, b);
-            }
-        }
-
-        return this;
-    }
-
-    /** C = A * b */
-    public FloatMatrix mul(float b, FloatMatrix C) {
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) * b);
-            }
-        }
-
-        return C;
-    }
-
-    /** A /= b */
-    public FloatMatrix div(float b) {
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                div(i, j, b);
-            }
-        }
-
-        return this;
-    }
-
-    /** C = A / b */
-    public FloatMatrix div(float b, FloatMatrix C) {
-        if (m != C.m || n != C.n) {
-            throw new IllegalArgumentException("Matrix is not of same size.");
-        }
-
-        for (int j = 0; j < n; j++) {
-            for (int i = 0; i < m; i++) {
-                C.set(i, j, get(i, j) / b);
-            }
-        }
-
-        return C;
     }
 
     /**
