@@ -17,12 +17,18 @@
 
 package smile.math.matrix;
 
+import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.Arrays;
+import java.util.Scanner;
+
 import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
@@ -348,7 +354,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
     @Override
     public long size() {
-        return A.capacity();
+        return m * n;
     }
 
     /**
@@ -508,7 +514,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     }
 
     /**
-     * Returns the transposed matrix.
+     * Returns the transpose of matrix.
      */
     public FloatMatrix transpose() {
         return of(Layout.ROW_MAJOR, n, m, ld, A);
@@ -2314,5 +2320,68 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 throw new IllegalArgumentException("LAPACK TRTRS error code: " + info);
             }
         }
+    }
+
+    /**
+     * Reads a matrix from a Matrix Market File Format file.
+     * For details, see
+     * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
+     *
+     * The returned matrix may be dense or sparse.
+     *
+     * @param path the input file path.
+     */
+    public static FloatMatrix market(Path path) throws IOException, ParseException {
+        try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
+             Scanner scanner = new Scanner(reader)) {
+
+            // The header line has the form
+            // %%MatrixMarket object format field symmetry
+            String header = scanner.next();
+            if (!header.equals("%%MatrixMarket")) {
+                throw new ParseException("Invalid Matrix Market file header", reader.getLineNumber());
+            }
+
+            String object = scanner.next();
+            if (!object.equals("matrix")) {
+                throw new UnsupportedOperationException("The object is not a matrix file: " + object);
+            }
+
+            String format = scanner.next();
+            if (!format.equals("array")) {
+                throw new UnsupportedOperationException("Unsupported Matrix Market format: " + format);
+            }
+
+            String field = scanner.next();
+            if (field.equals("complex") || field.equals("pattern")) {
+                throw new UnsupportedOperationException("No support of complex or pattern matrix");
+            }
+            String symmetry = scanner.nextLine().trim();
+            boolean symmetric = symmetry.equals("symmetric");
+            boolean skew = symmetry.equals("skew-symmetric");
+
+            // Ignore comment lines
+            String line = scanner.nextLine();
+            while (line.startsWith("%")) {
+                line = scanner.nextLine();
+            }
+
+            // Size line
+            Scanner s = new Scanner(line);
+            int m = s.nextInt();
+            int n = s.nextInt();
+
+            FloatMatrix matrix = new FloatMatrix(m, n);
+            if (symmetric) matrix.uplo(UPLO.LOWER);
+
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    float x = scanner.nextFloat();
+                    matrix.set(i, j, x);
+                }
+            }
+
+            return matrix;
+       }
     }
 }

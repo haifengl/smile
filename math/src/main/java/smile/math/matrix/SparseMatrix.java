@@ -19,13 +19,17 @@ package smile.math.matrix;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.LineNumberReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import smile.math.MathEx;
+import smile.math.blas.Transpose;
+import smile.util.SparseArray;
 import smile.util.Strings;
 
 import static java.util.Spliterator.*;
@@ -60,34 +64,30 @@ import static java.util.Spliterator.*;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, SparseMatrix>, Iterable<SparseMatrix.Entry> {
+public class SparseMatrix extends MatrixBase implements MatrixVectorMultiplication<double[]>, Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of rows.
      */
-    private int nrows;
+    private final int m;
     /**
      * The number of columns.
      */
-    private int ncols;
+    private final int n;
     /**
      * The index of the start of columns.
      */
-    private int[] colIndex;
+    private final int[] colIndex;
     /**
      * The row indices of nonzero values.
      */
-    private int[] rowIndex;
+    private final int[] rowIndex;
     /**
      * The array of nonzero values stored column by column.
      */
-    private double[] x;
-    /**
-     * True if the matrix is symmetric.
-     */
-    private boolean symmetric = false;
+    private final double[] nonzeros;
 
     /**
      * Encapsulates an entry in a matrix for use in streaming. As typical stream object,
@@ -103,8 +103,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         public final int j;
         /** The value. */
         public final double x;
-
-        /** The index to the internal storage. */
+        /** The index to the matrix storage. */
         public final int index;
 
         /**
@@ -114,7 +113,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         private Entry(int i, int j, int index) {
             this.i = i;
             this.j = j;
-            this.x = SparseMatrix.this.x[index];
+            this.x = nonzeros[index];
             this.index = index;
         }
 
@@ -123,7 +122,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
          * is final and thus not updated.
          */
         public void update(double value) {
-            SparseMatrix.this.x[index] = value;
+            nonzeros[index] = value;
         }
 
         @Override
@@ -134,73 +133,73 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
     /**
      * Constructor.
-     * @param nrows the number of rows in the matrix.
-     * @param ncols the number of columns in the matrix.
+     * @param m the number of rows in the matrix.
+     * @param n the number of columns in the matrix.
      * @param nvals the number of nonzero entries in the matrix.
      */
-    private SparseMatrix(int nrows, int ncols, int nvals) {
-        this.nrows = nrows;
-        this.ncols = ncols;
+    private SparseMatrix(int m, int n, int nvals) {
+        this.m = m;
+        this.n = n;
         rowIndex = new int[nvals];
-        colIndex = new int[ncols + 1];
-        x = new double[nvals];
+        colIndex = new int[n + 1];
+        nonzeros = new double[nvals];
     }
 
     /**
      * Constructor.
-     * @param nrows the number of rows in the matrix.
-     * @param ncols the number of columns in the matrix.
+     * @param m the number of rows in the matrix.
+     * @param n the number of columns in the matrix.
      * @param rowIndex the row indices of nonzero values.
      * @param colIndex the index of the start of columns.
-     * @param x the array of nonzero values stored column by column.
+     * @param nonzeros the array of nonzero values stored column by column.
      */
-    public SparseMatrix(int nrows, int ncols, double[] x, int[] rowIndex, int[] colIndex) {
-        this.nrows = nrows;
-        this.ncols = ncols;
+    public SparseMatrix(int m, int n, double[] nonzeros, int[] rowIndex, int[] colIndex) {
+        this.m = m;
+        this.n = n;
         this.rowIndex = rowIndex;
         this.colIndex = colIndex;
-        this.x = x;
+        this.nonzeros = nonzeros;
     }
 
     /**
      * Constructor.
-     * @param D a dense matrix to converted into sparse matrix format.
+     * @param A a dense matrix to converted into sparse matrix format.
      */
-    public SparseMatrix(double[][] D) {
-        this(D, 100 * MathEx.EPSILON);
+    public SparseMatrix(double[][] A) {
+        this(A, 100 * MathEx.EPSILON);
     }
 
     /**
      * Constructor.
-     * @param D a dense matrix to converted into sparse matrix format.
+     * @param A a dense matrix to converted into sparse matrix format.
      * @param tol the tolerance to regard a value as zero if |x| &lt; tol.
      */
-    public SparseMatrix(double[][] D, double tol) {
-        nrows = D.length;
-        ncols = D[0].length;
+    public SparseMatrix(double[][] A, double tol) {
+        m = A.length;
+        n = A[0].length;
 
-        int n = 0; // number of non-zero elements
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
-                if (Math.abs(D[i][j]) >= tol) {
-                    n++;
+        int nvals = 0; // number of non-zero elements
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
+                if (Math.abs(A[i][j]) >= tol) {
+                    nvals++;
                 }
             }
         }
 
-        x = new double[n];
-        rowIndex = new int[n];
-        colIndex = new int[ncols + 1];
-        colIndex[ncols] = n;
+        nonzeros = new double[nvals];
+        rowIndex = new int[nvals];
+        colIndex = new int[n + 1];
+        colIndex[n] = nvals;
 
-        n = 0;
-        for (int j = 0; j < ncols; j++) {
-            colIndex[j] = n;
-            for (int i = 0; i < nrows; i++) {
-                if (Math.abs(D[i][j]) >= tol) {
-                    rowIndex[n] = i;
-                    x[n] = D[i][j];
-                    n++;
+        int k = 0;
+        for (int j = 0; j < n; j++) {
+            colIndex[j] = k;
+            for (int i = 0; i < m; i++) {
+                if (Math.abs(A[i][j]) >= tol) {
+                    rowIndex[k] = i;
+                    nonzeros[k] = A[i][j];
+                    k++;
                 }
             }
         }
@@ -208,9 +207,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
 
     @Override
     public SparseMatrix clone() {
-        SparseMatrix copy = new SparseMatrix(nrows, ncols, x.clone(), rowIndex.clone(), colIndex.clone());
-        copy.symmetric = symmetric;
-        return copy;
+        return new SparseMatrix(m, n, nonzeros.clone(), rowIndex.clone(), colIndex.clone());
     }
 
     /**
@@ -218,7 +215,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * @return an iterator of nonzero entries
      */
     public Iterator<Entry> iterator() {
-        return iterator(0, ncols);
+        return iterator(0, n);
     }
 
     /**
@@ -247,30 +244,18 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     }
 
     @Override
-    public boolean isSymmetric() {
-        return symmetric;
-    }
-
-    @Override
-    public void setSymmetric(boolean symmetric) {
-        this.symmetric = symmetric;
-    }
-
-    @Override
     public int nrows() {
-        return nrows;
+        return m;
     }
 
     @Override
     public int ncols() {
-        return ncols;
+        return n;
     }
 
-    /**
-     * Returns the number of nonzero values.
-     */
-    public int length() {
-        return colIndex[ncols];
+    @Override
+    public long size() {
+        return colIndex[n];
     }
 
     /*
@@ -304,7 +289,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
      * Provides a stream over all of the non-zero elements of a sparse matrix.
      */
     public Stream<Entry> nonzeros() {
-        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), length(), ORDERED | SIZED | IMMUTABLE);
+        Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), size(), ORDERED | SIZED | IMMUTABLE);
         return StreamSupport.stream(spliterator, false);
     }
 
@@ -319,110 +304,103 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return StreamSupport.stream(spliterator, false);
     }
 
-    /** Returns the value at the index of internal storage. */
-    public double get(int index) {
-        return x[index];
-    }
-
-    /** Sets the value at the index of internal storage. */
-    public double set(int index, double value) {
-        return x[index] = value;
-    }
-
     @Override
+    public String str(int i, int j) {
+        return String.format("%.4f", get(i, j));
+    }
+
+    /** Returns the element at the storage index. */
+    /*
+    public double get(int index) {
+        return nonzeros[index];
+    }
+*/
+    /** Sets the element at the storage index. */
+    /*
+    public double set(int index, double value) {
+        return nonzeros[index] = value;
+    }
+*/
+    /**
+     * Returns the element A[i, j].
+     */
     public double get(int i, int j) {
-        if (i < 0 || i >= nrows || j < 0 || j >= ncols) {
+        if (i < 0 || i >= m || j < 0 || j >= n) {
             throw new IllegalArgumentException("Invalid index: row = " + i + " col = " + j);
         }
 
         for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
             if (rowIndex[k] == i) {
-                return x[k];
+                return nonzeros[k];
             }
         }
 
         return 0.0;
     }
 
-    @Override
-    public double[] ax(double[] x, double[] y) {
-        Arrays.fill(y, 0.0);
-
-        for (int j = 0; j < ncols; j++) {
-            for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
-            }
+    /**
+     * Matrix-vector multiplication.
+     * <pre><code>
+     *     y = alpha * A * x + beta * y
+     * </code></pre>
+     */
+    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        int k = trans == Transpose.NO_TRANSPOSE ? m : n;
+        for (int i = 0; i < k; i++) {
+            y[i] *= beta;
         }
 
+        if (trans == Transpose.NO_TRANSPOSE) {
+            for (int j = 0; j < n; j++) {
+                for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
+                    y[rowIndex[i]] += nonzeros[i] * x[j];
+                }
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
+                    y[i] += nonzeros[j] * x[rowIndex[j]];
+                }
+            }
+        }
+    }
+
+    @Override
+    public double[] mv(Transpose trans, double[] x) {
+        double[] y = new double[trans == Transpose.NO_TRANSPOSE ? m : n];
+        mv(trans, x, y);
         return y;
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y) {
-        for (int j = 0; j < ncols; j++) {
-            for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
-            }
-        }
-
-        return y;
+    public void mv(Transpose trans, double[] x, double[] y) {
+        mv(trans, 1.0, x, 0.0f, y);
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y, double b) {
-        for (int i = 0; i < y.length; i++) {
-            y[i] *= b;
-        }
+    public void mv(Transpose trans, double[] work, int inputOffset, int outputOffset) {
+        Arrays.fill(work, outputOffset, outputOffset + (trans == Transpose.NO_TRANSPOSE ? m : n), 0.0);
 
-        for (int j = 0; j < ncols; j++) {
-            for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                y[rowIndex[i]] += this.x[i] * x[j];
+        if (trans == Transpose.NO_TRANSPOSE) {
+            for (int j = 0; j < n; j++) {
+                for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
+                    work[outputOffset + rowIndex[i]] += nonzeros[i] * work[inputOffset + j];
+                }
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
+                    work[outputOffset + i] += nonzeros[j] * work[rowIndex[inputOffset + j]];
+                }
             }
         }
-
-        return y;
     }
 
-    @Override
-    public double[] atx(double[] x, double[] y) {
-        Arrays.fill(y, 0.0);
-        for (int i = 0; i < ncols; i++) {
-            for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
-            }
-        }
-
-        return y;
-    }
-
-
-    @Override
-    public double[] atxpy(double[] x, double[] y) {
-        for (int i = 0; i < ncols; i++) {
-            for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] atxpy(double[] x, double[] y, double b) {
-        for (int i = 0; i < ncols; i++) {
-            y[i] *= b;
-            for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                y[i] += this.x[j] * x[rowIndex[j]];
-            }
-        }
-
-        return y;
-    }
-
-    @Override
+    /**
+     * Returns the transpose of matrix.
+     */
     public SparseMatrix transpose() {
-        int m = nrows, n = ncols;
-        SparseMatrix at = new SparseMatrix(n, m, x.length);
+        SparseMatrix trans = new SparseMatrix(n, m, nonzeros.length);
 
         int[] count = new int[m];
         for (int i = 0; i < n; i++) {
@@ -433,38 +411,36 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         }
 
         for (int j = 0; j < m; j++) {
-            at.colIndex[j + 1] = at.colIndex[j] + count[j];
+            trans.colIndex[j + 1] = trans.colIndex[j] + count[j];
         }
 
         Arrays.fill(count, 0);
         for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 int k = rowIndex[j];
-                int index = at.colIndex[k] + count[k];
-                at.rowIndex[index] = i;
-                at.x[index] = x[j];
+                int index = trans.colIndex[k] + count[k];
+                trans.rowIndex[index] = i;
+                trans.nonzeros[index] = nonzeros[j];
                 count[k]++;
             }
         }
 
-        return at;
+        return trans;
     }
 
     /**
      * Returns the matrix multiplication C = A * B.
      */
-    @Override
-    public SparseMatrix abmm(SparseMatrix B) {
-        if (ncols != B.nrows) {
+    public SparseMatrix mm(SparseMatrix B) {
+        if (n != B.m) {
             throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
         }
 
-        int m = nrows;
-        int anz = length();
-        int n = B.ncols;
+        int n = B.n;
+        int anz = colIndex[n];
         int[] Bp = B.colIndex;
         int[] Bi = B.rowIndex;
-        double[] Bx = B.x;
+        double[] Bx = B.nonzeros;
         int bnz = Bp[n];
 
         int[] w = new int[m];
@@ -475,7 +451,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         SparseMatrix C = new SparseMatrix(m, n, nzmax);
         int[] Cp = C.colIndex;
         int[] Ci = C.rowIndex;
-        double[] Cx = C.x;
+        double[] Cx = C.nonzeros;
 
         int nz = 0;
         for (int j = 0; j < n; j++) {
@@ -487,8 +463,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 System.arraycopy(Cx, 0, Cx2, 0, nz);
                 Ci = Ci2;
                 Cx = Cx2;
-                C.rowIndex = Ci;
-                C.x = Cx;
+                C = new SparseMatrix(m, n, Cx2, Ci2, Cp);
             }
 
             // column j of C starts here
@@ -515,7 +490,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
     private static int scatter(SparseMatrix A, int j, double beta, int[] w, double[] x, int mark, SparseMatrix C, int nz) {
         int[] Ap = A.colIndex;
         int[] Ai = A.rowIndex;
-        double[] Ax = A.x;
+        double[] Ax = A.nonzeros;
 
         int[] Ci = C.rowIndex;
         for (int p = Ap[j]; p < Ap[j + 1]; p++) {
@@ -532,37 +507,24 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return nz;
     }
 
-    @Override
-    public SparseMatrix abtmm(SparseMatrix B) {
-        SparseMatrix BT = B.transpose();
-        return abmm(BT);
-    }
-
-    @Override
-    public SparseMatrix atbmm(SparseMatrix B) {
-        SparseMatrix AT = transpose();
-        return AT.abmm(B);
-    }
-
-    @Override
-    public SparseMatrix atbtmm(SparseMatrix B) {
-        return B.abmm(this).transpose();
-    }
-
-    @Override
+    /**
+     * Returns A' * A
+     */
     public SparseMatrix ata() {
         SparseMatrix AT = transpose();
         return AT.aat(this);
     }
 
-    @Override
+    /**
+     * Returns A * A'
+     */
     public SparseMatrix aat() {
         SparseMatrix AT = transpose();
         return aat(AT);
     }
 
+    /** Returns A * A' */
     private SparseMatrix aat(SparseMatrix AT) {
-        int m = nrows;
         int[] done = new int[m];
         for (int i = 0; i < m; i++) {
             done[i] = -1;
@@ -625,13 +587,13 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
                 int k = AT.rowIndex[j];
                 for (int l = colIndex[k]; l < colIndex[k + 1]; l++) {
                     int h = rowIndex[l];
-                    temp[h] += AT.x[j] * x[l];
+                    temp[h] += AT.nonzeros[j] * nonzeros[l];
                 }
             }
 
             for (int j = aat.colIndex[i]; j < aat.colIndex[i + 1]; j++) {
                 int k = aat.rowIndex[j];
-                aat.x[j] = temp[k];
+                aat.nonzeros[j] = temp[k];
                 temp[k] = 0.0;
             }
         }
@@ -639,7 +601,9 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         return aat;
     }
 
-    @Override
+    /**
+     * Returns the diagonal elements.
+     */
     public double[] diag() {
         int n = Math.min(nrows(), ncols());
         double[] d = new double[n];
@@ -647,7 +611,7 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
         for (int i = 0; i < n; i++) {
             for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
                 if (rowIndex[j] == i) {
-                    d[i] = x[j];
+                    d[i] = nonzeros[j];
                     break;
                 }
             }
@@ -769,6 +733,115 @@ public class SparseMatrix implements Matrix, MatrixMultiplication<SparseMatrix, 
             }
 
             return new SparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+        }
+    }
+
+    /**
+     * Reads a matrix from a Matrix Market File Format file.
+     * For details, see
+     * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
+     *
+     * The returned matrix may be dense or sparse.
+     *
+     * @param path the input file path.
+     */
+    public static SparseMatrix market(Path path) throws IOException, ParseException {
+        try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
+             Scanner scanner = new Scanner(reader)) {
+
+            // The header line has the form
+            // %%MatrixMarket object format field symmetry
+            String header = scanner.next();
+            if (!header.equals("%%MatrixMarket")) {
+                throw new ParseException("Invalid Matrix Market file header", reader.getLineNumber());
+            }
+
+            String object = scanner.next();
+            if (!object.equals("matrix")) {
+                throw new UnsupportedOperationException("The object is not a matrix file: " + object);
+            }
+
+            String format = scanner.next();
+            if (!format.equals("coordinate")) {
+                throw new UnsupportedOperationException("Unsupported Matrix Market format: " + format);
+            }
+
+            String field = scanner.next();
+            if (field.equals("complex") || field.equals("pattern")) {
+                throw new UnsupportedOperationException("No support of complex or pattern matrix");
+            }
+            String symmetry = scanner.nextLine().trim();
+            boolean symmetric = symmetry.equals("symmetric");
+            boolean skew = symmetry.equals("skew-symmetric");
+
+            // Ignore comment lines
+            String line = scanner.nextLine();
+            while (line.startsWith("%")) {
+                line = scanner.nextLine();
+            }
+
+            // Size line
+            Scanner s = new Scanner(line);
+            int m = s.nextInt();
+            int n = s.nextInt();
+            int nz = s.nextInt();
+
+            int[] colSize = new int[n];
+            List<SparseArray> rows = new ArrayList<>();
+            for (int i = 0; i < m; i++) {
+                rows.add(new SparseArray());
+            }
+
+            for (int k = 0; k < nz; k++) {
+                String[] tokens = scanner.nextLine().trim().split("\\s+");
+                if (tokens.length != 3) {
+                    throw new ParseException("Invalid data line: " + line, reader.getLineNumber());
+                }
+
+                int i = Integer.parseInt(tokens[0]) - 1;
+                int j = Integer.parseInt(tokens[1]) - 1;
+                double x = Double.parseDouble(tokens[2]);
+
+                SparseArray row = rows.get(i);
+                row.set(j, x);
+                colSize[j] += 1;
+
+                if (symmetric) {
+                    row = rows.get(j);
+                    row.set(i, x);
+                    colSize[i] += 1;
+                } else if (skew) {
+                    row = rows.get(j);
+                    row.set(i, -x);
+                    colSize[i] += 1;
+                }
+            }
+
+            int[] pos = new int[n];
+            int[] colIndex = new int[n + 1];
+            for (int i = 0; i < n; i++) {
+                colIndex[i + 1] = colIndex[i] + colSize[i];
+            }
+
+            if (symmetric || skew) {
+                nz *= 2;
+            }
+            int[] rowIndex = new int[nz];
+            double[] nonzeros = new double[nz];
+
+            for (int i = 0; i < m; i++) {
+                for (SparseArray.Entry e :rows.get(i)) {
+                    int j = e.i;
+                    int k = colIndex[j] + pos[j];
+
+                    rowIndex[k] = i;
+                    nonzeros[k] = e.x;
+                    pos[j]++;
+                }
+            }
+
+            SparseMatrix matrix = new SparseMatrix(m, n, nonzeros, rowIndex, colIndex);
+            return matrix;
         }
     }
 }
