@@ -84,8 +84,8 @@ public class BandMatrixTest {
             assertEquals(y[i], y2[i], 1E-7f);
         }
 
-        y = a.mv(Transpose.TRANSPOSE, x);
-        y2 = band.mv(Transpose.TRANSPOSE, x);
+        y = a.tv(x);
+        y2 = band.tv(x);
         for (int i = 0; i < y.length; i++) {
             assertEquals(y[i], y2[i], 1E-7f);
         }

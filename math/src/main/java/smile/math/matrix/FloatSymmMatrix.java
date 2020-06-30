@@ -21,13 +21,15 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
+import static smile.math.blas.Layout.*;
+import static smile.math.blas.UPLO.*;
 
 /**
  * They symmetric matrix in packed storage.
  *
  * @author Haifeng Li
  */
-public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]> {
+public class FloatSymmMatrix extends MatrixBase implements FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatSymmMatrix.class);
 
@@ -67,7 +69,7 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
     public FloatSymmMatrix(UPLO uplo, float[][] AP) {
         this(uplo, AP.length);
 
-        if (uplo == UPLO.LOWER) {
+        if (uplo == LOWER) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
                     this.AP[i + ((2*n-j-1) * j / 2)] = AP[i][j];
@@ -108,7 +110,7 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
      * Returns the matrix layout.
      */
     public Layout layout() {
-        return Layout.COL_MAJOR;
+        return COL_MAJOR;
     }
 
     /** Gets the format of packed matrix. */
@@ -180,7 +182,7 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
      * Gets A[i,j].
      */
     public float get(int i, int j) {
-        if (uplo == UPLO.LOWER) {
+        if (uplo == LOWER) {
             if (j > i) {
                 int tmp = i;
                 i = j;
@@ -201,7 +203,7 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
      * Sets A[i,j] = x.
      */
     public FloatSymmMatrix set(int i, int j, float x) {
-        if (uplo == UPLO.LOWER) {
+        if (uplo == LOWER) {
             if (j > i) {
                 int tmp = i;
                 i = j;
@@ -220,26 +222,9 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
         return this;
     }
 
-    /**
-     * Matrix-vector multiplication.
-     * <pre><code>
-     *     y = alpha * A * x + beta * y
-     * </code></pre>
-     */
-    public void mv(float alpha, float[] x, float beta, float[] y) {
+    @Override
+    public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         BLAS.engine.spmv(layout(), uplo, n, alpha, AP, x, 1, beta, y, 1);
-    }
-
-    @Override
-    public float[] mv(float[] x) {
-        float[] y = new float[n];
-        mv(x, y);
-        return y;
-    }
-
-    @Override
-    public void mv(float[] x, float[] y) {
-        mv(1.0f, x, 0.0f, y);
     }
 
     @Override
@@ -250,17 +235,7 @@ public class FloatSymmMatrix extends MatrixBase implements MatrixVectorMultiplic
     }
 
     @Override
-    public float[] mv(Transpose trans, float[] x) {
-        return mv(x);
-    }
-
-    @Override
-    public void mv(Transpose trans, float[] x, float[] y) {
-        mv(1.0f, x, 0.0f, y);
-    }
-
-    @Override
-    public void mv(Transpose trans, float[] work, int inputOffset, int outputOffset) {
+    public void tv(float[] work, int inputOffset, int outputOffset) {
         mv(work, inputOffset, outputOffset);
     }
 

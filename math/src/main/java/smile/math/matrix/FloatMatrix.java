@@ -33,8 +33,13 @@ import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
+import static smile.math.blas.Diag.*;
+import static smile.math.blas.Layout.*;
+import static smile.math.blas.Side.*;
+import static smile.math.blas.Transpose.*;
+import static smile.math.blas.UPLO.*;
 
-public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]> {
+public class FloatMatrix extends MatrixBase implements FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
 
@@ -138,11 +143,11 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @param A the matrix storage.
      */
     public FloatMatrix(int m, int n, int ld, FloatBuffer A) {
-        if (layout() == Layout.COL_MAJOR && ld < m) {
+        if (layout() == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
 
-        if (layout() == Layout.ROW_MAJOR && ld < n) {
+        if (layout() == ROW_MAJOR && ld < n) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
         }
 
@@ -159,7 +164,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @param n the number of columns.
      */
     public static FloatMatrix of(Layout layout, int m, int n) {
-        if (layout == Layout.COL_MAJOR) {
+        if (layout == COL_MAJOR) {
             int ld = ld(m);
             int size = ld * n;
             return of(layout, m, n, ld, FloatBuffer.allocate(size));
@@ -179,21 +184,21 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * @param A the matrix storage.
      */
     public static FloatMatrix of(Layout layout, int m, int n, int ld, FloatBuffer A) {
-        if (layout == Layout.COL_MAJOR && ld < m) {
+        if (layout == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
 
-        if (layout == Layout.ROW_MAJOR && ld < n) {
+        if (layout == ROW_MAJOR && ld < n) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for ROW_MAJOR: %d < %d", ld, n));
         }
 
-        if (layout == Layout.COL_MAJOR) {
+        if (layout == COL_MAJOR) {
             return new FloatMatrix(m, n, ld, A);
         } else {
             return new FloatMatrix(m, n, ld, A) {
                 @Override
                 public Layout layout() {
-                    return Layout.ROW_MAJOR;
+                    return ROW_MAJOR;
                 }
 
                 @Override
@@ -361,7 +366,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * Returns the matrix layout.
      */
     public Layout layout() {
-        return Layout.COL_MAJOR;
+        return COL_MAJOR;
     }
 
     /**
@@ -517,7 +522,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
      * Returns the transpose of matrix.
      */
     public FloatMatrix transpose() {
-        return of(Layout.ROW_MAJOR, n, m, ld, A);
+        return of(ROW_MAJOR, n, m, ld, A);
     }
 
     @Override
@@ -1231,38 +1236,28 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
     }
 
-    /**
-     * Matrix-vector multiplication.
-     * <pre><code>
-     *     y = alpha * A * x + beta * y
-     * </code></pre>
-     */
+    @Override
     public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         mv(trans, alpha, FloatBuffer.wrap(x), beta, FloatBuffer.wrap(y));
     }
 
     @Override
-    public float[] mv(Transpose trans, float[] x) {
-        float[] y = new float[trans == Transpose.NO_TRANSPOSE ? n : m];
-        mv(trans, x, y);
-        return y;
+    public void mv(float[] work, int inputOffset, int outputOffset) {
+        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, n);
+        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, m);
+        mv(NO_TRANSPOSE, 1.0f, xb, 0.0f, yb);
     }
 
     @Override
-    public void mv(Transpose trans, float[] x, float[] y) {
-        mv(trans, 1.0f, FloatBuffer.wrap(x), 0.0f, FloatBuffer.wrap(y));
-    }
-
-    @Override
-    public void mv(Transpose trans, float[] work, int inputOffset, int outputOffset) {
-        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, trans == Transpose.NO_TRANSPOSE ? n : m);
-        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, trans == Transpose.NO_TRANSPOSE ? m : n);
-        mv(trans, 1.0f, xb, 0.0f, yb);
+    public void tv(float[] work, int inputOffset, int outputOffset) {
+        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, m);
+        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, n);
+        mv(TRANSPOSE, 1.0f, xb, 0.0f, yb);
     }
 
     /** Flips the transpose operation. */
     private Transpose flip(Transpose trans) {
-        return trans == Transpose.NO_TRANSPOSE ? Transpose.TRANSPOSE : Transpose.NO_TRANSPOSE;
+        return trans == NO_TRANSPOSE ? TRANSPOSE : NO_TRANSPOSE;
     }
 
     /**
@@ -1277,13 +1272,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         if (isSymmetric()) {
-            BLAS.engine.symm(C.layout(), Side.LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
+            BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
         } else if (B.isSymmetric()) {
-            BLAS.engine.symm(C.layout(), Side.RIGHT, uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
+            BLAS.engine.symm(C.layout(), RIGHT, uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
         } else {
             if (C.layout() != layout()) transA = flip(transA);
             if (C.layout() != B.layout()) transB = flip(transB);
-            int k = transA == Transpose.NO_TRANSPOSE ? n : m;
+            int k = transA == NO_TRANSPOSE ? n : m;
 
             BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, ld);
         }
@@ -1292,21 +1287,21 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
     /** Returns A' * A */
     public FloatMatrix ata() {
         FloatMatrix C = new FloatMatrix(n, n);
-        mm(Transpose.TRANSPOSE, Transpose.NO_TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, transpose(), 0.0f, C);
         return C;
     }
 
     /** Returns A * A' */
     public FloatMatrix aat() {
         FloatMatrix C = new FloatMatrix(m, m);
-        mm(Transpose.NO_TRANSPOSE, Transpose.TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, transpose(), 0.0f, C);
         return C;
     }
 
     /** Returns A * D * B, where D is a diagonal matrix. */
     public FloatMatrix adb(Transpose transA, Transpose transB, FloatMatrix B, float[] diag) {
         FloatMatrix C;
-        if (transA == Transpose.NO_TRANSPOSE) {
+        if (transA == NO_TRANSPOSE) {
             C = new FloatMatrix(m, n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
@@ -1322,7 +1317,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             }
         }
 
-        if (transB == Transpose.NO_TRANSPOSE) {
+        if (transB == NO_TRANSPOSE) {
             return C.abmm(B);
         } else {
             return C.abtmm(B);
@@ -1336,7 +1331,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         FloatMatrix C = new FloatMatrix(m, B.n);
-        mm(Transpose.NO_TRANSPOSE, Transpose.NO_TRANSPOSE, 1.0f, B, 0.0f, C);
+        mm(NO_TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
 
@@ -1347,7 +1342,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         FloatMatrix C = new FloatMatrix(m, B.m);
-        mm(Transpose.NO_TRANSPOSE, Transpose.TRANSPOSE, 1.0f, B, 0.0f, C);
+        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
 
@@ -1358,7 +1353,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         FloatMatrix C = new FloatMatrix(n, B.n);
-        mm(Transpose.TRANSPOSE, Transpose.NO_TRANSPOSE, 1.0f, B, 0.0f, C);
+        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
 
@@ -1369,7 +1364,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
         }
 
         FloatMatrix C = new FloatMatrix(n, B.m);
-        mm(Transpose.TRANSPOSE, Transpose.TRANSPOSE, 1.0f, B, 0.0f, C);
+        mm(TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
 
@@ -1466,7 +1461,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             FloatMatrix VT = new FloatMatrix(k, n);
             FloatMatrix W = clone();
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.ECONOMY, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
                 logger.error("LAPACK GESDD error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
@@ -1749,7 +1744,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 sigma[i] = 1.0f / s[i];
             }
 
-            return V.adb(Transpose.NO_TRANSPOSE, Transpose.TRANSPOSE, U, sigma);
+            return V.adb(NO_TRANSPOSE, TRANSPOSE, U, sigma);
         }
 
         /**
@@ -1769,7 +1764,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
 
             int r = rank();
             float[] Utb = new float[s.length];
-            U.submatrix(0, 0, m-1, r-1).mv(Transpose.TRANSPOSE, b, Utb);
+            U.submatrix(0, 0, m-1, r-1).tv(b, Utb);
             for (int i = 0; i < r; i++) {
                 Utb[i] /= s[i];
             }
@@ -2089,7 +2084,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.getrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -2230,7 +2225,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
                 }
             }
 
-            L.uplo(UPLO.LOWER);
+            L.uplo(LOWER);
             return new Cholesky(L);
         }
 
@@ -2307,13 +2302,13 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), Side.LEFT, Transpose.TRANSPOSE, B.nrows(), B.ncols(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
+            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrows(), B.ncols(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
             }
 
-            info = LAPACK.engine.trtrs(qr.layout(), UPLO.UPPER, Transpose.NO_TRANSPOSE, Diag.NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
+            info = LAPACK.engine.trtrs(qr.layout(), UPPER, NO_TRANSPOSE, NON_UNIT, qr.n, B.n, qr.A, qr.ld, B.A, B.ld);
 
             if (info != 0) {
                 logger.error("LAPACK TRTRS error code: {}", info);
@@ -2372,7 +2367,7 @@ public class FloatMatrix extends MatrixBase implements MatrixVectorMultiplicatio
             int n = s.nextInt();
 
             FloatMatrix matrix = new FloatMatrix(m, n);
-            if (symmetric) matrix.uplo(UPLO.LOWER);
+            if (symmetric) matrix.uplo(LOWER);
 
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
