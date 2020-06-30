@@ -17,49 +17,37 @@
 
 package smile.math.matrix;
 
+import smile.math.blas.Transpose;
+
 /**
  * The matrix of A' * A. For SVD, we compute eigen decomposition of A' * A
  * when m >= n, or that of A * A' when m < n.
  *
  * @author Haifeng Li
  */
-class ATA implements Matrix {
+class ATA extends DMatrix {
 
-    private Matrix A;
-    private Matrix AtA;
+    private DMatrix A;
+    private DMatrix AtA;
     double[] buf;
 
     /** Constructor. */
-    public ATA(Matrix A) {
+    public ATA(DMatrix A) {
         this.A = A;
 
         if (A.nrows() >= A.ncols()) {
             buf = new double[A.nrows()];
 
-            if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
-                AtA = A.ata();
+            if ((A.ncols() < 10000) && (A instanceof Matrix)) {
+                //AtA = A.ata();
             }
         } else {
             buf = new double[A.ncols()];
 
-            if ((A.nrows() < 10000) && (A instanceof DenseMatrix)) {
-                AtA = A.aat();
+            if ((A.nrows() < 10000) && (A instanceof Matrix)) {
+                //AtA = A.aat();
             }
         }
-    }
-
-    /** Private constructor for clone(). */
-    private ATA() {
-
-    }
-
-    @Override
-    public ATA clone() {
-        ATA copy = new ATA();
-        copy.A = A;
-        copy.AtA = AtA;
-        copy.buf = buf.clone();
-        return copy;
     }
 
     @Override
@@ -77,54 +65,32 @@ class ATA implements Matrix {
     }
 
     @Override
-    public ATA transpose() {
-        return this;
+    public long size() {
+        return A.size();
     }
 
     @Override
-    public ATA ata() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public ATA aat() {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public double[] ax(double[] x, double[] y) {
+    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         if (AtA != null) {
-            AtA.ax(x, y);
+            AtA.mv(trans, alpha, x, beta, y);
         } else {
             if (A.nrows() >= A.ncols()) {
-                A.ax(x, buf);
-                A.atx(buf, y);
+                A.mv(x, buf);
+                A.tv(buf, y);
             } else {
-                A.atx(x, buf);
-                A.ax(buf, y);
+                A.tv(x, buf);
+                A.mv(buf, y);
             }
         }
-
-        return y;
     }
 
     @Override
-    public boolean isSymmetric() {
-        return true;
-    }
-
-    @Override
-    public double[] atx(double[] x, double[] y) {
-        return ax(x, y);
-    }
-
-    @Override
-    public double[] axpy(double[] x, double[] y) {
+    public void mv(double[] work, int inputOffset, int outputOffset) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public double[] axpy(double[] x, double[] y, double b) {
+    public void tv(double[] work, int inputOffset, int outputOffset) {
         throw new UnsupportedOperationException();
     }
 
@@ -134,17 +100,7 @@ class ATA implements Matrix {
     }
 
     @Override
-    public double apply(int i, int j) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public double[] atxpy(double[] x, double[] y) {
-        throw new UnsupportedOperationException();
-    }
-
-    @Override
-    public double[] atxpy(double[] x, double[] y, double b) {
+    public DMatrix set(int i, int j, double x) {
         throw new UnsupportedOperationException();
     }
 }

@@ -106,4 +106,114 @@ public abstract class DMatrix extends IMatrix<double[]> {
     public void tv(double[] x, double[] y) {
         mv(Transpose.TRANSPOSE, 1.0, x, 0.0, y);
     }
+
+    /**
+     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of eigenvalues we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     */
+    public EVD eigen(int k) {
+        return eigen(k, 1.0E-6, 10 * nrows());
+    }
+
+    /**
+     * Find k largest approximate eigen pairs of a symmetric matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of eigenvalues we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
+     * @param maxIter Maximum number of iterations.
+     */
+    public EVD eigen(int k, double kappa, int maxIter) {
+        try {
+            Class<?> clazz = Class.forName("smile.netlib.ARPACK");
+            java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class, Double.TYPE, Integer.TYPE);
+            return (EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
+        } catch (Exception e) {
+            if (!(e instanceof ClassNotFoundException)) {
+                org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
+                logger.info("Matrix.eigen({}, {}, {}):", k, kappa, maxIter, e);
+            }
+            return Lanczos.eigen(this, k, kappa, maxIter);
+        }
+    }
+
+    /**
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     */
+    public SVD svd(int k) {
+        return svd(k, 1.0E-6, 10 * nrows());
+    }
+
+    /**
+     * Find k largest approximate singular triples of a matrix by the
+     * Lanczos algorithm.
+     *
+     * @param k the number of singular triples we wish to compute for the input matrix.
+     * This number cannot exceed the size of A.
+     * @param kappa relative accuracy of ritz values acceptable as singular values.
+     * @param maxIter Maximum number of iterations.
+     */
+    public SVD svd(int k, double kappa, int maxIter) {
+        ATA B = new ATA(this);
+        EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
+
+        double[] s = eigen.getEigenValues();
+        for (int i = 0; i < s.length; i++) {
+            s[i] = Math.sqrt(s[i]);
+        }
+
+        int m = nrows();
+        int n = ncols();
+
+        if (m >= n) {
+
+            DenseMatrix V = eigen.getEigenVectors();
+
+            double[] tmp = new double[m];
+            double[] vi = new double[n];
+            DenseMatrix U = Matrix.zeros(m, s.length);
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < n; j++) {
+                    vi[j] = V.get(j, i);
+                }
+
+                mv(vi, tmp);
+
+                for (int j = 0; j < m; j++) {
+                    U.set(j, i, tmp[j] / s[i]);
+                }
+            }
+
+            return new SVD(U, V, s);
+
+        } else {
+
+            DenseMatrix U = eigen.getEigenVectors();
+
+            double[] tmp = new double[n];
+            double[] ui = new double[m];
+            DenseMatrix V = Matrix.zeros(n, s.length);
+            for (int i = 0; i < s.length; i++) {
+                for (int j = 0; j < m; j++) {
+                    ui[j] = U.get(j, i);
+                }
+
+                tv(ui, tmp);
+
+                for (int j = 0; j < n; j++) {
+                    V.set(j, i, tmp[j] / s[i]);
+                }
+            }
+
+            return new SVD(U, V, s);
+        }
+    }
 }
