@@ -45,7 +45,9 @@ public abstract class MatrixBase implements Cloneable, Serializable {
     public abstract int ncols();
 
     /**
-     * Returns the storage size.
+     * Returns the number of stored matrix elements. For conventional matrix,
+     * it is simplify nrows * ncols. But it is usually much less for band,
+     * packed or sparse matrix.
      */
     public abstract long size();
 
