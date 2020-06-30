@@ -64,7 +64,7 @@ import static java.util.Spliterator.*;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<SparseMatrix.Entry> {
+public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
     private static final long serialVersionUID = 2L;
 
@@ -304,11 +304,6 @@ public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<Sparse
         return StreamSupport.stream(spliterator, false);
     }
 
-    @Override
-    public String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
-    }
-
     /** Returns the element at the storage index. */
     /*
     public double get(int index) {
@@ -321,9 +316,7 @@ public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<Sparse
         return nonzeros[index] = value;
     }
 */
-    /**
-     * Returns the element A[i, j].
-     */
+    @Override
     public double get(int i, int j) {
         if (i < 0 || i >= m || j < 0 || j >= n) {
             throw new IllegalArgumentException("Invalid index: row = " + i + " col = " + j);
@@ -336,6 +329,11 @@ public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<Sparse
         }
 
         return 0.0;
+    }
+
+    @Override
+    public SparseMatrix set(int i, int j, double x) {
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -589,9 +587,7 @@ public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<Sparse
         return aat;
     }
 
-    /**
-     * Returns the diagonal elements.
-     */
+    @Override
     public double[] diag() {
         int n = Math.min(nrows(), ncols());
         double[] d = new double[n];

@@ -24,7 +24,56 @@ import smile.math.blas.Transpose;
  *
  * @author Haifeng Li
  */
-public interface DMatrix extends IMatrix<double[]> {
+public abstract class DMatrix extends IMatrix<double[]> {
+    /**
+     * Sets A[i,j] = x.
+     */
+    public abstract DMatrix set(int i, int j, double x);
+
+    /**
+     * Returns A[i, j].
+     */
+    public abstract double get(int i, int j);
+
+    /**
+     * Returns A[i, j]. For Scala users.
+     */
+    public double apply(int i, int j) {
+        return get(i, j);
+    }
+
+    @Override
+    String str(int i, int j) {
+        return String.format("%.4f", get(i, j));
+    }
+
+    /**
+     * Returns the diagonal elements.
+     */
+    public double[] diag() {
+        int n = Math.min(nrows(), ncols());
+
+        double[] d = new double[n];
+        for (int i = 0; i < n; i++) {
+            d[i] = get(i, i);
+        }
+
+        return d;
+    }
+
+    /**
+     * Returns the matrix trace. The sum of the diagonal elements.
+     */
+    public double trace() {
+        int n = Math.min(nrows(), ncols());
+
+        double t = 0.0;
+        for (int i = 0; i < n; i++) {
+            t += get(i, i);
+        }
+
+        return t;
+    }
 
     /**
      * Matrix-vector multiplication.
@@ -32,29 +81,29 @@ public interface DMatrix extends IMatrix<double[]> {
      *     y = alpha * A * x + beta * y
      * </code></pre>
      */
-    void mv(Transpose trans, double alpha, double[] x, double beta, double[] y);
+    public abstract void mv(Transpose trans, double alpha, double[] x, double beta, double[] y);
 
     @Override
-    default double[] mv(double[] x) {
+    public double[] mv(double[] x) {
         double[] y = new double[nrows()];
         mv(Transpose.NO_TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
 
     @Override
-    default void mv(double[] x, double[] y) {
+    public void mv(double[] x, double[] y) {
         mv(Transpose.NO_TRANSPOSE, 1.0, x, 0.0, y);
     }
 
     @Override
-    default double[] tv(double[] x) {
+    public double[] tv(double[] x) {
         double[] y = new double[nrows()];
         mv(Transpose.TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
 
     @Override
-    default void tv(double[] x, double[] y) {
+    public void tv(double[] x, double[] y) {
         mv(Transpose.TRANSPOSE, 1.0, x, 0.0, y);
     }
 }

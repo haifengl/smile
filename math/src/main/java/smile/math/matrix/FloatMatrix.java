@@ -39,7 +39,7 @@ import static smile.math.blas.Side.*;
 import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.*;
 
-public class FloatMatrix extends MatrixBase implements FMatrix {
+public class FloatMatrix extends FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
 
@@ -426,33 +426,6 @@ public class FloatMatrix extends MatrixBase implements FMatrix {
         return diag;
     }
 
-    /**
-     * Returns the diagonal elements.
-     */
-    public float[] diag() {
-        int k = Math.min(m, n);
-        float[] d = new float[k];
-        for (int i = 0; i < k; i++) {
-            d[i] = get(i, i);
-        }
-
-        return d;
-    }
-
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public float trace() {
-        int k = Math.min(m, n);
-
-        float t = 0.0f;
-        for (int i = 0; i < k; i++) {
-            t += get(i, i);
-        }
-
-        return t;
-    }
-
     /** Returns a deep copy of matrix. */
     @Override
     public FloatMatrix clone() {
@@ -562,20 +535,11 @@ public class FloatMatrix extends MatrixBase implements FMatrix {
     }
 
     @Override
-    public String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
-    }
-
-    /**
-     * Gets A[i,j].
-     */
     public float get(int i, int j) {
         return A.get(index(i, j));
     }
 
-    /**
-     * Sets A[i,j] = x.
-     */
+    @Override
     public FloatMatrix set(int i, int j, float x) {
         A.put(index(i, j), x);
         return this;

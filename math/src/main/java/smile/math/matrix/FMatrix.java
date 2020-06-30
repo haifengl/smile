@@ -24,7 +24,56 @@ import smile.math.blas.Transpose;
  *
  * @author Haifeng Li
  */
-public interface FMatrix extends IMatrix<float[]> {
+public abstract class FMatrix extends IMatrix<float[]> {
+    /**
+     * Sets A[i,j] = x.
+     */
+    public abstract FMatrix set(int i, int j, float x);
+
+    /**
+     * Returns A[i, j].
+     */
+    public abstract float get(int i, int j);
+
+    /**
+     * Returns A[i, j]. For Scala users.
+     */
+    public float apply(int i, int j) {
+        return get(i, j);
+    }
+
+    @Override
+    String str(int i, int j) {
+        return String.format("%.4f", get(i, j));
+    }
+
+    /**
+     * Returns the diagonal elements.
+     */
+    public float[] diag() {
+        int n = Math.min(nrows(), ncols());
+
+        float[] d = new float[n];
+        for (int i = 0; i < n; i++) {
+            d[i] = get(i, i);
+        }
+
+        return d;
+    }
+
+    /**
+     * Returns the matrix trace. The sum of the diagonal elements.
+     */
+    public float trace() {
+        int n = Math.min(nrows(), ncols());
+
+        float t = 0.0f;
+        for (int i = 0; i < n; i++) {
+            t += get(i, i);
+        }
+
+        return t;
+    }
 
     /**
      * Matrix-vector multiplication.
@@ -32,29 +81,29 @@ public interface FMatrix extends IMatrix<float[]> {
      *     y = alpha * A * x + beta * y
      * </code></pre>
      */
-    void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
+    public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
 
     @Override
-    default float[] mv(float[] x) {
+    public float[] mv(float[] x) {
         float[] y = new float[nrows()];
         mv(Transpose.NO_TRANSPOSE, 1.0f, x, 0.0f, y);
         return y;
     }
 
     @Override
-    default void mv(float[] x, float[] y) {
+    public void mv(float[] x, float[] y) {
         mv(Transpose.NO_TRANSPOSE, 1.0f, x, 0.0f, y);
     }
 
     @Override
-    default float[] tv(float[] x) {
+    public float[] tv(float[] x) {
         float[] y = new float[nrows()];
         mv(Transpose.TRANSPOSE, 1.0f, x, 0.0f, y);
         return y;
     }
 
     @Override
-    default void tv(float[] x, float[] y) {
+    public void tv(float[] x, float[] y) {
         mv(Transpose.TRANSPOSE, 1.0f, x, 0.0f, y);
     }
 }

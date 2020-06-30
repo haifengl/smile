@@ -29,7 +29,7 @@ import static smile.math.blas.UPLO.*;
  *
  * @author Haifeng Li
  */
-public class FloatSymmMatrix extends MatrixBase implements FMatrix {
+public class FloatSymmMatrix extends FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatSymmMatrix.class);
 
@@ -118,30 +118,6 @@ public class FloatSymmMatrix extends MatrixBase implements FMatrix {
         return uplo;
     }
 
-    /**
-     * Returns the diagonal elements.
-     */
-    public float[] diag() {
-        float[] d = new float[n];
-        for (int i = 0; i < n; i++) {
-            d[i] = get(i, i);
-        }
-
-        return d;
-    }
-
-    /**
-     * Returns the matrix trace. The sum of the diagonal elements.
-     */
-    public float trace() {
-        float t = 0.0f;
-        for (int i = 0; i < n; i++) {
-            t += get(i, i);
-        }
-
-        return t;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (o == null || !(o instanceof FloatSymmMatrix)) {
@@ -174,13 +150,6 @@ public class FloatSymmMatrix extends MatrixBase implements FMatrix {
     }
 
     @Override
-    public String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
-    }
-
-    /**
-     * Gets A[i,j].
-     */
     public float get(int i, int j) {
         if (uplo == LOWER) {
             if (j > i) {
@@ -199,9 +168,7 @@ public class FloatSymmMatrix extends MatrixBase implements FMatrix {
         }
     }
 
-    /**
-     * Sets A[i,j] = x.
-     */
+    @Override
     public FloatSymmMatrix set(int i, int j, float x) {
         if (uplo == LOWER) {
             if (j > i) {
