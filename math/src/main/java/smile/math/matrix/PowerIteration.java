@@ -40,7 +40,7 @@ public class PowerIteration {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v) {
+    public static double eigen(DMatrix A, double[] v) {
         return eigen(A, v, Math.max(1.0E-10, A.nrows() * MathEx.EPSILON));
     }
 
@@ -56,7 +56,7 @@ public class PowerIteration {
      * @param tol the desired convergence tolerance.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v, double tol) {
+    public static double eigen(DMatrix A, double[] v, double tol) {
         return eigen(A, v, 0.0, tol);
     }
 
@@ -74,7 +74,7 @@ public class PowerIteration {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v, double tol, int maxIter) {
+    public static double eigen(DMatrix A, double[] v, double tol, int maxIter) {
         return eigen(A, v, 0.0, tol, maxIter);
     }
 
@@ -100,7 +100,7 @@ public class PowerIteration {
      * @param tol the desired convergence tolerance.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v, double p, double tol) {
+    public static double eigen(DMatrix A, double[] v, double p, double tol) {
         return eigen(A, v, p, tol, Math.max(20, 2 * A.nrows()));
     }
 
@@ -128,7 +128,7 @@ public class PowerIteration {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v, double p, double tol, int maxIter) {
+    public static double eigen(DMatrix A, double[] v, double p, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -171,8 +171,8 @@ public class PowerIteration {
      * Calculate and normalize y = (A - pI) x.
      * Returns the largest element of y in magnitude.
      */
-    private static double ax(Matrix A, double[] x, double[] y, double p) {
-        A.ax(x, y);
+    private static double ax(DMatrix A, double[] x, double[] y, double p) {
+        A.mv(x, y);
 
         if (p != 0.0) {
             for (int i = 0; i < y.length; i++) {

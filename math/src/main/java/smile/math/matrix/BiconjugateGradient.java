@@ -102,7 +102,7 @@ public class BiconjugateGradient {
      * Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.
      */
-    private Preconditioner Jacobi(Matrix A) {
+    private Preconditioner Jacobi(DMatrix A) {
         return (b, x) -> {
                 double[] diag = A.diag();
                 int n = diag.length;
@@ -120,7 +120,7 @@ public class BiconjugateGradient {
      * (or all zeros). On output, x is reset to the improved solution.
      * @return the estimated error.
      */
-    public double solve(Matrix A, double[] b, double[] x) {
+    public double solve(DMatrix A, double[] b, double[] x) {
         if (maxIter <= 0) {
             maxIter = 2 * Math.max(A.nrows(), A.ncols());
         }
@@ -140,7 +140,7 @@ public class BiconjugateGradient {
         double[] z = new double[n];
         double[] zz = new double[n];
 
-        A.ax(x, r);
+        A.mv(x, r);
         for (j = 0; j < n; j++) {
             r[j] = b[j] - r[j];
             rr[j] = r[j];
@@ -180,12 +180,12 @@ public class BiconjugateGradient {
                 }
             }
             bkden = bknum;
-            A.ax(p, z);
+            A.mv(p, z);
             for (akden = 0.0, j = 0; j < n; j++) {
                 akden += z[j] * pp[j];
             }
             ak = bknum / akden;
-            A.atx(pp, zz);
+            A.tv(pp, zz);
             for (j = 0; j < n; j++) {
                 x[j] += ak * p[j];
                 r[j] -= ak * z[j];
