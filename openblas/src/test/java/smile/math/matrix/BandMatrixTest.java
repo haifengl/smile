@@ -15,19 +15,14 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.math.blas.openblas;
+package smile.math.matrix;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.blas.Transpose;
 import smile.math.blas.UPLO;
-import smile.math.matrix.BandMatrix;
-import smile.math.matrix.FloatBandMatrix;
-import smile.math.matrix.FloatMatrix;
-import smile.math.matrix.Matrix;
 import static org.junit.Assert.*;
 
 /**

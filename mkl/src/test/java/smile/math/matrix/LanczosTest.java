@@ -62,9 +62,6 @@ public class LanczosTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of decompose method, of class EigenValueDecomposition.
-     */
     @Test
     public void testLanczos() {
         System.out.println("eigen");
@@ -82,9 +79,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class EigenValueDecomposition.
-     */
     @Test
     public void testEigen1() {
         System.out.println("eigen1");
@@ -98,9 +92,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class EigenValueDecomposition.
-     */
     @Test
     public void testEigen2() {
         System.out.println("eigen2");
@@ -118,9 +109,7 @@ public class LanczosTest {
         assertEquals(0.992, result.wr[4], 1E-4);
         assertEquals(0.990, result.wr[5], 1E-4);
     }
-    /**
-     * Test of decompose method, of class SingularValueDecomposition.
-     */
+
     @Test
     public void testDecompose1() {
         System.out.println("svd symm");
@@ -164,9 +153,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class SingularValueDecomposition.
-     */
     @Test
     public void testDecompose2() {
         System.out.println("svd asymm");
@@ -222,9 +208,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class SingularValueDecomposition.
-     */
     @Test
     public void testSVD3() {
         System.out.println("svd m = n+1");
@@ -279,9 +262,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class SingularValueDecomposition.
-     */
     @Test
     public void testSVD4() {
         System.out.println("svd m = n+2");
@@ -335,9 +315,6 @@ public class LanczosTest {
         }
     }
 
-    /**
-     * Test of decompose method, of class SingularValueDecomposition.
-     */
     @Test
     public void testSVD9() {
         System.out.println("SparseMatrix.svd()");

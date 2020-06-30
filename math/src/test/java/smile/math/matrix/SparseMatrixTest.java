@@ -27,17 +27,14 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
+import static smile.math.blas.Transpose.NO_TRANSPOSE;
+import static smile.math.blas.Transpose.TRANSPOSE;
 
 /**
  *
  * @author Haifeng Li
  */
 public class SparseMatrixTest {
-
-    int[] rowIndex = {0, 1, 0, 1, 2, 1, 2};
-    int[] colIndex = {0, 2, 5, 7};
-    double[] val = {0.9, 0.4, 0.4, 0.5, 0.3, 0.3, 0.8};
-    SparseMatrix sparse = new SparseMatrix(3, 3, val, rowIndex, colIndex);
 
     double[][] A = {
             {0.9000, 0.4000, 0.0000},
@@ -50,6 +47,8 @@ public class SparseMatrixTest {
             {0.56, 0.50, 0.39},
             {0.12, 0.39, 0.73}
     };
+
+    SparseMatrix sparse = new SparseMatrix(A, 1E-8);
 
     public SparseMatrixTest() {
     }
@@ -97,6 +96,70 @@ public class SparseMatrixTest {
         assertEquals(0.0, sparse.get(2, 0), 1E-7);
         assertEquals(0.0, sparse.get(0, 2), 1E-7);
         assertEquals(0.4, sparse.get(0, 1), 1E-7);
+    }
+
+    @Test
+    public void testAx() {
+        System.out.println("ax");
+        double[] d = new double[sparse.nrows()];
+        sparse.mv(b, d);
+        assertEquals(0.65, d[0], 1E-7f);
+        assertEquals(0.60, d[1], 1E-7f);
+        assertEquals(0.55, d[2], 1E-7f);
+    }
+
+    @Test
+    public void testAxpy() {
+        System.out.println("axpy");
+        double[] d = new double[sparse.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        sparse.mv(NO_TRANSPOSE, 1.0, b, 1.0, d);
+        assertEquals(1.65, d[0], 1E-7f);
+        assertEquals(1.60, d[1], 1E-7f);
+        assertEquals(1.55, d[2], 1E-7f);
+    }
+
+    @Test
+    public void testAxpy2() {
+        System.out.println("axpy b = 2");
+        double[] d = new double[sparse.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        sparse.mv(NO_TRANSPOSE, 1.0, b, 2.0, d);
+        assertEquals(2.65, d[0], 1E-7f);
+        assertEquals(2.60, d[1], 1E-7f);
+        assertEquals(2.55, d[2], 1E-7f);
+    }
+
+    @Test
+    public void testAtx() {
+        System.out.println("atx");
+        double[] d = new double[sparse.nrows()];
+        sparse.tv(b, d);
+        assertEquals(0.65, d[0], 1E-7f);
+        assertEquals(0.60, d[1], 1E-7f);
+        assertEquals(0.55, d[2], 1E-7f);
+    }
+
+    @Test
+    public void testAtxpy() {
+        System.out.println("atxpy");
+        double[] d = new double[sparse.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        sparse.mv(TRANSPOSE, 1.0, b, 1.0, d);
+        assertEquals(1.65, d[0], 1E-7f);
+        assertEquals(1.60, d[1], 1E-7f);
+        assertEquals(1.55, d[2], 1E-7f);
+    }
+
+    @Test
+    public void testAtxpy2() {
+        System.out.println("atxpy b = 2");
+        double[] d = new double[sparse.nrows()];
+        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        sparse.mv(TRANSPOSE, 1.0, b, 2.0, d);
+        assertEquals(2.65, d[0], 1E-7f);
+        assertEquals(2.60, d[1], 1E-7f);
+        assertEquals(2.55, d[2], 1E-7f);
     }
 
     @Test
