@@ -18,7 +18,7 @@
 package smile.math.matrix;
 
 import java.nio.DoubleBuffer;
-
+import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import static smile.math.blas.Layout.*;
@@ -62,7 +62,7 @@ import static smile.math.blas.UPLO.*;
  * with j &gt; 0 appropriate to the number of elements on each subdiagonal.
  * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
  * with j &lt; n-1 appropriate to the number of elements on each superdiagonal.
- * 
+ *
  * @author Haifeng Li
  */
 public class BandMatrix extends DMatrix {
@@ -72,31 +72,31 @@ public class BandMatrix extends DMatrix {
     /**
      * The band matrix storage.
      */
-    private final double[] AB;
+    final double[] AB;
     /**
      * The number of rows.
      */
-    private final int m;
+    final int m;
     /**
      * The number of columns.
      */
-    private final int n;
+    final int n;
     /**
      * The number of subdiagonal rows.
      */
-    private final int kl;
+    final int kl;
     /**
      * The number of superdiagonal rows.
      */
-    private final int ku;
+    final int ku;
     /**
      * The leading dimension.
      */
-    private transient int ld;
+    transient int ld;
     /**
      * The upper or lower triangle of the symmetric band matrix.
      */
-    private UPLO uplo = null;
+    UPLO uplo = null;
 
     /**
      * Constructor.
@@ -221,7 +221,7 @@ public class BandMatrix extends DMatrix {
         return this;
     }
 
-    /** Gets the format of symmetric band matrix. */
+    /** Gets the format of packed matrix. */
     public UPLO uplo() {
         return uplo;
     }
@@ -232,7 +232,7 @@ public class BandMatrix extends DMatrix {
             return false;
         }
 
-        return equals((BandMatrix) o, 1E-7);
+        return equals((BandMatrix) o, 1E-7f);
     }
 
     /**
@@ -262,7 +262,7 @@ public class BandMatrix extends DMatrix {
         if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
             return AB[j * ld + ku + i - j];
         } else {
-            return 0.0;
+            return 0.0f;
         }
     }
 
@@ -291,9 +291,9 @@ public class BandMatrix extends DMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -302,9 +302,9 @@ public class BandMatrix extends DMatrix {
         DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
         DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
         if (uplo != null) {
-            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -340,7 +340,7 @@ public class BandMatrix extends DMatrix {
 
         BandMatrix lu = new BandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
         lu.uplo = uplo;
-        if (uplo == LOWER) {
+        if (uplo == UPLO.LOWER) {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i <= kl; i++) {
                     lu.AB[j * lu.ld + i] = get(j + i, j);
@@ -426,7 +426,7 @@ public class BandMatrix extends DMatrix {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            double d = 1.0;
+            double d = 1.0f;
             for (int j = 0; j < n; j++) {
                 d *= lu.AB[j * lu.ld + lu.kl/2 + lu.ku];
             }
@@ -457,7 +457,7 @@ public class BandMatrix extends DMatrix {
          */
         public double[] solve(double[] b) {
             double[] x = b.clone();
-            //solve(new Matrix(x));
+            solve(new Matrix(x));
             return x;
         }
 
@@ -468,7 +468,6 @@ public class BandMatrix extends DMatrix {
          * @throws  RuntimeException  if matrix is singular.
          */
         public void solve(Matrix B) {
-            /*
             if (lu.m != lu.n) {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
             }
@@ -485,13 +484,11 @@ public class BandMatrix extends DMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, lu.AB, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
             }
-
-             */
         }
     }
 
@@ -541,7 +538,7 @@ public class BandMatrix extends DMatrix {
          * Returns the matrix determinant
          */
         public double det() {
-            double d = 1.0;
+            double d = 1.0f;
             for (int i = 0; i < lu.n; i++) {
                 d *= lu.get(i, i);
             }
@@ -565,7 +562,7 @@ public class BandMatrix extends DMatrix {
          */
         public double[] solve(double[] b) {
             double[] x = b.clone();
-            //solve(new Matrix(x));
+            solve(new Matrix(x));
             return x;
         }
 
@@ -575,18 +572,15 @@ public class BandMatrix extends DMatrix {
          *          be overwritten with the solution matrix.
          */
         public void solve(Matrix B) {
-            /*
             if (B.m != lu.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);
             }
-
-             */
         }
     }
 }

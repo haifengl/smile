@@ -90,6 +90,38 @@ public class FloatMatrixTest {
     }
 
     @Test
+    public void testColMeans() {
+        System.out.println("colMeans");
+        float[][] A = {
+                { 0.7220180f,  0.07121225f, 0.6881997f},
+                {-0.2648886f, -0.89044952f, 0.3700456f},
+                {-0.6391588f,  0.44947578f, 0.6240573f}
+        };
+        float[] r = {-0.06067647f, -0.12325383f, 0.56076753f};
+
+        float[] result = new FloatMatrix(A).colMeans();
+        for (int i = 0; i < r.length; i++) {
+            assertEquals(result[i], r[i], 1E-7f);
+        }
+    }
+
+    @Test
+    public void testRowMeans() {
+        System.out.println("rowMeans");
+        float[][] A = {
+                { 0.7220180f,  0.07121225f, 0.6881997f},
+                {-0.2648886f, -0.89044952f, 0.3700456f},
+                {-0.6391588f,  0.44947578f, 0.6240573f}
+        };
+        float[] r = {0.4938100f, -0.2617642f, 0.1447914f};
+
+        float[] result = new FloatMatrix(A).rowMeans();
+        for (int i = 0; i < r.length; i++) {
+            assertEquals(result[i], r[i], 1E-7f);
+        }
+    }
+
+    @Test
     public void testTranspose() {
         FloatMatrix t = matrix.transpose();
         assertEquals(Layout.COL_MAJOR, matrix.layout());

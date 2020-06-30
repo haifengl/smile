@@ -24,6 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 
 /**
  *
@@ -67,16 +68,16 @@ public class LanczosTest {
     @Test
     public void testLanczos() {
         System.out.println("eigen");
-        Matrix a = Matrix.of(A);
-        a.setSymmetric(true);
-        EVD result = Lanczos.eigen(a, 3);
-        assertTrue(MathEx.equals(eigenValues, result.getEigenValues(), 1E-7));
+        Matrix a = new Matrix(A);
+        a.uplo(UPLO.LOWER);
+        Matrix.EVD result = Lanczos.eigen(a, 3);
+        assertTrue(MathEx.equals(eigenValues, result.wr, 1E-7));
 
-        assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
-        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
+        assertEquals(eigenVectors.length,    result.Vr.nrows());
+        assertEquals(eigenVectors[0].length, result.Vr.ncols());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
-                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
+                assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.Vr.get(i, j)), 1E-7);
             }
         }
     }
@@ -87,13 +88,13 @@ public class LanczosTest {
     @Test
     public void testEigen1() {
         System.out.println("eigen1");
-        Matrix a = Matrix.of(A);
-        a.setSymmetric(true);
-        EVD result = Lanczos.eigen(a, 1);
-        assertEquals(eigenValues[0], result.getEigenValues()[0], 1E-4);
+        Matrix a = new Matrix(A);
+        a.uplo(UPLO.LOWER);
+        Matrix.EVD result = Lanczos.eigen(a, 1);
+        assertEquals(eigenValues[0], result.wr[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
-            assertEquals(Math.abs(eigenVectors[i][0]), Math.abs(result.getEigenVectors().get(i, 0)), 1E-4);
+            assertEquals(Math.abs(eigenVectors[i][0]), Math.abs(result.Vr.get(i, 0)), 1E-4);
         }
     }
 
@@ -107,15 +108,15 @@ public class LanczosTest {
         A[0][0] = A[1][1] = A[2][2] = A[3][3] = 2.0;
         for (int i = 4; i < 500; i++)
             A[i][i] = (500 - i) / 500.0;
-        Matrix a = Matrix.of(A);
-        a.setSymmetric(true);
-        EVD result = Lanczos.eigen(a, 6);
-        assertEquals(2.0, result.getEigenValues()[0], 1E-4);
-        assertEquals(2.0, result.getEigenValues()[1], 1E-4);
-        assertEquals(2.0, result.getEigenValues()[2], 1E-4);
-        assertEquals(2.0, result.getEigenValues()[3], 1E-4);
-        assertEquals(0.992, result.getEigenValues()[4], 1E-4);
-        assertEquals(0.990, result.getEigenValues()[5], 1E-4);
+        Matrix a = new Matrix(A);
+        a.uplo(UPLO.LOWER);
+        Matrix.EVD result = Lanczos.eigen(a, 6);
+        assertEquals(2.0, result.wr[0], 1E-4);
+        assertEquals(2.0, result.wr[1], 1E-4);
+        assertEquals(2.0, result.wr[2], 1E-4);
+        assertEquals(2.0, result.wr[3], 1E-4);
+        assertEquals(0.992, result.wr[4], 1E-4);
+        assertEquals(0.990, result.wr[5], 1E-4);
     }
     /**
      * Test of decompose method, of class SingularValueDecomposition.
@@ -143,22 +144,22 @@ public class LanczosTest {
                 {0.6240573, -0.44947578, -0.6391588}
         };
 
-        SVD result = Matrix.of(A).svd(3);
-        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
+        Matrix.SVD result = new Matrix(A).svd(3);
+        assertTrue(MathEx.equals(s, result.s, 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.U.nrows());
+        assertEquals(U[0].length, result.U.ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.U.get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.V.nrows());
+        assertEquals(V[0].length, result.V.ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.V.get(i, j)), 1E-7);
             }
         }
     }
@@ -201,22 +202,22 @@ public class LanczosTest {
                 {-0.5156083, -0.36573746, -0.47613340, 0.41342817, -0.2659765, 0.1654796, -0.32346758}
         };
 
-        SVD result = Matrix.of(A).svd(7);
-        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
+        Matrix.SVD result = new Matrix(A).svd(7);
+        assertTrue(MathEx.equals(s, result.s, 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.U.nrows());
+        assertEquals(U[0].length, result.U.ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.U.get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.V.nrows());
+        assertEquals(V[0].length, result.V.ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.V.get(i, j)), 1E-7);
             }
         }
     }
@@ -258,22 +259,22 @@ public class LanczosTest {
                 {0.06127719, 0.230326187, 0.04693098, -0.3300697, 0.825499232, -0.3880689}
         };
 
-        SVD result = Matrix.of(A).svd(6);
-        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
+        Matrix.SVD result = new Matrix(A).svd(6);
+        assertTrue(MathEx.equals(s, result.s, 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.U.nrows());
+        assertEquals(U[0].length, result.U.ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.U.get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.V.nrows());
+        assertEquals(V[0].length, result.V.ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.V.get(i, j)), 1E-7);
             }
         }
     }
@@ -314,22 +315,22 @@ public class LanczosTest {
                 {0.82502638, -0.400562630, 0.30810911, -0.1797507, 0.1778750}
         };
 
-        SVD result = Matrix.of(A).svd(5);
-        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
+        Matrix.SVD result = new Matrix(A).svd(5);
+        assertTrue(MathEx.equals(s, result.s, 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.U.nrows());
+        assertEquals(U[0].length, result.U.ncols());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
-                assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
+                assertEquals(Math.abs(U[i][j]), Math.abs(result.U.get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.V.nrows());
+        assertEquals(V[0].length, result.V.ncols());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
-                assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
+                assertEquals(Math.abs(V[i][j]), Math.abs(result.V.get(i, j)), 1E-7);
             }
         }
     }
@@ -381,22 +382,22 @@ public class LanczosTest {
                 {-0.406678, -0.10893, 0.492444, 0.0123293, 0.270696, -0.0538747, -0.0538747, -0.165339, -0.579426, -0.225424, 0.231961, 0.182535}
         };
 
-        SVD result = new SparseMatrix(A).svd(9);
-        assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-5));
+        Matrix.SVD result = new SparseMatrix(A).svd(9);
+        assertTrue(MathEx.equals(s, result.s, 1E-5));
 
-        assertEquals(Ut[0].length, result.getU().nrows());
-        assertEquals(Ut.length, result.getU().ncols());
+        assertEquals(Ut[0].length, result.U.nrows());
+        assertEquals(Ut.length, result.U.ncols());
         for (int i = 0; i < Ut.length; i++) {
             for (int j = 0; j < Ut[i].length; j++) {
-                assertEquals(Math.abs(Ut[i][j]), Math.abs(result.getU().get(j, i)), 1E-5);
+                assertEquals(Math.abs(Ut[i][j]), Math.abs(result.U.get(j, i)), 1E-5);
             }
         }
 
-        assertEquals(Vt[0].length, result.getV().nrows());
-        assertEquals(Vt.length, result.getV().ncols());
+        assertEquals(Vt[0].length, result.V.nrows());
+        assertEquals(Vt.length, result.V.ncols());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
-                assertEquals(Math.abs(Vt[i][j]), Math.abs(result.getV().get(j, i)), 1E-5);
+                assertEquals(Math.abs(Vt[i][j]), Math.abs(result.V.get(j, i)), 1E-5);
             }
         }
     }

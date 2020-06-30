@@ -18,10 +18,18 @@
 package smile.math.matrix;
 
 /**
- * Functional interface for lambda iteration through a sparse matrix.
+ * Double precision matrix element stream consumer.
  *
  * @author Haifeng Li
  */
-public interface MatrixElementConsumer {
-    void accept(int row, int column, double value);
+public interface DMatrixConsumer {
+    /**
+     * Accepts one matrix element and performs the operation
+     * on the given arguments.
+     *
+     * @param i the row
+     * @param j the column
+     * @param x the value
+     */
+    void accept(int i, int j, double x);
 }

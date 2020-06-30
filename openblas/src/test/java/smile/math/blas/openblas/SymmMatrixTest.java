@@ -23,8 +23,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.blas.UPLO;
-import smile.math.matrix.FloatSymmMatrix;
 import smile.math.matrix.FloatMatrix;
+import smile.math.matrix.FloatSymmMatrix;
+import smile.math.matrix.Matrix;
+import smile.math.matrix.SymmMatrix;
 import static org.junit.Assert.*;
 
 /**
@@ -56,9 +58,9 @@ public class SymmMatrixTest {
     public void testFloatSymmMatrix() {
         System.out.println("FloatSymmMatrix");
         float[][] A = {
-            {0.9000f, 0.4000f, 0.0000f},
-            {0.4000f, 0.5000f, 0.3000f},
-            {0.0000f, 0.3000f, 0.8000f}
+                {0.9000f, 0.4000f, 0.0000f},
+                {0.4000f, 0.5000f, 0.3000f},
+                {0.0000f, 0.3000f, 0.8000f}
         };
         float[] b = {0.5f, 0.5f, 0.5f};
 
@@ -93,7 +95,7 @@ public class SymmMatrixTest {
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
 
         // Upper symmetric matrix
@@ -113,7 +115,7 @@ public class SymmMatrixTest {
         // solution vector
         assertEquals(x.length, bkx.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], bkx[i], 1E-7f);
+            assertEquals(x[i], bkx[i], 1E-6f);
         }
 
         cholesky = symm.cholesky();
@@ -127,7 +129,7 @@ public class SymmMatrixTest {
             assertEquals(x[i], choleskyx[i], 1E-7f);
         }
     }
-/*
+
     @Test
     public void testSymmMatrix() {
         System.out.println("SymmMatrix");
@@ -138,7 +140,69 @@ public class SymmMatrixTest {
         };
         double[] b = {0.5f, 0.5f, 0.5f};
 
-    }
+        Matrix a = new Matrix(A);
+        Matrix.LU lu = a.lu();
+        double[] x = lu.solve(b);
 
- */
+        SymmMatrix symm = new SymmMatrix(UPLO.LOWER, A);
+
+        double[] y = a.mv(x);
+        double[] y2 = symm.mv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
+        }
+
+        SymmMatrix.BunchKaufman bk = symm.bk();
+        double[] bkx = bk.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), bk.det(), 1E-7f);
+        // solution vector
+        assertEquals(x.length, bkx.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], bkx[i], 1E-7f);
+        }
+
+        SymmMatrix.Cholesky cholesky = symm.cholesky();
+        double[] choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-6f);
+        }
+
+        // Upper symmetric matrix
+        symm = new SymmMatrix(UPLO.UPPER, A);
+
+        y = a.mv(x);
+        y2 = symm.mv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
+        }
+
+        bk = symm.bk();
+        bkx = bk.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), bk.det(), 1E-7f);
+        // solution vector
+        assertEquals(x.length, bkx.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], bkx[i], 1E-6f);
+        }
+
+        cholesky = symm.cholesky();
+        choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-7f);
+        }
+    }
 }

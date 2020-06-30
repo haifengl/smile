@@ -61,9 +61,6 @@ public class PowerIterationTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of decompose method, of class EigenValueDecomposition.
-     */
     @Test
     public void testEigen() {
         System.out.println("Eigen");
@@ -71,7 +68,7 @@ public class PowerIterationTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        double eigenvalue = PowerIteration.eigen(Matrix.of(A), v, 1E-6);
+        double eigenvalue = PowerIteration.eigen(new Matrix(A), v);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
 
         double ratio = Math.abs(eigenVectors[0][0]/v[0]);
@@ -87,7 +84,7 @@ public class PowerIterationTest {
         for (int i = 0; i < v.length; i++)
             v[i] = 1.0;
 
-        eigenvalue = PowerIteration.eigen(Matrix.of(A), v, 0.22, 1E-4, 4);
+        eigenvalue = PowerIteration.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 
         ratio = Math.abs(eigenVectors[0][0]/v[0]);
