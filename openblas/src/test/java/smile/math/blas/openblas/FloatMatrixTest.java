@@ -241,7 +241,7 @@ public class FloatMatrixTest {
         };
         FloatMatrix a = new FloatMatrix(A);
         FloatMatrix b = new FloatMatrix(B);
-        a.add(b);
+        a.add(1.0f, b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
     }
 
@@ -265,7 +265,7 @@ public class FloatMatrixTest {
         };
         FloatMatrix a = new FloatMatrix(A);
         FloatMatrix b = new FloatMatrix(B);
-        a.sub(b);
+        a.sub(1.0f, b);
         assertTrue(MathEx.equals(C, a.toArray(), 1E-6f));
     }
 
