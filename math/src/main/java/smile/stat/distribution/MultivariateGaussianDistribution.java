@@ -18,6 +18,7 @@
 package smile.stat.distribution;
 
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
@@ -165,6 +166,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      */
     private void init() {
         dim = mu.length;
+        sigma.uplo(UPLO.LOWER);
         Matrix.Cholesky cholesky = sigma.cholesky();
         sigmaInv = cholesky.inverse();
         sigmaDet = cholesky.det();
