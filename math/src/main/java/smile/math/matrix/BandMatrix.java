@@ -18,9 +18,12 @@
 package smile.math.matrix;
 
 import java.nio.DoubleBuffer;
-import java.nio.IntBuffer;
+
 import smile.math.MathEx;
 import smile.math.blas.*;
+import static smile.math.blas.Layout.*;
+import static smile.math.blas.Transpose.*;
+import static smile.math.blas.UPLO.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -62,7 +65,7 @@ import smile.math.blas.*;
  * 
  * @author Haifeng Li
  */
-public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication<double[]> {
+public class BandMatrix extends MatrixBase implements DMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
@@ -187,7 +190,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
      * Returns the matrix layout.
      */
     public Layout layout() {
-        return Layout.COL_MAJOR;
+        return COL_MAJOR;
     }
 
     /**
@@ -310,12 +313,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
         return this;
     }
 
-    /**
-     * Matrix-vector multiplication.
-     * <pre><code>
-     *     y = alpha * A * x + beta * y
-     * </code></pre>
-     */
+    @Override
     public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         if (uplo != null) {
             BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
@@ -325,25 +323,24 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
     }
 
     @Override
-    public double[] mv(Transpose trans, double[] x) {
-        double[] y = new double[trans == Transpose.NO_TRANSPOSE ? n : m];
-        mv(trans, x, y);
-        return y;
-    }
-
-    @Override
-    public void mv(Transpose trans, double[] x, double[] y) {
-        mv(trans, 1.0, x, 0.0, y);
-    }
-
-    @Override
-    public void mv(Transpose trans, double[] work, int inputOffset, int outputOffset) {
-        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, trans == Transpose.NO_TRANSPOSE ? n : m);
-        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, trans == Transpose.NO_TRANSPOSE ? m : n);
+    public void mv(double[] work, int inputOffset, int outputOffset) {
+        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
+        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
             BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+        }
+    }
+
+    @Override
+    public void tv(double[] work, int inputOffset, int outputOffset) {
+        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
+        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
+        if (uplo != null) {
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
+        } else {
+            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0, yb, 1);
         }
     }
 
@@ -377,9 +374,9 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        BandMatrix lu = new BandMatrix(m, n, uplo == UPLO.LOWER ? kl : 0, uplo == UPLO.LOWER ? 0 : ku);
+        BandMatrix lu = new BandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
         lu.uplo = uplo;
-        if (uplo == UPLO.LOWER) {
+        if (uplo == LOWER) {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i <= kl; i++) {
                     lu.AB[j * lu.ld + i] = get(j + i, j);
@@ -393,7 +390,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
             }
         }
 
-        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
+        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
         if (info != 0) {
             logger.error("LAPACK PBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PBTRF error code: " + info);
@@ -619,7 +616,7 @@ public class BandMatrix extends MatrixBase implements MatrixVectorMultiplication
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, lu.AB, lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

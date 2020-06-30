@@ -21,6 +21,9 @@ import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
 import smile.math.blas.*;
+import static smile.math.blas.Layout.*;
+import static smile.math.blas.Transpose.*;
+import static smile.math.blas.UPLO.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -62,7 +65,7 @@ import smile.math.blas.*;
  * 
  * @author Haifeng Li
  */
-public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplication<float[]> {
+public class FloatBandMatrix extends MatrixBase implements FMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatBandMatrix.class);
 
@@ -187,7 +190,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
      * Returns the matrix layout.
      */
     public Layout layout() {
-        return Layout.COL_MAJOR;
+        return COL_MAJOR;
     }
 
     /**
@@ -310,12 +313,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
         return this;
     }
 
-    /**
-     * Matrix-vector multiplication.
-     * <pre><code>
-     *     y = alpha * A * x + beta * y
-     * </code></pre>
-     */
+    @Override
     public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
         if (uplo != null) {
             BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
@@ -325,25 +323,24 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
     }
 
     @Override
-    public float[] mv(Transpose trans, float[] x) {
-        float[] y = new float[trans == Transpose.NO_TRANSPOSE ? n : m];
-        mv(trans, x, y);
-        return y;
-    }
-
-    @Override
-    public void mv(Transpose trans, float[] x, float[] y) {
-        mv(trans, 1.0f, x, 0.0f, y);
-    }
-
-    @Override
-    public void mv(Transpose trans, float[] work, int inputOffset, int outputOffset) {
-        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, trans == Transpose.NO_TRANSPOSE ? n : m);
-        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, trans == Transpose.NO_TRANSPOSE ? m : n);
+    public void mv(float[] work, int inputOffset, int outputOffset) {
+        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, n);
+        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, m);
         if (uplo != null) {
             BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         } else {
-            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        }
+    }
+
+    @Override
+    public void tv(float[] work, int inputOffset, int outputOffset) {
+        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, m);
+        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, n);
+        if (uplo != null) {
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        } else {
+            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, FloatBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
         }
     }
 
@@ -377,7 +374,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatBandMatrix lu = new FloatBandMatrix(m, n, uplo == UPLO.LOWER ? kl : 0, uplo == UPLO.LOWER ? 0 : ku);
+        FloatBandMatrix lu = new FloatBandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
         lu.uplo = uplo;
         if (uplo == UPLO.LOWER) {
             for (int j = 0; j < n; j++) {
@@ -393,7 +390,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
             }
         }
 
-        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
+        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
         if (info != 0) {
             logger.error("LAPACK PBTRF error code: {}", info);
             throw new ArithmeticException("LAPACK PBTRF error code: " + info);
@@ -523,7 +520,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.gbtrs(lu.layout(), Transpose.NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -615,7 +612,7 @@ public class FloatBandMatrix extends MatrixBase implements MatrixVectorMultiplic
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
 
-            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == UPLO.LOWER ? lu.kl : lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, FloatBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK POTRS error code: {}", info);
                 throw new ArithmeticException("LAPACK POTRS error code: " + info);

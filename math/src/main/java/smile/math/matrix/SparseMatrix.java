@@ -64,7 +64,7 @@ import static java.util.Spliterator.*;
  *
  * @author Haifeng Li
  */
-public class SparseMatrix extends MatrixBase implements MatrixVectorMultiplication<double[]>, Iterable<SparseMatrix.Entry> {
+public class SparseMatrix extends MatrixBase implements DMatrix, Iterable<SparseMatrix.Entry> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(SparseMatrix.class);
     private static final long serialVersionUID = 2L;
 
@@ -338,60 +338,48 @@ public class SparseMatrix extends MatrixBase implements MatrixVectorMultiplicati
         return 0.0;
     }
 
-    /**
-     * Matrix-vector multiplication.
-     * <pre><code>
-     *     y = alpha * A * x + beta * y
-     * </code></pre>
-     */
+    @Override
     public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         int k = trans == Transpose.NO_TRANSPOSE ? m : n;
+        double[] ax = beta == 0.0 ? y : new double[k];
+
+        if (trans == Transpose.NO_TRANSPOSE) {
+            for (int j = 0; j < n; j++) {
+                for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
+                    ax[rowIndex[i]] += nonzeros[i] * x[j];
+                }
+            }
+        } else {
+            for (int i = 0; i < n; i++) {
+                for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
+                    ax[i] += nonzeros[j] * x[rowIndex[j]];
+                }
+            }
+        }
+
         for (int i = 0; i < k; i++) {
-            y[i] *= beta;
+            y[i] = alpha * ax[i] + beta * y[i];
         }
+    }
 
-        if (trans == Transpose.NO_TRANSPOSE) {
-            for (int j = 0; j < n; j++) {
-                for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                    y[rowIndex[i]] += nonzeros[i] * x[j];
-                }
-            }
-        } else {
-            for (int i = 0; i < n; i++) {
-                for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                    y[i] += nonzeros[j] * x[rowIndex[j]];
-                }
+    @Override
+    public void mv(double[] work, int inputOffset, int outputOffset) {
+        Arrays.fill(work, outputOffset, outputOffset + m, 0.0);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
+                work[outputOffset + rowIndex[i]] += nonzeros[i] * work[inputOffset + j];
             }
         }
     }
 
     @Override
-    public double[] mv(Transpose trans, double[] x) {
-        double[] y = new double[trans == Transpose.NO_TRANSPOSE ? m : n];
-        mv(trans, x, y);
-        return y;
-    }
+    public void tv(double[] work, int inputOffset, int outputOffset) {
+        Arrays.fill(work, outputOffset, outputOffset + n, 0.0);
 
-    @Override
-    public void mv(Transpose trans, double[] x, double[] y) {
-        mv(trans, 1.0, x, 0.0f, y);
-    }
-
-    @Override
-    public void mv(Transpose trans, double[] work, int inputOffset, int outputOffset) {
-        Arrays.fill(work, outputOffset, outputOffset + (trans == Transpose.NO_TRANSPOSE ? m : n), 0.0);
-
-        if (trans == Transpose.NO_TRANSPOSE) {
-            for (int j = 0; j < n; j++) {
-                for (int i = colIndex[j]; i < colIndex[j + 1]; i++) {
-                    work[outputOffset + rowIndex[i]] += nonzeros[i] * work[inputOffset + j];
-                }
-            }
-        } else {
-            for (int i = 0; i < n; i++) {
-                for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
-                    work[outputOffset + i] += nonzeros[j] * work[rowIndex[inputOffset + j]];
-                }
+        for (int i = 0; i < n; i++) {
+            for (int j = colIndex[i]; j < colIndex[i + 1]; j++) {
+                work[outputOffset + i] += nonzeros[j] * work[rowIndex[inputOffset + j]];
             }
         }
     }

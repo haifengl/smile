@@ -22,7 +22,7 @@ public enum SVDJob {
     /** All left (or right) singular vectors are returned in supplied  matrix U (or Vt). */
     ALL((byte) 'A'),
     /** The first min(m, n) singular vectors are returned in supplied matrix U (or Vt). */
-    ECONOMY((byte) 'S'),
+    COMPACT((byte) 'S'),
     /** The first min(m, n) singular vectors are overwritten on the matrix A. */
     OVERWRITE((byte) 'O'),
     /** No singular vectors are computed. */

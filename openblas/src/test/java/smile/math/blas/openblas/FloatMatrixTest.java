@@ -180,7 +180,7 @@ public class FloatMatrixTest {
     public void testAtx() {
         System.out.println("atx");
         float[] d = new float[matrix.nrows()];
-        matrix.mv(TRANSPOSE, b, d);
+        matrix.tv(b, d);
         assertEquals(0.65f, d[0], 1E-6f);
         assertEquals(0.60f, d[1], 1E-6f);
         assertEquals(0.55f, d[2], 1E-6f);
