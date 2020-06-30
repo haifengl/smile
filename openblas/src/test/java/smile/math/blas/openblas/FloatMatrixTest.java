@@ -300,12 +300,12 @@ public class FloatMatrixTest {
 
         FloatMatrix a = new FloatMatrix(A);
         FloatMatrix b = new FloatMatrix(B);
-        float[][] F = b.abmm(a).transpose().toArray();
+        float[][] F = b.mm(a).transpose().toArray();
 
-        assertTrue(MathEx.equals(a.abmm(b).toArray(),   C, 1E-6f));
-        assertTrue(MathEx.equals(a.abtmm(b).toArray(),  D, 1E-6f));
-        assertTrue(MathEx.equals(a.atbmm(b).toArray(),  E, 1E-6f));
-        assertTrue(MathEx.equals(a.atbtmm(b).toArray(), F, 1E-6f));
+        assertTrue(MathEx.equals(a.mm(b).toArray(),   C, 1E-6f));
+        assertTrue(MathEx.equals(a.mt(b).toArray(),  D, 1E-6f));
+        assertTrue(MathEx.equals(a.tm(b).toArray(),  E, 1E-6f));
+        assertTrue(MathEx.equals(a.tt(b).toArray(), F, 1E-6f));
     }
 
     @Test
@@ -1011,10 +1011,10 @@ public class FloatMatrixTest {
         FloatMatrix a = new FloatMatrix(A);
         FloatMatrix pinv = a.svd().pinv();
 
-        FloatMatrix x = pinv.abmm(a).abmm(pinv);
+        FloatMatrix x = pinv.mm(a).mm(pinv);
         assertTrue(x.equals(pinv, 1E-5f));
 
-        x = a.abmm(pinv).abmm(a);
+        x = a.mm(pinv).mm(a);
         assertTrue(x.equals(a, 1E-5f));
     }
 

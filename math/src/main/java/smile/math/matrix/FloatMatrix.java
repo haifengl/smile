@@ -1252,6 +1252,7 @@ public class FloatMatrix extends SMatrix {
     public FloatMatrix ata() {
         FloatMatrix C = new FloatMatrix(n, n);
         mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        C.uplo(LOWER);
         return C;
     }
 
@@ -1259,6 +1260,7 @@ public class FloatMatrix extends SMatrix {
     public FloatMatrix aat() {
         FloatMatrix C = new FloatMatrix(m, m);
         mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        C.uplo(LOWER);
         return C;
     }
 
@@ -1281,15 +1283,11 @@ public class FloatMatrix extends SMatrix {
             }
         }
 
-        if (transB == NO_TRANSPOSE) {
-            return C.abmm(B);
-        } else {
-            return C.abtmm(B);
-        }
+        return transB == NO_TRANSPOSE ? C.mm(B) : C.mt(B);
     }
 
     /** Returns matrix multiplication A * B. */
-    public FloatMatrix abmm(FloatMatrix B) {
+    public FloatMatrix mm(FloatMatrix B) {
         if (n != B.m) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", m, n, B.m, B.n));
         }
@@ -1300,7 +1298,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /** Returns matrix multiplication A * B'. */
-    public FloatMatrix abtmm(FloatMatrix B) {
+    public FloatMatrix mt(FloatMatrix B) {
         if (n != B.n) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", m, n, B.m, B.n));
         }
@@ -1311,7 +1309,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /** Returns matrix multiplication A' * B. */
-    public FloatMatrix atbmm(FloatMatrix B) {
+    public FloatMatrix tm(FloatMatrix B) {
         if (m != B.m) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", m, n, B.m, B.n));
         }
@@ -1322,7 +1320,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /** Returns matrix multiplication A' * B'. */
-    public FloatMatrix atbtmm(FloatMatrix B) {
+    public FloatMatrix tt(FloatMatrix B) {
         if (m != B.n) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B': %d x %d vs %d x %d", m, n, B.m, B.n));
         }
