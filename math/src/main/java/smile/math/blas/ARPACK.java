@@ -18,9 +18,11 @@
 package smile.math.blas;
 
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.EVD;
+
+import java.nio.DoubleBuffer;
+import java.util.Arrays;
+
 import static org.bytedeco.arpackng.global.arpack.*;
 
 /**
@@ -38,7 +40,7 @@ public interface ARPACK {
      * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
      * @param ritz Specify which of the Ritz values to compute.
      */
-    static EVD eigen(Matrix A, int k, Ritz ritz) {
+    static Matrix.EVD eigen(Matrix A, int k, Ritz ritz) {
         return eigen(A, k, ritz, 1E-6, A.nrows());
     }
 
@@ -49,7 +51,7 @@ public interface ARPACK {
      * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
      * @param which Specify which of the Ritz values to compute.
      */
-    static EVD eigen(Matrix A, int k, String which) {
+    static Matrix.EVD eigen(Matrix A, int k, String which) {
         return eigen(A, k, which, 1E-6, A.nrows());
     }
 
@@ -62,7 +64,7 @@ public interface ARPACK {
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
      */
-    static EVD eigen(Matrix A, int k, Ritz ritz, double kappa, int maxIter) {
+    static Matrix.EVD eigen(Matrix A, int k, Ritz ritz, double kappa, int maxIter) {
         return eigen(A, k, ritz.name(), kappa, maxIter);
     }
 
@@ -75,7 +77,7 @@ public interface ARPACK {
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
      */
-    static EVD eigen(Matrix A, int k, String which, double kappa, int maxIter) {
+    static Matrix.EVD eigen(Matrix A, int k, String which, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -139,7 +141,7 @@ public interface ARPACK {
                 throw new IllegalStateException("ARPACK DSAUPD ido = " + ido[0]);
             }
 
-            mv(A, workd, ipntr[0] - 1, ipntr[1] - 1);
+            A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
         }
 
         logger.info("ARPACK: " + iter + " iterations for Matrix of size " + n);
@@ -171,18 +173,8 @@ public interface ARPACK {
         int computed = iparam[4];
         logger.info("ARPACK computed " + computed + " eigenvalues");
 
-        //DenseMatrix ev = Matrix.of(n, nev, V);
-        //Matrix.reverse(d, ev);
-        //return new EVD(ev, d);
-        return null;
-    }
-
-    static void mv(Matrix A, double[] work, int inputOffset, int outputOffset) {
-        int n = A.ncols();
-        double[] x = new double[A.ncols()];
-        System.arraycopy(work, inputOffset, x, 0, n);
-        double[] y = new double[A.ncols()];
-        A.ax(x, y);
-        System.arraycopy(y, 0, work, outputOffset, n);
+        Matrix.EVD eig = new Matrix.EVD(d, Matrix.of(Layout.COL_MAJOR, n, nev, n, DoubleBuffer.wrap(Arrays.copyOfRange(V, 0, n * nev))));
+        eig.sort();
+        return eig;
     }
 }

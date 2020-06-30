@@ -114,7 +114,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public EVD eigen(int k) {
+    public Matrix.EVD eigen(int k) {
         return eigen(k, 1.0E-6, 10 * nrows());
     }
 
@@ -127,11 +127,11 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
      */
-    public EVD eigen(int k, double kappa, int maxIter) {
+    public Matrix.EVD eigen(int k, double kappa, int maxIter) {
         try {
             Class<?> clazz = Class.forName("smile.netlib.ARPACK");
             java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class, Double.TYPE, Integer.TYPE);
-            return (EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
+            return (Matrix.EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
         } catch (Exception e) {
             if (!(e instanceof ClassNotFoundException)) {
                 org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
@@ -148,7 +148,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param k the number of singular triples we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public SVD svd(int k) {
+    public Matrix.SVD svd(int k) {
         return svd(k, 1.0E-6, 10 * nrows());
     }
 
@@ -161,11 +161,11 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @param kappa relative accuracy of ritz values acceptable as singular values.
      * @param maxIter Maximum number of iterations.
      */
-    public SVD svd(int k, double kappa, int maxIter) {
+    public Matrix.SVD svd(int k, double kappa, int maxIter) {
         ATA B = new ATA(this);
-        EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
+        Matrix.EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
 
-        double[] s = eigen.getEigenValues();
+        double[] s = eigen.wr;
         for (int i = 0; i < s.length; i++) {
             s[i] = Math.sqrt(s[i]);
         }
@@ -174,12 +174,11 @@ public abstract class DMatrix extends IMatrix<double[]> {
         int n = ncols();
 
         if (m >= n) {
-
-            DenseMatrix V = eigen.getEigenVectors();
+            Matrix V = eigen.Vr;
 
             double[] tmp = new double[m];
             double[] vi = new double[n];
-            DenseMatrix U = Matrix.zeros(m, s.length);
+            Matrix U = new Matrix(m, s.length);
             for (int i = 0; i < s.length; i++) {
                 for (int j = 0; j < n; j++) {
                     vi[j] = V.get(j, i);
@@ -192,15 +191,13 @@ public abstract class DMatrix extends IMatrix<double[]> {
                 }
             }
 
-            return new SVD(U, V, s);
-
+            return new Matrix.SVD(s, U, V);
         } else {
-
-            DenseMatrix U = eigen.getEigenVectors();
+            Matrix U = eigen.Vr;
 
             double[] tmp = new double[n];
             double[] ui = new double[m];
-            DenseMatrix V = Matrix.zeros(n, s.length);
+            Matrix V = new Matrix(n, s.length);
             for (int i = 0; i < s.length; i++) {
                 for (int j = 0; j < m; j++) {
                     ui[j] = U.get(j, i);
@@ -213,7 +210,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
                 }
             }
 
-            return new SVD(U, V, s);
+            return new Matrix.SVD(s, U, V);
         }
     }
 }

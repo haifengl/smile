@@ -100,16 +100,26 @@ public class FloatMatrix extends SMatrix {
 
     /**
      * Constructor.
+     * @param m the number of rows.
+     * @param n the number of columns.
      * @param A the array of matrix.
      */
-    public FloatMatrix(float[][] A) {
-        this(A.length, A[0].length);
+    public FloatMatrix(int m, int n, float[][] A) {
+        this(m, n);
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 set(i, j, A[i][j]);
             }
         }
+    }
+
+    /**
+     * Constructor.
+     * @param A the array of matrix.
+     */
+    public FloatMatrix(float[][] A) {
+        this(A.length, A[0].length, A);
     }
 
     /**

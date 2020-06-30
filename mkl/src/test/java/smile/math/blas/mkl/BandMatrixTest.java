@@ -22,7 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.blas.Transpose;
 import smile.math.blas.UPLO;
 import smile.math.matrix.BandMatrix;
 import smile.math.matrix.FloatBandMatrix;
@@ -127,7 +126,7 @@ public class BandMatrixTest {
             assertEquals(x[i], choleskyx[i], 1E-6f);
         }
     }
-/*
+
     @Test
     public void testBandMatrix() {
         System.out.println("BandMatrix");
@@ -140,7 +139,7 @@ public class BandMatrixTest {
 
         Matrix a = new Matrix(A);
         Matrix.LU lu = a.lu();
-        float[] x = lu.solve(b);
+        double[] x = lu.solve(b);
 
         BandMatrix band = new BandMatrix(3, 3, 1, 1);
         for (int i = 0; i < A.length; i++) {
@@ -157,8 +156,8 @@ public class BandMatrixTest {
             assertEquals(y[i], y2[i], 1E-7f);
         }
 
-        y = a.mv(Transpose.TRANSPOSE, x);
-        y2 = band.mv(Transpose.TRANSPOSE, x);
+        y = a.tv(x);
+        y2 = band.tv(x);
         for (int i = 0; i < y.length; i++) {
             assertEquals(y[i], y2[i], 1E-7f);
         }
@@ -167,24 +166,24 @@ public class BandMatrixTest {
         double[] lux = bandlu.solve(b);
 
         // determinant
-        assertEquals(lu.det(), bandlu.det(), 1E-7);
+        assertEquals(lu.det(), bandlu.det(), 1E-7f);
         // solution vector
         assertEquals(x.length, lux.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], lux[i], 1E-7);
+            assertEquals(x[i], lux[i], 1E-7f);
         }
 
         // Upper band matrix
         band.uplo(UPLO.UPPER);
         BandMatrix.Cholesky cholesky = band.cholesky();
-        float[] choleskyx = cholesky.solve(b);
+        double[] choleskyx = cholesky.solve(b);
 
         // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7);
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
 
         // Lower band matrix
@@ -193,13 +192,11 @@ public class BandMatrixTest {
         choleskyx = cholesky.solve(b);
 
         // determinant
-        assertEquals(lu.det(), cholesky.det(), 1E-7);
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
     }
-
- */
 }
