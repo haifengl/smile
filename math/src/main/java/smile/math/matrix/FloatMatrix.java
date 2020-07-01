@@ -28,6 +28,7 @@ import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
+
 import static smile.math.blas.Diag.*;
 import static smile.math.blas.Layout.*;
 import static smile.math.blas.Side.*;

@@ -19,17 +19,14 @@ package smile.math.matrix;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.LineNumberReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.*;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
-import smile.util.SparseArray;
 import smile.util.Strings;
 
 import static java.util.Spliterator.*;
