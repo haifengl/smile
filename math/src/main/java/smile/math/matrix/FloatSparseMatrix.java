@@ -207,39 +207,6 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
         return new FloatSparseMatrix(m, n, nonzeros.clone(), rowIndex.clone(), colIndex.clone());
     }
 
-    /**
-     * Returns an iterator of nonzero entries.
-     * @return an iterator of nonzero entries
-     */
-    public Iterator<Entry> iterator() {
-        return iterator(0, n);
-    }
-
-    /**
-     * Returns an iterator of nonzero entries.
-     * @param beginColumn The beginning column, inclusive.
-     * @param endColumn   The end column, exclusive.
-     * @return an iterator of nonzero entries
-     */
-    public Iterator<Entry> iterator(int beginColumn, int endColumn) {
-        return new Iterator<Entry>() {
-            int k = colIndex[beginColumn]; // entry index
-            int j = beginColumn; // column
-
-            @Override
-            public boolean hasNext() {
-                return k < colIndex[endColumn];
-            }
-
-            @Override
-            public Entry next() {
-                int i = rowIndex[k];
-                while (k >= colIndex[j + 1]) j++;
-                return new Entry(i, j, k++);
-            }
-        };
-    }
-
     @Override
     public int nrows() {
         return m;
@@ -254,33 +221,6 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     public long size() {
         return colIndex[n];
     }
-
-    /*
-     * Benchmarks of iteration and stream using jmh:
-     *
-     * Benchmark                                       Mode  Cnt        Score       Error   Units
-     * IteratorSpeed.timeDirect                        avgt    5   429888.246    3819.232   ns/op
-     * IteratorSpeed.timeDirect: gc.alloc.rate         avgt    5      ~ 10^-4              MB/sec
-     * IteratorSpeed.timeDirect: gc.alloc.rate.norm    avgt    5        0.088       0.001    B/op
-     * IteratorSpeed.timeDirect: gc.count              avgt    5          ~ 0              counts
-     * IteratorSpeed.timeDirect: stack                 avgt               NaN                 ---
-     * IteratorSpeed.timeIterator                      avgt    5   430718.537    7831.509   ns/op
-     * IteratorSpeed.timeIterator: gc.alloc.rate       avgt    5        0.028       0.001  MB/sec
-     * IteratorSpeed.timeIterator: gc.alloc.rate.norm  avgt    5       16.089       0.011    B/op
-     * IteratorSpeed.timeIterator: gc.count            avgt    5          ~ 0              counts
-     * IteratorSpeed.timeIterator: stack               avgt               NaN                 ---
-     * IteratorSpeed.timeStream                        avgt    5  1032370.658   55295.704   ns/op
-     * IteratorSpeed.timeStream: gc.alloc.rate         avgt    5        0.077       0.004  MB/sec
-     * IteratorSpeed.timeStream: gc.alloc.rate.norm    avgt    5      104.210       0.011    B/op
-     * IteratorSpeed.timeStream: gc.count              avgt    5          ~ 0              counts
-     * IteratorSpeed.timeStream: stack                 avgt               NaN                 ---
-     *
-     * The three cases are timeDirect for a direct loop over internal data structures,
-     * timeIterator for #foreachNonZero and timeStream for the streaming equivalent form.
-     * The timeIterator case is at most a few percent slower than the direct loops while
-     * the stream is about 2-3 times slower. Note that the JVM is clever enough to optimize
-     * away the creation of temporary objects in the streaming idiom.
-     */
 
     /**
      * Provides a stream over all of the non-zero elements of a sparse matrix.
@@ -299,6 +239,96 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     public Stream<Entry> nonzeros(int beginColumn, int endColumn) {
         Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(beginColumn, endColumn), colIndex[endColumn] - colIndex[beginColumn], ORDERED | SIZED | IMMUTABLE);
         return StreamSupport.stream(spliterator, false);
+    }
+
+    /**
+     * Returns an iterator of nonzero entries.
+     * @return an iterator of nonzero entries
+     */
+    @Override
+    public Iterator<Entry> iterator() {
+        return iterator(0, n);
+    }
+
+    /**
+     * Returns an iterator of nonzero entries.
+     * @param beginColumn The beginning column, inclusive.
+     * @param endColumn   The end column, exclusive.
+     * @return an iterator of nonzero entries
+     */
+    public Iterator<Entry> iterator(int beginColumn, int endColumn) {
+        if (beginColumn < 0 || beginColumn >= n) {
+            throw new IllegalArgumentException("Invalid begin column: " + beginColumn);
+        }
+
+        if (endColumn <= beginColumn || endColumn > n) {
+            throw new IllegalArgumentException("Invalid end column: " + endColumn);
+        }
+
+        return new Iterator<Entry>() {
+            int k = colIndex[beginColumn]; // entry index
+            int j = beginColumn; // column
+
+            @Override
+            public boolean hasNext() {
+                return k < colIndex[endColumn];
+            }
+
+            @Override
+            public Entry next() {
+                int i = rowIndex[k];
+                while (k >= colIndex[j + 1]) j++;
+                return new Entry(i, j, k++);
+            }
+        };
+    }
+
+    /**
+     * For each loop on non-zero elements. This will be a bit faster than iterator or stream
+     * by avoiding boxing. But it will be considerably less general.
+     * <p>
+     * Note that the consumer could be called on values that are either effectively or actually
+     * zero. The only guarantee is that no values that are known to be zero based on the
+     * structure of the matrix will be processed.
+     *
+     * @param consumer The matrix element consumer.
+     */
+    public void forEachNonZero(DoubleConsumer consumer) {
+        for (int j = 0; j < n; j++) {
+            for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
+                int i = rowIndex[k];
+                consumer.accept(i, j, nonzeros[k]);
+            }
+        }
+    }
+
+    /**
+     * For each loop on non-zero elements. This will be a bit faster than iterator or stream
+     * by avoiding boxing. But it will be considerably less general.
+     * <p>
+     * Note that the consumer could be called on values that are either effectively or actually
+     * zero. The only guarantee is that no values that are known to be zero based on the
+     * structure of the matrix will be processed.
+     *
+     * @param beginColumn The beginning column, inclusive.
+     * @param endColumn   The end column, exclusive.
+     * @param consumer    The matrix element consumer.
+     */
+    public void forEachNonZero(int beginColumn, int endColumn, FloatConsumer consumer) {
+        if (beginColumn < 0 || beginColumn >= n) {
+            throw new IllegalArgumentException("Invalid begin column: " + beginColumn);
+        }
+
+        if (endColumn <= beginColumn || endColumn > n) {
+            throw new IllegalArgumentException("Invalid end column: " + endColumn);
+        }
+
+        for (int j = beginColumn; j < endColumn; j++) {
+            for (int k = colIndex[j]; k < colIndex[j + 1]; k++) {
+                int i = rowIndex[k];
+                consumer.accept(i, j, nonzeros[k]);
+            }
+        }
     }
 
     /** Returns the element at the storage index. */
