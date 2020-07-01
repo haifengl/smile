@@ -17,17 +17,12 @@
 
 package smile.math.matrix;
 
-import java.io.LineNumberReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Scanner;
 
 import smile.math.MathEx;
 import smile.math.blas.*;
@@ -1839,9 +1834,10 @@ public class Matrix extends DMatrix {
 
             Matrix Vl2 = null;
             if (Vl != null) {
-                Vl2 = new Matrix(n, n);
+                int m = Vl.m;
+                Vl2 = new Matrix(m, n);
                 for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < n; i++) {
+                    for (int i = 0; i < m; i++) {
                         Vl2.set(i, j, Vl.get(i, index[j]));
                     }
                 }
@@ -1849,13 +1845,13 @@ public class Matrix extends DMatrix {
 
             Matrix Vr2 = null;
             if (Vr != null) {
-                Vr2 = new Matrix(n, n);
+                int m = Vl.m;
+                Vr2 = new Matrix(m, n);
                 for (int j = 0; j < n; j++) {
-                    for (int i = 0; i < n; i++) {
+                    for (int i = 0; i < m; i++) {
                         Vr2.set(i, j, Vr.get(i, index[j]));
                     }
                 }
-
             }
 
             return new EVD(wr2, wi2, Vl2, Vr2);

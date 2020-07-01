@@ -22,7 +22,7 @@ package smile.math.matrix;
  *
  * @author Haifeng Li
  */
-public interface DMatrixConsumer {
+public interface DoubleConsumer {
     /**
      * Accepts one matrix element and performs the operation
      * on the given arguments.
