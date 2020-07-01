@@ -17,25 +17,23 @@
 
 package smile.interpolation;
 
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.LU;
 
 /**
- * Radial basis function interpolation is a popular method for the data points are
- * irregularly distributed in space. In its basic form, radial basis function
- * interpolation is in the form
+ * Radial basis function interpolation is a popular method for the data points
+ * are irregularly distributed in space. In its basic form, radial basis
+ * function interpolation is in the form
  * <p>
  * <pre>
  *     y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
  * </pre>
  * where the approximating function y(x) is represented as a sum of N radial
- * basis functions &phi;, each associated with a different center c<sub>i</sub>, and weighted
- * by an appropriate coefficient w<sub>i</sub>. For distance, one usually chooses
- * euclidean distance. The weights w<sub>i</sub> can
+ * basis functions &phi;, each associated with a different center c<sub>i</sub>,
+ * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+ * one usually chooses euclidean distance. The weights w<sub>i</sub> can
  * be estimated using the matrix methods of linear least squares, because
  * the approximating function is linear in the weights.
  * <p>
@@ -50,7 +48,7 @@ import smile.math.matrix.LU;
  * Other popular choices for &phi; comprise the Gaussian function and the so
  * called thin plate splines. Thin plate splines result from the solution of
  * a variational problem. The advantage of the thin plate splines is that
- * their conditioning is invariant under scalings. Gaussians, multi-quadrics
+ * their conditioning is invariant under scaling. Gaussians, multi-quadrics
  * and inverse multi-quadrics are infinitely smooth and and involve a scale
  * or shape parameter, r<sub><small>0</small></sub> &gt; 0.
  * Decreasing r<sub><small>0</small></sub> tends to
@@ -111,7 +109,7 @@ public class RBFInterpolation1D implements Interpolation {
 
         int n = x.length;
 
-        DenseMatrix G = Matrix.zeros(n, n);
+        Matrix G = new Matrix(n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -130,13 +128,12 @@ public class RBFInterpolation1D implements Interpolation {
         }
 
         if (rbf instanceof GaussianRadialBasis) {
-            Cholesky cholesky = G.cholesky();
-            cholesky.solve(rhs);
-            w = rhs;
+            G.uplo(UPLO.LOWER);
+            Matrix.Cholesky cholesky = G.cholesky();
+            w = cholesky.solve(rhs);
         } else {
-            LU lu = G.lu(true);
-            lu.solve(rhs);
-            w = rhs;
+            Matrix.LU lu = G.lu();
+            w = lu.solve(rhs);
         }
     }
 
