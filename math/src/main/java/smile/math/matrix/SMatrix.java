@@ -130,7 +130,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * @return a dense or sparse matrix.
      * @author Haifeng Li
      */
-    static SMatrix market(Path path) throws IOException, ParseException {
+    public static SMatrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
              Scanner scanner = new Scanner(reader)) {
 
@@ -299,5 +299,79 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
             throw new ParseException("Invalid Matrix Market format: " + format, 0);
         }
+    }
+
+    /**
+     * Returns the matrix of A' * A or A * A', whichever is smaller.
+     * For SVD, we compute eigenvalue decomposition of A' * A
+     * when m >= n, or that of A * A' when m < n.
+     */
+    SMatrix square() {
+        SMatrix A = this;
+
+        return new SMatrix() {
+            /**
+             * The larger dimension of A.
+             */
+            private int m = Math.max(A.nrows(), A.ncols());
+            /**
+             * The smaller dimension of A.
+             */
+            private int n = Math.min(A.nrows(), A.ncols());
+            /**
+             * Workspace for A * x
+             */
+            private float[] Ax = new float[m + n];
+
+            @Override
+            public int nrows() {
+                return n;
+            }
+
+            @Override
+            public int ncols() {
+                return n;
+            }
+
+            @Override
+            public long size() {
+                return m + n;
+            }
+
+            @Override
+            public void mv(float[] work, int inputOffset, int outputOffset) {
+                System.arraycopy(work, inputOffset, Ax, 0, n);
+
+                if (A.nrows() >= A.ncols()) {
+                    A.mv(Ax, 0, n);
+                    A.tv(Ax, n, 0);
+                } else {
+                    A.tv(Ax, 0, n);
+                    A.mv(Ax, n, 0);
+                }
+
+                System.arraycopy(Ax, 0, work, outputOffset, n);
+            }
+
+            @Override
+            public void tv(float[] work, int inputOffset, int outputOffset) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public float get(int i, int j) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public SMatrix set(int i, int j, float x) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }

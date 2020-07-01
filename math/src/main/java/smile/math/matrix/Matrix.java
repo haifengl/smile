@@ -1503,7 +1503,7 @@ public class Matrix extends DMatrix {
          */
         public SVD(double[] s, Matrix U, Matrix V) {
             this.m = U.m;
-            this.n = V.n;
+            this.n = V.m;
             this.s = s;
             this.U = U;
             this.V = V;

@@ -120,113 +120,6 @@ public abstract class DMatrix extends IMatrix<double[]> {
     }
 
     /**
-     * Find k largest approximate eigen pairs of a symmetric matrix by the
-     * Lanczos algorithm.
-     *
-     * @param k the number of eigenvalues we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     */
-    public Matrix.EVD eigen(int k) {
-        return eigen(k, 1.0E-6, 10 * nrows());
-    }
-
-    /**
-     * Find k largest approximate eigen pairs of a symmetric matrix by the
-     * Lanczos algorithm.
-     *
-     * @param k the number of eigenvalues we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
-     * @param maxIter Maximum number of iterations.
-     */
-    public Matrix.EVD eigen(int k, double kappa, int maxIter) {
-        try {
-            Class<?> clazz = Class.forName("smile.netlib.ARPACK");
-            java.lang.reflect.Method method = clazz.getMethod("eigen", Matrix.class, Integer.TYPE, String.class, Double.TYPE, Integer.TYPE);
-            return (Matrix.EVD) method.invoke(null, this, k, "LA", kappa, maxIter);
-        } catch (Exception e) {
-            if (!(e instanceof ClassNotFoundException)) {
-                org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Matrix.class);
-                logger.info("Matrix.eigen({}, {}, {}):", k, kappa, maxIter, e);
-            }
-            return Lanczos.eigen(this, k, kappa, maxIter);
-        }
-    }
-
-    /**
-     * Find k largest approximate singular triples of a matrix by the
-     * Lanczos algorithm.
-     *
-     * @param k the number of singular triples we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     */
-    public Matrix.SVD svd(int k) {
-        return svd(k, 1.0E-6, 10 * nrows());
-    }
-
-    /**
-     * Find k largest approximate singular triples of a matrix by the
-     * Lanczos algorithm.
-     *
-     * @param k the number of singular triples we wish to compute for the input matrix.
-     * This number cannot exceed the size of A.
-     * @param kappa relative accuracy of ritz values acceptable as singular values.
-     * @param maxIter Maximum number of iterations.
-     */
-    public Matrix.SVD svd(int k, double kappa, int maxIter) {
-        ATA B = new ATA(this);
-        Matrix.EVD eigen = Lanczos.eigen(B, k, kappa, maxIter);
-
-        double[] s = eigen.wr;
-        for (int i = 0; i < s.length; i++) {
-            s[i] = Math.sqrt(s[i]);
-        }
-
-        int m = nrows();
-        int n = ncols();
-
-        if (m >= n) {
-            Matrix V = eigen.Vr;
-
-            double[] tmp = new double[m];
-            double[] vi = new double[n];
-            Matrix U = new Matrix(m, s.length);
-            for (int i = 0; i < s.length; i++) {
-                for (int j = 0; j < n; j++) {
-                    vi[j] = V.get(j, i);
-                }
-
-                mv(vi, tmp);
-
-                for (int j = 0; j < m; j++) {
-                    U.set(j, i, tmp[j] / s[i]);
-                }
-            }
-
-            return new Matrix.SVD(s, U, V);
-        } else {
-            Matrix U = eigen.Vr;
-
-            double[] tmp = new double[n];
-            double[] ui = new double[m];
-            Matrix V = new Matrix(n, s.length);
-            for (int i = 0; i < s.length; i++) {
-                for (int j = 0; j < m; j++) {
-                    ui[j] = U.get(j, i);
-                }
-
-                tv(ui, tmp);
-
-                for (int j = 0; j < n; j++) {
-                    V.set(j, i, tmp[j] / s[i]);
-                }
-            }
-
-            return new Matrix.SVD(s, U, V);
-        }
-    }
-
-    /**
      * Reads a matrix from a Matrix Market File Format file.
      * For details, see
      * <a href="http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html">http://people.sc.fsu.edu/~jburkardt/data/mm/mm.html</a>.
@@ -237,7 +130,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
      * @return a dense or sparse matrix.
      * @author Haifeng Li
      */
-    static DMatrix market(Path path) throws IOException, ParseException {
+    public static DMatrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
              Scanner scanner = new Scanner(reader)) {
 
@@ -406,5 +299,79 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
             throw new ParseException("Invalid Matrix Market format: " + format, 0);
         }
+    }
+
+    /**
+     * Returns the matrix of A' * A or A * A', whichever is smaller.
+     * For SVD, we compute eigenvalue decomposition of A' * A
+     * when m >= n, or that of A * A' when m < n.
+     */
+    DMatrix square() {
+        DMatrix A = this;
+
+        return new DMatrix() {
+            /**
+             * The larger dimension of A.
+             */
+            private int m = Math.max(A.nrows(), A.ncols());
+            /**
+             * The smaller dimension of A.
+             */
+            private int n = Math.min(A.nrows(), A.ncols());
+            /**
+             * Workspace for A * x
+             */
+            private double[] Ax = new double[m + n];
+
+            @Override
+            public int nrows() {
+                return n;
+            }
+
+            @Override
+            public int ncols() {
+                return n;
+            }
+
+            @Override
+            public long size() {
+                return m + n;
+            }
+
+            @Override
+            public void mv(double[] work, int inputOffset, int outputOffset) {
+                System.arraycopy(work, inputOffset, Ax, 0, n);
+
+                if (A.nrows() >= A.ncols()) {
+                    A.mv(Ax, 0, n);
+                    A.tv(Ax, n, 0);
+                } else {
+                    A.tv(Ax, 0, n);
+                    A.mv(Ax, n, 0);
+                }
+
+                System.arraycopy(Ax, 0, work, outputOffset, n);
+            }
+
+            @Override
+            public void tv(double[] work, int inputOffset, int outputOffset) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public double get(int i, int j) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public DMatrix set(int i, int j, double x) {
+                throw new UnsupportedOperationException();
+            }
+        };
     }
 }
