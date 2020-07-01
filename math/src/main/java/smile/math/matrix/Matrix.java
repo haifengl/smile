@@ -1845,7 +1845,7 @@ public class Matrix extends DMatrix {
 
             Matrix Vr2 = null;
             if (Vr != null) {
-                int m = Vl.m;
+                int m = Vr.m;
                 Vr2 = new Matrix(m, n);
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
