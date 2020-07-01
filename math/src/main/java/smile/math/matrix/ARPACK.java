@@ -18,6 +18,7 @@
 package smile.math.matrix;
 
 import java.nio.DoubleBuffer;
+import java.nio.FloatBuffer;
 import java.util.Arrays;
 import static smile.math.blas.Layout.*;
 import static org.bytedeco.arpackng.global.arpack.*;
@@ -102,7 +103,7 @@ public interface ARPACK {
     }
 
     /**
-     * Computes k eigenvalues of a symmetric matrix.
+     * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
@@ -112,7 +113,7 @@ public interface ARPACK {
     }
 
     /**
-     * Computes k eigenvalues of a symmetric matrix.
+     * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
@@ -132,12 +133,13 @@ public interface ARPACK {
         int[] ido = {0};
         int[] info = {0};
         byte[] bmat = {'I'}; // standard eigenvalue problem
-        byte[] bwhich = which.toString().getBytes();
+        String swhich = which.name();
+        byte[] bwhich = {(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
         int ncv = Math.min(3 * nev, n);
 
         int[] iparam = new int[11];
         iparam[0] = 1;
-        iparam[2] = 300;
+        iparam[2] = 10 * n;
         iparam[6] = 1; // mode
 
         int[] ipntr = new int[11];
@@ -157,7 +159,9 @@ public interface ARPACK {
             dsaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
                      workd, workl, workl.length, info);
 
-            A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
+            if (ido[0] == -1 || ido[0] == 1) {
+                A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
+            }
         } while (ido[0] == -1 || ido[0] == 1);
 
         if (info[0] < 0) {
@@ -165,15 +169,13 @@ public interface ARPACK {
         }
 
         info[0] = 0;
-        byte[] all = {'A'};
-        double[] d = new double[nev];
+        byte[] howmny = {'A'};
+        double[] d = new double[ncv * 2];
         int[] select = new int[ncv];
-        double[] z = new double[(n+1) * (nev+1)];
-        int ldz = n + 1;
         double sigma = 0.0;
         boolean rvec = true;
 
-        dseupd_c(rvec, all, select, d, z, ldz, sigma,
+        dseupd_c(rvec, howmny, select, d, V, ldv, sigma,
                  bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
                  workd, workl, workl.length, info);
 
@@ -190,7 +192,305 @@ public interface ARPACK {
         nev = iparam[4]; // number of found eigenvalues
         logger.info("ARPACK computed " + nev + " eigenvalues");
 
-        Matrix.EVD eig = new Matrix.EVD(d, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(Arrays.copyOfRange(V, 0, n * nev))));
+        d = Arrays.copyOfRange(d, 0, nev);
+        V = Arrays.copyOfRange(V, 0, n * nev);
+        Matrix.EVD eig = new Matrix.EVD(d, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        return eig.sort();
+    }
+
+    /**
+     * Computes NEV eigenvalues of a symmetric single precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     */
+    static FloatMatrix.EVD syev(SMatrix A, int nev, SymmWhich which) {
+        return syev(A, nev, which, 0.0f);
+    }
+
+    /**
+     * Computes NEV eigenvalues of a symmetric single precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     * @param tol the stopping criterion.
+     */
+    static FloatMatrix.EVD syev(SMatrix A, int nev, SymmWhich which, float tol) {
+        if (A.nrows() != A.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        }
+
+        int n = A.nrows();
+
+        if (nev <= 0 || nev >= n) {
+            throw new IllegalArgumentException("Invalid NEV: " + nev);
+        }
+
+        int[] ido = {0};
+        int[] info = {0};
+        byte[] bmat = {'I'}; // standard eigenvalue problem
+        String swhich = which.name();
+        byte[] bwhich = swhich.getBytes();//{(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
+        int ncv = Math.min(3 * nev, n);
+
+        int[] iparam = new int[11];
+        iparam[0] = 1;
+        iparam[2] = 10 * n;
+        iparam[6] = 1; // mode
+
+        int[] ipntr = new int[11];
+        // Arnoldi reverse communication
+        float[] workd = new float[3 * n];
+        // private work array
+        float[] workl = new float[ncv * (ncv + 8)];
+
+        // used for initial residual (if info != 0)
+        // and eventually the output residual
+        float[] resid = new float[n];
+        // Lanczos basis vectors
+        float[] V = new float[n * ncv];
+        int ldv = n;
+
+        do {
+            ssaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                    workd, workl, workl.length, info);
+
+            if (ido[0] == -1 || ido[0] == 1) {
+                A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
+            }
+        } while (ido[0] == -1 || ido[0] == 1);
+
+        if (info[0] < 0) {
+            throw new IllegalStateException("ARPACK DSAUPD error code: " + info[0]);
+        }
+
+        info[0] = 0;
+        byte[] howmny = {'A'};
+        float[] d = new float[ncv * 2];
+        int[] select = new int[ncv];
+        float sigma = 0.0f;
+        boolean rvec = true;
+
+        sseupd_c(rvec, howmny, select, d, V, ldv, sigma,
+                bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                workd, workl, workl.length, info);
+
+        if (info[0] != 0) {
+            String error = "ARPACK DSEUPD error code: " + info[0];
+            if (info[0] == 1) {
+                error = "ARPACK DSEUPD error: Maximum number of iterations reached.";
+            } else if (info[0] == 3) {
+                error = "ARPACK DSEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
+            }
+            throw new IllegalStateException(error);
+        }
+
+        nev = iparam[4]; // number of found eigenvalues
+        logger.info("ARPACK computed " + nev + " eigenvalues");
+
+        d = Arrays.copyOfRange(d, 0, nev);
+        V = Arrays.copyOfRange(V, 0, n * nev);
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(d, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
+        return eig.sort();
+    }
+
+    /**
+     * Computes NEV eigenvalues of an asymmetric double precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     */
+    static Matrix.EVD eigen(DMatrix A, int nev, AsymmWhich which) {
+        return eigen(A, nev, which, 0.0);
+    }
+
+    /**
+     * Computes NEV eigenvalues of an asymmetric double precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     * @param tol the stopping criterion.
+     */
+    static Matrix.EVD eigen(DMatrix A, int nev, AsymmWhich which, double tol) {
+        if (A.nrows() != A.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        }
+
+        int n = A.nrows();
+
+        if (nev <= 0 || nev >= n) {
+            throw new IllegalArgumentException("Invalid NEV: " + nev);
+        }
+
+        int[] ido = {0};
+        int[] info = {0};
+        byte[] bmat = {'I'}; // standard eigenvalue problem
+        String swhich = which.name();
+        byte[] bwhich = {(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
+        int ncv = Math.min(3 * nev, n);
+
+        int[] iparam = new int[11];
+        iparam[0] = 1;
+        iparam[2] = 10 * n;
+        iparam[6] = 1; // mode
+
+        int[] ipntr = new int[14];
+        // Arnoldi reverse communication
+        double[] workd = new double[3 * n];
+        double[] workev = new double[3 * ncv];
+        // private work array
+        double[] workl = new double[3*ncv*ncv + 6*ncv];
+
+        // used for initial residual (if info != 0)
+        // and eventually the output residual
+        double[] resid = new double[n];
+        // Lanczos basis vectors
+        double[] V = new double[n * ncv];
+        int ldv = n;
+
+        do {
+            dnaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                    workd, workl, workl.length, info);
+
+            if (ido[0] == -1 || ido[0] == 1) {
+                A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
+            }
+        } while (ido[0] == -1 || ido[0] == 1);
+
+        if (info[0] < 0) {
+            throw new IllegalStateException("ARPACK DNAUPD error code: " + info[0]);
+        }
+
+        info[0] = 0;
+        byte[] howmny = {'A'};
+        double[] wr = new double[ncv * 2];
+        double[] wi = new double[ncv * 2];
+        int[] select = new int[ncv];
+        double sigmar = 0.0;
+        double sigmai = 0.0;
+        boolean rvec = true;
+
+        dneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
+                bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                workd, workl, workl.length, info);
+
+        if (info[0] != 0) {
+            String error = "ARPACK DNEUPD error code: " + info[0];
+            if (info[0] == 1) {
+                error = "ARPACK DNEUPD error: Maximum number of iterations reached.";
+            } else if (info[0] == 3) {
+                error = "ARPACK DNEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
+            }
+            throw new IllegalStateException(error);
+        }
+
+        nev = iparam[4]; // number of found eigenvalues
+        logger.info("ARPACK computed " + nev + " eigenvalues");
+
+        wr = Arrays.copyOfRange(wr, 0, nev);
+        wi = Arrays.copyOfRange(wi, 0, nev);
+        V = Arrays.copyOfRange(V, 0, n * nev);
+        Matrix.EVD eig = new Matrix.EVD(wr, wi, null, Matrix.of(COL_MAJOR, n, nev, ldv, DoubleBuffer.wrap(V)));
+        return eig.sort();
+    }
+
+    /**
+     * Computes NEV eigenvalues of an asymmetric single precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     */
+    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmWhich which) {
+        return eigen(A, nev, which, 0.0f);
+    }
+
+    /**
+     * Computes NEV eigenvalues of an asymmetric single precision matrix.
+     *
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param which which eigenvalues to compute.
+     * @param tol the stopping criterion.
+     */
+    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmWhich which, float tol) {
+        if (A.nrows() != A.ncols()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        }
+
+        int n = A.nrows();
+
+        if (nev <= 0 || nev >= n) {
+            throw new IllegalArgumentException("Invalid NEV: " + nev);
+        }
+
+        int[] ido = {0};
+        int[] info = {0};
+        byte[] bmat = {'I'}; // standard eigenvalue problem
+        String swhich = which.name();
+        byte[] bwhich = {(byte) swhich.charAt(0), (byte) swhich.charAt(1)};
+        int ncv = Math.min(3 * nev, n);
+
+        int[] iparam = new int[11];
+        iparam[0] = 1;
+        iparam[2] = 10 * n;
+        iparam[6] = 1; // mode
+
+        int[] ipntr = new int[14];
+        // Arnoldi reverse communication
+        float[] workd = new float[3 * n];
+        float[] workev = new float[3 * ncv];
+        // private work array
+        float[] workl = new float[3*ncv*ncv + 6*ncv];
+
+        // used for initial residual (if info != 0)
+        // and eventually the output residual
+        float[] resid = new float[n];
+        // Lanczos basis vectors
+        float[] V = new float[n * ncv];
+        int ldv = n;
+
+        do {
+            snaupd_c(ido, bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                    workd, workl, workl.length, info);
+
+            if (ido[0] == -1 || ido[0] == 1) {
+                A.mv(workd, ipntr[0] - 1, ipntr[1] - 1);
+            }
+        } while (ido[0] == -1 || ido[0] == 1);
+
+        if (info[0] < 0) {
+            throw new IllegalStateException("ARPACK DNAUPD error code: " + info[0]);
+        }
+
+        info[0] = 0;
+        byte[] howmny = {'A'};
+        float[] wr = new float[ncv * 2];
+        float[] wi = new float[ncv * 2];
+        int[] select = new int[ncv];
+        float sigmar = 0.0f;
+        float sigmai = 0.0f;
+        boolean rvec = true;
+
+        sneupd_c(rvec, howmny, select, wr, wi, V, ldv, sigmar, sigmai, workev,
+                bmat, n, bwhich, nev, tol, resid, ncv, V, ldv, iparam, ipntr,
+                workd, workl, workl.length, info);
+
+        if (info[0] != 0) {
+            String error = "ARPACK DNEUPD error code: " + info[0];
+            if (info[0] == 1) {
+                error = "ARPACK DNEUPD error: Maximum number of iterations reached.";
+            } else if (info[0] == 3) {
+                error = "ARPACK DNEUPD error: No shifts could be applied during implicit Arnoldi update, try increasing NCV.";
+            }
+            throw new IllegalStateException(error);
+        }
+
+        nev = iparam[4]; // number of found eigenvalues
+        logger.info("ARPACK computed " + nev + " eigenvalues");
+
+        wr = Arrays.copyOfRange(wr, 0, nev);
+        wi = Arrays.copyOfRange(wi, 0, nev);
+        V = Arrays.copyOfRange(V, 0, n * nev);
+        FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
         return eig.sort();
     }
 }

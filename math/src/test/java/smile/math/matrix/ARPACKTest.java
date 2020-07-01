@@ -66,5 +66,17 @@ public class ARPACKTest {
         assertEquals(2.0, eig.wr[3], 1E-4);
         assertEquals(0.992, eig.wr[4], 1E-4);
         assertEquals(0.990, eig.wr[5], 1E-4);
+
+        // non-symmetric
+        eig = ARPACK.eigen(a, 6, ARPACK.AsymmWhich.LM);
+        assertEquals(2.0, eig.wr[0], 1E-4);
+        assertEquals(2.0, eig.wr[1], 1E-4);
+        assertEquals(2.0, eig.wr[2], 1E-4);
+        assertEquals(2.0, eig.wr[3], 1E-4);
+        assertEquals(0.992, eig.wr[4], 1E-4);
+        assertEquals(0.990, eig.wr[5], 1E-4);
+        for (int i = 0; i < eig.wi.length; i++) {
+            assertEquals(0.0, eig.wi[i], 1E-4);
+        }
     }
 }
