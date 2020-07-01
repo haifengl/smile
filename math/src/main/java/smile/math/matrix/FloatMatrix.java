@@ -1504,7 +1504,7 @@ public class FloatMatrix extends SMatrix {
          */
         public SVD(float[] s, FloatMatrix U, FloatMatrix V) {
             this.m = U.m;
-            this.n = V.n;
+            this.n = V.m;
             this.s = s;
             this.U = U;
             this.V = V;

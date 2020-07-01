@@ -20,48 +20,38 @@ package smile.math.matrix;
 import smile.math.blas.Transpose;
 
 /**
- * The matrix of A' * A. For SVD, we compute eigen decomposition of A' * A
- * when m >= n, or that of A * A' when m < n.
+ * The matrix of A' * A. For SVD, we compute eigenvalue decomposition
+ * of A' * A when m >= n, or that of A * A' when m < n.
  *
  * @author Haifeng Li
  */
 class ATA extends DMatrix {
 
+    /** A' * A */
     private DMatrix A;
-    private DMatrix AtA;
-    double[] buf;
+    /** Workspace for A * x */
+    private double[] Ax;
+    /** The larger dimension of A. */
+    private int m;
+    /** The smaller dimension of A. */
+    private int n;
 
     /** Constructor. */
     public ATA(DMatrix A) {
         this.A = A;
-
-        if (A.nrows() >= A.ncols()) {
-            buf = new double[A.nrows()];
-
-            if ((A.ncols() < 10000) && (A instanceof Matrix)) {
-                //AtA = A.ata();
-            }
-        } else {
-            buf = new double[A.ncols()];
-
-            if ((A.nrows() < 10000) && (A instanceof Matrix)) {
-                //AtA = A.aat();
-            }
-        }
+        this.m = Math.max(A.nrows(), A.ncols());
+        this.n = Math.min(A.nrows(), A.ncols());
+        this.Ax = new double[m + n];
     }
 
     @Override
     public int nrows() {
-        if (A.nrows() >= A.ncols()) {
-            return A.ncols();
-        } else {
-            return A.nrows();
-        }
+        return n;
     }
 
     @Override
     public int ncols() {
-        return nrows();
+        return n;
     }
 
     @Override
@@ -70,27 +60,27 @@ class ATA extends DMatrix {
     }
 
     @Override
-    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
-        if (AtA != null) {
-            AtA.mv(trans, alpha, x, beta, y);
-        } else {
-            if (A.nrows() >= A.ncols()) {
-                A.mv(x, buf);
-                A.tv(buf, y);
-            } else {
-                A.tv(x, buf);
-                A.mv(buf, y);
-            }
-        }
-    }
-
-    @Override
     public void mv(double[] work, int inputOffset, int outputOffset) {
-        throw new UnsupportedOperationException();
+        System.arraycopy(work, inputOffset, Ax, 0, n);
+
+        if (A.nrows() >= A.ncols()) {
+            A.mv(Ax, 0, n);
+            A.tv(Ax, n, 0);
+        } else {
+            A.tv(Ax, 0, n);
+            A.mv(Ax, n, 0);
+        }
+
+        System.arraycopy(Ax, 0, work, outputOffset, n);
     }
 
     @Override
     public void tv(double[] work, int inputOffset, int outputOffset) {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
         throw new UnsupportedOperationException();
     }
 

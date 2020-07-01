@@ -105,6 +105,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
@@ -115,6 +116,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      * @param tol the stopping criterion.
@@ -201,6 +203,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
@@ -211,6 +214,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      * @param tol the stopping criterion.
@@ -297,6 +301,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of an asymmetric double precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
@@ -307,6 +312,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of an asymmetric double precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      * @param tol the stopping criterion.
@@ -397,6 +403,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
@@ -407,6 +414,7 @@ public interface ARPACK {
     /**
      * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
+     * @param A the matrix to decompose.
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      * @param tol the stopping criterion.
@@ -492,5 +500,145 @@ public interface ARPACK {
         V = Arrays.copyOfRange(V, 0, n * nev);
         FloatMatrix.EVD eig = new FloatMatrix.EVD(wr, wi, null, FloatMatrix.of(COL_MAJOR, n, nev, ldv, FloatBuffer.wrap(V)));
         return eig.sort();
+    }
+
+    /**
+     * Computes k largest approximate singular triples of a matrix.
+     *
+     * @param A the matrix to decompose.
+     * @param k the number of singular triples to compute.
+     */
+    static Matrix.SVD svd(DMatrix A, int k) {
+        return svd(A, k, 0.0);
+    }
+
+    /**
+     * Computes k largest approximate singular triples of a matrix.
+     *
+     * @param A the matrix to decompose.
+     * @param k the number of singular triples to compute.
+     * @param tol the stopping criterion.
+     */
+    static Matrix.SVD svd(DMatrix A, int k, double tol) {
+        int m = A.nrows();
+        int n = A.ncols();
+
+        DMatrix ata = A.square();
+        Matrix.EVD eigen = syev(ata, k, SymmWhich.LM, tol);
+
+        double[] s = eigen.wr;
+        for (int i = 0; i < s.length; i++) {
+            s[i] = Math.sqrt(s[i]);
+        }
+
+        if (m >= n) {
+            Matrix V = eigen.Vr;
+
+            double[] Av = new double[m];
+            double[] v = new double[n];
+            Matrix U = new Matrix(m, s.length);
+            for (int j = 0; j < s.length; j++) {
+                for (int i = 0; i < n; i++) {
+                    v[i] = V.get(i, j);
+                }
+
+                A.mv(v, Av);
+
+                for (int i = 0; i < m; i++) {
+                    U.set(i, j, Av[i] / s[j]);
+                }
+            }
+
+            return new Matrix.SVD(s, U, V);
+        } else {
+            Matrix U = eigen.Vr;
+
+            double[] Atu = new double[n];
+            double[] u = new double[m];
+            Matrix V = new Matrix(n, s.length);
+            for (int j = 0; j < s.length; j++) {
+                for (int i = 0; i < m; i++) {
+                    u[i] = U.get(i, j);
+                }
+
+                A.tv(u, Atu);
+
+                for (int i = 0; i < n; i++) {
+                    V.set(i, j, Atu[i] / s[j]);
+                }
+            }
+
+            return new Matrix.SVD(s, U, V);
+        }
+    }
+
+    /**
+     * Computes k largest approximate singular triples of a matrix.
+     *
+     * @param A the matrix to decompose.
+     * @param k the number of singular triples to compute.
+     */
+    static FloatMatrix.SVD svd(SMatrix A, int k) {
+        return svd(A, k, 0.0f);
+    }
+
+    /**
+     * Computes k largest approximate singular triples of a matrix.
+     *
+     * @param A the matrix to decompose.
+     * @param k the number of singular triples to compute.
+     * @param tol the stopping criterion.
+     */
+    static FloatMatrix.SVD svd(SMatrix A, int k, float tol) {
+        int m = A.nrows();
+        int n = A.ncols();
+
+        SMatrix ata = A.square();
+        FloatMatrix.EVD eigen = syev(ata, k, SymmWhich.LM, tol);
+
+        float[] s = eigen.wr;
+        for (int i = 0; i < s.length; i++) {
+            s[i] = (float) Math.sqrt(s[i]);
+        }
+
+        if (m >= n) {
+            FloatMatrix V = eigen.Vr;
+
+            float[] Av = new float[m];
+            float[] v = new float[n];
+            FloatMatrix U = new FloatMatrix(m, s.length);
+            for (int j = 0; j < s.length; j++) {
+                for (int i = 0; i < n; i++) {
+                    v[i] = V.get(i, j);
+                }
+
+                A.mv(v, Av);
+
+                for (int i = 0; i < m; i++) {
+                    U.set(i, j, Av[i] / s[j]);
+                }
+            }
+
+            return new FloatMatrix.SVD(s, U, V);
+        } else {
+            FloatMatrix U = eigen.Vr;
+
+            float[] Atu = new float[n];
+            float[] u = new float[m];
+            FloatMatrix V = new FloatMatrix(n, s.length);
+            for (int j = 0; j < s.length; j++) {
+                for (int i = 0; i < m; i++) {
+                    u[i] = U.get(i, j);
+                }
+
+                A.tv(u, Atu);
+
+                for (int i = 0; i < n; i++) {
+                    V.set(i, j, Atu[i] / s[j]);
+                }
+            }
+
+            return new FloatMatrix.SVD(s, U, V);
+        }
     }
 }
