@@ -1542,6 +1542,10 @@ public class Matrix extends DMatrix {
          * singular values.
          */
         public int rank() {
+            if (s.length != Math.min(m, n)) {
+                throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
+            }
+
             int r = 0;
             double tol = rcond();
 
@@ -1577,7 +1581,11 @@ public class Matrix extends DMatrix {
          * that is not invertible has the condition number equal to infinity.
          */
         public double condition() {
-            return (s[0] <= 0.0f || s[n - 1] <= 0.0f) ? Float.POSITIVE_INFINITY : s[0] / s[s.length - 1];
+            if (s.length != Math.min(m, n)) {
+                throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
+            }
+
+            return (s[0] <= 0.0f || s[s.length - 1] <= 0.0f) ? Float.POSITIVE_INFINITY : s[0] / s[s.length - 1];
         }
 
         /**
@@ -1585,6 +1593,10 @@ public class Matrix extends DMatrix {
          * Returns null if the rank is zero (if and only if zero matrix).
          */
         public Matrix range() {
+            if (s.length != Math.min(m, n)) {
+                throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
+            }
+
             if (U == null) {
                 throw new IllegalStateException("The left singular vectors are not available.");
             }
@@ -1610,6 +1622,10 @@ public class Matrix extends DMatrix {
          * Returns null if the matrix is of full rank.
          */
         public Matrix nullspace() {
+            if (s.length != Math.min(m, n)) {
+                throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
+            }
+
             if (V == null) {
                 throw new IllegalStateException("The right singular vectors are not available.");
             }

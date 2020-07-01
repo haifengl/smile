@@ -19,6 +19,7 @@ package smile.math.matrix;
 
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
+import smile.math.MathEx;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -209,11 +210,28 @@ public class SparseMatrixTest {
             d[row][col] = rand.nextGaussian() + 10;
         }
 
-        // now that we have the data, we can to the actual SparseMatrix part
         SparseMatrix m = new SparseMatrix(d, 1e-10);
 
-        // verify all values and the number of non-zeros
+        // forEach
         AtomicInteger k = new AtomicInteger(0);
+        m.forEachNonZero((i, j, x) -> {
+            assertEquals(d[i][j], x, 0);
+            assertEquals(d[i][j], m.get(i, j), 0);
+            k.incrementAndGet();
+        });
+
+        k.set(0);
+        m.forEachNonZero(100, 400, (i, j, x) -> {
+            assertTrue(j >= 100);
+            assertTrue(j < 400);
+            assertEquals(d[i][j], x, 0);
+            assertEquals(d[i][j], m.get(i, j), 0);
+            k.incrementAndGet();
+        });
+        assertEquals(limitedNonZeros, k.get());
+
+        // iterator
+        k.set(0);
         for (SparseMatrix.Entry e : m) {
             assertEquals(d[e.i][e.j], e.x, 0.0);
             assertEquals(d[e.i][e.j], m.get(e.i, e.j), 0.0);
@@ -232,6 +250,7 @@ public class SparseMatrixTest {
         });
         assertEquals(limitedNonZeros, k.get());
 
+        // stream
         k.set(0);
         m.nonzeros().forEach(e -> {
             assertEquals(d[e.i][e.j], e.x, 0);
@@ -253,7 +272,7 @@ public class SparseMatrixTest {
     }
 
     @Test
-    public void benchmarkIterationSpeed() {
+    public void testIterationSpeed() {
         System.out.println("speed");
 
         Random rand = new Random();
@@ -274,11 +293,7 @@ public class SparseMatrixTest {
             m.iterator().forEachRemaining(e -> sum1[e.j] += e.x);
         }
         double t1 = System.nanoTime() / 1e9;
-        double sum = 0;
-        for (double v : sum1) {
-            sum += v;
-        }
-        System.out.printf("iterator: %.3f (%.2f)\n", (t1 - t0), sum);
+        System.out.printf("iterator: %.3f (%.2f)\n", (t1 - t0), MathEx.sum(sum1));
 
         t0 = System.nanoTime() / 1e9;
         double[] sum2 = new double[2000];
@@ -286,11 +301,15 @@ public class SparseMatrixTest {
             m.nonzeros().forEach(e -> sum2[e.j] += e.x);
         }
         t1 = System.nanoTime() / 1e9;
-        sum = 0;
-        for (double v : sum2) {
-            sum += v;
+        System.out.printf("stream: %.3f (%.2f)\n", (t1 - t0), MathEx.sum(sum2));
+
+        t0 = System.nanoTime() / 1e9;
+        double[] sum3 = new double[2000];
+        for (int rep = 0; rep < 1000; rep++) {
+            m.forEachNonZero((i, j, x) -> sum3[j] += x);
         }
-        System.out.printf("stream: %.3f (%.2f)\n", (t1 - t0), sum);
+        t1 = System.nanoTime() / 1e9;
+        System.out.printf("forEach: %.3f (%.2f)\n", (t1 - t0), MathEx.sum(sum3));
     }
 
     @Test(expected = Test.None.class)
