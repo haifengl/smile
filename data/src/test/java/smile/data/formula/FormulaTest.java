@@ -32,7 +32,7 @@ import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import static smile.data.formula.Terms.*;
 
 import static org.junit.Assert.*;
@@ -166,7 +166,7 @@ public class FormulaTest {
         assertEquals(10000.0, formula.y(df.get(0)), 1E-7);
         assertEquals(Double.NaN, formula.y(df.get(1)), 1E-7);
 
-        DenseMatrix matrix = formula.matrix(df);
+        Matrix matrix = formula.matrix(df);
         assertEquals(df.size(), matrix.nrows());
         assertEquals(2, matrix.ncols());
     }
@@ -554,7 +554,7 @@ public class FormulaTest {
         assertEquals(Math.round(230000.), output.get(2,0));
         assertEquals(null, output.get(3,0));
 
-        DenseMatrix matrix = formula.matrix(df);
+        Matrix matrix = formula.matrix(df);
         System.out.println(matrix);
         System.out.println(matrix.nrows());
         System.out.println(matrix.ncols());
@@ -565,7 +565,7 @@ public class FormulaTest {
         assertEquals(Math.round(230000.), matrix.get(2,0), 1E-10);
         assertEquals(Double.NaN, matrix.get(3,0), 1E-10);
 
-        DenseMatrix matrix1 = formula.matrix(df);
+        Matrix matrix1 = formula.matrix(df);
         System.out.println(matrix1);
         assertEquals(df.size(), matrix1.nrows());
         assertEquals(2, matrix1.ncols());

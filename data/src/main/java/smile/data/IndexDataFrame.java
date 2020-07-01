@@ -24,7 +24,6 @@ import java.util.stream.Stream;
 
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -294,12 +293,12 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public DenseMatrix toMatrix() {
+    public Matrix toMatrix() {
         int nrows = nrows();
         int ncols = ncols();
         DataType[] types = types();
 
-        DenseMatrix m = Matrix.of(nrows, ncols, 0);
+        Matrix m = new Matrix(nrows, ncols);
         for (int j = 0; j < ncols; j++) {
             DataType type = types[j];
             switch (type.id()) {
