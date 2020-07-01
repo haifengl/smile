@@ -62,10 +62,6 @@ lazy val openblas = project.in(file("openblas")).settings(commonSettings: _*).de
 
 lazy val mkl = project.in(file("mkl")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val nd4j = project.in(file("nd4j")).settings(nonPubishSettings: _*).dependsOn(math)
-
-lazy val netlib = project.in(file("netlib")).settings(commonSettings: _*).dependsOn(math)
-
 lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(math)
 
 lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
@@ -74,7 +70,7 @@ lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsO
 
 lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib, io % "test")
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, netlib, io % "test", mkl % "test")
 
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 

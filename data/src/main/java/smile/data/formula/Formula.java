@@ -26,7 +26,6 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -447,7 +446,7 @@ public class Formula implements Serializable {
      * All categorical variables will be dummy encoded.
      * @param df The input DataFrame.
      */
-    public DenseMatrix matrix(DataFrame df) {
+    public Matrix matrix(DataFrame df) {
         bind(df.schema(), true);
 
         boolean bias = true;
@@ -464,7 +463,7 @@ public class Formula implements Serializable {
         int ncols = x.length;
 
         ncols += bias ? 1 : 0;
-        DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
+        Matrix m = new Matrix(nrows, ncols);
         if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
 
         for (int j = 0; j < x.length; j++) {

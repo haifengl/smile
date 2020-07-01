@@ -27,14 +27,11 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
-import smile.data.formula.DateFeature;
-import smile.data.formula.Formula;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.vector.StringVector;
-import smile.math.matrix.DenseMatrix;
-import static smile.data.formula.Terms.*;
+import smile.math.matrix.Matrix;
 
 import static org.junit.Assert.*;
 
@@ -253,7 +250,7 @@ public class DataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("age", "salary").toMatrix();
+        Matrix output = df.select("age", "salary").toMatrix();
         System.out.println(output);
         assertEquals(4, output.nrows());
         assertEquals(2, output.ncols());

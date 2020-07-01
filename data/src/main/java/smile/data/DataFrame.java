@@ -31,7 +31,6 @@ import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.data.vector.Vector;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.util.Strings;
 
@@ -708,7 +707,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * replaced by their internal codes. Missing values/nulls will be
      * encoded as Double.NaN.
      */
-    DenseMatrix toMatrix();
+    Matrix toMatrix();
 
     /** Returns the statistic summary of numeric columns. */
     default DataFrame summary() {
@@ -1099,7 +1098,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     /**
      * Returns a stream collector that accumulates tuples into a Matrix.
      */
-    static Collector<Tuple, List<Tuple>, DenseMatrix> matrix() {
+    static Collector<Tuple, List<Tuple>, Matrix> matrix() {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<Tuple>(),
@@ -1114,7 +1113,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                     }
                     int nrows = container.size();
                     int ncols = container.get(0).length();
-                    DenseMatrix m = Matrix.zeros(nrows, ncols);
+                    Matrix m = new Matrix(nrows, ncols);
                     for (int i = 0; i < nrows; i++) {
                         for (int j = 0; j < ncols; j++) {
                             m.set(i, j, container.get(i).getDouble(j));
