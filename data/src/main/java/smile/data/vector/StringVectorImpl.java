@@ -114,7 +114,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
                 short[] data = new short[size()];
                 for (int i = 0; i < data.length; i++) {
                     String s = get(i);
-                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).shortValue();
+                    data[i] = s == null ? (short) -1 : scale.valueOf(s).shortValue();
                 }
 
                 return new ShortVectorImpl(new StructField(name(), DataTypes.ShortType, scale), data);
@@ -123,7 +123,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
                 int[] data = new int[size()];
                 for (int i = 0; i < data.length; i++) {
                     String s = get(i);
-                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).intValue();
+                    data[i] = s == null ? -1 : scale.valueOf(s).intValue();
                 }
 
                 return new IntVectorImpl(new StructField(name(), DataTypes.IntegerType, scale), data);

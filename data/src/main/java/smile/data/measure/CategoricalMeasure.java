@@ -56,6 +56,10 @@ public abstract class CategoricalMeasure implements Measure {
      * Map a string to an integer level.
      */
     final Map<String, Number> level2value;
+    /**
+     * The flag if the values are of standard factor [0, 1, 2, ..., k).
+     */
+    final boolean factor;
 
     /**
      * Constructor.
@@ -71,6 +75,14 @@ public abstract class CategoricalMeasure implements Measure {
      */
     public CategoricalMeasure(List<String> levels) {
         this(levels.toArray(new String[levels.size()]));
+    }
+
+    /**
+     * Constructor.
+     * @param values the valid values.
+     */
+    public CategoricalMeasure(int[] values) {
+        this(values, Arrays.stream(values).mapToObj(v -> Integer.toString(v)).toArray(String[]::new));
     }
 
     /**
@@ -104,6 +116,15 @@ public abstract class CategoricalMeasure implements Measure {
                 level2value.put(levels[i], values[i]);
             }
         }
+
+        boolean factor = true;
+        for (int i = 0; i < values.length; i++) {
+            if (values[i] != i) {
+                factor = false;
+                break;
+            }
+        }
+        this.factor = factor;
     }
 
     /** Returns the ordinal values of an enum. */
@@ -136,8 +157,19 @@ public abstract class CategoricalMeasure implements Measure {
     }
 
     /** Returns the level string representation. */
-    public String level(int i) {
-        return value2level.get(i);
+    public String level(int value) {
+        return value2level.get(value);
+    }
+
+    /** Returns the factor value (in range [0, size)) of level. */
+    public int factor(int value) {
+        if (factor) return value;
+
+        for (int j = 0; j < values.length; j++) {
+            if (values[j] == value) return j;
+        }
+
+        throw new IllegalArgumentException("Invalid level: " + value);
     }
 
     /** Returns the data type that is suitable for this measure scale. */
@@ -152,8 +184,8 @@ public abstract class CategoricalMeasure implements Measure {
     }
 
     /** Returns the string value of a level. */
-    public String toString(int level) {
-        return level(level);
+    public String toString(int value) {
+        return level(value);
     }
 
     @Override
