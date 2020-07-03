@@ -181,10 +181,10 @@ public class IndexDataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        Matrix output = df.select("age", "salary").toMatrix();
+        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(false, DataFrame.CategoricalEncoder.ONE_HOT, "name");
         System.out.println(output);
         assertEquals(4, output.nrows());
-        assertEquals(2, output.ncols());
+        assertEquals(4, output.ncols());
         assertEquals(48., output.get(0, 0), 1E-10);
         assertEquals(23., output.get(1, 0), 1E-10);
         assertEquals(13., output.get(2, 0), 1E-10);
@@ -193,6 +193,14 @@ public class IndexDataFrameTest {
         assertTrue(Double.isNaN(output.get(1, 1)));
         assertTrue(Double.isNaN(output.get(2, 1)));
         assertEquals(230000., output.get(3, 1), 1E-10);
+        assertEquals(0, output.get(0, 2), 1E-10);
+        assertEquals(1, output.get(1, 2), 1E-10);
+        assertEquals(0, output.get(2, 2), 1E-10);
+        assertEquals(0, output.get(3, 2), 1E-10);
+        assertEquals(1, output.get(0, 3), 1E-10);
+        assertEquals(0, output.get(1, 3), 1E-10);
+        assertEquals(1, output.get(2, 3), 1E-10);
+        assertEquals(1, output.get(3, 3), 1E-10);
     }
 
     /**
@@ -201,9 +209,9 @@ public class IndexDataFrameTest {
     @Test
     public void testDataFrameToArray() {
         System.out.println("toArray");
-        double[][] output = df.select("age", "salary").toArray();
+        double[][] output = df.select("age", "salary", "gender").toArray(false, DataFrame.CategoricalEncoder.ONE_HOT);
         assertEquals(4, output.length);
-        assertEquals(2, output[0].length);
+        assertEquals(4, output[0].length);
         assertEquals(48., output[0][0], 1E-10);
         assertEquals(23., output[1][0], 1E-10);
         assertEquals(13., output[2][0], 1E-10);
@@ -212,5 +220,13 @@ public class IndexDataFrameTest {
         assertTrue(Double.isNaN(output[1][1]));
         assertTrue(Double.isNaN(output[2][1]));
         assertEquals(230000., output[3][1], 1E-10);
+        assertEquals(0, output[0][2], 1E-10);
+        assertEquals(1, output[1][2], 1E-10);
+        assertEquals(0, output[2][2], 1E-10);
+        assertEquals(0, output[3][2], 1E-10);
+        assertEquals(1, output[0][3], 1E-10);
+        assertEquals(0, output[1][3], 1E-10);
+        assertEquals(1, output[2][3], 1E-10);
+        assertEquals(1, output[3][3], 1E-10);
     }
 }

@@ -665,49 +665,222 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
     }
 
     /**
-     * Returns a new DataFrame with given string columns converted to nominal.
+     * Returns a new DataFrame with given columns converted to nominal.
      *
-     * @param cols string column names. If empty, all string columns
+     * @param cols column names. If empty, all object columns
      *             in the data frame will be converted.
      * @return a new DataFrame.
      */
     default DataFrame factorize(String... cols) {
         if (cols.length == 0) {
             cols = Arrays.stream(schema().fields())
-                    .filter(field -> field.type.isString())
+                    .filter(field -> field.type.isObject())
                     .map(field -> field.name)
                     .toArray(String[]::new);
         }
 
+        int n = size();
         HashSet<String> set = new HashSet<>(Arrays.asList(cols));
         BaseVector[] vectors = Arrays.stream(names()).map(col -> {
             if (set.contains(col)) {
-                StringVector c = stringVector(col);
-                NominalScale scale = c.nominal();
-                return c.factorize(scale);
+                int j = columnIndex(col);
+                List<String> levels = IntStream.range(0, n)
+                        .mapToObj(i -> getString(i, j))
+                        .distinct()
+                        .collect(Collectors.toList());
+                Collections.sort(levels);
+                NominalScale scale =  new NominalScale(levels);
+
+                int[] data = new int[n];
+                for (int i = 0; i < n; i++) {
+                    String s = getString(i, j);
+                    data[i] = s == null ? (byte) -1 : scale.valueOf(s).intValue();
+                }
+
+                return IntVector.of(new StructField(col, DataTypes.IntegerType, scale), data);
             } else return column(col);
         }).toArray(BaseVector[]::new);
 
         return of(vectors);
     }
 
+    /** Categorical variable encoder. */
+    enum CategoricalEncoder {
+        /** Level of measurement. */
+        LEVEL,
+        /** Dummy encoding. */
+        DUMMY,
+        /** One hot encoding. */
+        ONE_HOT
+    }
+
     /**
      * Return an array obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
-     * as the columns of a matrix. Nominal and ordinal variables are
-     * replaced by their internal codes. Missing values/nulls will be
+     * as the columns of a matrix. Missing values/nulls will be
      * encoded as Double.NaN.
+     *
+     * @param bias if true, add the first column of all 1's.
+     * @param encoder the categorical variable encoder.
      */
-    double[][] toArray();
+    default double[][] toArray(boolean bias, CategoricalEncoder encoder) {
+        int nrows = nrows();
+        int ncols = ncols();
+        StructType schema = schema();
+
+        ArrayList<String> colNames = new ArrayList<>();
+        if (bias) colNames.add("Intercept");
+        for (int j = 0; j < ncols; j++) {
+            StructField field = schema.field(j);
+
+            Measure measure = field.measure;
+            if (measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+                int n = cat.size();
+
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    for (int k = 1; k < n; k++) {
+                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                    }
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    for (int k = 0; k < n; k++) {
+                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                    }
+                }
+            } else {
+                colNames.add(field.name);
+            }
+        }
+
+        double[][] matrix = new double[nrows][colNames.size()];
+
+        int j = 0;
+        if (bias) {
+            j++;
+            for (int i = 0; i < nrows; i++) {
+                matrix[i][0] = 1.0;
+            }
+        }
+
+        for (int col = 0; col < ncols; col++) {
+            StructField field = schema.field(col);
+
+            Measure measure = field.measure;
+            if (measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    for (int i = 0; i < nrows; i++) {
+                        int k = cat.factor(getInt(i, col));
+                        if (k > 0) matrix[i][j + k - 1] = 1.0;
+                    }
+                    j += cat.size() - 1;
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    for (int i = 0; i < nrows; i++) {
+                        int k = cat.factor(getInt(i, col));
+                        matrix[i][j + k] = 1.0;
+                    }
+                    j += cat.size();
+                }
+            } else {
+                for (int i = 0; i < nrows; i++) {
+                    matrix[i][j] = getDouble(i, col);
+                }
+                j++;
+            }
+        }
+
+        return matrix;
+    }
 
     /**
      * Return a matrix obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
-     * as the columns of a matrix. Nominal and ordinal variables are
-     * replaced by their internal codes. Missing values/nulls will be
+     * as the columns of a matrix. Missing values/nulls will be
      * encoded as Double.NaN.
+     *
+     * @param bias if true, add the first column of all 1's.
+     * @param encoder the categorical variable encoder.
+     * @param rowNames the column to be used as row names.
      */
-    Matrix toMatrix();
+    default Matrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
+        int nrows = nrows();
+        int ncols = ncols();
+        StructType schema = schema();
+
+        ArrayList<String> colNames = new ArrayList<>();
+        if (bias) colNames.add("Intercept");
+        for (int j = 0; j < ncols; j++) {
+            StructField field = schema.field(j);
+            if (field.name.equals(rowNames)) continue;
+
+            Measure measure = field.measure;
+            if (measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+                int n = cat.size();
+
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    for (int k = 1; k < n; k++) {
+                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                    }
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    for (int k = 0; k < n; k++) {
+                        colNames.add(String.format("%s_%s", field.name, cat.level(k)));
+                    }
+                }
+            } else {
+                colNames.add(field.name);
+            }
+        }
+
+        Matrix matrix = new Matrix(nrows, colNames.size());
+        matrix.colNames(colNames.toArray(new String[colNames.size()]));
+        if (rowNames != null) {
+            int j = schema.fieldIndex(rowNames);
+            String[] rows = new String[nrows];
+            for (int i = 0; i < nrows; i++) {
+                rows[i] = getString(i, j);
+            }
+            matrix.rowNames(rows);
+        }
+
+        int j = 0;
+        if (bias) {
+            j++;
+            for (int i = 0; i < nrows; i++) {
+                matrix.set(i, 0, 1.0);
+            }
+        }
+
+        for (int col = 0; col < ncols; col++) {
+            StructField field = schema.field(col);
+            if (field.name.equals(rowNames)) continue;
+
+            Measure measure = field.measure;
+            if (measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    for (int i = 0; i < nrows; i++) {
+                        int k = cat.factor(getInt(i, col));
+                        if (k > 0) matrix.set(i, j + k - 1, 1.0);
+                    }
+                    j += cat.size() - 1;
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    for (int i = 0; i < nrows; i++) {
+                        int k = cat.factor(getInt(i, col));
+                        matrix.set(i, j + k, 1.0);
+                    }
+                    j += cat.size();
+                }
+            } else {
+                for (int i = 0; i < nrows; i++) {
+                    matrix.set(i, j, getDouble(i, col));
+                }
+                j++;
+            }
+        }
+
+        return matrix;
+    }
 
     /** Returns the statistic summary of numeric columns. */
     default DataFrame summary() {
@@ -723,7 +896,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
         int k = 0;
         for (int j = 0; j < ncols; j++) {
-            if (measures[j] != null && measures[j] instanceof CategoricalMeasure) continue;
+            if (measures[j] instanceof CategoricalMeasure) continue;
 
             DataType type = types[j];
             if (type.isInt()) {
