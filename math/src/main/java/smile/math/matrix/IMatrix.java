@@ -147,19 +147,19 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         String newline = n < ncols() ? "...\n" : "\n";
 
         if (colNames != null) {
-            sb.append(rowNames == null ? "   " : "          ");
+            sb.append(rowNames == null ? "   " : "            ");
 
             for (int j = 0; j < n; j++) {
-                sb.append(String.format(" %10s", colNames[j]));
+                sb.append(String.format(" %12.12s", colNames[j]));
             }
             sb.append(newline);
         }
 
         for (int i = 0; i < m; i++) {
-            sb.append(rowNames == null ? "   " : String.format("%-10s", rowNames[i]));
+            sb.append(rowNames == null ? "   " : String.format("%-12.12s", rowNames[i]));
 
             for (int j = 0; j < n; j++) {
-                sb.append(String.format(" %10s", str(i, j)));
+                sb.append(String.format(" %12.12s", str(i, j)));
             }
             sb.append(newline);
         }

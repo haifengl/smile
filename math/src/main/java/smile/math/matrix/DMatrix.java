@@ -56,7 +56,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     @Override
     String str(int i, int j) {
-        return String.format("%.4f", get(i, j));
+        return String.format("%.6g", get(i, j));
     }
 
     /**
