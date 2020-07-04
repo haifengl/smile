@@ -444,11 +444,13 @@ public class Formula implements Serializable {
     /**
      * Returns the design matrix of predictors.
      * All categorical variables will be dummy encoded.
+     * If the formula doesn't has an Intercept term, the bias
+     * column will be included. Otherwise, it is based on the
+     * setting of Intercept term.
+     *
      * @param df The input DataFrame.
      */
     public Matrix matrix(DataFrame df) {
-        bind(df.schema(), true);
-
         boolean bias = true;
         Optional<Intercept> intercept = Arrays.stream(predictors)
                 .filter(term -> term instanceof Intercept)
@@ -459,61 +461,17 @@ public class Formula implements Serializable {
             bias = intercept.get().isInclulded();
         }
 
-        int nrows = df.nrows();
-        int ncols = x.length;
+        return matrix(df, bias);
+    }
 
-        ncols += bias ? 1 : 0;
-        Matrix m = new Matrix(nrows, ncols);
-        if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
-
-        for (int j = 0; j < x.length; j++) {
-            BaseVector v = x[j].apply(df);
-            DataType type = x[j].type();
-            switch (type.id()) {
-                case Double:
-                case Integer:
-                case Float:
-                case Long:
-                case Boolean:
-                case Byte:
-                case Short:
-                case Char: {
-                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
-                    break;
-                }
-
-                case String: {
-                    for (int i = 0; i < nrows; i++) {
-                        String s = (String) v.get(i);
-                        m.set(i, j, s == null ? Double.NaN : Double.valueOf(s));
-                    }
-                    break;
-                }
-
-                case Object: {
-                    Class clazz = ((ObjectType) type).getObjectClass();
-                    if (clazz == Boolean.class) {
-                        for (int i = 0; i < nrows; i++) {
-                            Boolean b = (Boolean) v.get(i);
-                            if (b != null)
-                                m.set(i, j, b.booleanValue() ? 1 : 0);
-                            else
-                                m.set(i, j, Double.NaN);
-                        }
-                    } else if (Number.class.isAssignableFrom(clazz)) {
-                        for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
-                    } else {
-                        throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
-                    }
-                    break;
-                }
-
-                default:
-                    throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
-            }
-        }
-
-        return m;
+    /**
+     * Returns the design matrix of predictors.
+     * All categorical variables will be dummy encoded.
+     * @param df The input DataFrame.
+     * @param bias If true, include the bias column.
+     */
+    public Matrix matrix(DataFrame df, boolean bias) {
+        return x(df).toMatrix(bias, DataFrame.CategoricalEncoder.DUMMY, null);
     }
 
     /**
