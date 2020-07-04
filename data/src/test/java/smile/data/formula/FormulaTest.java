@@ -556,28 +556,16 @@ public class FormulaTest {
 
         Matrix matrix = formula.matrix(df);
         System.out.println(matrix);
-        System.out.println(matrix.nrows());
-        System.out.println(matrix.ncols());
         assertEquals(df.size(), matrix.nrows());
         assertEquals(2, matrix.ncols());
-        assertEquals(Math.round(10000.), matrix.get(0,0), 1E-10);
-        assertEquals(Double.NaN, matrix.get(1,0), 1E-10);
-        assertEquals(Math.round(230000.), matrix.get(2,0), 1E-10);
-        assertEquals(Double.NaN, matrix.get(3,0), 1E-10);
-
-        Matrix matrix1 = formula.matrix(df);
-        System.out.println(matrix1);
-        assertEquals(df.size(), matrix1.nrows());
-        assertEquals(2, matrix1.ncols());
-        assertEquals(Math.round(10000.), matrix1.get(0,0), 1E-10);
-        assertEquals(Double.NaN, matrix1.get(1,0), 1E-10);
-        assertEquals(Math.round(230000.), matrix.get(2,0), 1E-10);
-        assertEquals(Double.NaN, matrix1.get(3,0), 1E-10);
-
-        assertEquals(1.0, matrix1.get(0,1), 1E-10);
-        assertEquals(1.0, matrix1.get(1,1), 1E-10);
-        assertEquals(1.0, matrix1.get(2,1), 1E-10);
-        assertEquals(1.0, matrix1.get(3,1), 1E-10);
+        assertEquals(1, matrix.get(0,0), 1E-10);
+        assertEquals(1, matrix.get(1,0), 1E-10);
+        assertEquals(1, matrix.get(2,0), 1E-10);
+        assertEquals(1, matrix.get(3,0), 1E-10);
+        assertEquals(Math.round(10000.), matrix.get(0,1), 1E-10);
+        assertEquals(Double.NaN, matrix.get(1,1), 1E-10);
+        assertEquals(Math.round(230000.), matrix.get(2,1), 1E-10);
+        assertEquals(Double.NaN, matrix.get(3,1), 1E-10);
     }
 
     @Test
