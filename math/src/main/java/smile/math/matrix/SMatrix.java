@@ -17,9 +17,6 @@
 
 package smile.math.matrix;
 
-import smile.math.blas.Transpose;
-import smile.util.SparseArray;
-
 import java.io.IOException;
 import java.io.LineNumberReader;
 import java.nio.file.Files;
@@ -29,6 +26,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
+import smile.math.blas.Transpose;
+import smile.util.SparseArray;
+import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.LOWER;
 
 /**
@@ -90,33 +90,54 @@ public abstract class SMatrix extends IMatrix<float[]> {
     /**
      * Matrix-vector multiplication.
      * <pre><code>
-     *     y = alpha * A * x + beta * y
+     *     y = alpha * op(A) * x + beta * y
      * </code></pre>
+     * where op is the transpose operation.
      */
     public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
 
     @Override
     public float[] mv(float[] x) {
         float[] y = new float[nrows()];
-        mv(Transpose.NO_TRANSPOSE, 1.0f, x, 0.0f, y);
+        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
         return y;
     }
 
     @Override
     public void mv(float[] x, float[] y) {
-        mv(Transpose.NO_TRANSPOSE, 1.0f, x, 0.0f, y);
+        mv(NO_TRANSPOSE, 1.0f, x, 0.0f, y);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre><code>
+     *     y = alpha * A * x + beta * y
+     * </code></pre>
+     */
+    public void mv(float alpha, float[] x, float beta, float[] y) {
+        mv(NO_TRANSPOSE, alpha, x, beta, y);
     }
 
     @Override
     public float[] tv(float[] x) {
         float[] y = new float[ncols()];
-        mv(Transpose.TRANSPOSE, 1.0f, x, 0.0f, y);
+        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
         return y;
     }
 
     @Override
     public void tv(float[] x, float[] y) {
-        mv(Transpose.TRANSPOSE, 1.0f, x, 0.0f, y);
+        mv(TRANSPOSE, 1.0f, x, 0.0f, y);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre><code>
+     *     y = alpha * A' * x + beta * y
+     * </code></pre>
+     */
+    public void tv(float alpha, float[] x, float beta, float[] y) {
+        mv(TRANSPOSE, alpha, x, beta, y);
     }
 
     /**
