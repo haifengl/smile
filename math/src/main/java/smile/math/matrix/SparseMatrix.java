@@ -332,17 +332,15 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /** Returns the element at the storage index. */
-    /*
     public double get(int index) {
         return nonzeros[index];
     }
-*/
+
     /** Sets the element at the storage index. */
-    /*
     public double set(int index, double value) {
         return nonzeros[index] = value;
     }
-*/
+
     @Override
     public double get(int i, int j) {
         if (i < 0 || i >= m || j < 0 || j >= n) {
