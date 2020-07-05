@@ -90,8 +90,9 @@ public abstract class DMatrix extends IMatrix<double[]> {
     /**
      * Matrix-vector multiplication.
      * <pre><code>
-     *     y = alpha * A * x + beta * y
+     *     y = alpha * op(A) * x + beta * y
      * </code></pre>
+     * where op is the transpose operation.
      */
     public abstract void mv(Transpose trans, double alpha, double[] x, double beta, double[] y);
 
@@ -107,6 +108,16 @@ public abstract class DMatrix extends IMatrix<double[]> {
         mv(NO_TRANSPOSE, 1.0, x, 0.0, y);
     }
 
+    /**
+     * Matrix-vector multiplication.
+     * <pre><code>
+     *     y = alpha * A * x + beta * y
+     * </code></pre>
+     */
+    public void mv(double alpha, double[] x, double beta, double[] y) {
+        mv(NO_TRANSPOSE, alpha, x, beta, y);
+    }
+
     @Override
     public double[] tv(double[] x) {
         double[] y = new double[ncols()];
@@ -117,6 +128,16 @@ public abstract class DMatrix extends IMatrix<double[]> {
     @Override
     public void tv(double[] x, double[] y) {
         mv(TRANSPOSE, 1.0, x, 0.0, y);
+    }
+
+    /**
+     * Matrix-vector multiplication.
+     * <pre><code>
+     *     y = alpha * A' * x + beta * y
+     * </code></pre>
+     */
+    public void tv(double alpha, double[] x, double beta, double[] y) {
+        mv(TRANSPOSE, alpha, x, beta, y);
     }
 
     /**
