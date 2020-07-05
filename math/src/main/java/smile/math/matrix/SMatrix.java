@@ -109,7 +109,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     @Override
     public float[] tv(float[] x) {
-        float[] y = new float[nrows()];
+        float[] y = new float[ncols()];
         mv(Transpose.TRANSPOSE, 1.0f, x, 0.0f, y);
         return y;
     }
