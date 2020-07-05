@@ -109,7 +109,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     @Override
     public double[] tv(double[] x) {
-        double[] y = new double[nrows()];
+        double[] y = new double[ncols()];
         mv(TRANSPOSE, 1.0, x, 0.0, y);
         return y;
     }
