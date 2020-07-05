@@ -58,12 +58,12 @@ public class FloatMatrix extends SMatrix {
     /**
      * If not null, the matrix is symmetric or triangular.
      */
-    UPLO uplo = null;
+    UPLO uplo;
     /**
      * If not null, the matrix is triangular. The flag specifies if a
      * triangular matrix has unit diagonal elements.
      */
-    Diag diag = null;
+    Diag diag;
 
     /**
      * Constructor of zero matrix.
@@ -326,12 +326,19 @@ public class FloatMatrix extends SMatrix {
     private void writeObject(ObjectOutputStream out) throws IOException {
         // write default properties
         out.defaultWriteObject();
-        // leading dimension is compacted to m
-        out.writeInt(m);
+
         // write buffer
-        for (int j = 0; j < n; j++) {
+        if (layout() == COL_MAJOR) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    out.writeFloat(get(i, j));
+                }
+            }
+        } else {
             for (int i = 0; i < m; i++) {
-                out.writeFloat(get(i, j));
+                for (int j = 0; j < n; j++) {
+                    out.writeFloat(get(i, j));
+                }
             }
         }
     }
@@ -340,17 +347,25 @@ public class FloatMatrix extends SMatrix {
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         //read default properties
         in.defaultReadObject();
-        this.ld = in.readInt();
 
         // read buffer data
-        int size = m * n;
-        float[] buffer = new float[size];
-        for (int j = 0; j < n; j++) {
+        this.A = FloatBuffer.wrap(new float[m * n]);
+
+        if (layout() == COL_MAJOR) {
+            this.ld = m;
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i < m; i++) {
+                    set(i, j, in.readFloat());
+                }
+            }
+        } else {
+            this.ld = n;
             for (int i = 0; i < m; i++) {
-                set(i, j, in.readFloat());
+                for (int j = 0; j < n; j++) {
+                    set(i, j, in.readFloat());
+                }
             }
         }
-        this.A = FloatBuffer.wrap(buffer);
     }
 
     @Override
