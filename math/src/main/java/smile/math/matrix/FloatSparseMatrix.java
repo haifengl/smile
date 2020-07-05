@@ -332,17 +332,15 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     }
 
     /** Returns the element at the storage index. */
-    /*
     public float get(int index) {
         return nonzeros[index];
     }
-*/
+
     /** Sets the element at the storage index. */
-    /*
     public float set(int index, float value) {
         return nonzeros[index] = value;
     }
-*/
+
     @Override
     public float get(int i, int j) {
         if (i < 0 || i >= m || j < 0 || j >= n) {
