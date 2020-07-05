@@ -146,7 +146,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         for (int i = 0; i < 100; i++) {
             Neighbor<double[], double[]> neighbor = naive.nearest(data[perm[i]]);
             answer[i] = neighbor.index;
-            radius += neighbor.distance;
+            radius += Math.sqrt(neighbor.distanceSq);
         }
         int naiveSearch = (int) (System.currentTimeMillis() - time);
         radius /= 100;

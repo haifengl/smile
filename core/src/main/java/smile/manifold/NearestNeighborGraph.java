@@ -93,7 +93,7 @@ class NearestNeighborGraph {
                 int v1 = i;
                 for (int j = 0; j < neighbors.length; j++) {
                     int v2 = neighbors[j].index;
-                    double weight = neighbors[j].distance;
+                    double weight = Math.sqrt(neighbors[j].distanceSq);
                     graph.setWeight(v1, v2, weight);
                     consumer.accept(v1, v2, weight, j);
                 }
@@ -101,7 +101,7 @@ class NearestNeighborGraph {
         } else {
             for (int i = 0; i < n; i++) {
                 for (Neighbor<T, T> neighbor : knn.knn(data[i], k)) {
-                    graph.setWeight(i, neighbor.index, neighbor.distance);
+                    graph.setWeight(i, neighbor.index, Math.sqrt(neighbor.distanceSq));
                 }
             }
         }

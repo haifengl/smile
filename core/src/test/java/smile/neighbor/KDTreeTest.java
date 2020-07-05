@@ -72,7 +72,7 @@ public class KDTreeTest {
             Neighbor<double[], double[]> n2 = naive.nearest(data[i]);
             assertEquals(n1.index, n2.index);
             assertEquals(n1.value, n2.value);
-            assertEquals(n1.distance, n2.distance, 1E-7);
+            assertEquals(n1.distanceSq, n2.distanceSq, 1E-7);
         }
     }
 
@@ -90,7 +90,7 @@ public class KDTreeTest {
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
-                assertEquals(n1[j].distance, n2[j].distance, 1E-7);
+                assertEquals(n1[j].distanceSq, n2[j].distanceSq, 1E-7);
             }
         }
     }
@@ -114,7 +114,7 @@ public class KDTreeTest {
             for (int j = 0; j < n1.size(); j++) {
                 assertEquals(n1.get(j).index, n2.get(j).index);
                 assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
+                assertEquals(n1.get(j).distanceSq, n2.get(j).distanceSq, 1E-7);
             }
             n1.clear();
             n2.clear();
@@ -130,7 +130,7 @@ public class KDTreeTest {
             for (int j = 0; j < n1.size(); j++) {
                 assertEquals(n1.get(j).index, n2.get(j).index);
                 assertEquals(n1.get(j).value, n2.get(j).value);
-                assertEquals(n1.get(j).distance, n2.get(j).distance, 1E-7);
+                assertEquals(n1.get(j).distanceSq, n2.get(j).distanceSq, 1E-7);
             }
             n1.clear();
             n2.clear();

@@ -39,16 +39,16 @@ class NeighborBuilder<K, V> implements Comparable<NeighborBuilder<K,V>> {
      */
     int index;
     /**
-     * The distance between the query and the neighbor.
+     * The squared distance between the query and the neighbor.
      */
-    double distance;
+    double distanceSq;
 
     /**
      * Constructor.
      */
     public NeighborBuilder() {
         this.index = -1;
-        this.distance = Double.MAX_VALUE;
+        this.distanceSq = Double.MAX_VALUE;
     }
 
     /**
@@ -56,23 +56,23 @@ class NeighborBuilder<K, V> implements Comparable<NeighborBuilder<K,V>> {
      * @param key the key of neighbor.
      * @param value the value of neighbor.
      * @param index the index of neighbor object in the dataset.
-     * @param distance the distance between the query and the neighbor.
+     * @param distanceSq the squared distance between the query and the neighbor.
      */
-    public NeighborBuilder(K key, V value, int index, double distance) {
+    public NeighborBuilder(K key, V value, int index, double distanceSq) {
         this.key = key;
         this.value = value;
         this.index = index;
-        this.distance = distance;
+        this.distanceSq = distanceSq;
     }
 
     /** Creates a neighbor object. */
     public Neighbor<K, V> toNeighbor() {
-        return new Neighbor<>(key, value, index, distance);
+        return new Neighbor<>(key, value, index, distanceSq);
     }
 
     @Override
     public int compareTo(NeighborBuilder<K,V> o) {
-        int d = Double.compare(distance, o.distance);
+        int d = Double.compare(distanceSq, o.distanceSq);
         // Sometime, the dataset contains duplicate samples.
         // If the distances are same, we sort by the sample index.
         return d == 0 ? index - o.index : d;

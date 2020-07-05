@@ -245,10 +245,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
-                    if (distance < neighbor.distance) {
+                    double distanceSq = MathEx.squaredDistance(q, keys[i]);
+                    if (distanceSq < neighbor.distanceSq) {
                         neighbor.index = i;
-                        neighbor.distance = distance;
+                        neighbor.distanceSq = distanceSq;
                     }
                 }
             }
@@ -266,7 +266,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, neighbor);
 
             // now look in further half
-            if (neighbor.distance >= diff) {
+            if (neighbor.distanceSq >= diff * diff) {
                 search(q, further, neighbor);
             }
         }
@@ -287,10 +287,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
+                    double distanceSq = MathEx.squaredDistance(q, keys[i]);
                     NeighborBuilder<double[], E> datum = heap.peek();
-                    if (distance < datum.distance) {
-                        datum.distance = distance;
+                    if (distanceSq < datum.distanceSq) {
+                        datum.distanceSq = distanceSq;
                         datum.index = i;
                         heap.heapify();
                     }
@@ -310,7 +310,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, heap);
 
             // now look in further half
-            if (heap.peek().distance >= diff) {
+            if (heap.peek().distanceSq >= diff * diff) {
                 search(q, further, heap);
             }
         }
@@ -331,9 +331,9 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             for (int idx = node.index; idx < node.index + node.count; idx++) {
                 int i = index[idx];
                 if (q != keys[i]) {
-                    double distance = MathEx.distance(q, keys[i]);
-                    if (distance <= radius) {
-                        neighbors.add(new Neighbor<>(keys[i], data[i], i, distance));
+                    double distanceSq = MathEx.squaredDistance(q, keys[i]);
+                    if (distanceSq <= radius * radius) {
+                        neighbors.add(new Neighbor<>(keys[i], data[i], i, distanceSq));
                     }
                 }
             }

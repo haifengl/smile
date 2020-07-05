@@ -91,7 +91,7 @@ public class MPLSHTest {
                 if (neighbor.index == truth.index) {
                     recall++;
                 } else {
-                    error += Math.abs(neighbor.distance - truth.distance) / truth.distance;
+                    error += Math.abs(Math.sqrt(neighbor.distanceSq) - Math.sqrt(truth.distanceSq)) / Math.sqrt(truth.distanceSq);
                 }
             }
         }

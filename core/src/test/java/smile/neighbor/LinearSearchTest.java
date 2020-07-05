@@ -80,7 +80,7 @@ public class LinearSearchTest {
         assertEquals(1, n1.length);
         assertEquals(0, n1[0].index);
         assertEquals(data[0], n1[0].value);
-        assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
+        assertEquals(d.d(data[0], data[1]), Math.sqrt(n1[0].distanceSq), 1E-7);
     }
 
     @Test(expected = Test.None.class)

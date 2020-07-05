@@ -46,9 +46,9 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
      */
     public final int index;
     /**
-     * The distance between the query and the neighbor.
+     * The squared distance between the query and the neighbor.
      */
-    public final double distance;
+    public final double distanceSq;
 
     /**
      * Constructor.
@@ -57,16 +57,16 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
      * @param index the index of neighbor object in the dataset.
      * @param distance the distance between the query and the neighbor.
      */
-    public Neighbor(K key, V object, int index, double distance) {
+    public Neighbor(K key, V object, int index, double distanceSq) {
         this.key = key;
         this.value = object;
         this.index = index;
-        this.distance = distance;
+        this.distanceSq = distanceSq;
     }
 
     @Override
     public int compareTo(Neighbor<K,V> o) {
-        int d = Double.compare(distance, o.distance);
+        int d = Double.compare(distanceSq, o.distanceSq);
         // Sometime, the dataset contains duplicate samples.
         // If the distances are same, we sort by the sample index.
         return d == 0 ? Integer.compare(index, o.index) : d;
@@ -74,11 +74,11 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
 
     @Override
     public String toString() {
-        return String.format("%s(%d):%s", key, index, Strings.decimal(distance));
+        return String.format("%s(%d):%s", key, index, Strings.decimal(Math.sqrt(distanceSq)));
     }
 
     /** Creates a neighbor object, of which key and object are the same. */
-    public static <T> Neighbor<T, T> of(T key, int index, double distance) {
-        return new Neighbor<>(key, key, index, distance);
+    public static <T> Neighbor<T, T> of(T key, int index, double distanceSq) {
+        return new Neighbor<>(key, key, index, distanceSq);
     }
 }

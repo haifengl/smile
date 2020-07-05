@@ -158,7 +158,7 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
         for (int i = 0; i < 1000; i++) {
             answers.add(naive.knn(data[perm[i]], knn));
             for (int j = 0; j < answers.get(i).length; j++) {
-                radius += answers.get(i)[j].distance;
+                radius += Math.sqrt(answers.get(i)[j].distanceSq);
             }
         }
         int naiveSearch = (int) (System.currentTimeMillis() - time);

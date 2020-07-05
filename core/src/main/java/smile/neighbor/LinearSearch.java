@@ -80,15 +80,16 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
         double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
 
         int index = -1;
-        double nearest = Double.MAX_VALUE;
+        double nearestSq = Double.MAX_VALUE;
         for (int i = 0; i < dist.length; i++) {
-            if (dist[i] < nearest && q != data[i]) {
+            double dSq = dist[i] * dist[i];
+            if (dSq < nearestSq && q != data[i]) {
                 index = i;
-                nearest = dist[i];
+                nearestSq = dSq;
             }
         }
 
-        return Neighbor.of(data[index], index, nearest);
+        return Neighbor.of(data[index], index, nearestSq);
     }
 
     @Override
@@ -110,8 +111,9 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
 
         for (int i = 0; i < dist.length; i++) {
             NeighborBuilder<T,T> datum = heap.peek();
-            if (dist[i] < datum.distance && q != data[i]) {
-                datum.distance = dist[i];
+            double dSq = dist[i] * dist[i];
+            if (dSq < datum.distanceSq && q != data[i]) {
+                datum.distanceSq = dSq;
                 datum.index = i;
                 datum.key = data[i];
                 datum.value = data[i];
@@ -132,7 +134,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
         double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
         for (int i = 0; i < data.length; i++) {
             if (dist[i] <= radius && q != data[i]) {
-                neighbors.add(Neighbor.of(data[i], i, dist[i]));
+                neighbors.add(Neighbor.of(data[i], i, dist[i] * dist[i]));
             }
         }
     }
