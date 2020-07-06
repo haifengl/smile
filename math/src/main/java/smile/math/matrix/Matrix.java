@@ -279,15 +279,38 @@ public class Matrix extends DMatrix {
      * Returns a square diagonal matrix with the elements of vector
      * v on the main diagonal.
      *
-     * @param v the diagonal elements.
+     * @param diag the diagonal elements.
      */
-    public static Matrix diag(double[] v) {
-        int n = v.length;
+    public static Matrix diag(double[] diag) {
+        int n = diag.length;
         Matrix D = new Matrix(n, n);
         for (int i = 0; i < n; i++) {
-            D.set(i, i, v[i]);
+            D.set(i, i, diag[i]);
         }
         return D;
+    }
+
+    /**
+     * Returns a Toeplitz matrix or diagonal-constant matrix is a matrix in
+     * which each descending diagonal from left to right is constant.
+     *
+     * @param a A[i, j] = A[i+1, j+1] = a[i - j]
+     */
+    public static Matrix toeplitz(double[] a) {
+        int n = a.length;
+        Matrix toeplitz = new Matrix(n, n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, a[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, a[j - i]);
+            }
+        }
+
+        return toeplitz;
     }
 
     /**
