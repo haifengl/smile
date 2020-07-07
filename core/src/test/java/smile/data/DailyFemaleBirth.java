@@ -50,14 +50,15 @@ public class DailyFemaleBirth {
 
     private static final String DATA_COL_NAME = "births";
     static {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("date", DataTypes.StringType));
-        fields.add(new StructField(DATA_COL_NAME, DataTypes.IntegerType));
-        StructType schema = DataTypes.struct(fields);
+//        ArrayList<StructField> fields = new ArrayList<>();
+//        fields.add(new StructField("date", DataTypes.StringType));
+//        fields.add(new StructField(DATA_COL_NAME, DataTypes.IntegerType));
+//        StructType schema = DataTypes.struct(fields);
 
+        // csv parser will figure out the schema automatically
         CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim();
         CSV csv = new CSV(format);
-        csv.schema(schema);
+//        csv.schema(schema);
 
         try {
             data = csv.read(Paths.getTestData("timeseries/daily-total-female-births-CA.csv"));
