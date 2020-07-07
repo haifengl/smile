@@ -840,6 +840,41 @@ public class FloatMatrix extends SMatrix {
         return this;
     }
 
+    /**
+     * A[i,j] = alpha * A[i,j] + beta
+     */
+    public double add(int i, int j, float alpha, float beta) {
+        int k = index(i, j);
+        float y = alpha * A.get(k) + beta;
+        A.put(k, y);
+        return y;
+    }
+
+    /** Element-wise submatrix addition A[i, j] = alpha * A[i, j] + beta * B */
+    public FloatMatrix add(int i, int j, float alpha, float beta, FloatMatrix B) {
+        for (int jj = 0; jj < B.n; jj++) {
+            for (int ii = 0; ii < B.m; ii++) {
+                add(i+ii, j+jj, alpha, beta * B.get(ii, jj));
+            }
+        }
+        return this;
+    }
+
+    /** Element-wise addition A = alpha * A + beta * B */
+    public FloatMatrix add(float alpha, float beta, FloatMatrix B) {
+        if (m != B.m || n != B.n) {
+            throw new IllegalArgumentException("Matrix B is not of same size.");
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                set(i, j, alpha * get(i, j) + beta * B.get(i, j));
+            }
+        }
+
+        return this;
+    }
+
     /** Rank-1 update A += alpha * x * y' */
     public FloatMatrix add(float alpha, float[] x, float[] y) {
         if (m != x.length || n != y.length) {
@@ -1202,9 +1237,9 @@ public class FloatMatrix extends SMatrix {
      * </code></pre>
      */
     public void mm(Transpose transA, Transpose transB, float alpha, FloatMatrix B, float beta, FloatMatrix C) {
-        if (isSymmetric() && transB == NO_TRANSPOSE) {
+        if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
             BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
-        } else if (B.isSymmetric() && transA == NO_TRANSPOSE) {
+        } else if (B.isSymmetric() && transA == NO_TRANSPOSE && layout() == C.layout()) {
             BLAS.engine.symm(C.layout(), RIGHT, B.uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
         } else {
             if (C.layout() != layout()) transA = flip(transA);
@@ -1569,7 +1604,7 @@ public class FloatMatrix extends SMatrix {
          * Singular values S(i) <= RCOND are treated as zero.
          */
         private float rcond() {
-            return Math.max(m, n) * MathEx.FLOAT_EPSILON * s[0];
+            return 0.5f * (float) Math.sqrt(m + n + 1) * s[0] * MathEx.FLOAT_EPSILON;
         }
 
         /**
@@ -2164,9 +2199,9 @@ public class FloatMatrix extends SMatrix {
          */
         public Cholesky CholeskyOfAtA() {
             int n = qr.n;
-            FloatMatrix L = FloatMatrix.diag(tau);
+            FloatMatrix L = new FloatMatrix(n, n);
             for (int i = 0; i < n; i++) {
-                for (int j = 0; j < i; j++) {
+                for (int j = 0; j <= i; j++) {
                     L.set(i, j, qr.get(j, i));
                 }
             }
