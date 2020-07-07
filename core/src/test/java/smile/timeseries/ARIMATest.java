@@ -25,7 +25,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.BitcoinHistoryPrice;
+import smile.data.BitcoinPrice;
 import smile.data.DailyFemaleBirth;
 import smile.data.SunspotNumber;
 import smile.math.MathEx;
@@ -95,30 +95,30 @@ public class ARIMATest {
         double validataionRatio = 0.01;
         
         ARIMA.ModelSelectionChoice modelSelection = ARIMA.ModelSelectionChoice.RMSE;
-        double metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        double metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        double metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        double metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        double metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
+        double metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        double metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        double metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        double metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        double metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
         double[] allMetrics = new double[]{metric818, metric413, metric211, metric110, metric411};
         double min = MathEx.min(allMetrics);
         assertTrue(Math.abs(metric413 - min) < 1E-2);
         
         modelSelection = ARIMA.ModelSelectionChoice.AIC;
-        metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
+        metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
         allMetrics = new double[]{metric818, metric413, metric211, metric110, metric411};
         assertTrue(Math.abs(metric110 - MathEx.min(allMetrics)) < 1E-2);
         
         modelSelection = ARIMA.ModelSelectionChoice.BIC;
-        metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
-        metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinHistoryPrice.timeseries);
+        metric818 = fitARIMA(8, 1, 8, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric413 = fitARIMA(4, 1, 3, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric211 = fitARIMA(2, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric110 = fitARIMA(1, 1, 0, validataionRatio, modelSelection, BitcoinPrice.timeseries);
+        metric411 = fitARIMA(4, 1, 1, validataionRatio, modelSelection, BitcoinPrice.timeseries);
         allMetrics = new double[]{metric818, metric413, metric211, metric110, metric411};
         assertTrue(Math.abs(metric110 - MathEx.min(allMetrics)) < 1E-2);
     }

@@ -51,14 +51,15 @@ public class SunspotNumber {
 
     private static final String DATA_COL_NAME = "suns_spot_number";
     static {
-        ArrayList<StructField> fields = new ArrayList<>();
-        fields.add(new StructField("year", DataTypes.StringType));
-        fields.add(new StructField(DATA_COL_NAME, DataTypes.DoubleType));
-        StructType schema = DataTypes.struct(fields);
+//        ArrayList<StructField> fields = new ArrayList<>();
+//        fields.add(new StructField("year", DataTypes.StringType));
+//        fields.add(new StructField(DATA_COL_NAME, DataTypes.DoubleType));
+//        StructType schema = DataTypes.struct(fields);
 
+        // csv parser will figure out the schema automatically
         CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim();
         CSV csv = new CSV(format);
-        csv.schema(schema);
+//        csv.schema(schema);
 
         try {
             data = csv.read(Paths.getTestData("timeseries/sunspotnumber.csv"));
