@@ -291,10 +291,10 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Returns a Toeplitz matrix or diagonal-constant matrix is a matrix in
-     * which each descending diagonal from left to right is constant.
+     * Returns a symmetric Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
      *
-     * @param a A[i, j] = A[i+1, j+1] = a[i - j]
+     * @param a A[i, j] = a[i - j] for i >= j (or a[j - i] when j > i)
      */
     public static Matrix toeplitz(double[] a) {
         int n = a.length;
@@ -1201,10 +1201,6 @@ public class Matrix extends DMatrix {
      * </code></pre>
      */
     public void mm(Transpose transA, Transpose transB, double alpha, Matrix B, double beta, Matrix C) {
-        if (layout() != C.layout()) {
-            throw new IllegalArgumentException();
-        }
-
         if (isSymmetric()) {
             BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
         } else if (B.isSymmetric()) {
@@ -1214,14 +1210,14 @@ public class Matrix extends DMatrix {
             if (C.layout() != B.layout()) transB = flip(transB);
             int k = transA == NO_TRANSPOSE ? n : m;
 
-            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, ld);
+            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, C.ld);
         }
     }
 
     /** Returns A' * A */
     public Matrix ata() {
         Matrix C = new Matrix(n, n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
     }
@@ -1229,7 +1225,7 @@ public class Matrix extends DMatrix {
     /** Returns A * A' */
     public Matrix aat() {
         Matrix C = new Matrix(m, m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
     }

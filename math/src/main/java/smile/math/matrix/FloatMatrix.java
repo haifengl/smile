@@ -292,10 +292,10 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Returns a Toeplitz matrix or diagonal-constant matrix is a matrix in
-     * which each descending diagonal from left to right is constant.
+     * Returns a symmetric Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
      *
-     * @param a A[i, j] = A[i+1, j+1] = a[i - j]
+     * @param a A[i, j] = a[i - j] for i >= j (or a[j - i] when j > i)
      */
     public static FloatMatrix toeplitz(float[] a) {
         int n = a.length;
@@ -1202,10 +1202,6 @@ public class FloatMatrix extends SMatrix {
      * </code></pre>
      */
     public void mm(Transpose transA, Transpose transB, float alpha, FloatMatrix B, float beta, FloatMatrix C) {
-        if (layout() != C.layout()) {
-            throw new IllegalArgumentException();
-        }
-
         if (isSymmetric()) {
             BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
         } else if (B.isSymmetric()) {
@@ -1215,14 +1211,14 @@ public class FloatMatrix extends SMatrix {
             if (C.layout() != B.layout()) transB = flip(transB);
             int k = transA == NO_TRANSPOSE ? n : m;
 
-            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, ld);
+            BLAS.engine.gemm(layout(), transA, transB, C.m, C.n, k, alpha,  A, ld,  B.A, B.ld, beta, C.A, C.ld);
         }
     }
 
     /** Returns A' * A */
     public FloatMatrix ata() {
         FloatMatrix C = new FloatMatrix(n, n);
-        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
     }
@@ -1230,7 +1226,7 @@ public class FloatMatrix extends SMatrix {
     /** Returns A * A' */
     public FloatMatrix aat() {
         FloatMatrix C = new FloatMatrix(m, m);
-        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, transpose(), 0.0f, C);
+        mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
     }
