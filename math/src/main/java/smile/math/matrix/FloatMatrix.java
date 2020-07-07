@@ -1202,10 +1202,10 @@ public class FloatMatrix extends SMatrix {
      * </code></pre>
      */
     public void mm(Transpose transA, Transpose transB, float alpha, FloatMatrix B, float beta, FloatMatrix C) {
-        if (isSymmetric()) {
+        if (isSymmetric() && transB == NO_TRANSPOSE) {
             BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
-        } else if (B.isSymmetric()) {
-            BLAS.engine.symm(C.layout(), RIGHT, uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
+        } else if (B.isSymmetric() && transA == NO_TRANSPOSE) {
+            BLAS.engine.symm(C.layout(), RIGHT, B.uplo, C.m, C.n, alpha, B.A, B.ld, A, ld, beta, C.A, C.ld);
         } else {
             if (C.layout() != layout()) transA = flip(transA);
             if (C.layout() != B.layout()) transB = flip(transB);
