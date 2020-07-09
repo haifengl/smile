@@ -24,6 +24,7 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import smile.classification.LogisticRegression;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -56,7 +57,7 @@ public class LogisticRegressionDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.DUMMY);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         LogisticRegression logit = LogisticRegression.fit(data, label, lambda, 1E-5, 500);

@@ -18,7 +18,6 @@
 package smile.regression;
 
 import java.util.Arrays;
-
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;

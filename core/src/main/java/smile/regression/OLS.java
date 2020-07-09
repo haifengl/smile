@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;

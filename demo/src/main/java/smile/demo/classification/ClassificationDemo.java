@@ -31,6 +31,7 @@ import javax.swing.JPanel;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.DataTypes;
@@ -95,7 +96,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         if (data.length < 500) {
@@ -150,7 +151,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         startButton.setEnabled(false);
         datasetBox.setEnabled(false);
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         if (data.length < 500) {
@@ -220,7 +221,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             datasetIndex = datasetBox.getSelectedIndex();
             loadData(datasetIndex);
 
-            double[][] data = formula.x(dataset[datasetIndex]).toArray();
+            double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
             if (data.length < 500) {
@@ -241,7 +242,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
         if (datasetBox.getSelectedIndex() != datasetIndex) {
             datasetBox.setSelectedIndex(datasetIndex);
 
-            double[][] data = formula.x(dataset[datasetIndex]).toArray();
+            double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
             int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
             Canvas canvas = ScatterPlot.of(data, label, mark).canvas();
