@@ -107,10 +107,10 @@ public class NaiveBayesTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        int p = WeatherNominal.x[0].length;
+        int p = WeatherNominal.level[0].length;
         int k = MathEx.max(WeatherNominal.y) + 1;
 
-        int[] prediction = LOOCV.classification(WeatherNominal.x, WeatherNominal.y, (x, y) -> {
+        int[] prediction = LOOCV.classification(WeatherNominal.level, WeatherNominal.y, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
             Distribution[][] condprob = new Distribution[k][p];

@@ -18,20 +18,17 @@
 package smile.glm;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
 
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.glm.model.Model;
 import smile.math.MathEx;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.QR;
 import smile.math.special.Erf;
 import smile.stat.Hypothesis;
 import smile.validation.ModelSelection;
@@ -87,9 +84,9 @@ public class GLM implements Serializable {
      */
     protected Formula formula;
     /**
-     * The schema of design matrix.
+     * The predictors of design matrix.
      */
-    protected StructType schema;
+    String[] predictors;
     /**
      * The model specifications (link function, deviance, etc.).
      */
@@ -140,10 +137,10 @@ public class GLM implements Serializable {
     /**
      * Constructor.
      */
-    public GLM(Formula formula, StructType schema, Model model, double[] beta, double loglikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
+    public GLM(Formula formula, String[] predictors, Model model, double[] beta, double loglikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
         this.formula = formula;
-        this.schema = schema;
         this.model = model;
+        this.predictors = predictors;
         this.beta = beta;
         this.loglikelihood = loglikelihood;
         this.deviance = deviance;
@@ -218,9 +215,9 @@ public class GLM implements Serializable {
 
     /** Predicts the mean response. */
     public double predict(Tuple x) {
-        double[] a = formula.xarray(x);
-        int p = beta.length - 1;
-        double dot = beta[p];
+        double[] a = formula.x(x).toArray(true, CategoricalEncoder.DUMMY);
+        int p = beta.length;
+        double dot = 0.0;
         for (int i = 0; i < p; i++) {
             dot += a[i] * beta[i];
         }
@@ -230,10 +227,9 @@ public class GLM implements Serializable {
 
     /** Predicts the mean response. */
     public double[] predict(DataFrame df) {
-        DenseMatrix X = formula.matrix(df);
-        int n = X.nrows();
-        double[] y = new double[n];
-        X.ax(beta, y);
+        Matrix X = formula.matrix(df, true);
+        double[] y = X.mv(beta);
+        int n = y.length;
         for (int i = 0; i < n; i++) {
             y[i] = model.invlink(y[i]);
         }
@@ -254,14 +250,8 @@ public class GLM implements Serializable {
         builder.append("\nCoefficients:\n");
         if (ztest != null) {
             builder.append("                  Estimate Std. Error    z value   Pr(>|z|)\n");
-            if (ztest.length > p) {
-                builder.append(String.format("Intercept       %10.3e %10.3e %10.4f %10.5f %s%n", ztest[p][0], ztest[p][1], ztest[p][2], ztest[p][3], Hypothesis.significance(ztest[p][3])));
-            } else {
-                builder.append(String.format("Intercept       %10.4f%n", beta[p]));
-            }
-
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.3e %10.3e %10.4f %10.5f %s%n", schema.fieldName(i), ztest[i][0], ztest[i][1], ztest[i][2], ztest[i][3], Hypothesis.significance(ztest[i][3])));
+                builder.append(String.format("%-15s %10.3e %10.3e %10.4f %10.5f %s%n", predictors[i], ztest[i][0], ztest[i][1], ztest[i][2], ztest[i][3], Hypothesis.significance(ztest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
@@ -269,7 +259,7 @@ public class GLM implements Serializable {
         } else {
             builder.append(String.format("Intercept       %10.4f%n", beta[p]));
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f%n", schema.fieldName(i), beta[i]));
+                builder.append(String.format("%-15s %10.4f%n", predictors[i], beta[i]));
             }
         }
 
@@ -319,18 +309,17 @@ public class GLM implements Serializable {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        DenseMatrix X = formula.matrix(data);
-        DenseMatrix XW = Matrix.zeros(X.nrows(), X.ncols());
+        Matrix X = formula.matrix(data, true);
+        Matrix XW = new Matrix(X.nrows(), X.ncols());
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
-        int p = X.ncols() - 1;
+        int p = X.ncols();
 
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
-        double[] beta = new double[p+1];
         double[] eta = new double[n];
         double[] mu = new double[n];
         double[] w = new double[n]; // sqrt of diagonal of W
@@ -348,18 +337,18 @@ public class GLM implements Serializable {
             z[i] *= w[i];
         });
 
-        for (int j = 0; j <= p; j++) {
+        for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
                 XW.set(i, j, X.get(i, j) * w[i]);
             }
         }
 
-        QR qr = XW.qr(true);
-        qr.solve(z, beta);
+        Matrix.QR qr = XW.qr();
+        double[] beta = qr.solve(z);
 
         double dev = Double.POSITIVE_INFINITY;
         for (int iter = 0; iter < maxIter; iter++) {
-            X.ax(beta, eta);
+            X.mv(beta, eta);
             IntStream.range(0, n).parallel().forEach(i -> {
                 mu[i] = model.invlink(eta[i]);
                 double g = model.dlink(mu[i]);
@@ -379,26 +368,26 @@ public class GLM implements Serializable {
             }
 
             dev = newDev;
-            for (int j = 0; j <= p; j++) {
+            for (int j = 0; j < p; j++) {
                 for (int i = 0; i < n; i++) {
                     XW.set(i, j, X.get(i, j) * w[i]);
                 }
             }
 
-            qr = XW.qr(true);
-            qr.solve(z, beta);
+            qr = XW.qr();
+            beta = qr.solve(z);
         }
 
-        Cholesky cholesky = qr.CholeskyOfAtA();
-        DenseMatrix inv = cholesky.inverse();
-        double[][] ztest = new double[p + 1][4];
-        for (int i = 0; i <= p; i++) {
+        Matrix.Cholesky cholesky = qr.CholeskyOfAtA();
+        Matrix inv = cholesky.inverse();
+        double[][] ztest = new double[p][4];
+        for (int i = 0; i < p; i++) {
             ztest[i][0] = beta[i];
             ztest[i][1] = Math.sqrt(inv.get(i, i));
             ztest[i][2] = ztest[i][0] / ztest[i][1];
             ztest[i][3] = 2.0 - Erf.erfc(-0.707106781186547524 * Math.abs(ztest[i][2]));
         }
 
-        return new GLM(formula, formula.xschema(), model, beta, model.loglikelihood(y, mu), dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
+        return new GLM(formula, X.colNames(), model, beta, model.loglikelihood(y, mu), dev, model.nullDeviance(y, MathEx.mean(y)), mu, residuals, ztest);
     }
 }

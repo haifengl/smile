@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
+import smile.stat.distribution.GaussianDistribution;
 
 /**
  * A layer in the neural network.
@@ -49,11 +49,11 @@ public abstract class Layer implements Serializable {
     /**
      * The affine transformation matrix.
      */
-    protected DenseMatrix weight;
+    protected Matrix weight;
     /**
      * The weight update of mini batch or momentum.
      */
-    protected DenseMatrix update;
+    protected Matrix update;
     /**
      * The bias.
      */
@@ -74,12 +74,12 @@ public abstract class Layer implements Serializable {
 
         // Initialize random weights.
         double r = Math.sqrt(2.0 / p);
-        weight = Matrix.randn(n, p, 0.0, r);
+        weight = Matrix.rand(n, p, new GaussianDistribution(0.0, r));
         bias = new double[n];
         output = new double[n];
         gradient = new double[n];
 
-        update = Matrix.zeros(n, p);
+        update = new Matrix(n, p);
         updateBias = new double[n];
     }
 
@@ -109,7 +109,7 @@ public abstract class Layer implements Serializable {
      */
     public void propagate(double[] x) {
         System.arraycopy(bias, 0, output, 0, n);
-        weight.axpy(x, output);
+        weight.mv(1.0, x, 1.0, output);
         f(output);
     }
 
@@ -155,7 +155,7 @@ public abstract class Layer implements Serializable {
      * @param lambda weight decay factor
      */
     public void update(double alpha, double lambda) {
-        weight.add(update);
+        weight.add(1.0, update);
         MathEx.add(bias, updateBias);
 
         // Weight decay as the weights are multiplied

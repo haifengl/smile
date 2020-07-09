@@ -27,10 +27,9 @@ import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.math.matrix.ARPACK;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
-import smile.netlib.ARPACK;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
@@ -239,7 +238,6 @@ public class UMAP implements Serializable {
 
         graph = computeFuzzySimplicialSet(nng.graph, k, 64);
         SparseMatrix conorm = graph.toMatrix();
-        conorm.setSymmetric(true);
 
         // Spectral embedding initialization
         double[][] coordinates = spectralLayout(graph, d);
@@ -450,15 +448,13 @@ public class UMAP implements Serializable {
         }
 
         SparseMatrix L = laplacian.toMatrix();
-        L.setSymmetric(true);
 
-        // ARPACK may not find all needed eigen values for k = d + 1.
-        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
-        // Our Lanczos class has no such issue.
-        EVD eigen = ARPACK.eigen(L, Math.min(10*(d+1), n-1), "SM");
+        // ARPACK may not find all needed eigenvalues for k = d + 1.
+        // Hack it with 10 * (d + 1).
+        Matrix.EVD eigen = ARPACK.syev(L, Math.min(10*(d+1), n-1), ARPACK.SymmWhich.SM);
 
         double absMax = 0;
-        DenseMatrix V = eigen.getEigenVectors();
+        Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncols() - j - 2;

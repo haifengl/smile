@@ -25,10 +25,9 @@ import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.math.matrix.ARPACK;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
-import smile.netlib.ARPACK;
 import smile.util.SparseArray;
 
 /**
@@ -176,14 +175,12 @@ public class LaplacianEigenmap implements Serializable {
 
         // Here L is actually I - D^(-1/2) * W * D^(-1/2)
         SparseMatrix L = SparseDataset.of(W, n).toMatrix();
-        L.setSymmetric(true);
 
-        // ARPACK may not find all needed eigen values for k = d + 1.
-        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
-        // Our Lanczos class has no such issue.
-        EVD eigen = ARPACK.eigen(L, Math.min(10*(d+1), n-1), "SM");
+        // ARPACK may not find all needed eigenvalues for k = d + 1.
+        // Hack it with 10 * (d + 1).
+        Matrix.EVD eigen = ARPACK.syev(L, Math.min(10*(d+1), n-1), ARPACK.SymmWhich.SM);
 
-        DenseMatrix V = eigen.getEigenVectors();
+        Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             double norm = 0.0;

@@ -24,6 +24,7 @@ import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.util.IntSet;
+import smile.validation.ModelSelection;
 
 /**
  * Maximum Entropy Classifier. Maximum entropy is a technique for learning
@@ -764,5 +765,12 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      */
     public double loglikelihood() {
         return L;
+    }
+
+    /**
+     * Returns the AIC score.
+     */
+    public double AIC() {
+        return ModelSelection.AIC(L, (k-1)*(p+1));
     }
 }
