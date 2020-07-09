@@ -96,7 +96,7 @@ class ByteVectorImpl implements ByteVector {
     public ByteVector get(int... index) {
         byte[] v = new byte[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new ByteVectorImpl(name, v);
+        return new ByteVectorImpl(field(), v);
     }
 
     @Override

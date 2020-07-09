@@ -91,7 +91,7 @@ class LongVectorImpl implements LongVector {
     public LongVector get(int... index) {
         long[] v = new long[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new LongVectorImpl(name, v);
+        return new LongVectorImpl(field(), v);
     }
 
     @Override

@@ -55,7 +55,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
     public StringVector get(int... index) {
         String[] v = new String[index.length];
         for (int i = 0; i < index.length; i++) v[i] = get(index[i]);
-        return new StringVectorImpl(name(), v);
+        return new StringVectorImpl(field(), v);
     }
 
     @Override

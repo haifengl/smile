@@ -91,7 +91,7 @@ class FloatVectorImpl implements FloatVector {
     public FloatVector get(int... index) {
         float[] v = new float[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new FloatVectorImpl(name, v);
+        return new FloatVectorImpl(field(), v);
     }
 
     @Override
