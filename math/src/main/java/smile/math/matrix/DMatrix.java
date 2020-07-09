@@ -38,9 +38,16 @@ import static smile.math.blas.UPLO.*;
  */
 public abstract class DMatrix extends IMatrix<double[]> {
     /**
-     * Sets A[i,j] = x.
+     * Sets A[i, j] = x.
      */
     public abstract DMatrix set(int i, int j, double x);
+
+    /**
+     * Sets A[i, j] = x for Scala users.
+     */
+    public DMatrix update(int i, int j, double x) {
+        return set(i, j, x);
+    }
 
     /**
      * Returns A[i, j].
@@ -48,7 +55,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
     public abstract double get(int i, int j);
 
     /**
-     * Returns A[i, j]. For Scala users.
+     * Returns A[i, j] for Scala users.
      */
     public double apply(int i, int j) {
         return get(i, j);
