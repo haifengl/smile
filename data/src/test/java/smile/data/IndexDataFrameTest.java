@@ -181,7 +181,7 @@ public class IndexDataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(false, DataFrame.CategoricalEncoder.ONE_HOT, "name");
+        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(false, CategoricalEncoder.ONE_HOT, "name");
         System.out.println(output);
         assertEquals(4, output.nrows());
         assertEquals(4, output.ncols());
@@ -209,7 +209,7 @@ public class IndexDataFrameTest {
     @Test
     public void testDataFrameToArray() {
         System.out.println("toArray");
-        double[][] output = df.select("age", "salary", "gender").toArray(false, DataFrame.CategoricalEncoder.ONE_HOT);
+        double[][] output = df.select("age", "salary", "gender").toArray(false, CategoricalEncoder.ONE_HOT);
         assertEquals(4, output.length);
         assertEquals(4, output[0].length);
         assertEquals(48., output[0][0], 1E-10);

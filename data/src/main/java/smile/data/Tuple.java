@@ -27,6 +27,7 @@ import java.util.stream.IntStream;
 
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -50,12 +51,69 @@ public interface Tuple extends Serializable {
     }
 
     /** Returns the tuple as an array of doubles. */
+    /*
     default double[] toArray() {
-        double[] x = new double[length()];
-        for (int i = 0; i < x.length; i++) {
-            x[i] = getDouble(i);
+        return toArray(false, CategoricalEncoder.LEVEL);
+    }
+*/
+    /**
+     * Return an array obtained by converting all the variables
+     * in a data frame to numeric mode. Missing values/nulls will be
+     * encoded as Double.NaN.
+     *
+     * @param bias if true, add the first column of all 1's.
+     * @param encoder the categorical variable encoder.
+     */
+    default double[] toArray(boolean bias, CategoricalEncoder encoder) {
+        int ncols = length();
+        StructType schema = schema();
+
+        int n = bias ? 1 : 0;
+        for (int i = 0; i < ncols; i++) {
+            StructField field = schema.field(i);
+
+            Measure measure = field.measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    n += cat.size() - 1;
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    n += cat.size();
+                }
+            } else {
+                n++;
+            }
         }
-        return x;
+
+        double[] array = new double[n];
+
+        int j = 0;
+        if (bias) {
+            array[j++] = 1.0;
+        }
+
+        for (int i = 0; i < ncols; i++) {
+            StructField field = schema.field(i);
+
+            Measure measure = field.measure;
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
+                CategoricalMeasure cat = (CategoricalMeasure) measure;
+                if (encoder == CategoricalEncoder.DUMMY) {
+                    int k = cat.factor(getInt(i));
+                    if (k > 0) array[j + k - 1] = 1.0;
+                    j += cat.size() - 1;
+                } else if (encoder == CategoricalEncoder.ONE_HOT) {
+                    int k = cat.factor(getInt(i));
+                    array[j + k] = 1.0;
+                    j += cat.size();
+                }
+            } else {
+                array[j++] = getDouble(i);
+            }
+        }
+
+        return array;
     }
 
     /**

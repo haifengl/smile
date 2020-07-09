@@ -704,16 +704,18 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         return of(vectors);
     }
 
-    /** Categorical variable encoder. */
-    enum CategoricalEncoder {
-        /** Level of measurement. */
-        LEVEL,
-        /** Dummy encoding. */
-        DUMMY,
-        /** One hot encoding. */
-        ONE_HOT
+    /**
+     * Return an array obtained by converting all the variables
+     * in a data frame to numeric mode and then binding them together
+     * as the columns of a matrix. Missing values/nulls will be
+     * encoded as Double.NaN. No bias term and uses level encoding
+     * for categorical variables.
+     */
+    /*
+    default double[][] toArray() {
+        return toArray(false, CategoricalEncoder.LEVEL);
     }
-
+*/
     /**
      * Return an array obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
@@ -734,7 +736,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             StructField field = schema.field(j);
 
             Measure measure = field.measure;
-            if (measure instanceof CategoricalMeasure) {
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 int n = cat.size();
 
@@ -766,7 +768,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             StructField field = schema.field(col);
 
             Measure measure = field.measure;
-            if (measure instanceof CategoricalMeasure) {
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrows; i++) {
@@ -797,6 +799,17 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * in a data frame to numeric mode and then binding them together
      * as the columns of a matrix. Missing values/nulls will be
      * encoded as Double.NaN.
+     */
+    default Matrix toMatrix() {
+        return toMatrix(false, CategoricalEncoder.LEVEL, null);
+    }
+
+    /**
+     * Return a matrix obtained by converting all the variables
+     * in a data frame to numeric mode and then binding them together
+     * as the columns of a matrix. Missing values/nulls will be
+     * encoded as Double.NaN. No bias term and uses level encoding
+     * for categorical variables.
      *
      * @param bias if true, add the first column of all 1's.
      * @param encoder the categorical variable encoder.
@@ -814,7 +827,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (measure instanceof CategoricalMeasure) {
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 int n = cat.size();
 
@@ -856,7 +869,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             if (field.name.equals(rowNames)) continue;
 
             Measure measure = field.measure;
-            if (measure instanceof CategoricalMeasure) {
+            if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 if (encoder == CategoricalEncoder.DUMMY) {
                     for (int i = 0; i < nrows; i++) {

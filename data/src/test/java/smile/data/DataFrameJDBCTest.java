@@ -164,7 +164,7 @@ public class DataFrameJDBCTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        Matrix output = df.select("Total").toMatrix(false, DataFrame.CategoricalEncoder.LEVEL, null);
+        Matrix output = df.select("Total").toMatrix(false, CategoricalEncoder.LEVEL, null);
         System.out.println(output);
         assertEquals(412, output.nrows());
         assertEquals(1, output.ncols());
