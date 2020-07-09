@@ -451,7 +451,7 @@ public class UMAP implements Serializable {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with 10 * (d + 1).
-        Matrix.EVD eigen = ARPACK.syev(L, Math.min(10*(d+1), n-1), ARPACK.SymmWhich.SM);
+        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
         double absMax = 0;
         Matrix V = eigen.Vr;

@@ -189,7 +189,7 @@ public class MDS {
         }
 
         B.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(B, k, ARPACK.SymmWhich.LA);
+        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, k);
 
         if (eigen.wr.length < k) {
             logger.warn("eigen({}) returns only {} eigen vectors", k, eigen.wr.length);

@@ -182,7 +182,7 @@ public class LLE implements Serializable {
 
         // ARPACK may not find all needed eigenvalues for k = d + 1.
         // Hack it with 10 * (d + 1).
-        Matrix.EVD eigen = ARPACK.syev(new M(Wt), Math.min(10*(d+1), n-1), ARPACK.SymmWhich.SM);
+        Matrix.EVD eigen = ARPACK.syev(new M(Wt), ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
         Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];

@@ -185,7 +185,7 @@ public class IsoMap implements Serializable {
         }
 
         B.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(B, d, ARPACK.SymmWhich.LA);
+        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
         if (eigen.wr.length < d) {
             logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);

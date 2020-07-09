@@ -49,7 +49,7 @@ public interface ARPACK {
     org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(ARPACK.class);
 
     /** Which eigenvalues of symmetric matrix to compute. */
-    enum SymmWhich {
+    enum SymmOption {
         /**
          * The largest algebraic eigenvalues.
          */
@@ -75,7 +75,7 @@ public interface ARPACK {
     }
 
     /** Which eigenvalues of asymmetric matrix to compute. */
-    enum AsymmWhich {
+    enum AsymmOption {
         /**
          * The eigenvalues largest in magnitude.
          */
@@ -109,8 +109,8 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
-    static Matrix.EVD syev(DMatrix A, int nev, SymmWhich which) {
-        return syev(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6);
+    static Matrix.EVD syev(DMatrix A, SymmOption which, int nev) {
+        return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
     }
 
     /**
@@ -122,7 +122,7 @@ public interface ARPACK {
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static Matrix.EVD syev(DMatrix A, int nev, SymmWhich which, int ncv, double tol) {
+    static Matrix.EVD syev(DMatrix A, SymmOption which, int nev, int ncv, double tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -207,8 +207,8 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
-    static FloatMatrix.EVD syev(SMatrix A, int nev, SymmWhich which) {
-        return syev(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6f);
+    static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev) {
+        return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
     }
 
     /**
@@ -220,7 +220,7 @@ public interface ARPACK {
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static FloatMatrix.EVD syev(SMatrix A, int nev, SymmWhich which, int ncv, float tol) {
+    static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev, int ncv, float tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -305,7 +305,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
-    static Matrix.EVD eigen(DMatrix A, int nev, AsymmWhich which) {
+    static Matrix.EVD eigen(DMatrix A, int nev, AsymmOption which) {
         return eigen(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6);
     }
 
@@ -318,7 +318,7 @@ public interface ARPACK {
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static Matrix.EVD eigen(DMatrix A, int nev, AsymmWhich which, int ncv, double tol) {
+    static Matrix.EVD eigen(DMatrix A, int nev, AsymmOption which, int ncv, double tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -407,7 +407,7 @@ public interface ARPACK {
      * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
      */
-    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmWhich which) {
+    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmOption which) {
         return eigen(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6f);
     }
 
@@ -420,7 +420,7 @@ public interface ARPACK {
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmWhich which, int ncv, float tol) {
+    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmOption which, int ncv, float tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -525,7 +525,7 @@ public interface ARPACK {
         int n = A.ncols();
 
         DMatrix ata = A.square();
-        Matrix.EVD eigen = syev(ata, k, SymmWhich.LM, ncv, tol);
+        Matrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
 
         double[] s = eigen.wr;
         for (int i = 0; i < s.length; i++) {
@@ -596,7 +596,7 @@ public interface ARPACK {
         int n = A.ncols();
 
         SMatrix ata = A.square();
-        FloatMatrix.EVD eigen = syev(ata, k, SymmWhich.LM, ncv, tol);
+        FloatMatrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
 
         float[] s = eigen.wr;
         for (int i = 0; i < s.length; i++) {

@@ -66,7 +66,7 @@ public class ARPACKTest {
         System.out.println("SA");
         Matrix a = new Matrix(A);
         a.uplo(LOWER);
-        Matrix.EVD eig = ARPACK.syev(a, 2, ARPACK.SymmWhich.SA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.SA, 2);
         assertEquals(eigenValues[1], eig.wr[0], 1E-4);
         assertEquals(eigenValues[2], eig.wr[1], 1E-4);
 
@@ -79,7 +79,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmWhich.SM);
+        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.SM);
         assertEquals(eigenValues[2], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -94,7 +94,7 @@ public class ARPACKTest {
         System.out.println("LA");
         Matrix a = new Matrix(A);
         a.uplo(LOWER);
-        Matrix.EVD eig = ARPACK.syev(a, 1, ARPACK.SymmWhich.LA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -102,7 +102,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmWhich.LM);
+        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.LM);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -117,7 +117,7 @@ public class ARPACKTest {
     public void testSymmSA() {
         System.out.println("Symm SA");
         SymmMatrix a = new SymmMatrix(LOWER, A);
-        Matrix.EVD eig = ARPACK.syev(a, 2, ARPACK.SymmWhich.SA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.SA, 2);
         assertEquals(eigenValues[1], eig.wr[0], 1E-4);
         assertEquals(eigenValues[2], eig.wr[1], 1E-4);
 
@@ -130,7 +130,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmWhich.SM);
+        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.SM);
         assertEquals(eigenValues[2], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -144,7 +144,7 @@ public class ARPACKTest {
     public void testSymmLA() {
         System.out.println("SymmLA");
         SymmMatrix a = new SymmMatrix(LOWER, A);
-        Matrix.EVD eig = ARPACK.syev(a, 1, ARPACK.SymmWhich.LA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
 
         for (int i = 0; i < 3; i++) {
@@ -152,7 +152,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmWhich.LM);
+        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.LM);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -175,7 +175,7 @@ public class ARPACKTest {
             a.set(i, i, (500 - i) / 500.0);
         }
 
-        Matrix.EVD eig = ARPACK.syev(a, 6, ARPACK.SymmWhich.LA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 6);
         assertEquals(2.0, eig.wr[0], 1E-4);
         assertEquals(2.0, eig.wr[1], 1E-4);
         assertEquals(2.0, eig.wr[2], 1E-4);
@@ -184,7 +184,7 @@ public class ARPACKTest {
         assertEquals(0.990, eig.wr[5], 1E-4);
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 6, ARPACK.AsymmWhich.LM);
+        eig = ARPACK.eigen(a, 6, ARPACK.AsymmOption.LM);
         assertEquals(2.0, eig.wr[0], 1E-4);
         assertEquals(2.0, eig.wr[1], 1E-4);
         assertEquals(2.0, eig.wr[2], 1E-4);
