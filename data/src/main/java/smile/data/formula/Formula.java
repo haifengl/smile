@@ -21,7 +21,7 @@ import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
@@ -417,9 +417,12 @@ public class Formula implements Serializable {
     /**
      * Returns the real values of predictors.
      */
+    /*
     public double[] xarray(Tuple t) {
         return Arrays.stream(x).mapToDouble(term -> term.applyAsDouble(t)).toArray();
     }
+
+     */
 
     /**
      * Returns a data frame of predictors and response variable
@@ -471,7 +474,7 @@ public class Formula implements Serializable {
      * @param bias If true, include the bias column.
      */
     public Matrix matrix(DataFrame df, boolean bias) {
-        return x(df).toMatrix(bias, DataFrame.CategoricalEncoder.DUMMY, null);
+        return x(df).toMatrix(bias, CategoricalEncoder.DUMMY, null);
     }
 
     /**

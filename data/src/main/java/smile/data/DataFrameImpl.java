@@ -107,62 +107,53 @@ class DataFrameImpl implements DataFrame {
                     Method read = prop.getReadMethod();
                     StructField field = Arrays.stream(fields).filter(f -> f.name.equals(name)).findFirst().get();
 
+                    int i = 0;
                     if (type == int.class) {
-                        int i = 0;
                         int[] values = new int[size];
                         for (T datum : data) values[i++] = (int) read.invoke(datum);
                         IntVector vector = IntVector.of(field, values);
                         columns.add(vector);
                     } else if (type == double.class) {
-                        int i = 0;
                         double[] values = new double[size];
                         for (T datum : data) values[i++] = (double) read.invoke(datum);
                         DoubleVector vector = DoubleVector.of(field, values);
                         columns.add(vector);
                     } else if (type == boolean.class) {
-                        int i = 0;
                         boolean[] values = new boolean[size];
                         for (T datum : data) values[i++] = (boolean) read.invoke(datum);
                         BooleanVector vector = BooleanVector.of(field, values);
                         columns.add(vector);
                     } else if (type == short.class) {
-                        int i = 0;
                         short[] values = new short[size];
                         for (T datum : data) values[i++] = (short) read.invoke(datum);
                         ShortVector vector = ShortVector.of(field, values);
                         columns.add(vector);
                     } else if (type == long.class) {
-                        int i = 0;
                         long[] values = new long[size];
                         for (T datum : data) values[i++] = (long) read.invoke(datum);
                         LongVector vector = LongVector.of(field, values);
                         columns.add(vector);
                     } else if (type == float.class) {
-                        int i = 0;
                         float[] values = new float[size];
                         for (T datum : data) values[i++] = (float) read.invoke(datum);
                         FloatVector vector = FloatVector.of(field, values);
                         columns.add(vector);
                     } else if (type == byte.class) {
-                        int i = 0;
                         byte[] values = new byte[size];
                         for (T datum : data) values[i++] = (byte) read.invoke(datum);
                         ByteVector vector = ByteVector.of(field, values);
                         columns.add(vector);
                     } else if (type == char.class) {
-                        int i = 0;
                         char[] values = new char[size];
                         for (T datum : data) values[i++] = (char) read.invoke(datum);
                         CharVector vector = CharVector.of(field, values);
                         columns.add(vector);
                     } else if (type == String.class) {
-                        int i = 0;
                         String[] values = new String[size];
                         for (T datum : data) values[i++] = (String) read.invoke(datum);
                         StringVector vector = StringVector.of(field, values);
                         columns.add(vector);
                     } else if (type.isEnum()) {
-                        int i = 0;
                         Object[] levels = type.getEnumConstants();
                         if (levels.length < Byte.MAX_VALUE + 1) {
                             byte[] values = new byte[size];
@@ -181,7 +172,6 @@ class DataFrameImpl implements DataFrame {
                             columns.add(vector);
                         }
                     } else {
-                        int i = 0;
                         Object[] values = new Object[size];
                         for (T datum : data) values[i++] = read.invoke(datum);
                         Vector<?> vector = Vector.of(field, values);
@@ -251,10 +241,10 @@ class DataFrameImpl implements DataFrame {
         this.columns = new ArrayList<>(fields.length);
 
         for (int j = 0; j < fields.length; j++) {
+            int i = 0;
             StructField field = fields[j];
             switch (field.type.id()) {
                 case Integer: {
-                    int i = 0;
                     int[] values = new int[size];
                     for (Tuple datum : data) values[i++] = datum.getInt(j);
                     IntVector vector = IntVector.of(field, values);
@@ -263,7 +253,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Long: {
-                    int i = 0;
                     long[] values = new long[size];
                     for (Tuple datum : data) values[i++] = datum.getLong(j);
                     LongVector vector = LongVector.of(field, values);
@@ -272,7 +261,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Double: {
-                    int i = 0;
                     double[] values = new double[size];
                     for (Tuple datum : data) values[i++] = datum.getDouble(j);
                     DoubleVector vector = DoubleVector.of(field, values);
@@ -281,7 +269,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Float: {
-                    int i = 0;
                     float[] values = new float[size];
                     for (Tuple datum : data) values[i++] = datum.getFloat(j);
                     FloatVector vector = FloatVector.of(field, values);
@@ -290,7 +277,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Boolean: {
-                    int i = 0;
                     boolean[] values = new boolean[size];
                     for (Tuple datum : data) values[i++] = datum.getBoolean(j);
                     BooleanVector vector = BooleanVector.of(field, values);
@@ -299,7 +285,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Byte: {
-                    int i = 0;
                     byte[] values = new byte[size];
                     for (Tuple datum : data) values[i++] = datum.getByte(j);
                     ByteVector vector = ByteVector.of(field, values);
@@ -308,7 +293,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Short: {
-                    int i = 0;
                     short[] values = new short[size];
                     for (Tuple datum : data) values[i++] = datum.getShort(j);
                     ShortVector vector = ShortVector.of(field, values);
@@ -317,7 +301,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case Char: {
-                    int i = 0;
                     char[] values = new char[size];
                     for (Tuple datum : data) values[i++] = datum.getChar(j);
                     CharVector vector = CharVector.of(field, values);
@@ -326,7 +309,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 case String: {
-                    int i = 0;
                     String[] values = new String[size];
                     for (Tuple datum : data) values[i++] = datum.getString(j);
                     StringVector vector = StringVector.of(field, values);
@@ -335,7 +317,6 @@ class DataFrameImpl implements DataFrame {
                 }
 
                 default: {
-                    int i = 0;
                     Object[] values = new Object[size];
                     for (Tuple datum : data) values[i++] = datum.get(j);
                     Vector vector = Vector.of(field, values);

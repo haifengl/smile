@@ -250,7 +250,7 @@ public class DataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(true, DataFrame.CategoricalEncoder.DUMMY, "name");
+        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(true, CategoricalEncoder.DUMMY, "name");
         System.out.println(output);
         assertEquals(4, output.nrows());
         assertEquals(4, output.ncols());
@@ -274,7 +274,7 @@ public class DataFrameTest {
     @Test
     public void testDataFrameToArray() {
         System.out.println("toArray");
-        double[][] output = df.select("age", "salary", "gender").toArray(true, DataFrame.CategoricalEncoder.DUMMY);
+        double[][] output = df.select("age", "salary", "gender").toArray(true, CategoricalEncoder.DUMMY);
         assertEquals(4, output.length);
         assertEquals(4, output[0].length);
         assertEquals(1, output[0][0], 1E-10);
