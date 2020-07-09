@@ -43,6 +43,13 @@ public abstract class SMatrix extends IMatrix<float[]> {
     public abstract SMatrix set(int i, int j, float x);
 
     /**
+     * Sets A[i,j] = x for Scala users.
+     */
+    public SMatrix update(int i, int j, float x) {
+        return set(i, j, x);
+    }
+
+    /**
      * Returns A[i, j].
      */
     public abstract float get(int i, int j);
