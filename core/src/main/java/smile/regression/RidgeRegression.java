@@ -22,8 +22,8 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.DenseMatrix;
+import smile.math.blas.UPLO;
+import smile.math.matrix.Matrix;
 
 /**
  * Ridge Regression. Coefficient estimates for multiple linear regression models rely on
@@ -109,7 +109,7 @@ public class RidgeRegression {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
 
-        DenseMatrix X = formula.matrix(data, false);
+        Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
@@ -122,6 +122,7 @@ public class RidgeRegression {
         LinearModel model = new LinearModel();
         model.formula = formula;
         model.schema = formula.xschema();
+        model.predictors = X.colNames();
         model.p = p;
         double[] center = X.colMeans();
         double[] scale = X.colSds();
@@ -132,19 +133,17 @@ public class RidgeRegression {
             }
         }
 
-        DenseMatrix scaledX = X.scale(center, scale);
+        Matrix scaledX = X.scale(center, scale);
+        double[] scaledY = scaledX.tv(y);
 
-        model.w = new double[p];
-        scaledX.atx(y, model.w);
-
-        DenseMatrix XtX = scaledX.ata();
+        Matrix XtX = scaledX.ata();
+        XtX.uplo(UPLO.LOWER);
         for (int i = 0; i < p; i++) {
             XtX.add(i, i, lambda);
         }
-        Cholesky cholesky = XtX.cholesky();
+        Matrix.Cholesky cholesky = XtX.cholesky();
 
-        cholesky.solve(model.w);
-        
+        model.w = cholesky.solve(scaledY);
         for (int j = 0; j < p; j++) {
             model.w[j] /= scale[j];
         }
@@ -154,7 +153,7 @@ public class RidgeRegression {
 
         double[] fittedValues = new double[n];
         Arrays.fill(fittedValues, model.b);
-        X.axpy(model.w, fittedValues);
+        X.mv(1.0, model.w, 1.0, fittedValues);
         model.fitness(fittedValues, y, ym);
 
         return model;

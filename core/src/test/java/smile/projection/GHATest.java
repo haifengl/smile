@@ -25,7 +25,6 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -121,7 +120,7 @@ public class GHATest {
 
         int k = 3;
         double[] mu = MathEx.colMeans(USArrests);
-        DenseMatrix cov = Matrix.of(MathEx.cov(USArrests));
+        Matrix cov = new Matrix(MathEx.cov(USArrests));
         for (int i = 0; i < USArrests.length; i++) {
            MathEx.sub(USArrests[i], mu);
         }
@@ -140,17 +139,11 @@ public class GHATest {
             }
         }
 
-        DenseMatrix p = gha.getProjection();
-        DenseMatrix t = p.ata();
+        Matrix p = gha.getProjection();
+        Matrix t = p.ata();
+        System.out.println(t);
 
-        for (int i = 0; i < t.nrows(); i++) {
-            for (int j = 0; j < t.ncols(); j++) {
-                System.out.format("% .4f ", t.get(i, j));
-            }
-            System.out.println();
-        }
-
-        DenseMatrix s = p.abmm(cov).abtmm(p);
+        Matrix s = p.mm(cov).mt(p);
         double[] ev = new double[k];
         System.out.println("Relative error of eigenvalues:");
         for (int i = 0; i < k; i++) {

@@ -17,7 +17,7 @@
 
 package smile.projection;
 
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 
 /**
  * Linear projection.
@@ -30,11 +30,11 @@ public interface LinearProjection extends Projection<double[]> {
      * Returns the projection matrix. The dimension reduced data can be obtained
      * by y = W * x.
      */
-    DenseMatrix getProjection();
+    Matrix getProjection();
 
     @Override
     default double[] project(double[] x) {
-        DenseMatrix A = getProjection();
+        Matrix A = getProjection();
         int p = A.nrows();
         int n = A.ncols();
 
@@ -43,13 +43,13 @@ public interface LinearProjection extends Projection<double[]> {
         }
 
         double[] y = new double[p];
-        A.ax(x, y);
+        A.mv(x, y);
         return y;
     }
 
     @Override
     default double[][] project(double[][] x) {
-        DenseMatrix A = getProjection();
+        Matrix A = getProjection();
         int p = A.nrows();
         int n = A.ncols();
 
@@ -59,7 +59,7 @@ public interface LinearProjection extends Projection<double[]> {
 
         double[][] y = new double[x.length][p];
         for (int i = 0; i < x.length; i++) {
-            A.ax(x[i], y[i]);
+            A.mv(x[i], y[i]);
         }
         return y;
     }

@@ -19,9 +19,9 @@ package smile.mds;
 
 import java.util.Properties;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
+import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
 
 /**
  * Classical multidimensional scaling, also known as principal coordinates
@@ -133,8 +133,8 @@ public class MDS {
             throw new IllegalArgumentException("Invalid k = " + k);
         }
 
-        DenseMatrix A = Matrix.zeros(n, n);
-        DenseMatrix B = Matrix.zeros(n, n);
+        Matrix A = new Matrix(n, n);
+        Matrix B = new Matrix(n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -156,7 +156,7 @@ public class MDS {
         }
 
         if (positive) {
-            DenseMatrix Z = Matrix.zeros(2 * n, 2 * n);
+            Matrix Z = new Matrix(2 * n, 2 * n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j < n; j++) {
                     Z.set(i, n + j, 2 * B.get(i, j));
@@ -175,7 +175,7 @@ public class MDS {
                 }
             }
 
-            double[] evalues = Z.eig();
+            double[] evalues = Z.eigen(false, false).wr;
             double c = MathEx.max(evalues);
 
             for (int i = 0; i < n; i++) {
@@ -188,27 +188,27 @@ public class MDS {
             }
         }
 
-        B.setSymmetric(true);
-        EVD eigen = B.eigen(k);
+        B.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = ARPACK.syev(B, k, ARPACK.SymmWhich.LA);
 
-        if (eigen.getEigenValues().length < k) {
-            logger.warn("eigen({}) returns only {} eigen vectors", k, eigen.getEigenValues().length);
-            k = eigen.getEigenValues().length;
+        if (eigen.wr.length < k) {
+            logger.warn("eigen({}) returns only {} eigen vectors", k, eigen.wr.length);
+            k = eigen.wr.length;
         }
 
         double[][] coordinates = new double[n][k];
         for (int j = 0; j < k; j++) {
-            if (eigen.getEigenValues()[j] < 0) {
+            if (eigen.wr[j] < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", k));
             }
 
-            double scale = Math.sqrt(eigen.getEigenValues()[j]);
+            double scale = Math.sqrt(eigen.wr[j]);
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = eigen.getEigenVectors().get(i, j) * scale;
+                coordinates[i][j] = eigen.Vr.get(i, j) * scale;
             }
         }
 
-        double[] eigenvalues = eigen.getEigenValues();
+        double[] eigenvalues = eigen.wr;
         double[] proportion = eigenvalues.clone();
         MathEx.unitize1(proportion);
 

@@ -77,7 +77,7 @@ public class OutputLayer extends Layer {
 
     @Override
     public void backpropagate(double[] error) {
-        weight.atx(gradient, error);
+        weight.tv(gradient, error);
     }
 
     /**

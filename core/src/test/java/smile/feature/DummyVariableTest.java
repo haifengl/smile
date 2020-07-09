@@ -74,7 +74,7 @@ public class DummyVariableTest {
         };
 
         Formula formula = Formula.rhs(onehot());
-        DataFrame df = formula.apply(WeatherNominal.data);
+        DataFrame df = formula.frame(WeatherNominal.data);
         System.out.println(df);
 
         for (int i = 0; i < result.length; i++) {

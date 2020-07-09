@@ -53,7 +53,7 @@ public class HiddenLayer extends Layer {
     public void backpropagate(double[] error) {
         f.g(gradient, output);
         if (error != null) {
-            weight.atx(gradient, error);
+            weight.tv(gradient, error);
         }
     }
 }

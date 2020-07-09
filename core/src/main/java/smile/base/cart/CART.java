@@ -219,7 +219,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
         for (int j = 0; j < p; j++) {
             Measure measure = schema.field(j).measure;
-            if (measure == null || !(measure instanceof NominalScale)) {
+            if (!(measure instanceof NominalScale)) {
                 x.column(j).toDoubleArray(a);
                 order[j] = QuickSort.sort(a);
             }

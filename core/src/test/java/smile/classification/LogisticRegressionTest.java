@@ -68,10 +68,10 @@ public class LogisticRegressionTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        int[] prediction = LOOCV.classification(WeatherNominal.x, WeatherNominal.y, (x, y) -> LogisticRegression.fit(x, y));
+        int[] prediction = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y, (x, y) -> LogisticRegression.fit(x, y));
         int error = Error.of(WeatherNominal.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(8, error);
+        assertEquals(4, error);
     }
 
     @Test

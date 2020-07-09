@@ -199,6 +199,7 @@ public class KDTreeTest {
 
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Benchmark: %.2fs%n", time);
+        assertTrue(time < 0.25);
     }
 
     @Test(expected = Test.None.class)

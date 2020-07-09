@@ -21,9 +21,8 @@ import java.io.Serializable;
 import java.util.Properties;
 import smile.math.DifferentiableFunction;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
 import smile.projection.ica.Exp;
 import smile.projection.ica.LogCosh;
 import smile.stat.distribution.GaussianDistribution;
@@ -141,7 +140,7 @@ public class ICA implements Serializable {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        DenseMatrix projection = Matrix.zeros(p, m);
+        Matrix projection = new Matrix(p, m);
 
         GaussianDistribution g = new GaussianDistribution(0, 1);
         double[][] W = new double[p][n];
@@ -152,7 +151,7 @@ public class ICA implements Serializable {
             MathEx.unitize(W[i]);
         }
 
-        DenseMatrix X = whiten(data);
+        Matrix X = whiten(data);
         double[] wold = new double[n];
         double[] wdif = new double[n];
         double[] gwX = new double[m];
@@ -167,7 +166,7 @@ public class ICA implements Serializable {
 
                 // Calculate derivative of projection
                 double[] wX = new double[m];
-                X.atx(w, wX);
+                X.tv(w, wX);
 
                 double g2 = 0.0;
                 for (int j = 0; j < m; j++) {
@@ -179,7 +178,7 @@ public class ICA implements Serializable {
                     g2w[j] = w[j] * g2;
                 }
 
-                X.ax(gwX, w);
+                X.mv(gwX, w);
 
                 for (int j = 0; j < n; j++) {
                     w[j] = (w[j] - g2w[j]) / m;
@@ -228,10 +227,10 @@ public class ICA implements Serializable {
      * @param data the raw data.
      * @return the whitened data
      */
-    private static DenseMatrix whiten(double[][] data) {
+    private static Matrix whiten(double[][] data) {
         // covariance matrix on centered data.
         double[] mean = MathEx.rowMeans(data);
-        DenseMatrix X = Matrix.of(data);
+        Matrix X = new Matrix(data);
         int n = X.nrows();
         int m = X.ncols();
         for (int j = 0; j < m; j++) {
@@ -240,13 +239,13 @@ public class ICA implements Serializable {
             }
         }
 
-        DenseMatrix XXt = X.aat();
-        XXt.setSymmetric(true);
-        EVD eigen = XXt.eigen();
-        DenseMatrix E = eigen.getEigenVectors();
-        DenseMatrix Y = E.atbmm(X);
+        Matrix XXt = X.aat();
+        XXt.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = XXt.eigen();
+        Matrix E = eigen.Vr;
+        Matrix Y = E.tm(X);
 
-        double[] d = eigen.getEigenValues();
+        double[] d = eigen.wr;
         for (int i = 0; i < d.length; i++) {
             if (d[i] < 1E-8) {
                 throw new IllegalArgumentException(String.format("Covariance matrix (column %d) is close to singular.", i));

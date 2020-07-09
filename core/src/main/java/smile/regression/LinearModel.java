@@ -18,12 +18,14 @@
 package smile.regression;
 
 import java.util.Arrays;
+
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 import smile.stat.Hypothesis;
 
@@ -66,6 +68,10 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * The schema of design matrix.
      */
     StructType schema;
+    /**
+     * The predictors of design matrix.
+     */
+    String[] predictors;
     /**
      * The dimensionality.
      */
@@ -136,7 +142,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * First initialized to the matrix (X<sup>T</sup>X)<sup>-1</sup>,
      * it is updated with each new learning instance.
      */
-    DenseMatrix V;
+    Matrix V;
 
     /** Package-wise constructor. */
     LinearModel() {
@@ -272,15 +278,15 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             TSS += MathEx.sqr(y[i] - ym);
         }
 
-        error = Math.sqrt(RSS / (n - p - 1));
-        df = n - p - 1;
+        error = Math.sqrt(RSS / (n - p));
+        df = n - p;
 
         RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p-1));
+        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
 
-        F = (TSS - RSS) * (n - p - 1) / (RSS * p);
-        int df1 = p;
-        int df2 = n - p - 1;
+        F = (TSS - RSS) * (n - p) / (RSS * (p - 1));
+        int df1 = p - 1;
+        int df2 = n - p;
 
         if (df2 > 0) {
             pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
@@ -301,27 +307,34 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     @Override
     public double predict(Tuple x) {
-        return predict(formula.xarray(x));
+        boolean bias = b == 0.0;
+        return predict(formula.x(x).toArray(bias, CategoricalEncoder.DUMMY));
     }
 
     @Override
     public double[] predict(DataFrame df) {
-        DenseMatrix X = formula.matrix(df, false);
-        double[] y = new double[X.nrows()];
-        Arrays.fill(y, b);
-        X.axpy(w, y);
-        return y;
+        if (b == 0.0) {
+            Matrix X = formula.matrix(df, true);
+            return X.mv(w);
+        } else {
+            Matrix X = formula.matrix(df, false);
+            double[] y = new double[X.nrows()];
+            Arrays.fill(y, b);
+            X.mv(1.0, w, 1.0, y);
+            return y;
+        }
     }
 
     /** Online update the regression model with a new training instance. */
     public void update(Tuple data) {
-        update(formula.xarray(data), formula.y(data));
+        boolean bias = b == 0.0;
+        update(formula.x(data).toArray(bias, CategoricalEncoder.DUMMY), formula.y(data));
     }
 
     /** Online update the regression model with a new data frame. */
     public void update(DataFrame data) {
         // Don't use data.stream, which may run in parallel.
-        // However, update is not multi-thread safe
+        // However, update is not multi-thread safe.
         int n = data.size();
         for (int i = 0; i < n; i++) {
             update(data.get(i));
@@ -368,34 +381,28 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
         }
 
-        double[] x1 = new double[p+1];
-        System.arraycopy(x, 0, x1, 0, p);
-        x1[p] = 1;
-
-        double v = 1 + V.xax(x1);
+        double v = 1 + V.xAx(x);
         // If 1/v is NaN, then the update to V will no longer be invertible.
         // See https://en.wikipedia.org/wiki/Sherman%E2%80%93Morrison_formula#Statement
         if (Double.isNaN(1/v)){
             throw new IllegalStateException("The updated V matrix is no longer invertible.");
         }
 
-        double[] Vx = new double[p+1];
-        V.ax(x1, Vx);
-        for (int j = 0; j <= p; j++) {
-            for (int i = 0; i <= p; i++) {
+        double[] Vx = V.mv(x);
+        for (int j = 0; j < p; j++) {
+            for (int i = 0; i < p; i++) {
                 double tmp = V.get(i, j) - ((Vx[i] * Vx[j])/v);
                 V.set(i, j, tmp/lambda);
             }
         }
 
         // V has been updated. Compute Vx again.
-        V.ax(x1, Vx);
+        V.mv(x, Vx);
 
         double err = y - predict(x);
         for (int i = 0; i < p; i++){
             w[i] += Vx[i] * err;
         }
-        b += Vx[p] * err;
     }
 
     @Override
@@ -411,22 +418,23 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
             builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
-            if (ttest.length > p) {
-                builder.append(String.format("Intercept       %10.4f %10.4f %10.4f %10.4f %s%n", ttest[p][0], ttest[p][1], ttest[p][2], ttest[p][3], Hypothesis.significance(ttest[p][3])));
-            } else {
+            if (b != 0.0) {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", schema.fieldName(i), ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], Hypothesis.significance(ttest[i][3])));
+                builder.append(String.format("%-15s %10.4f %10.4f %10.4f %10.4f %s%n", predictors[i], ttest[i][0], ttest[i][1], ttest[i][2], ttest[i][3], Hypothesis.significance(ttest[i][3])));
             }
 
             builder.append("---------------------------------------------------------------------\n");
             builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
         } else {
-            builder.append(String.format("Intercept       %10.4f%n", b));
+            if (b != 0.0) {
+                builder.append(String.format("Intercept       %10.4f%n", b));
+            }
+
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("%-15s %10.4f%n", schema.fieldName(i), w[i]));
+                builder.append(String.format("%-15s %10.4f%n", predictors[i], w[i]));
             }
         }
 

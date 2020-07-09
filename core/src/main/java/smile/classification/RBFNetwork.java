@@ -20,8 +20,6 @@ package smile.classification;
 import smile.base.rbf.RBF;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
 import smile.math.rbf.RadialBasisFunction;
 import smile.util.IntSet;
 
@@ -99,7 +97,7 @@ public class RBFNetwork<T> implements Classifier<T> {
     /**
      * The linear weights.
      */
-    private DenseMatrix w;
+    private Matrix w;
     /**
      * The radial basis function.
      */
@@ -120,7 +118,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param w the weights of RBFs.
      * @param normalized True if this is a normalized RBF network.
      */
-    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized) {
+    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized) {
         this(k, rbf, w, normalized, IntSet.of(k));
     }
 
@@ -132,7 +130,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param normalized True if this is a normalized RBF network.
      * @param labels class labels
      */
-    public RBFNetwork(int k, RBF<T>[] rbf, DenseMatrix w, boolean normalized, IntSet labels) {
+    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
         this.k = k;
         this.rbf = rbf;
         this.w = w;
@@ -169,8 +167,8 @@ public class RBFNetwork<T> implements Classifier<T> {
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = Matrix.zeros(n, m+1);
-        DenseMatrix b = Matrix.zeros(n, k);
+        Matrix G = new Matrix(n, m+1);
+        Matrix b = new Matrix(n, k);
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
@@ -188,10 +186,10 @@ public class RBFNetwork<T> implements Classifier<T> {
             }
         }
 
-        QR qr = G.qr();
+        Matrix.QR qr = G.qr();
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submat(0, 0, m+1, k), normalized, codec.labels);
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);
     }
 
     /** Returns true if the model is  normalized. */
@@ -209,7 +207,7 @@ public class RBFNetwork<T> implements Classifier<T> {
         }
 
         double[] sumw = new double[k];
-        w.atx(f, sumw);
+        w.tv(f, sumw);
 
         return labels.valueOf(MathEx.whichMax(sumw));
     }
