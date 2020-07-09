@@ -105,7 +105,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
         }
 
         W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, k, ARPACK.SymmWhich.LA);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
         double[][] Y = eigen.Vr.toArray();
         for (int i = 0; i < n; i++) {
             MathEx.unitize2(Y[i]);
@@ -242,7 +242,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
 
         Matrix W = C.submatrix(0, 0, l-1, l-1);
         W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(W, k, ARPACK.SymmWhich.LA);
+        Matrix.EVD eigen = ARPACK.syev(W, ARPACK.SymmOption.LA, k);
         double[] e = eigen.wr;
         double scale = Math.sqrt((double)l / n);
         for (int i = 0; i < k; i++) {

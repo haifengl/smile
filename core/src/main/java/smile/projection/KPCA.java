@@ -165,7 +165,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         }
 
         K.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(K, k, ARPACK.SymmWhich.LA);;
+        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, k);;
 
         double[] eigvalues = eigen.wr;
         Matrix eigvectors = eigen.Vr;
