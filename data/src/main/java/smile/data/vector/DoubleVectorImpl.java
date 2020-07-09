@@ -96,7 +96,7 @@ class DoubleVectorImpl implements DoubleVector {
     public DoubleVector get(int... index) {
         double[] v = new double[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new DoubleVectorImpl(name, v);
+        return new DoubleVectorImpl(field(), v);
     }
 
     @Override

@@ -112,7 +112,7 @@ class VectorImpl<T> implements Vector<T> {
         @SuppressWarnings("unchecked")
         T[] v = (T[]) java.lang.reflect.Array.newInstance(vector.getClass().getComponentType(), index.length);
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new VectorImpl<>(name, type, v);
+        return new VectorImpl<>(field(), v);
     }
 
     @Override

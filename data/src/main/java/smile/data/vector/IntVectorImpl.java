@@ -102,7 +102,7 @@ class IntVectorImpl implements IntVector {
     public IntVector get(int... index) {
         int[] v = new int[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new IntVectorImpl(name, v);
+        return new IntVectorImpl(field(), v);
     }
 
     @Override
