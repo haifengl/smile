@@ -27,6 +27,7 @@ import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
+import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianDistribution;
 
 import static smile.math.blas.Diag.*;
@@ -254,22 +255,20 @@ public class FloatMatrix extends SMatrix {
      * Returns a random matrix of standard normal distribution.
      */
     public static FloatMatrix randn(int m, int n) {
-        return randn(m, n, 0.0f, 1.0f);
+        return rand(m, n, GaussianDistribution.getInstance());
     }
 
     /**
-     * Returns a random matrix of normal distribution.
+     * Returns a random matrix.
      *
-     * @param mu the mean of normal distribution.
-     * @param sigma the standard deviation of normal distribution.
+     * @param distribution the distribution of random number.
      */
-    public static FloatMatrix randn(int m, int n, float mu, float sigma) {
+    public static FloatMatrix rand(int m, int n, Distribution distribution) {
         FloatMatrix matrix = new FloatMatrix(m, n);
-        GaussianDistribution g = new GaussianDistribution(mu, sigma);
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                matrix.set(i, j, (float) g.rand());
+                matrix.set(i, j, (float) distribution.rand());
             }
         }
 
@@ -300,6 +299,7 @@ public class FloatMatrix extends SMatrix {
     public static FloatMatrix toeplitz(float[] a) {
         int n = a.length;
         FloatMatrix toeplitz = new FloatMatrix(n, n);
+        toeplitz.uplo(LOWER);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -308,6 +308,34 @@ public class FloatMatrix extends SMatrix {
 
             for (int j = i; j < n; j++) {
                 toeplitz.set(i, j, a[j - i]);
+            }
+        }
+
+        return toeplitz;
+    }
+
+    /**
+     * Returns a Toeplitz matrix in which each descending diagonal
+     * from left to right is constant.
+     *
+     * @param kl A[i, j] = kl[i - j] for i >  j
+     * @param ku A[i, j] = ku[j - i] for i <= j
+     */
+    public static FloatMatrix toeplitz(float[] kl, float[] ku) {
+        if (kl.length != ku.length - 1) {
+            throw new IllegalArgumentException(String.format("Invalid subdiagonals and superdiagonals size: %d != %d - 1", kl.length, ku.length));
+        }
+
+        int n = kl.length;
+        FloatMatrix toeplitz = new FloatMatrix(n, n);
+
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < i; j++) {
+                toeplitz.set(i, j, kl[i - j]);
+            }
+
+            for (int j = i; j < n; j++) {
+                toeplitz.set(i, j, ku[j - i]);
             }
         }
 
