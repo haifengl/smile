@@ -59,7 +59,7 @@ public class ARPACKTest {
         }
         
         SparseMatrix a = new SparseMatrix(A, 1E-7);
-        Matrix.EVD eig = ARPACK.syev(a, 6, ARPACK.SymmOption.LA);
+        Matrix.EVD eig = ARPACK.syev(a, ARPACK.SymmOption.LA, 6);
         assertEquals(2.0, eig.wr[0], 1E-4);
         assertEquals(2.0, eig.wr[1], 1E-4);
         assertEquals(2.0, eig.wr[2], 1E-4);
