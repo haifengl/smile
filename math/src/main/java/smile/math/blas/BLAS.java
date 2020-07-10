@@ -127,6 +127,9 @@ public interface BLAS {
      * elements of respectively vector x and y. When working backward
      * (incx < 0 or incy < 0), each  routine  starts  at the end of the
      * vector and moves backward.
+     * <p>
+     * When  n <= 0, or alpha = 0., this routine returns immediately
+     * with no change in its arguments.
      *
      * @param n Number of elements in the vectors. If n <= 0, these routines
      *          return without any computation.
@@ -145,9 +148,6 @@ public interface BLAS {
      *
      * @param incy Increment between elements of y.
      *             If incy = 0, the results will be unpredictable.
-     *
-     * @return When  n <= 0, or alpha = 0., this routine returns immediately
-     *         with no change in its arguments.
      */
     void axpy(int n, double alpha, double[] x, int incx, double[] y, int incy);
 
@@ -158,6 +158,9 @@ public interface BLAS {
      * elements of respectively vector x and y. When working backward
      * (incx < 0 or incy < 0), each  routine  starts  at the end of the
      * vector and moves backward.
+     * <p>
+     * When  n <= 0, or alpha = 0., this routine returns immediately
+     * with no change in its arguments.
      *
      * @param n Number of elements in the vectors. If n <= 0, these routines
      *          return without any computation.
@@ -176,9 +179,6 @@ public interface BLAS {
      *
      * @param incy Increment between elements of y.
      *             If incy = 0, the results will be unpredictable.
-     *
-     * @return When  n <= 0, or alpha = 0., this routine returns immediately
-     *         with no change in its arguments.
      */
     void axpy(int n, float alpha, float[] x, int incx, float[] y, int incy);
 
