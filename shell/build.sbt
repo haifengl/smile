@@ -14,7 +14,11 @@ packageName := "smile"
 packageSummary := "Statistical Machine Intelligence and Learning Engine"
 packageDescription :=
   """
-    |
+    |Smile is a fast and comprehensive machine learning, NLP, linear algebra,
+    |graph, interpolation, and visualization system in Java and Scala.
+    |With advanced data structures and algorithms, Smile delivers
+    |state-of-art performance. Smile is well documented and please check out
+    |the project website for programming guides and more information.
     |""".stripMargin
 
 // dealing with long classpaths
@@ -47,6 +51,6 @@ buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-compiler" % "2.13.2",
+  "org.scala-lang" % "scala-compiler" % "2.13.3",
   "org.slf4j" % "slf4j-simple" % "1.7.30"
 )
