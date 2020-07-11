@@ -37,12 +37,7 @@ public interface LAPACK {
     /** Creates an instance. */
     static LAPACK getInstance() {
         LAPACK mkl = MKL();
-
-        if (mkl != null) {
-            return mkl;
-        } else {
-            return OpenBLAS();
-        }
+        return mkl != null ? mkl : new smile.math.blas.openblas.OpenBLAS();
     }
 
     /** Creates an MKL instance. */
@@ -55,21 +50,6 @@ public interface LAPACK {
             return (LAPACK) clazz.newInstance();
         } catch (Exception e) {
             logger.debug("Failed to create MKL instance: ", e);
-        }
-
-        return null;
-    }
-
-    /** Creates an OpenBLAS instance. */
-    static LAPACK OpenBLAS() {
-        org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LAPACK.class);
-
-        try {
-            Class<?> clazz = Class.forName("smile.math.blas.openblas.OpenBLAS");
-            logger.info("smile-openblas module is available.");
-            return (LAPACK) clazz.newInstance();
-        } catch (Exception e) {
-            logger.debug("Failed to create OpenBLAS instance: ", e);
         }
 
         return null;
