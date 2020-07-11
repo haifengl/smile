@@ -147,10 +147,10 @@ public class RandomForestTest {
     public void testAll() {
         test("CPU", CPU.formula, CPU.data, 75.0190);
         test("2dplanes", Planes.formula, Planes.data, 1.3574);
-        test("abalone", Abalone.formula, Abalone.train, 2.1911);
+        test("abalone", Abalone.formula, Abalone.train, 2.1932);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 2.8868);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5632);
         test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
