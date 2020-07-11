@@ -43,7 +43,7 @@ import smile.util._
 object USPS {
 
   def main(args: Array[String]): Unit = {
-    benchmark
+    benchmark()
   }
 
   def benchmark(): Unit = {
@@ -54,7 +54,7 @@ object USPS {
     (1 to 256).foreach(i => fields.add(new StructField("V" + i, DataTypes.DoubleType)))
     val schema = DataTypes.struct(fields)
 
-    val formula: Formula = "class" ~
+    val formula: Formula = "class" ~ "."
     val zipTrain = read.csv(Paths.getTestData("usps/zip.train").toString, delimiter = ' ', header = false, schema = schema)
     val zipTest = read.csv(Paths.getTestData("usps/zip.test").toString, delimiter = ' ', header = false, schema = schema)
     val x = formula.x(zipTrain).toArray(false, CategoricalEncoder.ONE_HOT)
