@@ -205,7 +205,7 @@ package object classification {
     * @param y training labels in [0, c), where c is the number of classes.
     * @param k the number of neighbors for classification.
     */
-  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time("K-Nearnest Neighbor") {
+  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time("K-Nearest Neighbor") {
     KNN.fit(x, y, k)
   }
 
