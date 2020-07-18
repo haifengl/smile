@@ -33,7 +33,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-final class Intercept implements Term {
+final class Intercept implements HyperTerm {
     /** The flag if the model has the intercept. */
     private final boolean flag;
 
