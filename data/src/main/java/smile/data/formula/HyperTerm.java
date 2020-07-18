@@ -24,19 +24,16 @@ import java.util.Set;
 import smile.data.type.StructType;
 
 /**
- * A term is recursively constructed from constant symbols,
- * variables and function symbols. A formula consists of a series
- * of terms. To be concise, we also allow HyperTerms that can be
- * can be expanded to multiple simple terms.
+ * An abstract term in the formula. A term is recursively constructed
+ * from constant symbols, variables and function symbols. A formula
+ * consists of a series of terms. To be concise, we also allow
+ * HyperTerms that can be can be expanded to multiple simple terms.
  *
  * @author Haifeng Li
  */
 public interface HyperTerm extends Serializable {
     /** Binds the term to a schema. */
-    void bind(StructType schema);
-
-    /** Returns the list of terms after expanding the hyperterm. */
-    List<? extends Term> terms();
+    List<? extends Term>  bind(StructType schema);
 
     /** Returns the list of variables used in this term. */
     Set<String> variables();
