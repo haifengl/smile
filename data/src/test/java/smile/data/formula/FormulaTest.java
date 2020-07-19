@@ -211,11 +211,11 @@ public class FormulaTest {
         StructType outputSchema = formula.bind(inputSchema);
         StructType schema = DataTypes.struct(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
+                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
                 new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
                 new StructField("water:wind", DataTypes.IntegerType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
-                new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
-                new StructField("sowing_density:wind", DataTypes.IntegerType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong")),
-                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
+                new StructField("sowing_density:wind", DataTypes.IntegerType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong"))
         );
         assertEquals(schema, outputSchema);
 
@@ -225,12 +225,12 @@ public class FormulaTest {
         outputSchema = formula.bind(inputSchema);
         schema = DataTypes.struct(
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
-                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
-                new StructField("water:sowing_density:wind", DataTypes.IntegerType, new NominalScale("dry:low:weak", "dry:low:strong", "dry:high:weak", "dry:high:strong", "wet:low:weak", "wet:low:strong", "wet:high:weak", "wet:high:strong")),
-                new StructField("water:wind", DataTypes.IntegerType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
+                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong")),
+                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
+                new StructField("water:wind", DataTypes.IntegerType, new NominalScale("dry:weak", "dry:strong", "wet:weak", "wet:strong")),
                 new StructField("sowing_density:wind", DataTypes.IntegerType, new NominalScale("low:weak", "low:strong", "high:weak", "high:strong")),
-                new StructField("wind", DataTypes.ByteType, new NominalScale("weak", "strong"))
+                new StructField("water:sowing_density:wind", DataTypes.IntegerType, new NominalScale("dry:low:weak", "dry:low:strong", "dry:high:weak", "dry:high:strong", "wet:low:weak", "wet:low:strong", "wet:high:weak", "wet:high:strong"))
         );
         assertEquals(schema, outputSchema);
     }
@@ -248,59 +248,19 @@ public class FormulaTest {
                 new StructField("wind", DataTypes.FloatType)
         );
         assertEquals("revenue ~ . + (water x sowing_density) + (humidity * wind) - wind", formula.toString());
+        System.out.println(formula.expand(inputSchema));
 
         StructType outputSchema = formula.bind(inputSchema);
         StructType schema = DataTypes.struct(
-                new StructField("revenue", DataTypes.DoubleType, Measure.Currency),
                 new StructField("humidity", DataTypes.FloatType, Measure.Percent),
                 new StructField("water", DataTypes.ByteType, new NominalScale("dry", "wet")),
                 new StructField("sowing_density", DataTypes.ByteType, new NominalScale("low", "high")),
-                new StructField("water_dry-sowing_density_low", DataTypes.ByteType),
-                new StructField("water_wet-sowing_density_low", DataTypes.ByteType),
-                new StructField("water_dry-sowing_density_high", DataTypes.ByteType),
-                new StructField("water_wet-sowing_density_high", DataTypes.ByteType),
+                new StructField("water:sowing_density", DataTypes.IntegerType, new NominalScale("dry:low", "dry:high", "wet:low", "wet:high")),
                 new StructField("humidity * wind", DataTypes.FloatType)
         );
         assertEquals(schema, outputSchema);
     }
 
-    /*
-    @Test
-    public void testFormulaOneHot() {
-        System.out.println("one-hot");
-        Formula formula = Formula.rhs(onehot("gender"));
-        assertEquals(" ~ one-hot(gender)", formula.toString());
-
-        DataFrame output = formula.frame(df);
-        System.out.println(output);
-        assertEquals(df.size(), output.size());
-        assertEquals(2, output.ncols());
-        assertEquals(1, output.getByte(0,0));
-        assertEquals(0, output.getByte(0,1));
-        assertEquals(1, output.getByte(1,0));
-        assertEquals(0, output.getByte(1,1));
-        assertEquals(0, output.getByte(2,0));
-        assertEquals(1, output.getByte(2,1));
-        assertEquals(0, output.getByte(3,0));
-        assertEquals(1, output.getByte(3,1));
-    }
-
-    @Test
-    public void testFormulaDummy() {
-        System.out.println("dummy");
-        Formula formula = Formula.rhs(dummy("gender"));
-        assertEquals(" ~ dummy(gender)", formula.toString());
-
-        DataFrame output = formula.frame(df);
-        System.out.println(output);
-        assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
-        assertEquals(0, output.getByte(0,0));
-        assertEquals(0, output.getByte(1,0));
-        assertEquals(1, output.getByte(2,0));
-        assertEquals(1, output.getByte(3,0));
-    }
-*/
     @Test
     public void testFormulaDate() {
         System.out.println("date");

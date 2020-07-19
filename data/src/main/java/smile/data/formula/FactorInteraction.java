@@ -58,6 +58,11 @@ public class FactorInteraction implements Term {
         this.factors = Arrays.asList(factors);
     }
 
+    /** Returns the number of factors in the interaction. */
+    public int size() {
+        return factors.size();
+    }
+
     @Override
     public String toString() {
         return factors.stream().collect(Collectors.joining(":"));

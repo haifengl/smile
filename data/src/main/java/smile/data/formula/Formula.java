@@ -211,21 +211,28 @@ public class Formula implements Serializable {
         for (Term predictor : predictors) {
             if (predictor instanceof Dot) {
                 expanded.addAll(rest);
-            } else {
-                expanded.add(predictor);
+            } else if (!(predictor instanceof Delete)) {
+                expanded.addAll(predictor.expand());
             }
         }
 
+        Set<String> deletes = Arrays.stream(predictors)
+                .filter(predictor -> predictor instanceof Delete)
+                .flatMap(predictor -> predictor.expand().stream())
+                .map(term -> term.toString().substring(2)) // Delete starts with "- "
+                .collect(Collectors.toSet());
+
+        expanded.removeIf(term -> deletes.contains(term.toString()));
         return new Formula(response, expanded.toArray(new Term[expanded.size()]));
     }
 
     /**
-     * Binds the formula to a schema and returns the output schema of formula.
+     * Binds the formula to a schema and returns the design matrix schema.
      * @param inputSchema the schema to bind with
      */
     public StructType bind(StructType inputSchema) {
         if (binding != null && binding.inputSchema == inputSchema) {
-            return binding.yxschema != null ? binding.yxschema : binding.xschema;
+            return binding.xschema;
         }
 
         Formula formula = expand(inputSchema);
@@ -238,12 +245,6 @@ public class Formula implements Serializable {
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
                 .collect(Collectors.toList());
 
-        List<Feature> deletes = Arrays.stream(formula.predictors)
-                .filter(predictor -> predictor instanceof Delete)
-                .flatMap(predictor -> predictor.bind(inputSchema).stream())
-                .collect(Collectors.toList());
-
-        features.removeAll(deletes);
         binding.x = features.toArray(new Feature[features.size()]);
         binding.xschema = DataTypes.struct(
                 features.stream()
@@ -265,7 +266,7 @@ public class Formula implements Serializable {
             }
         }
 
-        return binding.yxschema != null ? binding.yxschema : binding.xschema;
+        return binding.xschema;
     }
 
     /**

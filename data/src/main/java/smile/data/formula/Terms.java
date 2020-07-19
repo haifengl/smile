@@ -763,8 +763,6 @@ public interface Terms {
 
     /** Returns a constant object term. */
     static Term val(final Object x) {
-        final DataType type = DataType.of(x.getClass());
-
         return new Constant() {
             @Override
             public String toString() {
