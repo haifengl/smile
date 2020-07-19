@@ -18,6 +18,7 @@
 package smile.data.type;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NumericalMeasure;
@@ -92,7 +93,7 @@ public class StructField implements Serializable {
     public boolean equals(Object o) {
         if (o instanceof StructField) {
             StructField f = (StructField) o;
-            return name.equals(f.name) && type.equals(f.type);
+            return name.equals(f.name) && type.equals(f.type) && Objects.equals(measure, f.measure);
         }
 
         return false;

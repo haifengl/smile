@@ -18,24 +18,18 @@
 package smile.data.formula;
 
 import smile.data.Tuple;
-import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.data.vector.*;
 import smile.data.DataFrame;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 
 /**
- * A term bound to a schema. A term returns a single value
+ * A feature in the formula once bound to a schema. A feature returns a single value
  * when applied to a data object (e.g. Tuple).
  *
  * @author Haifeng Li
  */
-public interface Term {
-    /** Returns the field meta data of output variable. */
+public interface Feature {
+    /** Returns the meta data of feature. */
     StructField field();
 
     /** Applies the term on a data object. */
@@ -81,7 +75,7 @@ public interface Term {
         throw new UnsupportedOperationException();
     }
 
-    /** Returns true if the term represents a plain variable. */
+    /** Returns true if the term represents a plain variable/column in the data frame. */
     default boolean isVariable() {
         return false;
     }

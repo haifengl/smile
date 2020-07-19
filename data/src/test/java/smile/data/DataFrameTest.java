@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
+import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
@@ -125,7 +126,7 @@ public class DataFrameTest {
         smile.data.type.StructType schema = DataTypes.struct(
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
-                new StructField("gender", DataTypes.ByteType),
+                new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
                 new StructField("name", DataTypes.StringType),
                 new StructField("salary", DataTypes.object(Double.class))
         );

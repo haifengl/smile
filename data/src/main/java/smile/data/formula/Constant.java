@@ -19,7 +19,6 @@ package smile.data.formula;
 
 import java.util.Collections;
 import java.util.Set;
-import smile.data.type.StructType;
 
 /**
  * A constant value in the formula.
@@ -28,17 +27,7 @@ import smile.data.type.StructType;
  */
 public abstract class Constant implements Term {
     @Override
-    public boolean isConstant() {
-        return true;
-    }
-
-    @Override
     public Set<String> variables() {
         return Collections.emptySet();
-    }
-
-    @Override
-    public void bind(StructType schema) {
-        // nop
     }
 }

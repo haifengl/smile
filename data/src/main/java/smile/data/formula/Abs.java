@@ -17,8 +17,11 @@
 
 package smile.data.formula;
 
+import java.util.ArrayList;
+import java.util.List;
 import smile.data.Tuple;
 import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -26,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Abs extends AbstractFunction {
+public class Abs extends AbstractFunction {
     /**
      * Constructor.
      *
@@ -37,51 +40,58 @@ class Abs extends AbstractFunction {
     }
 
     @Override
-    public Object apply(Tuple o) {
-        Object y = x.apply(o);
-        if (y == null) return null;
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
 
-        if (y instanceof Double) return Math.abs((double) y);
-        else if (y instanceof Integer) return Math.abs((int) y);
-        else if (y instanceof Float) return Math.abs((float) y);
-        else if (y instanceof Long) return Math.abs((long) y);
-        else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
-    }
+        for (Feature feature : x.bind(schema)) {
+            StructField xfield = feature.field();
+            DataType type = xfield.type;
+            if (!(type.isInt() ||  type.isLong() ||  type.isDouble() || type.isFloat())) {
+                throw new IllegalStateException(String.format("Invalid expression: abs(%s)", type));
+            }
 
-    @Override
-    public int applyAsInt(Tuple o) {
-        return Math.abs(x.applyAsInt(o));
-    }
+            features.add(new Feature() {
+                StructField field = new StructField(String.format("abs(%s)", xfield.name), xfield.type, xfield.measure);
 
-    @Override
-    public long applyAsLong(Tuple o) {
-        return Math.abs(x.applyAsLong(o));
-    }
+                @Override
+                public StructField field() {
+                    return field;
+                }
 
-    @Override
-    public float applyAsFloat(Tuple o) {
-        return Math.abs(x.applyAsFloat(o));
-    }
+                @Override
+                public Object apply(Tuple o) {
+                    Object y = feature.apply(o);
+                    if (y == null) return null;
 
-    @Override
-    public double applyAsDouble(Tuple o) {
-        return Math.abs(x.applyAsDouble(o));
-    }
+                    if (y instanceof Double) return Math.abs((double) y);
+                    else if (y instanceof Integer) return Math.abs((int) y);
+                    else if (y instanceof Float) return Math.abs((float) y);
+                    else if (y instanceof Long) return Math.abs((long) y);
+                    else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
+                }
 
-    @Override
-    public DataType type() {
-        return x.type();
-    }
+                @Override
+                public int applyAsInt(Tuple o) {
+                    return Math.abs(feature.applyAsInt(o));
+                }
 
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
+                @Override
+                public long applyAsLong(Tuple o) {
+                    return Math.abs(feature.applyAsLong(o));
+                }
 
-        if (!(x.type().isInt() ||
-              x.type().isLong() ||
-              x.type().isDouble() ||
-              x.type().isFloat())) {
-            throw new IllegalStateException(String.format("Invalid expression: abs(%s)", x.type()));
+                @Override
+                public float applyAsFloat(Tuple o) {
+                    return Math.abs(feature.applyAsFloat(o));
+                }
+
+                @Override
+                public double applyAsDouble(Tuple o) {
+                    return Math.abs(feature.applyAsDouble(o));
+                }
+            });
         }
+
+        return features;
     }
 }

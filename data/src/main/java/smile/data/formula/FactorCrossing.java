@@ -30,12 +30,12 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class FactorCrossing implements HyperTerm {
+class FactorCrossing implements Term {
     /** The order of interactions. */
     private int order;
     /** The children factors. */
     private List<String> factors;
-    /** The terms after binding. */
+    /** The terms. */
     private List<Term> terms;
 
     /**
@@ -57,7 +57,7 @@ class FactorCrossing implements HyperTerm {
     @SafeVarargs
     public FactorCrossing(int order, String... factors) {
         if (factors.length < 2) {
-            throw new IllegalArgumentException("Cross constructor takes at least two factors");
+            throw new IllegalArgumentException("FactorCrossing takes at least two factors");
         }
 
         if (order < 2 || order > factors.length) {
@@ -66,6 +66,30 @@ class FactorCrossing implements HyperTerm {
 
         this.order = order;
         this.factors = Arrays.asList(factors);
+
+        terms = new ArrayList<>();
+        String[] work = new String[order];
+        combination(terms, factors, work, order, 0, factors.length-1, 0);
+    }
+
+    /**
+     * Generates all combinations of `order` elements in the array `factors`.
+     */
+    private static void combination(List<Term> terms, String factors[], String data[], int order, int start, int end, int index) {
+        if (index == order) {
+            return;
+        }
+
+        for (int i = start; i <= end; i++) {
+            data[index] = factors[i];
+            if (index == 0) {
+                terms.add(new Variable(data[index]));
+            } else {
+                terms.add(new FactorInteraction(Arrays.copyOf(data, index+1)));
+            }
+
+            combination(terms, factors, data, order, i+1, end, index+1);
+        }
     }
 
     @Override
@@ -78,64 +102,16 @@ class FactorCrossing implements HyperTerm {
     }
 
     @Override
-    public List<? extends Term> terms() {
-        return terms;
-    }
-
-    @Override
     public Set<String> variables() {
         return new HashSet<>(factors);
     }
 
     @Override
-    public void bind(StructType schema) {
-        List<List<DummyVariable>> encoders = new ArrayList<>();
-
-        OneHot factor = new OneHot(factors.get(factors.size() - 1));
-        factor.bind(schema);
-        encoders.addAll(factor.terms().stream()
-                        .map(term -> Collections.singletonList(term))
-                        .collect(Collectors.toList())
-        );
-
-        for (int i = factors.size() - 2; i >= 0; i--) {
-            factor = new OneHot(factors.get(i));
-            factor.bind(schema);
-            List<DummyVariable> terms = factor.terms();
-
-            // combine terms with existing combinations
-            encoders.addAll(encoders.stream().flatMap(list ->
-                    terms.stream().map(term -> {
-                        List<DummyVariable> newList = new ArrayList<>();
-                        newList.add(term);
-                        newList.addAll(list);
-                        return newList;
-                    })
-            ).collect(Collectors.toList()));
-
-            // add new single terms
-            encoders.addAll(terms.stream()
-                    .map(term -> Collections.singletonList(term))
-                    .collect(Collectors.toList())
-            );
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
+        for (Term term : terms) {
+            features.addAll(term.bind(schema));
         }
-
-        // add single factor terms
-        terms = factors.stream()
-                .map(name -> {
-                    Variable column = new Variable(name);
-                    column.bind(schema);
-                    return column;
-                })
-                .collect(Collectors.toList());
-
-        // add interactions in ascending order
-        for (int i = 2; i <= order; i++) {
-            final int size = i;
-            terms.addAll(encoders.stream()
-                    .filter(list -> list.size() == size)
-                    .map(list -> new DummyInteraction(list))
-                    .collect(Collectors.toList()));
-        }
+        return features;
     }
 }

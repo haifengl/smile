@@ -20,7 +20,6 @@ package smile.data.formula;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -62,9 +61,9 @@ public class Formula implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
 
     /** The left-hand side of formula. */
-    private HyperTerm response;
+    private Term response;
     /** The right-hand side of formula. */
-    private HyperTerm[] predictors;
+    private Term[] predictors;
     /** The formula-schema binding. */
     private transient Binding binding;
 
@@ -77,9 +76,9 @@ public class Formula implements Serializable {
         /** The output schema with only predictors. */
         StructType xschema;
         /** The response variable and predictors. */
-        Term[] yx;
+        Feature[] yx;
         /** The predictors. */
-        Term[] x;
+        Feature[] x;
     }
 
     /**
@@ -87,7 +86,7 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public Formula(HyperTerm response, HyperTerm... predictors) {
+    public Formula(Term response, Term... predictors) {
         if (response instanceof Dot || response instanceof FactorCrossing) {
             throw new IllegalArgumentException("The response variable cannot be '.' or FactorCrossing.");
         }
@@ -102,7 +101,7 @@ public class Formula implements Serializable {
     }
 
     /** Returns the response term. */
-    public Optional<HyperTerm> response() {
+    public Optional<Term> response() {
         return Optional.ofNullable(response);
     }
 
@@ -133,7 +132,7 @@ public class Formula implements Serializable {
      * in the formula in the context of a data frame.
      * @param lhs the left-hand side of formula, i.e. dependent variable.
      */
-    public static Formula lhs(HyperTerm lhs) {
+    public static Formula lhs(Term lhs) {
         return new Formula(lhs, new Dot());
     }
 
@@ -149,7 +148,7 @@ public class Formula implements Serializable {
      * Factory method. No response variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula rhs(HyperTerm... predictors) {
+    public static Formula rhs(Term... predictors) {
         return new Formula(null, predictors);
     }
 
@@ -166,7 +165,7 @@ public class Formula implements Serializable {
                     if (predictor.equals("1")) return new Intercept(true);
                     if (predictor.equals("0")) return new Intercept(false);
                     return new Variable(predictor);
-                }).toArray(HyperTerm[]::new)
+                }).toArray(Term[]::new)
         );
     }
 
@@ -175,7 +174,7 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula of(String response, HyperTerm... predictors) {
+    public static Formula of(String response, Term... predictors) {
         return new Formula(new Variable(response), predictors);
     }
 
@@ -184,7 +183,7 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula of(HyperTerm response, HyperTerm... predictors) {
+    public static Formula of(Term response, Term... predictors) {
         return new Formula(response, predictors);
     }
 
@@ -208,8 +207,8 @@ public class Formula implements Serializable {
                 .map(field -> new Variable(field.name))
                 .collect(Collectors.toList());
 
-        List<HyperTerm> expanded = new ArrayList<>();
-        for (HyperTerm predictor : predictors) {
+        List<Term> expanded = new ArrayList<>();
+        for (Term predictor : predictors) {
             if (predictor instanceof Dot) {
                 expanded.addAll(rest);
             } else {
@@ -217,7 +216,7 @@ public class Formula implements Serializable {
             }
         }
 
-        return new Formula(response, expanded.toArray(new HyperTerm[expanded.size()]));
+        return new Formula(response, expanded.toArray(new Term[expanded.size()]));
     }
 
     /**
@@ -234,30 +233,30 @@ public class Formula implements Serializable {
         binding = new Binding();
         binding.inputSchema = inputSchema;
 
-        List<Term> terms = Arrays.stream(formula.predictors)
-                .filter(predictor -> !(predictor instanceof Delete))
+        List<Feature> features = Arrays.stream(formula.predictors)
+                .filter(predictor -> !(predictor instanceof Delete) && !(predictor instanceof Intercept))
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
                 .collect(Collectors.toList());
 
-        List<Term> removes = Arrays.stream(formula.predictors)
+        List<Feature> deletes = Arrays.stream(formula.predictors)
                 .filter(predictor -> predictor instanceof Delete)
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
                 .collect(Collectors.toList());
 
-        terms.removeAll(removes);
-        binding.x = terms.toArray(new Term[terms.size()]);
+        features.removeAll(deletes);
+        binding.x = features.toArray(new Feature[features.size()]);
         binding.xschema = DataTypes.struct(
-                terms.stream()
+                features.stream()
                      .map(term -> term.field())
                      .toArray(StructField[]::new)
         );
 
         if (response != null) {
             try {
-                terms.addAll(0, response.bind(inputSchema));
-                binding.yx = terms.toArray(new Term[terms.size()]);
+                features.addAll(0, response.bind(inputSchema));
+                binding.yx = features.toArray(new Feature[features.size()]);
                 binding.yxschema = DataTypes.struct(
-                        terms.stream()
+                        features.stream()
                              .map(term -> term.field())
                              .toArray(StructField[]::new)
                 );
@@ -399,7 +398,7 @@ public class Formula implements Serializable {
                 .findAny();
 
         if (intercept.isPresent()) {
-            bias = intercept.get().isInclulded();
+            bias = intercept.get().bias();
         }
 
         return matrix(df, bias);

@@ -711,11 +711,10 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * encoded as Double.NaN. No bias term and uses level encoding
      * for categorical variables.
      */
-    /*
     default double[][] toArray() {
         return toArray(false, CategoricalEncoder.LEVEL);
     }
-*/
+
     /**
      * Return an array obtained by converting all the variables
      * in a data frame to numeric mode and then binding them together
@@ -1149,6 +1148,28 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                 x[i] = data[i][j];
             }
             vectors[j] = DoubleVector.of(names[j], x);
+        }
+        return DataFrame.of(vectors);
+    }
+
+    /**
+     * Creates a DataFrame from a 2-dimensional array.
+     * @param data The data array.
+     * @param names the name of columns.
+     */
+    static DataFrame of(float[][] data, String... names) {
+        int p = data[0].length;
+        if (names == null || names.length == 0) {
+            names = IntStream.range(1, p+1).mapToObj(i -> "V"+i).toArray(String[]::new);
+        }
+
+        FloatVector[] vectors = new FloatVector[p];
+        for (int j = 0; j < p; j++) {
+            float[] x = new float[data.length];
+            for (int i = 0; i < x.length; i++) {
+                x[i] = data[i][j];
+            }
+            vectors[j] = FloatVector.of(names[j], x);
         }
         return DataFrame.of(vectors);
     }

@@ -23,7 +23,7 @@ lazy val commonSettings = Seq(
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
   },
-  publishArtifact in Test := false ,
+  publishArtifact in Test := false,
   publishMavenStyle := true,
   pomIncludeRepository := { _ => false },
   pomExtra := (
