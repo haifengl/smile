@@ -22,8 +22,6 @@ import java.util.List;
 import java.util.Set;
 
 import smile.data.Tuple;
-import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -34,7 +32,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-final class Variable implements HyperTerm {
+final class Variable implements Term {
     /** The variable name. */
     private final String name;
 
@@ -45,6 +43,11 @@ final class Variable implements HyperTerm {
      */
     public Variable(String name) {
         this.name = name;
+    }
+
+    /** Returns the variable name. */
+    public String name() {
+        return name;
     }
 
     @Override
@@ -71,12 +74,8 @@ final class Variable implements HyperTerm {
     }
 
     @Override
-    public List<Term> bind(StructType schema) {
-        Term term = new Term() {
-            /** Data type of variable. Only available after calling bind(). */
-            private DataType type;
-            /** The level of measurements. */
-            private Measure measure;
+    public List<Feature> bind(StructType schema) {
+        Feature feature = new Feature() {
             /** The column index in the schema. */
             private int index = schema.fieldIndex(name);
             /** The struct field. */
@@ -118,6 +117,6 @@ final class Variable implements HyperTerm {
             }
         };
 
-        return Collections.singletonList(term);
+        return Collections.singletonList(feature);
     }
 }

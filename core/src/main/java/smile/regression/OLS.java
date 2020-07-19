@@ -114,6 +114,7 @@ public class OLS {
      * @param recursive if true, the return model supports recursive least squares.
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
+        formula = formula.expand(data.schema());
         Matrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 

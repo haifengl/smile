@@ -31,9 +31,9 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public interface HyperTerm extends Serializable {
+public interface Term extends Serializable {
     /** Binds the term to a schema. */
-    List<? extends Term>  bind(StructType schema);
+    List<Feature>  bind(StructType schema);
 
     /** Returns the list of variables used in this term. */
     Set<String> variables();

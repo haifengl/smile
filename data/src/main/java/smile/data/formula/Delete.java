@@ -26,16 +26,16 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Delete implements HyperTerm {
+class Delete implements Term {
     /** The term to delete. */
-    HyperTerm x;
+    Term x;
 
     /**
      * Constructor.
      *
      * @param x the term to delete.
      */
-    public Delete(HyperTerm x) {
+    public Delete(Term x) {
         this.x = x;
     }
 
@@ -45,13 +45,8 @@ class Delete implements HyperTerm {
     }
 
     @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
-    }
-
-    @Override
-    public List<? extends Term> terms() {
-        return x.terms();
+    public List<Feature> bind(StructType schema) {
+        throw new IllegalStateException("Delete.bind() should not be called.");
     }
 
     @Override

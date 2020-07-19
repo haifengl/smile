@@ -29,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Dot implements HyperTerm {
+class Dot implements Term {
     /** All columns in the schema. */
     private List<Variable> columns;
 
@@ -46,21 +46,12 @@ class Dot implements HyperTerm {
     }
 
     @Override
-    public List<Variable> terms() {
-        return columns;
-    }
-
-    @Override
     public Set<String> variables() {
         return columns.stream().map(Variable::name).collect(Collectors.toSet());
     }
 
     @Override
-    public void bind(StructType schema) {
-        columns = Arrays.stream(schema.fields())
-                .map(field -> new Variable(field.name))
-                .collect(Collectors.toList());
-
-        columns.forEach(column -> column.bind(schema));
+    public List<Feature>  bind(StructType schema) {
+        throw new IllegalStateException("Dot.bind() should not be called.");
     }
 }

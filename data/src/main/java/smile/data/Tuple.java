@@ -51,11 +51,10 @@ public interface Tuple extends Serializable {
     }
 
     /** Returns the tuple as an array of doubles. */
-    /*
     default double[] toArray() {
         return toArray(false, CategoricalEncoder.LEVEL);
     }
-*/
+
     /**
      * Return an array obtained by converting all the variables
      * in a data frame to numeric mode. Missing values/nulls will be

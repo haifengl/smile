@@ -17,7 +17,11 @@
 
 package smile.data.formula;
 
+import java.util.ArrayList;
+import java.util.List;
 import smile.data.Tuple;
+import smile.data.type.DataType;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -25,7 +29,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Mul extends Operator {
+public class Mul extends Operator {
     /**
      * Constructor.
      *
@@ -37,37 +41,74 @@ class Mul extends Operator {
     }
 
     @Override
-    public int applyAsInt(Tuple o) {
-        return a.applyAsInt(o) * b.applyAsInt(o);
-    }
-
-    @Override
-    public long applyAsLong(Tuple o) {
-        return a.applyAsLong(o) * b.applyAsLong(o);
-    }
-
-    @Override
-    public float applyAsFloat(Tuple o) {
-        return a.applyAsFloat(o) * b.applyAsFloat(o);
-    }
-
-    @Override
-    public double applyAsDouble(Tuple o) {
-        return a.applyAsDouble(o) * b.applyAsDouble(o);
-    }
-
-    @Override
-    public void bind(StructType schema) {
-        super.bind(schema);
-
-        if (type.isInt()) {
-            lambda = (Tuple o) -> a.applyAsInt(o) * b.applyAsInt(o);
-        } else if (type.isLong()) {
-            lambda = (Tuple o) -> a.applyAsLong(o) * b.applyAsLong(o);
-        } else if (type.isFloat()) {
-            lambda = (Tuple o) -> a.applyAsFloat(o) * b.applyAsFloat(o);
-        } else if (type.isDouble()) {
-            lambda = (Tuple o) -> a.applyAsDouble(o) * b.applyAsDouble(o);
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
+        List<Feature> xfeatures = x.bind(schema);
+        List<Feature> yfeatures = y.bind(schema);
+        if (xfeatures.size() != yfeatures.size()) {
+            throw new IllegalStateException(String.format("The features of %s and %s are of different size: %d != %d", x, y, xfeatures.size(), yfeatures.size()));
         }
+
+        for (int i = 0; i < xfeatures.size(); i++) {
+            Feature a = xfeatures.get(i);
+            StructField xfield = a.field();
+            DataType xtype = xfield.type;
+            Feature b = yfeatures.get(i);
+            StructField yfield = b.field();
+            DataType ytype = yfield.type;
+
+            if (!(xtype.isInt() ||  xtype.isLong() ||  xtype.isDouble() || xtype.isFloat() ||
+                  ytype.isInt() ||  ytype.isLong() ||  ytype.isDouble() || ytype.isFloat() )) {
+                throw new IllegalStateException(String.format("Invalid expression: %s * %s", xtype, ytype));
+            }
+
+            features.add(new Feature() {
+                StructField field = new StructField(String.format("%s * %s", xfield.name, yfield.name),
+                        DataType.prompt(xfield.type, yfield.type),
+                        null);
+
+                java.util.function.Function<Tuple, Object> lambda =
+                        field.type.isInt()    ? (Tuple o) -> a.applyAsInt(o)    * b.applyAsInt(o) :
+                        field.type.isLong()   ? (Tuple o) -> a.applyAsLong(o)   * b.applyAsLong(o) :
+                        field.type.isFloat()  ? (Tuple o) -> a.applyAsFloat(o)  * b.applyAsFloat(o) :
+                        field.type.isDouble() ? (Tuple o) -> a.applyAsDouble(o) * b.applyAsDouble(o) :
+                        null;
+
+                @Override
+                public StructField field() {
+                    return field;
+                }
+
+                @Override
+                public Object apply(Tuple o) {
+                    Object x = a.apply(o);
+                    Object y = b.apply(o);
+                    if (x == null || y == null) return null;
+                    else return lambda.apply(o);
+                }
+
+                @Override
+                public int applyAsInt(Tuple o) {
+                    return a.applyAsInt(o) * b.applyAsInt(o);
+                }
+
+                @Override
+                public long applyAsLong(Tuple o) {
+                    return a.applyAsLong(o) * b.applyAsLong(o);
+                }
+
+                @Override
+                public float applyAsFloat(Tuple o) {
+                    return a.applyAsFloat(o) * b.applyAsFloat(o);
+                }
+
+                @Override
+                public double applyAsDouble(Tuple o) {
+                    return a.applyAsDouble(o) * b.applyAsDouble(o);
+                }
+            });
+        }
+
+        return features;
     }
 }

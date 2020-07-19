@@ -30,23 +30,4 @@ public abstract class AbstractTerm implements Term {
     public AbstractTerm() {
 
     }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this) {
-            return true;
-        }
-
-        if (o instanceof Term) {
-            Term t = (Term) o;
-            return name().equals(t.name());
-        }
-
-        return false;
-    }
-
-    @Override
-    public int hashCode() {
-        return name().hashCode();
-    }
 }
