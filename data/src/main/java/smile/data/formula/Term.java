@@ -18,6 +18,7 @@
 package smile.data.formula;
 
 import java.io.Serializable;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
@@ -37,4 +38,9 @@ public interface Term extends Serializable {
 
     /** Returns the list of variables used in this term. */
     Set<String> variables();
+
+    /** Expands the term (e.g. FactorCrossing). */
+    default List<Term> expand() {
+        return Collections.singletonList(this);
+    }
 }

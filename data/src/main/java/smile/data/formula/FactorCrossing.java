@@ -70,6 +70,12 @@ class FactorCrossing implements Term {
         terms = new ArrayList<>();
         String[] work = new String[order];
         combination(terms, factors, work, order, 0, factors.length-1, 0);
+        Comparator<Term> compareBySize = (Term o1, Term o2) -> {
+            int n1 = o1 instanceof FactorInteraction ? ((FactorInteraction) o1).size() : 1;
+            int n2 = o2 instanceof FactorInteraction ? ((FactorInteraction) o2).size() : 1;
+            return n1 - n2;
+        };
+        Collections.sort(terms, compareBySize);
     }
 
     /**
@@ -104,6 +110,11 @@ class FactorCrossing implements Term {
     @Override
     public Set<String> variables() {
         return new HashSet<>(factors);
+    }
+
+    @Override
+    public List<Term> expand() {
+        return terms;
     }
 
     @Override

@@ -80,11 +80,6 @@ public interface Feature {
         return false;
     }
 
-    /** Returns true if the term represents a constant value. */
-    default boolean isConstant() {
-        return false;
-    }
-
     default BaseVector apply(DataFrame df) {
         StructField field = field();
 

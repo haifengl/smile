@@ -111,4 +111,40 @@ public class FormulaTest {
         assertEquals("overcast:hot:normal", output.getString(12, 0));
         assertEquals("rainy:mild:high", output.getString(13, 0));
     }
+
+    @Test
+    public void testCrossing() {
+        System.out.println("crossing");
+
+        Formula formula = Formula.rhs(cross(2, "outlook", "temperature", "humidity"));
+        assertEquals(" ~ (outlook x temperature x humidity)^2", formula.toString());
+
+        DataFrame output = formula.frame(weather);
+        System.out.println(output);
+
+        StructType schema = DataTypes.struct(
+                new StructField("outlook", DataTypes.ByteType, new NominalScale("sunny", "overcast", "rainy")),
+                new StructField("temperature", DataTypes.ByteType, new NominalScale("hot", "mild", "cool")),
+                new StructField("humidity", DataTypes.ByteType, new NominalScale("high", "normal")),
+                new StructField("outlook:temperature", DataTypes.IntegerType, new NominalScale("sunny:hot", "sunny:mild", "sunny:cool", "overcast:hot", "overcast:mild", "overcast:cool", "rainy:hot", "rainy:mild", "rainy:cool")),
+                new StructField("outlook:humidity", DataTypes.IntegerType, new NominalScale("sunny:high", "sunny:normal", "overcast:high", "overcast:normal", "rainy:high", "rainy:normal")),
+                new StructField("temperature:humidity", DataTypes.IntegerType, new NominalScale("hot:high", "hot:normal", "mild:high", "mild:normal", "cool:high", "cool:normal"))
+        );
+        assertEquals(schema, output.schema());
+
+        assertEquals("sunny:hot", output.getString(0, 3));
+        assertEquals("sunny:hot", output.getString(1, 3));
+        assertEquals("overcast:hot", output.getString(2, 3));
+        assertEquals("rainy:mild", output.getString(3, 3));
+        assertEquals("rainy:cool", output.getString(4, 3));
+        assertEquals("rainy:cool", output.getString(5, 3));
+        assertEquals("overcast:cool", output.getString(6, 3));
+        assertEquals("sunny:mild", output.getString(7, 3));
+        assertEquals("sunny:cool", output.getString(8, 3));
+        assertEquals("rainy:mild", output.getString(9, 3));
+        assertEquals("sunny:mild", output.getString(10, 3));
+        assertEquals("overcast:mild", output.getString(11, 3));
+        assertEquals("overcast:hot", output.getString(12, 3));
+        assertEquals("rainy:mild", output.getString(13, 3));
+    }
 }

@@ -19,6 +19,8 @@ package smile.data.formula;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+
 import smile.data.type.StructType;
 
 /**
@@ -52,5 +54,10 @@ class Delete implements Term {
     @Override
     public Set<String> variables() {
         return x.variables();
+    }
+
+    @Override
+    public List<Term> expand() {
+        return x.expand().stream().map(term -> new Delete(term)).collect(Collectors.toList());
     }
 }
