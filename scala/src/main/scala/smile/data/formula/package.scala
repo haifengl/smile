@@ -26,12 +26,10 @@ package object formula {
   implicit def buildFactorInteraction(x: FactorInteractionBuilder) = x.toFactorInteraction
   implicit def buildFactorCrossing(x: FactorCrossingBuilder) = x.toFactorCrossing
   implicit def pimpFormulaString(x: String) = PimpedFormulaString(x)
-  implicit def pimpHyperTerm(x: HyperTerm) = PimpedHyperTerm(x)
+  implicit def pimpHyperTerm(x: Term) = PimpedHyperTerm(x)
   implicit def pimpTerm(x: Term) = PimpedTerm(x)
 
-  def dot(): HyperTerm = Terms.dot()
-  def onehot(factors: String*): HyperTerm = Terms.onehot(factors: _*)
-  def dummy(factors: String*): HyperTerm = Terms.dummy(factors: _*)
+  def dot(): Term = Terms.dot()
   def abs(x: String): Term = Terms.abs($(x))
   def ceil(x: String): Term = Terms.ceil($(x))
   def floor(x: String): Term = Terms.floor($(x))
