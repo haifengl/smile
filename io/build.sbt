@@ -13,6 +13,6 @@ libraryDependencies ++= {
     // SAS7BDAT
     "com.epam" % "parso" % "2.0.11",
     "org.apache.commons" % "commons-csv" % "1.8",
-    "org.xerial" % "sqlite-jdbc" % "3.30.1" % Test
+    "org.xerial" % "sqlite-jdbc" % "3.32.3.1" % Test
   )
 }
