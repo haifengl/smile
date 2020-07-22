@@ -24,7 +24,11 @@ import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.LinearKernel;
 import smile.math.kernel.SparseLinearKernel;
 
-/** Linear kernel machine. */
+/**
+ * Linear kernel machine.
+ *
+ * @author Haifeng Li
+ */
 public class LinearKernelMachine implements Serializable {
     private static final long serialVersionUID = 2L;
 

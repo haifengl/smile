@@ -24,6 +24,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import smile.data.CategoricalEncoder;
 import smile.plot.swing.Canvas;
 import smile.manifold.LLE;
 import smile.plot.swing.Wireframe;
@@ -41,7 +42,7 @@ public class LLEDemo extends ManifoldDemo {
     @Override
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray();
+        double[][] data = dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT);
         if (data.length > 1000) {
             double[][] x = new double[1000][];
             for (int i = 0; i < 1000; i++)

@@ -22,11 +22,11 @@ package smile.math.distance;
  * non-negativity, isolation, and symmetry, it also has to satisfy triangular
  * inequality.
  * <ul>
- * <li> non-negativity: d(x, y) &ge; 0
- * <li> isolation: d(x, y) = 0 if and only if x = y
- * <li> symmetry: d(x, y) = d(x, y)
- * <li> triangular inequality: d(x, y) + d(y, z) &ge; d(x, z).
- * </ul>.
+ * <li> non-negativity: <code>d(x, y) &ge; 0</code>
+ * <li> isolation: <code>d(x, y) = 0</code> if and only if <code>x = y</code>
+ * <li> symmetry: <code>d(x, y) = d(x, y)</code>
+ * <li> triangular inequality: <code>d(x, y) + d(y, z) &ge; d(x, z)</code>.
+ * </ul>
  *
  * @author Haifeng Li
  */

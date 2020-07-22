@@ -17,10 +17,15 @@
 
 package smile.data.formula;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.function.*;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
 
 /**
  * Predefined terms.
@@ -29,13 +34,21 @@ import smile.data.type.DataTypes;
  */
 public interface Terms {
     /** Returns a variable. */
-    static Variable $(String x) {
-        return new Variable(x);
+    static Term $(String x) {
+        if (x.equals("0"))
+            return new Intercept(false);
+        else if (x.equals("1"))
+            return new Intercept(true);
+        else
+            return new Variable(x);
     }
 
-    /** Returns all columns not otherwise in the formula. */
-    static All all() {
-        return new All();
+    /**
+     * Returns the special term "." that means all columns not otherwise
+     * in the formula in the context of a data frame.
+     */
+    static Dot dot() {
+        return new Dot();
     }
 
     /** Factor interaction of two or more factors. */
@@ -53,19 +66,17 @@ public interface Terms {
         return new FactorCrossing(order, factors);
     }
 
-    /** Deletes a variable from the formula. */
-    static Delete delete(String x) {
-        return delete($(x));
+    /** Deletes a variable or the intercept ("1") from the formula. */
+    static Term delete(String x) {
+        if (x.equals("1"))
+            return new Intercept(false);
+        else
+            return delete($(x));
     }
 
     /** Deletes a term from the formula. */
     static Delete delete(Term x) {
         return new Delete(x);
-    }
-
-    /** One-hot encoding of nominal factors. */
-    static OneHot onehot(String... factors) {
-        return new OneHot(factors);
     }
 
     /** Extracts date/time features. */
@@ -408,22 +419,31 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.BooleanType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.BooleanType, null);
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
+
+                    @Override
+                    public boolean applyAsBoolean(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -433,37 +453,31 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.CharType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.CharType, null);
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public char applyAsChar(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -473,37 +487,56 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.ByteType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.ByteType, null);
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public byte applyAsByte(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public short applyAsShort(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public int applyAsInt(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public long applyAsLong(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public float applyAsFloat(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -513,37 +546,51 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.ShortType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.ShortType, null);
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public short applyAsShort(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public int applyAsInt(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public long applyAsLong(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public float applyAsFloat(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -553,37 +600,46 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.IntegerType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.IntegerType, null);
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public int applyAsInt(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public long applyAsLong(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public float applyAsFloat(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -593,32 +649,41 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.LongType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.LongType, null);
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public long applyAsLong(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public float applyAsFloat(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -628,32 +693,36 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.FloatType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.FloatType, null);
 
-            @Override
-            public float applyAsFloat(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public float applyAsFloat(Tuple o) {
+                        return x;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -663,54 +732,60 @@ public interface Terms {
         return new Constant() {
             @Override
             public String toString() {
-                return name();
-            }
-
-            @Override
-            public String name() {
                 return String.valueOf(x);
             }
 
             @Override
-            public DataType type() {
-                return DataTypes.DoubleType;
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataTypes.DoubleType, null);
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return x;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public double applyAsDouble(Tuple o) {
+                        return x;
+                    }
+
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
 
     /** Returns a constant object term. */
     static Term val(final Object x) {
-        final DataType type = DataType.of(x.getClass());
-
         return new Constant() {
             @Override
             public String toString() {
-                return name();
+                return String.valueOf(x);
             }
 
             @Override
-            public String name() {
-                return x.toString();
-            }
+            public List<Feature> bind(StructType schema) {
+                Feature feature = new Feature() {
+                    private StructField field = new StructField(String.valueOf(x), DataType.of(x.getClass()), null);
 
-            @Override
-            public DataType type() {
-                return type;
-            }
+                    @Override
+                    public StructField field() {
+                        return field;
+                    }
 
-            @Override
-            public Object apply(Tuple o) {
-                return x;
+                    @Override
+                    public Object apply(Tuple o) {
+                        return x;
+                    }
+                };
+
+                return Collections.singletonList(feature);
             }
         };
     }
@@ -735,33 +810,46 @@ public interface Terms {
     static <T> Term of(final String name, final Term x, ToIntFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
-            public DataType type() {
-                return DataTypes.IntegerType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return f.applyAsInt((T) x.apply(o));
-            }
+                for (Feature feature : x.bind(schema)) {
+                    features.add(new Feature() {
+                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.IntegerType, null);
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return f.applyAsInt((T) x.apply(o));
-            }
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
 
-            @Override
-            public float applyAsFloat(Tuple o) {
-                return f.applyAsInt((T) x.apply(o));
-            }
+                        @Override
+                        public int applyAsInt(Tuple o) {
+                            return f.applyAsInt((T) feature.apply(o));
+                        }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return f.applyAsInt((T) x.apply(o));
-            }
+                        @Override
+                        public long applyAsLong(Tuple o) {
+                            return f.applyAsInt((T) feature.apply(o));
+                        }
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsInt((T) x.apply(o));
+                        @Override
+                        public float applyAsFloat(Tuple o) {
+                            return f.applyAsInt((T) feature.apply(o));
+                        }
+
+                        @Override
+                        public double applyAsDouble(Tuple o) {
+                            return f.applyAsInt((T) feature.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            return f.applyAsInt((T) feature.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -786,28 +874,41 @@ public interface Terms {
     static <T> Term of(final String name, final Term x, ToLongFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
-            public DataType type() {
-                return DataTypes.LongType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return f.applyAsLong((T) x.apply(o));
-            }
+                for (Feature feature : x.bind(schema)) {
+                    features.add(new Feature() {
+                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.LongType, null);
 
-            @Override
-            public float applyAsFloat(Tuple o) {
-                return f.applyAsLong((T) x.apply(o));
-            }
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return f.applyAsLong((T) x.apply(o));
-            }
+                        @Override
+                        public long applyAsLong(Tuple o) {
+                            return f.applyAsLong((T) feature.apply(o));
+                        }
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsLong((T) x.apply(o));
+                        @Override
+                        public float applyAsFloat(Tuple o) {
+                            return f.applyAsLong((T) feature.apply(o));
+                        }
+
+                        @Override
+                        public double applyAsDouble(Tuple o) {
+                            return f.applyAsLong((T) feature.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            return f.applyAsLong((T) feature.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -832,18 +933,31 @@ public interface Terms {
     static <T> Term of(final String name, final Term x, ToDoubleFunction<T> f) {
         return new AbstractFunction(name, x) {
             @Override
-            public DataType type() {
-                return DataTypes.DoubleType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return f.applyAsDouble((T) x.apply(o));
-            }
+                for (Feature feature : x.bind(schema)) {
+                    features.add(new Feature() {
+                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.DoubleType, null);
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsDouble((T) x.apply(o));
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public double applyAsDouble(Tuple o) {
+                            return f.applyAsDouble((T) feature.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            return f.applyAsDouble((T) feature.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -870,13 +984,26 @@ public interface Terms {
     static <T, R> Term of(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
         return new AbstractFunction(name, x) {
             @Override
-            public DataType type() {
-                return DataTypes.object(clazz);
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.apply((T) x.apply(o));
+                for (Feature feature : x.bind(schema)) {
+                    features.add(new Feature() {
+                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.object(clazz), null);
+
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            return f.apply((T) feature.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -903,18 +1030,46 @@ public interface Terms {
     static <T, U> Term of(final String name, final Term x, final Term y, ToIntBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
-            public DataType type() {
-                return DataTypes.IntegerType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
+                List<Feature> xfeatures = x.bind(schema);
+                List<Feature> yfeatures = y.bind(schema);
+                if (xfeatures.size() != yfeatures.size()) {
+                    throw new IllegalStateException(String.format("The features of %s and %s are of different size: %d != %d", x, y, xfeatures.size(), yfeatures.size()));
+                }
 
-            @Override
-            public int applyAsInt(Tuple o) {
-                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
-            }
+                for (int i = 0; i < xfeatures.size(); i++) {
+                    Feature a = xfeatures.get(i);
+                    StructField xfield = a.field();
+                    Feature b = yfeatures.get(i);
+                    StructField yfield = b.field();
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsInt((T) x.apply(o), (U) y.apply(o));
+                    features.add(new Feature() {
+                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                                DataTypes.IntegerType,
+                                null);
+
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public int applyAsInt(Tuple o) {
+                            return f.applyAsInt((T) a.apply(o), (U) b.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            Object x = a.apply(o);
+                            Object y = b.apply(o);
+                            if (x == null || y == null) return null;
+                            else return f.applyAsInt((T) a.apply(o), (U) b.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -941,18 +1096,46 @@ public interface Terms {
     static <T, U> Term of(final String name, final Term x, final Term y, ToLongBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
-            public DataType type() {
-                return DataTypes.LongType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
+                List<Feature> xfeatures = x.bind(schema);
+                List<Feature> yfeatures = y.bind(schema);
+                if (xfeatures.size() != yfeatures.size()) {
+                    throw new IllegalStateException(String.format("The features of %s and %s are of different size: %d != %d", x, y, xfeatures.size(), yfeatures.size()));
+                }
 
-            @Override
-            public long applyAsLong(Tuple o) {
-                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
-            }
+                for (int i = 0; i < xfeatures.size(); i++) {
+                    Feature a = xfeatures.get(i);
+                    StructField xfield = a.field();
+                    Feature b = yfeatures.get(i);
+                    StructField yfield = b.field();
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsLong((T) x.apply(o), (U) y.apply(o));
+                    features.add(new Feature() {
+                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                                DataTypes.LongType,
+                                null);
+
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public long applyAsLong(Tuple o) {
+                            return f.applyAsLong((T) a.apply(o), (U) b.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            Object x = a.apply(o);
+                            Object y = b.apply(o);
+                            if (x == null || y == null) return null;
+                            else return f.applyAsLong((T) a.apply(o), (U) b.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -979,18 +1162,46 @@ public interface Terms {
     static <T, U> Term of(final String name, final Term x, final Term y, ToDoubleBiFunction<T, U> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
-            public DataType type() {
-                return DataTypes.DoubleType;
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
+                List<Feature> xfeatures = x.bind(schema);
+                List<Feature> yfeatures = y.bind(schema);
+                if (xfeatures.size() != yfeatures.size()) {
+                    throw new IllegalStateException(String.format("The features of %s and %s are of different size: %d != %d", x, y, xfeatures.size(), yfeatures.size()));
+                }
 
-            @Override
-            public double applyAsDouble(Tuple o) {
-                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
-            }
+                for (int i = 0; i < xfeatures.size(); i++) {
+                    Feature a = xfeatures.get(i);
+                    StructField xfield = a.field();
+                    Feature b = yfeatures.get(i);
+                    StructField yfield = b.field();
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.applyAsDouble((T) x.apply(o), (U) y.apply(o));
+                    features.add(new Feature() {
+                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                                DataTypes.DoubleType,
+                                null);
+
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public double applyAsDouble(Tuple o) {
+                            return f.applyAsDouble((T) a.apply(o), (U) b.apply(o));
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            Object x = a.apply(o);
+                            Object y = b.apply(o);
+                            if (x == null || y == null) return null;
+                            else return f.applyAsDouble((T) a.apply(o), (U) b.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }
@@ -1019,13 +1230,41 @@ public interface Terms {
     static <T, U, R> Term of(final String name, final Term x, final Term y, final Class<R> clazz, BiFunction<T, U, R> f) {
         return new AbstractBiFunction(name, x, y) {
             @Override
-            public DataType type() {
-                return DataTypes.object(clazz);
-            }
+            public List<Feature> bind(StructType schema) {
+                List<Feature> features = new ArrayList<>();
+                List<Feature> xfeatures = x.bind(schema);
+                List<Feature> yfeatures = y.bind(schema);
+                if (xfeatures.size() != yfeatures.size()) {
+                    throw new IllegalStateException(String.format("The features of %s and %s are of different size: %d != %d", x, y, xfeatures.size(), yfeatures.size()));
+                }
 
-            @Override
-            public Object apply(Tuple o) {
-                return f.apply((T) x.apply(o), (U) y.apply(o));
+                for (int i = 0; i < xfeatures.size(); i++) {
+                    Feature a = xfeatures.get(i);
+                    StructField xfield = a.field();
+                    Feature b = yfeatures.get(i);
+                    StructField yfield = b.field();
+
+                    features.add(new Feature() {
+                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                                DataTypes.object(clazz),
+                                null);
+
+                        @Override
+                        public StructField field() {
+                            return field;
+                        }
+
+                        @Override
+                        public Object apply(Tuple o) {
+                            Object x = a.apply(o);
+                            Object y = b.apply(o);
+                            if (x == null || y == null) return null;
+                            else return f.apply((T) a.apply(o), (U) b.apply(o));
+                        }
+                    });
+                }
+
+                return features;
             }
         };
     }

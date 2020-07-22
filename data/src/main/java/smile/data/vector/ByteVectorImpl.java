@@ -17,7 +17,7 @@
 
 package smile.data.vector;
 
-import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
@@ -46,7 +46,7 @@ class ByteVectorImpl implements ByteVector {
 
     /** Constructor. */
     public ByteVectorImpl(StructField field, byte[] vector) {
-        if (field.measure instanceof ContinuousMeasure) {
+        if (field.measure instanceof NumericalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -96,7 +96,7 @@ class ByteVectorImpl implements ByteVector {
     public ByteVector get(int... index) {
         byte[] v = new byte[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new ByteVectorImpl(name, v);
+        return new ByteVectorImpl(field(), v);
     }
 
     @Override

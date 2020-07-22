@@ -22,9 +22,10 @@ import smile.math.MathEx;
 /**
  * Gaussian variogram.
  * <p>
- * v(r) = c + b * (1 - e<sup>-3r<sup>2</sup>/a<sup>2</sup></sup>)
- * <p>
- * where a is the range parameter and b is sill paramter. The distance of two
+ * <pre>
+ *     v(r) = c + b * (1 - e<sup>-3r<sup>2</sup>/a<sup>2</sup></sup>)
+ * </pre>
+ * where a is the range parameter and b is sill parameter. The distance of two
  * pairs increase, the variogram of those two pairs also increase. Eventually,
  * the increase of the distance can not cause the variogram increase. The
  * distance which cause the variogram reach plateau is called range. The sill

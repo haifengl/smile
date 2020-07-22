@@ -17,7 +17,6 @@
 
 package smile.classification;
 
-import smile.data.measure.DiscreteMeasure;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.SparseArray;
@@ -66,12 +65,7 @@ import java.util.Arrays;
  * <p>
  * A third setting is Polya Urn model which simply
  * add twice for what is seen in training data instead of one time.
- * See reference for more detail.
- *
- * @see Distribution
- * @see LDA
- * @see QDA
- * @see RDA
+ * See reference for more details.
  *
  * <h2>References</h2>
  * <ol>
@@ -80,11 +74,16 @@ import java.util.Arrays;
  * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
  *
+ * @see Distribution
+ * @see LDA
+ * @see QDA
+ * @see RDA
+ *
  * @author Haifeng Li
  */
 public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteMeasure.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 
     /**
      * The generation models of naive Bayes classifier.

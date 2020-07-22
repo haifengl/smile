@@ -20,21 +20,23 @@ package smile.interpolation.variogram;
 import smile.math.MathEx;
 
 /**
- * Power variogram
+ * Power variogram.
  * <p>
- * v(r) = c + &alpha; r<sup>&beta;</sup>
- * <p>
+ * <pre>
+ *     v(r) = c + &alpha; r<sup>&beta;</sup>
+ * </pre>
  * where &beta; is fixed and &alpha; is fitted by unweighted least squares
  * over all pairs of data points. The value of &beta; should be in the range
- * 1 &le; &beta; &lt; 2. A good general choice is 1.5, but for functions with
- * a strong linear trend, we may experiment with values as large as 1.99.
+ * <code>1 &le; &beta; &lt; 2</code>. A good general choice is 1.5, but for
+ * functions with a strong linear trend, we may experiment with values as
+ * large as 1.99.
  * <p>
  * The parameter c is the so-called nugget effect. Though the value of the
- * variogram for h = 0 is strictly 0, several factors, such as sampling error
- * and short scale variability, may cause sample values separated by extremely
- * small distances to be quite dissimilar. This causes a discontinuity at the
- * origin of the variogram. The vertical jump from the value of 0 at the origin
- * to the value of the variogram at extremely small separation distances is
+ * variogram for <code>h = 0</code> is strictly 0, several factors, such as
+ * sampling error and short scale variability, may cause sample values separated
+ * by extremely small distances to be quite dissimilar. This causes a discontinuity
+ * at the origin of the variogram. The vertical jump from the value of 0 at the
+ * origin to the value of the variogram at extremely small separation distances is
  * called the nugget effect.
  *
  * @author Haifeng Li

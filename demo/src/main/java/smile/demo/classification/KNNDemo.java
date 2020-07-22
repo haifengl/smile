@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.classification.KNN;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -57,7 +58,7 @@ public class KNNDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         KNN<double[]> knn = KNN.fit(data, label, k);

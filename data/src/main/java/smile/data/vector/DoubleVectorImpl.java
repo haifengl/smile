@@ -17,7 +17,7 @@
 
 package smile.data.vector;
 
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
@@ -47,7 +47,7 @@ class DoubleVectorImpl implements DoubleVector {
 
     /** Constructor. */
     public DoubleVectorImpl(StructField field, double[] vector) {
-        if (field.measure instanceof DiscreteMeasure) {
+        if (field.measure instanceof CategoricalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -96,7 +96,7 @@ class DoubleVectorImpl implements DoubleVector {
     public DoubleVector get(int... index) {
         double[] v = new double[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new DoubleVectorImpl(name, v);
+        return new DoubleVectorImpl(field(), v);
     }
 
     @Override

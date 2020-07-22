@@ -26,7 +26,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public abstract class AbstractBiFunction extends AbstractTerm {
+public abstract class AbstractBiFunction implements Term {
     /** The name of function. */
     String name;
     /** The first parameter of function. */
@@ -48,13 +48,8 @@ public abstract class AbstractBiFunction extends AbstractTerm {
     }
 
     @Override
-    public String name() {
-        return String.format("%s(%s, %s)", name, x.name(), y.name());
-    }
-
-    @Override
     public String toString() {
-        return name();
+        return String.format("%s(%s, %s)", name, x, y);
     }
 
     @Override
@@ -62,11 +57,5 @@ public abstract class AbstractBiFunction extends AbstractTerm {
         Set<String> vars = new HashSet<>(x.variables());
         vars.addAll(y.variables());
         return vars;
-    }
-
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
-        y.bind(schema);
     }
 }

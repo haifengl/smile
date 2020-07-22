@@ -27,6 +27,7 @@ import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 
 /**
+ * Table column settings.
  *
  * @author Haifeng Li
  */

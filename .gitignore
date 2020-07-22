@@ -7,7 +7,7 @@
 .ipynb_checkpoints
 
 # javadoc
-docs
+doc/api
 web/node_modules/
 web/_site/
 

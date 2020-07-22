@@ -19,6 +19,11 @@ package smile.neighbor.lsh;
 
 import smile.stat.distribution.GaussianDistribution;
 
+/**
+ * Hash value Parzen model for multi-probe hash.
+ *
+ * @author Haifeng Li
+ */
 public class HashValueParzenModel {
 
     /**

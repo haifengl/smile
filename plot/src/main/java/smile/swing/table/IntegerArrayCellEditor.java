@@ -38,6 +38,8 @@ import javax.swing.text.DefaultFormatterFactory;
 /**
  * Implements a cell editor that uses a formatted text field
  * to edit int[] values.
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class IntegerArrayCellEditor extends DefaultCellEditor {

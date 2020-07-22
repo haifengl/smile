@@ -17,9 +17,12 @@
 
 package smile.data.formula;
 
+import java.util.ArrayList;
+import java.util.List;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -44,28 +47,41 @@ public class DoubleFunction extends AbstractFunction {
     }
 
     @Override
-    public DataType type() {
-        return x.type().id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType;
-    }
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
 
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
+        for (Feature feature : x.bind(schema)) {
+            StructField xfield = feature.field();
+            DataType type = xfield.type;
+            if (!(type.isDouble() || type.isFloat() || type.isInt() || type.isLong() || type.isShort() || type.isByte())) {
+                throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, type));
+            }
 
-        if (!(x.type().isDouble() || x.type().isFloat() || x.type().isInt() || x.type().isLong() || x.type().isShort() || x.type().isByte())) {
-            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, x.type()));
+            features.add(new Feature() {
+                StructField field = new StructField(
+                        String.format("%s(%s)", name, xfield.name),
+                        type.id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType,
+                        xfield.measure);
+
+                @Override
+                public StructField field() {
+                    return field;
+                }
+
+                @Override
+                public Double apply(Tuple o) {
+                    Object y = feature.apply(o);
+                    if (y == null) return null;
+                    else return lambda.apply(((Number) y).doubleValue());
+                }
+
+                @Override
+                public double applyAsDouble(Tuple o) {
+                    return lambda.apply(feature.applyAsDouble(o));
+                }
+            });
         }
-    }
 
-    @Override
-    public double applyAsDouble(Tuple o) {
-        return lambda.apply(x.applyAsDouble(o));
-    }
-
-    @Override
-    public Double apply(Tuple o) {
-        Object y = x.apply(o);
-        if (y == null) return null;
-        else return lambda.apply(((Number) y).doubleValue());
+        return features;
     }
 }

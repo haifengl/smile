@@ -99,7 +99,7 @@ public class SVMTest {
         int[] prediction = Validation.test(model, testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(131, error);
+        assertEquals(130, error);
     }
 
     @Test(expected = Test.None.class)
@@ -162,7 +162,7 @@ public class SVMTest {
         int[] prediction = Validation.test(model, testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(33, error);
+        assertEquals(34, error);
     }
 
     @Test(expected = Test.None.class)

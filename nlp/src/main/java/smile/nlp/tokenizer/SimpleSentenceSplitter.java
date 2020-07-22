@@ -42,13 +42,13 @@ import smile.nlp.dictionary.EnglishDictionary;
  * a quote or start a contraction such as 'tis. Leading-quote contractions
  * are uncommon in contemporary English texts, but appear frequently in Early
  * Modern English texts.
- *
+ * <p>
  * This tokenizer assumes that the text has already been segmented into
  * paragraphs. Any carriage returns will be replaced by whitespace.
  *
  * <h2>References</h2>
  * <ol>
- * <li> Paul Clough. A Perl program for sentence splitting using rules. <li>
+ * <li> Paul Clough. A Perl program for sentence splitting using rules. </li>
  * </ol>
  * 
  * @author Haifeng Li

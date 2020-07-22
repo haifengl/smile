@@ -18,9 +18,14 @@
 package smile.math.kernel;
 
 /**
- * The Thin Plate Spline Kernel. k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;),
- * where &sigma; &gt; 0 is the scale parameter of the kernel. The kernel can work
- * on sparse binary array as int[], which are the indices of nonzero elements.
+ * The Thin Plate Spline Kernel on binary sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
+ * </pre>
+ * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ * The kernel can work on sparse binary array as int[], which are the
+ * indices of nonzero elements.
  * 
  * @author Haifeng Li
  */
