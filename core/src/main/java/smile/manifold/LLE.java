@@ -185,9 +185,14 @@ public class LLE implements Serializable {
         Matrix.EVD eigen = ARPACK.syev(new M(Wt), ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
         Matrix V = eigen.Vr;
+        // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
+        // Maybe due to numeric stability.
+        int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
+        //System.out.println(Arrays.toString(eigen.wr));
+        //System.out.println(V.toString(10, V.nrows()-1));
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - 2;
+            int c = V.ncols() - j - offset;
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, c);
             }
