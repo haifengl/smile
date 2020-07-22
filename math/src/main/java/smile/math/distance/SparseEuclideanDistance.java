@@ -22,11 +22,7 @@ import java.util.Iterator;
 import smile.util.SparseArray;
 
 /**
- * Euclidean distance. Use getInstance() to get the standard unweighted
- * Euclidean distance. Or create an instance with a specified
- * weight vector. For float or double arrays, missing values (i.e. NaN)
- * are also handled. Also support sparse arrays of which zeros are excluded
- * to save space.
+ * Euclidean distance on sparse arrays.
  *
  * @author Haifeng Li
  */

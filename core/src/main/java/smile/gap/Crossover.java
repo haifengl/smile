@@ -21,6 +21,8 @@ import smile.math.MathEx;
 
 /**
  * The types of crossover operation.
+ *
+ * @author Haifeng Li
  */
 public enum Crossover {
 

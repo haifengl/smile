@@ -20,11 +20,10 @@ package smile.math.distance;
 import java.util.Arrays;
 
 /**
- * Euclidean distance. Use getInstance() to get the standard unweighted
- * Euclidean distance. Or create an instance with a specified
- * weight vector. For float or double arrays, missing values (i.e. NaN)
- * are also handled. Also support sparse arrays of which zeros are excluded
- * to save space.
+ * Euclidean distance. For float or double arrays, missing values (i.e. NaN)
+ * are also handled.
+ *
+ * @see SparseEuclideanDistance
  *
  * @author Haifeng Li
  */

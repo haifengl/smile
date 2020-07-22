@@ -56,6 +56,6 @@ public interface DataFrameRegression {
     /** Returns the formula associated with the model. */
     Formula formula();
 
-    /** Returns the design matrix schema. */
+    /** Returns the schema of predictors. */
     StructType schema();
 }

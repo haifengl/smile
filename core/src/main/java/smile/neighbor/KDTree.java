@@ -266,7 +266,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, neighbor);
 
             // now look in further half
-            if (neighbor.distance >= diff) {
+            if (neighbor.distance >= Math.abs(diff)) {
                 search(q, further, neighbor);
             }
         }
@@ -310,7 +310,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             search(q, nearer, heap);
 
             // now look in further half
-            if (heap.peek().distance >= diff) {
+            if (heap.peek().distance >= Math.abs(diff)) {
                 search(q, further, heap);
             }
         }

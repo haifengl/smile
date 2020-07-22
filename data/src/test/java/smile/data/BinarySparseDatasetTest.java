@@ -68,7 +68,7 @@ public class BinarySparseDatasetTest {
             SparseMatrix sm = data.toMatrix();
             assertEquals(990002, sm.nrows());
             assertEquals(41271, sm.ncols());
-            assertEquals(8018988, sm.length());
+            assertEquals(8018988, sm.size());
             assertEquals(1, sm.get(0, 1), 1E-16);
             assertEquals(1, sm.get(0, 2), 1E-16);
             assertEquals(1, sm.get(0, 3), 1E-16);

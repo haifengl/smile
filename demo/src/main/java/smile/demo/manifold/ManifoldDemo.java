@@ -18,6 +18,7 @@
 package smile.demo.manifold;
 
 import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.io.Read;
 
@@ -133,7 +134,7 @@ public abstract class ManifoldDemo extends JPanel implements Runnable, ActionLis
                 }
             }
 
-            double[][] data = dataset[datasetIndex].toArray();
+            double[][] data = dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT);
         
             if (data.length < 500) {
                 pointLegend = 'o';

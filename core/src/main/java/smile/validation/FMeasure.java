@@ -23,10 +23,10 @@ package smile.validation;
  * divided by the number of all positive results, and the recall r is the number of
  * correct positive results divided by the number of positive results that should
  * have been returned.
- *
+ * <p>
  * The traditional or balanced F-score (F1 score) is the harmonic mean of
  * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
- *
+ * <p>
  * The general formula involves a positive real &beta; so that F-score measures
  * the effectiveness of retrieval with respect to a user who attaches &beta; times
  * as much importance to recall as precision.

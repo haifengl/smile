@@ -20,6 +20,7 @@ package smile.demo.classification;
 import java.awt.Dimension;
 import javax.swing.JFrame;
 import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 
@@ -90,7 +91,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
     @Override
     public double[][] learn(double[] x, double[] y) {
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.LEVEL);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         int[] labelPredict = new int[label.length];
         

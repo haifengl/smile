@@ -21,7 +21,7 @@
  * functions for ICA. These contrast functions enable both the estimation of
  * the whole decomposition by minimizing mutual information, and estimation
  * of individual independent components as projection pursuit directions.
- *
+ * <p>
  * The contrast functions must be a non-quadratic non-linear function
  * that has second-order derivative.
  *

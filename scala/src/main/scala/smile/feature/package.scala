@@ -17,7 +17,7 @@
 
 package smile
 
-import smile.data.DataFrame
+import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula.Formula
 
 /** Feature generation, normalization and selection.
@@ -79,7 +79,7 @@ package object feature {
     *  - M. Shipp, et al. Diffuse large B-cell lymphoma outcome prediction by gene-expression profiling and supervised machine learning. Nature Medicine, 2002.
     */
   def s2n(formula: Formula, data: DataFrame): Array[Double] = {
-    val x = formula.x(data).toArray
+    val x = formula.x(data).toArray(false, CategoricalEncoder.ONE_HOT)
     val y = formula.y(data).toIntArray
     SignalNoiseRatio.of(x, y)
   }
@@ -111,7 +111,7 @@ package object feature {
     *  - S. Dudoit, J. Fridlyand and T. Speed. Comparison of discrimination methods for the classification of tumors using gene expression data. J Am Stat Assoc, 97:77-87, 2002.
     */
   def ssr(formula: Formula, data: DataFrame): Array[Double] = {
-    val x = formula.x(data).toArray
+    val x = formula.x(data).toArray(false, CategoricalEncoder.ONE_HOT)
     val y = formula.y(data).toIntArray
     SumSquaresRatio.of(x, y)
   }

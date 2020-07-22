@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.classification.SVM;
+import smile.data.CategoricalEncoder;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 
@@ -75,7 +76,7 @@ public class SVMDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         int n = label.length;
         int[] y2 = new int[n];

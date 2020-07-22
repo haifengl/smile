@@ -25,7 +25,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 import smile.math.MathEx;
-import smile.math.matrix.Matrix;
+import smile.math.matrix.SparseMatrix;
 import java.util.Arrays;
 
 /**
@@ -384,7 +384,7 @@ public class AdjacencyListTest {
         graph.addEdge(3, 5);
         graph.addEdge(5, 4);
 
-        Matrix matrix = graph.toMatrix();
+        SparseMatrix matrix = graph.toMatrix();
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {
@@ -427,7 +427,7 @@ public class AdjacencyListTest {
         graph.addEdge(3, 5);
         graph.addEdge(5, 4);
 
-        Matrix matrix = graph.toMatrix();
+        SparseMatrix matrix = graph.toMatrix();
 
         for (int i = 0; i < 8; i++) {
             for (int j = 0; j < 8; j++) {

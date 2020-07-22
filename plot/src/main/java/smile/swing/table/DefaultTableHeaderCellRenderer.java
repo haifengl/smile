@@ -30,11 +30,11 @@ import javax.swing.table.JTableHeader;
 
 /**
  * A default cell renderer for a JTableHeader.
- * <P>
+ * <p>
  * DefaultTableHeaderCellRenderer attempts to provide identical behavior to the
  * renderer which the Swing subsystem uses by default, the Sun proprietary class
  * sun.swing.table.DefaultTableCellHeaderRenderer.
- * <P>
+ * <p>
  * To apply any desired customization, DefaultTableHeaderCellRenderer may be
  * suitably extended.
  *

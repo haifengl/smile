@@ -17,7 +17,7 @@
 
 package smile.data.vector;
 
-import smile.data.measure.ContinuousMeasure;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
 
@@ -47,7 +47,7 @@ class IntVectorImpl implements IntVector {
 
     /** Constructor. */
     public IntVectorImpl(StructField field, int[] vector) {
-        if (field.measure instanceof ContinuousMeasure) {
+        if (field.measure instanceof NumericalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -102,7 +102,7 @@ class IntVectorImpl implements IntVector {
     public IntVector get(int... index) {
         int[] v = new int[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new IntVectorImpl(name, v);
+        return new IntVectorImpl(field(), v);
     }
 
     @Override

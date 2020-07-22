@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
@@ -174,21 +175,37 @@ public class KNN<T> implements SoftClassifier<T> {
     public int predict(T x) {
         Neighbor<T,T>[] neighbors = knn.knn(x, k);
         if (k == 1) {
+            if (neighbors[0] == null) {
+                throw new IllegalStateException("No neighbor found.");
+            }
             return y[neighbors[0].index];
         }
 
         int[] count = new int[labels.size()];
-        for (int i = 0; i < k; i++) {
-            count[labels.indexOf(y[neighbors[i].index])]++;
+        for (Neighbor<T,T> neighbor : neighbors) {
+            if (neighbor != null) {
+                count[labels.indexOf(y[neighbor.index])]++;
+            }
         }
 
-        return labels.valueOf(MathEx.whichMax(count));
+        int y = MathEx.whichMax(count);
+        if (count[y] == 0) {
+            throw new IllegalStateException("No neighbor found.");
+        }
+
+        return labels.valueOf(y);
     }
 
     @Override
     public int predict(T x, double[] posteriori) {
         Neighbor<T,T>[] neighbors = knn.knn(x, k);
         if (k == 1) {
+            if (neighbors[0] == null) {
+                throw new IllegalStateException("No neighbor found.");
+            }
+
+            Arrays.fill(posteriori, 0.0);
+            posteriori[labels.indexOf(y[neighbors[0].index])] = 1.0;
             return y[neighbors[0].index];
         }
 
@@ -197,10 +214,15 @@ public class KNN<T> implements SoftClassifier<T> {
             count[labels.indexOf(y[neighbors[i].index])]++;
         }
 
+        int y = MathEx.whichMax(count);
+        if (count[y] == 0) {
+            throw new IllegalStateException("No neighbor found.");
+        }
+
         for (int i = 0; i < count.length; i++) {
             posteriori[i] = (double) count[i] / k;
         }
 
-        return labels.valueOf(MathEx.whichMax(count));
+        return labels.valueOf(y);
     }
 }

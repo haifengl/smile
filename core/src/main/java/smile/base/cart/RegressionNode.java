@@ -25,6 +25,8 @@ import smile.math.MathEx;
 
 /**
  * A leaf node in regression tree.
+ *
+ * @author Haifeng Li
  */
 public class RegressionNode extends LeafNode {
     private static final long serialVersionUID = 2L;

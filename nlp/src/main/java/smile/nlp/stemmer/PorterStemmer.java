@@ -29,36 +29,18 @@ package smile.nlp.stemmer;
  * removed and control moves to the next step. If the rule is not accepted
  * then the next rule in the step is tested, until either a rule from that
  * step fires and control passes to the next step or there are no more rules
- * in that step whence control moves to the next step. For details, see
- * <p>
- * Martin Porter, An algorithm for suffix stripping, Program, 14(3), 130-137, 1980.
+ * in that step whence control moves to the next step.
  * <p>
  * Note that this class is NOT multi-thread safe.
- *
+ * <p>
  * The code is based on http://www.tartarus.org/~martin/PorterStemmer
- * 
- * History:
- * 
- * Release 1
- * 
- * Bug 1 (reported by Gonzalo Parra 16/10/99) fixed as marked below.
- * The words 'aed', 'eed', 'oed' leave k at 'a' for step 3, and b[k-1]
- * is then out outside the bounds of b.
- * 
- * Release 2
- * 
- * Similarly,
- * 
- * Bug 2 (reported by Steve Dyrdahl 22/2/00) fixed as marked below.
- * 'ion' by itself leaves j = -1 in the test for 'ion' in step 5, and
- * b[j] is then outside the bounds of b.
- * 
- * Release 3
- * 
- * Considerably revised 4/9/00 in the light of many helpful suggestions
- * from Brian Goetz of Quiotix Corporation (brian@quiotix.com).
- * 
- * Release 4
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> Martin Porter, An algorithm for suffix stripping, Program, 14(3), 130-137, 1980. </li>
+ * </ol>
+ *
+ * @author Haifeng Li
  */
 public class PorterStemmer implements Stemmer {
 

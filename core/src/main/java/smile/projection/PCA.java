@@ -19,10 +19,8 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
-import smile.math.matrix.SVD;
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -84,7 +82,7 @@ public class PCA implements LinearProjection, Serializable {
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */
-    private DenseMatrix eigvectors;
+    private Matrix eigvectors;
     /**
      * Eigenvalues of principal components.
      */
@@ -100,7 +98,7 @@ public class PCA implements LinearProjection, Serializable {
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private Matrix projection;
 
     /**
      * Constructor.
@@ -108,7 +106,7 @@ public class PCA implements LinearProjection, Serializable {
      * @param eigvalues the eigen values of principal components.
      * @param loadings the matrix of variable loadings.
      */
-    public PCA(double[] mu, double[] eigvalues, DenseMatrix loadings) {
+    public PCA(double[] mu, double[] eigvalues, Matrix loadings) {
         this.mu = mu;
         this.eigvalues = eigvalues;
         this.eigvectors = loadings;
@@ -139,7 +137,7 @@ public class PCA implements LinearProjection, Serializable {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        DenseMatrix x = Matrix.of(data);
+        Matrix x = new Matrix(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 x.sub(i, j, mu[j]);
@@ -147,18 +145,18 @@ public class PCA implements LinearProjection, Serializable {
         }
 
         double[] eigvalues;
-        DenseMatrix eigvectors;
+        Matrix eigvectors;
         if (m > n) {
-            SVD svd = x.svd();
-            eigvalues = svd.getSingularValues();
+            Matrix.SVD svd = x.svd();
+            eigvalues = svd.s;
             for (int i = 0; i < eigvalues.length; i++) {
                 eigvalues[i] *= eigvalues[i];
             }
 
-            eigvectors = svd.getV();
+            eigvectors = svd.V;
         } else {
 
-            DenseMatrix cov = Matrix.zeros(n, n);
+            Matrix cov = new Matrix(n, n);
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
@@ -174,13 +172,11 @@ public class PCA implements LinearProjection, Serializable {
                 }
             }
 
-            cov.setSymmetric(true);
-            EVD eigen = cov.eigen();
+            cov.uplo(UPLO.LOWER);
+            Matrix.EVD eigen = cov.eigen().sort();
 
-            DenseMatrix loadings = eigen.getEigenVectors();
-
-            eigvalues = eigen.getEigenValues();
-            eigvectors = loadings;
+            eigvalues = eigen.wr;
+            eigvectors = eigen.Vr;
         }
 
         return new PCA(mu, eigvalues, eigvectors);
@@ -199,14 +195,14 @@ public class PCA implements LinearProjection, Serializable {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        DenseMatrix x = Matrix.of(data);
+        Matrix x = new Matrix(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 x.sub(i, j, mu[j]);
             }
         }
 
-        DenseMatrix cov = Matrix.zeros(n, n);
+        Matrix cov = new Matrix(n, n);
         for (int k = 0; k < m; k++) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
@@ -234,17 +230,17 @@ public class PCA implements LinearProjection, Serializable {
             }
         }
 
-        cov.setSymmetric(true);
-        EVD eigen = cov.eigen();
+        cov.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = cov.eigen().sort();
 
-        DenseMatrix loadings = eigen.getEigenVectors();
+        Matrix loadings = eigen.Vr;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 loadings.div(i, j, sd[i]);
             }
         }
 
-        return new PCA(mu, eigen.getEigenValues(), loadings);
+        return new PCA(mu, eigen.wr, loadings);
     }
 
     /**
@@ -258,7 +254,7 @@ public class PCA implements LinearProjection, Serializable {
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
      */
-    public DenseMatrix getLoadings() {
+    public Matrix getLoadings() {
         return eigvectors;
     }
 
@@ -287,7 +283,7 @@ public class PCA implements LinearProjection, Serializable {
     }
 
     @Override
-    public DenseMatrix getProjection() {
+    public Matrix getProjection() {
         return projection;
     }
 
@@ -301,15 +297,14 @@ public class PCA implements LinearProjection, Serializable {
         }
 
         this.p = p;
-        projection = Matrix.zeros(p, n);
+        projection = new Matrix(p, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < p; j++) {
                 projection.set(j, i, eigvectors.get(i, j));
             }
         }
 
-        pmu = new double[p];
-        projection.ax(mu, pmu);
+        pmu = projection.mv(mu);
 
         return this;
     }
@@ -340,8 +335,7 @@ public class PCA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
         }
 
-        double[] y = new double[p];
-        projection.ax(x, y);
+        double[] y = projection.mv(x);
         MathEx.sub(y, pmu);
         return y;
     }
@@ -354,7 +348,7 @@ public class PCA implements LinearProjection, Serializable {
 
         double[][] y = new double[x.length][p];
         for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], y[i]);
+            projection.mv(x[i], y[i]);
             MathEx.sub(y[i], pmu);
         }
         return y;

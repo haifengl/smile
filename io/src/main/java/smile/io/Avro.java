@@ -42,10 +42,10 @@ import smile.data.type.StructType;
 
 /**
  * Apache Avro is a data serialization system.
- *
+ * <p>
  * Avro provides rich data structures, a compact, fast, binary data format,
  * a container file, to store persistent data, and remote procedure call (RPC).
- *
+ * <p>
  * Avro relies on schemas. When Avro data is stored in a file, its schema
  * is stored with it. Avro schemas are defined with JSON.
  *

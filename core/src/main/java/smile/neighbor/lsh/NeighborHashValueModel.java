@@ -18,10 +18,9 @@
 package smile.neighbor.lsh;
 
 /**
- * Probability list of all buckets for given query object.
- */
-/**
  * Gaussian model of hash values of nearest neighbor.
+ *
+ * @author Haifeng Li
  */
 public class NeighborHashValueModel {
 

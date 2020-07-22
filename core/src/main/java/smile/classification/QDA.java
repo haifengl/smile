@@ -18,11 +18,11 @@
 package smile.classification;
 
 import java.util.Properties;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.math.matrix.Matrix;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -80,7 +80,7 @@ public class QDA implements SoftClassifier<double[]> {
      * to discriminant functions, normalized so that within groups covariance
      * matrix is spherical.
      */
-    private final DenseMatrix[] scaling;
+    private final Matrix[] scaling;
     /**
      * The class label encoder.
      */
@@ -93,7 +93,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
      */
-    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling) {
+    public QDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling) {
         this(priori, mu, eigen, scaling, IntSet.of(priori.length));
     }
 
@@ -105,7 +105,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param scaling the eigen vectors of each covariance matrix.
      * @param labels class labels
      */
-    public QDA(double[] priori, double[][] mu, double[][] eigen, DenseMatrix[] scaling, IntSet labels) {
+    public QDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
@@ -142,7 +142,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param data the data frame of the explanatory and response variables.
      */
     public static QDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray();
+        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
         return fit(x, y, prop);
     }
@@ -179,12 +179,12 @@ public class QDA implements SoftClassifier<double[]> {
     public static QDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
 
-        DenseMatrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
+        Matrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
 
         int k = cov.length;
         int p = cov[0].nrows();
         double[][] eigen = new double[k][];
-        DenseMatrix[] scaling = new DenseMatrix[k];
+        Matrix[] scaling = new Matrix[k];
 
         tol = tol * tol;
         for (int i = 0; i < k; i++) {
@@ -195,16 +195,16 @@ public class QDA implements SoftClassifier<double[]> {
                 }
             }
 
-            EVD evd = cov[i].eigen();
+            Matrix.EVD evd = cov[i].eigen().sort();
 
-            for (double s : evd.getEigenValues()) {
+            for (double s : evd.wr) {
                 if (s < tol) {
                     throw new IllegalArgumentException(String.format("Class %d covariance matrix is close to singular.", i));
                 }
             }
 
-            eigen[i] = evd.getEigenValues();
-            scaling[i] = evd.getEigenVectors();
+            eigen[i] = evd.wr;
+            scaling[i] = evd.Vr;
         }
 
         return new QDA(da.priori, da.mu, eigen, scaling, da.labels);
@@ -237,7 +237,7 @@ public class QDA implements SoftClassifier<double[]> {
                 d[j] = x[j] - mui[j];
             }
 
-            scaling[i].atx(d, ux);
+            scaling[i].tv(d, ux);
 
             double f = 0.0;
             double[] ev = eigen[i];

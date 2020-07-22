@@ -17,8 +17,13 @@
 
 package smile.math.matrix;
 
-import java.util.Arrays;
+import java.nio.DoubleBuffer;
+import java.nio.IntBuffer;
 import smile.math.MathEx;
+import smile.math.blas.*;
+import static smile.math.blas.Layout.*;
+import static smile.math.blas.Transpose.*;
+import static smile.math.blas.UPLO.*;
 
 /**
  * A band matrix is a sparse matrix, whose non-zero entries are confined to
@@ -57,113 +62,108 @@ import smile.math.MathEx;
  * with j &gt; 0 appropriate to the number of elements on each subdiagonal.
  * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
  * with j &lt; n-1 appropriate to the number of elements on each superdiagonal.
- * 
+ *
  * @author Haifeng Li
  */
-public class BandMatrix implements Matrix, LinearSolver {
-    private static final long serialVersionUID = 1L;
+public class BandMatrix extends DMatrix {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BandMatrix.class);
 
     /**
-     * Compact store of band matrix as A[0, n-1][0, m1+m2].
+     * The band matrix storage.
      */
-    private double[][] A;
-
+    final double[] AB;
     /**
-     * The size of matrix.
+     * The number of rows.
      */
-    private int n;
-
+    final int m;
+    /**
+     * The number of columns.
+     */
+    final int n;
     /**
      * The number of subdiagonal rows.
      */
-    private int m1;
-
+    final int kl;
     /**
      * The number of superdiagonal rows.
      */
-    private int m2;
+    final int ku;
+    /**
+     * The leading dimension.
+     */
+    transient int ld;
+    /**
+     * The upper or lower triangle of the symmetric band matrix.
+     */
+    UPLO uplo = null;
 
     /**
-     * The upper triangular matrix of LU decomposition.
+     * Constructor.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param kl the number of subdiagonals.
+     * @param ku the number of superdiagonals.
      */
-    private double[][] au;
+    public BandMatrix(int m, int n, int kl, int ku) {
+        if (m <= 0 || n <= 0) {
+            throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
+        }
 
-    /**
-     * The lower triangular matrix of LU decomposition.
-     */
-    private double[][] al;
+        if (kl < 0 || ku < 0) {
+            throw new IllegalArgumentException(String.format("Invalid subdiagonals or superdiagonals: kl = %d, ku = %d", kl, ku));
+        }
 
-    /**
-     * index[0,n-1] records the row permutation effected by the partial pivoting.
-     */
-    private int[] index;
+        if (kl >= m) {
+            throw new IllegalArgumentException(String.format("Invalid subdiagonals %d >= %d", kl, m));
+        }
 
-    /**
-     * d is +/-1 depending on whether the number of row interchanges was even
-     * or odd. respectively.
-     */
-    private double d;
-    /**
-     * True if the matrix is symmetric.
-     */
-    private boolean symmetric = false;
+        if (ku >= n) {
+            throw new IllegalArgumentException(String.format("Invalid superdiagonals %d >= %d", ku, n));
+        }
 
-    /**
-     * Constructor of an n-by-n band-diagonal matrix A with m subdiagonal
-     * rows and m superdiagonal rows.
-     * @param n the dimensionality of matrix.
-     * @param m the number of subdiagonal and superdiagonal rows.
-     */
-    public BandMatrix(int n, int m) {
-        this(n, m, m);
+        this.m = m;
+        this.n = n;
+        this.kl = kl;
+        this.ku = ku;
+        this.ld = kl + ku + 1;
+        this.AB = new double[ld * n];
     }
 
     /**
-     * Constructor of an n-by-n band-diagonal matrix A with m<sub>1</sub> subdiagonal
-     * rows and m<sub>2</sub> superdiagonal rows.
-     * @param n the dimensionality of matrix.
-     * @param m1 the number of subdiagonal rows.
-     * @param m2 the number of superdiagonal rows.
+     * Constructor.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param kl the number of subdiagonals.
+     * @param ku the number of superdiagonals.
+     * @param AB the band matrix. A[i, j] is stored in
+     *           AB[ku+i-j, j] for max(0, j-ku) <= i <= min(m-1, j+kl).
      */
-    public BandMatrix(int n, int m1, int m2) {
-        this.n = n;
-        this.m1 = m1;
-        this.m2 = m2;
-        A = new double[n][m1+m2+1];
+    public BandMatrix(int m, int n, int kl, int ku, double[][] AB) {
+        this(m, n, kl, ku);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < ld; i++) {
+                this.AB[j * ld + i] = AB[i][j];
+            }
+        }
     }
 
     @Override
     public BandMatrix clone() {
-        BandMatrix copy = new BandMatrix(n, m1, m2);
-        for (int i = 0; i < n; i++) {
-            System.arraycopy(A[i], 0, copy.A[i], 0, A[i].length);
+        BandMatrix matrix = new BandMatrix(m, n, kl, ku);
+        System.arraycopy(AB, 0, matrix.AB, 0, AB.length);
+
+        if (m == n && kl == ku) {
+            matrix.uplo(uplo);
         }
 
-        copy.symmetric = symmetric;
-
-        if (au != null) {
-            copy.au = MathEx.clone(au);
-            copy.al = MathEx.clone(al);
-            copy.index = index.clone();
-            copy.d = d;
-        }
-
-        return copy;
-    }
-
-    @Override
-    public boolean isSymmetric() {
-        return symmetric;
-    }
-
-    @Override
-    public void setSymmetric(boolean symmetric) {
-        this.symmetric = symmetric;
+        return matrix;
     }
 
     @Override
     public int nrows() {
-        return n;
+        return m;
     }
 
     @Override
@@ -172,344 +172,415 @@ public class BandMatrix implements Matrix, LinearSolver {
     }
 
     @Override
-    public double get(int i, int j) {
-        return A[i][j-i+m1];
+    public long size() {
+        return AB.length;
     }
 
-    public BandMatrix set(int i, int j, double x) {
-        A[i][j-i+m1] = x;
-        return this;
+    /** Returns the number of subdiagonals. */
+    public int kl() {
+        return kl;
+    }
+
+    /** Returns the number of superdiagonals. */
+    public int ku() {
+        return ku;
     }
 
     /**
-     * Returns the matrix transpose.
-     * @return the transpose of matrix.
+     * Returns the matrix layout.
      */
+    public Layout layout() {
+        return COL_MAJOR;
+    }
+
+    /**
+     * Returns the leading dimension.
+     */
+    public int ld() {
+        return ld;
+    }
+
+    /**
+     * Return if the matrix is symmetric (uplo != null).
+     */
+    public boolean isSymmetric() {
+        return uplo != null;
+    }
+
+    /** Sets the format of symmetric band matrix. */
+    public BandMatrix uplo(UPLO uplo) {
+        if (m != n) {
+            throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+        }
+
+        if (kl != ku) {
+            throw new IllegalArgumentException(String.format("kl != ku: %d != %d", kl, ku));
+        }
+
+        this.uplo = uplo;
+        return this;
+    }
+
+    /** Gets the format of packed matrix. */
+    public UPLO uplo() {
+        return uplo;
+    }
+
     @Override
-    public BandMatrix transpose() {
-        BandMatrix at = new BandMatrix(n, m2, m1);
-        for (int i = 0; i < n; i++) {
-            for (int j = i-m2; j <= i+m1; j++) {
-                if (j >= 0 && j < n) {
-                    at.set(i, j, get(j, i));
+    public boolean equals(Object o) {
+        if (o == null || !(o instanceof BandMatrix)) {
+            return false;
+        }
+
+        return equals((BandMatrix) o, 1E-7f);
+    }
+
+    /**
+     * Returns if two matrices equals given an error margin.
+     *
+     * @param o the other matrix.
+     * @param eps the error margin.
+     */
+    public boolean equals(BandMatrix o, double eps) {
+        if (m != o.m || n != o.n) {
+            return false;
+        }
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                if (!MathEx.isZero(get(i, j) - o.get(i, j), eps)) {
+                    return false;
                 }
             }
         }
 
-        return at;
+        return true;
     }
 
     @Override
-    public BandMatrix ata() {
-        throw new UnsupportedOperationException();
+    public double get(int i, int j) {
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            return AB[j * ld + ku + i - j];
+        } else {
+            return 0.0f;
+        }
     }
 
     @Override
-    public BandMatrix aat() {
-        throw new UnsupportedOperationException();
+    public BandMatrix set(int i, int j, double x) {
+        if (Math.max(0, j-ku) <= i && i <= Math.min(m-1, j+kl)) {
+            AB[j * ld + ku + i - j] = x;
+        } else {
+            throw new UnsupportedOperationException(String.format("Set element at (%d, %d)", i, j));
+        }
+
+        return this;
     }
 
-    /**
-     * Returns the matrix determinant.
-     */
-    public double det() {
-        if (au == null) {
-            decompose();
+    @Override
+    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        if (uplo != null) {
+            BLAS.engine.sbmv(layout(), uplo, n, kl, alpha, AB, ld, x, 1, beta, y, 1);
+        } else {
+            BLAS.engine.gbmv(layout(), trans, m, n, kl, ku, alpha, AB, ld, x, 1, beta, y, 1);
         }
-        
-        double dd = d;
-        for (int i = 0; i < n; i++) {
-            dd *= au[i][0];
-        }
+    }
 
-        return dd;
+    @Override
+    public void mv(double[] work, int inputOffset, int outputOffset) {
+        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, n);
+        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, m);
+        if (uplo != null) {
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        } else {
+            BLAS.engine.gbmv(layout(), NO_TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        }
+    }
+
+    @Override
+    public void tv(double[] work, int inputOffset, int outputOffset) {
+        DoubleBuffer xb = DoubleBuffer.wrap(work, inputOffset, m);
+        DoubleBuffer yb = DoubleBuffer.wrap(work, outputOffset, n);
+        if (uplo != null) {
+            BLAS.engine.sbmv(layout(), uplo, n, kl, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        } else {
+            BLAS.engine.gbmv(layout(), TRANSPOSE, m, n, kl, ku, 1.0f, DoubleBuffer.wrap(AB), ld, xb, 1, 0.0f, yb, 1);
+        }
     }
 
     /**
      * LU decomposition.
      */
-    public void decompose() {
-        final double TINY = 1.0e-16;
-
-        int mm = m1 + m2 + 1;
-        index = new int[n];
-        au = new double[n][mm];
-        al = new double[n][m1];
-
-        for (int i = 0; i < A.length; i++) {
-            System.arraycopy(A[i], 0, au[i], 0, A[i].length);
-        }
-
-        double dum;
-        int l = m1;
-        for (int i = 0; i < m1; i++) {
-            for (int j = m1 - i; j < mm; j++) {
-                au[i][j - l] = au[i][j];
-            }
-            l--;
-            for (int j = mm - l - 1; j < mm; j++)
-                au[i][j] = 0.0;
-        }
-
-        d = 1.0;
-        l = m1;
-        for (int k = 0; k < n; k++) {
-            dum = au[k][0];
-            int i = k;
-            if (l < n) {
-                l++;
-            }
-
-            for (int j = k + 1; j < l; j++) {
-                if (Math.abs(au[j][0]) > Math.abs(dum)) {
-                    dum = au[j][0];
-                    i = j;
-                }
-            }
-
-            index[k] = i + 1;
-            if (dum == 0.0) {
-                au[k][0] = TINY;
-            }
-
-            if (i != k) {
-                d = -d;
-                // swap au[k], au[i]
-                double[] swap = au[k];
-                au[k] = au[i];
-                au[i] = swap;
-            }
-
-            for (i = k + 1; i < l; i++) {
-                dum = au[i][0] / au[k][0];
-                al[k][i - k - 1] = dum;
-                for (int j = 1; j < mm; j++) {
-                    au[i][j - 1] = au[i][j] - dum * au[k][j];
-                }
-                au[i][mm - 1] = 0.0;
+    public LU lu() {
+        BandMatrix lu = new BandMatrix(m, n, 2*kl, ku);
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < ld; i++) {
+                lu.AB[j * lu.ld + kl + i] = AB[j * ld + i];
             }
         }
-    }
-
-    @Override
-    public double[] ax(double[] x, double[] y) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
+        int[] ipiv = new int[n];
+        int info = LAPACK.engine.gbtrf(lu.layout(), lu.m, lu.n, lu.kl/2, lu.ku, lu.AB, lu.ld, ipiv);
+        if (info < 0) {
+            logger.error("LAPACK GBTRF error code: {}", info);
+            throw new ArithmeticException("LAPACK GBTRF error code: " + info);
         }
 
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but y is %d x 1", n, n, y.length));
-        }
-
-        Arrays.fill(y, 0.0);
-        for (int i = 0; i < n; i++) {
-            int k = i - m1;
-            int tmploop = Math.min(m1 + m2 + 1, n - k);
-            for (int j = Math.max(0, -k); j < tmploop; j++) {
-                y[i] += A[i][j] * x[j + k];
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] axpy(double[] x, double[] y) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
-        }
-
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but y is %d x 1", n, n, y.length));
-        }
-
-        for (int i = 0; i < n; i++) {
-            int k = i - m1;
-            int tmploop = Math.min(m1 + m2 + 1, n - k);
-            for (int j = Math.max(0, -k); j < tmploop; j++) {
-                y[i] += A[i][j] * x[j + k];
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] axpy(double[] x, double[] y, double b) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but x is %d x 1", n, n, x.length));
-        }
-
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but y is %d x 1", n, n, y.length));
-        }
-
-        for (int i = 0; i < n; i++) {
-            int k = i - m1;
-            int tmploop = Math.min(m1 + m2 + 1, n - k);
-            y[i] *= b;
-            for (int j = Math.max(0, -k); j < tmploop; j++) {
-                y[i] += A[i][j] * x[j + k];
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] atx(double[] x, double[] y) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
-        }
-
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but y is 1 x %d", n, n, y.length));
-        }
-
-        Arrays.fill(y, 0.0);
-        for (int i = 0; i < n; i++) {
-            for (int j = -m2; j <= m1; j++) {
-                if (i + j >= 0 && i + j < n) {
-                    y[i] += A[i + j][m1 - j] * x[i + j];
-                }
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] atxpy(double[] x, double[] y) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
-        }
-
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but y is 1 x %d", n, n, y.length));
-        }
-
-        for (int i = 0; i < n; i++) {
-            for (int j = -m2; j <= m1; j++) {
-                if (i + j >= 0 && i + j < n) {
-                    y[i] += A[i + j][m1 - j] * x[i + j];
-                }
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] atxpy(double[] x, double[] y, double b) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but x is 1 x %d", n, n, x.length));
-        }
-
-        if (y.length != n) {
-            throw new IllegalArgumentException(String.format("Column dimensions do not agree: A is %d x %d, but y is 1 x %d", n, n, y.length));
-        }
-
-        for (int i = 0; i < n; i++) {
-            y[i] *= b;
-            for (int j = -m2; j <= m1; j++) {
-                if (i + j >= 0 && i + j < n) {
-                    y[i] += A[i + j][m1 - j] * x[i + j];
-                }
-            }
-        }
-
-        return y;
-    }
-
-    @Override
-    public double[] diag() {
-        double[] d = new double[n];
-        for (int i = 0; i < n; i++) {
-            d[i] = A[i][m1];
-        }
-
-        return d;
+        return new LU(lu, ipiv, info);
     }
 
     /**
-     * Solve A*x = b.
-     * @param b   a vector with as many rows as A.
-     * @param x   is output vector so that L*U*X = b(piv,:)
-     * @throws RuntimeException if matrix is singular.
-     */
-    public double[] solve(double[] b, double[] x) {
-        if (b.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1", n, n, b.length));
-        }
-
-        if (b.length != x.length) {
-            throw new IllegalArgumentException("b and x dimensions do not agree.");
-        }
-
-        if (au == null) {
-            decompose();
-        }
-        System.arraycopy(b, 0, x, 0, n);
-
-        int mm = m1 + m2 + 1;
-        int l = m1;
-
-        for (int k = 0; k < n; k++) {
-            int j = index[k] - 1;
-
-            if (j != k) {
-                // swap x[k] and x[j]
-                double swap = x[k];
-                x[k] = x[j];
-                x[j] = swap;
-            }
-
-            if (l < n) {
-                l++;
-            }
-
-            for (j = k + 1; j < l; j++) {
-                x[j] -= al[k][j - k - 1] * x[k];
-            }
-        }
-
-        l = 1;
-        for (int i = n - 1; i >= 0; i--) {
-            double dum = x[i];
-            for (int k = 1; k < l; k++) {
-                dum -= au[i][k] * x[k + i];
-            }
-            x[i] = dum / au[i][0];
-            if (l < mm) {
-                l++;
-            }
-        }
-
-        return x;
-    }
-
-    /**
-     * Iteratively improve a solution to linear equations.
+     * Cholesky decomposition for symmetric and positive definite matrix.
      *
-     * @param b right hand side of linear equations.
-     * @param x a solution to linear equations.
+     * @throws ArithmeticException if the matrix is not positive definite.
      */
-    public void improve(double[] b, double[] x) {
-        if (b.length != n || x.length != n) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but b is %d x 1 and x is %d x 1", n, n, b.length, x.length));
+    public Cholesky cholesky() {
+        if (uplo == null) {
+            throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        // Calculate the right-hand side, accumulating the residual
-        // in higher precision.
-        double[] r = b.clone();
-        axpy(x, r, -1.0);
+        BandMatrix lu = new BandMatrix(m, n, uplo == LOWER ? kl : 0, uplo == LOWER ? 0 : ku);
+        lu.uplo = uplo;
+        if (uplo == UPLO.LOWER) {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i <= kl; i++) {
+                    lu.AB[j * lu.ld + i] = get(j + i, j);
+                }
+            }
+        } else {
+            for (int j = 0; j < n; j++) {
+                for (int i = 0; i <= ku; i++) {
+                    lu.AB[j * lu.ld + ku - i] = get(j - i, j);
+                }
+            }
+        }
 
-        // Solve for the error term.
-        solve(r, r);
+        int info = LAPACK.engine.pbtrf(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, lu.AB, lu.ld);
+        if (info != 0) {
+            logger.error("LAPACK PBTRF error code: {}", info);
+            throw new ArithmeticException("LAPACK PBTRF error code: " + info);
+        }
 
-        // Subtract the error from the old solution.
-        for (int i = 0; i < n; i++) {
-            x[i] -= r[i];
+        return new Cholesky(lu);
+    }
+
+    /**
+     * The LU decomposition. For an m-by-n matrix A with m &ge; n, the LU
+     * decomposition is an m-by-n unit lower triangular matrix L, an n-by-n
+     * upper triangular matrix U, and a permutation vector piv of length m
+     * so that A(piv,:) = L*U. If m &lt; n, then L is m-by-m and U is m-by-n.
+     * <p>
+     * The LU decomposition with pivoting always exists, even if the matrix is
+     * singular. The primary use of the LU decomposition is in the solution of
+     * square systems of simultaneous linear equations if it is not singular.
+     * The decomposition can also be used to calculate the determinant.
+     *
+     * @author Haifeng Li
+     */
+    public static class LU {
+        /**
+         * The LU decomposition.
+         */
+        public final BandMatrix lu;
+
+        /**
+         * The pivot vector.
+         */
+        public final int[] ipiv;
+
+        /**
+         * If info = 0, the LU decomposition was successful.
+         * If info = i > 0,  U(i,i) is exactly zero. The factorization
+         * has been completed, but the factor U is exactly
+         * singular, and division by zero will occur if it is used
+         * to solve a system of equations.
+         */
+        public final int info;
+
+        /**
+         * Constructor.
+         * @param lu       LU decomposition matrix
+         * @param ipiv     the pivot vector
+         * @param info     info > 0 if the matrix is singular
+         */
+        public LU(BandMatrix lu, int[] ipiv, int info) {
+            this.lu = lu;
+            this.ipiv = ipiv;
+            this.info = info;
+        }
+
+        /**
+         * Returns if the matrix is singular.
+         */
+        public boolean isSingular() {
+            return info > 0;
+        }
+
+        /**
+         * Returns the matrix determinant
+         */
+        public double det() {
+            int m = lu.m;
+            int n = lu.n;
+
+            if (m != n) {
+                throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
+            }
+
+            double d = 1.0f;
+            for (int j = 0; j < n; j++) {
+                d *= lu.AB[j * lu.ld + lu.kl/2 + lu.ku];
+            }
+
+            for (int j = 0; j < n; j++){
+                if (j+1 != ipiv[j]) {
+                    d = -d;
+                }
+            }
+
+            return d;
+        }
+
+        /**
+         * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
+         */
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
+            solve(inv);
+            return inv;
+        }
+
+        /**
+         * Solve A * x = b.
+         * @param b  right hand side of linear system.
+         *           On output, b will be overwritten with the solution matrix.
+         * @exception  RuntimeException  if matrix is singular.
+         */
+        public double[] solve(double[] b) {
+            double[] x = b.clone();
+            solve(new Matrix(x));
+            return x;
+        }
+
+        /**
+         * Solve A * X = B. B will be overwritten with the solution matrix on output.
+         * @param B  right hand side of linear system.
+         *           On output, B will be overwritten with the solution matrix.
+         * @throws  RuntimeException  if matrix is singular.
+         */
+        public void solve(Matrix B) {
+            if (lu.m != lu.n) {
+                throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
+            }
+
+            if (B.m != lu.m) {
+                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
+            }
+
+            if (lu.layout() != B.layout()) {
+                throw new IllegalArgumentException("The matrix layout is inconsistent.");
+            }
+
+            if (info > 0) {
+                throw new RuntimeException("The matrix is singular.");
+            }
+
+            int ret = LAPACK.engine.gbtrs(lu.layout(), NO_TRANSPOSE, lu.n, lu.kl/2, lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            if (ret != 0) {
+                logger.error("LAPACK GETRS error code: {}", ret);
+                throw new ArithmeticException("LAPACK GETRS error code: " + ret);
+            }
+        }
+    }
+
+    /**
+     * The Cholesky decomposition of a symmetric, positive-definite matrix.
+     * When it is applicable, the Cholesky decomposition is roughly twice as
+     * efficient as the LU decomposition for solving systems of linear equations.
+     * <p>
+     * The Cholesky decomposition is mainly used for the numerical solution of
+     * linear equations. The Cholesky decomposition is also commonly used in
+     * the Monte Carlo method for simulating systems with multiple correlated
+     * variables: The matrix of inter-variable correlations is decomposed,
+     * to give the lower-triangular L. Applying this to a vector of uncorrelated
+     * simulated shocks, u, produces a shock vector Lu with the covariance
+     * properties of the system being modeled.
+     * <p>
+     * Unscented Kalman filters commonly use the Cholesky decomposition to choose
+     * a set of so-called sigma points. The Kalman filter tracks the average
+     * state of a system as a vector x of length n and covariance as an n-by-n
+     * matrix P. The matrix P is always positive semi-definite, and can be
+     * decomposed into L*L'. The columns of L can be added and subtracted from
+     * the mean x to form a set of 2n vectors called sigma points. These sigma
+     * points completely capture the mean and covariance of the system state.
+     *
+     * @author Haifeng Li
+     */
+    public static class Cholesky {
+
+        /**
+         * The Cholesky decomposition.
+         */
+        public final BandMatrix lu;
+
+        /**
+         * Constructor.
+         * @param lu the lower/upper triangular part of matrix contains the Cholesky
+         *           factorization.
+         */
+        public Cholesky(BandMatrix lu) {
+            if (lu.nrows() != lu.ncols()) {
+                throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
+            }
+            this.lu = lu;
+        }
+
+        /**
+         * Returns the matrix determinant
+         */
+        public double det() {
+            double d = 1.0f;
+            for (int i = 0; i < lu.n; i++) {
+                d *= lu.get(i, i);
+            }
+
+            return d * d;
+        }
+
+        /**
+         * Returns the matrix inverse.
+         */
+        public Matrix inverse() {
+            Matrix inv = Matrix.eye(lu.n);
+            solve(inv);
+            return inv;
+        }
+
+        /**
+         * Solves the linear system A * x = b.
+         * @param b the right hand side of linear systems.
+         * @return the solution vector.
+         */
+        public double[] solve(double[] b) {
+            double[] x = b.clone();
+            solve(new Matrix(x));
+            return x;
+        }
+
+        /**
+         * Solves the linear system A * X = B.
+         * @param B the right hand side of linear systems. On output, B will
+         *          be overwritten with the solution matrix.
+         */
+        public void solve(Matrix B) {
+            if (B.m != lu.m) {
+                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
+            }
+
+            int info = LAPACK.engine.pbtrs(lu.layout(), lu.uplo, lu.n, lu.uplo == LOWER ? lu.kl : lu.ku, B.n, DoubleBuffer.wrap(lu.AB), lu.ld, B.A, B.ld);
+            if (info != 0) {
+                logger.error("LAPACK POTRS error code: {}", info);
+                throw new ArithmeticException("LAPACK POTRS error code: " + info);
+            }
         }
     }
 }
