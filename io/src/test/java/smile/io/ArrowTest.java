@@ -25,7 +25,7 @@ import org.junit.Test;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.util.Paths;
 
 import java.io.File;
@@ -171,7 +171,7 @@ public class ArrowTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("Total").toMatrix();
+        Matrix output = df.select("Total").toMatrix();
         System.out.println(output);
         assertEquals(412, output.nrows());
         assertEquals(1, output.ncols());

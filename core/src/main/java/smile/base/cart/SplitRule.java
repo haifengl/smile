@@ -19,6 +19,8 @@ package smile.base.cart;
 
 /**
  * The criterion to choose variable to split instances.
+ *
+ * @author Haifeng Li
  */
 public enum SplitRule {
     /**

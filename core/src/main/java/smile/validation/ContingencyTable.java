@@ -42,7 +42,7 @@ class ContingencyTable {
     /** The contingency table. */
     public final int[][] table;
 
-    /** Creates the contingency table. */
+    /** Constructor. */
     public ContingencyTable(int[] y1, int[] y2) {
         if (y1.length != y2.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", y1.length, y2.length));

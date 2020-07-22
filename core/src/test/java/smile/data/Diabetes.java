@@ -38,7 +38,7 @@ public class Diabetes {
         try {
             data = Read.csv(Paths.getTestData("regression/diabetes.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader());
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'diabetes': " + ex);

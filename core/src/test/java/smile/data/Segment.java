@@ -41,9 +41,9 @@ public class Segment {
             train = Read.arff(Paths.getTestData("weka/segment-challenge.arff"));
             test = Read.arff(Paths.getTestData("weka/segment-test.arff"));
 
-            x = formula.x(train).toArray();
+            x = formula.x(train).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(train).toIntArray();
-            testx = formula.x(test).toArray();
+            testx = formula.x(test).toArray(false, CategoricalEncoder.DUMMY);
             testy = formula.y(test).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'segment': " + ex);

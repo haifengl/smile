@@ -27,14 +27,12 @@ import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
-import smile.data.formula.DateFeature;
-import smile.data.formula.Formula;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.vector.StringVector;
-import smile.math.matrix.DenseMatrix;
-import static smile.data.formula.Terms.*;
+import smile.math.matrix.Matrix;
 
 import static org.junit.Assert.*;
 
@@ -128,7 +126,7 @@ public class DataFrameTest {
         smile.data.type.StructType schema = DataTypes.struct(
                 new StructField("age", DataTypes.IntegerType),
                 new StructField("birthday", DataTypes.DateType),
-                new StructField("gender", DataTypes.ByteType),
+                new StructField("gender", DataTypes.ByteType, new NominalScale("Male", "Female")),
                 new StructField("name", DataTypes.StringType),
                 new StructField("salary", DataTypes.object(Double.class))
         );
@@ -253,18 +251,22 @@ public class DataFrameTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("age", "salary").toMatrix();
+        Matrix output = df.select("name", "age", "salary", "gender").toMatrix(true, CategoricalEncoder.DUMMY, "name");
         System.out.println(output);
         assertEquals(4, output.nrows());
-        assertEquals(2, output.ncols());
-        assertEquals(38., output.get(0, 0), 1E-10);
-        assertEquals(23., output.get(1, 0), 1E-10);
-        assertEquals(48., output.get(2, 0), 1E-10);
-        assertEquals(13., output.get(3, 0), 1E-10);
-        assertEquals(10000., output.get(0, 1), 1E-10);
-        assertTrue(Double.isNaN(output.get(1, 1)));
-        assertEquals(230000., output.get(2, 1), 1E-10);
-        assertTrue(Double.isNaN(output.get(3, 1)));
+        assertEquals(4, output.ncols());
+        assertEquals(38., output.get(0, 1), 1E-10);
+        assertEquals(23., output.get(1, 1), 1E-10);
+        assertEquals(48., output.get(2, 1), 1E-10);
+        assertEquals(13., output.get(3, 1), 1E-10);
+        assertEquals(10000., output.get(0, 2), 1E-10);
+        assertTrue(Double.isNaN(output.get(1, 2)));
+        assertEquals(230000., output.get(2, 2), 1E-10);
+        assertTrue(Double.isNaN(output.get(3, 2)));
+        assertEquals(0, output.get(0, 3), 1E-10);
+        assertEquals(0, output.get(1, 3), 1E-10);
+        assertEquals(1, output.get(2, 3), 1E-10);
+        assertEquals(1, output.get(3, 3), 1E-10);
     }
 
     /**
@@ -273,16 +275,24 @@ public class DataFrameTest {
     @Test
     public void testDataFrameToArray() {
         System.out.println("toArray");
-        double[][] output = df.select("age", "salary").toArray();
+        double[][] output = df.select("age", "salary", "gender").toArray(true, CategoricalEncoder.DUMMY);
         assertEquals(4, output.length);
-        assertEquals(2, output[0].length);
-        assertEquals(38, output[0][0], 1E-10);
-        assertEquals(23., output[1][0], 1E-10);
-        assertEquals(48., output[2][0], 1E-10);
-        assertEquals(13., output[3][0], 1E-10);
-        assertEquals(10000., output[0][1], 1E-10);
-        assertTrue(Double.isNaN(output[1][1]));
-        assertEquals(230000., output[2][1], 1E-10);
-        assertTrue(Double.isNaN(output[3][1]));
+        assertEquals(4, output[0].length);
+        assertEquals(1, output[0][0], 1E-10);
+        assertEquals(1, output[1][0], 1E-10);
+        assertEquals(1, output[2][0], 1E-10);
+        assertEquals(1, output[3][0], 1E-10);
+        assertEquals(38., output[0][1], 1E-10);
+        assertEquals(23., output[1][1], 1E-10);
+        assertEquals(48., output[2][1], 1E-10);
+        assertEquals(13., output[3][1], 1E-10);
+        assertEquals(10000., output[0][2], 1E-10);
+        assertTrue(Double.isNaN(output[1][2]));
+        assertEquals(230000., output[2][2], 1E-10);
+        assertTrue(Double.isNaN(output[3][2]));
+        assertEquals(0, output[0][3], 1E-10);
+        assertEquals(0, output[1][3], 1E-10);
+        assertEquals(1, output[2][3], 1E-10);
+        assertEquals(1, output[3][3], 1E-10);
     }
 }

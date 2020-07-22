@@ -356,7 +356,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
     loop.breakable {
       while (true) {
         buffer.get match {
-          case END_OF_DOCUMENT => loop.break
+          case END_OF_DOCUMENT => loop.break()
           case TYPE_BOOLEAN    => json(ename(buffer)) = boolean(buffer)
           case TYPE_INT32      => json(ename(buffer)) = int(buffer)
           case TYPE_INT64      => json(ename(buffer)) = long(buffer)

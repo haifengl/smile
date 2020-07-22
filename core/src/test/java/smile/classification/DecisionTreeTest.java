@@ -61,7 +61,7 @@ public class DecisionTreeTest {
     public void testWeather() throws Exception {
         System.out.println("Weather");
 
-        DecisionTree model = DecisionTree.fit(WeatherNominal.formula, WeatherNominal.data);
+        DecisionTree model = DecisionTree.fit(WeatherNominal.formula, WeatherNominal.data, SplitRule.GINI, 8, 10, 1);
         System.out.println(model);
 
         double[] importance = model.importance();
@@ -69,13 +69,13 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x));
-        int error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(5, error);
-
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
+
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
+        int error = Error.of(WeatherNominal.y, prediction);
+        System.out.println("Error = " + error);
+        assertEquals(7, error);
     }
 
     @Test

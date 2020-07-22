@@ -96,18 +96,18 @@ public class RandomForestTest {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        RandomForest model = RandomForest.fit(WeatherNominal.formula, WeatherNominal.data, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds));
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 100, 2, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds)));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(5, error);
+        assertEquals(6, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);

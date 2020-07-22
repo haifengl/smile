@@ -18,8 +18,6 @@
 package smile.imputation;
 
 import smile.math.matrix.Matrix;
-import smile.math.matrix.LU;
-import smile.math.matrix.DenseMatrix;
 import smile.sort.QuickSort;
 
 /**
@@ -115,7 +113,7 @@ public class LLSImputation implements MissingValueImputation {
 
             QuickSort.sort(dist, dat);
 
-            DenseMatrix A = Matrix.zeros(d - missing, k);
+            Matrix A = new Matrix(d - missing, k);
             double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
@@ -143,7 +141,7 @@ public class LLSImputation implements MissingValueImputation {
             if (!sufficient)
                 continue;
 
-            LU lu = A.lu();
+            Matrix.LU lu = A.lu();
             lu.solve(b);
 
             for (int j = 0; j < d; j++) {

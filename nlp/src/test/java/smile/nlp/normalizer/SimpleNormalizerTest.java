@@ -32,7 +32,7 @@ public class SimpleNormalizerTest {
     @Test
     public void testSplit() {
         System.out.println("normalize text");
-        String text = "\tTHE BIG RIPOFF\n\n"
+        String text = "\t\u00A0THE BIG RIPOFF\n\n"
                 + "Mr. John B. Smith bought cheapsite.com for 1.5 million dollars,\n\r"
                 + "i.e. he paid far too much for it.\n\n"
                 + "Did he mind?\n\r"

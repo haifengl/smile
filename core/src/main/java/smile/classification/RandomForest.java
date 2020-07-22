@@ -93,7 +93,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     }
 
     /**
-     * Design matrix formula
+     * The model formula.
      */
     private Formula formula;
 
@@ -281,6 +281,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             throw new IllegalArgumentException("Invalid sampling rating: " + subsample);
         }
 
+        formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 
@@ -356,7 +357,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
                 }
             }
 
-            DecisionTree tree = new DecisionTree(x, codec.y, codec.field, k, rule, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
+            DecisionTree tree = new DecisionTree(x, codec.y, y.field(), k, rule, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
 
             // estimate OOB error
             int oob = 0;

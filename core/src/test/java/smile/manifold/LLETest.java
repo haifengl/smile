@@ -17,24 +17,12 @@
 
 package smile.manifold;
 
-import org.apache.commons.csv.CSVFormat;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.DataFrame;
 import smile.data.SwissRoll;
-import smile.data.formula.Formula;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
-import smile.io.CSV;
-import smile.util.Paths;
-
-import java.util.ArrayList;
-import java.util.stream.IntStream;
-
 import static org.junit.Assert.*;
 
 /**

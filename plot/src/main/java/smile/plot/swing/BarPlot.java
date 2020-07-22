@@ -98,6 +98,11 @@ public class BarPlot extends Plot {
     }
 
     @Override
+    public Optional<Legend[]> legends() {
+        return legends;
+    }
+
+    @Override
     public Canvas canvas() {
         Canvas canvas = new Canvas(getLowerBound(), getUpperBound());
         canvas.add(this);
@@ -136,8 +141,8 @@ public class BarPlot extends Plot {
         for (int i = 0; i < n; i++) {
             double[][] x = new double[data[i].length][2];
             for (int j = 0; j < x.length; j++) {
-                x[i][0] = j + (i+1) * width;
-                x[i][1] = data[i][j];
+                x[j][0] = j + (i+1) * width;
+                x[j][1] = data[i][j];
             }
 
             Color color = Palette.COLORS[i];

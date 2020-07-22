@@ -36,7 +36,7 @@ public class BostonHousing {
         try {
             data = Read.arff(Paths.getTestData("weka/regression/housing.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'boston housing': " + ex);

@@ -17,10 +17,7 @@
 
 package smile.clustering;
 
-import java.util.function.ToDoubleBiFunction;
 import smile.math.MathEx;
-import smile.math.distance.Distance;
-import smile.math.distance.EuclideanDistance;
 
 /**
  * K-Means clustering. The algorithm partitions n observations into k clusters

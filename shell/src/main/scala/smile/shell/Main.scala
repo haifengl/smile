@@ -25,9 +25,9 @@ object Main {
   def main(args: Array[String]): Unit = {
     try {
       val clazz = Class.forName("ammonite.Main$")
-      AmmoniteREPL.main(clazz, args)
+      AmmoniteREPL.main0(clazz, args)
     } catch {
-      case _: ClassNotFoundException => ScalaREPL.main(args)
+      case _: ClassNotFoundException => ScalaREPL.main0(args)
     }
   }
 }

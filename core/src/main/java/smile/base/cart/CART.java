@@ -34,19 +34,23 @@ import java.util.*;
 import java.util.stream.IntStream;
 import java.util.AbstractMap.SimpleEntry;
 
-/** Classification and regression tree. */
+/**
+ * Classification and regression tree.
+ *
+ * @author Haifeng Li
+ */
 public abstract class CART implements SHAP<Tuple>, Serializable {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CART.class);
 
-    /** The schema of data. */
+    /** The model formula. */
+    protected Formula formula;
+
+    /** The schema of predictors. */
     protected StructType schema;
 
     /** The schema of response variable. */
     protected StructField response;
-
-    /** Design matrix formula */
-    protected Formula formula = null;
 
     /** The root of decision tree. */
     protected Node root;
@@ -152,7 +156,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
         if (mtry < 1 || mtry > p) {
             logger.debug("Invalid mtry. Use all features.");
-            this.mtry = schema.length();
+            this.mtry = p;
         }
 
         if (maxDepth < 1) {
@@ -215,7 +219,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
 
         for (int j = 0; j < p; j++) {
             Measure measure = schema.field(j).measure;
-            if (measure == null || !(measure instanceof NominalScale)) {
+            if (!(measure instanceof NominalScale)) {
                 x.column(j).toDoubleArray(a);
                 order[j] = QuickSort.sort(a);
             }

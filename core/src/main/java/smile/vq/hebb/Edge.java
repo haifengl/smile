@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 /**
  * The connection between neurons.
+ *
+ * @author Haifeng Li
  */
 public class Edge implements Serializable {
     private static final long serialVersionUID = 2L;

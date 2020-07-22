@@ -22,7 +22,11 @@ import java.util.stream.Collectors;
 import smile.neighbor.lsh.Bucket;
 import smile.neighbor.lsh.Hash;
 
-/** Mutable LSH. */
+/**
+ * Mutable LSH.
+ *
+ * @author Haifeng Li
+ */
 public class MutableLSH<E> extends LSH<E> {
     /**
      * Constructor.

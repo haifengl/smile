@@ -18,17 +18,17 @@
 package smile.math.random;
 
 /**
- * Mersenne Twister 64-bit.
- * <p>
- * Similar to the regular Mersenne Twister but is implemented use
- * 64-bit registers (Java <code>long</code>) and produces
- * different output.
- * <ul>
- * <li>  Makato Matsumoto and Takuji Nishimura,
+ * 64-bit Mersenne Twister. Similar to the regular Mersenne Twister
+ * but is implemented use 64-bit registers (Java <code>long</code>)
+ * and produces different output.
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> Makato Matsumoto and Takuji Nishimura,
  * <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/mt.pdf">"Mersenne Twister: A 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator"</a>,
  * <i>ACM Transactions on Modeling and Computer Simulation, </i> Vol. 8, No. 1,
  * January 1998, pp 3--30.</li>
- * </ul>
+ * </ol>
  *
  * @author Haifeng Li
  */

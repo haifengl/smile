@@ -23,6 +23,7 @@ import java.text.SimpleDateFormat;
 import javax.swing.table.DefaultTableCellRenderer;
 
 /**
+ * Date cell renderer.
  *
  * @author Haifeng Li
  */

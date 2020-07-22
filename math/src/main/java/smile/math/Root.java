@@ -22,42 +22,8 @@ package smile.math;
  *
  * @author Haifeng Li
  */
-public class Root {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);
-
-    /**
-     * The accuracy tolerance.
-     */
-    private double tol = 1E-7;
-    /**
-     * The maximum number of allowed iterations.
-     */
-    private int maxIter = 500;
-
-    /**
-     * Constructor with tol = 1E-7 and maxIter = 500.
-     */
-    public Root() {
-        this(1E-7, 500);
-    }
-
-    /**
-     * Constructor.
-     * @param tol the accuracy tolerance.
-     * @param maxIter the maximum number of allowed iterations.
-     */
-    public Root(double tol, int maxIter) {
-        if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        this.tol = tol;
-        this.maxIter = maxIter;
-    }
+public interface Root {
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);
 
     /**
      * Brent's method for root-finding. It combines the bisection method,
@@ -67,16 +33,26 @@ public class Root {
      * fast-converging secant method or inverse quadratic interpolation
      * if possible, but it falls back to the more robust bisection method
      * if necessary.
-     *
+     * <p>
      * The method is guaranteed to converge as long as the function can be
      * evaluated within the initial interval known to contain a root.
      *
      * @param func the function to be evaluated.
      * @param x1 the left end of search interval.
      * @param x2 the right end of search interval.
+     * @param tol the desired accuracy (convergence tolerance).
+     * @param maxIter the maximum number of iterations.
      * @return the root.
      */
-    public double find(Function func, double x1, double x2) {
+    static double find(Function func, double x1, double x2, double tol, int maxIter) {
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
         double a = x1, b = x2, c = x2, d = 0, e = 0, fa = func.apply(a), fb = func.apply(b), fc, p, q, r, s, xm;
         if ((fa > 0.0 && fb > 0.0) || (fa < 0.0 && fb < 0.0)) {
             throw new IllegalArgumentException("Root must be bracketed.");
@@ -170,9 +146,11 @@ public class Root {
      * @param func the function to be evaluated.
      * @param x1 the left end of search interval.
      * @param x2 the right end of search interval.
+     * @param tol the desired accuracy (convergence tolerance).
+     * @param maxIter the maximum number of iterations.
      * @return the root.
      */
-    public double find(DifferentiableFunction func, double x1, double x2) {
+    static double find(DifferentiableFunction func, double x1, double x2, double tol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
