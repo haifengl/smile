@@ -337,7 +337,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         BaseVector y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
-        DecisionTree tree = new DecisionTree(x, codec.y, codec.field, codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
+        DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
         tree.labels = codec.labels;
         return tree;
