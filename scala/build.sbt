@@ -14,5 +14,5 @@ libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
   "com.thoughtworks.xstream" % "xstream" % "1.4.12",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "org.specs2" %% "specs2-core" % "4.9.3" % Test
+  "org.specs2" %% "specs2-core" % "4.10.0" % Test
 )
