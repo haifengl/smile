@@ -81,10 +81,6 @@ import smile.validation.ModelSelection;
  */
 public abstract class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 2L;
-    /**
-     * The names of independent variables.
-     */
-    String[] fields;
 
     /**
      * The dimension of input space.
@@ -131,11 +127,6 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         this.L = L;
         this.lambda = lambda;
         this.labels = labels;
-        fields = new String[p+1];
-        fields[p] = "Intercept";
-        for (int i = 0; i < p; i++) {
-            fields[i] = "x" + (i+1);
-        }
     }
 
     /** Binomial logistic regression. The dependent variable is nominal of two levels. */
@@ -328,15 +319,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         DataFrame X = formula.x(data);
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
-        Binomial model = binomial(x, y, prop);
-
-        StructType schema = X.schema();
-        int p = schema.length();
-        for (int i = 0; i < p; i++) {
-            model.fields[i] = schema.fieldName(i);;
-        }
-
-        return model;
+        return binomial(x, y, prop);
     }
 
     /**
@@ -426,15 +409,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         DataFrame X = formula.x(data);
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
-        Multinomial model = multinomial(x, y, prop);
-
-        StructType schema = X.schema();
-        int p = schema.length();
-        for (int i = 0; i < p; i++) {
-            model.fields[i] = schema.fieldName(i);;
-        }
-
-        return model;
+        return multinomial(x, y, prop);
     }
 
     /**
@@ -532,15 +507,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         DataFrame X = formula.x(data);
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
-        LogisticRegression model = fit(x, y, prop);
-
-        StructType schema = X.schema();
-        int p = schema.length();
-        for (int i = 0; i < p; i++) {
-            model.fields[i] = schema.fieldName(i);;
-        }
-
-        return model;
+        return fit(x, y, prop);
     }
 
     /**
