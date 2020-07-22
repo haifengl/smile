@@ -95,14 +95,14 @@ public class Formula implements Serializable {
         this.predictors = predictors;
     }
 
-    /** Returns a formula with only predictors. */
-    public Formula predictors() {
-        return rhs(predictors);
+    /** Returns the predictors. */
+    public Term[] predictors() {
+        return predictors;
     }
 
     /** Returns the response term. */
-    public Optional<Term> response() {
-        return Optional.ofNullable(response);
+    public Term response() {
+        return response;
     }
 
     @Override
@@ -116,6 +116,18 @@ public class Formula implements Serializable {
 
         if (p.startsWith("+ ")) p = p.substring(2);
         return String.format("%s ~ %s", r, p);
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Formula)) return false;
+        Formula f = (Formula) o;
+        if (predictors.length != f.predictors.length) return false;
+        if (!String.valueOf(response).equals(String.valueOf(f.response))) return false;
+        for (int i = 0; i < predictors.length; i++) {
+            if (!String.valueOf(predictors[i]).equals(String.valueOf(f.predictors[i]))) return false;
+        }
+        return true;
     }
 
     /**
@@ -188,14 +200,10 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Expands the 'all' term on the given schema.
+     * Expands the Dot and FactorCrossing terms on the given schema.
      * @param inputSchema the schema to expand on
      */
     public Formula expand(StructType inputSchema) {
-        if (!Arrays.stream(predictors).anyMatch(predictor -> predictor instanceof Dot)) {
-            return this;
-        }
-
         Set<String> columns = new HashSet<>();
         if (response != null) columns.addAll(response.variables());
         Arrays.stream(predictors)
@@ -227,7 +235,7 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Binds the formula to a schema and returns the design matrix schema.
+     * Binds the formula to a schema and returns the schema of predictors.
      * @param inputSchema the schema to bind with
      */
     public StructType bind(StructType inputSchema) {

@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.blas.Transpose;
 import smile.math.matrix.DMatrix;
@@ -121,6 +122,9 @@ public class LASSO {
      * @param maxIter the maximum number of IPM (Newton) iterations.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
+        formula = formula.expand(data.schema());
+        StructType schema = formula.bind(data.schema());
+
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
@@ -129,7 +133,7 @@ public class LASSO {
 
         for (int j = 0; j < scale.length; j++) {
             if (MathEx.isZero(scale[j])) {
-                throw new IllegalArgumentException(String.format("The column '%s' is constant", formula.xschema().fieldName(j)));
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", X.colName(j)));
             }
         }
 
@@ -137,7 +141,7 @@ public class LASSO {
 
         LinearModel model = train(scaledX, y, lambda, tol, maxIter);
         model.formula = formula;
-        model.schema = formula.xschema();
+        model.schema = schema;
         model.predictors = X.colNames();
 
         for (int j = 0; j < model.p; j++) {

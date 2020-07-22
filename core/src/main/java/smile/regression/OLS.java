@@ -20,6 +20,7 @@ package smile.regression;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
@@ -115,6 +116,8 @@ public class OLS {
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
         formula = formula.expand(data.schema());
+        StructType schema = formula.bind(data.schema());
+
         Matrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 
@@ -147,7 +150,7 @@ public class OLS {
 
         LinearModel model = new LinearModel();
         model.formula = formula;
-        model.schema = formula.xschema();
+        model.schema = schema;
         model.predictors = X.colNames();
         model.p = p;
         model.w = w;
