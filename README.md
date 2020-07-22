@@ -66,7 +66,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>2.4.0</version>
+      <version>2.5.0</version>
     </dependency>
 ```
 
@@ -74,50 +74,44 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.4.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.0"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:2.4.0")
+    implementation("com.github.haifengl:smile-kotlin:2.5.0")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "2.4.0"]
+    [org.clojars.haifengl/smile "2.5.0"]
 ```
 
-To enable machine optimized matrix computation, the users should
-make their machine-optimized libblas3 (CBLAS) and liblapack3 (Fortran)
-available as shared libraries at runtime. This module employs the highly
-efficient [netlib-java](https://github.com/fommil/netlib-java#netlib-java)
-library.
+By default, Smile leverages OpenBLAS for optimized matrix computation.
+If you don't use algorithms depending on matrix computation, you may
+exclude the dependcy to save space:
+```
+    libraryDependencies += "com.github.haifengl" % "smile-core" % "2.5.0" exclude("org.bytedeco", "arpack-ng-platform")
+```
 
-#### OS X
-Apple OS X requires no further setup as it ships with the veclib framework.
+If you prefer other BLAS implementations, you can use any library found on
+the "java.library.path" or on the class path, by specifying it with the
+"org.bytedeco.openblas.load" system property. For example, to use the BLAS
+library from the Accelerate framework on Mac OS X, we can pass options such
+as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.
 
-#### Linux
-Generically-tuned ATLAS and OpenBLAS are available with most distributions
-and must be enabled explicitly using the package-manager. For example,
-
- - sudo apt-get install libatlas3-base libopenblas-base
- - sudo update-alternatives --config libblas.so
- - sudo update-alternatives --config libblas.so.3
- - sudo update-alternatives --config liblapack.so
- - sudo update-alternatives --config liblapack.so.3
-
-However, these are only generic pre-tuned builds. If you have [Intel MKL]
-(https://software.intel.com/en-us/mkl) installed, you could also create
-symbolic links from libblas.so.3 and liblapack.so.3 to libmkl_rt.so or
-use Debian's alternatives system.
-
-#### Windows
-The native_system builds expect to find libblas3.dll and liblapack3.dll
-on the %PATH% (or current working directory). Smile prebuilt package
-ships [Intel MKL](https://software.intel.com/en-us/mkl), which features
-highly optimized, threaded, and vectorized math functions that maximize
-performance on each processor family.
+For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
+Or you may simply include `smile-mkl` module in your project, which includes MKL binaries.
+With `smile-mkl` module in the class path, Smile will automatically switch to MKL.
+No need to specify `-Dorg.bytedeco.openblas.load=mkl_rt`.
+```
+    <dependency>
+      <groupId>com.github.haifengl</groupId>
+      <artifactId>smile-mkl</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+```
 
 ## Shell
 Smile comes with interactive shells for Java, Scala and Kotlin.
@@ -172,7 +166,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>2.4.0</version>
+      <version>2.5.0</version>
     </dependency>
 ```
 
