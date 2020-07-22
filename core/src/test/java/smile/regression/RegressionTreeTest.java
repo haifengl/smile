@@ -106,10 +106,10 @@ public class RegressionTreeTest {
     public void testAll() {
         test("CPU", CPU.formula, CPU.data, 84.5224);
         test("2dplanes", Planes.formula, Planes.data, 1.1164);
-        test("abalone", Abalone.formula, Abalone.train, 2.5891);
+        test("abalone", Abalone.formula, Abalone.train, 2.5888);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.1093);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.2882);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8634);
         test("cal_housing", CalHousing.formula, CalHousing.data, 59979.0575);
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9136);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);

@@ -18,6 +18,7 @@
 package smile.demo.projection;
 
 import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
@@ -112,10 +113,10 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
             String[] names = null;
 
             if (formula[datasetIndex] == null) {
-                data = dataset[datasetIndex].toArray();
+                data = dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT);
             } else {
                 DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
-                data = datax.toArray();
+                data = datax.toArray(false, CategoricalEncoder.ONE_HOT);
                 if (datasetIndex == 1) {
                     names = dataset[datasetIndex].stringVector(0).toArray();
                 } else {

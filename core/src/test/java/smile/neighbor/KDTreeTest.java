@@ -68,8 +68,8 @@ public class KDTreeTest {
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> n1 = kdtree.nearest(data[i]);
-            Neighbor<double[], double[]> n2 = naive.nearest(data[i]);
+            Neighbor<double[], double[]> n1 = naive.nearest(data[i]);
+            Neighbor<double[], double[]> n2 = kdtree.nearest(data[i]);
             assertEquals(n1.index, n2.index);
             assertEquals(n1.value, n2.value);
             assertEquals(n1.distance, n2.distance, 1E-7);
@@ -85,8 +85,8 @@ public class KDTreeTest {
         LinearSearch<double[]> naive = new LinearSearch<>(data, new EuclideanDistance());
 
         for (int i = 0; i < data.length; i++) {
-            Neighbor<double[], double[]> [] n1 = kdtree.knn(data[i], 10);
-            Neighbor<double[], double[]> [] n2 = naive.knn(data[i], 10);
+            Neighbor<double[], double[]> [] n1 = naive.knn(data[i], 10);
+            Neighbor<double[], double[]> [] n2 = kdtree.knn(data[i], 10);
             for (int j = 0; j < n1.length; j++) {
                 assertEquals(n1[j].index, n2[j].index);
                 assertEquals(n1[j].value, n2[j].value);
@@ -122,8 +122,8 @@ public class KDTreeTest {
 
         System.out.println("range 1.5");
         for (int i = 0; i < data.length; i++) {
-            kdtree.range(data[i], 1.5, n1);
-            naive.range(data[i], 1.5, n2);
+            naive.range(data[i], 1.5, n1);
+            kdtree.range(data[i], 1.5, n2);
             Collections.sort(n1);
             Collections.sort(n2);
             assertEquals(n1.size(), n2.size());
@@ -170,6 +170,36 @@ public class KDTreeTest {
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Range: %.2fs%n", time);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testBenchmark() throws Exception {
+        System.out.println("----- Benchmark -----");
+
+        int N = 40000;
+        int size = 100;
+        int numTests = 100_000;
+
+        double[][] coords = new double[N][3];
+        for (int i = 0; i < N; i++) {
+            coords[i][0] = MathEx.random() * size;
+            coords[i][1] = MathEx.random() * size;
+            coords[i][2] = MathEx.random() * size;
+        }
+        KDTree<double[]> kdt = new KDTree<>(coords, coords);
+
+        long start = System.currentTimeMillis();
+        double[] q = new double[3];
+        for (int i = 0; i < numTests; i++) {
+            q[0] = MathEx.random() * size;
+            q[1] = MathEx.random() * size;
+            q[2] = MathEx.random() * size;
+            kdt.nearest(q);
+        }
+
+        double time = (System.currentTimeMillis() - start) / 1000.0;
+        System.out.format("Benchmark: %.2fs%n", time);
+        assertTrue(time < 0.25);
     }
 
     @Test(expected = Test.None.class)

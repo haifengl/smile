@@ -18,7 +18,7 @@
 package smile.math.rbf;
 
 /**
- * Inverse multiquadric RBF. &phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>-1/2</sup>
+ * Inverse multiquadric RBF. <code>&phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>-1/2</sup></code>
  * where r<sub>0</sub> is a scale factor. Although it sounds odd, the inverse
  * multiquadric gives results that are comparable to the multiquadric,
  * sometimes better. The reason is what really matters is smoothness, and

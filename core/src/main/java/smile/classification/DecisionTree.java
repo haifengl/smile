@@ -332,11 +332,12 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
      * @param nodeSize the minimum size of leaf nodes.
      */
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
+        formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
-        DecisionTree tree = new DecisionTree(x, codec.y, codec.field, codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
+        DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
         tree.labels = codec.labels;
         return tree;

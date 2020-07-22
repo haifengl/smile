@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * Neural network cost function.
+ *
+ * @author Haifeng Li
  */
 public enum Cost {
     /**

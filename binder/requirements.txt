@@ -1,2 +1,0 @@
-nbdime
-jupyterlab-git

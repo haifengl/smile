@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 
 import smile.classification.FLD;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -38,7 +39,7 @@ public class FLDDemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.DUMMY);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         FLD fisher = FLD.fit(data, label);

@@ -38,6 +38,8 @@ import javax.swing.text.DefaultFormatterFactory;
 /**
  * Implements a cell editor that uses a formatted text field
  * to edit double[] values.
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class DoubleArrayCellEditor extends DefaultCellEditor {

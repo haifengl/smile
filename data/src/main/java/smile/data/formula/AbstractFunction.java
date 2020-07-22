@@ -18,14 +18,13 @@
 package smile.data.formula;
 
 import java.util.Set;
-import smile.data.type.StructType;
 
 /**
  * This class provides a skeletal implementation of the function term.
  *
  * @author Haifeng Li
  */
-public abstract class AbstractFunction extends AbstractTerm {
+public abstract class AbstractFunction implements Term {
     /** The name of function. */
     String name;
     /** The operand. */
@@ -43,22 +42,15 @@ public abstract class AbstractFunction extends AbstractTerm {
     }
 
     @Override
-    public String name() {
-        return String.format("%s(%s)", name, x.name());
-    }
-
-    @Override
     public String toString() {
-        return name();
+        if (x instanceof Operator)
+            return String.format("%s%s", name, x);
+        else
+            return String.format("%s(%s)", name, x);
     }
 
     @Override
     public Set<String> variables() {
         return x.variables();
-    }
-
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
     }
 }

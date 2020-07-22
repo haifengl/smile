@@ -27,8 +27,8 @@ import java.util.Date;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import smile.data.measure.ContinuousMeasure;
-import smile.data.measure.DiscreteMeasure;
+import smile.data.measure.CategoricalMeasure;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
@@ -69,8 +69,8 @@ class VectorImpl<T> implements Vector<T> {
     /** Constructor. */
     public VectorImpl(StructField field, T[] vector) {
         if (field.measure != null) {
-            if ((field.type.isIntegral() && field.measure instanceof ContinuousMeasure) ||
-                (field.type.isFloating() && field.measure instanceof DiscreteMeasure) ||
+            if ((field.type.isIntegral() && field.measure instanceof NumericalMeasure) ||
+                (field.type.isFloating() && field.measure instanceof CategoricalMeasure) ||
                 (!field.type.isIntegral() && !field.type.isFloating())) {
                 throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
             }
@@ -112,7 +112,7 @@ class VectorImpl<T> implements Vector<T> {
         @SuppressWarnings("unchecked")
         T[] v = (T[]) java.lang.reflect.Array.newInstance(vector.getClass().getComponentType(), index.length);
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new VectorImpl<>(name, type, v);
+        return new VectorImpl<>(field(), v);
     }
 
     @Override

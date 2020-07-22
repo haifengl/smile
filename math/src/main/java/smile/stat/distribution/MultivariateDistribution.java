@@ -17,9 +17,8 @@
 
 package smile.stat.distribution;
 
-import smile.math.matrix.DenseMatrix;
-
 import java.io.Serializable;
+import smile.math.matrix.Matrix;
 
 /**
  * Probability distribution of multivariate random variable.
@@ -49,7 +48,7 @@ public interface MultivariateDistribution extends Serializable {
     /**
      * The covariance matrix of distribution.
      */
-    DenseMatrix cov();
+    Matrix cov();
     
     /**
      * The probability density function for continuous distribution

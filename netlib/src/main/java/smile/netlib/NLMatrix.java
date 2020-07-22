@@ -205,7 +205,7 @@ public class NLMatrix extends JMatrix {
             NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(Transpose, Transpose,
                     m, n, k, 1.0, data(), k, B.data(),
-                    k, 0.0, C.data(), m);
+                    n, 0.0, C.data(), m);
             return C;
         }
 

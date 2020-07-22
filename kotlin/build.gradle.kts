@@ -26,9 +26,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    implementation("com.github.haifengl:smile-core:2.4.0")
-    implementation("com.github.haifengl:smile-nlp:2.4.0")
-    implementation("com.github.haifengl:smile-io:2.4.0")
+    api("com.github.haifengl:smile-core:2.4.0")
+    api("com.github.haifengl:smile-nlp:2.4.0")
+    api("com.github.haifengl:smile-io:2.4.0")
 }
 
 // Copy jar to shell lib
@@ -46,7 +46,7 @@ tasks.build {
 tasks {
     val dokka by getting(DokkaTask::class) {
         outputFormat = "html"
-        outputDirectory = "../docs/2.0/api/kotlin"
+        outputDirectory = "../doc/api/kotlin"
         configuration {
             includes = listOf("packages.md")
             externalDocumentationLink {

@@ -24,22 +24,28 @@ import smile.association.TotalSupportTree.Node;
 
 /**
  * Association Rule Mining.
- * Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
- * binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
- * be a set of transactions called the database. Each transaction in D has a
- * unique transaction ID and contains a subset of the items in I.
- * An association rule is defined as an implication of the form X &rArr; Y
- * where X, Y &sube; I and X &cap; Y = &Oslash;. The item sets X and Y are called
- * antecedent (left-hand-side or LHS) and consequent (right-hand-side or RHS)
- * of the rule, respectively. The support supp(X) of an item set X is defined as
+ * Let <code></code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
+ * be a set of n binary attributes called items. Let
+ * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
+ * be a set of transactions called the database. Each transaction in
+ * <code>D</code> has an unique transaction ID and contains a subset of
+ * the items in <code>I</code>. An association rule is defined as an
+ * implication of the form <code>X &rArr; Y</code>
+ * where <code>X, Y &sube; I</code> and <code>X &cap; Y = &Oslash;</code>.
+ * The item sets <code>X</code> and <code>Y</code> are called antecedent
+ * (left-hand-side or LHS)
+ * and consequent (right-hand-side or RHS) of the rule, respectively.
+ * The support <code>supp(X)</code> of an item set X is defined as
  * the proportion of transactions in the database which contain the item set.
- * Note that the support of an association rule X &rArr; Y is supp(X &cup; Y).
- * The confidence of a rule is defined conf(X &rArr; Y) = supp(X &cup; Y) / supp(X).
- * Confidence can be interpreted as an estimate of the probability P(Y | X),
- * the probability of finding the RHS of the rule in transactions under the
- * condition that these transactions also contain the LHS.
- * Association rules are usually required to satisfy a user-specified minimum
- * support and a user-specified minimum confidence at the same time.
+ * Note that the support of an association rule <code>X &rArr; Y</code> is
+ * <code>supp(X &cup; Y)</code>. The confidence of a rule is defined
+ * <code>conf(X &rArr; Y) = supp(X &cup; Y) / supp(X)</code>.
+ * Confidence can be interpreted as an estimate of the probability
+ * <code>P(Y | X)</code>, the probability of finding the RHS of the
+ * rule in transactions under the condition that these transactions
+ * also contain the LHS. Association rules are usually required to
+ * satisfy a user-specified minimum support and a user-specified
+ * minimum confidence at the same time.
  * 
  * @author Haifeng Li
  */

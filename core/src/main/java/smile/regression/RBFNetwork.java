@@ -19,8 +19,6 @@ package smile.regression;
 
 import smile.base.rbf.RBF;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
 import smile.math.rbf.RadialBasisFunction;
 
 /**
@@ -127,7 +125,7 @@ public class RBFNetwork<T> implements Regression<T> {
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = Matrix.zeros(n, m);
+        Matrix G = new Matrix(n, m);
         double[] b = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
@@ -144,9 +142,8 @@ public class RBFNetwork<T> implements Regression<T> {
             }
         }
 
-        double[] w = new double[m];
-        QR qr = G.qr();
-        qr.solve(b, w);
+        Matrix.QR qr = G.qr();
+        double[] w = qr.solve(b);
 
         return new RBFNetwork<>(rbf, w, normalized);
     }

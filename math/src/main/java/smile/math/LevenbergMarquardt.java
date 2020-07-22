@@ -18,13 +18,10 @@
 package smile.math;
 
 import java.util.Arrays;
-
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.SVD;
 
 /**
- * Levenberg–Marquardt algorithm.
+ * The Levenberg–Marquardt algorithm.
  * The Levenberg–Marquardt algorithm (LMA), also known as the Damped
  * least-squares method, is used to solve non-linear least squares
  * problems for generic curve-fitting problems. However,
@@ -43,25 +40,25 @@ public class LevenbergMarquardt {
     private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
 
     /** The fitted parameters. */
-    public final double[] p;
+    public final double[] parameters;
     /** The fitted values. */
-    public final double[] f;
+    public final double[] fittedValues;
     /** The residuals. */
-    public final double[] r;
+    public final double[] residuals;
     /** The sum of squares due to error. */
     public final double sse;
 
     /**
      * Constructor.
-     * @param p The fitted parameters.
-     * @param f The fitted values.
-     * @param r The residuals.
+     * @param parameters The fitted parameters.
+     * @param fittedValues The fitted values.
+     * @param residuals The residuals.
      * @param sse The sum of squares due to error.
      */
-    LevenbergMarquardt(double[] p, double[] f, double[] r, double sse) {
-        this.p = p;
-        this.f = f;
-        this.r = r;
+    LevenbergMarquardt(double[] parameters, double[] fittedValues, double[] residuals, double sse) {
+        this.parameters = parameters;
+        this.fittedValues = fittedValues;
+        this.residuals = residuals;
         this.sse = sse;
     }
 
@@ -121,7 +118,7 @@ public class LevenbergMarquardt {
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
-        DenseMatrix J = Matrix.zeros(n, d);
+        Matrix J = new Matrix(n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
@@ -163,12 +160,12 @@ public class LevenbergMarquardt {
                 }
             }
 
-            SVD svd = J.svd();
-            double[] s = svd.getSingularValues();
+            Matrix.SVD svd = J.svd();
+            double[] s = svd.s;
             double s2 = MathEx.dot(s, s);
-            DenseMatrix U = svd.getU();
-            DenseMatrix V = svd.getV();
-            U.atx(r, g);
+            Matrix U = svd.U;
+            Matrix V = svd.V;
+            U.tv(r, g);
 
             for (int k = 0; k < epstab.length; k++) {
                 double epsL = Math.max(epsLlast * epstab[k], 1e-7);
@@ -177,7 +174,7 @@ public class LevenbergMarquardt {
                     gse[j] = g[j] / se;
                 }
 
-                V.ax(gse, chg);
+                V.mv(gse, chg);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];
@@ -283,7 +280,7 @@ public class LevenbergMarquardt {
         double[] norm = new double[d];
         Arrays.fill(norm, 1.0);
 
-        DenseMatrix J = Matrix.zeros(n, d);
+        Matrix J = new Matrix(n, d);
 
         double epsLlast = 1;
         double[] epstab = {0.1, 1, 1e2, 1e4, 1e6};
@@ -325,12 +322,12 @@ public class LevenbergMarquardt {
                 }
             }
 
-            SVD svd = J.svd();
-            double[] s = svd.getSingularValues();
+            Matrix.SVD svd = J.svd();
+            double[] s = svd.s;
             double s2 = MathEx.dot(s, s);
-            DenseMatrix U = svd.getU();
-            DenseMatrix V = svd.getV();
-            U.atx(r, g);
+            Matrix U = svd.U;
+            Matrix V = svd.V;
+            U.tv(r, g);
 
             for (int k = 0; k < epstab.length; k++) {
                 double epsL = Math.max(epsLlast * epstab[k], 1e-7);
@@ -339,7 +336,7 @@ public class LevenbergMarquardt {
                     gse[j] = g[j] / se;
                 }
 
-                V.ax(gse, chg);
+                V.mv(gse, chg);
 
                 for (int j = 0; j < d; j++) {
                     chg[j] *= norm[j];

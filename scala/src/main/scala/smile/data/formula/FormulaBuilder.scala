@@ -21,8 +21,8 @@ import scala.collection.mutable.ListBuffer
 import Terms._
 
 /** DSL to build a formula in R style. */
-case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
-  def + (term: HyperTerm): FormulaBuilder = {
+case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {
+  def + (term: Term): FormulaBuilder = {
     x.append(term)
     this
   }
@@ -45,7 +45,7 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
   /** Builds the formula. */
   def toFormula: Formula = y match {
     case None => x.toList match {
-      case Nil => Formula.rhs(all)
+      case Nil => Formula.rhs(dot)
       case x => Formula.rhs(x: _*)
     }
 
@@ -60,8 +60,8 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[HyperTerm]) {
   * Use a different name to avoid clash.
   */
 private[formula] case class PimpedFormulaString(a: String) {
-  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) all else $(b)))
-  def ~ (b: HyperTerm) = FormulaBuilder(Option($(a)), ListBuffer(b))
+  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) dot else $(b)))
+  def ~ (b: Term) = FormulaBuilder(Option($(a)), ListBuffer(b))
   def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
   def unary_~ = FormulaBuilder(Option.empty, ListBuffer($(a)))
 
@@ -91,7 +91,7 @@ private[formula] case class FactorCrossingBuilder(x: ListBuffer[String]) {
   def toFactorCrossing: FactorCrossing = cross(x.toList: _*)
 }
 
-private[formula] case class PimpedHyperTerm(a: HyperTerm) {
+private[formula] case class PimpedHyperTerm(a: Term) {
   def unary_~ = FormulaBuilder(Option.empty, ListBuffer(a))
 }
 

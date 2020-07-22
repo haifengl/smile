@@ -24,14 +24,14 @@ import java.util.Map;
 
 /**
  * A perfect hash of an array of strings to their index in the array.
- *
+ * <p>
  * A perfect hash function for a set <code>S</code> is a hash function
  * that maps distinct elements in <code>S</code> to a set of integers,
  * with no collisions. In mathematical terms, it is an injective function.
- *
+ * <p>
  * Perfect hash functions may be used to implement a lookup table with
  * constant worst-case access time.
- *
+ * <p>
  * A perfect hash function for a specific set <code>S</code> can be found by
  * a randomized algorithm in a number of operations that is proportional
  * to the size of <code>S</code>. The original construction of Fredman,
@@ -39,6 +39,8 @@ import java.util.Map;
  * (larger than the size of the universe from which <code>S</code> is drawn),
  * and a parameter <code>k</code>, and maps each element <code>x</code> of
  * <code>S</code> to the index <code>g(x) = (kx mod p) mod n</code>.
+ *
+ * @author Haifeng Li
  */
 public class PerfectHash implements Serializable {
     /** The keyword set. */
