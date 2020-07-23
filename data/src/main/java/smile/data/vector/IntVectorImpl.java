@@ -17,13 +17,11 @@
 
 package smile.data.vector;
 
+import java.util.Arrays;
+import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.IntStream;
 
 /**
  * An immutable integer vector.
