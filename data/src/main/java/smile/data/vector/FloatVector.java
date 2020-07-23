@@ -17,6 +17,7 @@
 
 package smile.data.vector;
 
+import java.util.function.DoubleFunction;
 import java.util.stream.Collectors;
 import java.util.stream.DoubleStream;
 import smile.data.type.DataType;
@@ -62,14 +63,14 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
         return getFloat(i);
     }
 
-
     /**
      * Returns the string representation of vector.
      * @param n Number of elements to show
      */
     default String toString(int n) {
+        DoubleFunction<String> toString = field()::toString;
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named float vector.

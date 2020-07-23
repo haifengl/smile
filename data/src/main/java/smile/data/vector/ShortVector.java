@@ -17,6 +17,7 @@
 
 package smile.data.vector;
 
+import java.util.function.IntFunction;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import smile.data.type.DataType;
@@ -67,8 +68,9 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      * @param n Number of elements to show
      */
     default String toString(int n) {
+        IntFunction<String> toString = field()::toString;
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named short integer vector.

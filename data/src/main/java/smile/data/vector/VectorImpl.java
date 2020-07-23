@@ -24,7 +24,6 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 import smile.data.measure.CategoricalMeasure;
@@ -93,8 +92,8 @@ class VectorImpl<T> implements Vector<T> {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override

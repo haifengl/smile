@@ -20,16 +20,11 @@ package smile.data.vector;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
+import java.util.function.Function;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import smile.data.measure.Measure;
-import smile.data.measure.NominalScale;
-import smile.data.measure.OrdinalScale;
 import smile.data.type.DataType;
 import smile.data.type.StructField;
 
@@ -118,11 +113,9 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param n Number of elements to show
      */
     default String toString(int n) {
+        Function<T, String> toString = field()::toString;
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        Measure m = measure().orElse(null);
-        Stream<T> stream = stream().limit(n);
-        Stream<String> s = m != null ? stream.map(i -> m.toString(i)) : stream.map(Objects::toString);
-        return s.collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).map(toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /**
