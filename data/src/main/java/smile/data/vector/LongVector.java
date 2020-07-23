@@ -17,7 +17,6 @@
 
 package smile.data.vector;
 
-import java.util.function.LongFunction;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import smile.data.type.DataType;
@@ -68,9 +67,8 @@ public interface LongVector extends BaseVector<Long, Long, LongStream> {
      * @param n Number of elements to show
      */
     default String toString(int n) {
-        LongFunction<String> toString = field()::toString;
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(toString).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named long vector.
