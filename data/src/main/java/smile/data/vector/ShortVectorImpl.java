@@ -17,12 +17,10 @@
 
 package smile.data.vector;
 
+import java.util.stream.IntStream;
 import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Optional;
-import java.util.stream.IntStream;
 
 /**
  * An immutable short vector.
@@ -61,8 +59,8 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override
