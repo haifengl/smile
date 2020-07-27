@@ -21,8 +21,9 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import smile.math.MathEx;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix.Cholesky;
+import smile.math.matrix.Matrix.QR;
+import smile.math.matrix.Matrix.SVD;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -447,11 +448,10 @@ public class ARIMA implements Serializable {
         }
 
         // model fit for linear combination
-        DenseMatrix toeplitz = Matrix.toeplitz(Arrays.copyOfRange(r, 0, p));
+        Matrix toeplitz = Matrix.toeplitz(Arrays.copyOfRange(r, 0, p));
         double[] y = Arrays.copyOfRange(r, 1, r.length);
 
-        Cholesky ols = toeplitz.cholesky();
-        ols.solve(y);
+        y = solveLinearReg(toeplitz, y);
         assert (y != null && y.length == p);
 
         y = restrictCoefficients(y);
@@ -506,13 +506,12 @@ public class ARIMA implements Serializable {
             acfs[i] = acf(data, i);
         }
 
-        DenseMatrix toeplitz = Matrix.toeplitz(acfs);
+        Matrix toeplitz = Matrix.toeplitz(acfs);
         double[] y = new double[k];
         y[k - 1] = acf(data, k);
         System.arraycopy(acfs, 1, y, 0, k - 1);
 
-        Cholesky ols = toeplitz.cholesky();
-        ols.solve(y);
+        y = solveLinearReg(toeplitz, y);
         assert (y != null && y.length == k);
 
         return y[k - 1];
@@ -662,13 +661,13 @@ public class ARIMA implements Serializable {
 
             // model fit for linear combination
             double[] rVector = new double[colSize];
-            DenseMatrix x = Matrix.of(iterationData);
+            Matrix x = new Matrix(iterationData);
             double[] y = Arrays.copyOfRange(trainingData, start, trainingEndIndex);
             x = x.transpose();
-            DenseMatrix xtx = x.aat();
-            rVector = x.ax(y, rVector);
-            Cholesky ols = xtx.cholesky();
-            ols.solve(rVector);
+            Matrix xtx = x.aat();
+            x.mv(y, rVector);
+            
+            rVector = solveLinearReg(xtx, rVector);
 
             assert (rVector != null && rVector.length == colSize);
             rVector = restrictCoefficients(rVector);
@@ -807,6 +806,54 @@ public class ARIMA implements Serializable {
             val += coeff[i - 1] * lags[index - i];
         }
         return val;
+    }
+
+    /**
+     * solve linear regression for given matrix and save coefficients into y
+     * 
+     * @param X
+     *            matrix to be solved
+     * @param y
+     *            solved coefficients of linear regression
+     * @return solved coefficients of linear regression
+     */
+    private static double[] solveLinearReg(Matrix X, double[] y) {
+        try {          
+//            // copied from deprecated JMatrix, but not working as expected
+//            int n = X.nrows();
+//            for (int j = 0; j < n; j++) {
+//                double d = 0.0;
+//                for (int k = 0; k < j; k++) {
+//                    double s = 0.0;
+//                    for (int i = 0; i < k; i++) {
+//                        s += X.get(k, i) * X.get(j, i);
+//                    }
+//                    s = (X.get(j, k) - s) / X.get(k, k);
+//                    X.set(j, k, s);
+//                    d = d + s * s;
+//                }
+//                d = X.get(j, j) - d;
+//
+//                if (d < 0.0) {
+//                    throw new IllegalArgumentException("The matrix is not positive definite.");
+//                }
+//
+//                X.set(j, j, Math.sqrt(d));
+//            }
+//            Cholesky ols = new Cholesky(X); 
+            
+//            Cholesky ols = X.cholesky();
+//            y = ols.solve(y);   
+            
+            QR qr = X.qr();
+            y = qr.solve(y);
+
+        } catch (ArithmeticException e) {
+            logger.warn("Matrix is not of full rank, try SVD instead : " + e.getMessage());
+            SVD svd = X.svd();
+            y = svd.solve(y);
+        }
+        return y;
     }
 
     /**
