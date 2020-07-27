@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
-import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
 import smile.sort.QuickSort;
 import smile.util.PriorityQueue;

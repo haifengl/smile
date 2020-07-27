@@ -22,7 +22,11 @@ import java.util.Comparator;
 import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
-/** The data about of a potential split for a leaf node. */
+/**
+ * The data about of a potential split for a leaf node.
+ *
+ * @author Haifeng Li
+ */
 public abstract class Split {
     public static Comparator<Split> comparator = (x, y) -> Double.compare(x.score, y.score);
 

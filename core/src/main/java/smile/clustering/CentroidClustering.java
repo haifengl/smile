@@ -28,12 +28,12 @@ import java.util.stream.IntStream;
  * an optimization problem: find the k cluster centers and assign the objects
  * to the nearest cluster center, such that the squared distances from the
  * cluster are minimized.
- *
+ * <p>
  * Variations of k-means include restricting the centroids to members of
  * the data set (k-medoids), choosing medians (k-medians clustering),
  * choosing the initial centers less randomly (k-means++) or allowing a
  * fuzzy cluster assignment (fuzzy c-means), etc.
- *
+ * <p>
  * Most k-means-type algorithms require the number of clusters to be
  * specified in advance, which is considered to be one of the biggest
  * drawbacks of these algorithms. Furthermore, the algorithms prefer

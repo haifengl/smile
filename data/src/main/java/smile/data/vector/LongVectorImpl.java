@@ -17,13 +17,11 @@
 
 package smile.data.vector;
 
-import smile.data.measure.ContinuousMeasure;
+import java.util.Arrays;
+import java.util.stream.LongStream;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.LongStream;
 
 /**
  * An immutable long vector.
@@ -47,7 +45,7 @@ class LongVectorImpl implements LongVector {
 
     /** Constructor. */
     public LongVectorImpl(StructField field, long[] vector) {
-        if (field.measure instanceof ContinuousMeasure) {
+        if (field.measure instanceof NumericalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -62,8 +60,8 @@ class LongVectorImpl implements LongVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override
@@ -91,7 +89,7 @@ class LongVectorImpl implements LongVector {
     public LongVector get(int... index) {
         long[] v = new long[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new LongVectorImpl(name, v);
+        return new LongVectorImpl(field(), v);
     }
 
     @Override

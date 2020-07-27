@@ -148,13 +148,12 @@ public class IsotonicMDS {
 
         ObjectiveFunction func = new ObjectiveFunction(nr, nc, d, ord, ord2);
 
-        double stress = 0.0;
-        BFGS bfgs = new BFGS(tol, maxIter);
+        double stress;
         try {
-            stress = bfgs.minimize(func, 5, x);
+            stress = BFGS.minimize(func, 5, x, tol, maxIter);
         } catch (Exception ex) {
             // If L-BFGS doesn't work, let's try BFGS.
-            stress = bfgs.minimize(func, x);
+            stress = BFGS.minimize(func, x, tol, maxIter);
         }
 
         if (stress == 0.0) {

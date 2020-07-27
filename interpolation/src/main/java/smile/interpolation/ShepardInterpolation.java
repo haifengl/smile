@@ -26,8 +26,8 @@ import smile.math.MathEx;
  * the respective function values y<sub>i</sub>. So we need not solve linear
  * equations and thus it works for very large N.
  * <p>
- * An example of such &phi; is &phi;(r) = r<sup>-p</sup> with (typically)
- * 1 &lt; p &le; 3.
+ * An example of such &phi; is <code>&phi;(r) = r<sup>-p</sup></code> with
+ * (typically) <code>1 &lt; p &le; 3</code>.
  * <p>
  * Shepard interpolation is rarely as accurate as the well-tuned application of
  * other radial basis functions. However, it is simple, fast, and often just the

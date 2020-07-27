@@ -20,60 +20,65 @@ package smile.data.formula;
 import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
- * A formula extracts the variables from a context
- * (e.g. Java Class or DataFrame).
+ * The model fitting formula in a compact symbolic form.
+ * An expression of the form y ~ model is interpreted as a specification that
+ * the response y is modelled by a linear predictor specified symbolically by
+ * model. Such a model consists of a series of terms separated by + operators.
+ * The terms themselves consist of variable and factor names separated by
+ * :: operators. Such a term is interpreted as the interaction of all the
+ * variables and factors appearing in the term. The special term "." means
+ * all columns not otherwise in the formula in the context of a data frame.
+ * <p>
+ * In addition to + and ::, a number of other operators are useful in model
+ * formulae. The && operator denotes factor crossing: a && b interpreted as
+ * a+b+a::b. The ^ operator indicates crossing to the specified degree.
+ * For example (a+b+c)^2 is identical to (a+b+c)*(a+b+c) which in turn
+ * expands to a formula containing the main effects for a, b and c together
+ * with their second-order interactions. The - operator removes the specified
+ * terms, so that (a+b+c)^2 - a::b is identical to a + b + c + b::c + a::c.
+ * It can also used to remove the intercept term: when fitting a linear model
+ * y ~ x - 1 specifies a line through the origin. A model with no intercept
+ * can be also specified as y ~ x + 0 or y ~ 0 + x.
+ * <p>
+ * While formulae usually involve just variable and factor names, they
+ * can also involve arithmetic expressions. The formula log(y) ~ a + log(x)
+ * is quite legal.
+ * <p>
+ * Note that the operators ~, +, ::, ^ are only available in Scala API.
  *
  * @author Haifeng Li
  */
 public class Formula implements Serializable {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
 
     /** The left-hand side of formula. */
-    private Term response = null;
+    private Term response;
     /** The right-hand side of formula. */
-    private HyperTerm[] predictors;
-    /** The formula output schema. */
-    private transient StructType schema;
-    /** The right hand side schema. */
-    private transient StructType xschema;
-    /** The terms (only predictors) after binding to a schema and expanding the hyper-terms. */
-    private transient Term[] x;
-    /** The terms (both predictors and response) after binding to a schema and expanding the hyper-terms. */
-    private transient Term[] xy;
+    private Term[] predictors;
+    /** The formula-schema binding. */
+    private transient Binding binding;
 
-    /**
-     * Constructor.
-     * @param response the response formula, i.e. dependent variable.
-     */
-    public Formula(String response) {
-        this(new Variable(response));
-    }
-
-    /**
-     * Constructor.
-     * @param response the response formula, i.e. dependent variable.
-     */
-    public Formula(Term response) {
-        this.response = response;
-        this.predictors = new HyperTerm[] { new All() };
-    }
-
-    /**
-     * Constructor.
-     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
-     */
-    public Formula(HyperTerm[] predictors) {
-        this.predictors = predictors;
+    /** The formula-schema binding. */
+    private class Binding {
+        /** The input schema. */
+        StructType inputSchema;
+        /** The output schema with response variable and predictors. */
+        StructType yxschema;
+        /** The output schema with only predictors. */
+        StructType xschema;
+        /** The response variable and predictors. */
+        Feature[] yx;
+        /** The predictors. */
+        Feature[] x;
     }
 
     /**
@@ -81,28 +86,23 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public Formula(String response, HyperTerm[] predictors) {
-        this(new Variable(response), predictors);
-    }
+    public Formula(Term response, Term... predictors) {
+        if (response instanceof Dot || response instanceof FactorCrossing) {
+            throw new IllegalArgumentException("The response variable cannot be '.' or FactorCrossing.");
+        }
 
-    /**
-     * Constructor.
-     * @param response the left-hand side of formula, i.e. dependent variable.
-     * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
-     */
-    public Formula(Term response, HyperTerm[] predictors) {
         this.response = response;
         this.predictors = predictors;
     }
 
-    /** Returns a formula with only predictors. */
-    public Formula predictors() {
-        return rhs(predictors);
+    /** Returns the predictors. */
+    public Term[] predictors() {
+        return predictors;
     }
 
     /** Returns the response term. */
-    public Optional<Term> response() {
-        return Optional.ofNullable(response);
+    public Term response() {
+        return response;
     }
 
     @Override
@@ -118,40 +118,50 @@ public class Formula implements Serializable {
         return String.format("%s ~ %s", r, p);
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (!(o instanceof Formula)) return false;
+        Formula f = (Formula) o;
+        if (predictors.length != f.predictors.length) return false;
+        if (!String.valueOf(response).equals(String.valueOf(f.response))) return false;
+        for (int i = 0; i < predictors.length; i++) {
+            if (!String.valueOf(predictors[i]).equals(String.valueOf(f.predictors[i]))) return false;
+        }
+        return true;
+    }
+
     /**
-     * Factory method.
+     * Factory method. The predictors will be all the columns not otherwise
+     * in the formula in the context of a data frame.
      * @param lhs the left-hand side of formula, i.e. dependent variable.
      */
     public static Formula lhs(String lhs) {
-        return new Formula(lhs);
+        return lhs(new Variable(lhs));
     }
 
     /**
-     * Factory method.
+     * Factory method. The predictors will be all the columns not otherwise
+     * in the formula in the context of a data frame.
      * @param lhs the left-hand side of formula, i.e. dependent variable.
      */
     public static Formula lhs(Term lhs) {
-        return new Formula(lhs);
+        return new Formula(lhs, new Dot());
     }
 
     /**
-     * Factory method.
+     * Factory method. No response variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
     public static Formula rhs(String... predictors) {
-        return new Formula(
-                Arrays.stream(predictors)
-                        .map(predictor -> new Variable(predictor))
-                        .toArray(Term[]::new)
-        );
+        return of(null, predictors);
     }
 
     /**
-     * Factory method.
+     * Factory method. No response variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula rhs(HyperTerm... predictors) {
-        return new Formula(predictors);
+    public static Formula rhs(Term... predictors) {
+        return new Formula(null, predictors);
     }
 
     /**
@@ -161,10 +171,13 @@ public class Formula implements Serializable {
      */
     public static Formula of(String response, String... predictors) {
         return new Formula(
-                response,
-                Arrays.stream(predictors)
-                        .map(predictor -> new Variable(predictor))
-                        .toArray(Term[]::new)
+                new Variable(response),
+                Arrays.stream(predictors).map(predictor -> {
+                    if (predictor.equals(".")) return new Dot();
+                    if (predictor.equals("1")) return new Intercept(true);
+                    if (predictor.equals("0")) return new Intercept(false);
+                    return new Variable(predictor);
+                }).toArray(Term[]::new)
         );
     }
 
@@ -173,8 +186,8 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula of(String response, HyperTerm... predictors) {
-        return new Formula(response, predictors);
+    public static Formula of(String response, Term... predictors) {
+        return new Formula(new Variable(response), predictors);
     }
 
     /**
@@ -182,133 +195,128 @@ public class Formula implements Serializable {
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
      */
-    public static Formula of(Term response, HyperTerm... predictors) {
+    public static Formula of(Term response, Term... predictors) {
         return new Formula(response, predictors);
     }
 
     /**
-     * Returns the schema of output data frame.
+     * Expands the Dot and FactorCrossing terms on the given schema.
+     * @param inputSchema the schema to expand on
      */
-    public StructType schema() {
-        return schema;
-    }
-
-    /**
-     * Returns the schema of design matrix.
-     */
-    public StructType xschema() {
-        return xschema;
-    }
-
-    /** Binds the formula to a schema and returns the output schema of formula. */
-    public StructType bind(StructType inputSchema) {
-        return bind(inputSchema, true);
-    }
-
-    /**
-     * Binds the formula to a schema and returns the output schema of formula.
-     * @param inputSchema the schema to bind with
-     * @param forced if true, bind the formula to the input schema even if it
-     *               was bound to another schema before.
-     */
-    private StructType bind(StructType inputSchema, boolean forced) {
-        if (schema != null && !forced) {
-            return schema;
-        }
-
-        if (response != null) response.bind(inputSchema);
-        Arrays.stream(predictors).forEach(term -> term.bind(inputSchema));
-
+    public Formula expand(StructType inputSchema) {
         Set<String> columns = new HashSet<>();
         if (response != null) columns.addAll(response.variables());
         Arrays.stream(predictors)
-                .filter((predictor -> !(predictor instanceof All)))
-                .flatMap(predictor -> predictor.terms().stream())
-                .filter(term -> term instanceof Variable)
-                .forEach(term -> columns.add(term.name()));
+                .filter(term -> term instanceof FactorCrossing || term instanceof Variable)
+                .forEach(term -> columns.addAll(term.variables()));
 
-        List<Term> factors = new ArrayList<>();
-        if (response != null) factors.add(response);
-
-        factors.addAll(Arrays.stream(predictors)
-                .filter(term -> !(term instanceof Delete))
-                .flatMap(term -> {
-                    if (term instanceof Delete) {
-                        return Stream.empty();
-                    } else if (term instanceof All) {
-                        return term.terms().stream().filter(t -> !columns.contains(t.name()));
-                    } else {
-                        return term.terms().stream();
-                    }
-                })
-                .collect(Collectors.toList()));
-
-        List<Term> removes = Arrays.stream(predictors)
-                .filter(term -> term instanceof Delete)
-                .flatMap(term -> term.terms().stream())
+        List<Variable> rest = Arrays.stream(inputSchema.fields())
+                .filter(field -> !columns.contains(field.name))
+                .map(field -> new Variable(field.name))
                 .collect(Collectors.toList());
 
-        factors.removeAll(removes);
-
-        xy = factors.toArray(new Term[factors.size()]);
-
-        StructField[] fields = factors.stream()
-                .map(factor -> factor.field())
-                .toArray(StructField[]::new);
-
-        schema = DataTypes.struct(fields);
-
-        if (response != null) {
-            x = Arrays.copyOfRange(xy, 1, xy.length);
-            xschema = DataTypes.struct(Arrays.copyOfRange(fields, 1, fields.length));
-        } else {
-            x = xy;
-            xschema = schema;
+        List<Term> expanded = new ArrayList<>();
+        for (Term predictor : predictors) {
+            if (predictor instanceof Dot) {
+                expanded.addAll(rest);
+            } else if (!(predictor instanceof Delete)) {
+                expanded.addAll(predictor.expand());
+            }
         }
 
-        return schema;
+        Set<String> deletes = Arrays.stream(predictors)
+                .filter(predictor -> predictor instanceof Delete)
+                .flatMap(predictor -> predictor.expand().stream())
+                .map(term -> term.toString().substring(2)) // Delete starts with "- "
+                .collect(Collectors.toSet());
+
+        expanded.removeIf(term -> deletes.contains(term.toString()));
+        return new Formula(response, expanded.toArray(new Term[expanded.size()]));
+    }
+
+    /**
+     * Binds the formula to a schema and returns the schema of predictors.
+     * @param inputSchema the schema to bind with
+     */
+    public StructType bind(StructType inputSchema) {
+        if (binding != null && binding.inputSchema == inputSchema) {
+            return binding.xschema;
+        }
+
+        Formula formula = expand(inputSchema);
+
+        binding = new Binding();
+        binding.inputSchema = inputSchema;
+
+        List<Feature> features = Arrays.stream(formula.predictors)
+                .filter(predictor -> !(predictor instanceof Delete) && !(predictor instanceof Intercept))
+                .flatMap(predictor -> predictor.bind(inputSchema).stream())
+                .collect(Collectors.toList());
+
+        binding.x = features.toArray(new Feature[features.size()]);
+        binding.xschema = DataTypes.struct(
+                features.stream()
+                     .map(term -> term.field())
+                     .toArray(StructField[]::new)
+        );
+
+        if (response != null) {
+            try {
+                features.addAll(0, response.bind(inputSchema));
+                binding.yx = features.toArray(new Feature[features.size()]);
+                binding.yxschema = DataTypes.struct(
+                        features.stream()
+                             .map(term -> term.field())
+                             .toArray(StructField[]::new)
+                );
+            } catch (NullPointerException ex) {
+                logger.debug("The response variable {} doesn't exist in the schema {}", response, inputSchema);
+            }
+        }
+
+        return binding.xschema;
     }
 
     /**
      * Apply the formula on a tuple to generate the model data.
      */
     public Tuple apply(Tuple t) {
-        bind(t.schema(), false);
+        bind(t.schema());
 
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
-                return schema;
+                return binding.yxschema;
             }
 
             @Override
             public Object get(int i) {
-                return xy[i].apply(t);
+                return binding.yx[i].apply(t);
             }
 
             @Override
             public int getInt(int i) {
-                return xy[i].applyAsInt(t);
+                return binding.yx[i].applyAsInt(t);
             }
 
             @Override
             public long getLong(int i) {
-                return xy[i].applyAsLong(t);
+                return binding.yx[i].applyAsLong(t);
             }
 
             @Override
             public float getFloat(int i) {
-                return xy[i].applyAsFloat(t);
+                return binding.yx[i].applyAsFloat(t);
             }
 
             @Override
             public double getDouble(int i) {
-                return xy[i].applyAsDouble(t);
+                return binding.yx[i].applyAsDouble(t);
             }
 
             @Override
             public String toString() {
-                return schema.toString(this);
+                return binding.yxschema.toString(this);
             }
         };
     }
@@ -317,60 +325,57 @@ public class Formula implements Serializable {
      * Apply the formula on a tuple to generate the predictors data.
      */
     public Tuple x(Tuple t) {
-        bind(t.schema(), false);
+        bind(t.schema());
 
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
-                return xschema;
+                return binding.xschema;
             }
 
             @Override
             public Object get(int i) {
-                return x[i].apply(t);
+                return binding.x[i].apply(t);
             }
 
             @Override
             public int getInt(int i) {
-                return x[i].applyAsInt(t);
+                return binding.x[i].applyAsInt(t);
             }
 
             @Override
             public long getLong(int i) {
-                return x[i].applyAsLong(t);
+                return binding.x[i].applyAsLong(t);
             }
 
             @Override
             public float getFloat(int i) {
-                return x[i].applyAsFloat(t);
+                return binding.x[i].applyAsFloat(t);
             }
 
             @Override
             public double getDouble(int i) {
-                return x[i].applyAsDouble(t);
+                return binding.x[i].applyAsDouble(t);
             }
 
             @Override
             public String toString() {
-                return xschema.toString(this);
+                return binding.xschema.toString(this);
             }
         };
     }
 
     /**
-     * Returns the real values of predictors.
-     */
-    public double[] xarray(Tuple t) {
-        return Arrays.stream(x).mapToDouble(term -> term.applyAsDouble(t)).toArray();
-    }
-
-    /**
-     * Returns a data frame of predictors and response variable
+     * Returns a data frame of predictors and optionally response variable
+     * (if input data frame has the related variable(s)).
+     *
      * @param df The input DataFrame.
      */
-    public DataFrame apply(DataFrame df) {
-        bind(df.schema(), true);
-        BaseVector[] vectors = Arrays.stream(xy).map(term -> term.apply(df)).toArray(BaseVector[]::new);
+    public DataFrame frame(DataFrame df) {
+        bind(df.schema());
+
+        BaseVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
+                .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -379,82 +384,43 @@ public class Formula implements Serializable {
      * @param df The input DataFrame.
      */
     public DataFrame x(DataFrame df) {
-        bind(df.schema(), true);
-        BaseVector[] vectors = Arrays.stream(x).map(term -> term.apply(df)).toArray(BaseVector[]::new);
+        bind(df.schema());
+        BaseVector[] vectors = Arrays.stream(binding.x)
+                .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
     /**
-     * Creates a design matrix of predictors without bias column.
+     * Returns the design matrix of predictors.
+     * All categorical variables will be dummy encoded.
+     * If the formula doesn't has an Intercept term, the bias
+     * column will be included. Otherwise, it is based on the
+     * setting of Intercept term.
+     *
      * @param df The input DataFrame.
      */
-    public DenseMatrix matrix(DataFrame df) {
-        return matrix(df, false);
+    public Matrix matrix(DataFrame df) {
+        boolean bias = true;
+        Optional<Intercept> intercept = Arrays.stream(predictors)
+                .filter(term -> term instanceof Intercept)
+                .map(term -> (Intercept) term)
+                .findAny();
+
+        if (intercept.isPresent()) {
+            bias = intercept.get().bias();
+        }
+
+        return matrix(df, bias);
     }
 
     /**
-     * Creates a design matrix of predictors.
+     * Returns the design matrix of predictors.
+     * All categorical variables will be dummy encoded.
      * @param df The input DataFrame.
-     * @param bias If true, the design matrix includes an all-one column for intercept.
+     * @param bias If true, include the bias column.
      */
-    public DenseMatrix matrix(DataFrame df, boolean bias) {
-        bind(df.schema(), true);
-
-        int nrows = df.nrows();
-        int ncols = x.length;
-
-        ncols += bias ? 1 : 0;
-        DenseMatrix m = Matrix.of(nrows, ncols, 0.0);
-        if (bias) for (int i = 0; i < nrows; i++) m.set(i, ncols-1, 1.0);
-
-        for (int j = 0; j < x.length; j++) {
-            BaseVector v = x[j].apply(df);
-            DataType type = x[j].type();
-            switch (type.id()) {
-                case Double:
-                case Integer:
-                case Float:
-                case Long:
-                case Boolean:
-                case Byte:
-                case Short:
-                case Char: {
-                    for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
-                    break;
-                }
-
-                case String: {
-                    for (int i = 0; i < nrows; i++) {
-                        String s = (String) v.get(i);
-                        m.set(i, j, s == null ? Double.NaN : Double.valueOf(s));
-                    }
-                    break;
-                }
-
-                case Object: {
-                    Class clazz = ((ObjectType) type).getObjectClass();
-                    if (clazz == Boolean.class) {
-                        for (int i = 0; i < nrows; i++) {
-                            Boolean b = (Boolean) v.get(i);
-                            if (b != null)
-                                m.set(i, j, b.booleanValue() ? 1 : 0);
-                            else
-                                m.set(i, j, Double.NaN);
-                        }
-                    } else if (Number.class.isAssignableFrom(clazz)) {
-                        for (int i = 0; i < nrows; i++) m.set(i, j, v.getDouble(i));
-                    } else {
-                        throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
-                    }
-                    break;
-                }
-
-                default:
-                    throw new UnsupportedOperationException(String.format("DataFrame.toMatrix() doesn't support type %s", type));
-            }
-        }
-
-        return m;
+    public Matrix matrix(DataFrame df, boolean bias) {
+        return x(df).toMatrix(bias, CategoricalEncoder.DUMMY, null);
     }
 
     /**
@@ -462,29 +428,50 @@ public class Formula implements Serializable {
      * @param df The input DataFrame.
      */
     public BaseVector y(DataFrame df) {
-        if (response == null) return null;
+        if (response == null) {
+            throw new UnsupportedOperationException("The formula has no response variable.");
+        }
 
-        response.bind(df.schema());
-        return response.apply(df);
+        bind(df.schema());
+
+        if (binding.yx == null) {
+            throw new UnsupportedOperationException("The data has no response variable.");
+        }
+
+        return binding.yx[0].apply(df);
     }
 
     /**
      * Returns the real-valued response value.
      */
     public double y(Tuple t) {
-        if (response == null) return 0.0;
+        if (response == null) {
+            throw new UnsupportedOperationException("The formula has no response variable.");
+        }
 
-        response.bind(t.schema());
-        return response.applyAsDouble(t);
+        bind(t.schema());
+
+        if (binding.yx == null) {
+            throw new UnsupportedOperationException("The data has no response variable.");
+        }
+
+        return binding.yx[0].applyAsDouble(t);
     }
 
     /**
      * Returns the integer-valued response value.
      */
     public int yint(Tuple t) {
-        if (response == null) return -1;
+        if (response == null) {
+            throw new UnsupportedOperationException("The formula has no response variable.");
+        }
 
-        response.bind(t.schema());
-        return response.applyAsInt(t);
+        bind(t.schema());
+
+        if (binding.yx == null) {
+            throw new UnsupportedOperationException("The data has no response variable.");
+        }
+
+        return binding.yx[0].applyAsInt(t);
     }
 }

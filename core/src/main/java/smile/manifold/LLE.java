@@ -21,12 +21,11 @@ import java.io.Serializable;
 import java.util.Arrays;
 import smile.graph.AdjacencyList;
 import smile.math.MathEx;
+import smile.math.blas.Transpose;
+import smile.math.matrix.ARPACK;
+import smile.math.matrix.DMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.SparseMatrix;
-import smile.math.matrix.LU;
-import smile.math.matrix.EVD;
-import smile.netlib.ARPACK;
 
 /**
  * Locally Linear Embedding. It has several advantages over Isomap, including
@@ -138,7 +137,7 @@ public class LLE implements Serializable {
             colIndex[i] = colIndex[i - 1] + k;
         }
 
-        DenseMatrix C = Matrix.zeros(k, k);
+        Matrix C = new Matrix(k, k);
         double[] b = new double[k];
 
         int m = 0;
@@ -165,8 +164,8 @@ public class LLE implements Serializable {
             }
 
             Arrays.fill(b, 1.0);
-            LU lu = C.lu(true);
-            lu.solve(b);
+            Matrix.LU lu = C.lu();
+            b = lu.solve(b);
 
             double sum = MathEx.sum(b);
             int[] ni = N[i];
@@ -181,15 +180,19 @@ public class LLE implements Serializable {
         // This is the transpose of W in the paper.
         SparseMatrix Wt = new SparseMatrix(n, n, w, rowIndex, colIndex);
 
-        // ARPACK may not find all needed eigen values for k = d + 1.
-        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
-        // Our Lanczos class has no such issue.
-        EVD eigen = ARPACK.eigen(new M(Wt), Math.min(10*(d+1), n-1), "SM");
+        // ARPACK may not find all needed eigenvalues for k = d + 1.
+        // Hack it with 10 * (d + 1).
+        Matrix.EVD eigen = ARPACK.syev(new M(Wt), ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
-        DenseMatrix V = eigen.getEigenVectors();
+        Matrix V = eigen.Vr;
+        // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
+        // Maybe due to numeric stability.
+        int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
+        //System.out.println(Arrays.toString(eigen.wr));
+        //System.out.println(V.toString(10, V.nrows()-1));
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - 2;
+            int c = V.ncols() - j - offset;
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, c);
             }
@@ -199,26 +202,25 @@ public class LLE implements Serializable {
     }
 
     /**
-     * M = t(I - W) * (I - W) , t() as the transpose.
-     * we have Mv = v - Wv - t(W)v + t(W)Wv. As W is sparse and we can
-     * compute only Wv and t(W)v efficiently.
+     * M = (I - W)' * (I - W).
+     * we have M * v = v - W * v - W' * v + W' * W * v. As W is sparse and we can
+     * compute only W * v and W' * v efficiently.
      */
-    private static class M implements Matrix {
+    private static class M extends DMatrix {
 
-        Matrix Wt;
+        SparseMatrix Wt;
+        double[] x;
         double[] Wx;
         double[] Wtx;
+        double[] WtWx;
 
-        public M(Matrix Wt) {
+        public M(SparseMatrix Wt) {
             this.Wt = Wt;
 
+            x = new double[Wt.nrows()];
             Wx = new double[Wt.nrows()];
             Wtx = new double[Wt.ncols()];
-        }
-
-        @Override
-        public boolean isSymmetric() {
-            return true;
+            WtWx = new double[Wt.nrows()];
         }
 
         @Override
@@ -232,31 +234,40 @@ public class LLE implements Serializable {
         }
 
         @Override
-        public M transpose() {
-            return this;
+        public long size() {
+            return Wt.size();
         }
 
         @Override
-        public double[] ax(double[] x, double[] y) {
-            Wt.atx(x, Wx);
-            Wt.ax(x, Wtx);
-            Wt.ax(Wx, y);
+        public void mv(double[] work, int inputOffset, int outputOffset) {
+            System.arraycopy(work, inputOffset, x, 0, x.length);
+            Wt.tv(x, Wx);
+            Wt.mv(x, Wtx);
+            Wt.mv(Wx, WtWx);
 
-            int n = Wt.nrows();
+            int n = x.length;
             for (int i = 0; i < n; i++) {
-                y[i] = y[i] + x[i] - Wx[i] - Wtx[i];
+                work[outputOffset + i] = WtWx[i] + x[i] - Wx[i] - Wtx[i];
             }
-
-            return y;
         }
 
         @Override
-        public double[] atx(double[] x, double[] y) {
-            return ax(x, y);
+        public void tv(double[] work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
-        public Matrix clone() {
+        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public DMatrix set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double get(int i, int j) {
             throw new UnsupportedOperationException();
         }
     }

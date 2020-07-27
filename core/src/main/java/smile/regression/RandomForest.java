@@ -75,7 +75,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     private static final long serialVersionUID = 2L;
 
     /**
-     * Design matrix formula
+     * The model formula.
      */
     private Formula formula;
 
@@ -186,6 +186,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
             throw new IllegalArgumentException("Invalid sampling rate: " + subsample);
         }
 
+        formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector response = formula.y(data);
         StructField field = response.field();

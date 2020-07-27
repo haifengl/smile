@@ -18,9 +18,6 @@
 package smile.imputation;
 
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
-import smile.math.matrix.SVD;
 
 /**
  * Missing value imputation with singular value decomposition. Given SVD
@@ -122,7 +119,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
-        SVD svd = Matrix.of(data).svd();
+        Matrix.SVD svd = new Matrix(data).svd();
 
         int d = data[0].length;
 
@@ -140,27 +137,26 @@ public class SVDImputation implements MissingValueImputation {
                 continue;
             }
 
-            DenseMatrix A = Matrix.zeros(d - missing, k);
+            Matrix A = new Matrix(d - missing, k);
             double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
                 if (!Double.isNaN(raw[i][j])) {
                     for (int l = 0; l < k; l++) {
-                        A.set(m, l, svd.getV().get(j, l));
+                        A.set(m, l, svd.V.get(j, l));
                     }
                     b[m++] = raw[i][j];
                 }
             }
 
-            double[] s = new double[k];
-            QR qr = A.qr();
-            qr.solve(b, s);
+            Matrix.QR qr = A.qr();
+            double[] s = qr.solve(b);
 
             for (int j = 0; j < d; j++) {
                 if (Double.isNaN(raw[i][j])) {
                     data[i][j] = 0;
                     for (int l = 0; l < k; l++) {
-                        data[i][j] += s[l] * svd.getV().get(j, l);
+                        data[i][j] += s[l] * svd.V.get(j, l);
                     }
                 }
             }

@@ -19,7 +19,6 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -74,7 +73,7 @@ public class GHA implements LinearProjection, Serializable {
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private Matrix projection;
     /**
      * Workspace for W * x.
      */
@@ -105,7 +104,7 @@ public class GHA implements LinearProjection, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.zeros(p, n);
+        projection = new Matrix(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
                 projection.set(i, j, 0.1 * MathEx.random());
@@ -125,7 +124,7 @@ public class GHA implements LinearProjection, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.of(w);
+        projection = new Matrix(w);
     }
 
     /**
@@ -134,7 +133,7 @@ public class GHA implements LinearProjection, Serializable {
      * eigenvalues. The dimension reduced data can be obtained by y = W * x.
      */
     @Override
-    public DenseMatrix getProjection() {
+    public Matrix getProjection() {
         return projection;
     }
 
@@ -163,7 +162,7 @@ public class GHA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
         }
 
-        projection.ax(x, y);
+        projection.mv(x, y);
 
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
@@ -179,8 +178,8 @@ public class GHA implements LinearProjection, Serializable {
             }
         }
 
-        projection.ax(x, y);
-        projection.atx(y, wy);
+        projection.mv(x, y);
+        projection.tv(y, wy);
         return MathEx.squaredDistance(x, wy);
     }
 }

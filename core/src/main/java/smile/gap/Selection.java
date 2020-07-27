@@ -23,6 +23,8 @@ import java.util.Arrays;
 
 /**
  * The way to select chromosomes from the population as parents to crossover.
+ *
+ * @author Haifeng Li
  */
 public interface Selection {
 

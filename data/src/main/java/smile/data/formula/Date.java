@@ -21,12 +21,12 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.*;
-import java.util.stream.Collectors;
 import smile.data.Tuple;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -34,17 +34,11 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class Date implements HyperTerm {
+public class Date implements Term {
     /** The name of variable. */
     private final String name;
     /** The features to extract. */
     private final DateFeature[] features;
-    /** The terms after binding to the schema. */
-    private List<FeatureExtractor> terms;
-    /** The data type of variable/column. */
-    private DataType type;
-    /** Column index after binding to a schema. */
-    private int index = -1;
 
     /**
      * Constructor.
@@ -54,7 +48,6 @@ class Date implements HyperTerm {
     public Date(String name, DateFeature... features) {
         this.name = name;
         this.features = features;
-        this.terms = Arrays.stream(features).map(feature -> new FeatureExtractor(feature)).collect(Collectors.toList());
     }
 
     @Override
@@ -63,19 +56,14 @@ class Date implements HyperTerm {
     }
 
     @Override
-    public List<? extends Term> terms() {
-        return terms;
-    }
-
-    @Override
     public Set<String> variables() {
         return Collections.singleton(name);
     }
 
     @Override
-    public void bind(StructType schema) {
-        index = schema.fieldIndex(name);
-        type = schema.field(name).type;
+    public List<Feature> bind(StructType schema) {
+        int index = schema.fieldIndex(name);
+        DataType type = schema.field(name).type;
         switch (type.id()) {
             case Date:
                 if (hasTimeFeatures(features)) {
@@ -93,6 +81,87 @@ class Date implements HyperTerm {
             default:
                 throw new UnsupportedOperationException(String.format("The filed %s is not a date/time: %s", name, type));
         }
+
+        Measure month = new NominalScale(
+                new int[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12},
+                new String[] {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"}
+                );
+        Measure dayOfWeek = new NominalScale(
+                new int[] {1, 2, 3, 4, 5, 6, 7},
+                new String[] {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"}
+                );
+
+        List<Feature> features = new ArrayList<>();
+        for (DateFeature feature : this.features) {
+            features.add(new Feature() {
+                StructField field = new StructField(
+                        String.format("%s_%s", name, feature),
+                        DataTypes.IntegerType,
+                        feature == DateFeature.MONTH ? month : (feature == DateFeature.DAY_OF_WEEK ? dayOfWeek : null));
+
+                @Override
+                public String toString() {
+                    return field.name;
+                }
+
+                @Override
+                public StructField field() {
+                    return field;
+                }
+
+                @Override
+                public int applyAsInt(Tuple o) {
+                    Object x = apply(o);
+                    return x == null ? -1 : (int) x;
+                }
+
+                @Override
+                public Object apply(Tuple o) {
+                    Object x = o.get(index);
+                    if (x == null) return null;
+
+                    switch (type.id()) {
+                        case Date:
+                        {
+                            LocalDate date = (LocalDate) x;
+                            switch (feature) {
+                                case YEAR: return date.getYear();
+                                case MONTH: return date.getMonthValue();
+                                case DAY_OF_MONTH: return date.getDayOfMonth();
+                                case DAY_OF_WEEK: return date.getDayOfWeek().getValue();
+                                default: throw new IllegalStateException("Extra time features from a date.");
+                            }
+                        }
+                        case Time:
+                        {
+                            LocalTime time = (LocalTime) x;
+                            switch (feature) {
+                                case HOURS: return time.getHour();
+                                case MINUTES: return time.getMinute();
+                                case SECONDS: return time.getSecond();
+                                default: throw new IllegalStateException("Extra date features from a time.");
+                            }
+                        }
+                        case DateTime:
+                        {
+                            LocalDateTime dateTime = (LocalDateTime) x;
+                            switch (feature) {
+                                case YEAR: return dateTime.getYear();
+                                case MONTH: return dateTime.getMonthValue();
+                                case DAY_OF_MONTH: return dateTime.getDayOfMonth();
+                                case DAY_OF_WEEK: return dateTime.getDayOfWeek().getValue();
+                                case HOURS: return dateTime.getHour();
+                                case MINUTES: return dateTime.getMinute();
+                                case SECONDS: return dateTime.getSecond();
+                            }
+                            break;
+                        }
+                    }
+                    throw new IllegalStateException("Unsupported data type for date/time features");
+                }
+            });
+        }
+        return features;
     }
 
     /** Returns true if there are time related features. */
@@ -118,117 +187,5 @@ class Date implements HyperTerm {
             }
         }
         return false;
-    }
-
-    /** The date/time feature extractor. */
-    class FeatureExtractor extends AbstractTerm {
-        /** The feature to be extracted. */
-        DateFeature feature;
-        /** The level of nominal scale. */
-        Optional<Measure> measure;
-
-        /**
-         * Constructor.
-         */
-        public FeatureExtractor(DateFeature feature) {
-            this.feature = feature;
-            switch (feature) {
-                case MONTH: {
-                    int[] values = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
-                    String[] levels = {"JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE", "JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"};
-                    measure = Optional.of(new NominalScale(values, levels));
-                    break;
-                }
-                case DAY_OF_WEEK: {
-                    int[] values = {1, 2, 3, 4, 5, 6, 7};
-                    String[] levels = {"MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"};
-                    measure = Optional.of(new NominalScale(values, levels));
-                    break;
-                }
-                default:
-                    measure = Optional.empty();
-            }
-        }
-
-        @Override
-        public String toString() {
-            return name();
-        }
-
-        @Override
-        public Set<String> variables() {
-            return Collections.singleton(name);
-        }
-
-        @Override
-        public int applyAsInt(Tuple o) {
-            Object x = apply(o);
-            return x == null ? -1 : (int) x;
-        }
-
-        @Override
-        public Object apply(Tuple o) {
-            Object x = o.get(index);
-            if (x == null) return null;
-
-            switch (type.id()) {
-                case Date:
-                {
-                    LocalDate date = (LocalDate) x;
-                    switch (feature) {
-                        case YEAR: return date.getYear();
-                        case MONTH: return date.getMonthValue();
-                        case DAY_OF_MONTH: return date.getDayOfMonth();
-                        case DAY_OF_WEEK: return date.getDayOfWeek().getValue();
-                        default: throw new IllegalStateException("Extra time features from a date.");
-                    }
-                }
-                case Time:
-                {
-                    LocalTime time = (LocalTime) x;
-                    switch (feature) {
-                        case HOURS: return time.getHour();
-                        case MINUTES: return time.getMinute();
-                        case SECONDS: return time.getSecond();
-                        default: throw new IllegalStateException("Extra date features from a time.");
-                    }
-                }
-                case DateTime:
-                {
-                    LocalDateTime dateTime = (LocalDateTime) x;
-                    switch (feature) {
-                        case YEAR: return dateTime.getYear();
-                        case MONTH: return dateTime.getMonthValue();
-                        case DAY_OF_MONTH: return dateTime.getDayOfMonth();
-                        case DAY_OF_WEEK: return dateTime.getDayOfWeek().getValue();
-                        case HOURS: return dateTime.getHour();
-                        case MINUTES: return dateTime.getMinute();
-                        case SECONDS: return dateTime.getSecond();
-                    }
-                    break;
-                }
-            }
-            throw new IllegalStateException("Unsupported data type for date/time features");
-        }
-
-        @Override
-        public String name() {
-            return String.format("%s_%s", name, feature);
-        }
-
-        @Override
-        public DataType type() {
-            return DataTypes.IntegerType;
-        }
-
-        @Override
-        public Optional<Measure> measure() {
-            return measure;
-        }
-
-        @Override
-        public void bind(StructType schema) {
-
-        }
     }
 }

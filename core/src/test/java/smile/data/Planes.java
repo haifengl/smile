@@ -37,7 +37,7 @@ public class Planes {
         try {
             data = Read.arff(Paths.getTestData("weka/regression/2dplanes.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'kin8nm': " + ex);

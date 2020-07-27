@@ -26,7 +26,7 @@ import java.util.stream.StreamSupport;
 /**
  * Total support tree is a kind of compressed set enumeration tree so that we
  * can generate association rules in a storage efficient way.
- * 
+ *
  * <h2>References</h2>
  * <ol>
  * <li> Frans Coenen, Paul Leng, and Shakil Ahmed. Data Structure for Association Rule Mining: T-Trees and P-Trees. IEEE TRANSACTIONS ON KNOWLEDGE AND DATA ENGINEERING, 16(6):774-778, 2004.</li>

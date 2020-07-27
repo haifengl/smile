@@ -76,7 +76,7 @@ public class BreastCancer {
         try {
             data = Read.csv(Paths.getTestData("classification/breastcancer.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader(), schema);
             data = data.drop("id");
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'breast cancer': " + ex);

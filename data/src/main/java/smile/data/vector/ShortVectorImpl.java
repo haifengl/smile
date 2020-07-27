@@ -17,12 +17,10 @@
 
 package smile.data.vector;
 
-import smile.data.measure.ContinuousMeasure;
+import java.util.stream.IntStream;
+import smile.data.measure.NumericalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Optional;
-import java.util.stream.IntStream;
 
 /**
  * An immutable short vector.
@@ -46,7 +44,7 @@ class ShortVectorImpl implements ShortVector {
 
     /** Constructor. */
     public ShortVectorImpl(StructField field, short[] vector) {
-        if (field.measure instanceof ContinuousMeasure) {
+        if (field.measure instanceof NumericalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -61,8 +59,8 @@ class ShortVectorImpl implements ShortVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override
@@ -96,7 +94,7 @@ class ShortVectorImpl implements ShortVector {
     public ShortVector get(int... index) {
         short[] v = new short[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new ShortVectorImpl(name, v);
+        return new ShortVectorImpl(field(), v);
     }
 
     @Override

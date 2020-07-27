@@ -142,7 +142,7 @@ public class ElasticNetTest {
         double[] prediction = Validation.test(model, Abalone.test);
         double rmse = RMSE.of(Abalone.testy, prediction);
         System.out.println("Test RMSE = " + rmse);
-        assertEquals(2.1395194279255536, rmse, 1E-4);
+        assertEquals(2.126312441862997, rmse, 1E-4);
     }
 
     @Test
@@ -158,6 +158,6 @@ public class ElasticNetTest {
         double rmse = RMSE.of(Diabetes.y, prediction);
 
         System.out.println("Diabetes 10-CV RMSE = " + rmse);
-        assertEquals(59.59568301421299, rmse, 1E-4);
+        assertEquals(59.59608985137332, rmse, 1E-4);
     }
 }

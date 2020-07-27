@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * The builder of layers.
+ *
+ * @author Haifeng Li
  */
 public abstract class LayerBuilder {
 

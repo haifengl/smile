@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.classification.RDA;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -57,7 +58,7 @@ public class RDADemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.DUMMY);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         RDA qda = RDA.fit(data, label, alpha);

@@ -28,8 +28,8 @@ import java.util.LinkedList;
  * the tree defines the key with which it is associated. All the descendants
  * of a node have a common prefix of the string associated with that node,
  * and the root is associated with the empty string. Values are normally
- * not associated with every node, only with leaves and some inner node
- * s that correspond to keys of interest.
+ * not associated with every node, only with leaves and some inner nodes
+ * that correspond to keys of interest.
  *  
  * @author Haifeng Li
  */

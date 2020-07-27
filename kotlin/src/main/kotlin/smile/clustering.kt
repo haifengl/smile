@@ -22,7 +22,7 @@ import smile.clustering.linkage.*
 import smile.math.distance.Distance
 import smile.math.distance.EuclideanDistance
 import smile.math.distance.Metric
-import smile.math.matrix.DenseMatrix
+import smile.math.matrix.Matrix
 import smile.neighbor.RNNSearch
 import smile.util.SparseArray
 
@@ -506,7 +506,7 @@ fun <T> mec(data: Array<T>, nns: RNNSearch<T, T>, k: Int, radius: Double, y: Int
  * @param W the adjacency matrix of graph.
  * @param k the number of clusters.
  */
-fun specc(W: DenseMatrix, k: Int): SpectralClustering {
+fun specc(W: Matrix, k: Int): SpectralClustering {
     return SpectralClustering.fit(W, k)
 }
 

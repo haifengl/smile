@@ -17,15 +17,12 @@
 
 package smile.data;
 
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.Matrix;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Collector;
 import java.util.stream.Stream;
+import smile.math.matrix.Matrix;
 
 /**
  * An immutable collection of data objects.
@@ -117,7 +114,7 @@ public interface Dataset<T> {
     /**
      * Returns a stream collector that accumulates elements into a Matrix.
      */
-    static <T> Collector<double[], List<double[]>, DenseMatrix> toMatrix() {
+    static <T> Collector<double[], List<double[]>, Matrix> toMatrix() {
         return Collector.of(
                 // supplier
                 () -> new ArrayList<double[]>(),
@@ -126,7 +123,7 @@ public interface Dataset<T> {
                 // combiner
                 (c1, c2) -> { c1.addAll(c2); return c1; },
                 // finisher
-                (container) -> Matrix.of(container.toArray(new double[container.size()][]))
+                (container) -> new Matrix(container.toArray(new double[container.size()][]))
         );
     }
 }

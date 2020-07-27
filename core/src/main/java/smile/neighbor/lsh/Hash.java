@@ -19,7 +19,6 @@ package smile.neighbor.lsh;
 
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -64,7 +63,7 @@ public class Hash implements Serializable {
      * The random vectors with entries chosen independently from a Gaussian
      * distribution.
      */
-    DenseMatrix a;
+    Matrix a;
     /**
      * Real numbers chosen uniformly from the range [0, w].
      */
@@ -144,7 +143,7 @@ public class Hash implements Serializable {
      */
     public int hash(double[] x) {
         double[] h = new double[k];
-        a.ax(x, h);
+        a.mv(x, h);
 
         long g = 0;
         for (int i = 0; i < k; i++) {

@@ -23,11 +23,11 @@ import java.util.Set;
 /**
  * The Jaccard index, also known as the Jaccard similarity coefficient is a
  * statistic used for comparing the similarity and diversity of sample sets.
- *
+ * <p>
  * The Jaccard coefficient measures similarity between sample sets, and is
  * defined as the size of the intersection divided by the size of the union
  * of the sample sets.
- *
+ * <p>
  * The Jaccard distance, which measures dissimilarity between sample sets,
  * is complementary to the Jaccard coefficient and is obtained by subtracting
  * the Jaccard coefficient from 1, or, equivalently, by dividing the difference

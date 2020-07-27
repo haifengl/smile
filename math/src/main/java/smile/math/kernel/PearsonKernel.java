@@ -19,7 +19,7 @@ package smile.math.kernel;
 
 /**
  * The Pearson Mercer Kernel.
-
+ *
  * @author Diego Catalano
  */
 public class PearsonKernel implements MercerKernel<double[]> {

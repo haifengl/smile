@@ -17,12 +17,9 @@
 
 package smile.regression;
 
+import smile.math.blas.UPLO;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.Cholesky;
-import smile.math.matrix.LU;
-import smile.math.matrix.EVD;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -87,7 +84,8 @@ public class GaussianProcessRegression {
 
         int n = x.length;
 
-        DenseMatrix K = Matrix.zeros(n, n);
+        Matrix K = new Matrix(n, n);
+        K.uplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double k = kernel.k(x[i], x[j]);
@@ -98,9 +96,8 @@ public class GaussianProcessRegression {
             K.add(i, i, lambda);
         }
 
-        Cholesky cholesky = K.cholesky();
-        double[] w = y.clone();
-        cholesky.solve(w);
+        Matrix.Cholesky cholesky = K.cholesky();
+        double[] w = cholesky.solve(y);
 
         return new KernelMachine<>(kernel, x, w);
     }
@@ -127,14 +124,14 @@ public class GaussianProcessRegression {
         int n = x.length;
         int m = t.length;
 
-        DenseMatrix G = Matrix.zeros(n, m);
+        Matrix G = new Matrix(n, m);
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
                 G.set(i, j, kernel.k(x[i], t[j]));
             }
         }
 
-        DenseMatrix K = G.ata();
+        Matrix K = G.ata();
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 K.add(i, j, lambda * kernel.k(t[i], t[j]));
@@ -142,11 +139,10 @@ public class GaussianProcessRegression {
             }
         }
 
-        double[] w = new double[m];
-        G.atx(y, w);
+        double[] Gty = G.tv(y);
 
-        LU lu = K.lu(true);
-        lu.solve(w);
+        Matrix.LU lu = K.lu();
+        double[] w = lu.solve(Gty);
 
         return new KernelMachine<>(kernel, t, w);
     }
@@ -172,14 +168,14 @@ public class GaussianProcessRegression {
         int n = x.length;
         int m = t.length;
 
-        DenseMatrix E = Matrix.zeros(n, m);
+        Matrix E = new Matrix(n, m);
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
                 E.set(i, j, kernel.k(x[i], t[j]));
             }
         }
 
-        DenseMatrix W = Matrix.zeros(m, m);
+        Matrix W = new Matrix(m, m);
         for (int i = 0; i < m; i++) {
             for (int j = 0; j <= i; j++) {
                 double k = kernel.k(t[i], t[j]);
@@ -188,30 +184,28 @@ public class GaussianProcessRegression {
             }
         }
 
-        W.setSymmetric(true);
-        EVD eigen = W.eigen();
-        DenseMatrix U = eigen.getEigenVectors();
-        DenseMatrix D = eigen.getD();
+        W.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = W.eigen().sort();
+        Matrix U = eigen.Vr;
+        Matrix D = eigen.diag();
         for (int i = 0; i < m; i++) {
             D.set(i, i, 1.0 / Math.sqrt(D.get(i, i)));
         }
 
-        DenseMatrix UD = U.abmm(D);
-        DenseMatrix UDUt = UD.abtmm(U);
-        DenseMatrix L = E.abmm(UDUt);
+        Matrix UD = U.mm(D);
+        Matrix UDUt = UD.mt(U);
+        Matrix L = E.mm(UDUt);
         
-        DenseMatrix LtL = L.ata();
+        Matrix LtL = L.ata();
         for (int i = 0; i < m; i++) {
             LtL.add(i, i, lambda);
         }
 
-        Cholesky chol = LtL.cholesky();
-        DenseMatrix invLtL = chol.inverse();
-        DenseMatrix K = L.abmm(invLtL).abtmm(L);
+        Matrix.Cholesky chol = LtL.cholesky();
+        Matrix invLtL = chol.inverse();
+        Matrix K = L.mm(invLtL).mt(L);
 
-        double[] w = new double[n];
-        K.atx(y, w);
-        
+        double[] w = K.tv(y);
         for (int i = 0; i < n; i++) {
             w[i] = (y[i] - w[i]) / lambda;
         }

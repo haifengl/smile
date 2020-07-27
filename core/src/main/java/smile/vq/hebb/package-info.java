@@ -22,7 +22,7 @@
  * plasticity, the adaptation of brain neurons during the learning process.
  * It was introduced by Donald Hebb in his 1949 book The Organization of
  * Behavior.
- *
+ * <p>
  * The theory is often summarized as "Cells that fire together wire together."
  * This summary, however, should not be taken too literally. Hebb emphasized
  * that cell A needs to "take part in firing" cell B, and such causality can
@@ -30,7 +30,7 @@
  * This important aspect of causation in Hebb's work foreshadowed what is
  * now known about spike-timing-dependent plasticity, which requires temporal
  * precedence.
- *
+ * <p>
  * The theory attempts to explain associative or Hebbian learning, in which
  * simultaneous activation of cells leads to pronounced increases in synaptic
  * strength between those cells. In the study of neural networks in cognitive

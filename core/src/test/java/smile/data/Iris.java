@@ -37,7 +37,7 @@ public class Iris {
         try {
             data = Read.arff(Paths.getTestData("weka/iris.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'iris': " + ex);

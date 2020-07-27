@@ -21,7 +21,9 @@ package smile.validation;
  * The false discovery rate (FDR) is ratio of false positives
  * to combined true and false positives, which is actually 1 - precision.
  * <p>
- * FDR = FP / (TP + FP)
+ * <pre>
+ *     FDR = FP / (TP + FP)
+ * </pre>
  *
  * @author Haifeng Li
  */

@@ -27,31 +27,29 @@ import smile.math.LevenbergMarquardt;
 import smile.math.MathEx;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.math.matrix.ARPACK;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
-import smile.netlib.ARPACK;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
  * Uniform Manifold Approximation and Projection.
- *
  * UMAP is a dimension reduction technique that can be used for visualization
  * similarly to t-SNE, but also for general non-linear dimension reduction.
  * The algorithm is founded on three assumptions about the data:
- *
+ * <p>
  * <ul>
  * <li>The data is uniformly distributed on a Riemannian manifold;</li>
  * <li>The Riemannian metric is locally constant (or can be approximated as
  * such);</li>
  * <li>The manifold is locally connected.</li>
  * </ul>
- *
+ * <p>
  * From these assumptions it is possible to model the manifold with a fuzzy
  * topological structure. The embedding is found by searching for a low
  * dimensional projection of the data that has the closest possible equivalent
  * fuzzy topological structure.
- *
+ * <p>
  * <h2>References</h2>
  * <ol>
  * <li>McInnes, L, Healy, J, UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction, ArXiv e-prints 1802.03426, 2018</li>
@@ -240,7 +238,6 @@ public class UMAP implements Serializable {
 
         graph = computeFuzzySimplicialSet(nng.graph, k, 64);
         SparseMatrix conorm = graph.toMatrix();
-        conorm.setSymmetric(true);
 
         // Spectral embedding initialization
         double[][] coordinates = spectralLayout(graph, d);
@@ -260,7 +257,7 @@ public class UMAP implements Serializable {
 
     /**
      * The curve function:
-     *
+     * <p>
      * <pre>
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>
@@ -308,7 +305,7 @@ public class UMAP implements Serializable {
         }
         double[] p = {0.5, 0.0};
         LevenbergMarquardt curveFit = LevenbergMarquardt.fit(func, x, y, p);
-        return curveFit.p;
+        return curveFit.parameters;
     }
 
     /**
@@ -451,15 +448,13 @@ public class UMAP implements Serializable {
         }
 
         SparseMatrix L = laplacian.toMatrix();
-        L.setSymmetric(true);
 
-        // ARPACK may not find all needed eigen values for k = d + 1.
-        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
-        // Our Lanczos class has no such issue.
-        EVD eigen = ARPACK.eigen(L, Math.min(10*(d+1), n-1), "SM");
+        // ARPACK may not find all needed eigenvalues for k = d + 1.
+        // Hack it with 10 * (d + 1).
+        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
         double absMax = 0;
-        DenseMatrix V = eigen.getEigenVectors();
+        Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncols() - j - 2;

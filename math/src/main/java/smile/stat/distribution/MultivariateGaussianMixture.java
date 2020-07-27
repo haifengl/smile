@@ -18,7 +18,6 @@
 package smile.stat.distribution;
 
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -81,7 +80,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
 
         double[] centroid = data[MathEx.randomInt(n)];
         double[] variance = null;
-        DenseMatrix cov = null;
+        Matrix cov = null;
         MultivariateGaussianDistribution gaussian;
         if (diagonal) {
             variance = new double[d];
@@ -98,7 +97,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
             }
             gaussian = new MultivariateGaussianDistribution(centroid, variance);
         } else {
-            cov = Matrix.of(MathEx.cov(data, mu));
+            cov = new Matrix(MathEx.cov(data, mu));
             gaussian = new MultivariateGaussianDistribution(centroid, cov);
         }
 
@@ -198,7 +197,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         // Splits the component
         Component component = components[index];
         double priori = component.priori / 2;
-        DenseMatrix delta = component.distribution.cov();
+        Matrix delta = component.distribution.cov();
         double[] mu = component.distribution.mean();
 
         Component[] mixture = new Component[k+1];

@@ -41,6 +41,8 @@ import smile.util.IntSet;
  * distribution is balanced in the training set, the binary classification
  * learners see unbalanced distributions because typically the set of
  * negatives they see is much larger than the set of positives.
+ *
+ * @author Haifeng Li
  */
 public class OneVersusRest<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 2L;
