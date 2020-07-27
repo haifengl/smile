@@ -779,32 +779,6 @@ public class Matrix extends DMatrix {
         }
         return this;
     }
-    
-    /**
-     * In linear algebra, a Toeplitz matrix or diagonal-constant matrix, in
-     * which each descending diagonal from left to right is constant.
-     * 
-     * @param input
-     *            original data to construct the toeplitz matrix
-     * @return a {@link DenseMatrix} of Toplietz characteristic
-     */
-    static DenseMatrix toeplitz(double[] input) {
-        int length = input.length;
-        double toeplitz[][] = new double[length][length];
-
-        for (int i = 0; i < length; i++) {
-            for (int j = 0; j < length; j++) {
-                if (j > i) {
-                    toeplitz[i][j] = input[j - i];
-                } else if (j == i) {
-                    toeplitz[i][j] = input[0];
-                } else {
-                    toeplitz[i][j] = input[i - j];
-                }
-            }
-        }
-        return Matrix.of(toeplitz);
-    }
 
     /** Element-wise multiplication A *= alpha * B */
     public Matrix mul(double alpha, Matrix B) {
