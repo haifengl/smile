@@ -16,6 +16,7 @@
  ******************************************************************************/
 
 // Imports Smile packages.
+import scala.language.existentials
 import scala.language.postfixOps
 import org.apache.commons.csv.CSVFormat
 import smile._

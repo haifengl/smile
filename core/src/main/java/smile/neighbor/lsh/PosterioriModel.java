@@ -26,6 +26,8 @@ import smile.util.IntArrayList;
 
 /**
  * Pre-computed posteriori probabilities for generating multiple probes.
+ *
+ * @author Haifeng Li
  */
 public class PosterioriModel implements Serializable {
     private static final long serialVersionUID = 2L;

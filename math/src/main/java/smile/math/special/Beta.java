@@ -23,9 +23,11 @@ import static smile.math.special.Gamma.lgamma;
 /**
  * The beta function, also called the Euler integral of the first kind.
  * <p>
- * B(x, y) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
- * <p>
- * for x, y &gt; 0 and the integration is over [0,1].The beta function is symmetric, i.e. B(x,y) = B(y,x).
+ * <pre>
+ *     B(x, y) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
+ * </pre>
+ * for <code>x, y &gt; 0</code> and the integration is over [0, 1].
+ * The beta function is symmetric, i.e. <code>B(x, y) = B(y, x)</code>.
  *
  * @author Haifeng Li
  */

@@ -25,7 +25,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 import smile.plot.swing.TextPlot;
@@ -85,7 +85,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
 
         RandomProjection rp = sparseBox.isSelected() ? RandomProjection.sparse(data[0].length, 0) : RandomProjection.of(data[0].length, 2);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
-        DenseMatrix projection = rp.getProjection();
+        Matrix projection = rp.getProjection();
         for (int i = 0; i < projection.nrows(); i++) {
             for (int j = 0; j < projection.ncols(); j++) {
                 System.out.format("% .4f ", projection.get(i, j));

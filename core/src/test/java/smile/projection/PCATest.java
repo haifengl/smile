@@ -252,6 +252,7 @@ public class PCATest {
 
         PCA pca = PCA.cor(USArrests);
         pca.setProjection(4);
+        System.out.println(java.util.Arrays.toString(pca.getVarianceProportion()));
         assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
 

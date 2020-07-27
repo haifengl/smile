@@ -30,14 +30,18 @@ public class WeatherNominal {
     public static DataFrame data;
     public static Formula formula = Formula.lhs("play");
 
-    public static double[][] x;
+    public static double[][] level;
+    public static double[][] dummy;
+    public static double[][] onehot;
     public static int[] y;
 
     static {
         try {
             data = Read.arff(Paths.getTestData("weka/weather.nominal.arff"));
 
-            x = formula.x(data).toArray();
+            level = formula.x(data).toArray(false, CategoricalEncoder.LEVEL);
+            dummy = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
+            onehot = formula.x(data).toArray(false, CategoricalEncoder.ONE_HOT);
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'weather nominal': " + ex);

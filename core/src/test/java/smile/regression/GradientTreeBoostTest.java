@@ -107,10 +107,10 @@ public class GradientTreeBoostTest {
     public void testLS() {
         test(Loss.ls(), "CPU", CPU.formula, CPU.data, 71.9149);
         test(Loss.ls(), "2dplanes", Planes.formula, Planes.data, 1.1016);
-        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2199);
+        test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2195);
         test(Loss.ls(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.ls(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0847);
-        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8148);
+        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1293);
         test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60604.6920);
         test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2487);
         test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
@@ -120,10 +120,10 @@ public class GradientTreeBoostTest {
     public void testLAD() {
         test(Loss.lad(), "CPU", CPU.formula, CPU.data, 89.6677);
         test(Loss.lad(), "2dplanes", Planes.formula, Planes.data, 1.1347);
-        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2990);
+        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2999);
         test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
-        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
+        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1389);
         test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
         test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
         test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
@@ -133,10 +133,10 @@ public class GradientTreeBoostTest {
     public void testQuantile() {
         test(Loss.quantile(0.5), "CPU", CPU.formula, CPU.data, 89.6677);
         test(Loss.quantile(0.5), "2dplanes", Planes.formula, Planes.data, 1.1347);
-        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2990);
+        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2999);
         test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0912);
-        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8460);
+        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1389);
         test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
         test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
         test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
@@ -146,10 +146,10 @@ public class GradientTreeBoostTest {
     public void testHuber() {
         test(Loss.huber(0.9), "CPU", CPU.formula, CPU.data, 85.3103);
         test(Loss.huber(0.9), "2dplanes", Planes.formula, Planes.data, 1.1080);
-        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2262);
+        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2263);
         test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0855);
-        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 2.8316);
+        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1513);
         test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
         test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
         test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);

@@ -19,7 +19,7 @@ package smile
 
 import smile.clustering.linkage.{CompleteLinkage, SingleLinkage, UPGMALinkage, UPGMCLinkage, WPGMALinkage, WPGMCLinkage, WardLinkage}
 import smile.math.distance.{Distance, EuclideanDistance, Metric}
-import smile.math.matrix.DenseMatrix
+import smile.math.matrix.Matrix
 import smile.neighbor.RNNSearch
 import smile.util.{SparseArray, time}
 
@@ -530,7 +530,7 @@ package object clustering {
     * @param W the adjacency matrix of graph.
     * @param k the number of clusters.
     */
-  def specc(W: DenseMatrix, k: Int): SpectralClustering = time("Spectral clustering") {
+  def specc(W: Matrix, k: Int): SpectralClustering = time("Spectral clustering") {
     SpectralClustering.fit(W, k)
   }
 

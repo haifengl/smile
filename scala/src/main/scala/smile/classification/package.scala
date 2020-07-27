@@ -205,7 +205,7 @@ package object classification {
     * @param y training labels in [0, c), where c is the number of classes.
     * @param k the number of neighbors for classification.
     */
-  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time("K-Nearnest Neighbor") {
+  def knn(x: Array[Array[Double]], y: Array[Int], k: Int): KNN[Array[Double]] = time("K-Nearest Neighbor") {
     KNN.fit(x, y, k)
   }
 
@@ -256,8 +256,8 @@ package object classification {
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.
     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-    *               weights which often has superior generalization performance, especially
-    *               when the dimensionality is high.
+    *               weights which often has superior generalization performance,
+    *               especially when the dimensionality is high.
     * @param tol the tolerance for stopping iterations.
     * @param maxIter the maximum number of iterations.
     *

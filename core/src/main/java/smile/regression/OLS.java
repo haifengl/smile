@@ -17,15 +17,12 @@
 
 package smile.regression;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
-import smile.math.matrix.SVD;
-import smile.math.matrix.Cholesky;
+import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 
 /**
@@ -118,67 +115,65 @@ public class OLS {
      * @param recursive if true, the return model supports recursive least squares.
      */
     public static LinearModel fit(Formula formula, DataFrame data, String method, boolean stderr, boolean recursive) {
-        DenseMatrix X = formula.matrix(data, true);
+        formula = formula.expand(data.schema());
+        StructType schema = formula.bind(data.schema());
+
+        Matrix X = formula.matrix(data);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
-        int p = X.ncols() - 1;
+        int p = X.ncols();
         
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
         }
 
         // weights and intercept
-        double[] w1 = new double[p+1];
-
-        QR qr = null;
-        SVD svd = null;
+        double[] w = null;
+        Matrix.QR qr = null;
+        Matrix.SVD svd = null;
 
         if (method.equalsIgnoreCase("svd")) {
-            svd = X.svd(false);
-            svd.solve(y, w1);
+            svd = X.svd();
+            w = svd.solve(y);
         } else {
             try {
-                qr = X.qr(false);
-                qr.solve(y, w1);
+                qr = X.qr();
+                w = qr.solve(y);
             } catch (RuntimeException e) {
                 logger.warn("Matrix is not of full rank, try SVD instead");
                 method = "svd";
-                svd = X.svd(false);
-                Arrays.fill(w1, 0.0);//re-init w1 with zero after exception caught
-                svd.solve(y, w1);
+                svd = X.svd();
+                w = svd.solve(y);
             }
         }
 
         LinearModel model = new LinearModel();
         model.formula = formula;
-        model.schema = formula.xschema();
+        model.schema = schema;
+        model.predictors = X.colNames();
         model.p = p;
-        model.b = w1[p];
-        model.w = new double[p];
-        System.arraycopy(w1, 0, model.w, 0, p);
+        model.w = w;
 
-        double[] fittedValues = new double[n];
-        X.ax(w1, fittedValues);
+        double[] fittedValues = X.mv(w);
         model.fitness(fittedValues, y, MathEx.mean(y));
 
-        DenseMatrix inv = null;
-
+        Matrix inv = null;
         if (stderr || recursive) {
-            Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky() : qr.CholeskyOfAtA();
+            Matrix.Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky() : qr.CholeskyOfAtA();
             inv = cholesky.inverse();
             model.V = inv;
         }
 
         if (stderr) {
-            double[][] ttest = new double[p + 1][4];
+            double[][] ttest = new double[p][4];
             model.ttest = ttest;
 
-            for (int i = 0; i <= p; i++) {
-                ttest[i][0] = w1[i];
+            for (int i = 0; i < p; i++) {
+                ttest[i][0] = w[i];
                 double se = model.error * Math.sqrt(inv.get(i, i));
                 ttest[i][1] = se;
-                double t = w1[i] / se;
+                double t = w[i] / se;
                 ttest[i][2] = t;
                 ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * model.df, 0.5, model.df / (model.df + t * t));
             }

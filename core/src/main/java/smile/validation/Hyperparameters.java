@@ -28,7 +28,7 @@ import smile.math.MathEx;
  * Hyperparameter tuning. A hyperparameter is a parameter whose value is set
  * before the learning process begins. By contrast, the values of other
  * parameters are derived via training.
- *
+ * <p>
  * Hyperparameters can be classified as model hyperparameters, that cannot
  * be inferred while fitting the machine to the training set because they
  * refer to the model selection task, or algorithm hyperparameters, that
@@ -36,7 +36,35 @@ import smile.math.MathEx;
  * affect the speed and quality of the learning process. For example,
  * the topology and size of a neural network are model hyperparameters,
  * while learning rate and mini-batch size are algorithm hyperparameters.
+ * <p>
+ * The below example shows how to tune the hyperparameters of random forest.
+ * <p>
+ * <pre>
+ * {@code
+ *    import smile.io.*;
+ *    import smile.data.formula.Formula;
+ *    import smile.validation.*;
+ *    import smile.classification.RandomForest;
  *
+ *    var hp = new Hyperparameters()
+ *        .add("smile.random.forest.trees", 100) // a fixed value
+ *        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
+ *        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
+ *
+ *    var train = Read.arff("data/weka/segment-challenge.arff");
+ *    var test = Read.arff("data/weka/segment-test.arff");
+ *    var formula = Formula.lhs("class");
+ *    var testy = formula.y(test).toIntArray();
+ *
+ *    hp.grid().forEach(prop -&gt; {
+ *        var model = RandomForest.fit(formula, train, prop);
+ *        var pred = model.predict(test);
+ *        System.out.println(prop);
+ *        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+ *        System.out.println(ConfusionMatrix.of(testy, pred));
+ *    });
+ * }
+ * </pre>
  * @author Haifeng Li
  */
 public class Hyperparameters {

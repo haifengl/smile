@@ -33,20 +33,22 @@ import smile.math.rbf.GaussianRadialBasis;
  * functions. It is a linear combination of radial basis functions.
  * <p>
  * In its basic form, radial basis function network is in the form
- * <p>
+ * <code>
  * y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+ * </code>
+ * where the approximating function <code>y(x)</code> is represented as
+ * a sum of <code>N</code> radial basis functions &phi;, each associated
+ * with a different center <code>c<sub>i</sub></code>, and weighted by an
+ * appropriate coefficient <code>w<sub>i</sub></code>. For distance,
+ * one usually chooses Euclidean distance. The weights
+ * <code>w<sub>i</sub></code> can be estimated using the matrix methods of
+ * linear least squares, because the approximating function is linear
+ * in the weights.
  * <p>
- * where the approximating function y(x) is represented as a sum of N radial
- * basis functions &phi;, each associated with a different center c<sub>i</sub>,
- * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
- * one usually chooses Euclidean distance. The weights w<sub>i</sub> can
- * be estimated using the matrix methods of linear least squares, because
- * the approximating function is linear in the weights.
- * <p>
- * The centers c<sub>i</sub> can be randomly selected from training data,
- * or learned by some clustering method (e.g. k-means), or learned together
- * with weight parameters undergo a supervised learning processing
- * (e.g. error-correction learning).
+ * The centers <code>c<sub>i</sub></code> can be randomly selected
+ * from training data, or learned by some clustering method (e.g. k-means),
+ * or learned together with weight parameters undergo a supervised
+ * learning processing (e.g. error-correction learning).
  *
  * @author Haifeng Li
  */

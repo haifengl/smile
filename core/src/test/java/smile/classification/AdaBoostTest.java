@@ -59,21 +59,21 @@ public class AdaBoostTest {
         System.out.println("Weather");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 200, 20, 4, 1);
+        AdaBoost model = AdaBoost.fit(WeatherNominal.formula, WeatherNominal.data, 20, 5, 8, 1);
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
+
+        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));
         int error = Error.of(WeatherNominal.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(6, error);
-
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        assertEquals(5, error);
     }
 
     @Test

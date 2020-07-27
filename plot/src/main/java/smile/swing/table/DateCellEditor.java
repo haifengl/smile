@@ -41,6 +41,8 @@ import javax.swing.text.DefaultFormatterFactory;
 /**
  * Implements a cell editor that uses a formatted text field
  * to edit Date values.
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class DateCellEditor extends DefaultCellEditor {

@@ -29,7 +29,7 @@ import static java.lang.Math.log;
  * machines, but can be applied to other classification models.
  * Platt scaling works by fitting a logistic regression model to
  * a classifier's scores.
- *
+ * <p>
  * Platt suggested using the Levenberg–Marquardt algorithm to optimize
  * the parameters, but a Newton algorithm was later proposed that should
  * be more numerically stable, which is implemented in this class.

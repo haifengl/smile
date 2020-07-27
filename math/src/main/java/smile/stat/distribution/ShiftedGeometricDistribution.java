@@ -20,13 +20,16 @@ package smile.stat.distribution;
 import smile.math.MathEx;
 
 /**
- * The "shifted" geometric distribution is a discrete probability distribution of the
- * number of failures before the first success, supported on the set
- * {0, 1, 2, 3, &hellip;}.
+ * The "shifted" geometric distribution is a discrete probability distribution
+ * of the number of failures before the first success, supported on the set
+ * <code>{0, 1, 2, 3, &hellip;}</code>.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
- * Pr(X = k) = (1 - p)<sup>k</sup> p.
-
+ * <p>
+ * <pre>
+ *     Pr(X = k) = (1 - p)<sup>k</sup> p
+ * </pre>.
+ *
  * @see GeometricDistribution
  *
  * @author Haifeng Li

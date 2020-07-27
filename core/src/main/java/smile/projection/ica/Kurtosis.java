@@ -22,6 +22,8 @@ import smile.math.DifferentiableFunction;
 /**
  * The kurtosis of the probability density function of a signal.
  * Note that kurtosis is very sensitive to outliers.
+ *
+ * @author Haifeng Li
  */
 public class Kurtosis implements DifferentiableFunction {
 
