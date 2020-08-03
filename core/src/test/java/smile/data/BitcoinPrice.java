@@ -17,15 +17,10 @@
 
 package smile.data;
 
-import java.util.ArrayList;
-
 import org.apache.commons.csv.CSVFormat;
-
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
-import smile.io.CSV;
+import smile.io.Read;
+import smile.timeseries.TimeSeries;
 import smile.util.Paths;
 
 /**
@@ -50,33 +45,12 @@ public class BitcoinPrice {
     public static DataFrame data;
     public static double[] timeseries;
 
-    private static final String DATA_COL_NAME = "Close";
     static {
-//        ArrayList<StructField> fields = new ArrayList<>();
-//        fields.add(new StructField("Date", DataTypes.StringType));
-//        fields.add(new StructField("Open", DataTypes.DoubleType));
-//        fields.add(new StructField("High", DataTypes.DoubleType));
-//        fields.add(new StructField("Low", DataTypes.DoubleType));
-//        fields.add(new StructField(DATA_COL_NAME, DataTypes.DoubleType));
-//        fields.add(new StructField("Volume", DataTypes.StringType));
-//        fields.add(new StructField("Market Cap", DataTypes.StringType));
-//        StructType schema = DataTypes.struct(fields);
-
-        // csv parser will figure out the schema automatically
-        CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim();
-        CSV csv = new CSV(format);
-//        csv.schema(schema);
-
         try {
-            data = csv.read(Paths.getTestData("timeseries/bitcoin_price.csv"));
+            data = Read.csv(Paths.getTestData("timeseries/bitcoin_price.csv"), CSVFormat.DEFAULT.withFirstRecordAsHeader().withTrim());
 
-            BaseVector vec = data.column(DATA_COL_NAME);
-            double[] d = vec.toDoubleArray();
-            timeseries = new double[d.length];
-            for (int i = 0; i < d.length; i++) {
-                timeseries[i] = d[d.length - i - 1];
-            }
-
+            double[] close = data.doubleVector("Close").toDoubleArray();
+            timeseries = TimeSeries.diff(close, 1, 1)[0];
         } catch (Exception ex) {
             System.err.println("Failed to load 'BitcoinPrice': " + ex);
             System.exit(-1);

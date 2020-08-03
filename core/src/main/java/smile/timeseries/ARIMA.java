@@ -14,6 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
+
 package smile.timeseries;
 
 import java.io.Serializable;
@@ -21,38 +22,32 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 
 import smile.math.MathEx;
-import smile.math.matrix.Matrix.Cholesky;
 import smile.math.matrix.Matrix.QR;
 import smile.math.matrix.Matrix.SVD;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 
 /**
- * An Auto-Regressive Integrated Moving-Average (ARIMA) model is a
- * generalization of an Auto-Regressive Moving-Average (ARMA) model for
- * timeseries data. This implementation only support non-seasonal cases.
+ * Auto-regressive integrated moving-average. ARIMA models are applied
+ * in some cases where data show evidence of non-stationarity, where
+ * an initial differencing step (corresponding to the "integrated" part
+ * of the model) can be applied one or more times to eliminate the
+ * non-stationarity.
  * <p>
  * The AR part of ARIMA indicates that the evolving variable of interest is
- * regressed on its own lagged (i.e., prior) values.
- * <p>
- * The MA part indicates that the regression error is actually a linear
- * combination of error terms whose values occurred contemporaneously and at
- * various times in the past.
- * <p>
+ * regressed on its own lagged (i.e., prior) values. The MA part indicates
+ * that the regression error is actually a linear combination of error terms
+ * whose values occurred contemporaneously and at various times in the past.
  * The I (for "integrated") indicates that the data values have been replaced
  * with the difference between their values and the previous values (and this
  * differencing process may have been performed more than once).
- * <p>
  * 
  * <h2>References</h2>
  * <ol>
- * <li>E. J. Hannan and J. Rissanen, Recursive Estimation of Mixed
- * Autoregressive-Moving Average Order, Biometrika Vol. 69, No. 1 (Apr., 1982),
- * pp. 81-94</li>
+ * <li>E. J. Hannan and J. Rissanen, Recursive Estimation of Mixed Autoregressive-Moving Average Order, Biometrika Vol. 69, No. 1 (Apr., 1982), pp. 81-94</li>
  * </ol>
  * 
  * @author rayeaster
- *
  */
 public class ARIMA implements Serializable {
 
@@ -457,64 +452,6 @@ public class ARIMA implements Serializable {
         y = restrictCoefficients(y);
 
         return y;
-    }
-
-    /**
-     * calculate the Auto Correlation Function (ACF) for given data array and
-     * lag
-     * 
-     * @param data
-     *            timeseries to calculate the ACF
-     * @param k
-     *            lag within the given timeseries data
-     * @return ACF value for given timeseries and lag
-     */
-    public static double acf(double[] data, int k) {
-
-        if (k == 0) {
-            return 1;
-        }
-
-        double ret = 0;
-        int N = data.length;
-        double mean = MathEx.mean(data);
-        double selfSSE = Arrays.stream(data).map(v -> Math.pow(v - mean, 2)).sum();
-        double lagSSE = IntStream.range(k, N - 1).mapToDouble(i -> (data[i] - mean) * (data[i - k] - mean)).sum();
-        ret = (N / (N - k)) * (lagSSE / selfSSE);
-        return ret;
-    }
-
-    /**
-     * calculate the Partial Auto Correlation Function (PACF) for given data
-     * array and lag
-     * 
-     * @param data
-     *            timeseries to calculate the PACF
-     * @param k
-     *            lag within the given timeseries data
-     * @return PACF value for given timeseries and lag
-     */
-    public static double pacf(double[] data, int k) {
-        if (k == 0) {
-            return 1;
-        } else if (k == 1) {
-            return acf(data, k);
-        }
-
-        double[] acfs = new double[k];
-        for (int i = 0; i < acfs.length; i++) {
-            acfs[i] = acf(data, i);
-        }
-
-        Matrix toeplitz = Matrix.toeplitz(acfs);
-        double[] y = new double[k];
-        y[k - 1] = acf(data, k);
-        System.arraycopy(acfs, 1, y, 0, k - 1);
-
-        y = solveLinearReg(toeplitz, y);
-        assert (y != null && y.length == k);
-
-        return y[k - 1];
     }
 
     /**
