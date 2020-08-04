@@ -117,12 +117,12 @@ public interface TimeSeries {
         }
 
         double[] acf = new double[lag];
+        double[] r = new double[lag];
         for (int i = 0; i < lag; i++) {
             acf[i] = acf(x, i);
         }
 
         Matrix toeplitz = Matrix.toeplitz(acf);
-        double[] r = new double[lag];
         System.arraycopy(acf, 1, r, 0, lag - 1);
         r[lag - 1] = acf(x, lag);
 
