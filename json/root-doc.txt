@@ -50,7 +50,8 @@ val doc =
   }
   """
 }}}
-The interpolator `json` parse a string to `JsObject`. It is also okay to embed
+The interpolator `json` parse a string to `JsObject`. To parse an array, use
+the interpolator `jsan` to `JsArray`. It is also okay to embed
 variable references directly in processed string literals.
 
 {{{
@@ -86,8 +87,7 @@ With a `JsObject` or `JsArray`, you can refer to the individual
 elements with a variation of array syntax, like this:
 {{{
 doc("store")("bicycle")("color")
-// Use symbol instead of string
-doc('store)('bicycle)('color)
+doc("store")("book")(0)("author")
 }}}
 Note that we follow Scala's array access convention by `()` rather than
 `[]` in JavaScript.
@@ -103,7 +103,7 @@ while Scala is a strong type language. In other words, we have both the
 type safe features of strong type language and the flexibility of dynamic
 language in this JSON library.
 
-If you try to access a non-exist field, 1JsUndefined` is returned.
+If you try to access a non-exist field, `JsUndefined` is returned.
 {{{
 scala> doc.book
 res11: unicorn.json.JsValue = undefined
