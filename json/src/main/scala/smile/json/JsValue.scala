@@ -54,8 +54,9 @@ sealed trait JsValue extends Dynamic {
     throw new UnsupportedOperationException
   }
 
-  def applyDynamic(key: String): JsValue = {
-    throw new UnsupportedOperationException
+  // for a.b(0)
+  def applyDynamic(key: String)(index: Int): JsValue = {
+    apply(key).apply(index)
   }
 
   def selectDynamic(key: String): JsValue = {
@@ -577,8 +578,6 @@ case class JsObject(fields: collection.mutable.Map[String, JsValue]) extends JsV
   override def apply(key: String): JsValue = {
     fields.getOrElse(key, JsUndefined)
   }
-
-  override def applyDynamic(key: String): JsValue = apply(key)
 
   override def selectDynamic(key: String): JsValue = apply(key)
 
