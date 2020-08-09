@@ -51,39 +51,51 @@ public class TimeSeriesTest {
     }
 
     @Test
-    public void testAcf() {
-        System.out.println("ACF of first-differencing");
+    public void testAcfPrice() {
+        System.out.println("ACF of price");
 
-        double[] x = BitcoinPrice.timeseries;
-        assertEquals( 1.0, TimeSeries.acf(x, 0), 1E-8);
-        assertEquals( 0.09288779, TimeSeries.acf(x, 1), 1E-8);
-        assertEquals(-0.05545845, TimeSeries.acf(x, 2), 1E-8);
-        assertEquals(-0.02800631, TimeSeries.acf(x, 3), 1E-8);
-        assertEquals( 0.09273750, TimeSeries.acf(x, 9), 1E-8);
+        double[] x = BitcoinPrice.price;
+        assertEquals(1.0, TimeSeries.acf(x, 0), 1E-7);
+        assertEquals(0.9937373, TimeSeries.acf(x, 1), 1E-7);
+        assertEquals(0.9870269, TimeSeries.acf(x, 2), 1E-7);
+        assertEquals(0.9810789, TimeSeries.acf(x, 3), 1E-7);
+        assertEquals(0.9491701, TimeSeries.acf(x, 9), 1E-7);
     }
 
     @Test
-    public void testAcf2() {
-        System.out.println("ACF of twice-differencing");
+    public void testAcfLogPrice() {
+        System.out.println("ACF of log price");
 
-        double[] x = TimeSeries.diff(BitcoinPrice.data.doubleVector("Close").toDoubleArray(), 1, 2)[1];
+        double[] x = BitcoinPrice.logPrice;
+        assertEquals(1.0, TimeSeries.acf(x, 0), 1E-7);
+        assertEquals(0.9969470, TimeSeries.acf(x, 1), 1E-7);
+        assertEquals(0.9939463, TimeSeries.acf(x, 2), 1E-7);
+        assertEquals(0.9910412, TimeSeries.acf(x, 3), 1E-7);
+        assertEquals(0.9724970, TimeSeries.acf(x, 9), 1E-7);
+    }
+
+    @Test
+    public void testAcfLogReturn() {
+        System.out.println("ACF of log return");
+
+        double[] x = BitcoinPrice.logReturn;
         assertEquals( 1.0, TimeSeries.acf(x, 0), 1E-8);
-        assertEquals(-0.41881183, TimeSeries.acf(x, 1), 1E-8);
-        assertEquals(-0.09565346, TimeSeries.acf(x, 2), 1E-8);
-        assertEquals( 0.03754026, TimeSeries.acf(x, 3), 1E-8);
-        assertEquals(-0.06052846, TimeSeries.acf(x, 9), 1E-8);
+        assertEquals( 0.00648546, TimeSeries.acf(x, 1), 1E-8);
+        assertEquals(-0.03218588, TimeSeries.acf(x, 2), 1E-8);
+        assertEquals(-0.00794621, TimeSeries.acf(x, 3), 1E-8);
+        assertEquals( 0.01021301, TimeSeries.acf(x, 9), 1E-8);
     }
 
     @Test
     public void testPacf() {
         System.out.println("PACF");
 
-        double[] x = BitcoinPrice.timeseries;
+        double[] x = BitcoinPrice.logReturn;
         assertEquals( 1.0, TimeSeries.pacf(x, 0), 1E-8);
-        assertEquals( 0.09288779, TimeSeries.pacf(x, 1), 1E-8);
-        assertEquals(-0.06464436, TimeSeries.pacf(x, 2), 1E-8);
-        assertEquals(-0.01673088, TimeSeries.pacf(x, 3), 1E-8);
-        assertEquals(-0.07145401, TimeSeries.pacf(x, 4), 1E-8);
-        assertEquals( 0.09639064, TimeSeries.pacf(x, 9), 1E-8);
+        assertEquals( 0.00648546, TimeSeries.pacf(x, 1), 1E-8);
+        assertEquals(-0.03222929, TimeSeries.pacf(x, 2), 1E-8);
+        assertEquals(-0.00752986, TimeSeries.pacf(x, 3), 1E-8);
+        assertEquals( 0.02646461, TimeSeries.pacf(x, 4), 1E-8);
+        assertEquals( 0.00713402, TimeSeries.pacf(x, 9), 1E-8);
     }
 }
