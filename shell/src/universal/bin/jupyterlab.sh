@@ -53,7 +53,7 @@ install_almond() {
       chmod +x coursier
   fi
 
-  SCALA_VERSION=2.13.3 ALMOND_VERSION=0.10.3
+  SCALA_VERSION=2.13.3 ALMOND_VERSION=0.10.4
 
   ./coursier bootstrap \
       -r jitpack \
