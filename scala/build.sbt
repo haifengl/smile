@@ -15,5 +15,5 @@ libraryDependencies ++= Seq(
   "com.thoughtworks.xstream" % "xstream" % "1.4.12",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "org.scala-lang.modules" %% "scala-java8-compat" % "0.9.0",
-  "org.specs2" %% "specs2-core" % "4.10.0" % Test
+  "org.specs2" %% "specs2-core" % "4.10.3" % Test
 )

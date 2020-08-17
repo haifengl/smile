@@ -68,7 +68,7 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(i -> measure().map(m -> m.toString(i)).orElseGet(() -> String.valueOf(i))).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(field()::toString).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named short integer vector.
