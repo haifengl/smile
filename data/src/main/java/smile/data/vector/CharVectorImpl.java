@@ -17,9 +17,8 @@
 
 package smile.data.vector;
 
-import smile.data.type.StructField;
-
 import java.util.stream.IntStream;
+import smile.data.type.StructField;
 
 /**
  * An immutable char vector.
