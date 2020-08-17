@@ -29,7 +29,6 @@ package object formula {
   implicit def pimpHyperTerm(x: Term) = PimpedHyperTerm(x)
   implicit def pimpTerm(x: Term) = PimpedTerm(x)
 
-  def dot(): Term = Terms.dot()
   def abs(x: String): Term = Terms.abs($(x))
   def ceil(x: String): Term = Terms.ceil($(x))
   def floor(x: String): Term = Terms.floor($(x))

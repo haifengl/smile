@@ -22,7 +22,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.stream.Collectors;
-
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.NominalScale;
 import smile.data.type.StructField;
