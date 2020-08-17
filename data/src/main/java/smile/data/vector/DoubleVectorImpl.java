@@ -17,13 +17,11 @@
 
 package smile.data.vector;
 
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
 import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.DoubleStream;
 
 /**
  * An immutable double vector.
@@ -62,8 +60,8 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override

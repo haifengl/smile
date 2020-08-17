@@ -17,14 +17,11 @@
 
 package smile.data.vector;
 
-import smile.data.measure.Measure;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * An immutable char vector.
@@ -35,11 +32,6 @@ public interface CharVector extends BaseVector<Character, Integer, IntStream> {
     @Override
     default DataType type() {
         return DataTypes.CharType;
-    }
-
-    @Override
-    default Optional<Measure> measure() {
-        return Optional.empty();
     }
 
     @Override
