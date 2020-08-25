@@ -96,7 +96,7 @@ public class GaussianProcessRegression {
             K.add(i, i, lambda);
         }
 
-        Matrix.Cholesky cholesky = K.cholesky();
+        Matrix.Cholesky cholesky = K.cholesky(true);
         double[] w = cholesky.solve(y);
 
         return new KernelMachine<>(kernel, x, w);
@@ -141,7 +141,7 @@ public class GaussianProcessRegression {
 
         double[] Gty = G.tv(y);
 
-        Matrix.LU lu = K.lu();
+        Matrix.LU lu = K.lu(true);
         double[] w = lu.solve(Gty);
 
         return new KernelMachine<>(kernel, t, w);
@@ -201,7 +201,7 @@ public class GaussianProcessRegression {
             LtL.add(i, i, lambda);
         }
 
-        Matrix.Cholesky chol = LtL.cholesky();
+        Matrix.Cholesky chol = LtL.cholesky(true);
         Matrix invLtL = chol.inverse();
         Matrix K = L.mm(invLtL).mt(L);
 

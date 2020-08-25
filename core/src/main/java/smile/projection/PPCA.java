@@ -194,7 +194,7 @@ public class PPCA implements LinearProjection, Serializable {
             M.add(i, i, noise);
         }
 
-        Matrix.Cholesky chol = M.cholesky();
+        Matrix.Cholesky chol = M.cholesky(true);
         Matrix Mi = chol.inverse();
         Matrix projection = Mi.mt(loading);
 
