@@ -185,7 +185,7 @@ public class GaussianProcessRegression {
         }
 
         W.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = W.eigen().sort();
+        Matrix.EVD eigen = W.eigen(false, true, true).sort();
         Matrix U = eigen.Vr;
         Matrix D = eigen.diag();
         for (int i = 0; i < m; i++) {
