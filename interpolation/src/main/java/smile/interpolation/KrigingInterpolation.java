@@ -17,6 +17,7 @@
 
 package smile.interpolation;
 
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.interpolation.variogram.PowerVariogram;
 import smile.interpolation.variogram.Variogram;
@@ -78,7 +79,7 @@ public class KrigingInterpolation {
     private double[][] x;
     private Variogram variogram;
     private double[] yvi;
-    private double[] vstar;
+    private ThreadLocal<double[]> vstar;
 
     /**
      * Constructor. The power variogram is employed. We assume no errors,
@@ -104,9 +105,14 @@ public class KrigingInterpolation {
         int n = x.length;
 
         yvi = new double[n + 1];
-        vstar = new double[n + 1];
-        Matrix v = new Matrix(n + 1, n + 1);
+        vstar = new ThreadLocal<double[]>() {
+            protected synchronized double[] initialValue() {
+                return new double[n + 1];
+            }
+        };
 
+        Matrix v = new Matrix(n + 1, n + 1);
+        v.uplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
             yvi[i] = y[i];
 
@@ -128,7 +134,7 @@ public class KrigingInterpolation {
             }
         }
 
-        Matrix.LU lu = v.lu();
+        Matrix.LU lu = v.lu(true);
         yvi = lu.solve(yvi);
     }
 
@@ -141,6 +147,7 @@ public class KrigingInterpolation {
         }
 
         int n = this.x.length;
+        double[] vstar = this.vstar.get();
         for (int i = 0; i < n; i++) {
             vstar[i] = variogram.f(rdist(x, this.x[i]));
         }
