@@ -104,6 +104,10 @@ public class RBFInterpolation {
      * @param normalized true for the normalized RBF interpolation.
      */
     public RBFInterpolation(double[][] x, double[] y, RadialBasisFunction rbf, boolean normalized) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
         this.x = x;
         this.rbf = rbf;
         this.normalized = normalized;

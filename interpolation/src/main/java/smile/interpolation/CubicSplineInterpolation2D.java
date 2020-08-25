@@ -36,6 +36,14 @@ public class CubicSplineInterpolation2D implements Interpolation2D {
      * Constructor.
      */
     public CubicSplineInterpolation2D(double[] x1, double[] x2, double[][] y) {
+        if (x1.length != y.length) {
+            throw new IllegalArgumentException("x1.length != y.length");
+        }
+
+        if (x2.length != y[0].length) {
+            throw new IllegalArgumentException("x2.length != y[0].length");
+        }
+
         m = x1.length;
 
         this.x1 = x1;
@@ -49,8 +57,9 @@ public class CubicSplineInterpolation2D implements Interpolation2D {
 
     @Override
     public double interpolate(double x1p, double x2p) {
-        for (int i = 0; i < m; i++)
+        for (int i = 0; i < m; i++) {
             yv[i] = srp[i].interpolate(x2p);
+        }
 
         CubicSplineInterpolation1D scol = new CubicSplineInterpolation1D(x1, yv);
 
