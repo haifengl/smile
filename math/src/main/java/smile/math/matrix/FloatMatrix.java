@@ -1364,7 +1364,16 @@ public class FloatMatrix extends SMatrix {
      * LU decomposition.
      */
     public LU lu() {
-        FloatMatrix lu = clone();
+        return lu(false);
+    }
+
+    /**
+     * LU decomposition.
+     *
+     * @param overwrite the flag if the decomposition overwrites this matrix.
+     */
+    public LU lu(boolean overwrite) {
+        FloatMatrix lu = overwrite ? this : clone();
         int[] ipiv = new int[Math.min(m, n)];
         int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, IntBuffer.wrap(ipiv));
         if (info < 0) {
@@ -1381,11 +1390,21 @@ public class FloatMatrix extends SMatrix {
      * @throws ArithmeticException if the matrix is not positive definite.
      */
     public Cholesky cholesky() {
+        return cholesky(false);
+    }
+
+    /**
+     * Cholesky decomposition for symmetric and positive definite matrix.
+     *
+     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @throws ArithmeticException if the matrix is not positive definite.
+     */
+    public Cholesky cholesky(boolean overwrite) {
         if (uplo == null) {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatMatrix lu = clone();
+        FloatMatrix lu = overwrite ? this : clone();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK GETRF error code: {}", info);
@@ -1399,7 +1418,16 @@ public class FloatMatrix extends SMatrix {
      * QR Decomposition.
      */
     public QR qr() {
-        FloatMatrix qr = clone();
+        return qr(false);
+    }
+
+    /**
+     * QR Decomposition.
+     *
+     * @param overwrite the flag if the decomposition overwrites this matrix.
+     */
+    public QR qr(boolean overwrite) {
+        FloatMatrix qr = overwrite ? this : clone();
         float[] tau = new float[Math.min(m, n)];
         int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, FloatBuffer.wrap(tau));
         if (info != 0) {
