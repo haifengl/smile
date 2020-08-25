@@ -103,6 +103,10 @@ public class RBFInterpolation1D implements Interpolation {
      * @param normalized true for the normalized RBF interpolation.
      */
     public RBFInterpolation1D(double[] x, double[] y, RadialBasisFunction rbf, boolean normalized) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
         this.x = x;
         this.rbf = rbf;
         this.normalized = normalized;

@@ -43,7 +43,22 @@ public class KrigingInterpolation1D implements Interpolation {
      * @param y the function values at given points.
      */
     public KrigingInterpolation1D(double[] x, double[] y) {
+        this(x, y, 1.5);
+    }
+
+    /**
+     * Constructor. The power variogram is employed for interpolation.
+     * @param x the point set.
+     * @param y the function values at given points.
+     * @param beta the parameter of power variogram. The value of &beta;
+     *             should be in the range <code>1 &le; &beta; &lt; 2</code>.
+     *             A good general choice is 1.5, but for functions with
+     *             a strong linear trend, we may experiment with values as
+     *             large as 1.99.
+     */
+    public KrigingInterpolation1D(double[] x, double[] y, double beta) {
         this.x = x;
+        this.beta = beta;
         pow(x, y);
 
         int n = x.length;
@@ -92,7 +107,6 @@ public class KrigingInterpolation1D implements Interpolation {
     }
 
     private void pow(double[] x, double[] y) {
-        beta = 1.5;
         int n = x.length;
 
         double num = 0.0, denom = 0.0;
