@@ -18,6 +18,7 @@
 package smile.interpolation;
 
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
@@ -32,7 +33,7 @@ public class KrigingInterpolation1D implements Interpolation {
 
     private double[] x;
     private double[] yvi;
-    private double[] vstar;
+    private ThreadLocal<double[]> vstar;
     private double alpha;
     private double beta;
 
@@ -47,9 +48,14 @@ public class KrigingInterpolation1D implements Interpolation {
 
         int n = x.length;
         yvi = new double[n + 1];
-        vstar = new double[n + 1];
-        Matrix v = new Matrix(n + 1, n + 1);
+        vstar = new ThreadLocal<double[]>() {
+            protected synchronized double[] initialValue() {
+                return new double[n + 1];
+            }
+        };
 
+        Matrix v = new Matrix(n + 1, n + 1);
+        v.uplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
             yvi[i] = y[i];
 
@@ -65,13 +71,14 @@ public class KrigingInterpolation1D implements Interpolation {
         yvi[n] = 0.0;
         v.set(n, n, 0.0);
 
-        Matrix.LU lu = v.lu();
+        Matrix.LU lu = v.lu(true);
         yvi = lu.solve(yvi);
     }
 
     @Override
     public double interpolate(double x) {
         int n = this.x.length;
+        double[] vstar = this.vstar.get();
         for (int i = 0; i < n; i++) {
             vstar[i] = variogram(Math.abs(x - this.x[i]));
         }
