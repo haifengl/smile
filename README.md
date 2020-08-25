@@ -101,7 +101,7 @@ computation:
 ```
 In this example, we include all supported 64-bit platforms and filter out
 32-bit platforms. The user should include only the needed platforms to save
-spaces.
+spaces. NOTE: Do NOT miss `classifier ""` of arpack-ng.
 
 If you prefer other BLAS implementations, you can use any library found on
 the "java.library.path" or on the class path, by specifying it with the

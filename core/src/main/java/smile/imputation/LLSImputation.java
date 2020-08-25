@@ -141,7 +141,7 @@ public class LLSImputation implements MissingValueImputation {
             if (!sufficient)
                 continue;
 
-            Matrix.LU lu = A.lu();
+            Matrix.LU lu = A.lu(true);
             lu.solve(b);
 
             for (int j = 0; j < d; j++) {

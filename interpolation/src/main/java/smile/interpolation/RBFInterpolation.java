@@ -130,10 +130,10 @@ public class RBFInterpolation {
 
         if (rbf instanceof GaussianRadialBasis) {
             G.uplo(UPLO.LOWER);
-            Matrix.Cholesky cholesky = G.cholesky();
+            Matrix.Cholesky cholesky = G.cholesky(true);
             w = cholesky.solve(rhs);
         } else {
-            Matrix.LU lu = G.lu();
+            Matrix.LU lu = G.lu(true);
             w = lu.solve(rhs);
         }
     }
