@@ -967,7 +967,7 @@ public class Matrix extends DMatrix {
      * L2 matrix norm. Maximum singular value.
      */
     public double norm2() {
-        return svd(false).s[0];
+        return svd(false, false).s[0];
     }
 
     /**
@@ -1369,7 +1369,7 @@ public class Matrix extends DMatrix {
     /**
      * LU decomposition.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
     public LU lu(boolean overwrite) {
         Matrix lu = overwrite ? this : clone();
@@ -1395,7 +1395,7 @@ public class Matrix extends DMatrix {
     /**
      * Cholesky decomposition for symmetric and positive definite matrix.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      * @throws ArithmeticException if the matrix is not positive definite.
      */
     public Cholesky cholesky(boolean overwrite) {
@@ -1423,7 +1423,7 @@ public class Matrix extends DMatrix {
     /**
      * QR Decomposition.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
     public QR qr(boolean overwrite) {
         Matrix qr = overwrite ? this : clone();
@@ -1452,7 +1452,7 @@ public class Matrix extends DMatrix {
      * without compromising the accuracy of the decomposition.
      */
     public SVD svd() {
-        return svd(true);
+        return svd(true, false);
     }
 
     /**
@@ -1470,15 +1470,16 @@ public class Matrix extends DMatrix {
      * without compromising the accuracy of the decomposition.
      *
      * @param vectors The flag if computing the singular vectors.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
-    public SVD svd(boolean vectors) {
+    public SVD svd(boolean vectors, boolean overwrite) {
         int k = Math.min(m, n);
         double[] s = new double[k];
 
+        Matrix W = overwrite ? this : clone();
         if (vectors) {
             Matrix U = new Matrix(m, k);
             Matrix VT = new Matrix(k, n);
-            Matrix W = clone();
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, DoubleBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
@@ -1490,7 +1491,6 @@ public class Matrix extends DMatrix {
         } else {
             Matrix U = new Matrix(1, 1);
             Matrix VT = new Matrix(1, 1);
-            Matrix W = clone();
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, DoubleBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
@@ -1512,7 +1512,7 @@ public class Matrix extends DMatrix {
      * eigenvectors.
      */
     public EVD eigen() {
-        return eigen(false, true);
+        return eigen(false, true, false);
     }
 
     /**
@@ -1526,13 +1526,14 @@ public class Matrix extends DMatrix {
      *
      * @param vl The flag if computing the left eigenvectors.
      * @param vr The flag if computing the right eigenvectors.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
-    public EVD eigen(boolean vl, boolean vr) {
+    public EVD eigen(boolean vl, boolean vr, boolean overwrite) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        Matrix eig = clone();
+        Matrix eig = overwrite ? this : clone();
         if (isSymmetric()) {
             double[] w = new double[n];
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, DoubleBuffer.wrap(w));

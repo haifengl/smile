@@ -185,7 +185,7 @@ public class LDA implements SoftClassifier<double[]> {
     public static LDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
         Matrix St = DiscriminantAnalysis.St(x, da.mean, da.k, tol);
-        Matrix.EVD eigen = St.eigen().sort();
+        Matrix.EVD eigen = St.eigen(false, true, true).sort();
 
         tol = tol * tol;
         for (double s : eigen.wr) {

@@ -968,7 +968,7 @@ public class FloatMatrix extends SMatrix {
      * L2 matrix norm. Maximum singular value.
      */
     public float norm2() {
-        return svd(false).s[0];
+        return svd(false, false).s[0];
     }
 
     /**
@@ -1370,7 +1370,7 @@ public class FloatMatrix extends SMatrix {
     /**
      * LU decomposition.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
     public LU lu(boolean overwrite) {
         FloatMatrix lu = overwrite ? this : clone();
@@ -1396,7 +1396,7 @@ public class FloatMatrix extends SMatrix {
     /**
      * Cholesky decomposition for symmetric and positive definite matrix.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      * @throws ArithmeticException if the matrix is not positive definite.
      */
     public Cholesky cholesky(boolean overwrite) {
@@ -1424,7 +1424,7 @@ public class FloatMatrix extends SMatrix {
     /**
      * QR Decomposition.
      *
-     * @param overwrite the flag if the decomposition overwrites this matrix.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
     public QR qr(boolean overwrite) {
         FloatMatrix qr = overwrite ? this : clone();
@@ -1453,7 +1453,7 @@ public class FloatMatrix extends SMatrix {
      * without compromising the accuracy of the decomposition.
      */
     public SVD svd() {
-        return svd(true);
+        return svd(true, false);
     }
 
     /**
@@ -1471,15 +1471,16 @@ public class FloatMatrix extends SMatrix {
      * without compromising the accuracy of the decomposition.
      *
      * @param vectors The flag if computing the singular vectors.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
-    public SVD svd(boolean vectors) {
+    public SVD svd(boolean vectors, boolean overwrite) {
         int k = Math.min(m, n);
         float[] s = new float[k];
 
+        FloatMatrix W = overwrite ? this : clone();
         if (vectors) {
             FloatMatrix U = new FloatMatrix(m, k);
             FloatMatrix VT = new FloatMatrix(k, n);
-            FloatMatrix W = clone();
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
@@ -1491,7 +1492,6 @@ public class FloatMatrix extends SMatrix {
         } else {
             FloatMatrix U = new FloatMatrix(1, 1);
             FloatMatrix VT = new FloatMatrix(1, 1);
-            FloatMatrix W = clone();
 
             int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
@@ -1513,7 +1513,7 @@ public class FloatMatrix extends SMatrix {
      * eigenvectors.
      */
     public EVD eigen() {
-        return eigen(false, true);
+        return eigen(false, true, false);
     }
 
     /**
@@ -1527,13 +1527,14 @@ public class FloatMatrix extends SMatrix {
      *
      * @param vl The flag if computing the left eigenvectors.
      * @param vr The flag if computing the right eigenvectors.
+     * @param overwrite The flag if the decomposition overwrites this matrix.
      */
-    public EVD eigen(boolean vl, boolean vr) {
+    public EVD eigen(boolean vl, boolean vr, boolean overwrite) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        FloatMatrix eig = clone();
+        FloatMatrix eig = overwrite ? this : clone();
         if (isSymmetric()) {
             float[] w = new float[n];
             int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, FloatBuffer.wrap(w));

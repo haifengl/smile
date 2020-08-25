@@ -172,7 +172,7 @@ public class PPCA implements LinearProjection, Serializable {
         }
 
         cov.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = cov.eigen().sort();
+        Matrix.EVD eigen = cov.eigen(false, true, true).sort();
         double[] evalues = eigen.wr;
         Matrix evectors = eigen.Vr;
 
