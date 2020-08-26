@@ -79,7 +79,6 @@ public class KrigingInterpolation {
     private double[][] x;
     private Variogram variogram;
     private double[] yvi;
-    private ThreadLocal<double[]> vstar;
 
     /**
      * Constructor. The power variogram is employed. We assume no errors,
@@ -103,13 +102,7 @@ public class KrigingInterpolation {
         this.variogram = variogram;
 
         int n = x.length;
-
         yvi = new double[n + 1];
-        vstar = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
-                return new double[n + 1];
-            }
-        };
 
         Matrix v = new Matrix(n + 1, n + 1);
         v.uplo(UPLO.LOWER);
@@ -147,16 +140,11 @@ public class KrigingInterpolation {
         }
 
         int n = this.x.length;
-        double[] vstar = this.vstar.get();
+        double y = yvi[n];
         for (int i = 0; i < n; i++) {
-            vstar[i] = variogram.f(rdist(x, this.x[i]));
+            y += yvi[i] * variogram.f(rdist(x, this.x[i]));
         }
-        vstar[n] = 1.0;
 
-        double y = 0.0;
-        for (int i = 0; i <= n; i++) {
-            y += yvi[i] * vstar[i];
-        }
         return y;
     }
 
