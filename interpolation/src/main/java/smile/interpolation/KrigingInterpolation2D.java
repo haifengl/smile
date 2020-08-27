@@ -29,38 +29,50 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class KrigingInterpolation1D implements Interpolation {
+public class KrigingInterpolation2D implements Interpolation2D {
 
-    private double[] x;
+    private double[] x1;
+    private double[] x2;
     private double[] yvi;
     private double alpha;
     private double beta;
 
     /**
      * Constructor. The power variogram is employed for interpolation.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      */
-    public KrigingInterpolation1D(double[] x, double[] y) {
-        this(x, y, 1.5);
+    public KrigingInterpolation2D(double[] x1, double[] x2, double[] y) {
+        this(x1, x2, y, 1.5);
     }
 
     /**
      * Constructor. The power variogram is employed for interpolation.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      * @param beta the parameter of power variogram. The value of &beta;
      *             should be in the range <code>1 &le; &beta; &lt; 2</code>.
      *             A good general choice is 1.5, but for functions with
      *             a strong linear trend, we may experiment with values as
      *             large as 1.99.
      */
-    public KrigingInterpolation1D(double[] x, double[] y, double beta) {
-        this.x = x;
-        this.beta = beta;
-        pow(x, y);
+    public KrigingInterpolation2D(double[] x1, double[] x2, double[] y, double beta) {
+        if (x1.length != x2.length) {
+            throw new IllegalArgumentException("x1.length != x2.length");
+        }
 
-        int n = x.length;
+        if (x1.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
+        this.x1 = x1;
+        this.x2 = x2;
+        this.beta = beta;
+        pow(x1, x2, y);
+
+        int n = x1.length;
         yvi = new double[n + 1];
 
         Matrix v = new Matrix(n + 1, n + 1);
@@ -69,7 +81,11 @@ public class KrigingInterpolation1D implements Interpolation {
             yvi[i] = y[i];
 
             for (int j = i; j < n; j++) {
-                double var = variogram(Math.abs(x[i] - x[j]));
+                double d1 = x1[i] - x1[j];
+                double d2 = x2[i] - x2[j];
+                double d = d1 * d1 + d2 * d2;
+
+                double var = variogram(d);
                 v.set(i, j, var);
                 v.set(j, i, var);
             }
@@ -85,23 +101,31 @@ public class KrigingInterpolation1D implements Interpolation {
     }
 
     @Override
-    public double interpolate(double x) {
-        int n = this.x.length;
+    public double interpolate(double x1, double x2) {
+        int n = this.x1.length;
         double y = yvi[n];
         for (int i = 0; i < n; i++) {
-            y += yvi[i] * variogram(Math.abs(x - this.x[i]));
+            double d1 = x1 - this.x1[i];
+            double d2 = x2 - this.x2[i];
+            double d = d1 * d1 + d2 * d2;
+
+            y += yvi[i] * variogram(d);
         }
+
         return y;
     }
 
-    private void pow(double[] x, double[] y) {
-        int n = x.length;
+    private void pow(double[] x1, double[] x2, double[] y) {
+        int n = x1.length;
 
         double num = 0.0, denom = 0.0;
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
-                double rb = MathEx.sqr(x[i] - x[j]);
-                rb = Math.pow(rb, 0.5 * beta);
+                double d1 = x1[i] - x1[j];
+                double d2 = x2[i] - x2[j];
+                double d = d1 * d1 + d2 * d2;
+
+                double rb = Math.pow(d, beta/2);
                 num += rb * 0.5 * MathEx.sqr(y[i] - y[j]);
                 denom += rb * rb;
             }
@@ -111,7 +135,7 @@ public class KrigingInterpolation1D implements Interpolation {
     }
 
     private double variogram(double r) {
-        return alpha * Math.pow(r, beta);
+        return alpha * Math.pow(r, beta/2);
     }
 
     @Override

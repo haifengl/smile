@@ -35,7 +35,9 @@ import smile.data.type.StructType;
 public interface Terms {
     /** Returns a variable. */
     static Term $(String x) {
-        if (x.equals("0"))
+        if (x.equals("."))
+            return new Dot();
+        else if (x.equals("0"))
             return new Intercept(false);
         else if (x.equals("1"))
             return new Intercept(true);
@@ -75,7 +77,11 @@ public interface Terms {
     }
 
     /** Deletes a term from the formula. */
-    static Delete delete(Term x) {
+    static Term delete(Term x) {
+        if (x instanceof Intercept) {
+            return new Intercept(false);
+        }
+
         return new Delete(x);
     }
 

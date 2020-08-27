@@ -17,8 +17,6 @@
 
 package smile.interpolation;
 
-import smile.math.MathEx;
-
 /**
  * Shepard interpolation is a special case of normalized radial basis function
  * interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
@@ -30,34 +28,41 @@ import smile.math.MathEx;
  * (typically) <code>1 &lt; p &le; 3</code>.
  * <p>
  * Shepard interpolation is rarely as accurate as the well-tuned application of
- * other radial basis functions. However, it is simple, fast, and often just the
+ * other radial basis functions. However, it is simple, fast, and often jut the
  * thing for quick and dirty applications.
  *
  * @author Haifeng Li
  */
-public class ShepardInterpolation {
+public class ShepardInterpolation2D implements Interpolation2D {
 
-    private double[][] x;
+    private double[] x1;
+    private double[] x2;
     private double[] y;
     private double p;
 
     /**
      * Constructor. By default p = 2.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      */
-    public ShepardInterpolation(double[][] x, double[] y) {
-        this(x, y, 2);
+    public ShepardInterpolation2D(double[] x1, double[] x2, double[] y) {
+        this(x1, x2, y, 2);
     }
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
-    public ShepardInterpolation(double[][] x, double[] y, double p) {
-        if (x.length != y.length) {
+    public ShepardInterpolation2D(double[] x1, double[] x2, double[] y, double p) {
+        if (x1.length != x2.length) {
+            throw new IllegalArgumentException("x1.length != x2.length");
+        }
+
+        if (x1.length != y.length) {
             throw new IllegalArgumentException("x.length != y.length");
         }
 
@@ -65,22 +70,19 @@ public class ShepardInterpolation {
             throw new IllegalArgumentException("Invalid p = " + p);
         }
 
-        this.x = x;
+        this.x1 = x1;
+        this.x2 = x2;
         this.y = y;
         this.p = -p;
     }
 
-    /**
-     * Interpolate the function at given point.
-     */
-    public double interpolate(double... x) {
-        if (x.length != this.x[0].length) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, this.x[0].length));
-        }
-
+    @Override
+    public double interpolate(double x1, double x2) {
         double weight = 0.0, sum = 0.0;
-        for (int i = 0; i < this.x.length; i++) {
-            double r = MathEx.squaredDistance(x, this.x[i]);
+        for (int i = 0; i < this.y.length; i++) {
+            double d1 = x1 - this.x1[i];
+            double d2 = x2 - this.x2[i];
+            double r = d1 * d1 + d2 * d2;
             if (r == 0.0) {
                 return y[i];
             }

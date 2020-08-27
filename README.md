@@ -66,7 +66,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>2.5.0</version>
+      <version>2.5.1</version>
     </dependency>
 ```
 
@@ -74,26 +74,34 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.0"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.1"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:2.5.0")
+    implementation("com.github.haifengl:smile-kotlin:2.5.1")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "2.5.0"]
+    [org.clojars.haifengl/smile "2.5.1"]
 ```
 
-By default, Smile leverages OpenBLAS for optimized matrix computation.
-If you don't use algorithms depending on matrix computation, you may
-exclude the dependcy to save space:
+Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
+some clustering algorithms, Gaussian Process regression, MLP, etc).
+To use these algorithms, you should include OpenBLAS for optimized matrix
+computation:
 ```
-    libraryDependencies += "com.github.haifengl" % "smile-core" % "2.5.0" exclude("org.bytedeco", "arpack-ng-platform")
+    libraryDependencies ++= Seq(
+      "org.bytedeco" % "javacpp"   % "1.5.3"       classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
+      "org.bytedeco" % "openblas"  % "0.3.9-1.5.3" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
+      "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.3" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier ""
+    )
 ```
+In this example, we include all supported 64-bit platforms and filter out
+32-bit platforms. The user should include only the needed platforms to save
+spaces. NOTE: Do NOT miss `classifier ""` of arpack-ng.
 
 If you prefer other BLAS implementations, you can use any library found on
 the "java.library.path" or on the class path, by specifying it with the
@@ -102,15 +110,11 @@ library from the Accelerate framework on Mac OS X, we can pass options such
 as `-Djava.library.path=/usr/lib/ -Dorg.bytedeco.openblas.load=blas`.
 
 For a default installation of MKL that would be `-Dorg.bytedeco.openblas.load=mkl_rt`.
-Or you may simply include `smile-mkl` module in your project, which includes MKL binaries.
-With `smile-mkl` module in the class path, Smile will automatically switch to MKL.
-No need to specify `-Dorg.bytedeco.openblas.load=mkl_rt`.
+Or you may simply include `smile-mkl` module in your project, which includes
+MKL binaries. With `smile-mkl` module in the class path, Smile will
+automatically switch to MKL.
 ```
-    <dependency>
-      <groupId>com.github.haifengl</groupId>
-      <artifactId>smile-mkl</artifactId>
-      <version>2.5.0</version>
-    </dependency>
+    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "2.5.1"
 ```
 
 ## Shell
@@ -166,7 +170,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>2.5.0</version>
+      <version>2.5.1</version>
     </dependency>
 ```
 

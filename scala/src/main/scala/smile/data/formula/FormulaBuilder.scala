@@ -60,7 +60,7 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {
   * Use a different name to avoid clash.
   */
 private[formula] case class PimpedFormulaString(a: String) {
-  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer(if (b.equals(".")) dot else $(b)))
+  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer($(b)))
   def ~ (b: Term) = FormulaBuilder(Option($(a)), ListBuffer(b))
   def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
   def unary_~ = FormulaBuilder(Option.empty, ListBuffer($(a)))
