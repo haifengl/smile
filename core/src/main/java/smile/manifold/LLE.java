@@ -164,7 +164,7 @@ public class LLE implements Serializable {
             }
 
             Arrays.fill(b, 1.0);
-            Matrix.LU lu = C.lu();
+            Matrix.LU lu = C.lu(true);
             b = lu.solve(b);
 
             double sum = MathEx.sum(b);

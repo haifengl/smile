@@ -233,7 +233,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         // Within class scatter
         Matrix Sw = St.sub(1.0, Sb);
         Matrix SwInvSb = Sw.inverse().mm(Sb);
-        Matrix scaling = SwInvSb.eigen().Vr.submatrix(0, 0, p-1, L-1);
+        Matrix scaling = SwInvSb.eigen(false, true, true).Vr.submatrix(0, 0, p-1, L-1);
 
         return scaling;
     }
@@ -270,7 +270,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
             }
         }
 
-        Matrix.SVD svd = X.svd();
+        Matrix.SVD svd = X.svd(true, true);
         Matrix U = svd.U;
         double[] s = svd.s;
 
@@ -289,7 +289,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         }
 
         Matrix StInvM = U.mm(UTM);
-        Matrix U2 = U.tm(StInvM.svd().U.submatrix(0, 0, p-1, L-1));
+        Matrix U2 = U.tm(StInvM.svd(true, true).U.submatrix(0, 0, p-1, L-1));
 
         for (int i = 0; i < n; i++) {
             // Since the rank of St is only n - k, there are some singular values of 0.

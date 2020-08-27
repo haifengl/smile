@@ -481,6 +481,304 @@ smile&gt;
     import smile.plot.Render._
     </code></pre>
 
+    <h2 id="tutorial">A Gentle Example</h2>
+
+    <p>This example shows how to use Smile for predictive modeling
+        from Java and Scala code. First, let's load the data.
+        Smile provides a couple of parsers for popular data formats,
+        such as Parquet, Avro, Arrow, SAS7BDAT, Weka's ARFF files, LibSVM's
+        file format, delimited text files, JSON, and binary sparse data.
+        These classes are in the package <code>smile.io</code>. In the
+        following example, we use the ARFF parser to load the weather dataset:</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.io.*;
+    var weather = Read.arff("data/weka/weather.nominal.arff");
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    import smile.io._
+    val weather = read.arff("data/weka/weather.nominal.arff")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Most Smile data parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>
+        object, which is immutable and contain a fixed number of named columns.
+        We can also parse plain delimited text files and the parser automatically
+        infer the schema. In the below, we load the USPS zip code handwriting
+        dataset in a white space delimitered text file.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import org.apache.commons.csv.CSVFormat;
+
+    var format = CSVFormat.DEFAULT.withDelimiter(' ');
+    var zipTrain = Read.csv("data/usps/zip.train", format);
+    var zipTest = Read.csv("data/usps/zip.test", format);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val zipTrain = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    val zipTest = read.csv("data/usps/zip.test", delimiter = ' ', header = false)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Because this data doesn't have a header line, the parser will assign
+        V1, V2, ... as the column names. In particular, the first column
+        (V1) is the class label. </p>
+
+    <p>Smile implements a variety of classification and regression algorithms.
+        In what follows, we train a random forest model on the USPS data.
+        Random forest is an ensemble classifier that consists of many decision
+        trees and outputs the majority vote of individual trees.
+        The method combines bagging idea and the random selection of features.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.classification.*;
+    import smile.data.formula.Formula;
+
+    var formula = Formula.lhs("V1");
+    
+    var prop = new java.util.Properties();
+    prop.setProperty("smile.random.forest.trees", "200");
+    var forest = RandomForest.fit(formula, zipTrain, prop);
+    System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val formula: Formula = "V1" ~
+
+    val forest = randomForest(formula, zipTrain, ntrees = 200)
+    println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the example, we firstly define a <code>Formula</code> object, which
+        specifies the model in a symbolic way. The left-hand-side (LHS) of
+        formula is the response variable, and the right-hand-side (RHS) is
+        a list of terms as independent variables. When the RHS is not specified,
+        the rest of columns in the data frame are used by default. In the
+        simpliest case, the terms (both of LHS and of RHS) are column 
+        names. But they can be functions (e.g. log) and transformations
+        (e.g. interaction and factor crossing) too. The functions/transformations
+        are symbolic and thus lazy.</p>
+
+    <p>With random forest, we may estimate the model accuracy with out-of-bag
+        (OOB) samples. This is useful especially when we don't have a separate
+         test dataset.</p>
+
+    <p>Now let's a support vector machine (SVM) on the USPS data. As SVM
+        is a kernel learning machine, it can be applied on any type of data
+        as long as we can define a Mercer kernel on the data. Therefore,
+        SVM class doesn't take a DataFrame as input but a generic array.
+        We can leverage the formula object to extract the training samples
+        and labels.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = formula.x(zipTrain).toArray();
+    var y = formula.y(zipTrain).toIntArray();
+    var testx = formula.x(zipTest).toArray();
+    var testy = formula.y(zipTest).toIntArray();
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = formula.x(zipTrain).toArray
+    val y = formula.y(zipTrain).toIntArray
+    val testx = formula.x(zipTest).toArray
+    val testy = formula.y(zipTest).toIntArray
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The SVM employs a Gaussian kernel and one-to-one strategy
+        as this is a multi-class problem. We also evaluate the model
+        on the test data with <code>Validation</code> class, which
+        provides a variety of model validation methods such as
+        cross validation, bootstrap, etc.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.math.kernel.GaussianKernel;
+    import smile.validation.*;
+
+    var kernel = new GaussianKernel(8.0);
+    var svm = OneVersusOne.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+    var pred = Validation.test(svm, testx);
+    System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+    System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val kernel = new GaussianKernel(8.0)
+    val svm = test(x, y, testx, testy) { (x, y) =>
+      ovo(x, y) { (x, y) =>
+        SVM.fit(x, y, kernel, 5, 1E-3)
+      }
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Lastly, we will train a 5-layer deep learning model. Deep learning
+        requires the features properly scaled/standardized. In this example,
+        we employs the class <code>Standardizer</code> to transforms features
+        to 0 mean and unit variance. A alternative is to subtract the median
+        and divide by the IQR, which is implemented <code>RobustStandardizer</code>.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.base.mlp.Layer;
+    import smile.base.mlp.OutputFunction;
+    import smile.feature.Standardizer;
+    import smile.math.MathEx;
+
+    var scaler = Standardizer.fit(x);
+    var scaledX = scaler.transform(x);
+    var scaledTestX = scaler.transform(testx);
+    
+    var net = new MLP(256,
+      Layer.sigmoid(768),
+      Layer.sigmoid(192),
+      Layer.sigmoid(30),
+      Layer.mle(10, OutputFunction.SIGMOID)
+    );
+    net.setLearningRate(0.1);
+    net.setMomentum(0.0);
+    
+    for (int epoch = 0; epoch < 10; epoch++) {
+      System.out.format("----- epoch %d -----%n", epoch);
+      for (int i : MathEx.permutate(x.length)) {
+        net.update(scaledX[i], y[i]);
+      }
+      var prediction = Validation.test(net, scaledTestX);
+      System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val scaler = Standardizer.fit(x)
+    val scaledX = scaler.transform(x)
+    val scaledTestX = scaler.transform(testx)
+    
+    val net = new MLP(256,
+      Layer.sigmoid(768),
+      Layer.sigmoid(192),
+      Layer.sigmoid(30),
+      Layer.mle(10, OutputFunction.SIGMOID)
+    )
+    net.setLearningRate(0.1)
+    net.setMomentum(0.0)
+    
+    (0 until 10).foreach(epoch => {
+      println("----- epoch %d -----" format epoch)
+      MathEx.permutate(x.length).foreach(i =>
+        net.update(scaledX(i), y(i))
+      )
+      val prediction = Validation.test(net, scaledTestX)
+      println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    })
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>To use the trained model, we can apply the method <code>predict</code>
+        on a new sample. Besides just returning class label, many methods
+        (e.g. neural networks) can also output the posteriori probabilities
+        of each class.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var posteriori = new double[10];
+    forest.predict(zipTest.get(0), posteriori);
+    svm.predict(testx[0]);
+    net.predict(scaledTestX[0], posteriori);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val posteriori = new Array[Double](10)
+    forest.predict(zipTest.get(0), posteriori)
+    svm.predict(testx(0))
+    net.predict(scaledTestX(0), posteriori)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
     <div id="btnv">
         <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
         <span class="btn-arrow-right">&nbsp;&rarr;</span>
