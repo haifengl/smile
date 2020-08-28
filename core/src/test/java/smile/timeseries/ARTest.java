@@ -59,14 +59,15 @@ public class ARTest {
         double[] x = BitcoinPrice.logReturn;
         AR ar = AR.ols(x, 6);
         System.out.println(ar);
-        assertEquals( 0.0029, ar.w[0], 1E-4);
-        assertEquals(-0.0359, ar.w[1], 1E-4);
-        assertEquals(-0.0051, ar.w[2], 1E-4);
-        assertEquals( 0.0279, ar.w[3], 1E-4);
-        assertEquals( 0.0570, ar.w[4], 1E-4);
-        assertEquals( 0.0742, ar.w[5], 1E-4);
-        assertEquals(-0.00210066, ar.b, 1E-8);
-        assertEquals( 0.00199942, ar.variance, 1E-8);
+        assertEquals(6, ar.p());
+        assertEquals( 0.0029, ar.coefficients()[0], 1E-4);
+        assertEquals(-0.0359, ar.coefficients()[1], 1E-4);
+        assertEquals(-0.0051, ar.coefficients()[2], 1E-4);
+        assertEquals( 0.0279, ar.coefficients()[3], 1E-4);
+        assertEquals( 0.0570, ar.coefficients()[4], 1E-4);
+        assertEquals( 0.0742, ar.coefficients()[5], 1E-4);
+        assertEquals(-0.00210066, ar.intercept(), 1E-8);
+        assertEquals( 0.00199942, ar.variance(), 1E-8);
     }
 
     @Test
@@ -76,14 +77,15 @@ public class ARTest {
         double[] x = BitcoinPrice.logReturn;
         AR ar = AR.fit(x, 6);
         System.out.println(ar);
-        assertEquals( 0.0011, ar.w[0], 1E-4);
-        assertEquals(-0.0328, ar.w[1], 1E-4);
-        assertEquals(-0.0055, ar.w[2], 1E-4);
-        assertEquals( 0.0283, ar.w[3], 1E-4);
-        assertEquals( 0.0557, ar.w[4], 1E-4);
-        assertEquals( 0.0723, ar.w[5], 1E-4);
-        assertEquals(-0.002224494, ar.b, 1E-8);
-        assertEquals( 3.505072140, ar.RSS, 1E-8);
-        assertEquals( 0.001999471, ar.variance, 1E-8);
+        assertEquals(6, ar.p());
+        assertEquals( 0.0011, ar.coefficients()[0], 1E-4);
+        assertEquals(-0.0328, ar.coefficients()[1], 1E-4);
+        assertEquals(-0.0055, ar.coefficients()[2], 1E-4);
+        assertEquals( 0.0283, ar.coefficients()[3], 1E-4);
+        assertEquals( 0.0557, ar.coefficients()[4], 1E-4);
+        assertEquals( 0.0723, ar.coefficients()[5], 1E-4);
+        assertEquals(-0.002224494, ar.intercept(), 1E-8);
+        assertEquals( 3.505072140, ar.RSS(), 1E-8);
+        assertEquals( 0.002011217, ar.variance(), 1E-8);
     }
 }
