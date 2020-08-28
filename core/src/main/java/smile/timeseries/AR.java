@@ -63,7 +63,6 @@ import smile.stat.Hypothesis;
  */
 public class AR implements Serializable {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AR.class);
 
     /** The fitting method. */
     enum Method {
@@ -74,49 +73,49 @@ public class AR implements Serializable {
             }
         },
         OLS,
-        ML
+        MLE
     }
 
     /**
      * The fitting method.
      */
-    Method method;
+    private Method method;
     /**
      * The order.
      */
-    int p;
+    private int p;
     /**
      * The intercept.
      */
-    double b;
+    private double b;
     /**
      * The linear weights.
      */
-    double[] w;
+    private double[] w;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
-    double[][] ttest;
+    private double[][] ttest;
     /**
      * The fitted values.
      */
-    double[] fittedValues;
+    private double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    double[] residuals;
+    private double[] residuals;
     /**
      * Residual sum of squares.
      */
-    double RSS;
+    private double RSS;
     /**
      * Estimated variance.
      */
-    double variance;
+    private double variance;
     /**
      * The degree-of-freedom of residual variance.
      */
-    int df;
+    private int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -132,25 +131,13 @@ public class AR implements Serializable {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    double RSquared;
+    private double RSquared;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    double adjustedRSquared;
-
-    /**
-     * Constructor.
-     *
-     * @param x the time series
-     * @param w the weights of AR(p).
-     * @param b the intercept.
-     * @param method the fitting method.
-     */
-    public AR(double[] x, double[] w, double b, Method method) {
-        this(x, w, b, method, true);
-    }
+    private double adjustedRSquared;
 
     /**
      * Constructor.
@@ -159,60 +146,44 @@ public class AR implements Serializable {
      * @param w the estimated weight parameters of AR(p).
      * @param b the intercept.
      * @param method the fitting method.
-     * @param stderr the flag if compute the estimated standard errors of the estimate of parameters.
      */
-    public AR(double[] x, double[] w, double b, Method method, boolean stderr) {
+    public AR(double[] x, double[] w, double b, Method method) {
         this.p = w.length;
         this.w = w;
         this.b = b;
         this.method = method;
 
-        Matrix X = X(x, p);
         double[] y = y(x, p);
         double ybar = MathEx.mean(y);
 
         int n = y.length;
+        double TSS = 0.0;
+        RSS = 0.0;
         fittedValues = new double[n];
         residuals = new double[n];
 
-        double[] w1 = Arrays.copyOf(w, p+1);
-        w1[p] = b;
-        X.mv(w1, fittedValues);
-
-        RSS = 0.0;
-        double TSS = 0.0;
         for (int i = 0; i < n; i++) {
-            residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.sqr(residuals[i]);
+            double yi = b;
+            for (int j = 0; j < p; j++) {
+                yi += w[j] * x[p + i - j - 1];
+            }
+            fittedValues[i] = yi;
+
+            double residual = y[i] - yi;
+            residuals[i] = residual;
+            RSS += MathEx.sqr(residual);
             TSS += MathEx.sqr(y[i] - ybar);
         }
 
         df = x.length - p;
         variance = RSS / df;
 
-        double error = Math.sqrt(variance);
         RSquared = 1.0 - RSS / TSS;
         adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
-
-        if (stderr) {
-            Matrix.Cholesky cholesky = X.ata().cholesky(true);
-            Matrix inv = cholesky.inverse();
-
-            ttest = new double[p][4];
-
-            for (int i = 0; i < p; i++) {
-                ttest[i][0] = w[i];
-                double se = error * Math.sqrt(inv.get(i, i));
-                ttest[i][1] = se;
-                double t = w[i] / se;
-                ttest[i][2] = t;
-                ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
-            }
-        }
     }
 
     /** Returns the least squares design matrix. */
-    private static Matrix X(double[] x, int p) {
+    static Matrix X(double[] x, int p) {
         int n = x.length - p;
         Matrix X = new Matrix(n, p+1);
         for (int j = 0; j < p; j++) {
@@ -229,8 +200,13 @@ public class AR implements Serializable {
     }
 
     /** Returns the right-hand-side of least squares. */
-    private static double[] y(double[] x, int p) {
+    static double[] y(double[] x, int p) {
         return Arrays.copyOfRange(x, p, x.length);
+    }
+
+    /** Returns the order of AR. */
+    public int p() {
+        return p;
     }
 
     /**
@@ -345,7 +321,16 @@ public class AR implements Serializable {
         double[] w = cholesky.solve(y);
 
         double mu = mean * (1.0 - MathEx.sum(w));
-        return new AR(x, w, mu, Method.Yule_Walker, false);
+
+        AR ar = new AR(x, w, mu, Method.Yule_Walker);
+
+        double wy = 0.0;
+        for (int i = 0; i < p; i++) {
+            wy += w[i] * y[i];
+        }
+
+        ar.variance = MathEx.var(x) * (x.length - 1) / (x.length - p - 1) * (1.0 - wy);
+        return ar;
     }
 
     /**
@@ -374,10 +359,31 @@ public class AR implements Serializable {
         double[] y = y(x, p);
 
         // weights and intercept
-        Matrix.SVD svd = X.svd(true, true);
+        Matrix.SVD svd = X.svd(true, !stderr);
         double[] w = svd.solve(y);
 
-        return new AR(x, Arrays.copyOf(w, p), w[p], Method.OLS, stderr);
+        AR ar = new AR(x, Arrays.copyOf(w, p), w[p], Method.OLS);
+
+        if (stderr) {
+            Matrix.Cholesky cholesky = X.ata().cholesky(true);
+            Matrix inv = cholesky.inverse();
+
+            int df = ar.df;
+            double error = Math.sqrt(ar.variance);
+            double[][] ttest = new double[p][4];
+            ar.ttest = ttest;
+
+            for (int i = 0; i < p; i++) {
+                ttest[i][0] = w[i];
+                double se = error * Math.sqrt(inv.get(i, i));
+                ttest[i][1] = se;
+                double t = w[i] / se;
+                ttest[i][2] = t;
+                ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+            }
+        }
+
+        return ar;
     }
 
     /**
