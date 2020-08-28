@@ -116,18 +116,18 @@ public interface TimeSeries {
             return acf(x, lag);
         }
 
-        double[] acf = new double[lag];
         double[] r = new double[lag];
         for (int i = 0; i < lag; i++) {
-            acf[i] = acf(x, i);
+            r[i] = acf(x, i+1);
         }
 
-        Matrix toeplitz = Matrix.toeplitz(acf);
-        System.arraycopy(acf, 1, r, 0, lag - 1);
-        r[lag - 1] = acf(x, lag);
+        double[] r1 = new double[lag];
+        r1[0] = 1.0;
+        System.arraycopy(r, 0, r1, 1, lag - 1);
+        Matrix toeplitz = Matrix.toeplitz(r1);
 
-        Matrix.Cholesky qr = toeplitz.cholesky();
-        double[] pacf = qr.solve(r);
+        Matrix.Cholesky cholesky = toeplitz.cholesky();
+        double[] pacf = cholesky.solve(r);
 
         return pacf[lag - 1];
     }
