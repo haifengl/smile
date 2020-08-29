@@ -178,11 +178,6 @@ public class RidgeRegression {
             throw new IllegalArgumentException(String.format("Invalid beta0 vector size: %d != %d", beta0.length, p));
         }
 
-        LinearModel model = new LinearModel();
-        model.formula = formula;
-        model.schema = schema;
-        model.predictors = X.colNames();
-        model.p = p;
         double[] center = X.colMeans();
         double[] scale = X.colSds();
 
@@ -212,19 +207,12 @@ public class RidgeRegression {
         }
         Matrix.Cholesky cholesky = XtX.cholesky(true);
 
-        model.w = cholesky.solve(scaledY);
+        double[] w = cholesky.solve(scaledY);
         for (int j = 0; j < p; j++) {
-            model.w[j] /= scale[j];
+            w[j] /= scale[j];
         }
 
-        double ym = MathEx.mean(y);
-        model.b = ym - MathEx.dot(model.w, center);
-
-        double[] fittedValues = new double[n];
-        Arrays.fill(fittedValues, model.b);
-        X.mv(1.0, model.w, 1.0, fittedValues);
-        model.fitness(fittedValues, y, ym);
-
-        return model;
+        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        return new LinearModel(formula, schema, X, y, w, b);
     }
 }
