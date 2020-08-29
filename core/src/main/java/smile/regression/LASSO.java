@@ -139,27 +139,18 @@ public class LASSO {
 
         Matrix scaledX = X.scale(center, scale);
 
-        LinearModel model = train(scaledX, y, lambda, tol, maxIter);
-        model.formula = formula;
-        model.schema = schema;
-        model.predictors = X.colNames();
+        double[] w = train(scaledX, y, lambda, tol, maxIter);
 
-        for (int j = 0; j < model.p; j++) {
-            model.w[j] /= scale[j];
+        int p = w.length;
+        for (int j = 0; j < p; j++) {
+            w[j] /= scale[j];
         }
 
-        double ym = MathEx.mean(y);
-        model.b = ym - MathEx.dot(model.w, center);
-
-        double[] fittedValues = new double[y.length];
-        Arrays.fill(fittedValues, model.b);
-        X.mv(1.0, model.w, 1.0, fittedValues);
-        model.fitness(fittedValues, y, ym);
-
-        return model;
+        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        return new LinearModel(formula, schema, X, y, w, b);
     }
 
-    static LinearModel train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
+    static double[] train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
@@ -362,11 +353,7 @@ public class LASSO {
             logger.error("LASSO: Too many iterations.");
         }
 
-        LinearModel model = new LinearModel();
-        model.p = p;
-        model.w = w;
-
-        return model;
+        return w;
     }
 
     /**
