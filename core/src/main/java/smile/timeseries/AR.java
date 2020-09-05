@@ -65,17 +65,24 @@ public class AR implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The fitting method. */
-    enum Method {
-        Yule_Walker {
+    public enum Method {
+        YuleWalker {
             @Override
             public String toString() {
                 return "Yule-Walker";
             }
         },
         OLS,
-        MLE
     }
 
+    /**
+     * The time series.
+     */
+    private double[] x;
+    /**
+     * The mean of time series.
+     */
+    private double mean;
     /**
      * The fitting method.
      */
@@ -89,9 +96,9 @@ public class AR implements Serializable {
      */
     private double b;
     /**
-     * The linear weights.
+     * The linear weights of AR.
      */
-    private double[] w;
+    private double[] ar;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -143,15 +150,17 @@ public class AR implements Serializable {
      * Constructor.
      *
      * @param x the time series
-     * @param w the estimated weight parameters of AR(p).
+     * @param ar the estimated weight parameters of AR(p).
      * @param b the intercept.
      * @param method the fitting method.
      */
-    public AR(double[] x, double[] w, double b, Method method) {
-        this.p = w.length;
-        this.w = w;
+    public AR(double[] x, double[] ar, double b, Method method) {
+        this.x = x;
+        this.p = ar.length;
+        this.ar = ar;
         this.b = b;
         this.method = method;
+        this.mean = MathEx.mean(x);
 
         double[] y = y(x, p);
         double ybar = MathEx.mean(y);
@@ -163,10 +172,7 @@ public class AR implements Serializable {
         residuals = new double[n];
 
         for (int i = 0; i < n; i++) {
-            double yi = b;
-            for (int j = 0; j < p; j++) {
-                yi += w[j] * x[p + i - j - 1];
-            }
+            double yi = forecast(x, p+i);
             fittedValues[i] = yi;
 
             double residual = y[i] - yi;
@@ -183,7 +189,7 @@ public class AR implements Serializable {
     }
 
     /** Returns the least squares design matrix. */
-    static Matrix X(double[] x, int p) {
+    private static Matrix X(double[] x, int p) {
         int n = x.length - p;
         Matrix X = new Matrix(n, p+1);
         for (int j = 0; j < p; j++) {
@@ -200,11 +206,27 @@ public class AR implements Serializable {
     }
 
     /** Returns the right-hand-side of least squares. */
-    static double[] y(double[] x, int p) {
+    private static double[] y(double[] x, int p) {
         return Arrays.copyOfRange(x, p, x.length);
     }
 
-    /** Returns the order of AR. */
+    /**
+     * Returns the time series.
+     */
+    public double[] x() {
+        return x;
+    }
+
+    /**
+     * Returns the mean of time series.
+     */
+    public double mean() {
+        return mean;
+    }
+
+    /**
+     * Returns the order of AR.
+     */
     public int p() {
         return p;
     }
@@ -221,10 +243,10 @@ public class AR implements Serializable {
     }
 
     /**
-     * Returns the linear coefficients (without intercept).
+     * Returns the linear coefficients of AR (without intercept).
      */
-    public double[] coefficients() {
-        return w;
+    public double[] ar() {
+        return ar;
     }
 
     /**
@@ -318,19 +340,17 @@ public class AR implements Serializable {
         Matrix toeplitz = Matrix.toeplitz(r);
 
         Matrix.Cholesky cholesky = toeplitz.cholesky();
-        double[] w = cholesky.solve(y);
+        double[] ar = cholesky.solve(y);
+        double mu = mean * (1.0 - MathEx.sum(ar));
+        AR model = new AR(x, ar, mu, Method.YuleWalker);
 
-        double mu = mean * (1.0 - MathEx.sum(w));
-
-        AR ar = new AR(x, w, mu, Method.Yule_Walker);
-
-        double wy = 0.0;
+        double aracf = 0.0;
         for (int i = 0; i < p; i++) {
-            wy += w[i] * y[i];
+            aracf += ar[i] * y[i];
         }
 
-        ar.variance = MathEx.var(x) * (x.length - 1) / (x.length - p - 1) * (1.0 - wy);
-        return ar;
+        model.variance = MathEx.var(x) * (x.length - 1) / (x.length - p - 1) * (1.0 - aracf);
+        return model;
     }
 
     /**
@@ -360,58 +380,63 @@ public class AR implements Serializable {
 
         // weights and intercept
         Matrix.SVD svd = X.svd(true, !stderr);
-        double[] w = svd.solve(y);
-
-        AR ar = new AR(x, Arrays.copyOf(w, p), w[p], Method.OLS);
+        double[] ar = svd.solve(y);
+        AR model = new AR(x, Arrays.copyOf(ar, p), ar[p], Method.OLS);
 
         if (stderr) {
             Matrix.Cholesky cholesky = X.ata().cholesky(true);
             Matrix inv = cholesky.inverse();
 
-            int df = ar.df;
-            double error = Math.sqrt(ar.variance);
+            int df = model.df;
+            double error = Math.sqrt(model.variance);
             double[][] ttest = new double[p][4];
-            ar.ttest = ttest;
+            model.ttest = ttest;
 
             for (int i = 0; i < p; i++) {
-                ttest[i][0] = w[i];
+                ttest[i][0] = ar[i];
                 double se = error * Math.sqrt(inv.get(i, i));
                 ttest[i][1] = se;
-                double t = w[i] / se;
+                double t = ar[i] / se;
                 ttest[i][2] = t;
                 ttest[i][3] = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
             }
         }
 
-        return ar;
+        return model;
     }
 
     /**
-     * Returns 1-step ahead forecast.
+     * Predicts/forecasts x[offset].
      *
      * @param x the time series.
+     * @param offset the offset of time series to forecast.
      */
-    public double predict(double[] x) {
-        return predict(x, 0);
-    }
-
-    /**
-     * Returns 1-step ahead forecast.
-     *
-     * @param x the time series.
-     * @param offset the offset of time series for forecasting.
-     */
-    public double predict(double[] x, int offset) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
+    private double forecast(double[] x, int offset) {
         double y = b;
         for (int i = 0; i < p; i++) {
-            y += w[i] * x[offset + i];
+            y += ar[i] * x[offset - i - 1];
         }
 
         return y;
+    }
+
+    /**
+     * Returns 1-step ahead forecast.
+     */
+    public double forecast() {
+        return forecast(x, x.length);
+    }
+
+    /**
+     * Returns l-step ahead forecast.
+     */
+    public double[] forecast(int l) {
+        double[] x = new double[p + l];
+        System.arraycopy(this.x, this.x.length - p, x, 0, p);
+        for (int i = 0; i < l; i++) {
+            x[p + i] = forecast(x, p+i);
+        }
+        return Arrays.copyOfRange(x, p, x.length);
     }
 
     @Override
@@ -443,7 +468,7 @@ public class AR implements Serializable {
             }
 
             for (int i = 0; i < p; i++) {
-                builder.append(String.format("x[-%d]\t    %10.4f%n", i+1, w[i]));
+                builder.append(String.format("x[-%d]\t    %10.4f%n", i+1, ar[i]));
             }
         }
 

@@ -25,8 +25,6 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 import smile.data.BitcoinPrice;
 
-import java.util.Arrays;
-
 /**
  *
  * @author Haifeng Li
@@ -57,17 +55,31 @@ public class ARTest {
         System.out.println("AR(6).ols");
 
         double[] x = BitcoinPrice.logReturn;
-        AR ar = AR.ols(x, 6);
-        System.out.println(ar);
-        assertEquals(6, ar.p());
-        assertEquals( 0.0029, ar.coefficients()[0], 1E-4);
-        assertEquals(-0.0359, ar.coefficients()[1], 1E-4);
-        assertEquals(-0.0051, ar.coefficients()[2], 1E-4);
-        assertEquals( 0.0279, ar.coefficients()[3], 1E-4);
-        assertEquals( 0.0570, ar.coefficients()[4], 1E-4);
-        assertEquals( 0.0742, ar.coefficients()[5], 1E-4);
-        assertEquals(-0.00210066, ar.intercept(), 1E-8);
-        assertEquals( 0.00199942, ar.variance(), 1E-8);
+        AR model = AR.ols(x, 6);
+        System.out.println(model);
+        assertEquals(6, model.p());
+        assertEquals( 0.0029, model.ar()[0], 1E-4);
+        assertEquals(-0.0359, model.ar()[1], 1E-4);
+        assertEquals(-0.0051, model.ar()[2], 1E-4);
+        assertEquals( 0.0279, model.ar()[3], 1E-4);
+        assertEquals( 0.0570, model.ar()[4], 1E-4);
+        assertEquals( 0.0742, model.ar()[5], 1E-4);
+        assertEquals(-0.00210066, model.intercept(), 1E-8);
+        assertEquals( 0.00199942, model.variance(), 1E-8);
+
+        assertEquals( -0.09426902, model.residuals()[0], 1E-8);
+        assertEquals(  0.04130677, model.residuals()[1], 1E-8);
+        assertEquals( -0.09436017, model.residuals()[2], 1E-8);
+        assertEquals(  0.07036025, model.residuals()[3], 1E-8);
+        assertEquals(  0.04814890, model.residuals()[1751], 1E-8);
+        assertEquals( -0.05724721, model.residuals()[1752], 1E-8);
+
+        assertEquals(-0.007884497, model.forecast(), 1E-8);
+
+        double[] forecast = model.forecast(3);
+        assertEquals(-0.007884497, forecast[0], 1E-8);
+        assertEquals( 0.016664739, forecast[1], 1E-8);
+        assertEquals( 0.017413334, forecast[2], 1E-8);
     }
 
     @Test
@@ -75,17 +87,17 @@ public class ARTest {
         System.out.println("AR(6).yw");
 
         double[] x = BitcoinPrice.logReturn;
-        AR ar = AR.fit(x, 6);
-        System.out.println(ar);
-        assertEquals(6, ar.p());
-        assertEquals( 0.0011, ar.coefficients()[0], 1E-4);
-        assertEquals(-0.0328, ar.coefficients()[1], 1E-4);
-        assertEquals(-0.0055, ar.coefficients()[2], 1E-4);
-        assertEquals( 0.0283, ar.coefficients()[3], 1E-4);
-        assertEquals( 0.0557, ar.coefficients()[4], 1E-4);
-        assertEquals( 0.0723, ar.coefficients()[5], 1E-4);
-        assertEquals(-0.002224494, ar.intercept(), 1E-8);
-        assertEquals( 3.505072140, ar.RSS(), 1E-8);
-        assertEquals( 0.002011217, ar.variance(), 1E-8);
+        AR model = AR.fit(x, 6);
+        System.out.println(model);
+        assertEquals(6, model.p());
+        assertEquals( 0.0011, model.ar()[0], 1E-4);
+        assertEquals(-0.0328, model.ar()[1], 1E-4);
+        assertEquals(-0.0055, model.ar()[2], 1E-4);
+        assertEquals( 0.0283, model.ar()[3], 1E-4);
+        assertEquals( 0.0557, model.ar()[4], 1E-4);
+        assertEquals( 0.0723, model.ar()[5], 1E-4);
+        assertEquals(-0.002224494, model.intercept(), 1E-8);
+        assertEquals( 3.505072140, model.RSS(), 1E-8);
+        assertEquals( 0.002011217, model.variance(), 1E-8);
     }
 }
