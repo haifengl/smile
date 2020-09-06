@@ -104,6 +104,10 @@ public class RBFInterpolation {
      * @param normalized true for the normalized RBF interpolation.
      */
     public RBFInterpolation(double[][] x, double[] y, RadialBasisFunction rbf, boolean normalized) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
         this.x = x;
         this.rbf = rbf;
         this.normalized = normalized;
@@ -130,10 +134,10 @@ public class RBFInterpolation {
 
         if (rbf instanceof GaussianRadialBasis) {
             G.uplo(UPLO.LOWER);
-            Matrix.Cholesky cholesky = G.cholesky();
+            Matrix.Cholesky cholesky = G.cholesky(true);
             w = cholesky.solve(rhs);
         } else {
-            Matrix.LU lu = G.lu();
+            Matrix.LU lu = G.lu(true);
             w = lu.solve(rhs);
         }
     }

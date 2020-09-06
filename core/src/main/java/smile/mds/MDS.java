@@ -175,7 +175,7 @@ public class MDS {
                 }
             }
 
-            double[] evalues = Z.eigen(false, false).wr;
+            double[] evalues = Z.eigen(false, false, true).wr;
             double c = MathEx.max(evalues);
 
             for (int i = 0; i < n; i++) {

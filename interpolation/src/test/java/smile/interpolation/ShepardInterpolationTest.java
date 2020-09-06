@@ -49,9 +49,6 @@ public class ShepardInterpolationTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of interpolate method, of class ShepardInterpolation.
-     */
     @Test
     public void testInterpolate() {
         System.out.println("interpolate");
@@ -62,5 +59,17 @@ public class ShepardInterpolationTest {
         assertEquals(0, instance.interpolate(x[0]), 1E-7);
         assertEquals(1, instance.interpolate(x[1]), 1E-7);
         assertEquals(0.5, instance.interpolate(x1), 1E-7);
+    }
+
+    @Test
+    public void testInterpolate2D() {
+        System.out.println("interpolate 2d");
+        double[] x1 = {0, 1};
+        double[] x2 = {0, 1};
+        double[] y = {0, 1};
+        ShepardInterpolation2D instance = new ShepardInterpolation2D(x1, x2, y);
+        assertEquals(0, instance.interpolate(0, 0), 1E-7);
+        assertEquals(1, instance.interpolate(1, 1), 1E-7);
+        assertEquals(0.5, instance.interpolate(0.5, 0.5), 1E-7);
     }
 }

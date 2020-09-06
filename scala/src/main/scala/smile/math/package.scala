@@ -18,7 +18,7 @@
 package smile
 
 import scala.language.implicitConversions
-import smile.math.matrix.{ARPACK, Matrix}
+import smile.math.matrix._
 import smile.math.special.{Beta, Erf, Gamma}
 import smile.stat.distribution.{Distribution, GaussianDistribution}
 import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
@@ -232,50 +232,73 @@ package object math {
   def diag(A: Matrix) = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]) = new Matrix(A).lu()
+  def lu(A: Array[Array[Double]]) = new Matrix(A).lu(true)
   /** LU decomposition. */
-  def lu(A: Matrix) = A.lu()
+  def lu(A: Matrix) = A.lu(false)
   /** LU decomposition. */
-  def lu(A: MatrixExpression) = A.toMatrix.lu()
+  def lu(A: MatrixExpression) = A.toMatrix.lu(true)
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]) = new Matrix(A).qr()
+  def qr(A: Array[Array[Double]]) = new Matrix(A).qr(true)
   /** QR decomposition. */
-  def qr(A: Matrix) = A.qr()
+  def qr(A: Matrix) = A.qr(false)
   /** QR decomposition. */
-  def qr(A: MatrixExpression) = A.toMatrix.qr()
+  def qr(A: MatrixExpression) = A.toMatrix.qr(true)
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]) =  new Matrix(A).cholesky()
+  def cholesky(A: Array[Array[Double]]) =  new Matrix(A).cholesky(true)
   /** Cholesky decomposition. */
-  def cholesky(A: Matrix) = A.cholesky()
+  def cholesky(A: Matrix) = A.cholesky(false)
   /** Cholesky decomposition. */
-  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky()
+  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky(true)
 
   /** Returns eigen values. */
-  def eig(A: Array[Array[Double]]) = new Matrix(A).eigen(false, false)
+  def eig(A: Array[Array[Double]]) = new Matrix(A).eigen(false, false, true)
   /** Returns eigen values. */
-  def eig(A: Matrix) = A.eigen(false, false)
+  def eig(A: Matrix) = A.eigen(false, false, false)
   /** Returns eigen values. */
-  def eig(A: MatrixExpression) = A.toMatrix.eigen(false, false)
+  def eig(A: MatrixExpression) = A.toMatrix.eigen(false, false, true)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]) = new Matrix(A).eigen()
+  def eigen(A: Array[Array[Double]]) = new Matrix(A).eigen(false, true, true)
   /** Eigen decomposition. */
-  def eigen(A: Matrix) = A.eigen()
+  def eigen(A: Matrix) = A.eigen(false, true, false)
   /** Eigen decomposition. */
-  def eigen(A: MatrixExpression) = A.toMatrix.eigen()
-  /** Eigen decomposition. */
-  //def eigen(A: Matrix, k: Int) = ARPACK.eigen(A, k)
+  def eigen(A: MatrixExpression) = A.toMatrix.eigen(false, true, true)
+  /** Returns k largest eigenvectors. */
+  def eigen(A: DMatrix, k: Int) = A match {
+    case a: Matrix =>
+      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
+    case a: BandMatrix =>
+      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
+    case a: SymmMatrix => ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+    case a => ARPACK.eigen(a, ARPACK.AsymmOption.LM, k)
+  }
+
+  /** Returns k largest eigenvectors. */
+  def eigen(A: SMatrix, k: Int) = A match {
+    case a: FloatMatrix =>
+      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
+    case a: FloatBandMatrix =>
+      if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+      else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
+    case a: FloatSymmMatrix => ARPACK.syev(a, ARPACK.SymmOption.LA, k)
+    case a => ARPACK.eigen(a, ARPACK.AsymmOption.LM, k)
+  }
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]) = new Matrix(A).svd()
+  def svd(A: Array[Array[Double]]) = new Matrix(A).svd(true, true)
   /** SVD decomposition. */
-  def svd(A: Matrix) = A.svd()
+  def svd(A: Matrix) = A.svd(true, false)
   /** SVD decomposition. */
-  def svd(A: MatrixExpression) = A.toMatrix.svd()
-  /** SVD decomposition. */
-  //def svd(A: Matrix, k: Int, tol: Double = 1E-6) = A.svd(k, kappa, maxIter)
+  def svd(A: MatrixExpression) = A.toMatrix.svd(true, true)
+  /** Returns k largest singular vectors. */
+  def svd(A: DMatrix, k: Int) = ARPACK.svd(A, k)
+  /** Returns k largest singular vectors. */
+  def svd(A: SMatrix, k: Int) = ARPACK.svd(A, k)
 
   /** Returns the determinant of matrix. */
   def det(A: Matrix) = lu(A).det()

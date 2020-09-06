@@ -55,6 +55,14 @@ public class ShepardInterpolation1D implements Interpolation {
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation1D(double[] x, double[] y, double p) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
+        if (p <= 0.0) {
+            throw new IllegalArgumentException("Invalid p = " + p);
+        }
+
         this.x = x;
         this.y = y;
         this.p = -p;
