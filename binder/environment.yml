@@ -4,5 +4,6 @@ channels:
   - simplect
   - jetbrains
 dependencies:
+  - jupyter-offlinenotebook
   - kotlin-jupyter-kernel
   - clojupyter
