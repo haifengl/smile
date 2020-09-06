@@ -503,7 +503,7 @@ public class FloatMatrixTest {
             }
         }
 
-        eig = a.eigen(false, false).sort();
+        eig = a.eigen(false, false, true).sort();
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr[i], 1E-6f);
         }
@@ -540,7 +540,7 @@ public class FloatMatrixTest {
             }
         }
 
-        eig = a.eigen(false, false).sort();
+        eig = a.eigen(false, false, true).sort();
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr[i], 1E-6f);
         }
