@@ -186,7 +186,7 @@ public class RBFNetwork<T> implements Classifier<T> {
             }
         }
 
-        Matrix.QR qr = G.qr();
+        Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
         return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);

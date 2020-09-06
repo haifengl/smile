@@ -143,9 +143,55 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      */
     Matrix V;
 
-    /** Package-wise constructor. */
-    LinearModel() {
+    /**
+     * Constructor.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param schema the schema of input data.
+     * @param X the design matrix.
+     * @param y the responsible variable.
+     * @param w the linear weights.
+     * @param b the intercept.
+     */
+    public LinearModel(Formula formula, StructType schema, Matrix X, double[] y, double[] w, double b) {
+        this.formula = formula;
+        this.schema = schema;
+        this.predictors = X.colNames();
+        this.p = X.ncols();
+        this.w = w;
+        this.b = b;
 
+        int n = X.nrows();
+        fittedValues = new double[n];
+        Arrays.fill(fittedValues, b);
+        X.mv(1.0, w, 1.0, fittedValues);
+
+        residuals = new double[n];
+        RSS = 0.0;
+        double TSS = 0.0;
+        double ybar = MathEx.mean(y);
+        for (int i = 0; i < n; i++) {
+            residuals[i] = y[i] - fittedValues[i];
+            RSS += MathEx.sqr(residuals[i]);
+            TSS += MathEx.sqr(y[i] - ybar);
+        }
+
+        error = Math.sqrt(RSS / (n - p));
+        df = n - p;
+
+        RSquared = 1.0 - RSS / TSS;
+        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
+
+        F = (TSS - RSS) * (n - p) / (RSS * (p - 1));
+        int df1 = p - 1;
+        int df2 = n - p;
+
+        if (df2 > 0) {
+            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
+        } else {
+            logger.warn("Skip calculating p-value: the linear system is under-determined.");
+            pvalue = Double.NaN;
+        }
     }
 
     @Override
@@ -256,43 +302,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      */
     public double pvalue() {
         return pvalue;
-    }
-
-    /**
-     * Calculate the fitness of model.
-     * @param fittedValues the fitted value of training data.
-     * @param y the response of training data.
-     * @param ym the mean of y
-     */
-    void fitness(double[] fittedValues, double[] y, double ym) {
-        int n = fittedValues.length;
-        this.fittedValues = fittedValues;
-        this.residuals = new double[n];
-
-        RSS = 0.0;
-        double TSS = 0.0;
-        for (int i = 0; i < n; i++) {
-            residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(y[i] - ym);
-        }
-
-        error = Math.sqrt(RSS / (n - p));
-        df = n - p;
-
-        RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p));
-
-        F = (TSS - RSS) * (n - p) / (RSS * (p - 1));
-        int df1 = p - 1;
-        int df2 = n - p;
-
-        if (df2 > 0) {
-            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
-        } else {
-            logger.warn("Skip calculating p-value: the linear system is under-determined.");
-            pvalue = Double.NaN;
-        }
     }
 
     @Override

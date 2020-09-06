@@ -106,8 +106,8 @@ public interface ARPACK {
      * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      */
     static Matrix.EVD syev(DMatrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
@@ -117,8 +117,8 @@ public interface ARPACK {
      * Computes NEV eigenvalues of a symmetric double precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
@@ -204,8 +204,8 @@ public interface ARPACK {
      * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      */
     static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
@@ -215,8 +215,8 @@ public interface ARPACK {
      * Computes NEV eigenvalues of a symmetric single precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
@@ -302,23 +302,23 @@ public interface ARPACK {
      * Computes NEV eigenvalues of an asymmetric double precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      */
-    static Matrix.EVD eigen(DMatrix A, int nev, AsymmOption which) {
-        return eigen(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6);
+    static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev) {
+        return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
     }
 
     /**
      * Computes NEV eigenvalues of an asymmetric double precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static Matrix.EVD eigen(DMatrix A, int nev, AsymmOption which, int ncv, double tol) {
+    static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev, int ncv, double tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }
@@ -404,23 +404,23 @@ public interface ARPACK {
      * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      */
-    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmOption which) {
-        return eigen(A, nev, which, Math.min(3 * nev, A.nrows()), 1E-6f);
+    static FloatMatrix.EVD eigen(SMatrix A, AsymmOption which, int nev) {
+        return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
     }
 
     /**
      * Computes NEV eigenvalues of an asymmetric single precision matrix.
      *
      * @param A the matrix to decompose.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param which which eigenvalues to compute.
+     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
-    static FloatMatrix.EVD eigen(SMatrix A, int nev, AsymmOption which, int ncv, float tol) {
+    static FloatMatrix.EVD eigen(SMatrix A, AsymmOption which, int nev, int ncv, float tol) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
         }

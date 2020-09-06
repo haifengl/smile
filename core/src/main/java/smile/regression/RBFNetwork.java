@@ -142,7 +142,7 @@ public class RBFNetwork<T> implements Regression<T> {
             }
         }
 
-        Matrix.QR qr = G.qr();
+        Matrix.QR qr = G.qr(true);
         double[] w = qr.solve(b);
 
         return new RBFNetwork<>(rbf, w, normalized);

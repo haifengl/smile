@@ -15,22 +15,23 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.interpolation;
+package smile.timeseries;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import smile.data.BitcoinPrice;
 
 /**
  *
  * @author Haifeng Li
  */
-public class KrigingInterpolationTest {
+public class BoxTestTest {
 
-    public KrigingInterpolationTest() {
+    public BoxTestTest() {
     }
 
     @BeforeClass
@@ -50,26 +51,28 @@ public class KrigingInterpolationTest {
     }
 
     @Test
-    public void testInterpolate() {
-        System.out.println("interpolate");
-        double[][] x = {{0, 0}, {1, 1}};
-        double[] y = {0, 1};
-        KrigingInterpolation instance = new KrigingInterpolation(x, y);
-        double[] x1 = {0.5, 0.5};
-        assertEquals(0, instance.interpolate(x[0]), 1E-7);
-        assertEquals(1, instance.interpolate(x[1]), 1E-7);
-        assertEquals(0.5, instance.interpolate(x1), 1E-7);
+    public void testPierce() {
+        System.out.println("Box-Pierce test");
+
+        double[] x = BitcoinPrice.logReturn;
+        BoxTest box = BoxTest.pierce(x, 5);
+        System.out.println(box);
+        assertEquals( BoxTest.Type.Box_Pierce, box.type);
+        assertEquals(5, box.df);
+        assertEquals(9.0098, box.q, 1E-4);
+        assertEquals(0.1087, box.pvalue, 1E-4);
     }
 
     @Test
-    public void testInterpolate2D() {
-        System.out.println("interpolate 2d");
-        double[] x1 = {0, 1};
-        double[] x2 = {0, 1};
-        double[] y = {0, 1};
-        KrigingInterpolation2D instance = new KrigingInterpolation2D(x1, x2, y);
-        assertEquals(0, instance.interpolate(0, 0), 1E-7);
-        assertEquals(1, instance.interpolate(1, 1), 1E-7);
-        assertEquals(0.5, instance.interpolate(0.5, 0.5), 1E-7);
+    public void testLjung() {
+        System.out.println("Ljung-Box test");
+
+        double[] x = BitcoinPrice.logReturn;
+        BoxTest box = BoxTest.ljung(x, 5);
+        System.out.println(box);
+        assertEquals( BoxTest.Type.Ljung_Box, box.type);
+        assertEquals(5, box.df);
+        assertEquals(9.0415, box.q, 1E-4);
+        assertEquals(0.1074, box.pvalue, 1E-4);
     }
 }

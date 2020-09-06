@@ -65,12 +65,13 @@ import smile.math.rbf.RadialBasisFunction;
  *
  * @author Haifeng Li
  */
-public class RBFInterpolation1D implements Interpolation {
+public class RBFInterpolation2D implements Interpolation2D {
 
     /**
      * The control points.
      */
-    private double[] x;
+    private double[] x1;
+    private double[] x2;
     /**
      * The linear weights.
      */
@@ -87,38 +88,48 @@ public class RBFInterpolation1D implements Interpolation {
     /**
      * Constructor. By default, it is a regular rbf interpolation without
      * normalization.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      * @param rbf the radial basis function used in the interpolation
      */
-    public RBFInterpolation1D(double[] x, double[] y, RadialBasisFunction rbf) {
-        this(x, y, rbf, false);
+    public RBFInterpolation2D(double[] x1, double[] x2, double[] y, RadialBasisFunction rbf) {
+        this(x1, x2, y, rbf, false);
     }
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     * @param x1 the 1st dimension of data points.
+     * @param x2 the 2nd dimension of data points.
+     * @param y the function values.
      * @param rbf the radial basis function used in the interpolation
      * @param normalized true for the normalized RBF interpolation.
      */
-    public RBFInterpolation1D(double[] x, double[] y, RadialBasisFunction rbf, boolean normalized) {
-        if (x.length != y.length) {
+    public RBFInterpolation2D(double[] x1, double[] x2, double[] y, RadialBasisFunction rbf, boolean normalized) {
+        if (x1.length != x2.length) {
+            throw new IllegalArgumentException("x1.length != x2.length");
+        }
+
+        if (x1.length != y.length) {
             throw new IllegalArgumentException("x.length != y.length");
         }
 
-        this.x = x;
+        this.x1 = x1;
+        this.x2 = x2;
         this.rbf = rbf;
         this.normalized = normalized;
 
-        int n = x.length;
+        int n = y.length;
 
         Matrix G = new Matrix(n, n);
         double[] rhs = new double[n];
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j <= i; j++) {
-                double r = rbf.f(Math.abs(x[i] - x[j]));
+                double d1 = x1[i] - x1[j];
+                double d2 = x2[i] - x2[j];
+                double d = Math.sqrt(d1 * d1 + d2 * d2);
+                double r = rbf.f(d);
                 G.set(i, j, r);
                 G.set(j, i, r);
                 sum += 2 * r;
@@ -142,12 +153,17 @@ public class RBFInterpolation1D implements Interpolation {
     }
 
     @Override
-    public double interpolate(double x) {
+    public double interpolate(double x1, double x2) {
+        int n = this.x1.length;
         double sum = 0.0, sumw = 0.0;
-        for (int i = 0; i < this.x.length; i++) {
-            double f = rbf.f(Math.abs(x - this.x[i]));
-            sumw += w[i] * f;
-            sum += f;
+        for (int i = 0; i < n; i++) {
+            double d1 = x1 - this.x1[i];
+            double d2 = x2 - this.x2[i];
+            double d = Math.sqrt(d1 * d1 + d2 * d2);
+
+            double r = rbf.f(d);
+            sumw += w[i] * r;
+            sum += r;
         }
 
         return normalized ? sumw / sum : sumw;
