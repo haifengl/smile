@@ -79,7 +79,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.SM);
+        eig = ARPACK.eigen(a, ARPACK.AsymmOption.SM, 1);
         assertEquals(eigenValues[2], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -102,7 +102,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.LM);
+        eig = ARPACK.eigen(a, ARPACK.AsymmOption.LM, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -130,7 +130,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.SM);
+        eig = ARPACK.eigen(a, ARPACK.AsymmOption.SM, 1);
         assertEquals(eigenValues[2], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -152,7 +152,7 @@ public class ARPACKTest {
         }
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 1, ARPACK.AsymmOption.LM);
+        eig = ARPACK.eigen(a, ARPACK.AsymmOption.LM, 1);
         assertEquals(eigenValues[0], eig.wr[0], 1E-4);
         for (int i = 0; i < eig.wi.length; i++) {
             assertEquals(0.0, eig.wi[i], 1E-4);
@@ -184,7 +184,7 @@ public class ARPACKTest {
         assertEquals(0.990, eig.wr[5], 1E-4);
 
         // non-symmetric
-        eig = ARPACK.eigen(a, 6, ARPACK.AsymmOption.LM);
+        eig = ARPACK.eigen(a, ARPACK.AsymmOption.LM, 6);
         assertEquals(2.0, eig.wr[0], 1E-4);
         assertEquals(2.0, eig.wr[1], 1E-4);
         assertEquals(2.0, eig.wr[2], 1E-4);
