@@ -35,6 +35,14 @@ public class BilinearInterpolation implements Interpolation2D {
      * Constructor.
      */
     public BilinearInterpolation(double[] x1, double[] x2, double[][] y) {
+        if (x1.length != y.length) {
+            throw new IllegalArgumentException("x1.length != y.length");
+        }
+
+        if (x2.length != y[0].length) {
+            throw new IllegalArgumentException("x2.length != y[0].length");
+        }
+
         this.y = y;
         x1terp = new LinearInterpolation(x1, x1);
         x2terp = new LinearInterpolation(x2, x2);

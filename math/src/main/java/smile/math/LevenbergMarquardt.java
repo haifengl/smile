@@ -160,7 +160,7 @@ public class LevenbergMarquardt {
                 }
             }
 
-            Matrix.SVD svd = J.svd();
+            Matrix.SVD svd = J.svd(true, true);
             double[] s = svd.s;
             double s2 = MathEx.dot(s, s);
             Matrix U = svd.U;
@@ -322,7 +322,7 @@ public class LevenbergMarquardt {
                 }
             }
 
-            Matrix.SVD svd = J.svd();
+            Matrix.SVD svd = J.svd(true, true);
             double[] s = svd.s;
             double s2 = MathEx.dot(s, s);
             Matrix U = svd.U;

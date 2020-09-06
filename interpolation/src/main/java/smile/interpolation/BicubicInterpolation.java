@@ -71,6 +71,14 @@ public class BicubicInterpolation implements Interpolation2D {
      * Constructor. The value in x1 and x2 must be monotonically increasing.
      */
     public BicubicInterpolation(double[] x1, double[] x2, double[][] y) {
+        if (x1.length != y.length) {
+            throw new IllegalArgumentException("x1.length != y.length");
+        }
+
+        if (x2.length != y[0].length) {
+            throw new IllegalArgumentException("x2.length != y[0].length");
+        }
+
         m = x1.length;
         n = x2.length;
         x1terp = new LinearInterpolation(x1, x1);

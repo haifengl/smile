@@ -57,6 +57,14 @@ public class ShepardInterpolation {
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation(double[][] x, double[] y, double p) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException("x.length != y.length");
+        }
+
+        if (p <= 0.0) {
+            throw new IllegalArgumentException("Invalid p = " + p);
+        }
+
         this.x = x;
         this.y = y;
         this.p = -p;
@@ -72,11 +80,11 @@ public class ShepardInterpolation {
 
         double weight = 0.0, sum = 0.0;
         for (int i = 0; i < this.x.length; i++) {
-            double r = MathEx.distance(x, this.x[i]);
+            double r = MathEx.squaredDistance(x, this.x[i]);
             if (r == 0.0) {
                 return y[i];
             }
-            double w = Math.pow(r, p);
+            double w = Math.pow(r, p/2);
             weight += w;
             sum += w * y[i];
         }
