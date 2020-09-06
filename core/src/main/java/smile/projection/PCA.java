@@ -137,17 +137,17 @@ public class PCA implements LinearProjection, Serializable {
         int n = data[0].length;
 
         double[] mu = MathEx.colMeans(data);
-        Matrix x = new Matrix(data);
+        Matrix X = new Matrix(data);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                x.sub(i, j, mu[j]);
+                X.sub(i, j, mu[j]);
             }
         }
 
         double[] eigvalues;
         Matrix eigvectors;
         if (m > n) {
-            Matrix.SVD svd = x.svd();
+            Matrix.SVD svd = X.svd(true, true);
             eigvalues = svd.s;
             for (int i = 0; i < eigvalues.length; i++) {
                 eigvalues[i] *= eigvalues[i];
@@ -160,7 +160,7 @@ public class PCA implements LinearProjection, Serializable {
             for (int k = 0; k < m; k++) {
                 for (int i = 0; i < n; i++) {
                     for (int j = 0; j <= i; j++) {
-                        cov.add(i, j, x.get(k, i) * x.get(k, j));
+                        cov.add(i, j, X.get(k, i) * X.get(k, j));
                     }
                 }
             }
@@ -173,7 +173,7 @@ public class PCA implements LinearProjection, Serializable {
             }
 
             cov.uplo(UPLO.LOWER);
-            Matrix.EVD eigen = cov.eigen().sort();
+            Matrix.EVD eigen = cov.eigen(false, true, true).sort();
 
             eigvalues = eigen.wr;
             eigvectors = eigen.Vr;
@@ -231,7 +231,7 @@ public class PCA implements LinearProjection, Serializable {
         }
 
         cov.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = cov.eigen().sort();
+        Matrix.EVD eigen = cov.eigen(false, true, true).sort();
 
         Matrix loadings = eigen.Vr;
         for (int i = 0; i < n; i++) {

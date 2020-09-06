@@ -195,7 +195,7 @@ public class QDA implements SoftClassifier<double[]> {
                 }
             }
 
-            Matrix.EVD evd = cov[i].eigen().sort();
+            Matrix.EVD evd = cov[i].eigen(false, true, true).sort();
 
             for (double s : evd.wr) {
                 if (s < tol) {

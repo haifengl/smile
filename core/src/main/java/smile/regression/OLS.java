@@ -148,19 +148,11 @@ public class OLS {
             }
         }
 
-        LinearModel model = new LinearModel();
-        model.formula = formula;
-        model.schema = schema;
-        model.predictors = X.colNames();
-        model.p = p;
-        model.w = w;
-
-        double[] fittedValues = X.mv(w);
-        model.fitness(fittedValues, y, MathEx.mean(y));
+        LinearModel model = new LinearModel(formula, schema, X, y, w, 0.0);
 
         Matrix inv = null;
         if (stderr || recursive) {
-            Matrix.Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky() : qr.CholeskyOfAtA();
+            Matrix.Cholesky cholesky = method.equalsIgnoreCase("svd") ? X.ata().cholesky(true) : qr.CholeskyOfAtA();
             inv = cholesky.inverse();
             model.V = inv;
         }

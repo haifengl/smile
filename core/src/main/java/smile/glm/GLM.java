@@ -343,7 +343,7 @@ public class GLM implements Serializable {
             }
         }
 
-        Matrix.QR qr = XW.qr();
+        Matrix.QR qr = XW.qr(true);
         double[] beta = qr.solve(z);
 
         double dev = Double.POSITIVE_INFINITY;
@@ -374,7 +374,7 @@ public class GLM implements Serializable {
                 }
             }
 
-            qr = XW.qr();
+            qr = XW.qr(true);
             beta = qr.solve(z);
         }
 
