@@ -77,7 +77,7 @@ public class OutputLayer extends Layer {
 
     @Override
     public void backpropagate(double[] error) {
-        weight.tv(gradient, error);
+        weight.tv(gradient.get(), error);
     }
 
     /**
@@ -86,6 +86,9 @@ public class OutputLayer extends Layer {
      * @param weight a positive weight value associated with the training instance.
      */
     public void computeError(double[] target, double weight) {
+        double[] output = this.output.get();
+        double[] gradient = this.gradient.get();
+
         int n = output.length;
         if (target.length != n) {
             throw new IllegalArgumentException(String.format("Invalid target vector size: %d, expected: %d", target.length, n));
