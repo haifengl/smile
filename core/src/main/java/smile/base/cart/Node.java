@@ -27,6 +27,8 @@ import smile.math.MathEx;
 
 /**
  * CART tree node.
+ *
+ * @author Haifeng Li
  */
 public interface Node extends Serializable {
     /**

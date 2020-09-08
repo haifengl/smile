@@ -18,9 +18,7 @@
 package smile.data.vector;
 
 import java.io.Serializable;
-import java.util.Optional;
 import java.util.stream.BaseStream;
-
 import smile.data.measure.Measure;
 import smile.data.type.DataType;
 import smile.data.type.StructField;
@@ -43,11 +41,13 @@ public interface BaseVector<T, TS, S extends BaseStream<TS, S>> extends Serializ
     DataType type();
 
     /** Returns the (optional) level of measurements. Only valid for number types. */
-    Optional<Measure> measure();
+    default Measure measure() {
+        return null;
+    }
 
     /** Returns a struct field corresponding to this vector. */
     default StructField field() {
-        return new StructField(name(), type(), measure().orElse(null));
+        return new StructField(name(), type(), measure());
     }
 
     /** Number of elements in the vector. */

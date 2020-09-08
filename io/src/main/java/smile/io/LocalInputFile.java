@@ -29,6 +29,8 @@ import org.apache.parquet.io.SeekableInputStream;
 /**
  * Parquet InputFile with a local java.nio.Path.
  * Adapted from https://github.com/tideworks/arvo2parquet
+ *
+ * @author Haifeng Li
  */
 class LocalInputFile implements InputFile {
     /** Local file object. */

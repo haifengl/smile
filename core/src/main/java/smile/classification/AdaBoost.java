@@ -67,7 +67,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
 
     /**
-     * Design matrix formula
+     * The model formula.
      */
     private Formula formula;
     /**
@@ -175,6 +175,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             throw new IllegalArgumentException("Invalid number of trees: " + ntrees);
         }
 
+        formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 
@@ -210,7 +211,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             }
 
             logger.info("Training {} tree", Strings.ordinal(t+1));
-            trees[t] = new DecisionTree(x, codec.y, codec.field, k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
+            trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
                 err[i] = trees[t].predict(x.get(i)) != y.getInt(i);

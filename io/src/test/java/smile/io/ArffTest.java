@@ -25,6 +25,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import java.time.LocalDateTime;
 import smile.data.DataFrame;
+import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
@@ -66,11 +67,11 @@ public class ArffTest {
         System.out.println(weather);
 
         StructType schema = DataTypes.struct(
-                new StructField("outlook", DataTypes.ByteType),
-                new StructField("temperature", DataTypes.ByteType),
-                new StructField("humidity", DataTypes.ByteType),
-                new StructField("windy", DataTypes.ByteType),
-                new StructField("play", DataTypes.ByteType));
+                new StructField("outlook", DataTypes.ByteType, new NominalScale("sunny", "overcast", "rainy")),
+                new StructField("temperature", DataTypes.ByteType, new NominalScale("hot", "mild", "cool")),
+                new StructField("humidity", DataTypes.ByteType, new NominalScale("high", "normal")),
+                new StructField("windy", DataTypes.ByteType, new NominalScale("TRUE", "FALSE")),
+                new StructField("play", DataTypes.ByteType, new NominalScale("yes", "no")));
         assertEquals(schema, weather.schema());
 
         assertEquals(14, weather.nrows());
@@ -104,7 +105,7 @@ public class ArffTest {
                 new StructField("sepalwidth", DataTypes.FloatType),
                 new StructField("petallength", DataTypes.FloatType),
                 new StructField("petalwidth", DataTypes.FloatType),
-                new StructField("class", DataTypes.ByteType));
+                new StructField("class", DataTypes.ByteType, new NominalScale("Iris-setosa", "Iris-versicolor", "Iris-virginica")));
         assertEquals(schema, iris.schema());
 
         assertEquals(150, iris.nrows());
@@ -178,10 +179,10 @@ public class ArffTest {
 
         StructType schema = DataTypes.struct(
                 new StructField("V1", DataTypes.IntegerType),
-                new StructField("V2", DataTypes.ByteType),
-                new StructField("V3", DataTypes.ByteType),
-                new StructField("V4", DataTypes.ByteType),
-                new StructField("class", DataTypes.ByteType));
+                new StructField("V2", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),
+                new StructField("V3", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),
+                new StructField("V4", DataTypes.ByteType, new NominalScale("U", "W", "X", "Y")),
+                new StructField("class", DataTypes.ByteType, new NominalScale("class A", "class B")));
         assertEquals(schema, sparse.schema());
 
         assertEquals(2, sparse.nrows());

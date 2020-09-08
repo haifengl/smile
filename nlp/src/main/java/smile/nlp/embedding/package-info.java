@@ -22,13 +22,13 @@
  * are mapped to vectors of real numbers. Conceptually it involves
  * a mathematical embedding from a space with many dimensions per
  * word to a continuous vector space with a much lower dimension.
- *
+ * <p>
  * Methods to generate this mapping include neural networks,
  * dimensionality reduction on the word co-occurrence matrix,
  * probabilistic models, explainable knowledge base method,
  * and explicit representation in terms of the context in
  * which words appear.
- *
+ * <p>
  * Word and phrase embeddings, when used as the underlying input
  * representation, have been shown to boost the performance in
  * NLP tasks such as syntactic parsing and sentiment analysis.

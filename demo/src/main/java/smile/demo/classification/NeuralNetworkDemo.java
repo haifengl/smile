@@ -28,6 +28,7 @@ import smile.base.mlp.Layer;
 import smile.base.mlp.OutputFunction;
 import smile.base.mlp.OutputLayer;
 import smile.classification.MLP;
+import smile.data.CategoricalEncoder;
 import smile.math.MathEx;
 
 /**
@@ -77,7 +78,7 @@ public class NeuralNetworkDemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         int k = MathEx.max(label) + 1;

@@ -21,8 +21,8 @@ import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -108,7 +108,10 @@ public class ElasticNet {
 
         double c = 1 / Math.sqrt(1 + lambda2);
 
-        DenseMatrix X = formula.matrix(data, false);
+        formula = formula.expand(data.schema());
+        StructType schema = formula.bind(data.schema());
+
+        Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
         int n = X.nrows();
@@ -121,7 +124,7 @@ public class ElasticNet {
         System.arraycopy(y, 0, y2, 0, y.length);
 
         // Scales the original data array and pads a weighted identity matrix
-        DenseMatrix X2 = Matrix.zeros(X.nrows()+ p, p);
+        Matrix X2 = new Matrix(X.nrows()+ p, p);
         double padding = c * Math.sqrt(lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
@@ -131,24 +134,12 @@ public class ElasticNet {
             X2.set(j + n, j, padding);
         }
 
-        LinearModel model = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
-        model.formula = formula;
-        model.schema = formula.xschema();
-
-        double[] w = new double[p];
+        double[] w = LASSO.train(X2, y2,lambda1 * c, tol, maxIter);
         for (int i = 0; i < p; i++) {
-            w[i] = c * model.w[i] / scale[i];
+            w[i] = c * w[i] / scale[i];
         }
-        model.w = w;
 
-        double ym = MathEx.mean(y);
-        model.b = ym - MathEx.dot(model.w, center);
-
-        double[] fittedValues = new double[y.length];
-        Arrays.fill(fittedValues, model.b);
-        X.axpy(model.w, fittedValues);
-        model.fitness(fittedValues, y, ym);
-
-        return model;
+        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        return new LinearModel(formula, schema, X, y, w, b);
     }
 }

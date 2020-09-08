@@ -19,6 +19,8 @@ package smile.data.formula;
 
 /**
  * The date/time features.
+ *
+ * @author Haifeng Li
  */
 public enum DateFeature {
     /**

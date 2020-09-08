@@ -19,6 +19,11 @@ package smile.data.formula;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import smile.data.Tuple;
+import smile.data.measure.CategoricalMeasure;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
@@ -36,11 +41,9 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-class FactorInteraction implements HyperTerm {
+public class FactorInteraction implements Term {
     /** The factors of interaction. */
     private List<String> factors;
-    /** The terms after binding. */
-    private List<OneHotEncoderInteraction> terms;
 
     /**
      * Constructor.
@@ -55,14 +58,14 @@ class FactorInteraction implements HyperTerm {
         this.factors = Arrays.asList(factors);
     }
 
-    @Override
-    public String toString() {
-        return factors.stream().collect(Collectors.joining(":"));
+    /** Returns the number of factors in the interaction. */
+    public int size() {
+        return factors.size();
     }
 
     @Override
-    public List<? extends Term> terms() {
-        return terms;
+    public String toString() {
+        return factors.stream().collect(Collectors.joining(":"));
     }
 
     @Override
@@ -71,41 +74,57 @@ class FactorInteraction implements HyperTerm {
     }
 
     @Override
-    public void bind(StructType schema) {
-        List<List<OneHotEncoder>> encoders = new ArrayList<>();
+    public List<Feature> bind(StructType schema) {
+        List<StructField> fields = factors.stream()
+                .map(factor -> schema.field(factor))
+                .collect(Collectors.toList());
 
-        OneHot factor = new OneHot(factors.get(factors.size() - 1));
-        factor.bind(schema);
-        encoders.addAll(factor.terms().stream()
-                .map(term -> Collections.singletonList(term))
-                .collect(Collectors.toList())
-        );
-
-        for (int i = factors.size() - 2; i >= 0; i--) {
-            factor = new OneHot(factors.get(i));
-            factor.bind(schema);
-            List<OneHotEncoder> terms = factor.terms();
-
-            // combine terms with existing combinations
-            encoders.addAll(encoders.stream().flatMap(list ->
-                    terms.stream().map(term -> {
-                        List<OneHotEncoder> newList = new ArrayList<>();
-                        newList.add(term);
-                        newList.addAll(list);
-                        return newList;
-                    })
-            ).collect(Collectors.toList()));
-
-            // add new single terms
-            encoders.addAll(terms.stream()
-                    .map(term -> Collections.singletonList(term))
-                    .collect(Collectors.toList())
-            );
+        for (StructField field : fields) {
+            if (!(field.measure instanceof CategoricalMeasure)) {
+                throw new IllegalStateException(String.format("%s is not a categorical variable: %s", field.name, field.measure));
+            }
         }
 
-        terms = encoders.stream()
-                .filter(list -> list.size() == factors.size())
-                .map(list -> new OneHotEncoderInteraction(list))
-                .collect(Collectors.toList());
+        List<String> levels = new ArrayList<>();
+        levels.add("");
+        for (StructField field : fields) {
+            CategoricalMeasure cat = (CategoricalMeasure) field.measure;
+            levels = levels.stream()
+                    .flatMap(l -> Arrays.stream(cat.levels()).map(level -> l.isEmpty() ? level : l + ":" + level))
+                    .collect(Collectors.toList());
+        }
+        NominalScale measure = new NominalScale(levels);
+
+        Feature feature = new Feature() {
+            StructField field = new StructField(
+                    factors.stream().collect(Collectors.joining(":")),
+                    DataTypes.IntegerType,
+                    measure
+            );
+
+            @Override
+            public String toString() {
+                return field.name;
+            }
+
+            @Override
+            public StructField field() {
+                return field;
+            }
+
+            @Override
+            public int applyAsInt(Tuple o) {
+                String level = factors.stream().map(factor -> o.getString(factor)).collect(Collectors.joining(":"));
+                return measure.valueOf(level).intValue();
+            }
+
+            @Override
+            public Object apply(Tuple o) {
+                String level = factors.stream().map(factor -> o.getString(factor)).collect(Collectors.joining(":"));
+                return measure.valueOf(level);
+            }
+        };
+
+        return Collections.singletonList(feature);
     }
 }

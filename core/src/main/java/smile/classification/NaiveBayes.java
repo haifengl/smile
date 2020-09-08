@@ -37,17 +37,17 @@ import smile.util.IntSet;
  * the users are free to use any discrete distributions to model categorical or
  * ordinal random variables.
  *
- * @see Distribution
- * @see LDA
- * @see QDA
- * @see RDA
- * 
  * <h2>References</h2>
  * <ol>
  * <li> Christopher D. Manning, Prabhakar Raghavan, and Hinrich Schutze. Introduction to Information Retrieval, Chapter 13, 2009.</li>
  * <li> Kevin P. Murphy. Machina Learning A Probability Perspective, Chapter 3, 2012.</li>
  * </ol>
- * 
+ *
+ * @see Distribution
+ * @see LDA
+ * @see QDA
+ * @see RDA
+ *
  * @author Haifeng Li
  */
 public class NaiveBayes implements SoftClassifier<double[]> {

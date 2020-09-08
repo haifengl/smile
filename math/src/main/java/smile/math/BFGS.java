@@ -22,7 +22,7 @@ import java.util.Arrays;
 /**
  * The Broyden–Fletcher–Goldfarb–Shanno (BFGS) algorithm is an iterative
  * method for solving unconstrained nonlinear optimization problems.
- *
+ * <p>
  * The BFGS method belongs to quasi-Newton methods, a class of hill-climbing
  * optimization techniques that seek a stationary point of a (preferably
  * twice continuously differentiable) function. For such problems,
@@ -31,7 +31,7 @@ import java.util.Arrays;
  * unless the function has a quadratic Taylor expansion near an optimum.
  * However, BFGS has proven to have good performance even for non-smooth
  * optimizations.
- *
+ * <p>
  * In quasi-Newton methods, the Hessian matrix of second derivatives is
  * not computed. Instead, the Hessian matrix is approximated using
  * updates specified by gradient evaluations (or approximate gradient
@@ -41,7 +41,7 @@ import java.util.Arrays;
  * specify a unique solution, and quasi-Newton methods differ in how they
  * constrain the solution. The BFGS method is one of the most popular
  * members of this class.
- *
+ * <p>
  * Like the original BFGS, the limited-memory BFGS (L-BFGS) uses an
  * estimation to the inverse Hessian matrix to steer its search
  * through variable space, but where BFGS stores a dense <code>n × n</code>
@@ -64,45 +64,12 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class BFGS {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
-
-    /**
-     * The desired convergence tolerance.
-     */
-    private double gtol = 1E-5;
-    /**
-     * The maximum number of allowed iterations.
-     */
-    private int maxIter = 500;
-
-    /**
-     * Constructor with gtol = 1E-5 and maxIter = 500.
-     */
-    public BFGS() {
-        this(1E-5, 500);
-    }
-
-    /**
-     * Constructor.
-     * @param gtol the convergence requirement on zeroing the gradient.
-     * @param maxIter the maximum number of allowed iterations.
-     */
-    public BFGS(double gtol, int maxIter) {
-        if (gtol <= 0.0) {
-            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
-        }
-
-        if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-        }
-
-        this.gtol = gtol;
-        this.maxIter = maxIter;
-    }
+public interface BFGS {
+    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
 
     /**
      * This method solves the unconstrained minimization problem
+     * <p>
      * <pre>
      *     min f(x),    x = (x1,x2,...,x_n),
      * </pre>
@@ -127,9 +94,19 @@ public class BFGS {
      *          <code>iflag = 0</code>, it contains the values of the variables
      *          at the best point found (usually a solution).
      *
+     * @param gtol the convergence tolerance on zeroing the gradient.
+     * @param maxIter the maximum number of iterations.
+     *
      * @return the minimum value of the function.
      */
-    public double minimize(DifferentiableMultivariateFunction func, int m, double[] x) {
+    static double minimize(DifferentiableMultivariateFunction func, int m, double[] x, double gtol, int maxIter) {
+        if (gtol <= 0.0) {
+            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
         // Initialize.
         if (m <= 0) {
             throw new IllegalArgumentException("Invalid m: " + m);
@@ -267,6 +244,7 @@ public class BFGS {
 
     /**
      * This method solves the unconstrained minimization problem
+     * <p>
      * <pre>
      *     min f(x),    x = (x1,x2,...,x_n),
      * </pre>
@@ -279,9 +257,20 @@ public class BFGS {
      *          contains the values of the variables at the best point found
      *          (usually a solution).
      *
+     * @param gtol the convergence tolerance on zeroing the gradient.
+     * @param maxIter the maximum number of iterations.
+     *
      * @return the minimum value of the function.
      */
-    public double minimize(DifferentiableMultivariateFunction func, double[] x) {
+    static double minimize(DifferentiableMultivariateFunction func, double[] x, double gtol, int maxIter) {
+        if (gtol <= 0.0) {
+            throw new IllegalArgumentException("Invalid gradient tolerance: " + gtol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
         // The convergence criterion on x values.
         final double TOLX = 4 * MathEx.EPSILON;
         // The scaled maximum step length allowed in line searches.
@@ -419,6 +408,7 @@ public class BFGS {
      * endpoints <code>stx</code> and <code>sty</code>. The interval of
      * uncertainty is initially chosen so that it contains a
      * minimizer of the modified function
+     * <p>
      * <pre>
      *      f(x+stp*s) - f(x) - ftol*stp*(gradf(x)'s).
      * </pre>
@@ -429,10 +419,12 @@ public class BFGS {
      * <p>
      * The algorithm is designed to find a step which satisfies
      * the sufficient decrease condition
+     * <p>
      * <pre>
      *       f(x+stp*s) &lt;= f(X) + ftol*stp*(gradf(x)'s),
      * </pre>
      * and the curvature condition
+     * <p>
      * <pre>
      *       abs(gradf(x+stp*s)'s)) &lt;= gtol*abs(gradf(x)'s).
      * </pre>
@@ -442,7 +434,6 @@ public class BFGS {
      * conditions, then the algorithm usually stops when rounding
      * errors prevent further progress. In this case <code>stp</code> only
      * satisfies the sufficient decrease condition.
-     * <p>
      *
      * @param xold on input this contains the base point for the line search.
      *
@@ -462,7 +453,7 @@ public class BFGS {
      *
      * @return the new function value.
      */
-    private double linesearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
+    static double linesearch(MultivariateFunction func, double[] xold, double fold, double[] g, double[] p, double[] x, double stpmax) {
         if (stpmax <= 0) {
             throw new IllegalArgumentException("Invalid upper bound of linear search step: " + stpmax);
         }

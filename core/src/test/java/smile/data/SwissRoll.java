@@ -32,7 +32,7 @@ public class SwissRoll {
     static {
         try {
             CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
-            data = csv.read(Paths.getTestData("manifold/swissroll.txt")).toArray();
+            data = csv.read(Paths.getTestData("manifold/swissroll.txt")).toArray(false, CategoricalEncoder.DUMMY);
         } catch (Exception ex) {
             System.err.println("Failed to load 'index.noun': " + ex);
             System.exit(-1);

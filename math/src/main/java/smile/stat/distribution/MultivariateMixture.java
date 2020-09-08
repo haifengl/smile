@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 
 /**
@@ -123,13 +122,13 @@ public class MultivariateMixture implements MultivariateDistribution {
     }
 
     @Override
-    public DenseMatrix cov() {
+    public Matrix cov() {
         double w = components[0].priori;
-        DenseMatrix v = components[0].distribution.cov();
+        Matrix v = components[0].distribution.cov();
 
         int m = v.nrows();
         int n = v.ncols();
-        DenseMatrix cov = Matrix.zeros(m, n);
+        Matrix cov = new Matrix(m, n);
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {

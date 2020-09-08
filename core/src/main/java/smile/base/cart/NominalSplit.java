@@ -21,7 +21,11 @@ import java.util.function.IntPredicate;
 import smile.data.DataFrame;
 import smile.data.vector.BaseVector;
 
-/** The data about of a potential split for a leaf node. */
+/**
+ * The data about of a potential split for a leaf node.
+ *
+ * @author Haifeng Li
+ */
 public class NominalSplit extends Split {
     /**
      * The split value.

@@ -25,6 +25,8 @@ import java.util.Map;
 /**
  * Perfect hash based immutable map. This can be used as a lookup table with
  * constant worst-case access time.
+ *
+ * @author Haifeng Li
  */
 public class PerfectMap<T> {
     /** Perfect hash of keywords. */

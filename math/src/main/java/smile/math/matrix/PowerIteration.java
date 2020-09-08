@@ -40,68 +40,8 @@ public class PowerIteration {
      * On output, it is the eigen vector corresponding largest eigen value.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v) {
-        return eigen(A, v, Math.max(1.0E-10, A.nrows() * MathEx.EPSILON));
-    }
-
-    /**
-     * Returns the largest eigen pair of matrix with the power iteration
-     * under the assumptions A has an eigenvalue that is strictly greater
-     * in magnitude than its other eigenvalues and the starting
-     * vector has a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param v on input, it is the non-zero initial guess of the eigen vector.
-     * On output, it is the eigen vector corresponding largest eigen value.
-     * @param tol the desired convergence tolerance.
-     * @return the largest eigen value.
-     */
-    public static double eigen(Matrix A, double[] v, double tol) {
-        return eigen(A, v, 0.0, tol);
-    }
-
-    /**
-     * Returns the largest eigen pair of matrix with the power iteration
-     * under the assumptions A has an eigenvalue that is strictly greater
-     * in magnitude than its other eigenvalues and the starting
-     * vector has a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param v on input, it is the non-zero initial guess of the eigen vector.
-     * On output, it is the eigen vector corresponding largest eigen value.
-     * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of iterations in case that the algorithm
-     * does not converge.
-     * @return the largest eigen value.
-     */
-    public static double eigen(Matrix A, double[] v, double tol, int maxIter) {
-        return eigen(A, v, 0.0, tol, maxIter);
-    }
-
-    /**
-     * Returns the largest eigen pair of matrix with the power iteration
-     * under the assumptions A has an eigenvalue that is strictly greater
-     * in magnitude than its other eigenvalues and the starting
-     * vector has a nonzero component in the direction of an eigenvector
-     * associated with the dominant eigenvalue.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @param v on input, it is the non-zero initial guess of the eigen vector.
-     * On output, it is the eigen vector corresponding largest eigen value.
-     * @param p the origin in the shifting power method. A - pI will be
-     * used in the iteration to accelerate the method. p should be such that
-     * |(&lambda;<sub>2</sub> - p) / (&lambda;<sub>1</sub> - p)| &lt; |&lambda;<sub>2</sub> / &lambda;<sub>1</sub>|,
-     * where &lambda;<sub>2</sub> is the second largest eigenvalue in magnitude.
-     * If we known the eigenvalue spectrum of A, (&lambda;<sub>2</sub> + &lambda;<sub>n</sub>)/2
-     * is the optimal choice of p, where &lambda;<sub>n</sub> is the smallest eigenvalue
-     * in magnitude. Good estimates of &lambda;<sub>2</sub> are more difficult
-     * to compute. However, if &mu; is an approximation to largest eigenvector,
-     * then using any x<sub>0</sub> such that x<sub>0</sub>*&mu; = 0 as the initial
-     * vector for a few iterations may yield a reasonable estimate of &lambda;<sub>2</sub>.
-     * @param tol the desired convergence tolerance.
-     * @return the largest eigen value.
-     */
-    public static double eigen(Matrix A, double[] v, double p, double tol) {
-        return eigen(A, v, p, tol, Math.max(20, 2 * A.nrows()));
+    public static double eigen(DMatrix A, double[] v) {
+        return eigen(A, v, 0.0f, Math.max(1.0E-6, A.nrows() * MathEx.EPSILON), Math.max(20, 2 * A.nrows()));
     }
 
     /**
@@ -128,7 +68,7 @@ public class PowerIteration {
      * does not converge.
      * @return the largest eigen value.
      */
-    public static double eigen(Matrix A, double[] v, double p, double tol, int maxIter) {
+    public static double eigen(DMatrix A, double[] v, double p, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
@@ -171,8 +111,8 @@ public class PowerIteration {
      * Calculate and normalize y = (A - pI) x.
      * Returns the largest element of y in magnitude.
      */
-    private static double ax(Matrix A, double[] x, double[] y, double p) {
-        A.ax(x, y);
+    private static double ax(DMatrix A, double[] x, double[] y, double p) {
+        A.mv(x, y);
 
         if (p != 0.0) {
             for (int i = 0; i < y.length; i++) {

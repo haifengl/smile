@@ -18,7 +18,7 @@
 package smile.math.rbf;
 
 /**
- * Multiquadric RBF. &phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>1/2</sup>
+ * Multiquadric RBF. <code>&phi;(r) = (r<sup>2</sup> + r<sup>2</sup><sub>0</sub>)<sup>1/2</sup></code>
  * where r<sub>0</sub> is a scale factor. Multiquadrics are said to be less
  * sensitive to the choice of r<sub>0</sub> than som other functional forms.
  * <p>
