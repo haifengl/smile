@@ -22,6 +22,7 @@ import java.awt.Dimension;
 import javax.swing.JFrame;
 
 import smile.classification.LDA;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -38,7 +39,7 @@ public class LDADemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.DUMMY);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         LDA lda = LDA.fit(data, label);

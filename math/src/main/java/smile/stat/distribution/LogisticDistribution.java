@@ -24,12 +24,14 @@ package smile.stat.distribution;
  * the normal distribution in shape but has heavier tails (higher kurtosis).
  * <p>
  * The cumulative distribution function of the logistic distribution is given by:
+ * <p>
  * <pre>
  *                   1
  * F(x; &mu;,s) = -------------
  *              1 + e<sup>-(x-&mu;)/s</sup>
  * </pre>
  * The probability density function of the logistic distribution is given by:
+ * <p>
  * <pre>
  *                  e<sup>-(x-&mu;)/s</sup>
  * f(x; &mu;,s) = -----------------

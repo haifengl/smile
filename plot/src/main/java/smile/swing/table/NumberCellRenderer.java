@@ -23,6 +23,7 @@ import javax.swing.table.DefaultTableCellRenderer;
 
 /**
  * Number renderer in JTable.
+ *
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")

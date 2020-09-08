@@ -37,7 +37,7 @@ public class Bank32nh {
         try {
             data = Read.arff(Paths.getTestData("weka/regression/bank32nh.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'kin8nm': " + ex);

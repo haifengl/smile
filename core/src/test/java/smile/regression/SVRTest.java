@@ -110,7 +110,7 @@ public class SVRTest {
         double[] prediction = Validation.test(model, Abalone.testx);
         double rmse = RMSE.of(Abalone.testy, prediction);
         System.out.println("Test RMSE = " + rmse);
-        assertEquals(2.1098880372502586, rmse, 1E-4);
+        assertEquals(2.1098880372502586, rmse, 1E-3);
     }
 
     @Test

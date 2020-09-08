@@ -71,7 +71,7 @@ public class DateFeatureTest {
         };
 
         Formula formula = Formula.rhs(date("timestamp", DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH, DateFeature.DAY_OF_WEEK, DateFeature.HOURS, DateFeature.MINUTES, DateFeature.SECONDS));
-        DataFrame output = formula.apply(Date.data);
+        DataFrame output = formula.frame(Date.data);
         assertEquals(output.ncols(), 7);
 
         StructType schema = output.schema();

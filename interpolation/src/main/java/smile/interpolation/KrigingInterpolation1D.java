@@ -18,9 +18,8 @@
 package smile.interpolation;
 
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.LU;
 
 /**
  * Kriging interpolation for the data points irregularly distributed in space.
@@ -34,7 +33,6 @@ public class KrigingInterpolation1D implements Interpolation {
 
     private double[] x;
     private double[] yvi;
-    private double[] vstar;
     private double alpha;
     private double beta;
 
@@ -44,14 +42,29 @@ public class KrigingInterpolation1D implements Interpolation {
      * @param y the function values at given points.
      */
     public KrigingInterpolation1D(double[] x, double[] y) {
+        this(x, y, 1.5);
+    }
+
+    /**
+     * Constructor. The power variogram is employed for interpolation.
+     * @param x the point set.
+     * @param y the function values at given points.
+     * @param beta the parameter of power variogram. The value of &beta;
+     *             should be in the range <code>1 &le; &beta; &lt; 2</code>.
+     *             A good general choice is 1.5, but for functions with
+     *             a strong linear trend, we may experiment with values as
+     *             large as 1.99.
+     */
+    public KrigingInterpolation1D(double[] x, double[] y, double beta) {
         this.x = x;
+        this.beta = beta;
         pow(x, y);
 
         int n = x.length;
         yvi = new double[n + 1];
-        vstar = new double[n + 1];
-        DenseMatrix v = Matrix.zeros(n + 1, n + 1);
 
+        Matrix v = new Matrix(n + 1, n + 1);
+        v.uplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
             yvi[i] = y[i];
 
@@ -67,27 +80,21 @@ public class KrigingInterpolation1D implements Interpolation {
         yvi[n] = 0.0;
         v.set(n, n, 0.0);
 
-        LU lu = v.lu(true);
-        lu.solve(yvi);
+        Matrix.LU lu = v.lu(true);
+        yvi = lu.solve(yvi);
     }
 
     @Override
     public double interpolate(double x) {
         int n = this.x.length;
+        double y = yvi[n];
         for (int i = 0; i < n; i++) {
-            vstar[i] = variogram(Math.abs(x - this.x[i]));
-        }
-        vstar[n] = 1.0;
-        
-        double y = 0.0;
-        for (int i = 0; i <= n; i++) {
-            y += yvi[i] * vstar[i];
+            y += yvi[i] * variogram(Math.abs(x - this.x[i]));
         }
         return y;
     }
 
     private void pow(double[] x, double[] y) {
-        beta = 1.5;
         int n = x.length;
 
         double num = 0.0, denom = 0.0;

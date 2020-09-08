@@ -17,13 +17,11 @@
 
 package smile.data.vector;
 
-import smile.data.measure.DiscreteMeasure;
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
+import smile.data.measure.CategoricalMeasure;
 import smile.data.measure.Measure;
 import smile.data.type.StructField;
-
-import java.util.Arrays;
-import java.util.Optional;
-import java.util.stream.DoubleStream;
 
 /**
  * An immutable double vector.
@@ -47,7 +45,7 @@ class DoubleVectorImpl implements DoubleVector {
 
     /** Constructor. */
     public DoubleVectorImpl(StructField field, double[] vector) {
-        if (field.measure instanceof DiscreteMeasure) {
+        if (field.measure instanceof CategoricalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -62,8 +60,8 @@ class DoubleVectorImpl implements DoubleVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override
@@ -96,7 +94,7 @@ class DoubleVectorImpl implements DoubleVector {
     public DoubleVector get(int... index) {
         double[] v = new double[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new DoubleVectorImpl(name, v);
+        return new DoubleVectorImpl(field(), v);
     }
 
     @Override

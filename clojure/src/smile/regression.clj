@@ -21,8 +21,8 @@
                              GaussianProcessRegression]
            [smile.base.cart Loss]))
 
-(defn ols
-  "Ordinary least squares.
+(defn lm
+  "Fitting linear models (ordinary least squares).
 
   In linear regression, the model specification is that the dependent
   variable is a linear combination of the parameters (but need not be
@@ -70,8 +70,9 @@
 
   `formula` is a symbolic description of the model to be fitted.
   `data` is the data frame of the explanatory and response variables.
-  `method` is 'qr' or 'svd'."
-  ([formula data] (ols formula data "qr" true true))
+  `method` is the fitting method ('qr' or 'svd').
+  `recursive` is the flag if the return model supports recursive least squares."
+  ([formula data] (lm formula data "qr" true true))
   ([formula data method, stderr recursive] (OLS/fit formula data method stderr recursive)))
 
 (defn ridge
@@ -344,16 +345,16 @@
 
   Classification and Regression Tree techniques have a number of advantages
   over many of those alternative techniques.
-   - **Simple to understand and interpret:**
+   - Simple to understand and interpret:
   In most cases, the interpretation of results summarized in a tree is
   very simple. This simplicity is useful not only for purposes of rapid
   classification of new observations, but can also often yield a much simpler
   'model' for explaining why observations are classified or predicted in a
   particular manner.
-   - **Able to handle both numerical and categorical data:**
+   - Able to handle both numerical and categorical data:
   Other techniques are usually specialized in analyzing datasets that
   have only one type of variable.
-   - **Nonparametric and nonlinear:**
+   - Nonparametric and nonlinear:
   The final results of using tree methods for classification or regression
   can be summarized in a series of (usually few) logical if-then conditions
   (tree nodes). Therefore, there is no implicit assumption that the underlying

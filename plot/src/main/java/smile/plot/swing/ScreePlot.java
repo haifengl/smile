@@ -29,7 +29,7 @@ import smile.projection.PCA;
  * analysis (FA) or principal components to keep in a principal component
  * analysis (PCA). The procedure of finding statistically significant
  * factors or components using a scree plot is also known as a scree test.
- *
+ * <p>
  * A scree plot always displays the eigenvalues in a downward curve,
  * ordering the eigenvalues from largest to smallest. According to the
  * scree test, the "elbow" of the graph where the eigenvalues seem to

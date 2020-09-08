@@ -21,6 +21,8 @@ import smile.math.DifferentiableFunction;
 
 /**
  * A good general-purpose contrast function for ICA.
+ *
+ * @author Haifeng Li
  */
 public class LogCosh implements DifferentiableFunction {
 

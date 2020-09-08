@@ -29,7 +29,7 @@ import smile.math.MathEx;
  * balls and , R_green green balls, we would ask what is the probability
  * of drawing a red ball, a black ball, a green ball or one of a
  * previously unseen color.
- *
+ * <p>
  * This method takes a set of (frequency, frequency-of-frequency) pairs and
  * estimate the probabilities corresponding to the observed frequencies,
  * and P<sub>0</sub>, the joint probability of all unobserved species.

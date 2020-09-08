@@ -23,8 +23,8 @@ import java.util.stream.Collectors;
 import smile.math.MathEx;
 
 /**
- * A finite mixture model is a probabilistic model for density estimation using a
- * mixture distribution. A mixture model can be regarded as a type of
+ * A finite mixture model is a probabilistic model for density estimation
+ * using a mixture distribution. A mixture model can be regarded as a type of
  * unsupervised learning or clustering.
  * <p>
  * The Expectation-maximization algorithm can be used to compute the

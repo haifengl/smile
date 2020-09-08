@@ -21,8 +21,12 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
- * where &sigma; &gt; 0 is the scale parameter of the kernel.
+ * The Laplacian Kernel on sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
+ * </pre>
+ * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
 
  * @author Haifeng Li
  */

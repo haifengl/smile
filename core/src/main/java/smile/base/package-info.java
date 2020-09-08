@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 /**
- * Base classes used by both classification and regression.
+ * The base classes that may be used for both classification and regression.
  *
  * @author Haifeng Li
  */

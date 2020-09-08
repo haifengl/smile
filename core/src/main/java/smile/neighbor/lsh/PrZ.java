@@ -19,6 +19,8 @@ package smile.neighbor.lsh;
 
 /**
  * Probability list of all buckets for given query object.
+ *
+ * @author Haifeng Li
  */
 public class PrZ implements Comparable<PrZ> {
 

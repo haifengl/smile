@@ -71,7 +71,7 @@ public class FLDTest {
         int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> FLD.fit(x, y));
         int error = Error.of(Iris.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(5, error);
+        assertEquals(3, error);
     }
 
     @Test
@@ -83,7 +83,7 @@ public class FLDTest {
         int error = Error.of(PenDigits.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(1502, error);
+        assertEquals(921, error);
     }
 
     @Test
@@ -95,7 +95,7 @@ public class FLDTest {
         int error = Error.of(BreastCancer.y, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(64, error);
+        assertEquals(20, error);
     }
 
     @Test(expected = Test.None.class)
@@ -104,14 +104,18 @@ public class FLDTest {
 
         FLD model = FLD.fit(USPS.x, USPS.y);
 
-        int[] prediction = Validation.test(model, USPS.testx);
-        int error = Error.of(USPS.testy, prediction);
-
+        int error = Error.of(USPS.testy, Validation.test(model, USPS.testx));
         System.out.println("Error = " + error);
-        assertEquals(561, error);
+        assertEquals(262, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
-        smile.data.Serialize.read(temp);
+        System.out.println(temp);
+        model = (FLD) smile.data.Serialize.read(temp);
+
+        Validation.test(model, USPS.testx);
+        error = Error.of(USPS.testy, Validation.test(model, USPS.testx));
+        System.out.println("Error = " + error);
+        assertEquals(262, error);
     }
 
     @Test(expected = Test.None.class)

@@ -15,7 +15,8 @@
 
  (ns smile.ai
   "Main namespace for REPL, referring to all public vars of
-  other namespaces except that smile.regression :as regression."
+  other namespaces except that smile.regression :as regression
+  to avoid name conflicts with smile.classifictation."
   {:author "Haifeng Li"}
   (:require [smile.io :refer :all]
             [smile.classification :refer :all]

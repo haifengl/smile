@@ -113,7 +113,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
     /**
-     * Design matrix formula
+     * The model formula.
      */
     private Formula formula;
     /**
@@ -260,6 +260,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
             throw new IllegalArgumentException("Invalid sampling fraction: " + subsample);
         }
 
+        formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 

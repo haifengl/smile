@@ -359,16 +359,16 @@
 
   Classification and Regression Tree techniques have a number of advantages
   over many of those alternative techniques.
-   - **Simple to understand and interpret:**
+   - Simple to understand and interpret:
   In most cases, the interpretation of results summarized in a tree is
   very simple. This simplicity is useful not only for purposes of rapid
   classification of new observations, but can also often yield a much simpler
   'model' for explaining why observations are classified or predicted in a
   particular manner.
-   - **Able to handle both numerical and categorical data:**
+   - Able to handle both numerical and categorical data:
   Other techniques are usually specialized in analyzing datasets that
   have only one type of variable.
-   - **Nonparametric and nonlinear:**
+   - Nonparametric and nonlinear:
   The final results of using tree methods for classification or regression
   can be summarized in a series of (usually few) logical if-then conditions
   (tree nodes). Therefore, there is no implicit assumption that the underlying

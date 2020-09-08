@@ -24,7 +24,7 @@ import smile.data.formula.Formula
 import smile.math.kernel.MercerKernel
 
 /**
- * Ordinary least squares. In linear regression,
+ * Fitting linear models (ordinary least squares). In linear regression,
  * the model specification is that the dependent variable is a linear
  * combination of the parameters (but need not be linear in the independent
  * variables). The residual is the difference between the value of the
@@ -70,9 +70,10 @@ import smile.math.kernel.MercerKernel
  *
  * @param formula a symbolic description of the model to be fitted.
  * @param data the data frame of the explanatory and response variables.
- * @param method qr or svd.
+ * @param method the fitting method ("svd" or "qr").
+ * @param recursive if true, the return model supports recursive least squares.
  */
-fun ols(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel {
+fun lm(formula: Formula, data: DataFrame, method: String = "qr", stderr: Boolean = true, recursive: Boolean = true): LinearModel {
     return OLS.fit(formula, data, method, stderr, recursive)
 }
 

@@ -39,6 +39,8 @@ import javax.swing.text.NumberFormatter;
 /**
  * Implements a cell editor that uses a formatted text field
  * to edit Integer values.
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class IntegerCellEditor extends DefaultCellEditor {

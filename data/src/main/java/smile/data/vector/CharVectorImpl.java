@@ -17,9 +17,8 @@
 
 package smile.data.vector;
 
-import smile.data.type.StructField;
-
 import java.util.stream.IntStream;
+import smile.data.type.StructField;
 
 /**
  * An immutable char vector.
@@ -84,7 +83,7 @@ class CharVectorImpl implements CharVector {
     public CharVector get(int... index) {
         char[] v = new char[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new CharVectorImpl(name, v);
+        return new CharVectorImpl(field(), v);
     }
 
     @Override

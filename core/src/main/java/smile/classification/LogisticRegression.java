@@ -20,13 +20,15 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
 import smile.util.IntSet;
+import smile.validation.ModelSelection;
 
 /**
  * Logistic regression. Logistic regression (logit model) is a generalized
@@ -69,222 +71,290 @@ import smile.util.IntSet;
  * Logistic regression estimation also obeys the maximum entropy principle, and
  * thus logistic regression is sometimes called "maximum entropy modeling",
  * and the resulting classifier the "maximum entropy classifier".
- * 
+ *
+ * @see smile.glm.GLM
  * @see MLP
  * @see Maxent
  * @see LDA
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
+public abstract class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    private int p;
+    int p;
 
     /**
      * The number of classes.
      */
-    private int k;
+    int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    private double L;
-
-    /**
-     * The linear weights for binary logistic regression.
-     */
-    private double[] w;
-
-    /**
-     * The linear weights for multi-class logistic regression.
-     */
-    private double[][] W;
+    double L;
 
     /**
      * Regularization factor.
      */
-    private double lambda = 0.1;
-    
+    double lambda;
+
     /**
      * learning rate for stochastic gradient descent.
      */
-    private double eta = 0.1;
+    double eta = 0.1;
 
     /**
      * The class label encoder.
      */
-    private final IntSet labels;
+    final IntSet labels;
 
     /**
-     * Constructor of binary logistic regression.
+     * Constructor.
+     * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
-     * @param w the weights.
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(double[] w, double L, double lambda) {
-        this(L, w, lambda, IntSet.of(2));
-    }
-
-    /**
-     * Constructor of binary logistic regression.
-     * @param L the log-likelihood of learned model.
-     * @param w the weights.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
      * @param labels class labels
      */
-    public LogisticRegression(double L, double[] w, double lambda, IntSet labels) {
-        this.p = w.length - 1;
-        this.k = 2;
+    public LogisticRegression(int p, double L, double lambda, IntSet labels) {
+        this.k = labels.size();
+        this.p = p;
         this.L = L;
-        this.w = w;
         this.lambda = lambda;
         this.labels = labels;
     }
 
-    /**
-     * Constructor of multi-class logistic regression.
-     * @param L the log-likelihood of learned model.
-     * @param W the weights of first k - 1 classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(double L, double[][] W, double lambda) {
-        this(L, W, lambda, IntSet.of(W.length+1));
-    }
+    /** Binomial logistic regression. The dependent variable is nominal of two levels. */
+    public static class Binomial extends LogisticRegression {
+        /**
+         * The linear weights.
+         */
+        private double[] w;
 
-    /**
-     * Constructor of multi-class logistic regression.
-     * @param L the log-likelihood of learned model.
-     * @param W the weights.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param labels class labels
-     */
-    public LogisticRegression(double L, double[][] W, double lambda, IntSet labels) {
-        this.p = W[0].length - 1;
-        this.k = W.length + 1;
-        this.L = L;
-        this.W = W;
-        this.lambda = lambda;
-        this.labels = labels;
-    }
-
-    /**
-     * Returns an array of size (p+1) containing the linear weights
-     * of binary logistic regression, where p is the dimension of
-     * feature vectors. If the weights fits in the specified array,
-     * it is returned therein. Otherwise, a new array is allocated.
-     * The last element is the weight of bias.
-     */
-    public double[] coefficients(double[] w) {
-        if (this.w == null) {
-            throw new UnsupportedOperationException("Call coefficients(double[]) on multi-class logistic regression");
+        /**
+         * Constructor.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels class labels
+         */
+        public Binomial(double[] w, double L, double lambda, IntSet labels) {
+            super(w.length - 1, L, lambda, labels);
+            this.w = w;
         }
 
-        if (w.length < p+1) {
-            w = new double[p+1];
+        /**
+         * Returns an array of size (p+1) containing the linear weights
+         * of binary logistic regression, where p is the dimension of
+         * feature vectors. The last element is the weight of bias.
+         */
+        public double[] coefficients() {
+            return w;
         }
 
-        System.arraycopy(this.w, 0, w, 0, p+1);
-
-        return w;
-    }
-
-    /**
-     * Returns a 2d-array of size (k-1) x (p+1), containing the linear weights
-     * of multi-class logistic regression, where k is the number of classes
-     * and p is the dimension of feature vectors. If the weights fits in
-     * the specified array, it is returned therein. Otherwise, a new array
-     * is allocated. The last element of each row is the weight of bias.
-     */
-    public double[][] coefficients(double[][] W) {
-        if (this.W == null) {
-            throw new UnsupportedOperationException("Call coefficients(double[][]) on binary logistic regression");
+        @Override
+        public int predict(double[] x) {
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            return labels.valueOf(f < 0.5 ? 0 : 1);
         }
 
-        if (W.length < this.W.length) {
-            W = new double[k-1][p+1];
-        }
-
-        for (int i = 0; i < k-1; i++) {
-            if (W[i] == null || W[i].length < p+1) {
-                W[i] = new double[p+1];
+        @Override
+        public int predict(double[] x, double[] posteriori) {
+            if (x.length != p) {
+                throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
             }
-            System.arraycopy(this.W[i], 0, W[i], 0, p+1);
+
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+            }
+
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+
+            posteriori[0] = 1.0 - f;
+            posteriori[1] = f;
+
+            return labels.valueOf(f < 0.5 ? 0 : 1);
         }
 
-        return W;
+        @Override
+        public void update(double[] x, int y) {
+            if (x.length != p) {
+                throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+            }
+
+            y = labels.indexOf(y);
+
+            // calculate gradient for incoming data
+            double wx = dot(x, w);
+            double err = y - MathEx.logistic(wx);
+
+            // update the weights
+            w[p] += eta * err;
+            for (int j = 0; j < p; j++) {
+                w[j] += eta * err * x[j];
+            }
+
+            // add regularization part
+            if (lambda > 0.0) {
+                for (int j = 0; j < p; j++) {
+                    w[j] -= eta * lambda * w[j];
+                }
+            }
+        }
+    }
+
+    /** Multinomial logistic regression. The dependent variable is nominal with more than two levels. */
+    public static class Multinomial extends LogisticRegression {
+        /**
+         * The linear weights.
+         */
+        private double[][] w;
+
+        /**
+         * Constructor.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels class labels
+         */
+        public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
+            super(w[0].length - 1, L, lambda, labels);
+            this.w = w;
+        }
+
+        /**
+         * Returns a 2d-array of size (k-1) x (p+1), containing the linear weights
+         * of multi-class logistic regression, where k is the number of classes
+         * and p is the dimension of feature vectors. The last element of each
+         * row is the weight of bias.
+         */
+        public double[][] coefficients() {
+            return w;
+        }
+
+        @Override
+        public int predict(double[] x) {
+            return predict(x, new double[k]);
+        }
+
+        @Override
+        public int predict(double[] x, double[] posteriori) {
+            if (x.length != p) {
+                throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+            }
+
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+            }
+
+            posteriori[k-1] = 0.0;
+            for (int i = 0; i < k-1; i++) {
+                posteriori[i] = dot(x, w[i]);
+            }
+
+            MathEx.softmax(posteriori);
+            return labels.valueOf(MathEx.whichMax(posteriori));
+        }
+
+        @Override
+        public void update(double[] x, int y) {
+            if (x.length != p) {
+                throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+            }
+
+            y = labels.indexOf(y);
+
+            double[] prob = new double[k];
+            for (int j = 0; j < k-1; j++) {
+                prob[j] = dot(x, w[j]);
+            }
+
+            MathEx.softmax(prob);
+
+            // update the weights
+            for (int i = 0; i < k-1; i++) {
+                double[] wi = w[i];
+                double err = (y == i ? 1.0 : 0.0) - prob[i];
+                wi[p] += eta * err;
+                for (int j = 0; j < p; j++) {
+                    wi[j] += eta * err * x[j];
+                }
+
+                // add regularization part
+                if (lambda > 0.0) {
+                    for (int j = 0; j < p; j++) {
+                        wi[j] -= eta * lambda * wi[j];
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * Learn logistic regression.
+     * Fits binomial logistic regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
-    public static LogisticRegression fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
+    public static Binomial binomial(Formula formula, DataFrame data) {
+        return binomial(formula, data, new Properties());
     }
 
     /**
-     * Learn logistic regression.
+     * Fits binomial logistic regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      */
-    public static LogisticRegression fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray();
+    public static Binomial binomial(Formula formula, DataFrame data, Properties prop) {
+        DataFrame X = formula.x(data);
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
+        return binomial(x, y, prop);
     }
 
     /**
-     * Learn logistic regression.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * Fits binomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
      */
-    public static LogisticRegression fit(double[][] x, int[] y) {
-        return fit(x, y, new Properties());
+    public static Binomial binomial(double[][] x, int[] y) {
+        return binomial(x, y, new Properties());
     }
 
     /**
-     * Learn logistic regression.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * Fits binomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
      */
-    public static LogisticRegression fit(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
-        return fit(x, y, lambda, tol, maxIter);
+    public static Binomial binomial(double[][] x, int[] y, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        return binomial(x, y, lambda, tol, maxIter);
     }
 
     /**
-     * Learn logistic regression.
+     * Fits binomial logistic regression.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
+     * @param y training labels.
      * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
      */
-    public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Binomial binomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -306,37 +376,184 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         int k = codec.k;
         y = codec.y;
 
-        LogisticRegression model;
-        BFGS bfgs = new BFGS(tol, maxIter);
-        if (k == 2) {
-            BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
-            double[] w = new double[p + 1];
-            double L = -bfgs.minimize(func, 5, w);
-            model = new LogisticRegression(L, w, lambda, codec.labels);
-        } else {
-            MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, lambda);
-            double[] w = new double[(k - 1) * (p + 1)];
-            double L = -bfgs.minimize(func, 5, w);
-
-            double[][] W = new double[k-1][p+1];
-            for (int i = 0, l = 0; i < k-1; i++) {
-                for (int j = 0; j <= p; j++, l++) {
-                    W[i][j] = w[l];
-                }
-            }
-
-            model = new LogisticRegression(L, W, lambda, codec.labels);
+        if (k != 2) {
+            throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
+        BinomialObjective objective = new BinomialObjective(x, y, lambda);
+        double[] w = new double[p + 1];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+
+        Binomial model = new Binomial(w, L, lambda, codec.labels);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
 
     /**
+     * Fits multinomial logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static Multinomial multinomial(Formula formula, DataFrame data) {
+        return multinomial(formula, data, new Properties());
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static Multinomial multinomial(Formula formula, DataFrame data, Properties prop) {
+        DataFrame X = formula.x(data);
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        int[] y = formula.y(data).toIntArray();
+        return multinomial(x, y, prop);
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static Multinomial multinomial(double[][] x, int[] y) {
+        return multinomial(x, y, new Properties());
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static Multinomial multinomial(double[][] x, int[] y, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
+        boolean stderr = Boolean.valueOf(prop.getProperty("smile.logit.standard.error", "true"));
+        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        return multinomial(x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     */
+    public static Multinomial multinomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        }
+
+        if (lambda < 0.0) {
+            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
+        }
+
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
+        int p = x[0].length;
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        y = codec.y;
+
+        if (k <= 2) {
+            throw new IllegalArgumentException("Fits multinomial model on binary class data.");
+        }
+
+        MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
+        double[] w = new double[(k - 1) * (p + 1)];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+
+        double[][] W = new double[k-1][p+1];
+        for (int i = 0, l = 0; i < k-1; i++) {
+            for (int j = 0; j <= p; j++, l++) {
+                W[i][j] = w[l];
+            }
+        }
+
+        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
+        model.setLearningRate(0.1 / x.length);
+        return model;
+    }
+
+    /**
+     * Fits logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static LogisticRegression fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
+    }
+
+    /**
+     * Fits logistic regression.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     */
+    public static LogisticRegression fit(Formula formula, DataFrame data, Properties prop) {
+        DataFrame X = formula.x(data);
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        int[] y = formula.y(data).toIntArray();
+        return fit(x, y, prop);
+    }
+
+    /**
+     * Fits logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y) {
+        return fit(x, y, new Properties());
+    }
+
+    /**
+     * Fits logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y, Properties prop) {
+        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
+        return fit(x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits logistic regression.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+        ClassLabels codec = ClassLabels.fit(y);
+        if (codec.k == 2)
+            return binomial(x, y, lambda, tol, maxIter);
+        else
+            return multinomial(x, y, lambda, tol, maxIter);
+    }
+
+    /**
      * Binary-class logistic regression objective function.
      */
-    static class BinaryObjectiveFunction implements DifferentiableMultivariateFunction {
-
+    static class BinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -369,7 +586,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         /**
          * Constructor.
          */
-        BinaryObjectiveFunction(double[][] x, int[] y, double lambda) {
+        BinomialObjective(double[][] x, int[] y, double lambda) {
             this.x = x;
             this.y = y;
             this.lambda = lambda;
@@ -445,8 +662,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
     /**
      * Multi-class logistic regression objective function.
      */
-    static class MultiClassObjectiveFunction implements DifferentiableMultivariateFunction {
-
+    static class MultinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -487,7 +703,7 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         /**
          * Constructor.
          */
-        MultiClassObjectiveFunction(double[][] x, int[] y, int k, double lambda) {
+        MultinomialObjective(double[][] x, int[] y, int k, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
@@ -618,57 +834,6 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         return dot;
     }
 
-    @Override
-    public void update(double[] x, int y) {
-        if (x.length != p) {
-            throw new IllegalArgumentException("Invalid input vector size: " + x.length);
-        }
-
-        y = labels.indexOf(y);
-        if (k == 2) {
-            // calculate gradient for incoming data
-            double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
-
-            // update the weights
-            w[p] += eta * err;
-            for (int j = 0; j < p; j++) {
-                w[j] += eta * err * x[j];
-            }
-
-            // add regularization part
-            if (lambda > 0.0) {
-                for (int j = 0; j < p; j++) {
-                    w[j] -= eta * lambda * w[j];
-                }
-            }
-        } else {
-            double[] prob = new double[k];
-            for (int j = 0; j < k-1; j++) {
-                prob[j] = dot(x, W[j]);
-            }
-
-            MathEx.softmax(prob);
-
-            // update the weights
-            for (int i = 0; i < k-1; i++) {
-                double[] w = W[i];
-                double err = (y == i ? 1.0 : 0.0) - prob[i];
-                w[p] += eta * err;
-                for (int j = 0; j < p; j++) {
-                    w[j] += eta * err * x[j];
-                }
-
-                // add regularization part
-                if (lambda > 0.0) {
-                    for (int j = 0; j < p; j++) {
-                        w[j] -= eta * lambda * w[j];
-                    }
-                }
-            }
-        }
-    }
-
     /**
      * Sets the learning rate of stochastic gradient descent.
      * It is a good practice to adapt the learning rate for
@@ -699,41 +864,10 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         return L;
     }
 
-    @Override
-    public int predict(double[] x) {
-        if (k == 2) {
-            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.valueOf(f < 0.5 ? 0 : 1);
-        } else {
-            return predict(x, new double[k]);
-        }
-    }
-
-    @Override
-    public int predict(double[] x, double[] posteriori) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        if (posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
-        }
-
-        if (k == 2) {
-            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-
-            posteriori[0] = 1.0 - f;
-            posteriori[1] = f;
-
-            return labels.valueOf(f < 0.5 ? 0 : 1);
-        } else {
-            posteriori[k-1] = 0.0;
-            for (int i = 0; i < k-1; i++) {
-                posteriori[i] = dot(x, W[i]);
-            }
-
-            MathEx.softmax(posteriori);
-            return labels.valueOf(MathEx.whichMax(posteriori));
-        }
+    /**
+     * Returns the AIC score.
+     */
+    public double AIC() {
+        return ModelSelection.AIC(L, (k-1)*(p+1));
     }
 }

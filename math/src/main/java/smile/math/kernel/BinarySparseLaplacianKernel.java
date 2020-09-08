@@ -18,10 +18,15 @@
 package smile.math.kernel;
 
 /**
- * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
- * where &sigma; &gt; 0 is the scale parameter of the kernel. The kernel
- * works sparse binary array as int[], which are the indices of nonzero elements.
-
+ * The Laplacian Kernel on binary sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
+ * </pre>
+ * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ * The kernel works sparse binary array as int[], which are the indices
+ * of nonzero elements.
+ *
  * @author Haifeng Li
  */
 public class BinarySparseLaplacianKernel implements MercerKernel<int[]> {

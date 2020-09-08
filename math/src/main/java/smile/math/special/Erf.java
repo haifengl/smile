@@ -20,15 +20,17 @@ package smile.math.special;
 import static java.lang.Math.*;
 
 /**
- * The error function (also called the Gauss error function) is a special
- * function of sigmoid shape which occurs in probability, statistics, materials
- * science, and partial differential equations. It is defined as:
+ * The error function. The error function (or the Gauss error function)
+ * is a special function of sigmoid shape which occurs in probability,
+ * statistics, materials science, and partial differential equations.
+ * It is defined as:
  * <p>
- * erf(x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t<sup>2</sup></sup>dt</i>
- * <p>
- * The complementary error function, denoted erfc, is defined as erfc(x) = 1 - erf(x).
- * The error function and complementary error function are special cases of the
- * incomplete gamma function.
+ * <pre>
+ *     erf(x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t<sup>2</sup></sup>dt</i>
+ * </pre>
+ * The complementary error function, denoted erfc, is defined as
+ * <code>erfc(x) = 1 - erf(x)</code>. The error function and complementary
+ * error function are special cases of the incomplete gamma function.
  * 
  * @author Haifeng Li
  */

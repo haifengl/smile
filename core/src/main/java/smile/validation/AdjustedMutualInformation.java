@@ -32,7 +32,7 @@ import static smile.math.MathEx.lfactorial;
  * randomness to adjust for chance. The AMI takes a value of 1 when the
  * two partitions are identical and 0 when the MI between two partitions
  * equals the value expected due to chance alone.
- *
+ * <p>
  * WARNING: The computation of adjustment is is really really slow.
  *
  * <h2>References</h2>

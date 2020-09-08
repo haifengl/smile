@@ -17,7 +17,7 @@
 
 package smile.math.distance;
 
-import smile.math.matrix.DenseMatrix;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
@@ -33,14 +33,15 @@ import smile.math.matrix.Matrix;
 public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
-    private DenseMatrix sigma;
-    private DenseMatrix sigmaInv;
+    private Matrix sigma;
+    private Matrix sigmaInv;
 
     /**
      * Constructor with given covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
-        sigma = Matrix.of(cov);
+        sigma = new Matrix(cov);
+        sigma.uplo(UPLO.LOWER);
         sigmaInv = sigma.inverse();
     }
 
@@ -62,7 +63,7 @@ public class MahalanobisDistance implements Metric<double[]> {
         for (int i = 0; i < n; i++)
             z[i] = x[i] - y[i];
 
-        double dist = sigmaInv.xax(z);
+        double dist = sigmaInv.xAx(z);
         return Math.sqrt(dist);
     }
 }

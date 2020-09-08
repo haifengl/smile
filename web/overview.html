@@ -218,13 +218,45 @@ permalink: "{{ page.filePathStem }}.html"
         In contrast, deep reinforcement learning uses a deep neural network without explicitly
         designing the state space.</p>
 
-    <p>Reinforcement learning focus on finding a balance between exploration (of uncharted
-        territory) and exploitation (of current knowledge). Reinforcement learning requires clever
-        exploration mechanisms. Randomly selecting actions, without reference to an estimated
-        probability distribution, shows poor performance. The case of (small) finite MDP is
-        relatively well understood. However, due to the lack of algorithms that scale well
-        with the number of states (or scale to problems with infinite state spaces), simple
-        exploration methods are the most practical.</p>
+    <p>The major challenge in reinforcement learning is the tradeoff
+        between exploration and exploitation. Reinforcement learning focus on
+        finding a balance between exploration (of uncharted territory) and
+        exploitation (of current knowledge). To obtain a lot of reward, an agent
+        must prefer actions that it has tried in the past and found to be effective
+        in producing reward. But to discover such actions, it has totry actions
+        that it has not selected before. The agent has to exploit what it has
+        already experienced in order to obtain reward, but it also has to explore
+        in order to make better action selections in the future. Reinforcement learning
+        requires clever exploration mechanisms. Randomly selecting actions, without
+        reference to an estimated probability distribution, shows poor performance.
+        The case of (small) finite MDP is relatively well understood. However,
+        due to the lack of algorithms that scale well with the number of states
+        (or scale to problems with infinite state spaces), simple exploration
+        methods are the most practical.</p>
+
+    <p>There are four main components in reinforcement learning system: a policy,
+        a reward signal, a value function, and optionally a model of the
+        environment. A policy defines the learning agent's way of behaving at
+        a given time. A reward signal defines the goal of a reinforcement
+        learning problem. The agent's objective is to maximize the total
+        reward it receives overthe long run. The reward signal is the primary
+        basis for altering the policy; if an action selected by the policy is
+        followed by low reward, then the policy may be changed to select some
+        other action in that situation in the future. While the reward
+        is an immediate signal, a value function specifies what is good in the
+        long run. The value of a state may be regarded as the total amount
+        of reward an agent can expect to accumulate over the future, starting
+        from that state. Action choices are made based on value judgments.
+        We seek actions that bring about states of highest value, not highest
+        reward. Unfortunately, it is much harder to determine values than
+        it is to determine rewards. Rewards are basically given directly
+        by the environment, but values must be estimated and re-estimated from
+        the sequences of observations an agent makes over its entire lifetime.
+        Optionally, some reinforcement learning systems have a model of the
+        environment. It allows inferences to be made about how the environment
+        will behave. For example, given a state and action, the model might
+        predict the result, next state and next reward, which can be used for
+        planning.</p>
 
     <h2 id="gan">Generative Adversarial Network</h2>
 

@@ -19,8 +19,11 @@ package smile.data.formula;
 
 import smile.data.Tuple;
 import smile.data.type.DataType;
-import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The term of round function.
@@ -38,31 +41,46 @@ class Round extends AbstractFunction {
     }
 
     @Override
-    public DataType type() {
-        if (x.type().equals(DataTypes.DoubleType)) return DataTypes.LongType;
-        if (x.type().equals(DataTypes.FloatType)) return DataTypes.IntegerType;
-        if (x.type().equals(DataTypes.object(Double.class))) return DataTypes.object(Long.class);
-        else return DataTypes.object(Integer.class);
-    }
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
 
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
+        for (Feature feature : x.bind(schema)) {
+            StructField xfield = feature.field();
+            DataType type = xfield.type;
+            if (!(type.isDouble() || type.isFloat())) {
+                throw new IllegalStateException(String.format("Invalid expression: round(%s)", type));
+            }
 
-        if (!(x.type().isDouble() || x.type().isFloat())) {
-            throw new IllegalStateException(String.format("Invalid expression: round(%s)", x.type()));
+            features.add(new Feature() {
+                StructField field = new StructField(String.format("round(%s)", xfield.name), xfield.type, xfield.measure);
+
+                @Override
+                public StructField field() {
+                    return field;
+                }
+
+                @Override
+                public Object apply(Tuple o) {
+                    Object y = feature.apply(o);
+                    if (y == null) return null;
+
+                    if (y instanceof Double) return Math.round((double) y);
+                    else if (y instanceof Float) return Math.abs((float) y);
+                    else throw new IllegalArgumentException("Invalid argument for abs(): " + y);
+                }
+
+                @Override
+                public float applyAsFloat(Tuple o) {
+                    return Math.round(feature.applyAsFloat(o));
+                }
+
+                @Override
+                public double applyAsDouble(Tuple o) {
+                    return Math.round(feature.applyAsDouble(o));
+                }
+            });
         }
-    }
 
-    @Override
-    public double applyAsDouble(Tuple o) {
-        return Math.round(x.applyAsDouble(o));
-    }
-
-    @Override
-    public Long apply(Tuple o) {
-        Object y = x.apply(o);
-        if (y == null) return null;
-        else return Math.round(((Number) y).doubleValue());
+        return features;
     }
 }

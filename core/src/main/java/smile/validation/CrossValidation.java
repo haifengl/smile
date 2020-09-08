@@ -17,7 +17,6 @@
 
 package smile.validation;
 
-import java.util.function.Function;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;

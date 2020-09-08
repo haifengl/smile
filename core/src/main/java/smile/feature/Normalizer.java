@@ -17,6 +17,7 @@
 
 package smile.feature;
 
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.math.MathEx;
@@ -100,7 +101,7 @@ public class Normalizer implements FeatureTransform {
 
     @Override
     public Tuple transform(Tuple x) {
-        double[] y = transform(x.toArray());
+        double[] y = transform(x.toArray(false, CategoricalEncoder.ONE_HOT));
         return Tuple.of(y, x.schema());
     }
 

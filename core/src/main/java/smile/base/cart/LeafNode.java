@@ -21,6 +21,8 @@ import smile.data.Tuple;
 
 /**
  * A leaf node in decision tree.
+ *
+ * @author Haifeng Li
  */
 public abstract class LeafNode implements Node {
     /** The number of samples in the node. */

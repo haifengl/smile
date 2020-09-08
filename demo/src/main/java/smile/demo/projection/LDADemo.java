@@ -32,6 +32,7 @@ import javax.swing.JPanel;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.classification.FLD;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.io.Read;
@@ -96,7 +97,7 @@ public class LDADemo extends JPanel implements Runnable, ActionListener {
      * the clusters.
      */
     public JComponent learn() {
-        double[][] data = formula[datasetIndex].x(dataset[datasetIndex]).toArray();
+        double[][] data = formula[datasetIndex].x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
 
         int min = MathEx.min(labels);

@@ -24,17 +24,21 @@ import smile.math.special.Gamma;
  * The Weibull distribution is one of the most widely used lifetime distributions
  * in reliability engineering. It is a versatile distribution that can take on
  * the characteristics of other types of distributions, based on the value of
- * the shape parameter. The distribution has two parameters: k &gt; 0 is the shape
- * parameter and &lambda; &gt; 0 is the scale parameter of the distribution.
- * The probability density function is
- * f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)<sup>k</sup></sup>
- * for x &ge; 0.
+ * the shape parameter. The distribution has two parameters: <code>k &gt; 0</code>
+ * is the shape parameter and <code>&lambda; &gt; 0</code> is the scale parameter
+ * of the distribution. The probability density function is
+ * <p>
+ * <pre>
+ *     f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)<sup>k</sup></sup>
+ * </pre>
+ * for <code>x &ge; 0</code>.
  * <p>
  * The Weibull distribution is often used in the field of life data analysis
  * due to its flexibility - it can mimic the behavior of other statistical
  * distributions such as the normal and the exponential. If the failure rate
- * decreases over time, then k &lt; 1. If the failure rate is constant over time,
- * then k = 1. If the failure rate increases over time, then k &gt; 1.
+ * decreases over time, then <code>k &lt; 1</code>. If the failure rate is
+ * constant over time, then <code>k = 1</code>. If the failure rate increases
+ * over time, then <code>k &gt; 1</code>.
  * <p>
  * An understanding of the failure rate may provide insight as to what is
  * causing the failures:
@@ -51,11 +55,11 @@ import smile.math.special.Gamma;
  * Under certain parameterizations, the Weibull distribution reduces to several
  * other familiar distributions:
  * <ul>
- * <li> When k = 1, it is the exponential distribution.
- * <li> When k = 2, it becomes equivalent to the Rayleigh distribution,
- * which models the modulus of a two-dimensional uncorrelated bivariate
- * normal vector.
- * <li> When k = 3.4, it appears similar to the normal distribution.
+ * <li> When <code>k = 1</code>, it is the exponential distribution.
+ * <li> When <code>k = 2</code>, it becomes equivalent to the Rayleigh
+ * distribution, which models the modulus of a two-dimensional uncorrelated
+ * bivariate normal vector.
+ * <li> When <code>k = 3.4</code>, it appears similar to the normal distribution.
  * <li> As k goes to infinity, the Weibull distribution asymptotically
  * approaches the Dirac delta function.
  * </ul>

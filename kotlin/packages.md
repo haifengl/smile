@@ -1,7 +1,7 @@
 # Module smile-kotlin
 
-Smile (Statistical Machine Intelligence and Learning Engine) is
-a fast and comprehensive machine learning, NLP, linear algebra,
+[Smile (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
+is a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.
 With advanced data structures and algorithms,
 Smile delivers state-of-art performance.
@@ -390,6 +390,10 @@ variables. Therefore, the estimation target is a function of the independent
 variables called the regression function. Regression analysis is widely
 used for prediction and forecasting.
   
+# Package smile.nlp
+
+Natural language processing.
+
 # Package smile.wavelet
 
 Wavelet analysis.

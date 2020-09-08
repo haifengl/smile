@@ -18,12 +18,10 @@
 package smile.data.formula;
 
 import java.util.Collections;
-import java.util.Optional;
+import java.util.List;
 import java.util.Set;
 
 import smile.data.Tuple;
-import smile.data.measure.Measure;
-import smile.data.type.DataType;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 
@@ -35,14 +33,8 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 final class Variable implements Term {
-    /** Variable name. */
+    /** The variable name. */
     private final String name;
-    /** Data type of variable. Only available after calling bind(). */
-    private DataType type;
-    /** The level of measurements. */
-    private Measure measure;
-    /** Column index after binding to a schema. */
-    private int index = -1;
 
     /**
      * Constructor.
@@ -53,7 +45,7 @@ final class Variable implements Term {
         this.name = name;
     }
 
-    /** Returns the name of variable. */
+    /** Returns the variable name. */
     public String name() {
         return name;
     }
@@ -61,11 +53,6 @@ final class Variable implements Term {
     @Override
     public String toString() {
         return name;
-    }
-
-    @Override
-    public boolean isVariable() {
-        return true;
     }
 
     @Override
@@ -87,48 +74,49 @@ final class Variable implements Term {
     }
 
     @Override
-    public Object apply(Tuple o) {
-        return o.get(index);
-    }
+    public List<Feature> bind(StructType schema) {
+        Feature feature = new Feature() {
+            /** The column index in the schema. */
+            private int index = schema.fieldIndex(name);
+            /** The struct field. */
+            private StructField field = schema.field(index);
 
-    @Override
-    public int applyAsInt(Tuple o) {
-        return o.getInt(index);
-    }
+            @Override
+            public boolean isVariable() {
+                return true;
+            }
 
-    @Override
-    public long applyAsLong(Tuple o) {
-        return o.getLong(index);
-    }
+            @Override
+            public StructField field() {
+                return field;
+            }
 
-    @Override
-    public float applyAsFloat(Tuple o) {
-        return o.getFloat(index);
-    }
+            @Override
+            public Object apply(Tuple o) {
+                return o.get(index);
+            }
 
-    @Override
-    public double applyAsDouble(Tuple o) {
-        return o.getDouble(index);
-    }
+            @Override
+            public int applyAsInt(Tuple o) {
+                return o.getInt(index);
+            }
 
-    @Override
-    public DataType type() {
-        if (type == null)
-            throw new IllegalStateException(String.format("Column(%s) is not bound to a schema yet.", name));
+            @Override
+            public long applyAsLong(Tuple o) {
+                return o.getLong(index);
+            }
 
-        return type;
-    }
+            @Override
+            public float applyAsFloat(Tuple o) {
+                return o.getFloat(index);
+            }
 
-    @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
-    }
+            @Override
+            public double applyAsDouble(Tuple o) {
+                return o.getDouble(index);
+            }
+        };
 
-    @Override
-    public void bind(StructType schema) {
-        index = schema.fieldIndex(name);
-        StructField field = schema.field(index);
-        type = field.type;
-        measure = field.measure;
+        return Collections.singletonList(feature);
     }
 }

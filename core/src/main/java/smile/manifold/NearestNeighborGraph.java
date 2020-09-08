@@ -24,6 +24,11 @@ import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
 
+/**
+ * Nearest neighbor graph builder.
+ *
+ * @author Haifeng Li
+ */
 class NearestNeighborGraph {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(NearestNeighborGraph.class);
 

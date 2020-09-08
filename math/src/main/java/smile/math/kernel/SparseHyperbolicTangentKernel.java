@@ -21,14 +21,17 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The hyperbolic tangent kernel.
- * k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;), where &gamma; is the scale
- * of the used inner product and &lambda; is the offset of the used inner
- * product. If the offset is negative the likelihood of obtaining a kernel
- * matrix that is not positive definite is much higher (since then even some
- * diagonal elements may be negative), hence if this kernel has to be used,
- * the offset should always be positive. Note, however, that this is no
- * guarantee that the kernel will be positive.
+ * The hyperbolic tangent kernel on sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
+ * </pre>
+ * where &gamma; is the scale of the used inner product and &lambda; is
+ * the offset of the used inner product. If the offset is negative the
+ * likelihood of obtaining a kernel matrix that is not positive definite
+ * is much higher (since then even some diagonal elements may be negative),
+ * hence if this kernel has to be used, the offset should always be positive.
+ * Note, however, that this is no guarantee that the kernel will be positive.
  * <p>
  * The hyperbolic tangent kernel was quite popular for support vector machines
  * due to its origin from neural networks. However, it should be used carefully

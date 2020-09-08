@@ -106,7 +106,7 @@ public class Gamma {
         } else {
             fg = PI / (gamma(1.0 - x) * sin(PI * x));
 
-            if (fg != 1.0 / 0.0 && fg != -1.0 / 0.0) {
+            if (Double.isFinite(fg)) {
                 if (fg < 0) {
                     throw new IllegalArgumentException("The gamma function is negative: " + fg);
                 } else {

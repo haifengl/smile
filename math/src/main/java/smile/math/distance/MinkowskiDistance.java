@@ -23,8 +23,9 @@ import java.util.Arrays;
  * Minkowski distance of order p or L<sub>p</sub>-norm, is a generalization of
  * Euclidean distance that is actually L<sub>2</sub>-norm. You may also provide
  * a specified weight vector. For float or double arrays, missing values (i.e. NaN)
- * are also handled. Also support sparse arrays of which zeros are excluded
- * to save space.
+ * are also handled.
+ *
+ * @see SparseMinkowskiDistance
  *
  * @author Haifeng Li
  */

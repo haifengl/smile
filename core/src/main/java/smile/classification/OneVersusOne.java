@@ -26,15 +26,17 @@ import smile.util.IntSet;
 /**
  * One-vs-one strategy for reducing the problem of
  * multiclass classification to multiple binary classification problems.
- * This approach trains K (K − 1) / 2 binary classifiers for a
+ * This approach trains <code>K (K − 1) / 2</code> binary classifiers for a
  * K-way multiclass problem; each receives the samples of a pair of
  * classes from the original training set, and must learn to distinguish
  * these two classes. At prediction time, a voting scheme is applied:
- * all K (K − 1) / 2 classifiers are applied to an unseen sample and the
- * class that got the highest number of positive predictions gets predicted
- * by the combined classifier.
- * Like One-vs-rest, one-vs-one suffers from ambiguities in that some
- * regions of its input space may receive the same number of votes.
+ * all <code>K (K − 1) / 2</code> classifiers are applied to an unseen
+ * sample and the class that got the highest number of positive predictions
+ * gets predicted by the combined classifier. Like One-vs-rest, one-vs-one
+ * suffers from ambiguities in that some regions of its input space may
+ * receive the same number of votes.
+ *
+ * @author Haifeng Li
  */
 public class OneVersusOne<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 2L;

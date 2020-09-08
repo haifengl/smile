@@ -19,7 +19,6 @@ package smile.projection;
 
 import java.io.Serializable;
 import smile.math.MathEx;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -64,13 +63,13 @@ public class RandomProjection implements LinearProjection, Serializable {
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private Matrix projection;
 
     /**
      * Constructor.
      * @param projection the projection matrix.
      */
-    public RandomProjection(DenseMatrix projection) {
+    public RandomProjection(Matrix projection) {
         this.projection = projection;
     }
 
@@ -107,7 +106,7 @@ public class RandomProjection implements LinearProjection, Serializable {
             MathEx.unitize(projection[i]);
         }
 
-        return new RandomProjection(Matrix.of(projection));
+        return new RandomProjection(new Matrix(projection));
     }
 
     /**
@@ -124,7 +123,7 @@ public class RandomProjection implements LinearProjection, Serializable {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        DenseMatrix projection = Matrix.zeros(p, n);
+        Matrix projection = new Matrix(p, n);
         double scale = Math.sqrt(3);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
@@ -135,7 +134,7 @@ public class RandomProjection implements LinearProjection, Serializable {
     }
 
     @Override
-    public DenseMatrix getProjection() {
+    public Matrix getProjection() {
         return projection;
     }
 }

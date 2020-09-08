@@ -56,7 +56,7 @@ public class RootTest {
     @Test
     public void testBrent() {
         System.out.println("Brent");
-        double result = MathEx.root.find(x -> x * x * x + x * x - 5 * x + 3, -4, -2);
+        double result = Root.find(x -> x * x * x + x * x - 5 * x + 3, -4, -2, 1E-7, 500);
         assertEquals(-3, result, 1E-7);
     }
 
@@ -78,7 +78,7 @@ public class RootTest {
                 return 3 * x * x + 2 * x - 5;
             }
         };
-        double result = MathEx.root.find(func, -4, -2);
+        double result = Root.find(func, -4, -2, 1E-7, 500);
         assertEquals(-3, result, 1E-7);
     }
 }

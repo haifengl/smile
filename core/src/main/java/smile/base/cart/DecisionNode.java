@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 
 /**
  * A leaf node in decision tree.
+ *
+ * @author Haifeng Li
  */
 public class DecisionNode extends LeafNode {
     private static final long serialVersionUID = 2L;

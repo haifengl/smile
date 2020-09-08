@@ -20,7 +20,11 @@ package smile.data.formula;
 import smile.data.Tuple;
 import smile.data.type.DataType;
 import smile.data.type.DataTypes;
+import smile.data.type.StructField;
 import smile.data.type.StructType;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * The generic term of applying an integer function.
@@ -44,28 +48,41 @@ public class IntFunction extends AbstractFunction {
     }
 
     @Override
-    public DataType type() {
-        return x.type().id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType;
-    }
+    public List<Feature> bind(StructType schema) {
+        List<Feature> features = new ArrayList<>();
 
-    @Override
-    public void bind(StructType schema) {
-        x.bind(schema);
+        for (Feature feature : x.bind(schema)) {
+            StructField xfield = feature.field();
+            DataType type = xfield.type;
+            if (!(type.isInt() || type.isShort() || type.isByte())) {
+                throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, type));
+            }
 
-        if (!(x.type().isInt() || x.type().isShort() || x.type().isLong())) {
-            throw new IllegalStateException(String.format("Invalid expression: %s(%s)", name, x.type()));
+            features.add(new Feature() {
+                StructField field = new StructField(
+                        String.format("%s(%s)", name, xfield.name),
+                        type.id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType,
+                        xfield.measure);
+
+                @Override
+                public StructField field() {
+                    return field;
+                }
+
+                @Override
+                public Integer apply(Tuple o) {
+                    Object y = feature.apply(o);
+                    if (y == null) return null;
+                    else return lambda.apply(((Number) y).intValue());
+                }
+
+                @Override
+                public int applyAsInt(Tuple o) {
+                    return lambda.apply(feature.applyAsInt(o));
+                }
+            });
         }
-    }
 
-    @Override
-    public int applyAsInt(Tuple o) {
-        return lambda.apply(x.applyAsInt(o));
-    }
-
-    @Override
-    public Integer apply(Tuple o) {
-        Object y = x.apply(o);
-        if (y == null) return null;
-        else return lambda.apply(((Number) y).intValue());
+        return features;
     }
 }

@@ -30,7 +30,7 @@ package smile.stat.distribution;
  * family unless the shape parameter is known.
  * <p>
  * The purpose of this interface is mainly to define the method M that is
- * the Maximization step in the EM algorithm. Note that distributuions of exponential
+ * the Maximization step in the EM algorithm. Note that distributions of exponential
  * family has the close-form solutions in the EM algorithm. With this interface,
  * we may allow the mixture contains distributions of different form as long as
  * it is from exponential family.

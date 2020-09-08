@@ -37,7 +37,7 @@ public class Puma8NH {
         try {
             data = Read.arff(Paths.getTestData("weka/regression/puma8NH.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toDoubleArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'puma8NH': " + ex);

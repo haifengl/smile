@@ -25,6 +25,8 @@ import smile.math.MathEx;
 
 /**
  * The neuron vertex in the growing neural gas network.
+ *
+ * @author Haifeng Li
  */
 public class Neuron implements Comparable<Neuron>, Serializable {
     private static final long serialVersionUID = 2L;

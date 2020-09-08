@@ -39,12 +39,12 @@ import smile.util.Strings;
  * First-order linear conditional random field. A conditional random field is a
  * type of discriminative undirected probabilistic graphical model. It is most
  * often used for labeling or parsing of sequential data.
- *
+ * <p>
  * A CRF is a Markov random field that was trained discriminatively.
  * Therefore it is not necessary to model the distribution over always
  * observed variables, which makes it possible to include arbitrarily
  * complicated features of the observed variables into the model.
- *
+ * <p>
  * This class implements an algorithm that trains CRFs via gradient
  * tree boosting. In tree boosting, the CRF potential functions
  * are represented as weighted sums of regression trees, which provide

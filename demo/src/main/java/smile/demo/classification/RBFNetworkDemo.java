@@ -25,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import smile.base.rbf.RBF;
 import smile.classification.RBFNetwork;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -46,7 +47,7 @@ public class RBFNetworkDemo extends ClassificationDemo {
 
     @Override
     public double[][] learn(double[] x, double[] y) {
-        double[][] data = formula.x(dataset[datasetIndex]).toArray();
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.ONE_HOT);
         int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
         try {

@@ -23,6 +23,7 @@ import java.awt.event.ActionListener;
 import javax.swing.*;
 
 import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.io.Read;
 import smile.plot.swing.Palette;
@@ -133,7 +134,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
             try {
                 CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ').withIgnoreSurroundingSpaces(true);
                 DataFrame dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"), format);
-                data = dataset.toArray();
+                data = dataset.toArray(false, CategoricalEncoder.ONE_HOT);
 
                 dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
                 labels = dataset.column(0).toIntArray();

@@ -32,6 +32,8 @@ import smile.math.kernel.MercerKernel;
  * choose which example should be considered next.
  * LASVM requires considerably less memory than a regular SVM solver.
  * This becomes a considerable speed advantage for large training sets.
+ *
+ * @author Haifeng Li
  */
 public class LASVM<T> implements Serializable {
     private static final long serialVersionUID = 2L;

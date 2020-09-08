@@ -26,7 +26,7 @@ import java.time.LocalDateTime;
 import smile.data.DataFrame;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.util.Paths;
 
 import static org.junit.Assert.*;
@@ -162,7 +162,7 @@ public class ParquetTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("id", "salary").toMatrix();
+        Matrix output = df.select("id", "salary").toMatrix();
         System.out.println(output);
         assertEquals(1000, output.nrows());
         assertEquals(2, output.ncols());

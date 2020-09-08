@@ -25,26 +25,26 @@ import java.util.Arrays;
  * be a set of <code>n</code> binary attributes called items. Let
  * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
  * be a set of transactions called the database. Each transaction in
- * <code>D</code> has a unique transaction ID and contains a subset
+ * <code>D</code> has an unique transaction ID and contains a subset
  * of the items in <code>I</code>. An association rule is defined
  * as an implication of the form <code>X &rArr; Y</code>
  * where <code>X, Y &sube; I</code> and <code>X &cap; Y = &Oslash;</code>.
  * The item sets <code>X</code> and <code>Y</code> are called
  * antecedent (left-hand-side or LHS) and consequent (right-hand-side or RHS)
  * of the rule, respectively.
- *
+ * <p>
  * The support <code>supp(X)</code> of an item
  * set <code>X</code> is defined as the proportion of transactions
  * in the database which contain the item set. Note that the support of
  * an association rule <code>X &rArr; Y</code> is <code>supp(X &cup; Y)</code>.
- *
+ * <p>
  * The confidence of a rule is defined as
  * <code>conf(X &rArr; Y) = supp(X &cup; Y) / supp(X)</code>.
  * Confidence can be interpreted as an estimate of the probability
  * <code>P(Y | X)</code>, the probability of finding the RHS of the rule
  * in transactions under the condition that these transactions also contain
  * the LHS.
- * 
+ * <p>
  * Lift is a measure of the performance of a targeting model
  * (association rule) at predicting or classifying cases as having
  * an enhanced response (with respect to the population as a whole),

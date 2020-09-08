@@ -47,7 +47,7 @@ public class PenDigits {
 
         try {
             data = Read.csv(Paths.getTestData("classification/pendigits.txt"), CSVFormat.DEFAULT.withDelimiter('\t'), schema);
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'pendigitis': " + ex);

@@ -17,6 +17,10 @@
 
 package smile.graph;
 
+import java.util.Arrays;
+import smile.math.MathEx;
+import smile.math.matrix.Matrix;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -24,10 +28,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.MathEx;
-import smile.math.matrix.Matrix;
-
-import java.util.Arrays;
 
 /**
  *
@@ -315,14 +315,12 @@ public class AdjacencyMatrixTest {
 
         assertEquals(2, g8.getOutdegree(4));
     }
-    /**
-     * Test of toSparseMatrix method, of class AdjacencyList.
-     */
+
     @Test
     public void testToMatrix() {
         System.out.println("toMatrix digraph = false");
 
-        AdjacencyList graph = new AdjacencyList(8, false);
+        AdjacencyMatrix graph = new AdjacencyMatrix(8, false);
         graph.addEdge(0, 2);
         graph.addEdge(1, 7);
         graph.addEdge(2, 6);
@@ -358,14 +356,11 @@ public class AdjacencyMatrixTest {
         assertEquals(1.0, matrix.get(4, 5), 1E-10);
     }
 
-    /**
-     * Test of toSparseMatrix method, of class AdjacencyList.
-     */
     @Test
     public void testToMatrixDigraph() {
         System.out.println("toMatrix digraph = true");
 
-        AdjacencyList graph = new AdjacencyList(8, true);
+        AdjacencyMatrix graph = new AdjacencyMatrix(8, true);
         graph.addEdge(0, 2);
         graph.addEdge(1, 7);
         graph.addEdge(2, 6);

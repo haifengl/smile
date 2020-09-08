@@ -65,6 +65,7 @@ import javax.swing.text.Position;
  * The <code>FontChooser</code> class is a swing component 
  * for font selection with <code>JFileChooser</code>-like APIs.
  * The following code pops up a font chooser dialog.
+ * <p>
  * <pre>
  * {@code
  *   FontChooser fontChooser = FontChooser.getInstance();
@@ -74,6 +75,8 @@ import javax.swing.text.Position;
  *   }
  * }
  * </pre>
+ *
+ * @author Haifeng Li
  */
 @SuppressWarnings("serial")
 public class FontChooser extends JComponent {

@@ -2,7 +2,11 @@ package smile.neighbor.lsh;
 
 import java.util.List;
 
-/** Training sample for MPLSH. */
+/**
+ * Training sample for MPLSH.
+ *
+ * @author Haifeng Li
+ */
 public class MultiProbeSample {
     /**
      * The query object.

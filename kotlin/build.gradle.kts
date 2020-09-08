@@ -10,13 +10,13 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.3.70" 
+    kotlin("jvm") version "1.3.72" 
     id("org.jetbrains.dokka") version "0.10.1"
     signing
 }
 
 group = "com.github.haifengl"
-version = "2.4.0"
+version = "2.5.2"
 
 repositories {
     mavenCentral()
@@ -26,9 +26,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    implementation("com.github.haifengl:smile-core:2.4.0")
-    implementation("com.github.haifengl:smile-nlp:2.4.0")
-    implementation("com.github.haifengl:smile-io:2.4.0")
+    api("com.github.haifengl:smile-core:2.5.2")
+    api("com.github.haifengl:smile-nlp:2.5.2")
+    api("com.github.haifengl:smile-io:2.5.2")
 }
 
 // Copy jar to shell lib
@@ -46,7 +46,7 @@ tasks.build {
 tasks {
     val dokka by getting(DokkaTask::class) {
         outputFormat = "html"
-        outputDirectory = "../docs/2.0/api/kotlin"
+        outputDirectory = "../doc/api/kotlin"
         configuration {
             includes = listOf("packages.md")
             externalDocumentationLink {

@@ -21,8 +21,12 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
- * where &sigma; &gt; 0 is the scale parameter of the kernel.
+ * The Gaussian Kernel on sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
+ * </pre>
+ * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
  * <p>
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being over used.

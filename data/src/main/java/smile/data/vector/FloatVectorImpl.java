@@ -17,13 +17,11 @@
 
 package smile.data.vector;
 
-import smile.data.measure.DiscreteMeasure;
-import smile.data.measure.Measure;
-import smile.data.type.StructField;
-
-import java.util.Optional;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
+import smile.data.measure.CategoricalMeasure;
+import smile.data.measure.Measure;
+import smile.data.type.StructField;
 
 /**
  * An immutable float vector.
@@ -47,7 +45,7 @@ class FloatVectorImpl implements FloatVector {
 
     /** Constructor. */
     public FloatVectorImpl(StructField field, float[] vector) {
-        if (field.measure instanceof DiscreteMeasure) {
+        if (field.measure instanceof CategoricalMeasure) {
             throw new IllegalArgumentException(String.format("Invalid measure %s for %s", field.measure, type()));
         }
 
@@ -62,8 +60,8 @@ class FloatVectorImpl implements FloatVector {
     }
 
     @Override
-    public Optional<Measure> measure() {
-        return Optional.ofNullable(measure);
+    public Measure measure() {
+        return measure;
     }
 
     @Override
@@ -91,7 +89,7 @@ class FloatVectorImpl implements FloatVector {
     public FloatVector get(int... index) {
         float[] v = new float[index.length];
         for (int i = 0; i < index.length; i++) v[i] = vector[index[i]];
-        return new FloatVectorImpl(name, v);
+        return new FloatVectorImpl(field(), v);
     }
 
     @Override

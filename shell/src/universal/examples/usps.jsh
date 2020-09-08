@@ -86,7 +86,7 @@ var net = new MLP(256,
   Layer.sigmoid(192),
   Layer.sigmoid(30),
   Layer.mle(k, OutputFunction.SIGMOID)
-)
+);
 net.setLearningRate(0.1);
 net.setMomentum(0.0);
 

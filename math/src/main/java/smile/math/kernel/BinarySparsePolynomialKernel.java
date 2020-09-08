@@ -18,7 +18,11 @@
 package smile.math.kernel;
 
 /**
- * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,
+ * The polynomial kernel on binary sparse data.
+ * <p>
+ * <pre>
+ *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
+ * </pre>
  * where &gamma; is the scale of the used inner product, &lambda; the offset of
  * the used inner product, and <i>d</i> the order of the polynomial kernel.
  * The kernel works on sparse binary array as int[], which are the indices of

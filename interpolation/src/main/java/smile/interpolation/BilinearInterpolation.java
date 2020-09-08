@@ -18,10 +18,11 @@
 package smile.interpolation;
 
 /**
- * Bilinear interpolation in a two-dimensional regular grid. Bilinear interpolation is an extension
- * of linear interpolation for interpolating functions of two variables on a
- * regular grid. The key idea is to perform linear interpolation first in one
- * direction, and then again in the other direction.
+ * Bilinear interpolation in a two-dimensional regular grid. Bilinear
+ * interpolation is an extension of linear interpolation for interpolating
+ * functions of two variables on a regular grid. The key idea is to perform
+ * linear interpolation first in one direction, and then again in the other
+ * direction.
  *
  * @author Haifeng Li
  */
@@ -34,6 +35,14 @@ public class BilinearInterpolation implements Interpolation2D {
      * Constructor.
      */
     public BilinearInterpolation(double[] x1, double[] x2, double[][] y) {
+        if (x1.length != y.length) {
+            throw new IllegalArgumentException("x1.length != y.length");
+        }
+
+        if (x2.length != y[0].length) {
+            throw new IllegalArgumentException("x2.length != y[0].length");
+        }
+
         this.y = y;
         x1terp = new LinearInterpolation(x1, x1);
         x2terp = new LinearInterpolation(x2, x2);

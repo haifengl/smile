@@ -30,7 +30,7 @@ object Benchmark {
       case "airline" => Airline.benchmark
       case "airline-100k" => Airline.benchmark("0.1m")
       case "airline-1m" => Airline.benchmark("1m")
-      case "usps" => USPS.benchmark
+      case "usps" => USPS.benchmark()
       case test => println(
         s"""
            |Unknown benchmark $test

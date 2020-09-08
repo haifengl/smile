@@ -42,7 +42,7 @@ public class Lanczos {
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
      */
-    public static EVD eigen(Matrix A, int k) {
+    public static Matrix.EVD eigen(DMatrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrows());
     }
 
@@ -56,13 +56,9 @@ public class Lanczos {
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
      */
-    public static EVD eigen(Matrix A, int k, double kappa, int maxIter) {
+    public static Matrix.EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
-        }
-
-        if (!A.isSymmetric()) {
-            throw new IllegalArgumentException("Matrix is not symmetric.");
         }
 
         if (k < 1 || k > A.nrows()) {
@@ -115,7 +111,7 @@ public class Lanczos {
         // arrays used in the QL decomposition
         double[] ritz = new double[n + 1];
         // eigenvectors calculated in the QL decomposition
-        DenseMatrix z = null;
+        Matrix z = null;
 
         // First step of the Lanczos algorithm. It also does a step of extended
         // local re-orthogonalization.
@@ -128,7 +124,7 @@ public class Lanczos {
         MathEx.scale(t, wptr[3]);
 
         // take the first step
-        A.ax(wptr[3], wptr[0]);
+        A.mv(wptr[3], wptr[0]);
         alf[0] = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-alf[0], wptr[1], wptr[0]);
         t = MathEx.dot(wptr[0], wptr[3]);
@@ -203,7 +199,7 @@ public class Lanczos {
                 t = 1.0 / rnm;
                 MathEx.scale(t, wptr[0], wptr[1]);
                 MathEx.scale(t, wptr[3]);
-                A.ax(wptr[3], wptr[0]);
+                A.mv(wptr[3], wptr[0]);
                 MathEx.axpy(-rnm, wptr[2], wptr[0]);
                 alf[j] = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-alf[j], wptr[1], wptr[0]);
@@ -257,14 +253,14 @@ public class Lanczos {
             System.arraycopy(alf, 0, ritz, 0, j + 1);
             System.arraycopy(bet, 0, wptr[5], 0, j + 1);
 
-            z = Matrix.zeros(j + 1, j + 1);
+            z = new Matrix(j + 1, j + 1);
             for (int i = 0; i <= j; i++) {
                 z.set(i, i, 1.0);
             }
 
             // compute the eigenvalues and eigenvectors of the
             // tridiagonal matrix
-            JMatrix.tql2(z, ritz, wptr[5]);
+            tql2(z, ritz, wptr[5]);
 
             for (int i = 0; i <= j; i++) {
                 bnd[i] = rnm * Math.abs(z.get(j, i));
@@ -297,7 +293,7 @@ public class Lanczos {
         k = Math.min(k, neig);
 
         double[] eigenvalues = new double[k];
-        DenseMatrix eigenvectors = Matrix.zeros(n, k);
+        Matrix eigenvectors = new Matrix(n, k);
         for (int i = 0, index = 0; i <= j && index < k; i++) {
             if (bnd[i] <= kappa * Math.abs(ritz[i])) {
                 for (int row = 0; row < n; row++) {
@@ -309,7 +305,7 @@ public class Lanczos {
             }
         }
 
-        return new EVD(eigenvectors, eigenvalues);
+        return new Matrix.EVD(eigenvalues, eigenvectors);
     }
 
     /**
@@ -318,7 +314,7 @@ public class Lanczos {
      * of operator can be found.
      * @param step   starting index for a Lanczos run
      */
-    private static double startv(Matrix A, double[][] q, double[][] wptr, int step) {
+    private static double startv(DMatrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
@@ -331,7 +327,7 @@ public class Lanczos {
             MathEx.copy(wptr[0], wptr[3]);
 
             // apply operator to put r in range (essential if m singular)
-            A.ax(wptr[3], wptr[0]);
+            A.mv(wptr[3], wptr[0]);
             MathEx.copy(wptr[0], wptr[3]);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
@@ -566,6 +562,130 @@ public class Lanczos {
             q[j] = s.clone();
         } else {
             MathEx.copy(s, q[j]);
+        }
+    }
+
+    /**
+     * Tridiagonal QL Implicit routine for computing eigenvalues and eigenvectors of a symmetric,
+     * real, tridiagonal matrix.
+     *
+     * The routine works extremely well in practice. The number of iterations for the first few
+     * eigenvalues might be 4 or 5, say, but meanwhile the off-diagonal elements in the lower right-hand
+     * corner have been reduced too. The later eigenvalues are liberated with very little work. The
+     * average number of iterations per eigenvalue is typically 1.3 - 1.6. The operation count per
+     * iteration is O(n), with a fairly large effective coefficient, say, ~20n. The total operation count
+     * for the diagonalization is then ~20n * (1.3 - 1.6)n = ~30n^2. If the eigenvectors are required,
+     * there is an additional, much larger, workload of about 3n^3 operations.
+     *
+     * @param V on input, it contains the identity matrix. On output, the kth column
+     * of V returns the normalized eigenvector corresponding to d[k].
+     * @param d on input, it contains the diagonal elements of the tridiagonal matrix.
+     * On output, it contains the eigenvalues.
+     * @param e on input, it contains the subdiagonal elements of the tridiagonal
+     * matrix, with e[0] arbitrary. On output, its contents are destroyed.
+     */
+    private static void tql2(Matrix V, double[] d, double[] e) {
+        int n = V.nrows();
+        for (int i = 1; i < n; i++) {
+            e[i - 1] = e[i];
+        }
+        e[n - 1] = 0.0;
+
+        double f = 0.0;
+        double tst1 = 0.0;
+        for (int l = 0; l < n; l++) {
+            // Find small subdiagonal element
+            tst1 = Math.max(tst1, Math.abs(d[l]) + Math.abs(e[l]));
+            int m = l;
+            for (; m < n; m++) {
+                if (Math.abs(e[m]) <= MathEx.EPSILON * tst1) {
+                    break;
+                }
+            }
+
+            // If m == l, d[l] is an eigenvalue,
+            // otherwise, iterate.
+            if (m > l) {
+                int iter = 0;
+                do {
+                    if (++iter >= 30) {
+                        throw new RuntimeException("Too many iterations");
+                    }
+
+                    // Compute implicit shift
+                    double g = d[l];
+                    double p = (d[l + 1] - g) / (2.0 * e[l]);
+                    double r = Math.hypot(p, 1.0);
+                    if (p < 0) {
+                        r = -r;
+                    }
+                    d[l] = e[l] / (p + r);
+                    d[l + 1] = e[l] * (p + r);
+                    double dl1 = d[l + 1];
+                    double h = g - d[l];
+                    for (int i = l + 2; i < n; i++) {
+                        d[i] -= h;
+                    }
+                    f = f + h;
+
+                    // Implicit QL transformation.
+                    p = d[m];
+                    double c = 1.0;
+                    double c2 = c;
+                    double c3 = c;
+                    double el1 = e[l + 1];
+                    double s = 0.0;
+                    double s2 = 0.0;
+                    for (int i = m - 1; i >= l; i--) {
+                        c3 = c2;
+                        c2 = c;
+                        s2 = s;
+                        g = c * e[i];
+                        h = c * p;
+                        r = Math.hypot(p, e[i]);
+                        e[i + 1] = s * r;
+                        s = e[i] / r;
+                        c = p / r;
+                        p = c * d[i] - s * g;
+                        d[i + 1] = h + s * (c * g + s * d[i]);
+
+                        // Accumulate transformation.
+                        for (int k = 0; k < n; k++) {
+                            h = V.get(k, i + 1);
+                            V.set(k, i + 1, s * V.get(k, i) + c * h);
+                            V.set(k, i,     c * V.get(k, i) - s * h);
+                        }
+                    }
+                    p = -s * s2 * c3 * el1 * e[l] / dl1;
+                    e[l] = s * p;
+                    d[l] = c * p;
+
+                    // Check for convergence.
+                } while (Math.abs(e[l]) > MathEx.EPSILON * tst1);
+            }
+            d[l] = d[l] + f;
+            e[l] = 0.0;
+        }
+
+        // Sort eigenvalues and corresponding vectors.
+        for (int i = 0; i < n - 1; i++) {
+            int k = i;
+            double p = d[i];
+            for (int j = i + 1; j < n; j++) {
+                if (d[j] > p) {
+                    k = j;
+                    p = d[j];
+                }
+            }
+            if (k != i) {
+                d[k] = d[i];
+                d[i] = p;
+                for (int j = 0; j < n; j++) {
+                    p = V.get(j, i);
+                    V.set(j, i, V.get(j, k));
+                    V.set(j, k, p);
+                }
+            }
         }
     }
 }

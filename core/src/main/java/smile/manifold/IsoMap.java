@@ -21,11 +21,11 @@ import java.io.Serializable;
 import smile.graph.AdjacencyList;
 import smile.graph.Graph.Edge;
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
+import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -175,7 +175,7 @@ public class IsoMap implements Serializable {
         double[] mean = MathEx.rowMeans(D);
         double mu = MathEx.mean(mean);
 
-        DenseMatrix B = Matrix.zeros(n, n);
+        Matrix B = new Matrix(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double b = D[i][j] - mean[i] - mean[j] + mu;
@@ -184,23 +184,22 @@ public class IsoMap implements Serializable {
             }
         }
 
-        B.setSymmetric(true);
+        B.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
-        EVD eigen = B.eigen(d);
-
-        if (eigen.getEigenValues().length < d) {
-            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.getEigenValues().length);
-            d = eigen.getEigenValues().length;
+        if (eigen.wr.length < d) {
+            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);
+            d = eigen.wr.length;
         }
 
-        DenseMatrix V = eigen.getEigenVectors();
+        Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
-            if (eigen.getEigenValues()[j] < 0) {
+            if (eigen.wr[j] < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
             }
 
-            double scale = Math.sqrt(eigen.getEigenValues()[j]);
+            double scale = Math.sqrt(eigen.wr[j]);
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, j) * scale;
             }

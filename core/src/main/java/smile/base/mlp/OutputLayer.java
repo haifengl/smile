@@ -19,6 +19,8 @@ package smile.base.mlp;
 
 /**
  * The output layer in the neural network.
+ *
+ * @author Haifeng Li
  */
 public class OutputLayer extends Layer {
     private static final long serialVersionUID = 2L;
@@ -75,7 +77,7 @@ public class OutputLayer extends Layer {
 
     @Override
     public void backpropagate(double[] error) {
-        weight.atx(gradient, error);
+        weight.tv(gradient, error);
     }
 
     /**

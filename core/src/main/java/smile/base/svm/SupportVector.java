@@ -21,6 +21,8 @@ import java.io.Serializable;
 
 /**
  * Support vector.
+ *
+ * @author Haifeng Li
  */
 public class SupportVector<T> implements Serializable {
     private static final long serialVersionUID = 2L;

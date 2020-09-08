@@ -95,7 +95,7 @@ object Airline {
       new StructField("dep_delayed_15min", DataTypes.ByteType, new NominalScale("N", "Y"))
     )
 
-    val formula: Formula = "dep_delayed_15min" ~
+    val formula: Formula = "dep_delayed_15min" ~ "."
     val train = read.csv(Paths.getTestData(s"airline/train-${dataSize}.csv").toString, schema = schema)
     val test = read.csv(Paths.getTestData("airline/test.csv").toString, schema = schema)
     val testy = formula.y(test).toIntArray

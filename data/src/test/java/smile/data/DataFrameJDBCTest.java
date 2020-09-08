@@ -27,13 +27,9 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.ArrayList;
-import smile.data.type.DataType;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
-import smile.math.matrix.DenseMatrix;
+import smile.math.matrix.Matrix;
 import smile.util.Paths;
 import static org.junit.Assert.*;
 
@@ -168,7 +164,7 @@ public class DataFrameJDBCTest {
     @Test
     public void testDataFrameToMatrix() {
         System.out.println("toMatrix");
-        DenseMatrix output = df.select("Total").toMatrix();
+        Matrix output = df.select("Total").toMatrix(false, CategoricalEncoder.LEVEL, null);
         System.out.println(output);
         assertEquals(412, output.nrows());
         assertEquals(1, output.ncols());

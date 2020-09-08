@@ -37,7 +37,7 @@ public class Weather {
         try {
             data = Read.arff(Paths.getTestData("weka/weather.arff"));
 
-            x = formula.x(data).toArray();
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
             y = formula.y(data).toIntArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'weather': " + ex);

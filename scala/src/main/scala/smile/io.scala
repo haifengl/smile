@@ -249,7 +249,7 @@ object read {
     val vertices = new ArrayBuffer[Array[Double]]
     val edges = new ArrayBuffer[Array[Int]]
 
-    Source.fromFile(file.toFile).getLines foreach { line =>
+    Source.fromFile(file.toFile).getLines() foreach { line =>
       val tokens = line.split("\\s+")
 
       if (tokens.size > 1) {

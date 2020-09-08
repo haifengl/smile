@@ -22,7 +22,7 @@ package smile.neighbor;
  * or closest point search, is an optimization problem for finding closest
  * points in metric spaces. The problem is: given a set S of points in a metric
  * space M and a query point q &isin; M, find the closest point in S to q.
- *
+ * <p>
  * In machine learning, we often build a nearest neighbor search data structure,
  * and then search with object in the same dataset. The object itsef is of course
  * the nearest one with distance 0. But this is meaningless and we therefore do

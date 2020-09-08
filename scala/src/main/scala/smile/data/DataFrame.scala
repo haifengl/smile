@@ -19,11 +19,13 @@ package smile.data
 
 import java.util.Optional
 import java.util.stream.IntStream
+
+import smile.data.measure.CategoricalMeasure
 import smile.json._
-import smile.data.measure.DiscreteMeasure
 
 /**
   * Pimped data frame with Scala style methods.
+ *
   * @param data a data frame.
   */
 case class DataFrameOps(data: DataFrame) {
@@ -107,7 +109,7 @@ case class TupleOps(t: Tuple) {
     val field = schema.field(i)
 
     val value =
-      if (field.measure != null && field.measure.isInstanceOf[measure.DiscreteMeasure])
+      if (field.measure != null && field.measure.isInstanceOf[CategoricalMeasure])
         if (t.isNullAt(i)) JsNull else JsString(t.getString(i))
       else
         t.get(i) match {
