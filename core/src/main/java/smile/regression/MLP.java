@@ -69,7 +69,7 @@ import smile.base.mlp.*;
     @Override
     public void update(double[] x, double y) {
         propagate(x);
-        target[0] = y;
+        target.get()[0] = y;
         backpropagate(x);
         update();
     }
@@ -80,6 +80,7 @@ import smile.base.mlp.*;
         double a = alpha;
         alpha = 1.0;
 
+        double[] target = this.target.get();
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             target[0] = y[i];
