@@ -223,9 +223,9 @@ public class SOM implements VectorQuantizer {
         int j = bmu.j;
 
         int d = bmu.w.length;
-        double rate = alpha.of(t);
+        double alpha = this.alpha.apply(t);
         Arrays.stream(neurons).parallel().forEach(neuron -> {
-            double delta = rate * theta.of(neuron.i - i, neuron.j - j, t);
+            double delta = alpha * theta.of(neuron.i - i, neuron.j - j, t);
             if (delta > eps) {
                 double[] w = neuron.w;
                 for (int k = 0; k < d; k++) {
