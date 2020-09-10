@@ -216,6 +216,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
         double f = 1.0 - t;
 
+        double[] target = this.target.get();
         if (n == 1) {
             target[0] = y == 1 ? t : f;
         } else {
