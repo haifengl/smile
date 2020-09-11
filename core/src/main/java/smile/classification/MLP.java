@@ -188,25 +188,21 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     public void update(double[] x, int y) {
         propagate(x);
         setTarget(labels.indexOf(y));
-        backpropagate(x);
-        update();
+        backpropagate(x, eta);
+        //update(1);
     }
 
     /** Mini-batch. */
     @Override
     public void update(double[][] x, int[] y) {
-        // Set momentum factor to 1.0 so that mini-batch is in play.
-        double a = alpha;
-        alpha = 1.0;
-
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             setTarget(labels.indexOf(y[i]));
-            backpropagate(x[i]);
+            backpropagate(x[i], 0.0);
         }
 
-        update();
-        alpha = a;
+        //update(x.length);
+        update(1);
     }
 
     /** Sets the target vector. */

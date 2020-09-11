@@ -50,13 +50,13 @@ public class HiddenLayer extends Layer {
     }
 
     @Override
-    public void backpropagate(double[] error) {
+    public void backpropagate(double[] lowerLayerGradient) {
         double[] output = this.output.get();
-        double[] gradient = this.gradient.get();
+        double[] outputGradient = this.outputGradient.get();
 
-        f.g(gradient, output);
-        if (error != null) {
-            weight.tv(gradient, error);
+        f.g(outputGradient, output);
+        if (lowerLayerGradient != null) {
+            weight.tv(outputGradient, lowerLayerGradient);
         }
     }
 }

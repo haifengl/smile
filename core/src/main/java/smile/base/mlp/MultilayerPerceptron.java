@@ -195,38 +195,41 @@ public abstract class MultilayerPerceptron implements Serializable {
     /**
      * Propagates the errors back through the network.
      */
-    protected void backpropagate(double[] x) {
-        output.computeError(target.get(), 1.0);
+    protected void backpropagate(double[] x, double eta) {
+        output.computeOutputGradient(target.get(), 1.0);
 
         Layer upper = output;
         for (int i = net.length - 1; i >= 0; i--) {
-            double[] error = net[i].gradient();
-            upper.backpropagate(error);
+            upper.backpropagate(net[i].gradient());
             upper = net[i];
         }
         // first hidden layer
         upper.backpropagate(null);
 
         for (Layer layer : net) {
-            layer.computeUpdate(eta, alpha, x);
+            layer.computeGradient(x, eta, alpha);
             x = layer.output();
         }
 
-        output.computeUpdate(eta, alpha, x);
+        output.computeGradient(x, eta, alpha);
     }
 
-    /** Updates the weights. */
-    protected void update() {
+    /**
+     * Updates the weights.
+     *
+     * @param m the mini-batch size.
+     */
+    protected void update(int m) {
         double decay = 1.0 - 2 * eta * lambda;
         if (decay < 0.9) {
             throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or decay (lambda = %.2f)", eta, lambda));
         }
 
         for (Layer layer : net) {
-            layer.update(alpha, decay);
+            layer.update(eta/m, alpha, decay);
         }
 
-        output.update(alpha, decay);
+        output.update(eta/m, alpha, decay);
     }
 }
 

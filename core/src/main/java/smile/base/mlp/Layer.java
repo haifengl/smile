@@ -22,7 +22,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.stat.distribution.GaussianDistribution;
 
 /**
  * A layer in the neural network.
@@ -52,31 +51,46 @@ public abstract class Layer implements Serializable {
      */
     protected transient ThreadLocal<double[]> output;
     /**
-     * The gradient vector.
+     * The output gradient.
      */
-    protected transient ThreadLocal<double[]> gradient;
+    protected transient ThreadLocal<double[]> outputGradient;
     /**
-     * The weight update of mini batch or momentum.
+     * The weight gradient.
      */
-    protected transient ThreadLocal<Matrix> update;
+    protected transient ThreadLocal<Matrix> weightGradient;
     /**
-     * The bias update of mini batch or momentum.
+     * The bias gradient.
      */
-    protected transient ThreadLocal<double[]> updateBias;
+    protected transient ThreadLocal<double[]> biasGradient;
+    /**
+     * The weight update.
+     */
+    protected transient ThreadLocal<Matrix> weightUpdate;
+    /**
+     * The bias update.
+     */
+    protected transient ThreadLocal<double[]> biasUpdate;
 
     /**
-     * Constructor.
+     * Constructor. Randomly initialized weights and zero bias.
+     *
      * @param n the number of neurons.
      * @param p the number of input variables (not including bias value).
      */
     public Layer(int n, int p) {
-        this.n = n;
-        this.p = p;
+        this(Matrix.rand(n, p, -Math.sqrt(6.0 / (n+p)), Math.sqrt(6.0 / (n+p))), new double[n]);
+    }
 
-        // Initialize random weights.
-        double r = Math.sqrt(2.0 / p);
-        weight = Matrix.rand(n, p, new GaussianDistribution(0.0, r));
-        bias = new double[n];
+    /**
+     * Constructor.
+     * @param weight the weight matrix.
+     * @param bias the bias vector.
+     */
+    public Layer(Matrix weight, double[] bias) {
+        this.n = weight.nrows();
+        this.p = weight.ncols();
+        this.weight = weight;
+        this.bias = bias;
 
         init();
     }
@@ -98,18 +112,27 @@ public abstract class Layer implements Serializable {
                 return new double[n];
             }
         };
-        gradient = new ThreadLocal<double[]>() {
+        outputGradient = new ThreadLocal<double[]>() {
             protected synchronized double[] initialValue() {
                 return new double[n];
             }
         };
-
-        update = new ThreadLocal<Matrix>() {
+        weightGradient = new ThreadLocal<Matrix>() {
             protected synchronized Matrix initialValue() {
                 return new Matrix(n, p);
             }
         };
-        updateBias = new ThreadLocal<double[]>() {
+        biasGradient = new ThreadLocal<double[]>() {
+            protected synchronized double[] initialValue() {
+                return new double[n];
+            }
+        };
+        weightUpdate = new ThreadLocal<Matrix>() {
+            protected synchronized Matrix initialValue() {
+                return new Matrix(n, p);
+            }
+        };
+        biasUpdate = new ThreadLocal<double[]>() {
             protected synchronized double[] initialValue() {
                 return new double[n];
             }
@@ -131,9 +154,9 @@ public abstract class Layer implements Serializable {
         return output.get();
     }
 
-    /** Returns the error/gradient vector. */
+    /** Returns the output gradient vector. */
     public double[] gradient() {
-        return gradient.get();
+        return outputGradient.get();
     }
 
     /**
@@ -155,49 +178,79 @@ public abstract class Layer implements Serializable {
 
     /**
      * Propagates the errors back to a lower layer.
-     * @param error the gradient vector of lower layer.
+     * @param lowerLayerGradient the gradient vector of lower layer.
      */
-    public abstract void backpropagate(double[] error);
+    public abstract void backpropagate(double[] lowerLayerGradient);
 
     /**
-     * Computes the updates of weight.
+     * Computes the parameter gradient.
      *
-     * @param eta the learning rate.
-     * @param alpha the momentum factor
      * @param x the input vector.
+     * @param eta the learning rate. For mini-batch, the learning rate
+     *            should be 0 so that only gradient is calculated.
+     *            Otherwise, the weights are updated directly.
+     * @param alpha the momentum factor.
      */
-    public void computeUpdate(double eta, double alpha, double[] x) {
-        double[] gradient = this.gradient.get();
-        Matrix update = this.update.get();
-        double[] updateBias = this.updateBias.get();
+    public void computeGradient(double[] x, double eta, double alpha) {
+        double[] outputGradient = this.outputGradient.get();
 
-        for (int j = 0; j < p; j++) {
-            double xj = x[j];
-            for (int i = 0; i < n; i++) {
-                double dw = eta * gradient[i] * xj;
-                if (alpha > 0.0) dw += alpha * update.get(i, j);
-                update.set(i, j, dw);
+        if (eta > 0.0) {
+            if (alpha > 0.0) {
+                Matrix weightUpdate = this.weightUpdate.get();
+                double[] biasUpdate = this.biasUpdate.get();
+
+                weightUpdate.mul(alpha);
+                weightUpdate.add(eta, outputGradient, x);
+                weight.add(1.0, weightUpdate);
+                for (int i = 0; i < n; i++) {
+                    double b = alpha * biasUpdate[i] + eta * outputGradient[i];
+                    biasUpdate[i] = b;
+                    bias[i] += b;
+                }
+            } else {
+                weight.add(eta, outputGradient, x);
+                for (int i = 0; i < n; i++) {
+                    bias[i] += eta * outputGradient[i];
+                }
             }
-        }
+        } else {
+            Matrix weightGradient = this.weightGradient.get();
+            double[] biasGradient = this.biasGradient.get();
 
-        for (int i = 0; i < n; i++) {
-            double db = eta * gradient[i];
-            if (alpha > 0.0) db += alpha * updateBias[i];
-            updateBias[i] = db;
+            weightGradient.add(1.0, outputGradient, x);
+            for (int i = 0; i < n; i++) {
+                biasGradient[i] += outputGradient[i];
+            }
         }
     }
 
     /**
      * Adjust network weights by back-propagation algorithm.
+     * @param eta the learning rate.
      * @param alpha the momentum factor
      * @param lambda weight decay factor
      */
-    public void update(double alpha, double lambda) {
-        Matrix update = this.update.get();
-        double[] updateBias = this.updateBias.get();
+    public void update(double eta, double alpha, double lambda) {
+        Matrix weightGradient = this.weightGradient.get();
+        double[] biasGradient = this.biasGradient.get();
 
-        weight.add(1.0, update);
-        MathEx.add(bias, updateBias);
+        if (alpha > 0.0) {
+            Matrix weightUpdate = this.weightUpdate.get();
+            double[] biasUpdate = this.biasUpdate.get();
+
+            weightUpdate.add(alpha, eta, weightGradient);
+            for (int i = 0; i < n; i++) {
+                biasUpdate[i] = alpha * biasUpdate[i] + eta * biasGradient[i];
+            }
+
+            weight.add(1.0, weightUpdate);
+            MathEx.add(bias, biasUpdate);
+        } else {
+            weight.add(eta, weightGradient);
+            for (int i = 0; i < n; i++) {
+                bias[i] += eta * biasGradient[i];
+            }
+        }
 
         // Weight decay as the weights are multiplied
         // by a factor slightly less than 1. This prevents the weights
@@ -207,11 +260,8 @@ public abstract class Layer implements Serializable {
             weight.mul(lambda);
         }
 
-        // Clear update matrix after the mini-batch
-        if (alpha == 1.0) {
-            update.fill(0.0);
-            Arrays.fill(updateBias, 0.0);
-        }
+        weightGradient.fill(0.0);
+        Arrays.fill(biasGradient, 0.0);
     }
 
     /**

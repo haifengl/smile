@@ -90,7 +90,7 @@ public class MLPTest {
 
         int error = Error.of(PenDigits.y, prediction);
         System.out.println("Error = " + error);
-        assertEquals(137, error);
+        assertEquals(125, error);
     }
 
     @Test
@@ -160,7 +160,7 @@ public class MLPTest {
             error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
-        assertEquals(36, error);
+        assertEquals(34, error);
 
         System.out.format("----- Mini-Batch Learning -----%n");
         model = new MLP(p,
@@ -233,7 +233,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(147, error);
+        assertEquals(145, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
