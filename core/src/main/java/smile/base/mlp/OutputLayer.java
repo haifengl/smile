@@ -76,18 +76,18 @@ public class OutputLayer extends Layer {
     }
 
     @Override
-    public void backpropagate(double[] error) {
-        weight.tv(gradient.get(), error);
+    public void backpropagate(double[] lowerLayerGradient) {
+        weight.tv(outputGradient.get(), lowerLayerGradient);
     }
 
     /**
-     * Compute the network output error.
+     * Compute the network output gradient.
      * @param target the desired output.
      * @param weight a positive weight value associated with the training instance.
      */
-    public void computeError(double[] target, double weight) {
+    public void computeOutputGradient(double[] target, double weight) {
         double[] output = this.output.get();
-        double[] gradient = this.gradient.get();
+        double[] outputGradient = this.outputGradient.get();
 
         int n = output.length;
         if (target.length != n) {
@@ -95,14 +95,14 @@ public class OutputLayer extends Layer {
         }
 
         for (int i = 0; i < n; i++) {
-            gradient[i] = target[i] - output[i];
+            outputGradient[i] = target[i] - output[i];
         }
 
-        f.g(cost, gradient, output);
+        f.g(cost, outputGradient, output);
 
         if (weight > 0.0 && weight != 1.0) {
             for (int i = 0; i < n; i++) {
-                gradient[i] *= weight;
+                outputGradient[i] *= weight;
             }
         }
     }
