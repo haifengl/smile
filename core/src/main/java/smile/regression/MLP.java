@@ -70,25 +70,21 @@ import smile.base.mlp.*;
     public void update(double[] x, double y) {
         propagate(x);
         target.get()[0] = y;
-        backpropagate(x, eta);
-        //update(1);
+        backpropagate(x, true);
+        t++;
     }
 
     @Override
     public void update(double[][] x, double[] y) {
-        // Set momentum factor to 1.0 so that mini-batch is in play.
-        double a = alpha;
-        alpha = 1.0;
-
         double[] target = this.target.get();
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             target[0] = y[i];
-            backpropagate(x[i], 0.0);
+            backpropagate(x[i], false);
         }
 
         update(x.length);
-        alpha = a;
+        t++;
     }
 }
 
