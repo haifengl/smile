@@ -184,6 +184,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         }
     }
 
+    /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, int y) {
         propagate(x);
@@ -192,7 +193,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         t++;
     }
 
-    /** Mini-batch. */
+    /** Updates the model with a mini-batch. RMSProp is applied if rho > 0. */
     @Override
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {
