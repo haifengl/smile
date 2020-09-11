@@ -183,72 +183,82 @@ public abstract class Layer implements Serializable {
     public abstract void backpropagate(double[] lowerLayerGradient);
 
     /**
-     * Computes the parameter gradient.
+     * Computes the parameter gradient and update the weights.
      *
      * @param x the input vector.
-     * @param eta the learning rate. For mini-batch, the learning rate
-     *            should be 0 so that only gradient is calculated.
-     *            Otherwise, the weights are updated directly.
-     * @param alpha the momentum factor.
+     * @param learningRate the learning rate.
+     * @param momentum the momentum factor
+     * @param decay weight decay factor
      */
-    public void computeGradient(double[] x, double eta, double alpha) {
+    public void computeGradientUpdate(double[] x, double learningRate, double momentum, double decay) {
         double[] outputGradient = this.outputGradient.get();
 
-        if (eta > 0.0) {
-            if (alpha > 0.0) {
-                Matrix weightUpdate = this.weightUpdate.get();
-                double[] biasUpdate = this.biasUpdate.get();
+        if (momentum > 0.0 && momentum < 1.0) {
+            Matrix weightUpdate = this.weightUpdate.get();
+            double[] biasUpdate = this.biasUpdate.get();
 
-                weightUpdate.mul(alpha);
-                weightUpdate.add(eta, outputGradient, x);
-                weight.add(1.0, weightUpdate);
-                for (int i = 0; i < n; i++) {
-                    double b = alpha * biasUpdate[i] + eta * outputGradient[i];
-                    biasUpdate[i] = b;
-                    bias[i] += b;
-                }
-            } else {
-                weight.add(eta, outputGradient, x);
-                for (int i = 0; i < n; i++) {
-                    bias[i] += eta * outputGradient[i];
-                }
+            weightUpdate.mul(momentum);
+            weightUpdate.add(learningRate, outputGradient, x);
+            weight.add(1.0, weightUpdate);
+
+            for (int i = 0; i < n; i++) {
+                double b = momentum * biasUpdate[i] + learningRate * outputGradient[i];
+                biasUpdate[i] = b;
+                bias[i] += b;
             }
         } else {
-            Matrix weightGradient = this.weightGradient.get();
-            double[] biasGradient = this.biasGradient.get();
-
-            weightGradient.add(1.0, outputGradient, x);
+            weight.add(learningRate, outputGradient, x);
             for (int i = 0; i < n; i++) {
-                biasGradient[i] += outputGradient[i];
+                bias[i] += learningRate * outputGradient[i];
             }
+        }
+
+        if (decay > 0.9 && decay < 1.0) {
+            weight.mul(decay);
+        }
+    }
+
+    /**
+     * Computes the parameter gradient for a sample of (mini-)batch.
+     *
+     * @param x the input vector.
+     */
+    public void computeGradient(double[] x) {
+        double[] outputGradient = this.outputGradient.get();
+        Matrix weightGradient = this.weightGradient.get();
+        double[] biasGradient = this.biasGradient.get();
+
+        weightGradient.add(1.0, outputGradient, x);
+        for (int i = 0; i < n; i++) {
+            biasGradient[i] += outputGradient[i];
         }
     }
 
     /**
      * Adjust network weights by back-propagation algorithm.
-     * @param eta the learning rate.
-     * @param alpha the momentum factor
-     * @param lambda weight decay factor
+     * @param learningRate the learning rate.
+     * @param momentum the momentum factor
+     * @param decay weight decay factor
      */
-    public void update(double eta, double alpha, double lambda) {
+    public void update(double learningRate, double momentum, double decay) {
         Matrix weightGradient = this.weightGradient.get();
         double[] biasGradient = this.biasGradient.get();
 
-        if (alpha > 0.0) {
+        if (momentum > 0.0 && momentum < 1.0) {
             Matrix weightUpdate = this.weightUpdate.get();
             double[] biasUpdate = this.biasUpdate.get();
 
-            weightUpdate.add(alpha, eta, weightGradient);
+            weightUpdate.add(momentum, learningRate, weightGradient);
             for (int i = 0; i < n; i++) {
-                biasUpdate[i] = alpha * biasUpdate[i] + eta * biasGradient[i];
+                biasUpdate[i] = momentum * biasUpdate[i] + learningRate * biasGradient[i];
             }
 
             weight.add(1.0, weightUpdate);
             MathEx.add(bias, biasUpdate);
         } else {
-            weight.add(eta, weightGradient);
+            weight.add(learningRate, weightGradient);
             for (int i = 0; i < n; i++) {
-                bias[i] += eta * biasGradient[i];
+                bias[i] += learningRate * biasGradient[i];
             }
         }
 
@@ -256,8 +266,8 @@ public abstract class Layer implements Serializable {
         // by a factor slightly less than 1. This prevents the weights
         // from growing too large, and can be seen as gradient descent
         // on a quadratic regularization term.
-        if (lambda < 1.0) {
-            weight.mul(lambda);
+        if (decay > 0.9 && decay < 1.0) {
+            weight.mul(decay);
         }
 
         weightGradient.fill(0.0);

@@ -26,6 +26,7 @@ import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.*;
 import smile.feature.Standardizer;
+import smile.math.TimeFunction;
 import smile.validation.CrossValidation;
 import smile.math.MathEx;
 import smile.validation.RMSE;
@@ -61,7 +62,7 @@ public class MLPTest {
         int p = Longley.x[0].length;
         MLP model = new MLP(p, Layer.rectifier(30), Layer.sigmoid(30));
         // small learning rate and weight decay to counter exploding gradient
-        model.setLearningRate(0.01);
+        model.setLearningRate(TimeFunction.constant(0.01));
         model.setWeightDecay(0.1);
 
         for (int epoch = 0; epoch < 5; epoch++) {
@@ -87,7 +88,9 @@ public class MLPTest {
         double[] prediction = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(p, builders);
             // small learning rate and weight decay to counter exploding gradient
-            model.setLearningRate(0.01);
+            //model.setLearningRate(TimeFunction.constant(0.01));
+            //model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
+            model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
             model.setWeightDecay(0.1);
 
             for (int epoch = 0; epoch < 5; epoch++) {
@@ -107,13 +110,13 @@ public class MLPTest {
 
     @Test
     public void testReLUSigmoid() {
-        test("CPU", CPU.x, CPU.y, 131.9643, Layer.rectifier(30), Layer.sigmoid(30));
-        test("2dplanes", Planes.x, Planes.y, 1.7144, Layer.rectifier(50), Layer.sigmoid(30));
-        test("abalone", Abalone.x, Abalone.y, 2.5926, Layer.rectifier(40), Layer.sigmoid(30));
+        test("CPU", CPU.x, CPU.y, 138.4294, Layer.rectifier(30), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, 1.5177, Layer.rectifier(50), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, 2.5331, Layer.rectifier(40), Layer.sigmoid(30));
         test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
-        test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1244, Layer.rectifier(65), Layer.sigmoid(30));
-        test("cal_housing", CalHousing.x, CalHousing.y, 117863.6368, Layer.rectifier(40), Layer.sigmoid(30));
-        test("puma8nh", Puma8NH.x, Puma8NH.y, 4.1754, Layer.rectifier(40), Layer.sigmoid(30));
-        test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2674, Layer.rectifier(40), Layer.sigmoid(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1220, Layer.rectifier(65), Layer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 115675.2492, Layer.rectifier(40), Layer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 3.9613, Layer.rectifier(40), Layer.sigmoid(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2640, Layer.rectifier(40), Layer.sigmoid(30));
     }
 }
