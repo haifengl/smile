@@ -65,6 +65,14 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     protected TimeFunction momentum = TimeFunction.constant(0.0);
     /**
+     * The discounting factor for the history/coming gradient in RMSProp.
+     */
+    protected double rho = 0.9;
+    /**
+     * A small constant for numerical stability in RMSProp.
+     */
+    protected double epsilon = 1E-07;
+    /**
      * The L2 regularization factor, which is also the weight decay factor.
      */
     protected double lambda = 0.0;
@@ -142,6 +150,24 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     public void setMomentum(TimeFunction momentum) {
         this.momentum = momentum;
+    }
+
+    /**
+     * Sets RMSProp parameters.
+     * @param rho The discounting factor for the history/coming gradient.
+     * @param epsilon A small constant for numerical stability.
+     */
+    public void setRMSProp(double rho, double epsilon) {
+        if (rho < 0.0 || rho >= 1.0) {
+            throw new IllegalArgumentException("Invalid rho = " + rho);
+        }
+
+        if (epsilon <= 0.0) {
+            throw new IllegalArgumentException("Invalid epsilon = " + epsilon);
+        }
+
+        this.rho = rho;
+        this.epsilon = epsilon;
     }
 
     /**
@@ -260,10 +286,10 @@ public abstract class MultilayerPerceptron implements Serializable {
         }
 
         for (Layer layer : net) {
-            layer.update(eta/m, alpha, decay);
+            layer.update(m, eta, alpha, decay, rho, epsilon);
         }
 
-        output.update(eta/m, alpha, decay);
+        output.update(m, eta, alpha, decay, rho, epsilon);
     }
 }
 

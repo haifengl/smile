@@ -63,6 +63,14 @@ public abstract class Layer implements Serializable {
      */
     protected transient ThreadLocal<double[]> biasGradient;
     /**
+     * The accumulate weight gradient.
+     */
+    protected transient ThreadLocal<Matrix> rmsWeightGradient;
+    /**
+     * The accumulate bias gradient.
+     */
+    protected transient ThreadLocal<double[]> rmsBiasGradient;
+    /**
      * The weight update.
      */
     protected transient ThreadLocal<Matrix> weightUpdate;
@@ -123,6 +131,16 @@ public abstract class Layer implements Serializable {
             }
         };
         biasGradient = new ThreadLocal<double[]>() {
+            protected synchronized double[] initialValue() {
+                return new double[n];
+            }
+        };
+        rmsWeightGradient = new ThreadLocal<Matrix>() {
+            protected synchronized Matrix initialValue() {
+                return new Matrix(n, p);
+            }
+        };
+        rmsBiasGradient = new ThreadLocal<double[]>() {
             protected synchronized double[] initialValue() {
                 return new double[n];
             }
@@ -236,29 +254,65 @@ public abstract class Layer implements Serializable {
 
     /**
      * Adjust network weights by back-propagation algorithm.
+     *
+     * @param m the size of mini-batch.
      * @param learningRate the learning rate.
      * @param momentum the momentum factor
      * @param decay weight decay factor
      */
-    public void update(double learningRate, double momentum, double decay) {
+    public void update(int m, double learningRate, double momentum, double decay, double rho, double epsilon) {
         Matrix weightGradient = this.weightGradient.get();
         double[] biasGradient = this.biasGradient.get();
+
+        double eta = learningRate / m;
+
+        if (rho > 0.0 && rho < 1.0) {
+            // gradient will be averaged and smoothed in RMSProp
+            eta = learningRate;
+
+            weightGradient.div(m);
+            for (int i = 0; i < n; i++) {
+                biasGradient[i] /= m;
+            }
+
+            Matrix rmsWeightGradient = this.rmsWeightGradient.get();
+            double[] rmsBiasGradient = this.rmsBiasGradient.get();
+
+            double rho1 = 1.0 - rho;
+            for (int j = 0; j < p; j++) {
+                for (int i = 0; i < n; i++) {
+                    rmsWeightGradient.set(i, j, rho * rmsWeightGradient.get(i, j) + rho1 * MathEx.sqr(weightGradient.get(i, j)));
+                }
+            }
+            for (int i = 0; i < n; i++) {
+                rmsBiasGradient[i] = rho * rmsBiasGradient[i] + rho1 * MathEx.sqr(biasGradient[i]);
+            }
+
+            for (int j = 0; j < p; j++) {
+                for (int i = 0; i < n; i++) {
+                    weightGradient.div(i, j, Math.sqrt(epsilon + rmsWeightGradient.get(i, j)));
+                }
+            }
+            for (int i = 0; i < n; i++) {
+                biasGradient[i] /= Math.sqrt(epsilon + rmsBiasGradient[i]);
+            }
+        }
 
         if (momentum > 0.0 && momentum < 1.0) {
             Matrix weightUpdate = this.weightUpdate.get();
             double[] biasUpdate = this.biasUpdate.get();
 
-            weightUpdate.add(momentum, learningRate, weightGradient);
+            weightUpdate.add(momentum, eta, weightGradient);
             for (int i = 0; i < n; i++) {
-                biasUpdate[i] = momentum * biasUpdate[i] + learningRate * biasGradient[i];
+                biasUpdate[i] = momentum * biasUpdate[i] + eta * biasGradient[i];
             }
 
             weight.add(1.0, weightUpdate);
             MathEx.add(bias, biasUpdate);
         } else {
-            weight.add(learningRate, weightGradient);
+            weight.add(eta, weightGradient);
             for (int i = 0; i < n; i++) {
-                bias[i] += learningRate * biasGradient[i];
+                bias[i] += eta * biasGradient[i];
             }
         }
 

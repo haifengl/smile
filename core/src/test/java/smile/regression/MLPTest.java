@@ -88,8 +88,6 @@ public class MLPTest {
         double[] prediction = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(p, builders);
             // small learning rate and weight decay to counter exploding gradient
-            //model.setLearningRate(TimeFunction.constant(0.01));
-            //model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
             model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
             model.setWeightDecay(0.1);
 

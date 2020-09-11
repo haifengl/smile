@@ -173,10 +173,10 @@ public class MLPTest {
 
         model.setLearningRate(TimeFunction.constant(0.2));
 
-        int batch = 10;
+        int batch = 20;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
-        for (int epoch = 1; epoch <= 300; epoch++) {
+        for (int epoch = 1; epoch <= 14; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
@@ -197,7 +197,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(31, error);
+        assertEquals(28, error);
     }
 
     @Test(expected = Test.None.class)
@@ -213,13 +213,13 @@ public class MLPTest {
         int k = MathEx.max(USPS.y) + 1;
 
         MLP model = new MLP(p,
-                Layer.sigmoid(768),
-                Layer.sigmoid(192),
-                Layer.sigmoid(30),
+                Layer.rectifier(768),
+                Layer.rectifier(192),
+                Layer.rectifier(30),
                 Layer.mle(k, OutputFunction.SIGMOID)
         );
 
-        model.setLearningRate(TimeFunction.linear(0.2, 20000, 0.05));
+        model.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
 
         int error = 0;
         for (int epoch = 1; epoch < 5; epoch++) {
@@ -234,7 +234,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(134, error);
+        assertEquals(114, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
