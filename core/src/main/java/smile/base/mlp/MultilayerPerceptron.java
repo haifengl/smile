@@ -67,7 +67,7 @@ public abstract class MultilayerPerceptron implements Serializable {
     /**
      * The discounting factor for the history/coming gradient in RMSProp.
      */
-    protected double rho = 0.9;
+    protected double rho = 0.0;
     /**
      * A small constant for numerical stability in RMSProp.
      */

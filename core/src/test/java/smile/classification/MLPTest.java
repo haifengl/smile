@@ -172,6 +172,7 @@ public class MLPTest {
         );
 
         model.setLearningRate(TimeFunction.constant(0.2));
+        model.setRMSProp(0.9, 1E-7);
 
         int batch = 20;
         double[][] batchx = new double[batch][];
@@ -202,7 +203,7 @@ public class MLPTest {
 
     @Test(expected = Test.None.class)
     public void testUSPS() throws Exception {
-        System.out.println("USPS");
+        System.out.println("USPS SGD");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
@@ -222,7 +223,7 @@ public class MLPTest {
         model.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
 
         int error = 0;
-        for (int epoch = 1; epoch < 5; epoch++) {
+        for (int epoch = 1; epoch <= 5; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             for (int i : permutation) {
@@ -234,9 +235,59 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(114, error);
+        assertEquals(110, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testUSPSMiniBatch() throws Exception {
+        System.out.println("USPS Mini-Batch Learning");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        Standardizer scaler = Standardizer.fit(USPS.x);
+        double[][] x = scaler.transform(USPS.x);
+        double[][] testx = scaler.transform(USPS.testx);
+        int p = x[0].length;
+        int k = MathEx.max(USPS.y) + 1;
+
+        MLP model = new MLP(p,
+                Layer.sigmoid(768),
+                Layer.sigmoid(192),
+                Layer.sigmoid(30),
+                Layer.mle(k, OutputFunction.SIGMOID)
+        );
+
+        model.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
+        model.setRMSProp(0.9, 1E-7);
+
+        int batch = 20;
+        double[][] batchx = new double[batch][];
+        int[] batchy = new int[batch];
+        int error = 0;
+        for (int epoch = 1; epoch <= 15; epoch++) {
+            System.out.format("----- epoch %d -----%n", epoch);
+            int[] permutation = MathEx.permutate(x.length);
+            int i = 0;
+            for (; i < x.length-batch;) {
+                for (int j = 0; j < batch; j++, i++) {
+                    batchx[j] = x[permutation[i]];
+                    batchy[j] = USPS.y[permutation[i]];
+                }
+                model.update(batchx, batchy);
+            }
+
+            for (; i < x.length; i++) {
+                model.update(x[permutation[i]], USPS.y[permutation[i]]);
+            }
+
+            int[] prediction = Validation.test(model, testx);
+            error = Error.of(USPS.testy, prediction);
+            System.out.println("Test Error = " + error);
+        }
+
+        assertEquals(127, error);
     }
 }
