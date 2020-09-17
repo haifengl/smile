@@ -17,10 +17,10 @@
 
 package smile.util;
 
-import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.math.MathEx;
 
 /**
  * String utility functions.
@@ -28,9 +28,6 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public interface Strings {
-
-    /** Decimal format for floating numbers. */
-    DecimalFormat decimalFormat = new DecimalFormat("#.######");
 
     /** Returns true if the string is null or empty. */
     static boolean isNullOrEmpty(String str) {
@@ -96,8 +93,19 @@ public interface Strings {
     }
 
     /** Returns the decimal string representation of a floating number. */
-    static String decimal(double x) {
-        return decimalFormat.format(x);
+    static String format(float x) {
+        if (MathEx.isZero(x, 1E-7f)) return "0.0000";
+        float ax = Math.abs(x);
+        if (ax >= 1E-3f && ax < 1E7f) return String.format("%.4f", x);
+        return String.format("%.4e", x);
+    }
+
+    /** Returns the decimal string representation of a floating number. */
+    static String format(double x) {
+        if (MathEx.isZero(x, 1E-14)) return "0.0000";
+        double ax = Math.abs(x);
+        if (ax >= 1E-3 && ax < 1E7) return String.format("%.4f", x);
+        return String.format("%.4e", x);
     }
 
     /** Returns the string representation of array in format '[1, 2, 3]'." */
