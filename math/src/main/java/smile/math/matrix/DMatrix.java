@@ -26,8 +26,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
-import smile.util.SparseArray;
 import smile.math.blas.Transpose;
+import smile.util.SparseArray;
 import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.*;
 
@@ -63,7 +63,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     @Override
     String str(int i, int j) {
-        return String.format("%.6g", get(i, j));
+        return smile.util.Strings.format(get(i, j));
     }
 
     /**

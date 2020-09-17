@@ -74,7 +74,7 @@ public class Neighbor<K, V> implements Comparable<Neighbor<K,V>> {
 
     @Override
     public String toString() {
-        return String.format("%s(%d):%s", key, index, Strings.decimal(distance));
+        return String.format("%s(%d):%s", key, index, Strings.format(distance));
     }
 
     /** Creates a neighbor object, of which key and object are the same. */
