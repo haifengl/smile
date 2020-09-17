@@ -35,7 +35,7 @@ package object shell {
        |                                                       ``::,,,,::''
        |
        |  Welcome to Smile Shell! Type "$exit<RETURN>" to leave the Smile Shell.
-       |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion}, Built at ${BuildInfo.builtAtString}
+       |  Version ${BuildInfo.version}, Scala ${BuildInfo.scalaVersion}, SBT ${BuildInfo.sbtVersion} built at ${BuildInfo.builtAtString}
        |===============================================================================
      """.stripMargin
 
