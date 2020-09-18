@@ -124,7 +124,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
 
         @Override
         public String toString() {
-            return String.format("(%d, %d):%s", i, j, Strings.decimal(x));
+            return String.format("(%d, %d):%s", i, j, Strings.format(x));
         }
     }
 
