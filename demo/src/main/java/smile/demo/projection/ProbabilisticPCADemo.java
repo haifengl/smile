@@ -27,16 +27,16 @@ import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 import smile.plot.swing.TextPlot;
 import smile.projection.PCA;
-import smile.projection.PPCA;
+import smile.projection.ProbabilisticPCA;
 
 /**
  *
  * @author Haifeng Li
  */
 @SuppressWarnings("serial")
-public class PPCADemo extends ProjectionDemo {
+public class ProbabilisticPCADemo extends ProjectionDemo {
 
-    public PPCADemo() {
+    public ProbabilisticPCADemo() {
     }
 
     @Override
@@ -76,7 +76,7 @@ public class PPCADemo extends ProjectionDemo {
         plot.setTitle("PCA");
         pane.add(plot.panel());
 
-        PPCA ppca = PPCA.fit(data, 2);
+        ProbabilisticPCA ppca = ProbabilisticPCA.fit(data, 2);
         y = ppca.project(data);
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
@@ -90,7 +90,7 @@ public class PPCADemo extends ProjectionDemo {
         pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
-        ppca = PPCA.fit(data, 3);
+        ppca = ProbabilisticPCA.fit(data, 3);
         System.out.format("Learn PPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
         y = ppca.project(data);
         if (names != null) {
@@ -113,7 +113,7 @@ public class PPCADemo extends ProjectionDemo {
     }
 
     public static void main(String argv[]) {
-        PPCADemo demo = new PPCADemo();
+        ProbabilisticPCADemo demo = new ProbabilisticPCADemo();
         JFrame f = new JFrame("Probabilistic Principal Component Analysis");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);

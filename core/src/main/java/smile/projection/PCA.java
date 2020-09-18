@@ -55,7 +55,7 @@ import smile.math.matrix.Matrix;
  * of PCA may be an obstacle to successful data reduction and compression.
  *
  * @see KPCA
- * @see PPCA
+ * @see ProbabilisticPCA
  * @see GHA
  * 
  * @author Haifeng Li
