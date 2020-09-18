@@ -63,7 +63,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     @Override
     String str(int i, int j) {
-        return smile.util.Strings.format(get(i, j));
+        return smile.util.Strings.format(get(i, j), true);
     }
 
     /**

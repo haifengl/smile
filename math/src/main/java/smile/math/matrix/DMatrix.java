@@ -63,7 +63,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     @Override
     String str(int i, int j) {
-        return smile.util.Strings.format(get(i, j));
+        return smile.util.Strings.format(get(i, j), true);
     }
 
     /**
