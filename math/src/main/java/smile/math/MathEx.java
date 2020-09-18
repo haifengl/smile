@@ -283,6 +283,11 @@ public class MathEx {
     }
 
     /** Returns true if x is an integer. */
+    public static boolean isInt(float x) {
+        return (x == (float) Math.floor(x)) && !Float.isInfinite(x);
+    }
+
+    /** Returns true if x is an integer. */
     public static boolean isInt(double x) {
         return (x == Math.floor(x)) && !Double.isInfinite(x);
     }
@@ -3422,7 +3427,7 @@ public class MathEx {
 
     /** Tests if a floating number is zero. */
     public static boolean isZero(float x) {
-        return isZero(x, EPSILON);
+        return isZero(x, FLOAT_EPSILON);
     }
 
     /** Tests if a floating number is zero with given epsilon. */
