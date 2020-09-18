@@ -67,6 +67,28 @@ public interface TimeSeries {
     }
 
     /**
+     * Autocovariance function.
+     *
+     * @param x time series
+     * @param lag the lag
+     */
+    static double cov(double[] x, int lag) {
+        if (lag < 0) {
+            lag = -lag;
+        }
+
+        int T = x.length;
+        double mu = MathEx.mean(x);
+
+        double cov = 0.0;
+        for (int i = lag; i < T; i++) {
+            cov += (x[i] - mu) * (x[i-lag] - mu);
+        }
+
+        return cov;
+    }
+
+    /**
      * Autocorrelation function.
      *
      * @param x time series

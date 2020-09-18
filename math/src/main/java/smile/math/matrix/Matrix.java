@@ -275,6 +275,24 @@ public class Matrix extends DMatrix {
     }
 
     /**
+     * Returns a random matrix of uniform distribution.
+     *
+     * @param lo the lower bound of uniform distribution.
+     * @param hi the upper bound of uniform distribution.
+     */
+    public static Matrix rand(int m, int n, double lo, double hi) {
+        Matrix matrix = new Matrix(m, n);
+
+        for (int j = 0; j < n; j++) {
+            for (int i = 0; i < m; i++) {
+                matrix.set(i, j, MathEx.random(lo, hi));
+            }
+        }
+
+        return matrix;
+    }
+
+    /**
      * Returns a square diagonal matrix with the elements of vector
      * v on the main diagonal.
      *

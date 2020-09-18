@@ -214,7 +214,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
-                err[i] = trees[t].predict(x.get(i)) != y.getInt(i);
+                err[i] = trees[t].predict(x.get(i)) != codec.y[i];
             }
             
             double e = 0.0; // weighted error
