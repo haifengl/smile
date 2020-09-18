@@ -66,28 +66,27 @@ import smile.base.mlp.*;
         return output.output()[0];
     }
 
+    /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, double y) {
         propagate(x);
-        target[0] = y;
-        backpropagate(x);
-        update();
+        target.get()[0] = y;
+        backpropagate(x, true);
+        t++;
     }
 
+    /** Updates the model with a mini-batch. RMSProp is applied if rho > 0. */
     @Override
     public void update(double[][] x, double[] y) {
-        // Set momentum factor to 1.0 so that mini-batch is in play.
-        double a = alpha;
-        alpha = 1.0;
-
+        double[] target = this.target.get();
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             target[0] = y[i];
-            backpropagate(x[i]);
+            backpropagate(x[i], false);
         }
 
-        update();
-        alpha = a;
+        update(x.length);
+        t++;
     }
 }
 

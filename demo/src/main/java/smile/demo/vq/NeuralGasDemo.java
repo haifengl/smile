@@ -57,7 +57,7 @@ public class NeuralGasDemo extends VQDemo {
         NeuralGas gas = new NeuralGas(NeuralGas.seed(numNeurons, dataset[datasetIndex]),
                 TimeFunction.exp(learningRate, dataset[datasetIndex].length * epochs / 2),
                 TimeFunction.exp(neighborhood, dataset[datasetIndex].length * epochs / 8),
-                2 * dataset[datasetIndex].length);
+                TimeFunction.constant(dataset[datasetIndex].length * 2));
 
         Canvas plot = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas();
         plot.add(ScatterPlot.of(gas.neurons(), '@'));

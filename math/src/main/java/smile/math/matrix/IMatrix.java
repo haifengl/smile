@@ -154,7 +154,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
         m = Math.min(m, nrows());
         n = Math.min(n, ncols());
 
-        String newline = n < ncols() ? "...\n" : "\n";
+        String newline = n < ncols() ? "  ...\n" : "\n";
 
         if (colNames != null) {
             sb.append(rowNames == null ? "   " : "            ");

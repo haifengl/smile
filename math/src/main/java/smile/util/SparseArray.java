@@ -76,7 +76,7 @@ public class SparseArray implements Iterable<SparseArray.Entry>, Serializable {
 
         @Override
         public String toString() {
-            return String.format("%d:%s", i, Strings.decimal(x));
+            return String.format("%d:%s", i, Strings.format(x));
         }
     }
 

@@ -184,29 +184,26 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         }
     }
 
+    /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, int y) {
         propagate(x);
         setTarget(labels.indexOf(y));
-        backpropagate(x);
-        update();
+        backpropagate(x, true);
+        t++;
     }
 
-    /** Mini-batch. */
+    /** Updates the model with a mini-batch. RMSProp is applied if rho > 0. */
     @Override
     public void update(double[][] x, int[] y) {
-        // Set momentum factor to 1.0 so that mini-batch is in play.
-        double a = alpha;
-        alpha = 1.0;
-
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
             setTarget(labels.indexOf(y[i]));
-            backpropagate(x[i]);
+            backpropagate(x[i], false);
         }
 
-        update();
-        alpha = a;
+        update(x.length);
+        t++;
     }
 
     /** Sets the target vector. */
@@ -216,6 +213,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
         double f = 1.0 - t;
 
+        double[] target = this.target.get();
         if (n == 1) {
             target[0] = y == 1 ? t : f;
         } else {

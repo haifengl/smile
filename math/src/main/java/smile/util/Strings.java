@@ -21,6 +21,7 @@ import java.text.DecimalFormat;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import smile.math.MathEx;
 
 /**
  * String utility functions.
@@ -28,9 +29,8 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public interface Strings {
-
     /** Decimal format for floating numbers. */
-    DecimalFormat decimalFormat = new DecimalFormat("#.######");
+    DecimalFormat decimal = new DecimalFormat("#.####");
 
     /** Returns true if the string is null or empty. */
     static boolean isNullOrEmpty(String str) {
@@ -50,7 +50,8 @@ public interface Strings {
         }
     }
 
-    /** Left pad a String with a specified character.
+    /**
+     * Left pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null
      * @param size  the size to pad to
@@ -69,7 +70,8 @@ public interface Strings {
         return fill(padChar, pads).concat(str);
     }
 
-    /** Right pad a String with a specified character.
+    /**
+     * Right pad a String with a specified character.
      *
      * @param str  the String to pad out, may be null
      * @param size  the size to pad to
@@ -95,9 +97,42 @@ public interface Strings {
         return new String(chars);
     }
 
-    /** Returns the decimal string representation of a floating number. */
-    static String decimal(double x) {
-        return decimalFormat.format(x);
+    /** Returns the string representation of a floating number without trailing zeros. */
+    static String format(float x) {
+        return format(x, false);
+    }
+
+    /** Returns the string representation of a floating number. */
+    static String format(float x, boolean trailingZeros) {
+        if (MathEx.isZero(x, 1E-7f)) {
+            return trailingZeros ? "0.0000" : "0";
+        }
+
+        float ax = Math.abs(x);
+        if (ax >= 1E-3f && ax < 1E7f) {
+            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+        }
+
+        return String.format("%.4e", x);
+    }
+
+    /** Returns the string representation of a floating number without trailing zeros. */
+    static String format(double x) {
+        return format(x, false);
+    }
+
+    /** Returns the string representation of a floating number. */
+    static String format(double x, boolean trailingZeros) {
+        if (MathEx.isZero(x, 1E-14)) {
+            return trailingZeros ? "0.0000" : "0";
+        }
+
+        double ax = Math.abs(x);
+        if (ax >= 1E-3 && ax < 1E7) {
+            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+        }
+
+        return String.format("%.4e", x);
     }
 
     /** Returns the string representation of array in format '[1, 2, 3]'." */
@@ -107,12 +142,12 @@ public interface Strings {
 
     /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
     static String toString(float[] a) {
-        return IntStream.range(0, a.length).mapToObj(i -> String.valueOf(a[i])).collect(Collectors.joining(", ", "[", "]"));
+        return IntStream.range(0, a.length).mapToObj(i -> format(a[i])).collect(Collectors.joining(", ", "[", "]"));
     }
 
     /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
     static String toString(double[] a) {
-        return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
+        return Arrays.stream(a).mapToObj(Strings::format).collect(Collectors.joining(", ", "[", "]"));
     }
 
     /**
