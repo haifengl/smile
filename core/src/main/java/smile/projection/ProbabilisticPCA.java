@@ -47,7 +47,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class PPCA implements LinearProjection, Serializable {
+public class ProbabilisticPCA implements LinearProjection, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -78,7 +78,7 @@ public class PPCA implements LinearProjection, Serializable {
      * @param loading the loading matrix.
      * @param projection the projection matrix.
      */
-    public PPCA(double noise, double[] mu, Matrix loading, Matrix projection) {
+    public ProbabilisticPCA(double noise, double[] mu, Matrix loading, Matrix projection) {
         this.noise = noise;
         this.mu = mu;
         this.loading = loading;
@@ -150,7 +150,7 @@ public class PPCA implements LinearProjection, Serializable {
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
      */
-    public static PPCA fit(double[][] data, int k) {
+    public static ProbabilisticPCA fit(double[][] data, int k) {
         int m = data.length;
         int n = data[0].length;
 
@@ -198,6 +198,6 @@ public class PPCA implements LinearProjection, Serializable {
         Matrix Mi = chol.inverse();
         Matrix projection = Mi.mt(loading);
 
-        return new PPCA(noise, mu, loading, projection);
+        return new ProbabilisticPCA(noise, mu, loading, projection);
     }
 }

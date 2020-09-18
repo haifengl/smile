@@ -145,8 +145,8 @@ package object projection {
     * @param data training data.
     * @param k the number of principal component to learn.
     */
-  def ppca(data: Array[Array[Double]], k: Int): PPCA = time("Probabilistic PCA") {
-    PPCA.fit(data, k)
+  def ppca(data: Array[Array[Double]], k: Int): ProbabilisticPCA = time("Probabilistic PCA") {
+    ProbabilisticPCA.fit(data, k)
   }
 
   /** Kernel principal component analysis. Kernel PCA is an extension of

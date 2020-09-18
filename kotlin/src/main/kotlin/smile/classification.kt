@@ -25,6 +25,7 @@ import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.math.MathEx
+import smile.math.TimeFunction
 import smile.math.distance.Distance
 import smile.math.kernel.MercerKernel
 import smile.neighbor.KNNSearch
@@ -279,16 +280,21 @@ fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: D
  * @param y training labels in [0, k), where k is the number of classes.
  * @param builders the builders of layers from bottom to top.
  * @param epochs the number of epochs of stochastic learning.
- * @param eta the learning rate.
- * @param alpha the momentum factor.
- * @param lambda the weight decay for regularization.
+ * @param learningRate the learning rate.
+ * @param momentum the momentum factor.
+ * @param weightDecay the weight decay for regularization.
+ * @param rho The RMSProp discounting factor for the history/coming gradient.
+ * @param epsilon A small constant for RMSProp numerical stability.
  */
 fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epochs: Int = 10,
-        eta: Double = 0.1, alpha: Double = 0.0, lambda: Double = 0.0): MLP {
+       learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
+       momentum: TimeFunction = TimeFunction.constant(0.0),
+       weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP {
     val net = MLP(x[0].size, *builders)
-    net.setLearningRate(eta)
-    net.setMomentum(alpha)
-    net.setWeightDecay(lambda)
+    net.setLearningRate(learningRate)
+    net.setMomentum(momentum)
+    net.setWeightDecay(weightDecay)
+    net.setRMSProp(rho, epsilon) 
     for (i in 1 .. epochs) net.update(x, y)
     return net
 }
