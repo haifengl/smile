@@ -91,7 +91,7 @@ import smile.demo.plot.Histogram3Demo;
 import smile.demo.projection.GHADemo;
 import smile.demo.projection.KPCADemo;
 import smile.demo.projection.PCADemo;
-import smile.demo.projection.PPCADemo;
+import smile.demo.projection.ProbabilisticPCADemo;
 import smile.demo.projection.RandomProjectionDemo;
 import smile.demo.stat.distribution.BernoulliDistributionDemo;
 import smile.demo.stat.distribution.BetaDistributionDemo;
@@ -202,7 +202,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new KPCADemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new PPCADemo());
+        algorithm = new DefaultMutableTreeNode(new ProbabilisticPCADemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new GHADemo());
