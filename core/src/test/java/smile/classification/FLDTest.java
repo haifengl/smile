@@ -109,7 +109,6 @@ public class FLDTest {
         assertEquals(262, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
-        System.out.println(temp);
         model = (FLD) smile.data.Serialize.read(temp);
 
         Validation.test(model, USPS.testx);
