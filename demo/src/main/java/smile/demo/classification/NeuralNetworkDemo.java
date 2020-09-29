@@ -38,8 +38,8 @@ import smile.math.TimeFunction;
  */
 @SuppressWarnings("serial")
 public class NeuralNetworkDemo extends ClassificationDemo {
-    private int units = 10;
-    private int epochs = 20;
+    private int units = 20;
+    private int epochs = 10;
     private JTextField unitsField;
     private JTextField epochsField;
 

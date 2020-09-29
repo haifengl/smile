@@ -21,7 +21,6 @@ import java.awt.BorderLayout;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
@@ -141,8 +140,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
     }
 
     /**
-     * Execute the clustering algorithm and return a swing JComponent representing
-     * the clusters.
+     * Execute the classification algorithm.
      */
     public abstract double[][] learn(double[] x, double[] y);
 
@@ -181,7 +179,6 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
             double[][] f = learn(x, y);
 
             if (f != null) {
-                /*
                 double[][] grid = new double[y.length * x.length][];
                 int[] clazz = new int[y.length * x.length];
                 for (int i = 0, k = 0; i < y.length; i++) {
@@ -192,8 +189,7 @@ public abstract class ClassificationDemo extends JPanel implements Runnable, Act
                     }
                 }
 
-                canvas.add(ScatterPlot.of(grid, '.', clazz));
-                 */
+                canvas.add(ScatterPlot.of(grid, clazz, '.'));
 
                 double[] levels = getContourLevels();
                 Contour contour = new Contour(x, y, f, levels);
