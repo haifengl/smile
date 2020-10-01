@@ -37,9 +37,10 @@ public class HellingerKernel implements MercerKernel<double[]> {
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        
+        }
+
         double sum = 0;
         for (int i = 0; i < x.length; i++) {
             sum += Math.sqrt(x[i] * y[i]);

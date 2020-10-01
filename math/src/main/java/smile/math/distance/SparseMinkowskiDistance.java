@@ -45,8 +45,9 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
      * Constructor.
      */
     public SparseMinkowskiDistance(int p) {
-        if (p <= 0)
+        if (p <= 0) {
             throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+        }
 
         this.p = p;
     }
@@ -57,12 +58,14 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
      * @param weight the weight vector.
      */
     public SparseMinkowskiDistance(int p, double[] weight) {
-        if (p <= 0)
+        if (p <= 0) {
             throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+        }
 
         for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0)
+            if (weight[i] < 0) {
                 throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+            }
         }
 
         this.p = p;
@@ -71,19 +74,22 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
     @Override
     public String toString() {
-        if (weight != null)
+        if (weight != null) {
             return String.format("Weighted Minkowski Distance(p = %d, weight = %s)", p, Arrays.toString(weight));
-        else
+        } else {
             return String.format("Minkowski Distance(p = %d)", p);
+        }
     }
 
     @Override
     public double d(SparseArray x, SparseArray y) {
-        if (x.isEmpty())
+        if (x.isEmpty()) {
             throw new IllegalArgumentException("List x is empty.");
+        }
 
-        if (y.isEmpty())
+        if (y.isEmpty()) {
             throw new IllegalArgumentException("List y is empty.");
+        }
 
         Iterator<SparseArray.Entry> iterX = x.iterator();
         Iterator<SparseArray.Entry> iterY = y.iterator();

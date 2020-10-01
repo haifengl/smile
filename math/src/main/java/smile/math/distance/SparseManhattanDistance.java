@@ -48,8 +48,9 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
      */
     public SparseManhattanDistance(double[] weight) {
         for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0)
+            if (weight[i] < 0) {
                 throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+            }
         }
 
         this.weight = weight;
@@ -57,19 +58,22 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
 
     @Override
     public String toString() {
-        if (weight != null)
+        if (weight != null) {
             return String.format("Weighted Manhattan Distance(%s)", Arrays.toString(weight));
-        else
+        } else {
             return "Manhattan Distance";
+        }
     }
 
     @Override
     public double d(SparseArray x, SparseArray y) {
-        if (x.isEmpty())
+        if (x.isEmpty()) {
             throw new IllegalArgumentException("List x is empty.");
+        }
 
-        if (y.isEmpty())
+        if (y.isEmpty()) {
             throw new IllegalArgumentException("List y is empty.");
+        }
 
         Iterator<SparseArray.Entry> iterX = x.iterator();
         Iterator<SparseArray.Entry> iterY = y.iterator();

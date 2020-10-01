@@ -40,8 +40,9 @@ public class ThinPlateSplineKernel implements MercerKernel<double[]> {
      * @param sigma the smooth/width parameter of Thin Plate Spline kernel.
      */
     public ThinPlateSplineKernel(double sigma) {
-        if (sigma <= 0)
+        if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive.");
+        }
 
         this.sigma = sigma;
     }
@@ -53,9 +54,10 @@ public class ThinPlateSplineKernel implements MercerKernel<double[]> {
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        
+        }
+
         double d = 0.0;
 
         for (int i = 0; i < x.length; i++) {

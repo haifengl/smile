@@ -170,12 +170,13 @@ public class EditDistance implements Metric<String> {
      * it is NOT multi-thread safe for unit cost edit distance.
      */
     public double d(char[] x, char[] y) {
-        if (weight != null)
+        if (weight != null) {
             return weightedEdit(x, y);
-        else if (FKP == null || x.length == 1 || y.length == 1)
+        } else if (FKP == null || x.length == 1 || y.length == 1) {
             return damerau ? damerau(x, y) : levenshtein(x, y);
-        else
+        } else {
             return br(x, y);
+        }
     }
 
     /**
