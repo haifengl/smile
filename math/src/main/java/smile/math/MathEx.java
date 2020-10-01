@@ -2182,36 +2182,10 @@ public class MathEx {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        switch (x.length) {
-            case 2: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                return d0 * d0 + d1 * d1;
-            }
-
-            case 3: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                int d2 = x[2] - y[2];
-                return d0 * d0 + d1 * d1 + d2 * d2;
-            }
-
-            case 4: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                int d2 = x[2] - y[2];
-                int d3 = x[3] - y[3];
-                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
-            }
-
-            case 1: {
-                return Math.abs(x[0] - y[0]);
-            }
-        }
-
         double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
-            sum += sqr(x[i] - y[i]);
+            int d = x[i] - y[i];
+            sum += d * d;
         }
 
         return sum;
@@ -2225,36 +2199,11 @@ public class MathEx {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        switch (x.length) {
-            case 2: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
-                return d0 * d0 + d1 * d1;
-            }
-
-            case 3: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
-                double d2 = (double) x[2] - (double) y[2];
-                return d0 * d0 + d1 * d1 + d2 * d2;
-            }
-
-            case 4: {
-                double d0 = (double) x[0] - (double) y[0];
-                double d1 = (double) x[1] - (double) y[1];
-                double d2 = (double) x[2] - (double) y[2];
-                double d3 = (double) x[3] - (double) y[3];
-                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
-            }
-
-            case 1: {
-                return Math.abs((double) x[0] - (double) y[0]);
-            }
-        }
-
         double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
-            sum += sqr((double) x[i] - (double) y[i]);
+            // covert x and y for better precision
+            double d = (double) x[i] - (double) y[i];
+            sum += d * d;
         }
 
         return sum;
@@ -2268,36 +2217,10 @@ public class MathEx {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
-        switch (x.length) {
-            case 2: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
-                return d0 * d0 + d1 * d1;
-            }
-
-            case 3: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
-                double d2 = x[2] - y[2];
-                return d0 * d0 + d1 * d1 + d2 * d2;
-            }
-
-            case 4: {
-                double d0 = x[0] - y[0];
-                double d1 = x[1] - y[1];
-                double d2 = x[2] - y[2];
-                double d3 = x[3] - y[3];
-                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
-            }
-
-            case 1: {
-                return Math.abs(x[0] - y[0]);
-            }
-        }
-
         double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
-            sum += sqr(x[i] - y[i]);
+            double d = x[i] - y[i];
+            sum += d * d;
         }
 
         return sum;
@@ -2328,11 +2251,13 @@ public class MathEx {
         }
         
         while (it1.hasNext()) {
-            sum += sqr(it1.next().x);
+            double d = it1.next().x;
+            sum += d * d;
         }
 
         while (it2.hasNext()) {
-            sum += sqr(it2.next().x);
+            double d = it2.next().x;
+            sum += d * d;
         }
         
         return sum;
