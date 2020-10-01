@@ -55,16 +55,19 @@ public class JaccardDistance<T> implements Distance<T[]> {
         Set<T> union = new HashSet<>();
         Set<T> intersection = new HashSet<>();
 
-        for (int i = 0; i < b.length; i++)
+        for (int i = 0; i < b.length; i++) {
             union.add(b[i]);
+        }
 
-        for (int i = 0; i < a.length; i++)
+        for (int i = 0; i < a.length; i++) {
             intersection.add(a[i]);
+        }
 
         intersection.retainAll(union);
 
-        for (int i = 0; i < a.length; i++)
+        for (int i = 0; i < a.length; i++) {
             union.add(a[i]);
+        }
 
         return 1.0 - (double) intersection.size() / union.size();
     }

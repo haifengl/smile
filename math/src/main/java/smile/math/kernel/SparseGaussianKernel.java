@@ -46,8 +46,9 @@ public class SparseGaussianKernel implements MercerKernel<SparseArray> {
      * @param sigma the smooth/width parameter of Gaussian kernel.
      */
     public SparseGaussianKernel(double sigma) {
-        if (sigma <= 0)
+        if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive.");
+        }
 
         this.gamma = 0.5 / (sigma * sigma);
     }

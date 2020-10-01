@@ -41,8 +41,9 @@ public class LeeDistance implements Metric<int[]> {
      * @param q the size of q-ary alphabet.
      */
     public LeeDistance(int q) {
-        if (q < 2)
+        if (q < 2) {
             throw new IllegalArgumentException(String.format("The size of q-ary alphabet has to be larger than 1: q = %d", q));
+        }
 
         this.q = q;
     }
@@ -54,8 +55,9 @@ public class LeeDistance implements Metric<int[]> {
 
     @Override
     public double d(int[] x, int[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         int dist = 0;
         for (int i = 0; i < x.length; i++) {
