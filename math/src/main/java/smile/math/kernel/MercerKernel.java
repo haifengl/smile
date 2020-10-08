@@ -19,6 +19,9 @@ package smile.math.kernel;
 
 import java.io.Serializable;
 import java.util.function.ToDoubleBiFunction;
+import java.util.stream.IntStream;
+import smile.math.blas.UPLO;
+import smile.math.matrix.Matrix;
 
 /**
  * A Mercer Kernel is a kernel that is positive semi-definite. When a kernel
@@ -53,5 +56,52 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
     @Override
     default double applyAsDouble(T x, T y) {
         return k(x, y);
+    }
+
+    /**
+     * Returns the kernel matrix.
+     *
+     * @param x samples.
+     * @return the kernel matrix.
+     */
+    default Matrix K(T[] x) {
+        int n = x.length;
+        int N = n * (n - 1) / 2;
+        Matrix K = new Matrix(n, n);
+        IntStream.range(0, N).parallel().forEach(k -> {
+            int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
+            int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
+            K.set(i, j, k(x[i], x[j]));
+        });
+
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                K.set(i, j, K.get(j, i));
+            }
+        }
+
+        K.uplo(UPLO.LOWER);
+        return K;
+    }
+
+    /**
+     * Returns the kernel matrix.
+     *
+     * @param x samples.
+     * @param y samples.
+     * @return the kernel matrix.
+     */
+    default Matrix K(T[] x, T[] y) {
+        int m = x.length;
+        int n = y.length;
+        Matrix K = new Matrix(m, n);
+        IntStream.range(0, m).parallel().forEach(i -> {
+            T xi = x[i];
+            for (int j = 0; j < n; j++) {
+                K.set(i, j, k(xi, y[j]));
+            }
+        });
+
+        return K;
     }
 }
