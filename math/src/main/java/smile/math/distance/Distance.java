@@ -19,6 +19,9 @@ package smile.math.distance;
 
 import java.io.Serializable;
 import java.util.function.ToDoubleBiFunction;
+import java.util.stream.IntStream;
+import smile.math.blas.UPLO;
+import smile.math.matrix.Matrix;
 
 /**
  * An interface to calculate a distance measure between two objects. A distance
@@ -50,5 +53,52 @@ public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     @Override
     default double applyAsDouble(T x, T y) {
         return d(x, y);
+    }
+
+    /**
+     * Returns the pairwise distance matrix.
+     *
+     * @param x samples.
+     * @return the pairwise distance matrix.
+     */
+    default Matrix D(T[] x) {
+        int n = x.length;
+        int N = n * (n - 1) / 2;
+        Matrix D = new Matrix(n, n);
+        IntStream.range(0, N).parallel().forEach(k -> {
+            int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
+            int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
+            D.set(i, j, d(x[i], x[j]));
+        });
+
+        for (int i = 0; i < n; i++) {
+            for (int j = i + 1; j < n; j++) {
+                D.set(i, j, D.get(j, i));
+            }
+        }
+
+        D.uplo(UPLO.LOWER);
+        return D;
+    }
+
+    /**
+     * Returns the pairwise distance matrix.
+     *
+     * @param x samples.
+     * @param y samples.
+     * @return the pairwise distance matrix.
+     */
+    default Matrix D(T[] x, T[] y) {
+        int m = x.length;
+        int n = y.length;
+        Matrix D = new Matrix(m, n);
+        IntStream.range(0, m).parallel().forEach(i -> {
+            T xi = x[i];
+            for (int j = 0; j < n; j++) {
+                D.set(i, j, d(xi, y[j]));
+            }
+        });
+
+        return D;
     }
 }
