@@ -10,5 +10,5 @@ val X = pca.project(mnist)
 val perplexity = 20
 val tsne = new TSNE(X, 2, perplexity, 200, 1000)
 
-val canvas = plot(tsne.coordinates, labels, '@', Palette.COLORS)
-Window(canvas)
+val canvas = plot(tsne.coordinates, labels, '@')
+canvas.window()
