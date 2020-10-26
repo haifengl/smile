@@ -20,6 +20,6 @@ var X = pca.project(mnist);
 var perplexity = 20;
 var tsne = new TSNE(X, 2, perplexity, 200, 1000);
 
-var plot = ScatterPlot.plot(tsne.coordinates, labels, '@', Palette.COLORS);
+var plot = ScatterPlot.plot(tsne.coordinates, labels, '@');
 plot.setTitle("t-SNE of MNIST");
-plot.window();
+plot.canvas().window();

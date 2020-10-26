@@ -160,18 +160,7 @@ public class TSNE implements Serializable {
         int d = Y[0].length;
 
         for (int iter = 1; iter <= iterations; iter++, totalIter++) {
-            MathEx.pdist(Y, Q, true, false);
-            Qsum = 0.0;
-            for (int i = 0; i < n; i++) {
-                double[] Qi = Q[i];
-                for (int j = 0; j < i; j++) {
-                    double q = 1.0 / (1.0 + Qi[j]);
-                    Qi[j] = q;
-                    Q[j][i] = q;
-                    Qsum += q;
-                }
-            }
-            Qsum *= 2.0;
+            Qsum = computeQ(Y, Q);
 
             IntStream.range(0, n).parallel().forEach(i -> sne(i));
 
@@ -214,10 +203,10 @@ public class TSNE implements Serializable {
 
     /** Computes the gradients and updates the coordinates. */
     private void sne(int i) {
-        double[] dC = new double[coordinates[0].length];
+        int d = coordinates[0].length;
+        double[] dC = new double[d];
         double[][] Y = coordinates;
         int n = Y.length;
-        int d = Y[0].length;
 
         // Compute gradient
         // dereference before the loop for better performance
@@ -310,5 +299,24 @@ public class TSNE implements Serializable {
         });
 
         return P;
+    }
+
+    /**
+     * Compute the Q matrix.
+     */
+    private double computeQ(double[][] x, double[][] Q) {
+        int n = x.length;
+
+        return IntStream.range(0, n).parallel().mapToDouble(i -> {
+            double[] xi = x[i];
+            double[] Qi = Q[i];
+            double sum = 0.0;
+            for (int j = 0; j < n; j++) {
+                double q = 1.0 / (1.0 + MathEx.squaredDistance(xi, x[j]));
+                Qi[j] = q;
+                sum += q;
+            }
+            return sum;
+        }).sum();
     }
 }
