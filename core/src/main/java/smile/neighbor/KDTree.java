@@ -78,6 +78,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
          */
         double cutoff;
         /**
+         * The radius for this node.
+         */
+        double radius;
+        /**
          * The child node which values of split coordinate is less than the cutoff value.
          */
         Node lower;
@@ -181,7 +185,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         for (int i = 0; i < d; i++) {
             double radius = (upperBound[i] - lowerBound[i]) / 2;
             if (radius > maxRadius) {
-                maxRadius = radius;
+                node.radius = maxRadius = radius;
                 node.split = i;
                 node.cutoff = (upperBound[i] + lowerBound[i]) / 2;
             }
@@ -232,7 +236,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     }
 
     /**
-     * Returns the nearest neighbors of the given target starting from the give
+     * Returns the nearest neighbors of the given target starting from the given
      * tree node.
      *
      * @param q    the query key.
@@ -317,8 +321,54 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     }
 
     /**
-     * Returns the neighbors in the given range of search target from the give
-     * tree node.
+     * Returns the nearest neighbors of the given target starting from the given
+     * tree node, limited by radius.
+     *
+     * @param q    the query key.
+     * @param node the root of subtree.
+     * @param radius the radius of search range from target.
+     * @param neighbor the current nearest neighbor.
+     */
+    private void search(double[] q, Node node, double radius, NeighborBuilder<double[], E> neighbor) {
+        if (node.isLeaf()) {
+            // look at all the instances in this leaf
+            for (int idx = node.index; idx < node.index + node.count; idx++) {
+                int i = index[idx];
+                if (q != keys[i]) {
+                    double distance = MathEx.distance(q, keys[i]);
+                    if (distance < neighbor.distance) {
+                        neighbor.index = i;
+                        neighbor.distance = distance;
+                    }
+                }
+            }
+        } else {
+            Node nearer, further;
+            double diff = q[node.split] - node.cutoff;
+            if (diff < 0) {
+                nearer = node.lower;
+                further = node.upper;
+            } else {
+                nearer = node.upper;
+                further = node.lower;
+            }
+            
+            if (Math.abs(diff) > node.radius + radius) {
+                return;
+            }
+            
+            search(q, nearer, neighbor);
+
+            // now look in further half
+            if (neighbor.distance >= Math.abs(diff)) {
+                search(q, further, neighbor);
+            }
+        }
+    }
+
+    /**
+     * Returns the neighbors in the given range of search target from the given
+     * tree node, limited by radius.
      *
      * @param q the query key.
      * @param node the root of subtree.
@@ -347,6 +397,10 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
                 nearer = node.upper;
                 further = node.lower;
             }
+            
+            if (Math.abs(diff) > node.radius + radius) {
+                return;
+            }
 
             search(q, nearer, radius, neighbors);
 
@@ -363,6 +417,16 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
         search(q, root, neighbor);
         neighbor.key = keys[neighbor.index];
         neighbor.value = data[neighbor.index];
+        return neighbor.toNeighbor();
+    }
+
+    public Neighbor<double[], E> nearest(double[] q, double radius) {
+        NeighborBuilder<double[], E> neighbor = new NeighborBuilder<>();
+        search(q, root, radius, neighbor);
+        if (neighbor.index >= 0) {
+            neighbor.key = keys[neighbor.index];
+            neighbor.value = data[neighbor.index];
+        }
         return neighbor.toNeighbor();
     }
 
