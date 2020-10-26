@@ -2149,8 +2149,30 @@ public class MathEx {
      */
     public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
         int n = x.length;
-        int N = n * (n - 1) / 2;
 
+        if (x[0].length <= 4 && !half) {
+            if (squared) {
+                IntStream.range(0, n).parallel().forEach(i -> {
+                    double[] xi = x[i];
+                    double[] di = dist[i];
+                    for (int j = 0; j < n; j++) {
+                        di[j] = squaredDistance(xi, x[j]);
+                    }
+                });
+            } else {
+                IntStream.range(0, n).parallel().forEach(i -> {
+                    double[] xi = x[i];
+                    double[] di = dist[i];
+                    for (int j = 0; j < n; j++) {
+                        di[j] = distance(xi, x[j]);
+                    }
+                });
+            }
+
+            return;
+        }
+
+        int N = n * (n - 1) / 2;
         if (squared) {
             IntStream.range(0, N).parallel().forEach(k -> {
                 int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
@@ -2182,6 +2204,29 @@ public class MathEx {
             throw new IllegalArgumentException("Input vector sizes are different.");
         }
 
+        switch (x.length) {
+            case 2: {
+                int d0 = x[0] - y[0];
+                int d1 = x[1] - y[1];
+                return d0 * d0 + d1 * d1;
+            }
+
+            case 3: {
+                int d0 = x[0] - y[0];
+                int d1 = x[1] - y[1];
+                int d2 = x[2] - y[2];
+                return d0 * d0 + d1 * d1 + d2 * d2;
+            }
+
+            case 4: {
+                int d0 = x[0] - y[0];
+                int d1 = x[1] - y[1];
+                int d2 = x[2] - y[2];
+                int d3 = x[3] - y[3];
+                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
+            }
+        }
+
         double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
             int d = x[i] - y[i];
@@ -2197,6 +2242,29 @@ public class MathEx {
     public static double squaredDistance(float[] x, float[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Input vector sizes are different.");
+        }
+
+        switch (x.length) {
+            case 2: {
+                double d0 = (double) x[0] - (double) y[0];
+                double d1 = (double) x[1] - (double) y[1];
+                return d0 * d0 + d1 * d1;
+            }
+
+            case 3: {
+                double d0 = (double) x[0] - (double) y[0];
+                double d1 = (double) x[1] - (double) y[1];
+                double d2 = (double) x[2] - (double) y[2];
+                return d0 * d0 + d1 * d1 + d2 * d2;
+            }
+
+            case 4: {
+                double d0 = (double) x[0] - (double) y[0];
+                double d1 = (double) x[1] - (double) y[1];
+                double d2 = (double) x[2] - (double) y[2];
+                double d3 = (double) x[3] - (double) y[3];
+                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
+            }
         }
 
         double sum = 0.0;
@@ -2215,6 +2283,29 @@ public class MathEx {
     public static double squaredDistance(double[] x, double[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException("Input vector sizes are different.");
+        }
+
+        switch (x.length) {
+            case 2: {
+                double d0 = x[0] - y[0];
+                double d1 = x[1] - y[1];
+                return d0 * d0 + d1 * d1;
+            }
+
+            case 3: {
+                double d0 = x[0] - y[0];
+                double d1 = x[1] - y[1];
+                double d2 = x[2] - y[2];
+                return d0 * d0 + d1 * d1 + d2 * d2;
+            }
+
+            case 4: {
+                double d0 = x[0] - y[0];
+                double d1 = x[1] - y[1];
+                double d2 = x[2] - y[2];
+                double d3 = x[3] - y[3];
+                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
+            }
         }
 
         double sum = 0.0;
