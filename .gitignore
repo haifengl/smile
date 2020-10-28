@@ -40,3 +40,9 @@ hs_err_pid*
 .cache-tests
 .classpath
 */.gitignore
+
+# VSCODE
+.vscode/*
+
+# METALS
+.metals/*
