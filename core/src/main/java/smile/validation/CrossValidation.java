@@ -20,7 +20,9 @@ package smile.validation;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
+import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
@@ -137,11 +139,11 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public int[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+    public int[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
         int[] prediction = new int[data.size()];
 
         for (int i = 0; i < k; i++) {
-            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
+            SoftClassifier<Tuple> model = trainer.apply(formula, data.of(train[i]));
             for (int j : test[i]) {
                 prediction[j] = model.predict(data.get(j));
             }
@@ -202,7 +204,7 @@ public class CrossValidation {
      * Runs cross validation tests.
      * @return the predictions.
      */
-    public static int[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+    public static int[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return cv.classification(formula, data, trainer);
     }

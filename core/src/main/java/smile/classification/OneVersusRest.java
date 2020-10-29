@@ -18,6 +18,10 @@
 package smile.classification;
 
 import java.util.function.BiFunction;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.Tuple;
+import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.util.IntSet;
 
@@ -60,11 +64,16 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * Constructor.
      * @param classifiers the binary classifier for each one-vs-rest case.
      */
+    public OneVersusRest(Classifier<T>[] classifiers) {
+        this(classifiers, null);
+    }
+
+    /**
+     * Constructor.
+     * @param classifiers the binary classifier for each one-vs-rest case.
+     */
     public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platts) {
-        this.classifiers = classifiers;
-        this.platts = platts;
-        k = classifiers.length;
-        labels = IntSet.of(k);
+        this(classifiers, platts, IntSet.of(classifiers.length));
     }
 
     /**
@@ -107,7 +116,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
-            throw new IllegalArgumentException(String.format("Only %d classes" + k));
+            throw new IllegalArgumentException("Only %d classes" + k);
         }
 
         int n = x.length;
@@ -128,12 +137,58 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         return new OneVersusRest<>(classifiers, platts);
     }
 
+    /**
+     * Fits a multi-class model with binary classifiers.
+     * Use +1 and -1 as positive and negative class labels.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param trainer the lambda to train binary classifiers.
+     */
+    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
+        return fit(formula, data, +1, -1, trainer);
+    }
+
+    /**
+     * Fits a multi-class model with binary classifiers.
+     * Use +1 and -1 as positive and negative class labels.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param pos the class label for one case.
+     * @param neg the class label for rest cases.
+     * @param trainer the lambda to train binary classifiers.
+     */
+    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, int pos, int neg, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
+        formula = formula.expand(data.schema());
+        DataFrame x = formula.x(data);
+        BaseVector bv = formula.y(data);
+
+        ClassLabels codec = ClassLabels.fit(bv);
+        int k = codec.k;
+        if (k <= 2) {
+            throw new IllegalArgumentException("Only %d classes" + k);
+        }
+
+        int n = x.nrows();
+        int[] y = codec.y;
+
+        Classifier<Tuple>[] classifiers = new Classifier[k];
+        for (int i = 0; i < k; i++) {
+            int[][] yi = new int[n][1];
+            for (int j = 0; j < n; j++) {
+                yi[j][0] = y[j] == i ? pos : neg;
+            }
+
+            classifiers[i] = trainer.apply(formula, x.merge(DataFrame.of(yi, bv.name())));
+        }
+        return new OneVersusRest<>(classifiers);
+    }
+
     @Override
     public int predict(T x) {
         int y = 0;
         double maxf = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            double f = platts[i].scale(classifiers[i].f(x));
+            double f = platts != null? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
             if (f > maxf) {
                 y = i;
                 maxf = f;
@@ -146,7 +201,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
     @Override
     public int predict(T x, double[] posteriori) {
         for (int i = 0; i < k; i++) {
-            posteriori[i] = platts[i].scale(classifiers[i].f(x));
+            posteriori[i] = platts != null? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
         }
 
         MathEx.unitize1(posteriori);

@@ -455,7 +455,7 @@ package object validation {
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return measure results.
       */
-    def classification(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+    def classification(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => SoftClassifier[Tuple]): Array[Double] = {
       val prediction = CrossValidation.classification(k, formula, data, trainer)
       val y = formula.y(data).toIntArray
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))

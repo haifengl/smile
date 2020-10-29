@@ -18,10 +18,11 @@
 package smile
 
 import java.util.stream.LongStream
+
 import smile.base.cart.SplitRule
 import smile.base.mlp.LayerBuilder
 import smile.base.rbf.RBF
-import smile.data.DataFrame
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.math.MathEx
 import smile.math.TimeFunction
@@ -979,6 +980,10 @@ package object classification {
     */
   def ovr[T <: AnyRef](x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): OneVersusRest[T] = time("One vs. Rest") {
     OneVersusRest.fit(x, y, trainer)
+  }
+
+  def ovr(formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => SoftClassifier[Tuple]): OneVersusRest[Tuple] = time("One vs. Rest") {
+    OneVersusRest.fit(formula, data, trainer)
   }
 
   /** Hacking scaladoc [[https://github.com/scala/bug/issues/8124 issue-8124]].
