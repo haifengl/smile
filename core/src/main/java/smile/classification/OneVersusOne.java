@@ -57,10 +57,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      *                    Only the lower half is needed.
      */
     public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts) {
-        this.classifiers = classifiers;
-        this.platts = platts;
-        k = classifiers.length;
-        labels = IntSet.of(k);
+        this(classifiers, platts, IntSet.of(classifiers.length));
     }
 
     /**
@@ -104,7 +101,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
-            throw new IllegalArgumentException(String.format("Only %d classes" + k));
+            throw new IllegalArgumentException(String.format("Only %d classes", k));
         }
 
         // sample size per class.
@@ -112,10 +109,9 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         y = codec.y;
 
         Classifier<T>[][] classifiers = new Classifier[k][];
-        PlattScaling[][] platts = new PlattScaling[k][];
+        PlattScaling[][] platts = null;
         for (int i = 1; i < k; i++) {
             classifiers[i] = new Classifier[i];
-            platts[i] = new PlattScaling[i];
             for (int j = 0; j < i; j++) {
                 int n = ni[i] + ni[j];
 
@@ -136,7 +132,20 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
                 }
 
                 classifiers[i][j] = trainer.apply(xij, yij);
-                platts[i][j] = PlattScaling.fit(classifiers[i][j], xij, yij);
+
+                if (j == 0 && i == 1) {
+                    try {
+                        classifiers[i][j].f(xij[0]);
+                        platts = new PlattScaling[k][];
+                    } catch (UnsupportedOperationException ex) {
+                        logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
+                    }
+                }
+
+                if (platts != null) {
+                    if (platts[i] == null) platts[i] = new PlattScaling[i];
+                    platts[i][j] = PlattScaling.fit(classifiers[i][j], xij, yij);
+                }
             }
         }
 
@@ -167,6 +176,10 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      */
     @Override
     public int predict(T x, double[] posteriori) {
+        if (platts == null) {
+            throw new UnsupportedOperationException("Platt scaling is not available");
+        }
+
         double[][] r = new double[k][k];
 
         for (int i = 1; i < k; i++) {

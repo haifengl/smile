@@ -50,6 +50,7 @@ import smile.util.IntSet;
  */
 public class OneVersusRest<T> implements SoftClassifier<T> {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusRest.class);
 
     /** The number of classes. */
     private int k;
@@ -116,14 +117,14 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         if (k <= 2) {
-            throw new IllegalArgumentException("Only %d classes" + k);
+            throw new IllegalArgumentException(String.format("Only %d classes", k));
         }
 
         int n = x.length;
         y = codec.y;
 
         Classifier<T>[] classifiers = new Classifier[k];
-        PlattScaling[] platts = new PlattScaling[k];
+        PlattScaling[] platts = null;
         for (int i = 0; i < k; i++) {
             int[] yi = new int[n];
             for (int j = 0; j < n; j++) {
@@ -131,7 +132,19 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
             }
 
             classifiers[i] = trainer.apply(x, yi);
-            platts[i] = PlattScaling.fit(classifiers[i], x, yi);
+
+            if (i == 0) {
+                try {
+                    classifiers[0].f(x[0]);
+                    platts = new PlattScaling[k];
+                } catch (UnsupportedOperationException ex) {
+                    logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
+                }
+            }
+
+            if (platts != null) {
+                platts[i] = PlattScaling.fit(classifiers[i], x, yi);
+            }
         }
 
         return new OneVersusRest<>(classifiers, platts);
@@ -200,6 +213,10 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
 
     @Override
     public int predict(T x, double[] posteriori) {
+        if (platts == null) {
+            throw new UnsupportedOperationException("Platt scaling is not available");
+        }
+
         for (int i = 0; i < k; i++) {
             posteriori[i] = platts != null? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
         }
