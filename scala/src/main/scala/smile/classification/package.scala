@@ -982,7 +982,7 @@ package object classification {
     OneVersusRest.fit(x, y, trainer)
   }
 
-  def ovr(formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => SoftClassifier[Tuple]): OneVersusRest[Tuple] = time("One vs. Rest") {
+  def ovr(formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => DataFrameClassifier): OneVersusRest[Tuple] = time("One vs. Rest") {
     OneVersusRest.fit(formula, data, trainer)
   }
 

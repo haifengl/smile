@@ -27,7 +27,7 @@ import smile.data.type.StructType;
  *
  * @author Haifeng Li
  */
-public interface DataFrameClassifier {
+public interface DataFrameClassifier extends SoftClassifier<Tuple> {
 
     /**
      * Predicts the class label of an instance.

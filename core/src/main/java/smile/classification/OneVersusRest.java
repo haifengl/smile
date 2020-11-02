@@ -157,7 +157,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param data the data frame of the explanatory and response variables.
      * @param trainer the lambda to train binary classifiers.
      */
-    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
+    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         return fit(formula, data, +1, -1, trainer);
     }
 
@@ -170,7 +170,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param neg the class label for rest cases.
      * @param trainer the lambda to train binary classifiers.
      */
-    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, int pos, int neg, BiFunction<Formula, DataFrame, SoftClassifier<Tuple>> trainer) {
+    public static OneVersusRest<Tuple> fit(Formula formula, DataFrame data, int pos, int neg, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
         BaseVector bv = formula.y(data);
@@ -178,13 +178,13 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         ClassLabels codec = ClassLabels.fit(bv);
         int k = codec.k;
         if (k <= 2) {
-            throw new IllegalArgumentException("Only %d classes" + k);
+            throw new IllegalArgumentException(String.format("Only %d classes", k));
         }
 
         int n = x.nrows();
         int[] y = codec.y;
 
-        Classifier<Tuple>[] classifiers = new Classifier[k];
+        DataFrameClassifier[] classifiers = new DataFrameClassifier[k];
         for (int i = 0; i < k; i++) {
             int[][] yi = new int[n][1];
             for (int j = 0; j < n; j++) {
@@ -199,12 +199,24 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
     @Override
     public int predict(T x) {
         int y = 0;
-        double maxf = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < k; i++) {
-            double f = platts != null? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
-            if (f > maxf) {
-                y = i;
-                maxf = f;
+        double maxp = 0.0;
+        if (classifiers[0] instanceof SoftClassifier) {
+            for (int i = 0; i < k; i++) {
+                double[] proba = new double[2];
+                ((SoftClassifier<T>) classifiers[i]).predict(x, proba);
+                double p = proba[1];
+                if (p > maxp) {
+                    y = i;
+                    maxp = p;
+                }
+            }
+        } else {
+            for (int i = 0; i < k; i++) {
+                double p = platts[i].scale(classifiers[i].f(x));
+                if (p > maxp) {
+                    y = i;
+                    maxp = p;
+                }
             }
         }
 
@@ -213,13 +225,17 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
 
     @Override
     public int predict(T x, double[] posteriori) {
-        if (platts == null) {
-            throw new UnsupportedOperationException("Platt scaling is not available");
-        }
-
-        for (int i = 0; i < k; i++) {
-            posteriori[i] = platts != null? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
-        }
+            if (classifiers[0] instanceof SoftClassifier) {
+                for (int i = 0; i < k; i++) {
+                    double[] proba = new double[2];
+                    ((SoftClassifier<T>) classifiers[i]).predict(x, proba);
+                    posteriori[i] = proba[1];
+                }
+            } else {
+                for (int i = 0; i < k; i++) {
+                    posteriori[i] = platts != null ? platts[i].scale(classifiers[i].f(x)) : classifiers[i].predict(x);
+                }
+            }
 
         MathEx.unitize1(posteriori);
         return labels.valueOf(MathEx.whichMax(posteriori));
