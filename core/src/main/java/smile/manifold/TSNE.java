@@ -158,11 +158,24 @@ public class TSNE implements Serializable {
         double[][] Y = coordinates;
         int n = Y.length;
         int d = Y[0].length;
+        double[][] dC = new double[n][d];
 
         for (int iter = 1; iter <= iterations; iter++, totalIter++) {
             Qsum = computeQ(Y, Q);
 
-            IntStream.range(0, n).parallel().forEach(i -> sne(i));
+            IntStream.range(0, n).parallel().forEach(i -> sne(i, dC[i]));
+
+            // gradient update with momentum and gains
+            IntStream.range(0, n).parallel().forEach(i -> {
+                double[] Yi = Y[i];
+                double[] dYi = dY[i];
+                double[] dCi = dC[i];
+                double[] g = gains[i];
+                for (int k = 0; k < d; k++) {
+                    Yi[k] += dYi[k];
+                    dYi[k] = momentum * dYi[k] - 4.0 * eta * g[k] * dCi[k];
+                }
+            });
 
             if (totalIter == momentumSwitchIter) {
                 momentum = finalMomentum;
@@ -176,37 +189,37 @@ public class TSNE implements Serializable {
 
             // Compute current value of cost function
             if (iter % 50 == 0)   {
-                double C = 0.0;
-                for (int i = 0; i < n; i++) {
+                double C = IntStream.range(0, n).parallel().mapToDouble(i -> {
                     double[] Pi = P[i];
                     double[] Qi = Q[i];
+                    double Ci = 0.0;
                     for (int j = 0; j < i; j++) {
                         double p = Pi[j];
                         double q = Qi[j] / Qsum;
                         if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
-                        C += p * MathEx.log2(p / q);
+                        Ci += p * MathEx.log2(p / q);
                     }
-                }
+                    return Ci;
+                }).sum();
                 logger.info("Error after {} iterations: {}", totalIter, 2 * C);
             }
         }
 
         // Make solution zero-mean
         double[] colMeans = MathEx.colMeans(Y);
-        for (int i = 0; i < n; i++) {
+        IntStream.range(0, n).parallel().forEach(i -> {
             double[] Yi = Y[i];
             for (int j = 0; j < d; j++) {
                 Yi[j] -= colMeans[j];
             }
-        }
+        });
     }
 
     /** Computes the gradients and updates the coordinates. */
-    private void sne(int i) {
-        int d = coordinates[0].length;
-        double[] dC = new double[d];
+    private void sne(int i, double[] dC) {
         double[][] Y = coordinates;
         int n = Y.length;
+        int d = Y[0].length;
 
         // Compute gradient
         // dereference before the loop for better performance
@@ -215,13 +228,15 @@ public class TSNE implements Serializable {
         double[] Qi = Q[i];
         double[] dYi = dY[i];
         double[] g = gains[i];
+
+        Arrays.fill(dC, 0.0);
         for (int j = 0; j < n; j++) {
             if (i != j) {
                 double[] Yj = Y[j];
                 double q = Qi[j];
                 double z = (Pi[j] - (q / Qsum)) * q;
                 for (int k = 0; k < d; k++) {
-                    dC[k] += 4.0 * (Yi[k] - Yj[k]) * z;
+                    dC[k] += (Yi[k] - Yj[k]) * z;
                 }
             }
         }
@@ -231,10 +246,11 @@ public class TSNE implements Serializable {
             // Update gains
             g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
             if (g[k] < minGain) g[k] = minGain;
-
+/*
             // gradient update with momentum and gains
             Yi[k] += dYi[k];
-            dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
+            dYi[k] = momentum * dYi[k] - 4.0 * eta * g[k] * dC[k];
+ */
         }
     }
 
