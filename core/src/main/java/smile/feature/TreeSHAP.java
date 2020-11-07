@@ -35,6 +35,7 @@ public interface TreeSHAP extends SHAP<Tuple> {
      * Returns the classification/regression trees.
      */
     CART[] trees();
+
     /** Returns the formula associated with the model. */
     Formula formula();
 
@@ -47,10 +48,12 @@ public interface TreeSHAP extends SHAP<Tuple> {
         for (CART tree : forest) {
             double[] phii = tree.shap(xt);
 
-            if (phi == null) phi = phii;
-            else {
-                for (int i = 0; i < phi.length; i++)
+            if (phi == null) {
+              phi = phii;
+            } else {
+                for (int i = 0; i < phi.length; i++) {
                     phi[i] += phii[i];
+                }
             }
         }
 
