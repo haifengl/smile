@@ -44,8 +44,9 @@ public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
      * @param sigma the smooth/width parameter of Thin Plate Spline kernel.
      */
     public SparseThinPlateSplineKernel(double sigma) {
-        if (sigma <= 0)
+        if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive.");
+        }
 
         this.sigma = sigma;
     }

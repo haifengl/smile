@@ -48,11 +48,11 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    def ols(formula: Formula,
-            data: DataFrame,
-            method: String = "qr",
-            stderr: Boolean = true,
-            recursive: Boolean = true): LinearModel
+    def lm(formula: Formula,
+           data: DataFrame,
+           method: String = "qr",
+           stderr: Boolean = true,
+           recursive: Boolean = true): LinearModel
     </code></pre>
             </div>
         </div>
@@ -72,11 +72,11 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="kotlin_1">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    fun ols(formula: Formula,
-            data: DataFrame,
-            method: String = "qr",
-            stderr: Boolean = true,
-            recursive: Boolean = true): LinearModel
+    fun lm(formula: Formula,
+           data: DataFrame,
+           method: String = "qr",
+           stderr: Boolean = true,
+           recursive: Boolean = true): LinearModel
     </code></pre>
             </div>
         </div>
@@ -124,7 +124,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
-    smile> val model = ols("y" ~, planes)
+    smile> val model = lm("y" ~, planes)
     [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
     model: regression.LinearModel = Linear Model:
 
@@ -194,7 +194,7 @@ permalink: "{{ page.filePathStem }}.html"
     >>> import smile.regression.*
     >>> val planes = read.arff("data/weka/regression/2dplanes.arff")
     [main] INFO smile.io.Arff - Read ARFF relation 2dplanes
-    >>> val model = ols(Formula.lhs("y"), planes)
+    >>> val model = lm(Formula.lhs("y"), planes)
     >>> model
     res165: smile.regression.LinearModel = Linear Model:
 

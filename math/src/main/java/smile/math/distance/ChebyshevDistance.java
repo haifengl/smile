@@ -42,8 +42,9 @@ public class ChebyshevDistance implements Metric<double[]> {
      * Chebyshev distance between the two arrays of type integer.
      */
     public static double d(int[] x, int[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         double dist = 0.0;
         for (int i = 0; i < x.length; i++) {

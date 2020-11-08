@@ -46,8 +46,9 @@ public class MinkowskiDistance implements Metric<double[]> {
      * Constructor.
      */
     public MinkowskiDistance(int p) {
-        if (p <= 0)
+        if (p <= 0) {
             throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+        }
 
         this.p = p;
     }
@@ -58,12 +59,14 @@ public class MinkowskiDistance implements Metric<double[]> {
      * @param weight the weight vector.
      */
     public MinkowskiDistance(int p, double[] weight) {
-        if (p <= 0)
+        if (p <= 0) {
             throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+        }
 
         for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0)
+            if (weight[i] < 0) {
                 throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+            }
         }
 
         this.p = p;
@@ -72,18 +75,20 @@ public class MinkowskiDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        if (weight != null)
+        if (weight != null) {
             return String.format("Weighted Minkowski Distance(p = %d, weight = %s)", p, Arrays.toString(weight));
-        else
+        } else {
             return String.format("Minkowski Distance(p = %d)", p);
+        }
     }
 
     /**
      * Minkowski distance between the two arrays of type integer.
      */
     public double d(int[] x, int[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         double dist = 0.0;
 
@@ -93,8 +98,9 @@ public class MinkowskiDistance implements Metric<double[]> {
                 dist += Math.pow(d, p);
             }
         } else {
-            if (x.length != weight.length)
+            if (x.length != weight.length) {
                 throw new IllegalArgumentException(String.format("Input vectors and weight vector have different length: %d, %d", x.length, weight.length));
+            }
 
             for (int i = 0; i < x.length; i++) {
                 double d = Math.abs(x[i] - y[i]);
@@ -113,8 +119,9 @@ public class MinkowskiDistance implements Metric<double[]> {
      * where d is the p-pow of distance between non-missing values.
      */
     public double d(float[] x, float[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         int n = x.length;
         int m = 0;
@@ -129,8 +136,9 @@ public class MinkowskiDistance implements Metric<double[]> {
                 }
             }
         } else {
-            if (x.length != weight.length)
+            if (x.length != weight.length) {
                 throw new IllegalArgumentException(String.format("Input vectors and weight vector have different length: %d, %d", x.length, weight.length));
+            }
 
             for (int i = 0; i < x.length; i++) {
                 if (!Float.isNaN(x[i]) && !Float.isNaN(y[i])) {
@@ -155,8 +163,9 @@ public class MinkowskiDistance implements Metric<double[]> {
      */
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         int n = x.length;
         int m = 0;
@@ -171,8 +180,9 @@ public class MinkowskiDistance implements Metric<double[]> {
                 }
             }
         } else {
-            if (x.length != weight.length)
+            if (x.length != weight.length) {
                 throw new IllegalArgumentException(String.format("Input vectors and weight vector have different length: %d, %d", x.length, weight.length));
+            }
 
             for (int i = 0; i < x.length; i++) {
                 if (!Double.isNaN(x[i]) && !Double.isNaN(y[i])) {

@@ -15,10 +15,11 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.data
+package smile.spark
 
 import scala.language.implicitConversions
 import scala.collection.JavaConverters._
+import smile.data.{DataFrame, Tuple}
 import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types.{

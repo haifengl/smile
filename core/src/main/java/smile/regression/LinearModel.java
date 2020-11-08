@@ -349,6 +349,11 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         }
     }
 
+    /**
+     * Growing window recursive least squares with lambda = 1.
+     * RLS updates an ordinary least squares with samples that
+     * arrive sequentially.
+     */
     @Override
     public void update(double[] x, double y) {
         update(x, y, 1.0);
@@ -373,8 +378,13 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      *
      * @param x training instance.
      * @param y response variable.
-     * @param lambda The forgetting factor in (0, 1]. Values closer to 1 will have
-     *               longer memory and values closer to 0 will be have shorter memory.
+     * @param lambda The forgetting factor in (0, 1]. The smaller lambda is,
+     *               the smaller is the contribution of previous samples to
+     *               the covariance matrix. This makes the filter more
+     *               sensitive to recent samples, which means more fluctuations
+     *               in the filter coefficients. The lambda = 1 case is referred
+     *               to as the growing window RLS algorithm. In practice, lambda
+     *               is usually chosen between 0.98 and 1.
      */
     public void update(double[] x, double y, double lambda) {
         if (V == null) {

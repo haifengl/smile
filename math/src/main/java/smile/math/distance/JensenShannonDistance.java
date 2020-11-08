@@ -54,8 +54,9 @@ public class JensenShannonDistance implements Metric<double[]> {
 
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         return Math.sqrt(MathEx.JensenShannonDivergence(x, y));
     }
