@@ -65,8 +65,9 @@ public class DynamicTimeWarping<T> implements Distance<T[]> {
      * @param radius the window width of Sakoe-Chiba band in terms of percentage of sequence length.
      */
     public DynamicTimeWarping(Distance<T> distance, double radius) {
-        if (radius < 0 || radius > 1)
+        if (radius < 0 || radius > 1) {
             throw new IllegalArgumentException("radius = " + radius);
+        }
 
         this.distance = distance;
         this.width = radius;

@@ -18,9 +18,7 @@
 package smile.demo.classification;
 
 import java.awt.Dimension;
-
 import javax.swing.JFrame;
-
 import smile.classification.FLD;
 import smile.data.CategoricalEncoder;
 
