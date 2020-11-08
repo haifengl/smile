@@ -74,14 +74,14 @@ public class TSNETest {
         TSNE tsne = new TSNE(X, 2, 20, 200, 1000);
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
-
-        assertEquals(-6.9417527754508255, tsne.coordinates[0][0], 1E-7);
-        assertEquals(-4.877894494201111, tsne.coordinates[0][1], 1E-7);
-        assertEquals(14.22564317852574, tsne.coordinates[100][0], 1E-7);
-        assertEquals(-5.034221622144134, tsne.coordinates[100][1], 1E-7);
-        assertEquals(-11.650229498504789, tsne.coordinates[1000][0], 1E-7);
-        assertEquals(-14.799602105478963, tsne.coordinates[1000][1], 1E-7);
-        assertEquals(15.210827467634445, tsne.coordinates[2000][0], 1E-7);
-        assertEquals(-4.216214533598115, tsne.coordinates[2000][1], 1E-7);
+        
+        assertEquals(-5.2315022440214785, tsne.coordinates[0][0], 1E-7);
+        assertEquals(8.033757250596969, tsne.coordinates[0][1], 1E-7);
+        assertEquals(5.089496162961281, tsne.coordinates[100][0], 1E-7);
+        assertEquals(-17.72146277229905, tsne.coordinates[100][1], 1E-7);
+        assertEquals(-25.499868415707077, tsne.coordinates[1000][0], 1E-7);
+        assertEquals(19.881092027717276, tsne.coordinates[1000][1], 1E-7);
+        assertEquals(-5.046192009411943, tsne.coordinates[2000][0], 1E-7);
+        assertEquals(30.328124791830007, tsne.coordinates[2000][1], 1E-7);
     }
 }
