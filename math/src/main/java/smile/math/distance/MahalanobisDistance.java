@@ -52,11 +52,13 @@ public class MahalanobisDistance implements Metric<double[]> {
 
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != sigma.nrows())
+        if (x.length != sigma.nrows()) {
             throw new IllegalArgumentException(String.format("Array x[%d] has different dimension with Sigma[%d][%d].", x.length, sigma.nrows(), sigma.ncols()));
+        }
 
-        if (y.length != sigma.nrows())
+        if (y.length != sigma.nrows()) {
             throw new IllegalArgumentException(String.format("Array y[%d] has different dimension with Sigma[%d][%d].", y.length, sigma.nrows(), sigma.ncols()));
+        }
 
         int n = x.length;
         double[] z = new double[n];
