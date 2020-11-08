@@ -22,4 +22,4 @@
  *
  * @author Haifeng Li
  */
-package smile.sampling;
+package smile.stat.sampling;

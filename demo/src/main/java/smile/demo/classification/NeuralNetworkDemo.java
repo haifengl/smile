@@ -30,6 +30,7 @@ import smile.base.mlp.OutputLayer;
 import smile.classification.MLP;
 import smile.data.CategoricalEncoder;
 import smile.math.MathEx;
+import smile.math.TimeFunction;
 
 /**
  *
@@ -37,8 +38,8 @@ import smile.math.MathEx;
  */
 @SuppressWarnings("serial")
 public class NeuralNetworkDemo extends ClassificationDemo {
-    private int units = 10;
-    private int epochs = 20;
+    private int units = 20;
+    private int epochs = 10;
     private JTextField unitsField;
     private JTextField epochsField;
 
@@ -88,9 +89,13 @@ public class NeuralNetworkDemo extends ClassificationDemo {
         } else {
             net = new MLP(2, Layer.sigmoid(units), Layer.mle(k, OutputFunction.SOFTMAX));
         }
-        
+
+        net.setLearningRate(TimeFunction.linear(0.1, 2*data.length, 0.01));
+        net.setMomentum(TimeFunction.constant(0.5));
+
         for (int i = 0; i < epochs; i++) {
-            for (int j = 0; j < data.length; j++) {
+            int[] permutation = MathEx.permutate(data.length);
+            for (int j : permutation) {
                 net.update(data[j], label[j]);
             }
         }

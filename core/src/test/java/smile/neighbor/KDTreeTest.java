@@ -177,23 +177,23 @@ public class KDTreeTest {
         System.out.println("----- Benchmark -----");
 
         int N = 40000;
-        int size = 100;
+        int scale = 100;
         int numTests = 100_000;
 
         double[][] coords = new double[N][3];
         for (int i = 0; i < N; i++) {
-            coords[i][0] = MathEx.random() * size;
-            coords[i][1] = MathEx.random() * size;
-            coords[i][2] = MathEx.random() * size;
+            coords[i][0] = MathEx.random() * scale;
+            coords[i][1] = MathEx.random() * scale;
+            coords[i][2] = MathEx.random() * scale;
         }
         KDTree<double[]> kdt = new KDTree<>(coords, coords);
 
         long start = System.currentTimeMillis();
         double[] q = new double[3];
         for (int i = 0; i < numTests; i++) {
-            q[0] = MathEx.random() * size;
-            q[1] = MathEx.random() * size;
-            q[2] = MathEx.random() * size;
+            q[0] = MathEx.random() * scale;
+            q[1] = MathEx.random() * scale;
+            q[2] = MathEx.random() * scale;
             kdt.nearest(q);
         }
 

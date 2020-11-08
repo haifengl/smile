@@ -89,7 +89,7 @@ public interface TimeFunction extends Serializable {
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps.
      */
-    static TimeFunction linear(double initLearningRate, int decaySteps) {
+    static TimeFunction linear(double initLearningRate, double decaySteps) {
         return linear(initLearningRate, decaySteps, 0.0001);
     }
 
@@ -102,7 +102,7 @@ public interface TimeFunction extends Serializable {
      * @param decaySteps the decay steps.
      * @param endLearningRate the end learning rate.
      */
-    static TimeFunction linear(double initLearningRate, int decaySteps, double endLearningRate) {
+    static TimeFunction linear(double initLearningRate, double decaySteps, double endLearningRate) {
         return polynomial(initLearningRate, decaySteps, endLearningRate, false, 1.0);
     }
 
@@ -121,12 +121,12 @@ public interface TimeFunction extends Serializable {
      * @param cycle the flag whether or not it should cycle beyond decaySteps.
      * @param power the power of the polynomial.
      */
-    static TimeFunction polynomial(double initLearningRate, int decaySteps, double endLearningRate, boolean cycle, double power) {
+    static TimeFunction polynomial(double initLearningRate, double decaySteps, double endLearningRate, boolean cycle, double power) {
         return new TimeFunction() {
             @Override
             public double apply(int t) {
                 if (cycle) {
-                    double T = decaySteps * Math.ceil(t / decaySteps);
+                    double T = decaySteps * Math.max(1, Math.ceil(t / decaySteps));
                     return ((initLearningRate - endLearningRate) * Math.pow(1 - t / T, power)) + endLearningRate;
                 } else {
                     double steps = Math.min(t, decaySteps);
@@ -136,14 +136,14 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("PolynomialDecay(initial learning rate = %f, decay steps = %d, end learning rate = %f, cycle = %s, power = %f)", initLearningRate, decaySteps, endLearningRate, cycle, power);
+                return String.format("PolynomialDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f, cycle = %s, power = %f)", initLearningRate, decaySteps, endLearningRate, cycle, power);
             }
         };
     }
 
     /**
      * Returns the inverse decay function
-     * <code>initLearningRate / (1 + decayRate * t / decaySteps)</code>.
+     * <code>initLearningRate * decaySteps / (t + decaySteps)</code>.
      *
      * @param initLearningRate the initial learning rate.
      * @param decaySteps the decay steps that should be a small percentage
@@ -158,19 +158,20 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decaySteps = %d)", initLearningRate, decaySteps);
+                return String.format("InverseTimeDecay(initial learning rate = %f, decaySteps = %.0f)", initLearningRate, decaySteps);
             }
         };
     }
 
     /**
-     * Returns the inverse decay function.
+     * Returns the inverse decay function
+     * <code>initLearningRate / (1 + decayRate * t / decaySteps)</code>.
      *
      * @param initLearningRate the initial learning rate.
      * @param decaySteps how often to apply decay.
      * @param decayRate the decay rate.
      */
-    static TimeFunction inverse(double initLearningRate, int decaySteps, double decayRate) {
+    static TimeFunction inverse(double initLearningRate, double decaySteps, double decayRate) {
         return inverse(initLearningRate, decaySteps, decayRate, false);
     }
 
@@ -184,7 +185,7 @@ public interface TimeFunction extends Serializable {
      * @param staircase the flag whether to apply decay in a discrete staircase,
      *                  as opposed to continuous, fashion.
      */
-    static TimeFunction inverse(double initLearningRate, int decaySteps, double decayRate, boolean staircase) {
+    static TimeFunction inverse(double initLearningRate, double decaySteps, double decayRate, boolean staircase) {
         return new TimeFunction() {
             @Override
             public double apply(int t) {
@@ -197,7 +198,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decay steps = %d, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("InverseTimeDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
     }
@@ -219,7 +220,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %d)", initLearningRate, decaySteps);
+                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f)", initLearningRate, decaySteps);
             }
         };
     }
@@ -232,7 +233,7 @@ public interface TimeFunction extends Serializable {
      * @param decaySteps the maximum decay steps.
      * @param endLearningRate the end learning rate.
      */
-    static TimeFunction exp(double initLearningRate, int decaySteps, double endLearningRate) {
+    static TimeFunction exp(double initLearningRate, double decaySteps, double endLearningRate) {
         double decayRate = endLearningRate / initLearningRate;
         return new TimeFunction() {
             @Override
@@ -242,7 +243,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %d, end learning rate = %f)", initLearningRate, decaySteps, endLearningRate);
+                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f)", initLearningRate, decaySteps, endLearningRate);
             }
         };
     }
@@ -257,7 +258,7 @@ public interface TimeFunction extends Serializable {
      * @param staircase the flag whether to apply decay in a discrete staircase,
      *                  as opposed to continuous, fashion.
      */
-    static TimeFunction exp(double initLearningRate, int decaySteps, double decayRate, boolean staircase) {
+    static TimeFunction exp(double initLearningRate, double decaySteps, double decayRate, boolean staircase) {
         return new TimeFunction() {
             @Override
             public double apply(int t) {
@@ -270,7 +271,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %d, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
     }
