@@ -15,12 +15,13 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.data
+package smile.spark
 
 import org.apache.spark.sql.{Encoder, Encoders, SparkSession}
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.data.`type`.{DataTypes, StructField}
+import smile.util.Paths
 
 case class Person(name:String,age:Int,friends:Array[String])
 
@@ -35,7 +36,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
   "Spark DataFrame" should {
     "convert to smile DataFrame for simple libSVM format" in {
 
-      val sparkMushrooms = spark.read.format("libsvm").load("spark/src/test/resources/mushrooms.svm")
+      val sparkMushrooms = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
       val smileMushrooms = SparkDataFrame(sparkMushrooms)
 
@@ -82,7 +83,7 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
     "using object or implicit is equal" in {
 
-      val sparkMushrooms = spark.read.format("libsvm").load("spark/src/test/resources/mushrooms.svm")
+      val sparkMushrooms = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
       val objectSmileMushrooms = SparkDataFrame(sparkMushrooms)
       val implicitSmileMushrooms = sparkMushrooms.toSmileDF
