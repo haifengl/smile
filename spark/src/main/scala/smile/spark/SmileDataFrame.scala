@@ -15,16 +15,21 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.data
+package smile.spark
 
 import java.util.stream.Collectors
 
 import org.apache.spark.smile.SparkDataTypes
 import org.apache.spark.sql.{Row, SparkSession}
+import smile.data.{DataFrame, Tuple}
 
 import scala.collection.JavaConverters._
 
+/**
+ * Converter from Spark [[org.apache.spark.sql.DataFrame]] to SMILE [[DataFrame]]
+ */
 object SmileDataFrame {
+
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame, spark:SparkSession): org.apache.spark.sql.DataFrame = {
     val schema = SparkDataTypes.sparkSchema(df.schema)

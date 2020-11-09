@@ -23,8 +23,9 @@ import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.base.rbf.RBF
 import smile.regression.RBFNetwork
+import smile.util.Paths
 
-class SmileRegressorSpec extends Specification with BeforeAll with AfterAll{
+class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
 
   var spark:SparkSession = _
 
@@ -32,10 +33,10 @@ class SmileRegressorSpec extends Specification with BeforeAll with AfterAll{
     spark = SparkSession.builder().master("local[*]").getOrCreate
   }
 
-  "SmileRegressor" should {
+  "SmileRegression" should {
     "have the same performances after saving and loading back the model" in {
 
-      val raw = spark.read.format("libsvm").load("spark/src/test/resources/mushrooms.svm")
+      val raw = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
       val trainer = { (x: Array[Array[Double]], y: Array[Double]) => {
         val neurons = RBF.fit(x, 3)
@@ -43,7 +44,7 @@ class SmileRegressorSpec extends Specification with BeforeAll with AfterAll{
         }
       }
 
-      val sr = new SmileRegressor()
+      val sr = new SmileRegression()
         .setTrainer(trainer)
 
       val re = new RegressionEvaluator()

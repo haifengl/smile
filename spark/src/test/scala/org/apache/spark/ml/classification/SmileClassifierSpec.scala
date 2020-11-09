@@ -22,6 +22,7 @@ import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.classification.KNN
+import smile.util.Paths
 
 class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
 
@@ -34,7 +35,7 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
   "SmileClassifier" should {
     "have the same performances after saving and loading back the model" in {
 
-      val raw = spark.read.format("libsvm").load("spark/src/test/resources/mushrooms.svm")
+      val raw = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
       val scl = new SmileClassifier()
         .setTrainer({ (x, y) => KNN.fit(x, y, 3) })

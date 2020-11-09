@@ -15,13 +15,14 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.data
+package smile.spark
 
-import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
-import smile.data.`type`.StructField
+import org.apache.spark.sql.SparkSession
+import smile.data.`type`.{StructField,StructType}
 import smile.io.Read
+import smile.util.Paths
 
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
@@ -32,16 +33,16 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
   }
 
   "Smile DataFrame" should {
-    "conversions should be idempotent but lose measures" in {
+    "conversions should be idempotent but lose smile measures" in {
 
-      val smileMushrooms = Read.arff("spark/src/test/resources/mushrooms.arff").omitNullRows()
+      val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
 
-      smileMushrooms.schema().fields().map(field => new StructField(field.name,field.`type`)) mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms,spark)).schema()
+      new StructType(smileMushrooms.schema().fields().map(field => new StructField(field.name,field.`type`)):_*) mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms,spark)).schema()
     }
 
     "using object or implicit is equal" in {
 
-      val smileMushrooms = Read.arff("spark/src/test/resources/mushrooms.arff").omitNullRows()
+      val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
 
       val objectSparkMushrooms = SmileDataFrame(smileMushrooms,spark)
       val implicitSparkMushrooms = smileMushrooms.toSparkDF(spark)

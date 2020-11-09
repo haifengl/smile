@@ -5,9 +5,6 @@ name := "smile-spark"
 crossPaths := true
 autoScalaLibrary := true
 
-fork.in(Test) := true
-parallelExecution.in(Test) := false
-
 libraryDependencies ++= {
   val sparkV = "2.4.7"
   Seq(

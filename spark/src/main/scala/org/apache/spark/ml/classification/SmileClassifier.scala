@@ -21,10 +21,8 @@ import java.io.{ObjectInputStream, ObjectOutputStream}
 
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.classification.{
-  ClassificationModel => SparkClassificationModel,
-  Classifier => SparkClassifier
-}
+import org.apache.spark.ml.{Estimator, Pipeline}
+import org.apache.spark.ml.classification.{ClassificationModel => SparkClassificationModel, Classifier => SparkClassifier}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util.Instrumentation._
@@ -35,18 +33,21 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, JObject}
 
+/**
+ * Params for SmileClassifier
+ */
 private[ml] trait SmileClassifierParams extends Params with ClassifierParams {
 
   type Trainer =
     (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]]
 
   /**
-   * smile classifier used for training
+   * Param for the smile classification trainer
    *
    * @group param
    */
   val trainer: Param[Trainer] =
-    new Param[Trainer](this, "trainer", "smile classifier used for training")
+    new Param[Trainer](this, "trainer", "the smile classification trainer")
 
   /** @group getParam */
   def getTrainer: Trainer = $(trainer)
@@ -81,23 +82,25 @@ private[ml] object SmileClassifierParams {
 
 }
 
+/**
+ * SmileClassifier is an [[Estimator]] that takes a smile classification trainer and train it on a [[Dataset]].
+ * It makes it easy to add a smile classification trainer into a Spark MLLib [[Pipeline]].
+ *
+ * @note SmileClassifier will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
+ *       but train the classifier on a Spark Executor.
+ */
 class SmileClassifier(override val uid: String)
   extends SparkClassifier[Vector, SmileClassifier, SmileClassificationModel]
     with SmileClassifierParams
     with MLWritable {
 
+  def this() = this(Identifiable.randomUID("SmileClassifier"))
+
+  /** @group setParam */
   def setTrainer(
                   value: (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]])
   : this.type =
     set(trainer, value.asInstanceOf[Trainer])
-
-  def this() = this(Identifiable.randomUID("SmileClassifier"))
-
-  override def copy(extra: ParamMap): SmileClassifier = {
-    val copied = new SmileClassifier(uid)
-    copyValues(copied, extra)
-    copied.setTrainer(copied.getTrainer)
-  }
 
   override protected def train(dataset: Dataset[_]): SmileClassificationModel =
     instrumented { instr =>
@@ -137,6 +140,12 @@ class SmileClassifier(override val uid: String)
 
     }
 
+  override def copy(extra: ParamMap): SmileClassifier = {
+    val copied = new SmileClassifier(uid)
+    copyValues(copied, extra)
+    copied.setTrainer(copied.getTrainer)
+  }
+
   override def write: MLWriter = new SmileClassifier.SmileClassifierWriter(this)
 
 }
@@ -147,6 +156,7 @@ object SmileClassifier extends MLReadable[SmileClassifier] {
 
   override def load(path: String): SmileClassifier = super.load(path)
 
+  /** [[MLWriter]] instance for [[SmileClassifier]] */
   private[SmileClassifier] class SmileClassifierWriter(instance: SmileClassifier)
     extends MLWriter {
 
@@ -156,6 +166,7 @@ object SmileClassifier extends MLReadable[SmileClassifier] {
 
   }
 
+  /** [[MLReader]] instance for [[SmileClassifier]] */
   private class SmileClassifierReader extends MLReader[SmileClassifier] {
 
     /** Checked against metadata when loading model */
@@ -171,6 +182,12 @@ object SmileClassifier extends MLReadable[SmileClassifier] {
 
 }
 
+/**
+ * Model produced by [[SmileClassifier]].
+ * This stores the models resulting from training the smile classifier.
+ *
+ * @param model smile classifier
+ */
 class SmileClassificationModel(
                                 override val uid: String,
                                 override val numClasses: Int,
@@ -182,18 +199,27 @@ class SmileClassificationModel(
   def this(numClasses: Int, model: smile.classification.Classifier[Array[Double]]) =
     this(Identifiable.randomUID("SmileClassificationModel"), numClasses, model)
 
+  override protected def predictRaw(features: Vector): Vector = {
+
+    /**
+     * The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
+     * a Vector with "confidence scores" for every classes of the classification problem.
+     * Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
+     */
+
+    val tmp = Array.fill(numClasses)(0.0)
+    tmp(model.predict(features.toArray)) = 1.0
+    Vectors.dense(tmp)
+
+
+  }
+
   override def copy(extra: ParamMap): SmileClassificationModel = {
     val copied = new SmileClassificationModel(uid, numClasses, model)
     copyValues(copied, extra).setParent(parent)
   }
 
   override def write: MLWriter = new SmileClassificationModel.SmileClassificationModelWriter(this)
-
-  override protected def predictRaw(features: Vector): Vector = {
-    val tmp = Array.fill(numClasses)(0.0)
-    tmp(model.predict(features.toArray)) = 1.0
-    Vectors.dense(tmp)
-  }
 
 }
 
@@ -203,6 +229,7 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
 
   override def load(path: String): SmileClassificationModel = super.load(path)
 
+  /** [[MLWriter]] instance for [[SmileClassificationModel]] */
   private[SmileClassificationModel] class SmileClassificationModelWriter(
                                                                           instance: SmileClassificationModel)
     extends MLWriter {
@@ -223,6 +250,7 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
     }
   }
 
+  /** [[MLReader]] instance for [[SmileClassificationModel]] */
   private class SmileClassificationModelReader extends MLReader[SmileClassificationModel] {
 
     /** Checked against metadata when loading model */
