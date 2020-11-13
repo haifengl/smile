@@ -22,7 +22,7 @@ package smile.base.mlp;
  *
  * @author Haifeng Li
  */
-class HiddenLayerBuilder extends LayerBuilder {
+public class HiddenLayerBuilder extends LayerBuilder {
 
     /** The activation function. */
     private ActivationFunction f;
