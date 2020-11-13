@@ -27,6 +27,9 @@ import smile.math.MathEx;
 import smile.projection.PCA;
 import smile.util.Paths;
 import org.apache.commons.csv.CSVFormat;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -72,13 +75,13 @@ public class TSNETest {
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
 
-        assertEquals(-9.057511358934908, tsne.coordinates[0][0], 1E-7);
-        assertEquals(-2.2165432722827325, tsne.coordinates[0][1], 1E-7);
-        assertEquals(9.433125273897296, tsne.coordinates[100][0], 1E-7);
-        assertEquals(-8.813645202338213, tsne.coordinates[100][1], 1E-7);
-        assertEquals(-23.665346236554285, tsne.coordinates[1000][0], 1E-7);
-        assertEquals(3.6938603106916954, tsne.coordinates[1000][1], 1E-7);
-        assertEquals(-5.053462644817888, tsne.coordinates[2000][0], 1E-7);
-        assertEquals(-5.659335605767346, tsne.coordinates[2000][1], 1E-7);
+        assertEquals(-5.2315022440214785, tsne.coordinates[0][0], 1E-7);
+        assertEquals(8.033757250596969, tsne.coordinates[0][1], 1E-7);
+        assertEquals(5.089496162961281, tsne.coordinates[100][0], 1E-7);
+        assertEquals(-17.72146277229905, tsne.coordinates[100][1], 1E-7);
+        assertEquals(-25.499868415707077, tsne.coordinates[1000][0], 1E-7);
+        assertEquals(19.881092027717276, tsne.coordinates[1000][1], 1E-7);
+        assertEquals(-5.046192009411943, tsne.coordinates[2000][0], 1E-7);
+        assertEquals(30.328124791830007, tsne.coordinates[2000][1], 1E-7);
     }
 }

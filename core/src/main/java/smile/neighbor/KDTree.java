@@ -377,7 +377,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
             throw new IllegalArgumentException("Neighbor array length is larger than the dataset size");
         }
 
-        HeapSelect<NeighborBuilder<double[], E>> heap = new HeapSelect<>(k);
+        HeapSelect<NeighborBuilder<double[], E>> heap = new HeapSelect<>(NeighborBuilder.class, k);
         for (int i = 0; i < k; i++) {
             heap.add(new NeighborBuilder<>());
         }

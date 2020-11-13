@@ -78,11 +78,9 @@ public class TSNE implements Serializable {
     private double minGain         = .01;
     private int    totalIter       =   1; // total iterations
 
-    private double[][] D;
-
-    private double[][] dY;
     private double[][] gains; // adjust learning rate for each point
 
+    private double[][] D;
     private double[][] P;
     private double[][] Q;
     private double     Qsum;
@@ -119,7 +117,6 @@ public class TSNE implements Serializable {
 
         coordinates = new double[n][d];
         double[][] Y = coordinates;
-        dY = new double[n][d];
         gains = new double[n][d]; // adjust learning rate for each point
 
         // Initialize Y randomly by N(0, 0.0001)
@@ -158,11 +155,25 @@ public class TSNE implements Serializable {
         double[][] Y = coordinates;
         int n = Y.length;
         int d = Y[0].length;
+        double[][] dY = new double[n][d];
+        double[][] dC = new double[n][d];
 
         for (int iter = 1; iter <= iterations; iter++, totalIter++) {
             Qsum = computeQ(Y, Q);
 
-            IntStream.range(0, n).parallel().forEach(i -> sne(i));
+            IntStream.range(0, n).parallel().forEach(i -> sne(i, dY[i], dC[i]));
+
+            // gradient update with momentum and gains
+            IntStream.range(0, n).parallel().forEach(i -> {
+                double[] Yi = Y[i];
+                double[] dYi = dY[i];
+                double[] dCi = dC[i];
+                double[] g = gains[i];
+                for (int k = 0; k < d; k++) {
+                    dYi[k] = momentum * dYi[k] - eta * g[k] * dCi[k];
+                    Yi[k] += dYi[k];
+                }
+            });
 
             if (totalIter == momentumSwitchIter) {
                 momentum = finalMomentum;
@@ -175,46 +186,47 @@ public class TSNE implements Serializable {
             }
 
             // Compute current value of cost function
-            if (iter % 50 == 0)   {
-                double C = 0.0;
-                for (int i = 0; i < n; i++) {
+            if (iter % 100 == 0)   {
+                double C = IntStream.range(0, n).parallel().mapToDouble(i -> {
                     double[] Pi = P[i];
                     double[] Qi = Q[i];
+                    double Ci = 0.0;
                     for (int j = 0; j < i; j++) {
                         double p = Pi[j];
                         double q = Qi[j] / Qsum;
                         if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
-                        C += p * MathEx.log2(p / q);
+                        Ci += p * MathEx.log2(p / q);
                     }
-                }
+                    return Ci;
+                }).sum();
                 logger.info("Error after {} iterations: {}", totalIter, 2 * C);
             }
         }
 
         // Make solution zero-mean
         double[] colMeans = MathEx.colMeans(Y);
-        for (int i = 0; i < n; i++) {
+        IntStream.range(0, n).parallel().forEach(i -> {
             double[] Yi = Y[i];
             for (int j = 0; j < d; j++) {
                 Yi[j] -= colMeans[j];
             }
-        }
+        });
     }
 
     /** Computes the gradients and updates the coordinates. */
-    private void sne(int i) {
-        int d = coordinates[0].length;
-        double[] dC = new double[d];
+    private void sne(int i, double[] dY, double[] dC) {
         double[][] Y = coordinates;
         int n = Y.length;
+        int d = Y[0].length;
 
         // Compute gradient
         // dereference before the loop for better performance
         double[] Yi = Y[i];
         double[] Pi = P[i];
         double[] Qi = Q[i];
-        double[] dYi = dY[i];
         double[] g = gains[i];
+
+        Arrays.fill(dC, 0.0);
         for (int j = 0; j < n; j++) {
             if (i != j) {
                 double[] Yj = Y[j];
@@ -226,15 +238,10 @@ public class TSNE implements Serializable {
             }
         }
 
-        // Perform the update
+        // Update gains
         for (int k = 0; k < d; k++) {
-            // Update gains
-            g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
+            g[k] = (Math.signum(dC[k]) != Math.signum(dY[k])) ? (g[k] + .2) : (g[k] * .8);
             if (g[k] < minGain) g[k] = minGain;
-
-            // gradient update with momentum and gains
-            Yi[k] += dYi[k];
-            dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
         }
     }
 
