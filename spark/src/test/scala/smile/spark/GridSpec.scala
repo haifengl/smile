@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.spark.tuning
+package smile.spark
 
 import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
@@ -25,9 +25,9 @@ import smile.io.Read
 import smile.util.Paths
 import smile.validation.Accuracy
 
-class TuningSuite extends Specification with BeforeAll with AfterAll{
+class GridSpec extends Specification with BeforeAll with AfterAll{
 
-  var spark: SparkSession = _
+  implicit var spark: SparkSession = _
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -43,7 +43,7 @@ class TuningSuite extends Specification with BeforeAll with AfterAll{
       val knn3 = (x:Array[Array[Double]], y:Array[Int]) => KNN.fit(x, y, 3)
       val knn5 = (x:Array[Array[Double]], y:Array[Int]) => KNN.fit(x, y, 5)
 
-      val res = classification.sparkgscv(spark)(5, x, y, Seq(new Accuracy()): _*) (Seq(knn3,knn5):_*)
+      val res = grid(5, x, y, Seq(new Accuracy()): _*) (Seq(knn3, knn5):_*)
 
       res(0)(0) mustEqual 1 and (res.length mustEqual 2) and (res(0).length mustEqual 5)
     }

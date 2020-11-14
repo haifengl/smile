@@ -61,7 +61,6 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
                         new StructField("friends", DataTypes.array(DataTypes.StringType))):_*)
 
       smilePersons.schema() mustEqual smileSchema
-
     }
 
     "converted DataFrame should have the same data" in {
@@ -78,7 +77,6 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val names = Set("smith","emma")
 
       names must contain(smilePersons("name")(0)) and (names must contain(smilePersons("name")(1)))
-
     }
 
     "using object or implicit is equal" in {
@@ -86,11 +84,10 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val sparkMushrooms = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
       val objectSmileMushrooms = SparkDataFrame(sparkMushrooms)
-      val implicitSmileMushrooms = sparkMushrooms.toSmileDF
+      val implicitSmileMushrooms = sparkMushrooms.toSmile
 
       objectSmileMushrooms.schema() mustEqual implicitSmileMushrooms.schema()
     }
-
   }
 
   def afterAll(): Unit = {
