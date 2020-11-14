@@ -36,6 +36,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Sensitivity implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static Sensitivity instance = new Sensitivity();
 
     @Override

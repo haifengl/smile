@@ -36,6 +36,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RandIndex implements ClusterMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static RandIndex instance = new RandIndex();
 
     @Override

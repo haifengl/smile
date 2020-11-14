@@ -28,6 +28,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class FDR implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static FDR instance = new FDR();
 
     @Override
