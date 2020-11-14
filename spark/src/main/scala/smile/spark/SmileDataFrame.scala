@@ -29,7 +29,7 @@ import scala.collection.JavaConverters._
 object SmileDataFrame {
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
-    val schema = SparkDataTypes.sparkSchema(df.schema)
+    val schema = SparkDataTypes.toSparkSchema(df.schema)
     spark.createDataFrame(
       df.stream()
         .collect(Collectors.toList())
