@@ -128,7 +128,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
 
             if (i == 0) {
                 try {
-                    classifiers[0].f(x[0]);
+                    classifiers[0].score(x[0]);
                     platts = new PlattScaling[k];
                 } catch (UnsupportedOperationException ex) {
                     logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
@@ -182,7 +182,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         int y = 0;
         double maxf = Double.NEGATIVE_INFINITY;
         for (int i = 0; i < k; i++) {
-            double f = platts[i].scale(classifiers[i].f(x));
+            double f = platts[i].scale(classifiers[i].score(x));
             if (f > maxf) {
                 y = i;
                 maxf = f;
@@ -199,7 +199,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
         }
 
         for (int i = 0; i < k; i++) {
-            posteriori[i] = platts[i].scale(classifiers[i].f(x));
+            posteriori[i] = platts[i].scale(classifiers[i].score(x));
         }
 
         MathEx.unitize1(posteriori);

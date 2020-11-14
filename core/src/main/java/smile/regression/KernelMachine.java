@@ -60,6 +60,6 @@ public class KernelMachine<T> extends smile.base.svm.KernelMachine<T> implements
 
     @Override
     public double predict(T x) {
-        return f(x);
+        return score(x);
     }
 }
