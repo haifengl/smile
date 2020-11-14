@@ -18,7 +18,7 @@
 package smile.spark
 
 import java.util.stream.Collectors
-import org.apache.spark.smile.SparkDataTypes
+import org.apache.spark.ml.DataTypeOps
 import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
 import scala.collection.JavaConverters._
@@ -29,7 +29,7 @@ import scala.collection.JavaConverters._
 object SmileDataFrame {
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
-    val schema = SparkDataTypes.toSparkSchema(df.schema)
+    val schema = DataTypeOps.toSparkSchema(df.schema)
     spark.createDataFrame(
       df.stream()
         .collect(Collectors.toList())

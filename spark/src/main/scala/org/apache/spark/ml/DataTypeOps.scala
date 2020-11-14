@@ -15,19 +15,19 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package org.apache.spark.smile
+package org.apache.spark.ml
 
-import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 import org.apache.spark.sql.types._
 import org.apache.spark.ml.linalg.VectorUDT
 import org.apache.spark.mllib.linalg.{VectorUDT => OldVectorUDT}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
+import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 
 /**
-  * SparkDataTypes is a collection of internal helper methods to convert back and forth
+  * DataTypeOps is a collection of internal helper methods to convert back and forth
   * between [[smile.data.`type`.DataType]] and [[org.apache.spark.sql.types.DataType]].
   */
-object SparkDataTypes {
+object DataTypeOps {
   /**
     * Convert a Spark schema to a Smile schema
     *
