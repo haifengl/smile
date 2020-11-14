@@ -17,20 +17,28 @@
 
 package smile.spark
 
-import scala.language.implicitConversions
-import scala.collection.JavaConverters._
+import org.apache.spark.smile.SparkDataTypes
+import smile.data.`type`.StructType
 import smile.data.{DataFrame, Tuple}
-import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
-import org.apache.spark.sql.Row
-import org.apache.spark.sql.types.{
-  ArrayType => SparkArrayType,
-  DataType => SparkDataType,
-  StructField => SparkStructField,
-  StructType => SparkStructType,
-  _
+
+import scala.collection.JavaConverters._
+
+/**
+ * Converter from SMILE [[DataFrame]] to Spark [[org.apache.spark.sql.DataFrame]]
+ */
+object SparkDataFrame {
+  /** Returns a local Smile DataFrame. */
+  def apply(df: org.apache.spark.sql.DataFrame): DataFrame = {
+    val schema = SparkDataTypes.smileSchema(df.schema)
+    DataFrame.of(
+      df.collect()
+        .map(row => SparkRowTuple(row, schema))
+        .toList
+        .asJava)
+  }
 }
 
-case class SparkRowTuple(row: org.apache.spark.sql.Row, val schema: StructType) extends Tuple {
+case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:StructType) extends Tuple {
   override def length: Int = row.size
   override def fieldIndex(name: String): Int = row.fieldIndex(name)
   override def isNullAt(i: Int): Boolean = row.isNullAt(i)
@@ -46,53 +54,9 @@ case class SparkRowTuple(row: org.apache.spark.sql.Row, val schema: StructType) 
   override def getString(i: Int): String = row.getString(i)
   override def getDate(i: Int): java.time.LocalDate = row.getDate(i).toLocalDate()
   override def getDateTime(i: Int): java.time.LocalDateTime = row.getTimestamp(i).toLocalDateTime()
+  override def getTime(i: Int): java.time.LocalTime = row.getTimestamp(i).toLocalDateTime().toLocalTime()
   override def getStruct(i: Int): SparkRowTuple = {
     val tuple = row.getStruct(i)
     SparkRowTuple(tuple, SparkDataTypes.smileSchema(tuple.schema))
-  }
-}
-
-object SparkDataFrame {
-  /** Returns a local Smile DataFrame. */
-  def apply(df: org.apache.spark.sql.DataFrame): DataFrame = {
-    val schema = SparkDataTypes.smileSchema(df.schema)
-    DataFrame.of(
-      df.collect()
-        .map(row => SparkRowTuple(row, schema))
-        .toList
-        .asJava)
-  }
-}
-
-object SparkDataTypes {
-  implicit def smileSchema(schema: SparkStructType): StructType = {
-    DataTypes.struct(schema.map(smileField): _*)
-  }
-
-  implicit def smileField(field: SparkStructField): StructField = {
-    new StructField(field.name, field.dataType)
-  }
-
-  implicit def smileType(`type`: SparkDataType): DataType = {
-    `type` match {
-      case BooleanType => DataTypes.BooleanType
-      case ByteType => DataTypes.ByteType
-      case BinaryType => DataTypes.ByteArrayType
-      case ShortType => DataTypes.ShortType
-      case IntegerType => DataTypes.IntegerType
-      case LongType => DataTypes.LongType
-      case FloatType => DataTypes.FloatType
-      case DoubleType => DataTypes.DoubleType
-      case _: DecimalType => DataTypes.DecimalType
-      case StringType => DataTypes.StringType
-      case TimestampType => DataTypes.DateTimeType
-      case DateType => DataTypes.DateType
-      case SparkArrayType(elementType, _) => DataTypes.array(elementType)
-      case SparkStructType(fields) => DataTypes.struct(fields.map(smileField): _*)
-      case MapType(keyType, valueType, _) =>
-        DataTypes.array(DataTypes.struct(Seq(new StructField("key", keyType), new StructField("value", valueType)): _*))
-      case ObjectType(cls) => DataTypes.`object`(cls)
-      case _: NullType => DataTypes.StringType
-    }
   }
 }
