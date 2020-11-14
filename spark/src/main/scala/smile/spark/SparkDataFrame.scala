@@ -23,7 +23,7 @@ import smile.data.{DataFrame, Tuple}
 import scala.collection.JavaConverters._
 
 /**
-  * Converter from SMILE [[DataFrame]] to Spark [[org.apache.spark.sql.DataFrame]]
+  * Converts Smile [[DataFrame]] to Spark [[org.apache.spark.sql.DataFrame]]
   */
 object SparkDataFrame {
   /** Returns a local Smile DataFrame. */

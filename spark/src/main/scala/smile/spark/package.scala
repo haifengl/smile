@@ -40,7 +40,7 @@ package object spark {
     * Extension method to SMILE [[DataFrame]] to convert them to Spark [[org.apache.spark.sql.DataFrame]]
     */
   implicit class SmileDataFrameOps(df: DataFrame) {
-    def toSpark(spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df,spark)
+    def toSpark(implicit spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df)
   }
 
   /**
