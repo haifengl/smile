@@ -44,16 +44,6 @@ package object spark {
   }
 
   /**
-    * Class to make [[ClassificationMeasure]] serializable so Spark can send instances on remote Spark Executors.
-    */
-  case class SerializableClassificationMeasure(@transient measure: ClassificationMeasure)
-
-  /**
-    * Class to make [[RegressionMeasure]] serializable so Spark can send instances on remote Spark Executors.
-    */
-  case class SerializableRegressionMeasure(@transient measure: RegressionMeasure)
-
-  /**
     * Distributed GridSearch Cross Validation for [[Classifier]].
     *
     * @param spark running spark session
@@ -73,11 +63,9 @@ package object spark {
 
     val xBroadcasted = sc.broadcast[Array[T]](x)
     val yBroadcasted = sc.broadcast[Array[Int]](y)
+    val measuresBroadcasted = measures.map(sc.broadcast)
 
     val trainersRDD = sc.parallelize(trainers)
-
-    val measuresBroadcasted = measures.map(SerializableClassificationMeasure).map(sc.broadcast)
-
     val res = trainersRDD
       .map(trainer => {
         //TODO: add smile-scala dependency and import the implicit conversion
@@ -86,7 +74,7 @@ package object spark {
         }
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val measures = measuresBroadcasted.map(_.value.measure)
+        val measures = measuresBroadcasted.map(_.value)
         //TODO: add smile-scala dependency and use smile.validation.cv
         val prediction =  CrossValidation.classification(k, x, y, biFunctionTrainer)
         val measuresOrAccuracy = if (measures.isEmpty) Seq(new Accuracy()) else measures
@@ -123,11 +111,9 @@ package object spark {
 
     val xBroadcasted = sc.broadcast[Array[T]](x)
     val yBroadcasted = sc.broadcast[Array[Double]](y)
+    val measuresBroadcasted = measures.map(sc.broadcast)
 
     val trainersRDD = sc.parallelize(trainers)
-
-    val measuresBroadcasted = measures.map(SerializableRegressionMeasure).map(sc.broadcast)
-
     val res = trainersRDD
       .map(trainer => {
         //TODO: add smile-scala dependency and import the implicit conversion
@@ -136,7 +122,7 @@ package object spark {
         }
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val measures = measuresBroadcasted.map(_.value.measure)
+        val measures = measuresBroadcasted.map(_.value)
         //TODO: add smile-scala dependency and use smile.validation.cv
         val prediction =  CrossValidation.regression(k, x, y, biFunctionTrainer)
         val measuresOrRMSE = if (measures.isEmpty) Seq(new RMSE()) else measures
