@@ -45,7 +45,7 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
       val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
 
       val objectSparkMushrooms = SmileDataFrame(smileMushrooms,spark)
-      val implicitSparkMushrooms = smileMushrooms.toSparkDF(spark)
+      val implicitSparkMushrooms = smileMushrooms.toSpark(spark)
 
       objectSparkMushrooms.schema mustEqual implicitSparkMushrooms.schema
     }
