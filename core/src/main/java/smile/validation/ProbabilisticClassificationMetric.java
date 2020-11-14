@@ -17,19 +17,18 @@
 
 package smile.validation;
 
+import java.io.Serializable;
+
 /**
- * An abstract interface to measure the binary classification performance.
+ * An abstract interface to measure the probabilistic classification performance.
  *
  * @author Haifeng Li
  */
-public interface BinaryClassificationMetric extends ClassificationMetric {
-
+public interface ProbabilisticClassificationMetric extends Serializable {
     /**
      * Returns a score to measure the quality of classification.
      * @param truth the true class labels.
      * @param probability The posterior probability of positive class.
      */
-    default double score(int[] truth, double[] probability) {
-        throw new UnsupportedOperationException();
-    }
+    double score(int[] truth, double[] probability);
 }

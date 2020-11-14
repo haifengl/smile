@@ -39,15 +39,10 @@ import smile.sort.QuickSort;
  *
  * @author Haifeng Li
  */
-public class AUC implements BinaryClassificationMetric {
+public class AUC implements ProbabilisticClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static AUC instance = new AUC();
-
-    @Override
-    public double score(int[] truth, int[] prediction) {
-        throw new UnsupportedOperationException();
-    }
 
     @Override
     public double score(int[] truth, double[] probability) {
