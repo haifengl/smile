@@ -10,13 +10,13 @@ tasks.withType<KotlinCompile> {
 
 plugins {
     `maven-publish`
-    kotlin("jvm") version "1.3.72" 
-    id("org.jetbrains.dokka") version "0.10.1"
+    kotlin("jvm") version "1.4.10" 
+    id("org.jetbrains.dokka") version "1.4.10.2"
     signing
 }
 
 group = "com.github.haifengl"
-version = "2.5.3"
+version = "2.6.0"
 
 repositories {
     mavenCentral()
@@ -26,9 +26,9 @@ repositories {
 
 dependencies {
     implementation(kotlin("stdlib")) 
-    api("com.github.haifengl:smile-core:2.5.3")
-    api("com.github.haifengl:smile-nlp:2.5.3")
-    api("com.github.haifengl:smile-io:2.5.3")
+    api("com.github.haifengl:smile-core:2.6.0")
+    api("com.github.haifengl:smile-nlp:2.6.0")
+    api("com.github.haifengl:smile-io:2.6.0")
 }
 
 // Copy jar to shell lib
@@ -44,9 +44,8 @@ tasks.build {
 
 // Configure existing Dokka task to output HTML
 tasks {
-    val dokka by getting(DokkaTask::class) {
-        outputFormat = "html"
-        outputDirectory = "../doc/api/kotlin"
+    dokkaHtml {
+        outputDirectory.set("../doc/api/kotlin")
         configuration {
             includes = listOf("packages.md")
             externalDocumentationLink {
@@ -61,8 +60,7 @@ val dokkaJar by tasks.creating(Jar::class) {
     group = JavaBasePlugin.DOCUMENTATION_GROUP
     description = "Assembles Kotlin docs with Dokka"
     classifier = "javadoc"
-    // dependsOn(tasks.dokka) not needed; dependency automatically inferred by from(tasks.dokka)
-    from(tasks.dokka)
+    from(tasks.dokkaHtml)
 }
 
 // Create sources Jar from main kotlin sources
