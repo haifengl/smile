@@ -28,9 +28,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class FMeasureTest {
+public class FScoreTest {
 
-    public FMeasureTest() {
+    public FScoreTest() {
     }
 
     @BeforeClass
@@ -62,7 +62,7 @@ public class FMeasureTest {
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
             0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
         };
-        FMeasure instance = new FMeasure();
+        FScore instance = new FScore();
         double expResult = 0.87719;
         double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-5);

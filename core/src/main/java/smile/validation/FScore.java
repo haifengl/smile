@@ -33,8 +33,14 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class FMeasure implements ClassificationMetric {
+public class FScore implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
+    /** The F_1 score, the harmonic mean of precision and recall. */
+    public final static FScore F1 = new FScore(1.0);
+    /** The F_2 score, which weighs recall higher than precision. */
+    public final static FScore F2 = new FScore(2.0);
+    /** The F_0.5 score, which weighs recall lower than precision. */
+    public final static FScore FHalf = new FScore(0.5);
 
     @Override
     public double score(int[] truth, int[] prediction) {
@@ -50,7 +56,7 @@ public class FMeasure implements ClassificationMetric {
     private double beta = 1.0;
 
     /** Constructor of F1 score. */
-    public FMeasure() {
+    public FScore() {
         this(1.0);
     }
 
@@ -61,7 +67,7 @@ public class FMeasure implements ClassificationMetric {
      *             to a user who attaches &beta; times as much
      *             importance to recall as precision.
      */
-    public FMeasure(double beta) {
+    public FScore(double beta) {
         if (beta <= 0.0) {
             throw new IllegalArgumentException("Negative beta");
         }
