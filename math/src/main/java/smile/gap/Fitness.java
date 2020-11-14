@@ -22,11 +22,10 @@ package smile.gap;
  *
  * @author Haifeng Li
  */
-public interface FitnessMeasure <T extends Chromosome> {
-
+public interface Fitness<T extends Chromosome> {
     /**
      * Returns the non-negative fitness value of a chromosome. Large values
      * indicate better fitness.
      */
-    double fit(T chromosome);
+    double score(T chromosome);
 }
