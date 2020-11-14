@@ -338,8 +338,8 @@ package object validation {
     if (metrics.isEmpty) Seq(new Accuracy) else metrics
   }
 
-  private def metricsOrRMSE(metrics: collection.Seq[RegressionMetric]): collection.Seq[RegressionMetric] = {
-    if (metrics.isEmpty) Seq(new RMSE) else metrics
+  private def metricsOrR2(metrics: collection.Seq[RegressionMetric]): collection.Seq[RegressionMetric] = {
+    if (metrics.isEmpty) Seq(new R2) else metrics
   }
 
   object loocv {
@@ -400,7 +400,7 @@ package object validation {
     def regression[T <: AnyRef](x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = LOOCV.regression(x, y, trainer)
 
-      metricsOrRMSE(metrics).map { metric =>
+      metricsOrR2(metrics).map { metric =>
         val result = metric.score(y, prediction)
         println(f"$metric%s: $result%.4f")
         result
@@ -419,7 +419,7 @@ package object validation {
       val prediction = LOOCV.regression(formula, data, trainer)
       val y = formula.y(data).toDoubleArray
 
-      metricsOrRMSE(metrics).map { metric =>
+      metricsOrR2(metrics).map { metric =>
         val result = metric.score(y, prediction)
         println(f"$metric%s: $result%.4f")
         result
@@ -491,7 +491,7 @@ package object validation {
     def regression[T <: AnyRef](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = CrossValidation.regression(k, x, y, trainer)
 
-      metricsOrRMSE(metrics).map { metric =>
+      metricsOrR2(metrics).map { metric =>
         val result = metric.score(y, prediction)
         println(f"$metric%s: $result%.4f")
         result
@@ -511,7 +511,7 @@ package object validation {
       val prediction = CrossValidation.regression(k, formula, data, trainer)
       val y = formula.y(data).toDoubleArray
 
-      metricsOrRMSE(metrics).map { metric =>
+      metricsOrR2(metrics).map { metric =>
         val result = metric.score(y, prediction)
         println(f"$metric%s: $result%.4f")
         result
