@@ -25,7 +25,7 @@ import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
-import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, RMSE, RegressionMetric}
+import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, R2, RegressionMetric}
 
 /**
   * Package for better integration of Spark MLLib Pipelines and SMILE
@@ -69,8 +69,7 @@ package object spark {
       val yBroadcasted = sc.broadcast(y)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Int], Classifier[T]] {
           override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y, prop)
         }
@@ -113,8 +112,7 @@ package object spark {
       val dataBroadcasted = sc.broadcast(data)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameClassifier] {
           override def apply(formula: Formula, data: DataFrame): DataFrameClassifier = trainer(formula, data, prop)
         }
@@ -135,8 +133,9 @@ package object spark {
 
       scores
     }
+
     /**
-      * Distributed hyper-parameter optimization with cross validation.
+      * Distributed hyper-parameter optimization.
       *
       * @param spark          spark session.
       * @param x              training samples.
@@ -160,8 +159,7 @@ package object spark {
       val testyBroadcasted = sc.broadcast(testy)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val x = xBroadcasted.value
         val y = yBroadcasted.value
         val testx = xBroadcasted.value
@@ -206,18 +204,17 @@ package object spark {
       val testBroadcasted = sc.broadcast(test)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val formula = formulaBroadcasted.value
         val train = trainBroadcasted.value
         val test = testBroadcasted.value
-        val y = formula.y(test).toIntArray
+        val testy = formula.y(test).toIntArray
         val metrics = metricsBroadcasted.value
 
         val model = trainer(formula, train, prop)
         val prediction = model.predict(test)
         val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map(_.score(y, prediction)).toArray
+        metricsOrAccuracy.map(_.score(testy, prediction)).toArray
       }).collect()
 
       formulaBroadcasted.destroy()
@@ -253,8 +250,7 @@ package object spark {
       val yBroadcasted = sc.broadcast(y)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Double], Regression[T]] {
           override def apply(x: Array[T], y: Array[Double]): Regression[T] = trainer(x, y, prop)
         }
@@ -264,8 +260,8 @@ package object spark {
         val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.regression(k, x, y, biFunctionTrainer)
-        val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
-        metricsOrRMSE.map(_.score(y, prediction)).toArray
+        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
+        metricsOrR2.map(_.score(y, prediction)).toArray
       }).collect()
 
       xBroadcasted.destroy()
@@ -297,8 +293,7 @@ package object spark {
       val dataBroadcasted = sc.broadcast(data)
       val metricsBroadcasted = sc.broadcast(metrics)
 
-      val hpRDD = sc.parallelize(configurations)
-      val scores = hpRDD.map(prop => {
+      val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameRegression] {
           override def apply(formula: Formula, data: DataFrame): DataFrameRegression = trainer(formula, data, prop)
         }
@@ -309,12 +304,104 @@ package object spark {
         val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.regression(k, formula, data, biFunctionTrainer)
-        val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
-        metricsOrRMSE.map(_.score(y, prediction)).toArray
+        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
+        metricsOrR2.map(_.score(y, prediction)).toArray
       }).collect()
 
       formulaBroadcasted.destroy()
       dataBroadcasted.destroy()
+      metricsBroadcasted.destroy()
+
+      scores
+    }
+
+    /**
+      * Distributed hyper-parameter optimization.
+      *
+      * @param spark          spark session.
+      * @param x              training samples.
+      * @param y              response variable.
+      * @param testx          test samples.
+      * @param testy          test labels.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
+                                   (trainer: (Array[T], Array[Double], Properties) => Regression[T])
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
+
+      val xBroadcasted = sc.broadcast(x)
+      val yBroadcasted = sc.broadcast(y)
+      val testxBroadcasted = sc.broadcast(testx)
+      val testyBroadcasted = sc.broadcast(testy)
+      val metricsBroadcasted = sc.broadcast(metrics)
+
+      val scores = sc.parallelize(configurations).map(prop => {
+        val x = xBroadcasted.value
+        val y = yBroadcasted.value
+        val testx = testxBroadcasted.value
+        val testy = testyBroadcasted.value
+        val metrics = metricsBroadcasted.value
+
+        val model = trainer(x, y, prop)
+        val prediction = model.predict(testx)
+        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
+        metricsOrR2.map(_.score(testy, prediction)).toArray
+      }).collect()
+
+      xBroadcasted.destroy()
+      yBroadcasted.destroy()
+      testxBroadcasted.destroy()
+      testyBroadcasted.destroy()
+      metricsBroadcasted.destroy()
+
+      scores
+    }
+
+    /**
+      * Distributed hyper-parameter optimization.
+      *
+      * @param spark          spark session.
+      * @param k              k-fold cross validation.
+      * @param formula        model formula.
+      * @param train          training data.
+      * @param test           test data.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
+                                   (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
+
+      val formulaBroadcasted = sc.broadcast(formula)
+      val trainBroadcasted = sc.broadcast(train)
+      val testBroadcasted = sc.broadcast(test)
+      val metricsBroadcasted = sc.broadcast(metrics)
+
+      val scores = sc.parallelize(configurations).map(prop => {
+        val formula = formulaBroadcasted.value
+        val train = trainBroadcasted.value
+        val test = trainBroadcasted.value
+        val testy = formula.y(test).toDoubleArray
+        val metrics = metricsBroadcasted.value
+
+        val model = trainer(formula, train, prop)
+        val prediction = model.predict(test)
+        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
+        metricsOrR2.map(_.score(testy, prediction)).toArray
+      }).collect()
+
+      formulaBroadcasted.destroy()
+      trainBroadcasted.destroy()
+      testBroadcasted.destroy()
       metricsBroadcasted.destroy()
 
       scores
