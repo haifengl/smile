@@ -45,7 +45,7 @@ class GridSpec extends Specification with BeforeAll with AfterAll{
 
       val res = grid(5, x, y, Seq(new Accuracy()): _*) (Seq(knn3, knn5):_*)
 
-      res(0)(0) mustEqual 1 and (res.length mustEqual 2) and (res(0).length mustEqual 5)
+      res(0)(0) mustEqual 1 and (res.length mustEqual 2) and (res(0).length mustEqual 1)
     }
   }
 
