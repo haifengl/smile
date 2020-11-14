@@ -8,7 +8,7 @@ lazy val commonSettings = Seq(
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
-  libraryDependencies += "junit" % "junit" % "4.13" % "test",
+  libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
   scalaVersion := "2.13.3",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
@@ -54,7 +54,7 @@ lazy val skipPublishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, shell)
+  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -84,6 +84,6 @@ lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
-lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(core, data, io % "test")
+lazy val spark = project.in(file("spark")).settings(skipPublishSettings: _*).dependsOn(core, data, io % "test")
 
 lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(benchmark, demo, scala)
