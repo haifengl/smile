@@ -77,6 +77,18 @@ package object validation {
     * one (assuming 'positive' ranks higher than 'negative').
     */
   def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.of(truth, probability)
+  /** Log loss is a evaluation metric for binary classifiers and it is sometimes
+    * the optimization objective as well in case of logistic regression and neural
+    * networks. Log Loss takes into account the uncertainty of the prediction
+    * based on how much it varies from the actual label. This provides a more
+    * nuanced view of the performance of the model. In general, minimizing
+    * Log Loss gives greater accuracy for the classifier. However, it is
+    * susceptible in case of imbalanced data.
+    */
+  def logloss(truth: Array[Int], probability: Array[Double]): Double = LogLoss.of(truth, probability)
+  /** Cross entropy generalizes the log loss metric to multiclass problems. */
+  def crossentropy(truth: Array[Int], probability: Array[Array[Double]]): Double = CrossEntropy.of(truth, probability)
+
   /**
     * MCC is a correlation coefficient between prediction and actual values.
     * It is considered as a balanced measure for binary classification, even in unbalanced data sets.
