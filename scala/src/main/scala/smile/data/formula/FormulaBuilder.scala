@@ -56,17 +56,19 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {
   }
 }
 
+/** Formula DSL entrance. */
+private[formula] case class PimpedFormulaBuilder(a: Term) {
+  def ~ (b: String) = FormulaBuilder(Option(a), ListBuffer($(b)))
+  def ~ (b: Term) = FormulaBuilder(Option(a), ListBuffer(b))
+  def ~ () = FormulaBuilder(Option(a), ListBuffer())
+  def unary_~ = FormulaBuilder(Option.empty, ListBuffer(a))
+}
+
 /** smile.nlp has pimpString function and PimpedString class.
   * Use a different name to avoid clash.
   */
 private[formula] case class PimpedFormulaString(a: String) {
-  def ~ (b: String) = FormulaBuilder(Option($(a)), ListBuffer($(b)))
-  def ~ (b: Term) = FormulaBuilder(Option($(a)), ListBuffer(b))
-  def ~ () = FormulaBuilder(Option($(a)), ListBuffer())
-  def unary_~ = FormulaBuilder(Option.empty, ListBuffer($(a)))
-
   def :: (b: String) = FactorInteractionBuilder(ListBuffer(a, b))
-
   def && (b: String) = FactorCrossingBuilder(ListBuffer(a, b))
 }
 

@@ -64,7 +64,7 @@ public class MSETest {
         };
         MSE instance = new MSE();
         double expResult = 0.80275;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 }

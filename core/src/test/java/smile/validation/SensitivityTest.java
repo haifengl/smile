@@ -64,7 +64,7 @@ public class SensitivityTest {
         };
         Sensitivity instance = new Sensitivity();
         double expResult = 0.8333;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-4);
     }
 }

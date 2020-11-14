@@ -32,6 +32,7 @@ import smile.math.rbf._
 import smile.stat.distribution._
 import smile.data._
 import smile.data.formula._
+import smile.data.formula.Terms.$
 import smile.data.measure._
 import smile.data.`type`._
 import java.awt.Color.{BLACK, BLUE, CYAN, DARK_GRAY, GRAY, GREEN, LIGHT_GRAY, MAGENTA, ORANGE, PINK, RED, WHITE, YELLOW}

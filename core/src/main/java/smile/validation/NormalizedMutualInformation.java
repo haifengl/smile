@@ -35,7 +35,19 @@ import static java.lang.Math.log;
  *
  * @author Haifeng Li
  */
-public class NormalizedMutualInformation implements ClusterMeasure {
+public class NormalizedMutualInformation implements ClusteringMetric {
+    private static final long serialVersionUID = 2L;
+    /** Default instance with max normalization. */
+    public final static NormalizedMutualInformation JOINT = new NormalizedMutualInformation(Method.JOINT);
+    /** Default instance with max normalization. */
+    public final static NormalizedMutualInformation MAX = new NormalizedMutualInformation(Method.MAX);
+    /** Default instance with min normalization. */
+    public final static NormalizedMutualInformation MIN = new NormalizedMutualInformation(Method.MIN);
+    /** Default instance with sum normalization. */
+    public final static NormalizedMutualInformation SUM = new NormalizedMutualInformation(Method.SUM);
+    /** Default instance with sqrt normalization. */
+    public final static NormalizedMutualInformation SQRT = new NormalizedMutualInformation(Method.SQRT);
+
     /** The normalization method. */
     private final Method method;
 
@@ -62,7 +74,7 @@ public class NormalizedMutualInformation implements ClusterMeasure {
     }
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         switch (method) {
             case JOINT: return joint(y1, y2);
             case MAX: return max(y1, y2);

@@ -17,9 +17,15 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
+
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.formula.Formula;
+import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.util.IntSet;
 
@@ -135,7 +141,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
 
                 if (j == 0 && i == 1) {
                     try {
-                        classifiers[i][j].f(xij[0]);
+                        classifiers[i][j].score(xij[0]);
                         platts = new PlattScaling[k][];
                     } catch (UnsupportedOperationException ex) {
                         logger.info("The classifier doesn't support score function. Don't fit Platt scaling.");
@@ -150,6 +156,40 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
         }
 
         return new OneVersusOne<>(classifiers, platts);
+    }
+
+    /**
+     * Fits a multi-class model with binary data frame classifiers.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param trainer the lambda to train binary classifiers.
+     */
+    @SuppressWarnings("unchecked")
+    public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+        Tuple[] x = data.stream().toArray(Tuple[]::new);
+        int[] y = formula.y(data).toIntArray();
+        OneVersusOne<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
+            DataFrame df = DataFrame.of(Arrays.asList(rows));
+            return (Classifier<Tuple>) trainer.apply(formula, df);
+        });
+
+        StructType schema = formula.x(data.get(0)).schema();
+        return new DataFrameClassifier() {
+            @Override
+            public int predict(Tuple x) {
+                return model.predict(x);
+            }
+
+            @Override
+            public Formula formula() {
+                return formula;
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
     }
 
     /** Prediction is based on voting. */
@@ -184,7 +224,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
 
         for (int i = 1; i < k; i++) {
             for (int j = 0; j < i; j++) {
-                r[i][j] = platts[i][j].scale(classifiers[i][j].f(x));
+                r[i][j] = platts[i][j].scale(classifiers[i][j].score(x));
                 r[j][i] = 1.0 - r[i][j];
             }
         }
