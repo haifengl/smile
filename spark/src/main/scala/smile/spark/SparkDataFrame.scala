@@ -28,7 +28,7 @@ import scala.collection.JavaConverters._
 object SparkDataFrame {
   /** Returns a local Smile DataFrame. */
   def apply(df: org.apache.spark.sql.DataFrame): DataFrame = {
-    val schema = SparkDataTypes.smileSchema(df.schema)
+    val schema = SparkDataTypes.toSmileSchema(df.schema)
     DataFrame.of(
       df.collect()
         .map(row => SparkRowTuple(row, schema))
@@ -56,6 +56,6 @@ case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:Stru
   override def getTime(i: Int): java.time.LocalTime = row.getTimestamp(i).toLocalDateTime().toLocalTime()
   override def getStruct(i: Int): SparkRowTuple = {
     val tuple = row.getStruct(i)
-    SparkRowTuple(tuple, SparkDataTypes.smileSchema(tuple.schema))
+    SparkRowTuple(tuple, SparkDataTypes.toSmileSchema(tuple.schema))
   }
 }
