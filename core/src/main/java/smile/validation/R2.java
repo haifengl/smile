@@ -17,39 +17,48 @@
 
 package smile.validation;
 
+import smile.math.MathEx;
+
 /**
- * Residual sum of squares.
+ * R<sup>2</sup>. R<sup>2</sup> coefficient of determination measures how well
+ * the regression line approximates the real data points. An R<sup>2</sup>
+ * of 1.0 indicates that the regression line perfectly fits the data.
  *
  * @author Haifeng Li
  */
-public class RSS implements RegressionMetric {
+public class R2 implements RegressionMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static RSS instance = new RSS();
+    public final static R2 instance = new R2();
 
     @Override
     public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);
     }
 
-    /** Calculates the residual sum of squares. */
+    /** Calculates the R squared coefficient. */
     public static double of(double[] truth, double[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
         }
 
+        double RSS = 0.0;
+        double TSS = 0.0;
+        double ybar = MathEx.mean(truth);
+
         int n = truth.length;
-        double rss = 0.0;
         for (int i = 0; i < n; i++) {
             double r = truth[i] - prediction[i];
-            rss += r * r;
+            RSS += r * r;
+            double t = truth[i] - ybar;
+            TSS += t * t;
         }
 
-        return rss;
+        return 1.0 - RSS / TSS;
     }
 
     @Override
     public String toString() {
-        return "RSS";
+        return "R2";
     }
 }
