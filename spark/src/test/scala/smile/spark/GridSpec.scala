@@ -17,13 +17,18 @@
 
 package smile.spark
 
+import java.util.Properties
+import java.util.stream.Collectors
+import scala.collection.JavaConverters._
 import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
-import smile.classification.KNN
+import smile.classification.RandomForest
+import smile.data.DataFrame
+import smile.data.formula.Formula
 import smile.io.Read
 import smile.util.Paths
-import smile.validation.Accuracy
+import smile.validation.{AUC, Accuracy, Hyperparameters, LogLoss, Precision, Recall}
 
 class GridSpec extends Specification with BeforeAll with AfterAll{
 
@@ -33,19 +38,34 @@ class GridSpec extends Specification with BeforeAll with AfterAll{
     spark = SparkSession.builder().master("local[*]").getOrCreate
   }
 
-  "SparkGridSearchCrossValidation" should {
-    "make KNN perfect on mushroom and return all runs" in {
+  "SparkCrossValidation" should {
+    "Grid search on mushrooms" in {
 
       val mushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
-      val x = mushrooms.select(1, 22).toArray
-      val y = mushrooms("class").toIntArray
+      val formula = Formula.lhs("class")
 
-      val knn3 = (x:Array[Array[Double]], y:Array[Int]) => KNN.fit(x, y, 3)
-      val knn5 = (x:Array[Array[Double]], y:Array[Int]) => KNN.fit(x, y, 5)
+      val hp = new Hyperparameters()
+        .add("smile.random.forest.trees", 100) // a fixed value
+        .add("smile.random.forest.mtry", Array(2, 3, 4)) // an array of values to choose
+        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
 
-      val res = grid(5, x, y, Seq(new Accuracy()): _*) (Seq(knn3, knn5):_*)
+      val configurations = hp.random().limit(10).collect(Collectors.toList()).asScala
+      val metrics = Seq(Accuracy.instance, Precision.instance, Recall.instance)
 
-      res(0)(0) mustEqual 1 and (res.length mustEqual 2) and (res(0).length mustEqual 1)
+      val scores = classification.hpo(5, formula, mushrooms, configurations, metrics: _*) {
+        (formula: Formula, data: DataFrame, prop: Properties) => RandomForest.fit(formula, data, prop)
+      }
+
+      (0 until configurations.length) foreach { i =>
+        print(configurations(i))
+        (0 until metrics.length) foreach { j =>
+          print(f"  ${metrics(j)} = ${100.0 * scores(i)(j)}%6.2f%%")
+        }
+        println
+      }
+
+      scores.length mustEqual configurations.length
+      scores(0).length mustEqual metrics.length
     }
   }
 
