@@ -24,13 +24,13 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class MSE implements RegressionMeasure {
+public class MSE implements RegressionMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MSE instance = new MSE();
 
     @Override
-    public double measure(double[] truth, double[] prediction) {
+    public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);
     }
 

@@ -33,11 +33,11 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class FMeasure implements ClassificationMeasure {
+public class FMeasure implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(beta, truth, prediction);
     }
 
@@ -78,8 +78,8 @@ public class FMeasure implements ClassificationMeasure {
      */
     public static double of(double beta, int[] truth, int[] prediction) {
         double beta2 = beta * beta;
-        double p = new Precision().measure(truth, prediction);
-        double r = new Recall().measure(truth, prediction);
+        double p = new Precision().score(truth, prediction);
+        double r = new Recall().score(truth, prediction);
         return (1 + beta2) * (p * r) / (beta2 * p + r);
     }
 }

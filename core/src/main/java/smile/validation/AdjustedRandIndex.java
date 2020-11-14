@@ -37,13 +37,13 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class AdjustedRandIndex implements ClusterMeasure {
+public class AdjustedRandIndex implements ClusteringMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static AdjustedRandIndex instance = new AdjustedRandIndex();
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         return of(y1, y2);
     }
 

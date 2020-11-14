@@ -39,18 +39,18 @@ import smile.sort.QuickSort;
  *
  * @author Haifeng Li
  */
-public class AUC implements BinaryClassificationMeasure {
+public class AUC implements BinaryClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static AUC instance = new AUC();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public double measure(int[] truth, double[] probability) {
+    public double score(int[] truth, double[] probability) {
         return of(truth, probability);
     }
 

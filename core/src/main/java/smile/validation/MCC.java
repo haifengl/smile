@@ -27,13 +27,13 @@ package smile.validation;
  *
  * @author digital-thinking
  */
-public class MCC implements ClassificationMeasure {
+public class MCC implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MCC instance = new MCC();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);
     }
 

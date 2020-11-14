@@ -27,13 +27,13 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class Precision implements ClassificationMeasure {
+public class Precision implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Precision instance = new Precision();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);
     }
 

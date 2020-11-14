@@ -35,13 +35,13 @@ package smile.validation;
  * 
  * @author Haifeng Li
  */
-public class Sensitivity implements ClassificationMeasure {
+public class Sensitivity implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Sensitivity instance = new Sensitivity();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);
     }
 

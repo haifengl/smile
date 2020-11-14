@@ -24,13 +24,13 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class Recall implements ClassificationMeasure {
+public class Recall implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static Recall instance = new Recall();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);
     }
 

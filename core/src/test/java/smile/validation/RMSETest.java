@@ -64,7 +64,7 @@ public class RMSETest {
         };
         RMSE instance = new RMSE();
         double expResult = 0.89596;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 }
