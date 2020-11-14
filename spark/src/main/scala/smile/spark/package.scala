@@ -67,7 +67,7 @@ package object spark {
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -77,7 +77,7 @@ package object spark {
 
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.classification(k, x, y, biFunctionTrainer)
         val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
@@ -86,7 +86,7 @@ package object spark {
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
@@ -111,7 +111,7 @@ package object spark {
 
       val formulaBroadcasted = sc.broadcast(formula)
       val dataBroadcasted = sc.broadcast(data)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -122,7 +122,7 @@ package object spark {
         val formula = formulaBroadcasted.value
         val data = dataBroadcasted.value
         val y = formula.y(data).toIntArray
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.classification(k, formula, data, biFunctionTrainer)
         val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
@@ -131,7 +131,7 @@ package object spark {
 
       formulaBroadcasted.destroy()
       dataBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
@@ -158,7 +158,7 @@ package object spark {
       val yBroadcasted = sc.broadcast(y)
       val testxBroadcasted = sc.broadcast(testx)
       val testyBroadcasted = sc.broadcast(testy)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -166,7 +166,7 @@ package object spark {
         val y = yBroadcasted.value
         val testx = xBroadcasted.value
         val testy = yBroadcasted.value
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val model = trainer(x, y, prop)
         val prediction = model.predict(testx)
@@ -178,7 +178,7 @@ package object spark {
       yBroadcasted.destroy()
       testxBroadcasted.destroy()
       testyBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
@@ -204,7 +204,7 @@ package object spark {
       val formulaBroadcasted = sc.broadcast(formula)
       val trainBroadcasted = sc.broadcast(train)
       val testBroadcasted = sc.broadcast(test)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -212,7 +212,7 @@ package object spark {
         val train = trainBroadcasted.value
         val test = testBroadcasted.value
         val y = formula.y(test).toIntArray
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val model = trainer(formula, train, prop)
         val prediction = model.predict(test)
@@ -223,7 +223,7 @@ package object spark {
       formulaBroadcasted.destroy()
       trainBroadcasted.destroy()
       testBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
@@ -251,7 +251,7 @@ package object spark {
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -261,7 +261,7 @@ package object spark {
 
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.regression(k, x, y, biFunctionTrainer)
         val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
@@ -270,7 +270,7 @@ package object spark {
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
@@ -295,7 +295,7 @@ package object spark {
 
       val formulaBroadcasted = sc.broadcast(formula)
       val dataBroadcasted = sc.broadcast(data)
-      val metricsBroadcasted = metrics.map(sc.broadcast)
+      val metricsBroadcasted = sc.broadcast(metrics)
 
       val hpRDD = sc.parallelize(configurations)
       val scores = hpRDD.map(prop => {
@@ -306,7 +306,7 @@ package object spark {
         val formula = formulaBroadcasted.value
         val data = dataBroadcasted.value
         val y = formula.y(data).toDoubleArray
-        val metrics = metricsBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.value
 
         val prediction = CrossValidation.regression(k, formula, data, biFunctionTrainer)
         val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
@@ -315,7 +315,7 @@ package object spark {
 
       formulaBroadcasted.destroy()
       dataBroadcasted.destroy()
-      metricsBroadcasted.foreach(_.destroy())
+      metricsBroadcasted.destroy()
 
       scores
     }
