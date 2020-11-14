@@ -18,47 +18,42 @@
 package smile.spark
 
 import java.util.function.BiFunction
-
 import org.apache.spark.sql.SparkSession
 import smile.classification.Classifier
 import smile.regression.Regression
 import smile.validation.{Accuracy, ClassificationMeasure, CrossValidation, RMSE, RegressionMeasure}
-
 import scala.reflect.ClassTag
 
 /**
- * Class to make [[ClassificationMeasure]] serializable so Spark can send instances on remote Spark Executors.
- */
+  * Class to make [[ClassificationMeasure]] serializable so Spark can send instances on remote Spark Executors.
+  */
 case class SerializableClassificationMeasure(@transient measure: ClassificationMeasure)
 
 /**
- * Class to make [[RegressionMeasure]] serializable so Spark can send instances on remote Spark Executors.
- */
+  * Class to make [[RegressionMeasure]] serializable so Spark can send instances on remote Spark Executors.
+  */
 case class SerializableRegressionMeasure(@transient measure: RegressionMeasure)
 
 /**
- * Package containing functions to tune and validate smile trainers over multiple Spark Executors in a parallel and distributed fashion.
- */
+  * Package containing functions to tune and validate smile trainers over multiple Spark Executors in a parallel and distributed fashion.
+  */
 package object tuning {
-
   object classification {
-
     /**
-     * Distributed GridSearch Cross Validation for [[Classifier]].
-     *
-     * @param spark running spark session
-     * @param k number of round of cross validation
-     * @param x instances
-     * @param y labels
-     * @param measures classification measures
-     * @param trainers classification trainers
-     *
-     * @return an array of array of classification measures, the first layer has the same size as the number of trainers,
-     *         the second layer as a size equals to k.
-     */
-    def sparkgscv[T <: Object: ClassTag](
-                                          spark: SparkSession)(k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(
-                                          trainers: ((Array[T], Array[Int]) => Classifier[T])*): Array[Array[Double]] = {
+      * Distributed GridSearch Cross Validation for [[Classifier]].
+      *
+      * @param spark running spark session
+      * @param k number of round of cross validation
+      * @param x instances
+      * @param y labels
+      * @param measures classification measures
+      * @param trainers classification trainers
+      *
+      * @return an array of array of classification measures, the first layer has the same size as the number of trainers,
+      *         the second layer as a size equals to k.
+      */
+    def sparkgscv[T <: Object: ClassTag](spark: SparkSession)(k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)
+                                        (trainers: ((Array[T], Array[Int]) => Classifier[T])*): Array[Array[Double]] = {
 
       val sc = spark.sparkContext
 
@@ -92,29 +87,25 @@ package object tuning {
       yBroadcasted.destroy()
 
       res
-
     }
-
   }
 
   object regression {
-
     /**
-     * Distributed GridSearch Cross Validation for [[Regression]].
-     *
-     * @param spark running spark session
-     * @param k number of round of cross validation
-     * @param x instances
-     * @param y labels
-     * @param measures regression measures
-     * @param trainers regression trainers
-     *
-     * @return an array of array of regression measures, the first layer has the same size as the number of trainers,
-     *         the second layer as a size equals to k.
-     */
-    def sparkgscv[T <: Object: ClassTag](
-                                          spark: SparkSession)(k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(
-                                          trainers: ((Array[T], Array[Double]) => Regression[T])*): Array[Array[Double]] = {
+      * Distributed GridSearch Cross Validation for [[Regression]].
+      *
+      * @param spark running spark session
+      * @param k number of round of cross validation
+      * @param x instances
+      * @param y labels
+      * @param measures regression measures
+      * @param trainers regression trainers
+      *
+      * @return an array of array of regression measures, the first layer has the same size as the number of trainers,
+      *         the second layer as a size equals to k.
+      */
+    def sparkgscv[T <: Object: ClassTag](spark: SparkSession)(k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)
+                                        (trainers: ((Array[T], Array[Double]) => Regression[T])*): Array[Array[Double]] = {
 
       val sc = spark.sparkContext
 
@@ -148,10 +139,6 @@ package object tuning {
       yBroadcasted.destroy()
 
       res
-
     }
-
   }
-
-
 }

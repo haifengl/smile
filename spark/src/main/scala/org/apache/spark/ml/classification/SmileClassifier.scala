@@ -18,10 +18,9 @@
 package org.apache.spark.ml.classification
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
-
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.{Estimator, Pipeline}
+import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.classification.{ClassificationModel => SparkClassificationModel, Classifier => SparkClassifier}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param._
@@ -34,20 +33,18 @@ import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, JObject}
 
 /**
- * Params for SmileClassifier
- */
+  * Params for SmileClassifier
+  */
 private[ml] trait SmileClassifierParams extends Params with ClassifierParams {
 
-  type Trainer =
-    (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]]
+  type Trainer = (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]]
 
   /**
-   * Param for the smile classification trainer
-   *
-   * @group param
-   */
-  val trainer: Param[Trainer] =
-    new Param[Trainer](this, "trainer", "the smile classification trainer")
+    * Param for the smile classification trainer
+    *
+    * @group param
+    */
+  val trainer: Param[Trainer] = new Param[Trainer](this, "trainer", "Smile classifier trainer")
 
   /** @group getParam */
   def getTrainer: Trainer = $(trainer)
@@ -55,13 +52,7 @@ private[ml] trait SmileClassifierParams extends Params with ClassifierParams {
 }
 
 private[ml] object SmileClassifierParams {
-
-  def saveImpl(
-                instance: SmileClassifierParams,
-                path: String,
-                sc: SparkContext,
-                extraMetadata: Option[JObject] = None): Unit = {
-
+  def saveImpl(instance: SmileClassifierParams, path: String, sc: SparkContext, extraMetadata: Option[JObject] = None): Unit = {
     val params = instance.extractParamMap().toSeq
     val jsonParams = render(
       params
@@ -72,23 +63,18 @@ private[ml] object SmileClassifierParams {
     DefaultParamsWriter.saveMetadata(instance, path, sc, extraMetadata, Some(jsonParams))
   }
 
-  def loadImpl(
-                path: String,
-                sc: SparkContext,
-                expectedClassName: String): DefaultParamsReader.Metadata = {
-
+  def loadImpl(path: String, sc: SparkContext, expectedClassName: String): DefaultParamsReader.Metadata = {
     DefaultParamsReader.loadMetadata(path, sc, expectedClassName)
   }
-
 }
 
 /**
- * SmileClassifier is an [[Estimator]] that takes a smile classification trainer and train it on a [[Dataset]].
- * It makes it easy to add a smile classification trainer into a Spark MLLib [[Pipeline]].
- *
- * @note SmileClassifier will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
- *       but train the classifier on a Spark Executor.
- */
+  * SmileClassifier is an [[Estimator]] that takes a smile classification trainer and train it on a [[Dataset]].
+  * It makes it easy to add a smile classification trainer into a Spark MLLib [[Pipeline]].
+  *
+  * @note SmileClassifier will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
+  *       but train the classifier on a Spark Executor.
+  */
 class SmileClassifier(override val uid: String)
   extends SparkClassifier[Vector, SmileClassifier, SmileClassificationModel]
     with SmileClassifierParams
@@ -97,9 +83,7 @@ class SmileClassifier(override val uid: String)
   def this() = this(Identifiable.randomUID("SmileClassifier"))
 
   /** @group setParam */
-  def setTrainer(
-                  value: (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]])
-  : this.type =
+  def setTrainer(value: (Array[Array[Double]], Array[Int]) => smile.classification.Classifier[Array[Double]]): this.type =
     set(trainer, value.asInstanceOf[Trainer])
 
   override protected def train(dataset: Dataset[_]): SmileClassificationModel =
@@ -137,7 +121,6 @@ class SmileClassifier(override val uid: String)
       }
 
       new SmileClassificationModel(numClasses, model)
-
     }
 
   override def copy(extra: ParamMap): SmileClassifier = {
@@ -147,7 +130,6 @@ class SmileClassifier(override val uid: String)
   }
 
   override def write: MLWriter = new SmileClassifier.SmileClassifierWriter(this)
-
 }
 
 object SmileClassifier extends MLReadable[SmileClassifier] {
@@ -157,18 +139,14 @@ object SmileClassifier extends MLReadable[SmileClassifier] {
   override def load(path: String): SmileClassifier = super.load(path)
 
   /** [[MLWriter]] instance for [[SmileClassifier]] */
-  private[SmileClassifier] class SmileClassifierWriter(instance: SmileClassifier)
-    extends MLWriter {
-
+  private[SmileClassifier] class SmileClassifierWriter(instance: SmileClassifier) extends MLWriter {
     override protected def saveImpl(path: String): Unit = {
       SmileClassifierParams.saveImpl(instance, path, sc)
     }
-
   }
 
   /** [[MLReader]] instance for [[SmileClassifier]] */
   private class SmileClassifierReader extends MLReader[SmileClassifier] {
-
     /** Checked against metadata when loading model */
     private val className = classOf[SmileClassifier].getName
 
@@ -179,19 +157,17 @@ object SmileClassifier extends MLReadable[SmileClassifier] {
       bc
     }
   }
-
 }
 
 /**
- * Model produced by [[SmileClassifier]].
- * This stores the models resulting from training the smile classifier.
- *
- * @param model smile classifier
- */
-class SmileClassificationModel(
-                                override val uid: String,
-                                override val numClasses: Int,
-                                val model: smile.classification.Classifier[Array[Double]])
+  * Model produced by [[SmileClassifier]].
+  * This stores the models resulting from training the smile classifier.
+  *
+  * @param model smile classifier
+  */
+class SmileClassificationModel(override val uid: String,
+                               override val numClasses: Int,
+                               val model: smile.classification.Classifier[Array[Double]])
   extends SparkClassificationModel[Vector, SmileClassificationModel]
     with SmileClassifierParams
     with MLWritable {
@@ -202,16 +178,13 @@ class SmileClassificationModel(
   override protected def predictRaw(features: Vector): Vector = {
 
     /**
-     * The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
-     * a Vector with "confidence scores" for every classes of the classification problem.
-     * Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
-     */
-
+      * The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
+      * a Vector with "confidence scores" for every classes of the classification problem.
+      * Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
+      */
     val tmp = Array.fill(numClasses)(0.0)
     tmp(model.predict(features.toArray)) = 1.0
     Vectors.dense(tmp)
-
-
   }
 
   override def copy(extra: ParamMap): SmileClassificationModel = {
@@ -220,20 +193,15 @@ class SmileClassificationModel(
   }
 
   override def write: MLWriter = new SmileClassificationModel.SmileClassificationModelWriter(this)
-
 }
 
 object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
-
   override def read: MLReader[SmileClassificationModel] = new SmileClassificationModelReader
 
   override def load(path: String): SmileClassificationModel = super.load(path)
 
   /** [[MLWriter]] instance for [[SmileClassificationModel]] */
-  private[SmileClassificationModel] class SmileClassificationModelWriter(
-                                                                          instance: SmileClassificationModel)
-    extends MLWriter {
-
+  private[SmileClassificationModel] class SmileClassificationModelWriter(instance: SmileClassificationModel) extends MLWriter {
     override protected def saveImpl(path: String): Unit = {
       val extraJson = "numClasses" -> instance.numClasses
       val fs = FileSystem.get(sc.hadoopConfiguration)
@@ -252,7 +220,6 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
 
   /** [[MLReader]] instance for [[SmileClassificationModel]] */
   private class SmileClassificationModelReader extends MLReader[SmileClassificationModel] {
-
     /** Checked against metadata when loading model */
     private val className = classOf[SmileClassificationModel].getName
 

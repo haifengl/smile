@@ -27,7 +27,7 @@ case class Person(name:String,age:Int,friends:Array[String])
 
 class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
-  var spark:SparkSession = _
+  var spark: SparkSession = _
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -96,7 +96,5 @@ class SparkDataFrameSpec extends Specification with BeforeAll with AfterAll{
   def afterAll(): Unit = {
     spark.stop()
   }
-
-
 }
 

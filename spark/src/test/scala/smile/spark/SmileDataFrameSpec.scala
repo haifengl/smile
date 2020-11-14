@@ -26,7 +26,7 @@ import smile.util.Paths
 
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
-  var spark:SparkSession = _
+  var spark: SparkSession = _
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -49,13 +49,10 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
       objectSparkMushrooms.schema mustEqual implicitSparkMushrooms.schema
     }
-
   }
 
   def afterAll(): Unit = {
     spark.stop()
   }
-
-
 }
 

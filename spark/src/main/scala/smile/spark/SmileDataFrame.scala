@@ -18,24 +18,20 @@
 package smile.spark
 
 import java.util.stream.Collectors
-
 import org.apache.spark.smile.SparkDataTypes
 import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
-
 import scala.collection.JavaConverters._
 
 /**
- * Converter from Spark [[org.apache.spark.sql.DataFrame]] to SMILE [[DataFrame]]
- */
+  * Converter from Spark [[org.apache.spark.sql.DataFrame]] to SMILE [[DataFrame]]
+  */
 object SmileDataFrame {
-
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame, spark:SparkSession): org.apache.spark.sql.DataFrame = {
     val schema = SparkDataTypes.sparkSchema(df.schema)
     spark.createDataFrame(df.stream().collect(Collectors.toList()).asScala.map(tuple => SmileTupleSparkRow(tuple,schema).asInstanceOf[Row]).asJava,schema)
   }
-
 }
 
 case class SmileTupleSparkRow(tuple:Tuple, override val schema:org.apache.spark.sql.types.StructType) extends org.apache.spark.sql.Row {

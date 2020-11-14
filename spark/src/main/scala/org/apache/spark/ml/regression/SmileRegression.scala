@@ -18,7 +18,6 @@
 package org.apache.spark.ml.regression
 
 import java.io.{ObjectInputStream, ObjectOutputStream}
-
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.linalg.Vector
@@ -33,34 +32,25 @@ import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 
 /**
- * Params for SmileRegression
- */
+  * Params for SmileRegression
+  */
 private[ml] trait SmileRegressionParams extends Params with PredictorParams {
 
-  type Trainer =
-    (Array[Array[Double]], Array[Double]) => smile.regression.Regression[Array[Double]]
+  type Trainer = (Array[Array[Double]], Array[Double]) => smile.regression.Regression[Array[Double]]
 
   /**
-   * Param for the smile regression trainer
-   *
-   * @group param
-   */
-  val trainer: Param[Trainer] =
-    new Param[Trainer](this, "trainer", "the smile regression trainer")
+    * Param for the smile regression trainer
+    *
+    * @group param
+    */
+  val trainer: Param[Trainer] = new Param[Trainer](this, "trainer", "Smile regression trainer")
 
   /** @group getParam */
   def getTrainer: Trainer = $(trainer)
-
 }
 
 private[ml] object SmileRegressionParams {
-
-  def saveImpl(
-                instance: SmileRegressionParams,
-                path: String,
-                sc: SparkContext,
-                extraMetadata: Option[JObject] = None): Unit = {
-
+  def saveImpl(instance: SmileRegressionParams, path: String, sc: SparkContext, extraMetadata: Option[JObject] = None): Unit = {
     val params = instance.extractParamMap().toSeq
     val jsonParams = render(
       params
@@ -71,23 +61,18 @@ private[ml] object SmileRegressionParams {
     DefaultParamsWriter.saveMetadata(instance, path, sc, extraMetadata, Some(jsonParams))
   }
 
-  def loadImpl(
-                path: String,
-                sc: SparkContext,
-                expectedClassName: String): DefaultParamsReader.Metadata = {
-
+  def loadImpl(path: String, sc: SparkContext, expectedClassName: String): DefaultParamsReader.Metadata = {
     DefaultParamsReader.loadMetadata(path, sc, expectedClassName)
   }
-
 }
 
 /**
- * SmileRegression is an [[Estimator]] that takes a smile regression trainer and train it on a [[Dataset]].
- * It makes it easy to add a smile regression trainer into a Spark MLLib [[Pipeline]].
- *
- * @note SmileRegression will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
- *       but train the regression on a Spark Executor.
- */
+  * SmileRegression is an [[Estimator]] that takes a smile regression trainer and train it on a [[Dataset]].
+  * It makes it easy to add a smile regression trainer into a Spark MLLib [[Pipeline]].
+  *
+  * @note SmileRegression will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
+  *       but train the regression on a Spark Executor.
+  */
 class SmileRegression(override val uid: String)
   extends Predictor[Vector, SmileRegression, SmileRegressionModel]
     with SmileRegressionParams
@@ -96,9 +81,7 @@ class SmileRegression(override val uid: String)
   def this() = this(Identifiable.randomUID("SmileRegression"))
 
   /** @group setParam */
-  def setTrainer(
-                  value: (Array[Array[Double]], Array[Double]) => smile.regression.Regression[Array[Double]])
-  : this.type =
+  def setTrainer(value: (Array[Array[Double]], Array[Double]) => smile.regression.Regression[Array[Double]]): this.type =
     set(trainer, value)
 
   override protected def train(dataset: Dataset[_]): SmileRegressionModel =
@@ -134,7 +117,6 @@ class SmileRegression(override val uid: String)
       }
 
       new SmileRegressionModel(model)
-
     }
 
   override def copy(extra: ParamMap): SmileRegression = {
@@ -144,7 +126,6 @@ class SmileRegression(override val uid: String)
   }
 
   override def write: MLWriter = new SmileRegression.SmileRegressionWriter(this)
-
 }
 
 object SmileRegression extends MLReadable[SmileRegression] {
@@ -155,16 +136,13 @@ object SmileRegression extends MLReadable[SmileRegression] {
 
   /** [[MLWriter]] instance for [[SmileRegression]] */
   private[SmileRegression] class SmileRegressionWriter(instance: SmileRegression) extends MLWriter {
-
     override protected def saveImpl(path: String): Unit = {
       SmileRegressionParams.saveImpl(instance, path, sc)
     }
-
   }
 
   /** [[MLReader]] instance for [[SmileRegression]] */
   private class SmileRegressionReader extends MLReader[SmileRegression] {
-
     /** Checked against metadata when loading model */
     private val className = classOf[SmileRegression].getName
 
@@ -175,18 +153,15 @@ object SmileRegression extends MLReadable[SmileRegression] {
       bc
     }
   }
-
 }
 
 /**
- * Model produced by [[SmileRegression]].
- * This stores the model resulting from training the smile regression model.
- *
- * @param model smile regression model
- */
-class SmileRegressionModel(
-                            override val uid: String,
-                            val model: smile.regression.Regression[Array[Double]])
+  * Model produced by [[SmileRegression]].
+  * This stores the model resulting from training the smile regression model.
+  *
+  * @param model smile regression model
+  */
+class SmileRegressionModel(override val uid: String, val model: smile.regression.Regression[Array[Double]])
   extends RegressionModel[Vector, SmileRegressionModel]
     with SmileRegressionParams
     with MLWritable {
@@ -204,11 +179,9 @@ class SmileRegressionModel(
   }
 
   override def write: MLWriter = new SmileRegressionModel.SmileRegressionModelWriter(this)
-
 }
 
 object SmileRegressionModel extends MLReadable[SmileRegressionModel] {
-
   override def read: MLReader[SmileRegressionModel] = new SmileRegressionModelReader
 
   override def load(path: String): SmileRegressionModel = super.load(path)
@@ -234,7 +207,6 @@ object SmileRegressionModel extends MLReadable[SmileRegressionModel] {
 
   /** [[MLReader]] instance for [[SmileRegressionModel]] */
   private class SmileRegressionModelReader extends MLReader[SmileRegressionModel] {
-
     /** Checked against metadata when loading model */
     private val className = classOf[SmileRegressionModel].getName
 
