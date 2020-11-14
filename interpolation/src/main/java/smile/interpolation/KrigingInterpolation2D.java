@@ -59,6 +59,10 @@ public class KrigingInterpolation2D implements Interpolation2D {
      *             large as 1.99.
      */
     public KrigingInterpolation2D(double[] x1, double[] x2, double[] y, double beta) {
+        if (beta < 1.0 || beta >= 2.0) {
+            throw new IllegalArgumentException("Invalid beta: " + beta);
+        }
+
         if (x1.length != x2.length) {
             throw new IllegalArgumentException("x1.length != x2.length");
         }
@@ -96,8 +100,8 @@ public class KrigingInterpolation2D implements Interpolation2D {
         yvi[n] = 0.0;
         v.set(n, n, 0.0);
 
-        Matrix.LU lu = v.lu(true);
-        yvi = lu.solve(yvi);
+        Matrix.SVD svd = v.svd(true, true);
+        yvi = svd.solve(yvi);
     }
 
     @Override

@@ -42,7 +42,17 @@ import static smile.math.MathEx.lfactorial;
  *
  * @author Haifeng Li
  */
-public class AdjustedMutualInformation implements ClusterMeasure {
+public class AdjustedMutualInformation implements ClusteringMetric {
+    private static final long serialVersionUID = 2L;
+    /** Default instance with max normalization. */
+    public final static AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);
+    /** Default instance with min normalization. */
+    public final static AdjustedMutualInformation MIN = new AdjustedMutualInformation(Method.MIN);
+    /** Default instance with sum normalization. */
+    public final static AdjustedMutualInformation SUM = new AdjustedMutualInformation(Method.SUM);
+    /** Default instance with sqrt normalization. */
+    public final static AdjustedMutualInformation SQRT = new AdjustedMutualInformation(Method.SQRT);
+
     /** The normalization method. */
     private final Method method;
 
@@ -67,7 +77,7 @@ public class AdjustedMutualInformation implements ClusterMeasure {
     }
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         switch (method) {
             case MAX: return max(y1, y2);
             case MIN: return min(y1, y2);

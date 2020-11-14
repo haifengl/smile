@@ -47,11 +47,12 @@ public class HeapSelect<T extends Comparable<? super T>> {
 
     /**
      * Constructor.
+     * @param clazz the data type of elements.
      * @param k the size of heap.
      */
     @SuppressWarnings("unchecked")
-    public HeapSelect(int k) {
-        this((T[]) new Comparable[k]);
+    public HeapSelect(Class clazz, int k) {
+        this((T[]) java.lang.reflect.Array.newInstance(clazz, k));
     }
 
     /**

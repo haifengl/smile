@@ -33,9 +33,17 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class FMeasure implements ClassificationMeasure {
+public class FScore implements ClassificationMetric {
+    private static final long serialVersionUID = 2L;
+    /** The F_1 score, the harmonic mean of precision and recall. */
+    public final static FScore F1 = new FScore(1.0);
+    /** The F_2 score, which weighs recall higher than precision. */
+    public final static FScore F2 = new FScore(2.0);
+    /** The F_0.5 score, which weighs recall lower than precision. */
+    public final static FScore FHalf = new FScore(0.5);
+
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(beta, truth, prediction);
     }
 
@@ -48,7 +56,7 @@ public class FMeasure implements ClassificationMeasure {
     private double beta = 1.0;
 
     /** Constructor of F1 score. */
-    public FMeasure() {
+    public FScore() {
         this(1.0);
     }
 
@@ -59,7 +67,7 @@ public class FMeasure implements ClassificationMeasure {
      *             to a user who attaches &beta; times as much
      *             importance to recall as precision.
      */
-    public FMeasure(double beta) {
+    public FScore(double beta) {
         if (beta <= 0.0) {
             throw new IllegalArgumentException("Negative beta");
         }
@@ -76,8 +84,8 @@ public class FMeasure implements ClassificationMeasure {
      */
     public static double of(double beta, int[] truth, int[] prediction) {
         double beta2 = beta * beta;
-        double p = new Precision().measure(truth, prediction);
-        double r = new Recall().measure(truth, prediction);
+        double p = new Precision().score(truth, prediction);
+        double r = new Recall().score(truth, prediction);
         return (1 + beta2) * (p * r) / (beta2 * p + r);
     }
 }

@@ -28,9 +28,9 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-public class FMeasureTest {
+public class R2Test {
 
-    public FMeasureTest() {
+    public R2Test() {
     }
 
     @BeforeClass
@@ -50,21 +50,21 @@ public class FMeasureTest {
     }
 
     @Test
-    public void testMeasure() {
-        System.out.println("F-measure");
-        int[] truth = {
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    public void test() {
+        System.out.println("R2");
+        double[] truth = {
+                83.0,  88.5,  88.2,  89.5,  96.2,  98.1,  99.0, 100.0, 101.2,
+                104.6, 108.4, 110.8, 112.6, 114.2, 115.7, 116.9
         };
-        int[] prediction = {
-            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-            0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+
+        double[] prediction = {
+                83.60082, 86.94973, 88.09677, 90.73065, 96.53551, 97.83067,
+                98.12232, 99.87776, 103.20861, 105.08598, 107.33369, 109.57251,
+                112.98358, 113.92898, 115.50214, 117.54028,
         };
-        FMeasure instance = new FMeasure();
-        double expResult = 0.87719;
-        double result = instance.measure(truth, prediction);
-        assertEquals(expResult, result, 1E-5);
+
+        double expResult = 0.9926;
+        double result = R2.of(truth, prediction);
+        assertEquals(expResult, result, 1E-4);
     }
 }
