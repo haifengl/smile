@@ -17,13 +17,15 @@
 
 package smile
 
+import java.util.Properties;
 import java.util.function.BiFunction
-import org.apache.spark.sql.SparkSession
-import smile.classification.Classifier
-import smile.data.DataFrame
-import smile.regression.Regression
-import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, RMSE, RegressionMetric}
 import scala.reflect.ClassTag
+import org.apache.spark.sql.SparkSession
+import smile.classification.{Classifier, DataFrameClassifier}
+import smile.data.DataFrame
+import smile.data.formula.Formula
+import smile.regression.{DataFrameRegression, Regression}
+import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, RMSE, RegressionMetric}
 
 /**
   * Package for better integration of Spark MLLib Pipelines and SMILE
@@ -43,101 +45,185 @@ package object spark {
     def toSpark(implicit spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df)
   }
 
-  /**
-    * Distributed GridSearch Cross Validation for [[Classifier]].
-    *
-    * @param spark running spark session
-    * @param k number of round of cross validation
-    * @param x instances
-    * @param y labels
-    * @param metrics classification metrics
-    * @param trainers classification trainers
-    *
-    * @return an array of array of classification metrics, the first layer has the same size as the number of trainers,
-    *         the second has the same size as the number of metrics.
-    */
-  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Int], metrics: ClassificationMetric*)
-                                 (trainers: ((Array[T], Array[Int]) => Classifier[T])*)
-                                 (implicit spark: SparkSession): Array[Array[Double]] = {
+  object classification {
+    /**
+      * Distributed hyper-parameter optimization with cross validation for classification.
+      *
+      * @param spark          spark session.
+      * @param k              k-fold cross validation.
+      * @param x              training samples.
+      * @param y              training labels.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
+                                   (trainer: (Array[T], Array[Int], Properties) => Classifier[T])
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
 
-    val sc = spark.sparkContext
+      val xBroadcasted = sc.broadcast(x)
+      val yBroadcasted = sc.broadcast(y)
+      val metricsBroadcasted = metrics.map(sc.broadcast)
 
-    val xBroadcasted = sc.broadcast[Array[T]](x)
-    val yBroadcasted = sc.broadcast[Array[Int]](y)
-    val metricsBroadcasted = metrics.map(sc.broadcast)
-
-    val trainersRDD = sc.parallelize(trainers)
-    val res = trainersRDD
-      .map(trainer => {
-        //TODO: add smile-scala dependency and import the implicit conversion
-        val biFunctionTrainer = new BiFunction[Array[T],Array[Int],Classifier[T]] {
-          override def apply(x: Array[T], y:Array[Int]): Classifier[T] = trainer(x,y)
+      val hpRDD = sc.parallelize(configurations)
+      val scores = hpRDD.map(prop => {
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Int], Classifier[T]] {
+          override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y, prop)
         }
+
         val x = xBroadcasted.value
         val y = yBroadcasted.value
         val metrics = metricsBroadcasted.map(_.value)
-        //TODO: add smile-scala dependency and use smile.validation.cv
-        val prediction =  CrossValidation.classification(k, x, y, biFunctionTrainer)
+
+        val prediction = CrossValidation.classification(k, x, y, biFunctionTrainer)
         val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map { metric =>
-          val result = metric.score(y, prediction)
-          result
-        }.toArray
-      })
-      .collect()
+        metricsOrAccuracy.map(_.score(y, prediction)).toArray
+      }).collect()
 
-    xBroadcasted.destroy()
-    yBroadcasted.destroy()
+      xBroadcasted.destroy()
+      yBroadcasted.destroy()
+      metricsBroadcasted.foreach(_.destroy())
 
-    res
+      scores
+    }
+
+    /**
+      * Distributed hyper-parameter optimization with cross validation for classification.
+      *
+      * @param spark          spark session.
+      * @param k              k-fold cross validation.
+      * @param formula        model formula.
+      * @param data           training data.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
+                                   (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier)
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
+
+      val formulaBroadcasted = sc.broadcast(formula)
+      val dataBroadcasted = sc.broadcast(data)
+      val metricsBroadcasted = metrics.map(sc.broadcast)
+
+      val hpRDD = sc.parallelize(configurations)
+      val scores = hpRDD.map(prop => {
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameClassifier] {
+          override def apply(formula: Formula, data: DataFrame): DataFrameClassifier = trainer(formula, data, prop)
+        }
+
+        val formula = formulaBroadcasted.value
+        val data = dataBroadcasted.value
+        val y = formula.y(data).toIntArray
+        val metrics = metricsBroadcasted.map(_.value)
+
+        val prediction = CrossValidation.classification(k, formula, data, biFunctionTrainer)
+        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
+        metricsOrAccuracy.map(_.score(y, prediction)).toArray
+      }).collect()
+
+      formulaBroadcasted.destroy()
+      dataBroadcasted.destroy()
+      metricsBroadcasted.foreach(_.destroy())
+
+      scores
+    }
   }
 
-  /**
-    * Distributed GridSearch Cross Validation for [[Regression]].
-    *
-    * @param spark running spark session
-    * @param k number of round of cross validation
-    * @param x instances
-    * @param y labels
-    * @param metrics regression metrics
-    * @param trainers regression trainers
-    *
-    * @return an array of array of regression metrics, the first layer has the same size as the number of trainers,
-    *         the second has the same size as the number of metrics.
-    */
-  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)
-                                 (trainers: ((Array[T], Array[Double]) => Regression[T])*)
-                                 (implicit spark: SparkSession): Array[Array[Double]] = {
+  object regression {
+    /**
+      * Distributed hyper-parameter optimization with cross validation for regression.
+      *
+      * @param spark          spark session.
+      * @param k              k-fold cross validation.
+      * @param x              training samples.
+      * @param y              response variable.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
+                                   (trainer: (Array[T], Array[Double], Properties) => Regression[T])
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
 
-    val sc = spark.sparkContext
+      val xBroadcasted = sc.broadcast(x)
+      val yBroadcasted = sc.broadcast(y)
+      val metricsBroadcasted = metrics.map(sc.broadcast)
 
-    val xBroadcasted = sc.broadcast[Array[T]](x)
-    val yBroadcasted = sc.broadcast[Array[Double]](y)
-    val metricsBroadcasted = metrics.map(sc.broadcast)
-
-    val trainersRDD = sc.parallelize(trainers)
-    val res = trainersRDD
-      .map(trainer => {
-        //TODO: add smile-scala dependency and import the implicit conversion
-        val biFunctionTrainer = new BiFunction[Array[T],Array[Double],Regression[T]] {
-          override def apply(x: Array[T], y:Array[Double]): Regression[T] = trainer(x,y)
+      val hpRDD = sc.parallelize(configurations)
+      val scores = hpRDD.map(prop => {
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Double], Regression[T]] {
+          override def apply(x: Array[T], y: Array[Double]): Regression[T] = trainer(x, y, prop)
         }
+
         val x = xBroadcasted.value
         val y = yBroadcasted.value
         val metrics = metricsBroadcasted.map(_.value)
-        //TODO: add smile-scala dependency and use smile.validation.cv
-        val prediction =  CrossValidation.regression(k, x, y, biFunctionTrainer)
+
+        val prediction = CrossValidation.regression(k, x, y, biFunctionTrainer)
         val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
-        metricsOrRMSE.map { metric =>
-          val result = metric.score(y, prediction)
-          result
-        }.toArray
-      })
-      .collect()
+        metricsOrRMSE.map(_.score(y, prediction)).toArray
+      }).collect()
 
-    xBroadcasted.destroy()
-    yBroadcasted.destroy()
+      xBroadcasted.destroy()
+      yBroadcasted.destroy()
+      metricsBroadcasted.foreach(_.destroy())
 
-    res
+      scores
+    }
+
+    /**
+      * Distributed hyper-parameter optimization with cross validation for regression.
+      *
+      * @param spark          spark session.
+      * @param k              k-fold cross validation.
+      * @param formula        model formula.
+      * @param data           training data.
+      * @param configurations hyper-parameter configurations.
+      * @param metrics        classification metrics.
+      * @param trainer        classifier trainer.
+      * @return a matrix of classification metrics. The rows are per model.
+      *         The columns are per metric.
+      */
+    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
+                                   (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
+                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+      val sc = spark.sparkContext
+
+      val formulaBroadcasted = sc.broadcast(formula)
+      val dataBroadcasted = sc.broadcast(data)
+      val metricsBroadcasted = metrics.map(sc.broadcast)
+
+      val hpRDD = sc.parallelize(configurations)
+      val scores = hpRDD.map(prop => {
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameRegression] {
+          override def apply(formula: Formula, data: DataFrame): DataFrameRegression = trainer(formula, data, prop)
+        }
+
+        val formula = formulaBroadcasted.value
+        val data = dataBroadcasted.value
+        val y = formula.y(data).toDoubleArray
+        val metrics = metricsBroadcasted.map(_.value)
+
+        val prediction = CrossValidation.regression(k, formula, data, biFunctionTrainer)
+        val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
+        metricsOrRMSE.map(_.score(y, prediction)).toArray
+      }).collect()
+
+      formulaBroadcasted.destroy()
+      dataBroadcasted.destroy()
+      metricsBroadcasted.foreach(_.destroy())
+
+      scores
+    }
   }
 }
