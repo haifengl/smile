@@ -15,18 +15,32 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.gap;
+package smile.validation;
 
 /**
- * A measure to evaluate the fitness of chromosomes.
+ * Cross entropy generalizes the log loss metric to multiclass problems.
  *
  * @author Haifeng Li
  */
-public interface FitnessMeasure <T extends Chromosome> {
-
+public interface CrossEntropy {
     /**
-     * Returns the non-negative fitness value of a chromosome. Large values
-     * indicate better fitness.
+     * Calculates the cross entropy for multiclass classifier.
+     * @param truth The sample labels
+     * @param probability The posterior probability of samples.
+     * @return Cross entropy
      */
-    double fit(T chromosome);
+    static double of(int[] truth, double[][] probability) {
+        if (truth.length != probability.length) {
+            throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, probability.length));
+        }
+
+        int n = truth.length;
+        double loss = 0.0;
+
+        for (int i = 0; i < n; i++) {
+            loss -= Math.log(probability[i][truth[i]]);
+        }
+
+        return loss / n;
+    }
 }

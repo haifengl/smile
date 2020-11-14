@@ -100,7 +100,7 @@ public class SumSquaresRatioTest {
             prediction[i] = lda.predict(testxx[i]);
         }
 
-        double accuracy = new Accuracy().measure(testy, prediction);
+        double accuracy = new Accuracy().score(testy, prediction);
         System.out.format("SSR %.2f%%%n", 100 * accuracy);
     }
 }
