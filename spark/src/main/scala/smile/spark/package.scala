@@ -22,7 +22,7 @@ import org.apache.spark.sql.SparkSession
 import smile.classification.Classifier
 import smile.data.DataFrame
 import smile.regression.Regression
-import smile.validation.{Accuracy, ClassificationMeasure, CrossValidation, RMSE, RegressionMeasure}
+import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, RMSE, RegressionMetric}
 import scala.reflect.ClassTag
 
 /**
@@ -50,20 +50,21 @@ package object spark {
     * @param k number of round of cross validation
     * @param x instances
     * @param y labels
-    * @param measures classification measures
+    * @param metrics classification metrics
     * @param trainers classification trainers
     *
-    * @return an array of array of classification measures, the first layer has the same size as the number of trainers,
-    *         the second has the same size as the number of measures.
+    * @return an array of array of classification metrics, the first layer has the same size as the number of trainers,
+    *         the second has the same size as the number of metrics.
     */
-  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)
-                                 (trainers: ((Array[T], Array[Int]) => Classifier[T])*)(implicit spark: SparkSession): Array[Array[Double]] = {
+  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Int], metrics: ClassificationMetric*)
+                                 (trainers: ((Array[T], Array[Int]) => Classifier[T])*)
+                                 (implicit spark: SparkSession): Array[Array[Double]] = {
 
     val sc = spark.sparkContext
 
     val xBroadcasted = sc.broadcast[Array[T]](x)
     val yBroadcasted = sc.broadcast[Array[Int]](y)
-    val measuresBroadcasted = measures.map(sc.broadcast)
+    val metricsBroadcasted = metrics.map(sc.broadcast)
 
     val trainersRDD = sc.parallelize(trainers)
     val res = trainersRDD
@@ -74,12 +75,12 @@ package object spark {
         }
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val measures = measuresBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.map(_.value)
         //TODO: add smile-scala dependency and use smile.validation.cv
         val prediction =  CrossValidation.classification(k, x, y, biFunctionTrainer)
-        val measuresOrAccuracy = if (measures.isEmpty) Seq(new Accuracy()) else measures
-        measuresOrAccuracy.map { measure =>
-          val result = measure.measure(y, prediction)
+        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
+        metricsOrAccuracy.map { metric =>
+          val result = metric.score(y, prediction)
           result
         }.toArray
       })
@@ -98,20 +99,21 @@ package object spark {
     * @param k number of round of cross validation
     * @param x instances
     * @param y labels
-    * @param measures regression measures
+    * @param metrics regression metrics
     * @param trainers regression trainers
     *
-    * @return an array of array of regression measures, the first layer has the same size as the number of trainers,
-    *         the second has the same size as the number of measures.
+    * @return an array of array of regression metrics, the first layer has the same size as the number of trainers,
+    *         the second has the same size as the number of metrics.
     */
-  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)
-                                 (trainers: ((Array[T], Array[Double]) => Regression[T])*)(implicit spark: SparkSession): Array[Array[Double]] = {
+  def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)
+                                 (trainers: ((Array[T], Array[Double]) => Regression[T])*)
+                                 (implicit spark: SparkSession): Array[Array[Double]] = {
 
     val sc = spark.sparkContext
 
     val xBroadcasted = sc.broadcast[Array[T]](x)
     val yBroadcasted = sc.broadcast[Array[Double]](y)
-    val measuresBroadcasted = measures.map(sc.broadcast)
+    val metricsBroadcasted = metrics.map(sc.broadcast)
 
     val trainersRDD = sc.parallelize(trainers)
     val res = trainersRDD
@@ -122,12 +124,12 @@ package object spark {
         }
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val measures = measuresBroadcasted.map(_.value)
+        val metrics = metricsBroadcasted.map(_.value)
         //TODO: add smile-scala dependency and use smile.validation.cv
         val prediction =  CrossValidation.regression(k, x, y, biFunctionTrainer)
-        val measuresOrRMSE = if (measures.isEmpty) Seq(new RMSE()) else measures
-        measuresOrRMSE.map { measure =>
-          val result = measure.measure(y, prediction)
+        val metricsOrRMSE = if (metrics.isEmpty) Seq(RMSE.instance) else metrics
+        metricsOrRMSE.map { metric =>
+          val result = metric.score(y, prediction)
           result
         }.toArray
       })

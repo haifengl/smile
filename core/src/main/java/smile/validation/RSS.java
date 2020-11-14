@@ -24,13 +24,13 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class RSS implements RegressionMeasure {
+public class RSS implements RegressionMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static RSS instance = new RSS();
 
     @Override
-    public double measure(double[] truth, double[] prediction) {
+    public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);
     }
 

@@ -27,13 +27,13 @@ package smile.validation;
  *
  * @author Haifeng Li
  */
-public class FDR implements ClassificationMeasure {
+public class FDR implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static FDR instance = new FDR();
 
     @Override
-    public double measure(int[] truth, int[] prediction) {
+    public double score(int[] truth, int[] prediction) {
         return of(truth, prediction);
     }
 

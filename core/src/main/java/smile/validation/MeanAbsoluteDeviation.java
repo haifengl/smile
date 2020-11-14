@@ -22,13 +22,13 @@ package smile.validation;
  * 
  * @author Haifeng Li
  */
-public class MeanAbsoluteDeviation implements RegressionMeasure {
+public class MeanAbsoluteDeviation implements RegressionMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MeanAbsoluteDeviation instance = new MeanAbsoluteDeviation();
 
     @Override
-    public double measure(double[] truth, double[] prediction) {
+    public double score(double[] truth, double[] prediction) {
         return of(truth, prediction);
     }
 

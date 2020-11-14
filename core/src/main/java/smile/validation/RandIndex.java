@@ -35,13 +35,13 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class RandIndex implements ClusterMeasure {
+public class RandIndex implements ClusteringMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static RandIndex instance = new RandIndex();
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         return of(y1, y2);
     }
 

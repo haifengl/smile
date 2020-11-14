@@ -64,7 +64,7 @@ public class RSSTest {
         };
         RSS instance = new RSS();
         double expResult = 12.844;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-3);
     }
 }

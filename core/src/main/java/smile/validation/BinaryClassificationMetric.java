@@ -17,18 +17,19 @@
 
 package smile.validation;
 
-import java.io.Serializable;
-
 /**
- * An abstract interface to measure the clustering performance.
+ * An abstract interface to measure the binary classification performance.
  *
  * @author Haifeng Li
  */
-public interface ClusterMeasure extends Serializable {
+public interface BinaryClassificationMetric extends ClassificationMetric {
+
     /**
-     * Returns an index to measure the quality of clustering.
-     * @param y1 the cluster labels.
-     * @param y2 the alternative cluster labels.
+     * Returns a score to measure the quality of classification.
+     * @param truth the true class labels.
+     * @param probability The posterior probability of positive class.
      */
-    double measure(int[] y1, int[] y2);
+    default double score(int[] truth, double[] probability) {
+        throw new UnsupportedOperationException();
+    }
 }

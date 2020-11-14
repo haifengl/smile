@@ -42,7 +42,7 @@ import static smile.math.MathEx.lfactorial;
  *
  * @author Haifeng Li
  */
-public class AdjustedMutualInformation implements ClusterMeasure {
+public class AdjustedMutualInformation implements ClusteringMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance with max normalization. */
     public final static AdjustedMutualInformation MAX = new AdjustedMutualInformation(Method.MAX);
@@ -77,7 +77,7 @@ public class AdjustedMutualInformation implements ClusterMeasure {
     }
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         switch (method) {
             case MAX: return max(y1, y2);
             case MIN: return min(y1, y2);

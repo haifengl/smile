@@ -30,13 +30,13 @@ import static java.lang.Math.log;
  *
  * @author Haifeng Li
  */
-public class MutualInformation implements ClusterMeasure {
+public class MutualInformation implements ClusteringMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
     public final static MutualInformation instance = new MutualInformation();
 
     @Override
-    public double measure(int[] y1, int[] y2) {
+    public double score(int[] y1, int[] y2) {
         return of(y1, y2);
     }
 
