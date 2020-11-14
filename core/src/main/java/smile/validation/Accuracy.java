@@ -24,6 +24,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Accuracy implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static Accuracy instance = new Accuracy();
 
     @Override

@@ -28,6 +28,8 @@ package smile.validation;
  * @author digital-thinking
  */
 public class MCC implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static MCC instance = new MCC();
 
     @Override

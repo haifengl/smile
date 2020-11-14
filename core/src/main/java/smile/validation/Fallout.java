@@ -29,6 +29,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Fallout implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static Fallout instance = new Fallout();
 
     @Override

@@ -25,6 +25,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class RSS implements RegressionMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static RSS instance = new RSS();
 
     @Override

@@ -17,13 +17,14 @@
 
 package smile.validation;
 
+import java.io.Serializable;
+
 /**
  * An abstract interface to measure the regression performance.
  *
  * @author Haifeng Li
  */
-public interface RegressionMeasure {
-
+public interface RegressionMeasure extends Serializable {
     /**
      * Returns an index to measure the quality of regression.
      * @param truth the true response values.

@@ -17,12 +17,14 @@
 
 package smile.validation;
 
+import java.io.Serializable;
+
 /**
  * An abstract interface to measure the classification performance.
  *
  * @author Haifeng Li
  */
-public interface ClassificationMeasure {
+public interface ClassificationMeasure extends Serializable {
 
     /**
      * Returns an index to measure the quality of classification.

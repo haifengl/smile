@@ -31,6 +31,8 @@ import static java.lang.Math.log;
  * @author Haifeng Li
  */
 public class MutualInformation implements ClusterMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static MutualInformation instance = new MutualInformation();
 
     @Override

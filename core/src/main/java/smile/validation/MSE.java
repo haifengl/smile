@@ -25,6 +25,8 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class MSE implements RegressionMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static MSE instance = new MSE();
 
     @Override

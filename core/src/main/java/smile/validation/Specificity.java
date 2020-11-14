@@ -35,6 +35,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class Specificity implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
     public final static Specificity instance = new Specificity();
 
     @Override

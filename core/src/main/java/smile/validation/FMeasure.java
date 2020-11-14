@@ -34,6 +34,8 @@ package smile.validation;
  * @author Haifeng Li
  */
 public class FMeasure implements ClassificationMeasure {
+    private static final long serialVersionUID = 2L;
+
     @Override
     public double measure(int[] truth, int[] prediction) {
         return of(beta, truth, prediction);
