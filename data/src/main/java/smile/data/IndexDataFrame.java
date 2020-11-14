@@ -32,8 +32,6 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class IndexDataFrame implements DataFrame {
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IndexDataFrame.class);
-
     /** The underlying data frame. */
     private DataFrame df;
     /** The row index. */
