@@ -64,7 +64,7 @@ package object spark {
     * @param trainers classification trainers
     *
     * @return an array of array of classification measures, the first layer has the same size as the number of trainers,
-    *         the second layer as a size equals to k.
+    *         the second has the same size as the number of measures.
     */
   def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)
                                  (trainers: ((Array[T], Array[Int]) => Classifier[T])*)(implicit spark: SparkSession): Array[Array[Double]] = {
@@ -114,7 +114,7 @@ package object spark {
     * @param trainers regression trainers
     *
     * @return an array of array of regression measures, the first layer has the same size as the number of trainers,
-    *         the second layer as a size equals to k.
+    *         the second has the same size as the number of measures.
     */
   def grid[T <: Object: ClassTag](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)
                                  (trainers: ((Array[T], Array[Double]) => Regression[T])*)(implicit spark: SparkSession): Array[Array[Double]] = {
