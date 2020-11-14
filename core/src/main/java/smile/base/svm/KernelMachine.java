@@ -109,7 +109,7 @@ public class KernelMachine<T> implements Serializable {
     }
 
     /** Returns the decision function value. */
-    public double f(T x) {
+    public double score(T x) {
         double f = b;
 
         for (int i = 0; i < instances.length; i++) {

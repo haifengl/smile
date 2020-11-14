@@ -64,7 +64,7 @@ public class PrecisionTest {
         };
         Precision instance = new Precision();
         double expResult = 0.9259;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-4);
     }
 }

@@ -104,7 +104,7 @@ public class GAFE {
      * @param length the length of bit string, i.e. the number of features.
      * @return bit strings of last generation.
      */
-    public BitString[] apply(int size, int generation, int length, FitnessMeasure<BitString> fitness) {
+    public BitString[] apply(int size, int generation, int length, Fitness<BitString> fitness) {
         if (size <= 0) {
             throw new IllegalArgumentException("Invalid population size: " + size);
         }
@@ -154,10 +154,10 @@ public class GAFE {
      * @param y training labels.
      * @param testx testing samples.
      * @param testy testing labels.
-     * @param measure classification measure.
+     * @param metric classification metric.
      * @param trainer the lambda to train a model.
      */
-    public static FitnessMeasure<BitString> fitness(double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMeasure measure, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
+    public static Fitness<BitString> fitness(double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMetric metric, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         return chromosome -> {
             byte[] bits = chromosome.bits();
             int[] features = indexOfOnes(bits);
@@ -167,21 +167,21 @@ public class GAFE {
             double[][] testxx = select(testx, features);
 
             Classifier<double[]> model = trainer.apply(xx, y);
-            return measure.measure(testy, model.predict(testxx));
+            return metric.score(testy, model.predict(testxx));
         };
     }
 
     /**
-     * Returns a regression fitness measure.
+     * Returns a regression fitness function.
      *
      * @param x training samples.
      * @param y training response.
      * @param testx testing samples.
      * @param testy testing response.
-     * @param measure classification measure.
+     * @param metric classification metric.
      * @param trainer the lambda to train a model.
      */
-    public static FitnessMeasure<BitString> fitness(double[][] x, double[] y, double[][] testx, double[] testy, RegressionMeasure measure, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+    public static Fitness<BitString> fitness(double[][] x, double[] y, double[][] testx, double[] testy, RegressionMetric metric, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         return chromosome -> {
             byte[] bits = chromosome.bits();
             int[] features = indexOfOnes(bits);
@@ -191,7 +191,7 @@ public class GAFE {
             double[][] testxx = select(testx, features);
 
             Regression<double[]> model = trainer.apply(xx, y);
-            return -measure.measure(testy, model.predict(testxx));
+            return -metric.score(testy, model.predict(testxx));
         };
     }
 
@@ -215,15 +215,15 @@ public class GAFE {
     }
 
     /**
-     * Returns a classification fitness measure.
+     * Returns a classification fitness function.
      *
      * @param y the column name of class labels.
      * @param train training data.
      * @param test testing data.
-     * @param measure classification measure.
+     * @param metric classification metric.
      * @param trainer the lambda to train a model.
      */
-    public static FitnessMeasure<BitString> fitness(String y, DataFrame train, DataFrame test, ClassificationMeasure measure, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+    public static Fitness<BitString> fitness(String y, DataFrame train, DataFrame test, ClassificationMetric metric, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         String[] names = train.names();
         int[] testy = test.column(y).toIntArray();
 
@@ -234,20 +234,20 @@ public class GAFE {
 
             Formula formula = Formula.of(y, features);
             DataFrameClassifier model = trainer.apply(formula, train);
-            return measure.measure(testy, model.predict(test));
+            return metric.score(testy, model.predict(test));
         };
     }
 
     /**
-     * Returns a regression fitness measure.
+     * Returns a regression fitness function.
      *
      * @param y the column name of response variable.
      * @param train training data.
      * @param test testing data.
-     * @param measure classification measure.
+     * @param metric classification metric.
      * @param trainer the lambda to train a model.
      */
-    public static FitnessMeasure<BitString> fitness(String y, DataFrame train, DataFrame test, RegressionMeasure measure, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
+    public static Fitness<BitString> fitness(String y, DataFrame train, DataFrame test, RegressionMetric metric, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         String[] names = train.names();
         double[] testy = test.column(y).toDoubleArray();
 
@@ -258,7 +258,7 @@ public class GAFE {
 
             Formula formula = Formula.of(y, features);
             DataFrameRegression model = trainer.apply(formula, train);
-            return -measure.measure(testy, model.predict(test));
+            return -metric.score(testy, model.predict(test));
         };
     }
 }

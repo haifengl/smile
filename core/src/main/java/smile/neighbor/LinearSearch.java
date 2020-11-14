@@ -103,7 +103,7 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
         }
 
         double[] dist = Arrays.stream(data).parallel().mapToDouble(x -> distance.d(q, x)).toArray();
-        HeapSelect<NeighborBuilder<T,T>> heap = new HeapSelect<>(k);
+        HeapSelect<NeighborBuilder<T,T>> heap = new HeapSelect<>(NeighborBuilder.class, k);
         for (int i = 0; i < k; i++) {
             heap.add(new NeighborBuilder<>());
         }

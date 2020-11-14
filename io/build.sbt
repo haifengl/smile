@@ -1,7 +1,7 @@
 name := "smile-io"
 
 libraryDependencies ++= {
-  val arrowV = "1.0.1"
+  val arrowV = "0.17.1"
   Seq(
     "org.apache.arrow" % "arrow-memory" % arrowV % Provided,
     "org.apache.arrow" % "arrow-vector" % arrowV % Provided,

@@ -62,9 +62,9 @@ public class RSSTest {
             98.12232, 99.87776, 103.20861, 105.08598, 107.33369, 109.57251,
             112.98358, 113.92898, 115.50214, 117.54028,
         };
-        RSS instance = new RSS();
+
         double expResult = 12.844;
-        double result = instance.measure(truth, prediction);
+        double result = RSS.of(truth, prediction);
         assertEquals(expResult, result, 1E-3);
     }
 }

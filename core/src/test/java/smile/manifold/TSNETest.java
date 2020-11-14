@@ -74,7 +74,7 @@ public class TSNETest {
         TSNE tsne = new TSNE(X, 2, 20, 200, 1000);
         long end = System.currentTimeMillis();
         System.out.format("t-SNE takes %.2f seconds\n", (end - start) / 1000.0);
-        
+
         assertEquals(-5.2315022440214785, tsne.coordinates[0][0], 1E-7);
         assertEquals(8.033757250596969, tsne.coordinates[0][1], 1E-7);
         assertEquals(5.089496162961281, tsne.coordinates[100][0], 1E-7);

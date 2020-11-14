@@ -68,20 +68,20 @@ public class BitString implements Chromosome {
      */
     private double crossoverRate = 0.9;
     /**
-     * The measure to evaluate the fitness of chromosome.
+     * The fitness function.
      */
-    private FitnessMeasure<BitString> measure;
+    private Fitness<BitString> fitness;
     /**
-     * The fitness of chromosome.
+     * The fitness score of chromosome.
      */
-    private double fitness = Double.NaN;
+    private double fitnessScore = Double.NaN;
 
     /**
      * Constructor. Two point cross over, cross over rate 0.9, mutation rate 0.01.
      * @param length the length of bit string.
      * @param measure the fitness measure.
      */
-    public BitString(int length, FitnessMeasure<BitString> measure) {
+    public BitString(int length, Fitness<BitString> measure) {
         this(length, measure, Crossover.TWO_POINT, 0.9, 0.01);
     }
     
@@ -93,7 +93,7 @@ public class BitString implements Chromosome {
      * @param crossoverRate the crossover rate.
      * @param mutationRate the mutation rate.
      */
-    public BitString(int length, FitnessMeasure<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
+    public BitString(int length, Fitness<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
         this(bits(length), measure, crossover, crossoverRate, mutationRate);
     }
 
@@ -102,19 +102,19 @@ public class BitString implements Chromosome {
      * @param bits the bit string of chromosome.
      * @param measure the fitness measure.
      */
-    public BitString(byte[] bits, FitnessMeasure<BitString> measure) {
+    public BitString(byte[] bits, Fitness<BitString> measure) {
         this(bits, measure, Crossover.TWO_POINT, 0.9, 0.01);
     }
 
     /**
      * Constructor.
      * @param bits the bit string of chromosome.
-     * @param measure the fitness measure.
+     * @param fitness the fitness function.
      * @param crossover the strategy of crossover operation.
      * @param crossoverRate the crossover rate.
      * @param mutationRate the mutation rate.
      */
-    public BitString(byte[] bits, FitnessMeasure<BitString> measure, Crossover crossover, double crossoverRate, double mutationRate) {
+    public BitString(byte[] bits, Fitness<BitString> fitness, Crossover crossover, double crossoverRate, double mutationRate) {
         if (crossoverRate < 0.0 || crossoverRate > 1.0) {
             throw new IllegalArgumentException("Invalid crossover rate: " + crossoverRate);
         }
@@ -125,7 +125,7 @@ public class BitString implements Chromosome {
 
         this.bits = bits;
         this.length = bits.length;
-        this.measure = measure;
+        this.fitness = fitness;
         this.crossoverRate = crossoverRate;
         this.mutationRate = mutationRate;
         this.crossover = crossover;
@@ -159,26 +159,26 @@ public class BitString implements Chromosome {
 
     @Override
     public int compareTo(Chromosome o) {
-        return Double.compare(fitness, o.fitness());
+        return Double.compare(fitnessScore, o.fitness());
     }
     
     @Override
     public double fitness() {
-        if (Double.isNaN(fitness)) {
-            fitness = measure.fit(this);
+        if (Double.isNaN(fitnessScore)) {
+            fitnessScore = fitness.score(this);
         }
 
-        return fitness;
+        return fitnessScore;
     }
 
     @Override
     public BitString newInstance() {
-        return new BitString(length, measure, crossover, crossoverRate, mutationRate);
+        return new BitString(length, fitness, crossover, crossoverRate, mutationRate);
     }
 
     /** Creates a new instance with given bits. */
     public BitString newInstance(byte[] bits) {
-        return new BitString(bits, measure, crossover, crossoverRate, mutationRate);
+        return new BitString(bits, fitness, crossover, crossoverRate, mutationRate);
     }
 
     @Override
