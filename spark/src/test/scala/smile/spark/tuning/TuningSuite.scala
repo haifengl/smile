@@ -27,7 +27,7 @@ import smile.validation.Accuracy
 
 class TuningSuite extends Specification with BeforeAll with AfterAll{
 
-  var spark:SparkSession = _
+  var spark: SparkSession = _
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -46,12 +46,10 @@ class TuningSuite extends Specification with BeforeAll with AfterAll{
       val res = classification.sparkgscv(spark)(5, x, y, Seq(new Accuracy()): _*) (Seq(knn3,knn5):_*)
 
       res(0)(0) mustEqual 1 and (res.length mustEqual 2) and (res(0).length mustEqual 5)
-
     }
   }
 
   def afterAll(): Unit = {
     spark.stop()
   }
-
 }

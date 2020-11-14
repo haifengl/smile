@@ -24,38 +24,37 @@ import org.apache.spark.mllib.linalg.{VectorUDT => OldVectorUDT}
 import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 
 /**
- * SparkDataTypes is a collection of internal helper methods to convert back and forth
- * between [[smile.data.`type`.DataType]] and [[org.apache.spark.sql.types.DataType]].
- */
+  * SparkDataTypes is a collection of internal helper methods to convert back and forth
+  * between [[smile.data.`type`.DataType]] and [[org.apache.spark.sql.types.DataType]].
+  */
 object SparkDataTypes {
-
   /**
-   * Convert a Spark schema to a smile schema
-   *
-   * @param schema spark schema
-   * @return smile schema
-   */
+    * Convert a Spark schema to a smile schema
+    *
+    * @param schema spark schema
+    * @return smile schema
+    */
   def smileSchema(schema: org.apache.spark.sql.types.StructType): StructType = {
     DataTypes.struct(schema.map(smileField): _*)
   }
 
   /**
-   * Convert a Spark field to a smile field
-   *
-   * @param field spark field
-   * @return smile field
-   */
+    * Convert a Spark field to a smile field
+    *
+    * @param field spark field
+    * @return smile field
+    */
   def smileField(field: org.apache.spark.sql.types.StructField): StructField = {
     new StructField(field.name, smileType(field.dataType))
   }
 
   /**
-   * Convert a [[org.apache.spark.sql.types.DataType]] to a smile [[DataType]].
-   * Deals with nested type or even user defined types.
-   *
-   * @param `type` spark datatype
-   * @return smile datatype
-   */
+    * Convert a [[org.apache.spark.sql.types.DataType]] to a smile [[DataType]].
+    * Deals with nested type or even user defined types.
+    *
+    * @param `type` spark datatype
+    * @return smile datatype
+    */
   def smileType(`type`: org.apache.spark.sql.types.DataType): DataType = {
     `type` match {
       case BooleanType => DataTypes.BooleanType
@@ -83,33 +82,33 @@ object SparkDataTypes {
   }
 
   /**
-   * Convert a smile schema to a Spark schema
-   *
-   * @param schema smile schema
-   * @return spark schema
-   */
+    * Convert a smile schema to a Spark schema
+    *
+    * @param schema smile schema
+    * @return spark schema
+    */
   def sparkSchema(schema: StructType): org.apache.spark.sql.types.StructType = {
     org.apache.spark.sql.types.StructType(schema.fields().map(sparkField))
   }
 
   /**
-   * Convert a smile field to a Spark field
-   *
-   * @param field spark field
-   * @return smile field
-   */
+    * Convert a smile field to a Spark field
+    *
+    * @param field smile field
+    * @return spark field
+    */
   def sparkField(field: StructField): org.apache.spark.sql.types.StructField = {
     //TODO: add metadata for measure
     org.apache.spark.sql.types.StructField(field.name, sparkType(field.`type`))
   }
 
   /**
-   * Convert a smile [[DataType]] to a [[org.apache.spark.sql.types.DataType]].
-   * Deals with nested type or even user defined types.
-   *
-   * @param `type` smile datatype
-   * @return spark datatype
-   */
+    * Convert a smile [[DataType]] to a [[org.apache.spark.sql.types.DataType]].
+    * Deals with nested type or even user defined types.
+    *
+    * @param `type` smile datatype
+    * @return spark datatype
+    */
   def sparkType(`type`: DataType): org.apache.spark.sql.types.DataType = {
     `type`.id match {
       case DataType.ID.Boolean => BooleanType
@@ -131,8 +130,7 @@ object SparkDataTypes {
           .schema
       case DataType.ID.Array =>
         new ArrayType(
-          sparkType(`type`.asInstanceOf[smile.data.`type`.ArrayType].getComponentType),
-          false)
+          sparkType(`type`.asInstanceOf[smile.data.`type`.ArrayType].getComponentType),false)
       case DataType.ID.Struct =>
         org.apache.spark.sql.types.StructType(
           `type`.asInstanceOf[smile.data.`type`.StructType]
@@ -141,5 +139,4 @@ object SparkDataTypes {
             .toSeq)
     }
   }
-
 }

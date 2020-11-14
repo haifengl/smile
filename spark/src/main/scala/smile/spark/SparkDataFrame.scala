@@ -20,12 +20,11 @@ package smile.spark
 import org.apache.spark.smile.SparkDataTypes
 import smile.data.`type`.StructType
 import smile.data.{DataFrame, Tuple}
-
 import scala.collection.JavaConverters._
 
 /**
- * Converter from SMILE [[DataFrame]] to Spark [[org.apache.spark.sql.DataFrame]]
- */
+  * Converter from SMILE [[DataFrame]] to Spark [[org.apache.spark.sql.DataFrame]]
+  */
 object SparkDataFrame {
   /** Returns a local Smile DataFrame. */
   def apply(df: org.apache.spark.sql.DataFrame): DataFrame = {

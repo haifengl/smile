@@ -26,7 +26,7 @@ import smile.util.Paths
 
 class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
 
-  var spark:SparkSession = _
+  var spark: SparkSession = _
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -48,7 +48,6 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
       data.cache()
 
       time {
-
         val model = scl.fit(data)
         val res = bce.evaluate(model.transform(data))
 
@@ -57,9 +56,7 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
         model.write.overwrite().save("/tmp/model")
         val loaded = SmileClassificationModel.load("/tmp/model")
         bce.evaluate(loaded.transform(data)) mustEqual bce.evaluate(model.transform(data))
-
       }
-
     }
   }
 
@@ -74,5 +71,4 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
   def afterAll(): Unit = {
     spark.stop()
   }
-
 }
