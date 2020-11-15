@@ -18,7 +18,6 @@
 package org.apache.spark.ml.classification
 
 import java.nio.file.Files
-
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
@@ -38,9 +37,10 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
   "SmileClassifier" should {
     "have the same performances after saving and loading back the model" in {
 
-      val raw = spark.read
+      val data = spark.read
         .format("libsvm")
         .load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+      data.cache()
 
       val trainer = (x: Array[Array[Double]], y: Array[Int]) => {
         val neurons = RBF.fit(x, 30)
@@ -48,35 +48,20 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
       }
 
       val rbf = new SmileClassifier().setTrainer(trainer)
-      val eval = new BinaryClassificationEvaluator()
-        .setLabelCol("label")
-        .setRawPredictionCol("rawPrediction")
+      val eval = new BinaryClassificationEvaluator().setLabelCol("label").setRawPredictionCol("rawPrediction")
 
-      val data = raw
-      data.cache()
+      val model = rbf.fit(data)
+      val metric = eval.evaluate(model.transform(data))
+      println(s"Evaluation result = $metric")
 
-      time {
-        val model = rbf.fit(data)
-        val metric = eval.evaluate(model.transform(data))
-        println(s"Evaluation result = $metric")
+      val temp = Files.createTempFile("smile-test-", ".tmp")
+      val path = temp.normalize().toString
+      model.write.overwrite().save(path)
+      temp.toFile().deleteOnExit()
 
-        val temp = Files.createTempFile("smile-test-", ".tmp")
-        val path = temp.normalize().toString
-        model.write.overwrite().save(path)
-        temp.toFile().deleteOnExit()
-
-        val loaded = SmileClassificationModel.load(path)
-        eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))
-      }
+      val loaded = SmileClassificationModel.load(path)
+      eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))
     }
-  }
-
-  def time[R](block: => R): R = {
-    val t0 = System.nanoTime()
-    val result = block // call-by-name
-    val t1 = System.nanoTime()
-    println(f"Elapsed time: ${(t1 - t0)/1E9}%.3f s")
-    result
   }
 
   def afterAll(): Unit = {
