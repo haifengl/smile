@@ -106,7 +106,7 @@ public class NeuralGas implements VectorQuantizer {
     /**
      * The lifetime of connections.
      */
-    private int lifetime;
+    private TimeFunction lifetime;
     /**
      * The distance between a new observation to neurons.
      */
@@ -128,7 +128,7 @@ public class NeuralGas implements VectorQuantizer {
      * @param lifetime the neuron connection lifetime, usually the number of
      *                 iterations for one or two epochs.
      */
-    public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, int lifetime) {
+    public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, TimeFunction lifetime) {
         this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
         this.alpha = alpha;
         this.theta = theta;
@@ -163,6 +163,7 @@ public class NeuralGas implements VectorQuantizer {
      * Returns the network of neurons.
      */
     public Graph network() {
+        double lifetime = this.lifetime.apply(t);
         for (int i = 0; i < neurons.length; i++) {
             for (Edge e : graph.getEdges(i)) {
                 if (t - e.weight > lifetime) {
@@ -182,9 +183,10 @@ public class NeuralGas implements VectorQuantizer {
         IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
         QuickSort.sort(dist, neurons);
 
-        double rate = alpha.of(t);
+        double alpha = this.alpha.apply(t);
+        double theta = this.theta.apply(t);
         for (int i = 0; i < k; i++) {
-            double delta = rate * Math.exp(-i/theta.of(t));
+            double delta = alpha * Math.exp(-i/theta);
             if (delta > eps) {
                 double[] w = neurons[i].w;
                 for (int j = 0; j < d; j++) {

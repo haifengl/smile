@@ -127,8 +127,8 @@ public class KrigingInterpolation {
             }
         }
 
-        Matrix.LU lu = v.lu(true);
-        yvi = lu.solve(yvi);
+        Matrix.SVD svd = v.svd(true, true);
+        yvi = svd.solve(yvi);
     }
 
     /**

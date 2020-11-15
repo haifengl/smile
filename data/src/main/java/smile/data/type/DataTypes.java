@@ -165,7 +165,7 @@ public class DataTypes {
         for (int i = 1; i <= ncols; i++) {
             String name = meta.getColumnName(i);
             DataType type = DataType.of(
-                    JDBCType.valueOf(meta.getColumnTypeName(i)),
+                    JDBCType.valueOf(meta.getColumnType(i)),
                     meta.isNullable(i) != ResultSetMetaData.columnNoNulls,
                     dbms);
             fields[i-1] = new StructField(name, type);

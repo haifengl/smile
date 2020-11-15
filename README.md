@@ -1,6 +1,5 @@
 # Smile
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XKU5BZX7XHPQ6)
 [![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 [![Maven Central](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core/badge.svg)](https://maven-badges.herokuapp.com/maven-central/com.github.haifengl/smile-core)
 
@@ -66,7 +65,7 @@ following to your project pom.xml file.
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-core</artifactId>
-      <version>2.5.2</version>
+      <version>2.5.3</version>
     </dependency>
 ```
 
@@ -74,18 +73,18 @@ For NLP, use the artifactId smile-nlp.
 
 For Scala API, please use
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.2"
+    libraryDependencies += "com.github.haifengl" %% "smile-scala" % "2.5.3"
 ```
 
 For Kotlin API, add the below into the `dependencies` section
 of Gradle build script.
 ```
-    implementation("com.github.haifengl:smile-kotlin:2.5.2")
+    implementation("com.github.haifengl:smile-kotlin:2.5.3")
 ```
 
 For Clojure API, add the following dependency to your project or build file:
 ```
-    [org.clojars.haifengl/smile "2.5.2"]
+    [org.clojars.haifengl/smile "2.5.3"]
 ```
 
 Some algorithms rely on BLAS and LAPACK (e.g. manifold learning,
@@ -94,9 +93,9 @@ To use these algorithms, you should include OpenBLAS for optimized matrix
 computation:
 ```
     libraryDependencies ++= Seq(
-      "org.bytedeco" % "javacpp"   % "1.5.3"       classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
-      "org.bytedeco" % "openblas"  % "0.3.9-1.5.3" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
-      "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.3" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier ""
+      "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
+      "org.bytedeco" % "openblas"  % "0.3.10-1.5.4" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
+      "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier ""
     )
 ```
 In this example, we include all supported 64-bit platforms and filter out
@@ -114,7 +113,7 @@ Or you may simply include `smile-mkl` module in your project, which includes
 MKL binaries. With `smile-mkl` module in the class path, Smile will
 automatically switch to MKL.
 ```
-    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "2.5.2"
+    libraryDependencies += "com.github.haifengl" %% "smile-mkl" % "2.5.3"
 ```
 
 ## Shell
@@ -170,7 +169,7 @@ To use SmilePlot, add the following to dependencies
     <dependency>
       <groupId>com.github.haifengl</groupId>
       <artifactId>smile-plot</artifactId>
-      <version>2.5.2</version>
+      <version>2.5.3</version>
     </dependency>
 ```
 

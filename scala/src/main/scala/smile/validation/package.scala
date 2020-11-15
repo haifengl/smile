@@ -69,7 +69,7 @@ package object validation {
     * The traditional or balanced F-score (F1 score) is the harmonic mean of
     * precision and recall, where an F1 score reaches its best value at 1 and worst at 0.
     */
-  def f1(truth: Array[Int], prediction: Array[Int]): Double = FMeasure.of(1.0, truth, prediction)
+  def f1(truth: Array[Int], prediction: Array[Int]): Double = FScore.F1.score(truth, prediction)
 
   /** The area under the curve (AUC). When using normalized units, the area under
     * the curve is equal to the probability that a classifier will rank a
@@ -77,6 +77,18 @@ package object validation {
     * one (assuming 'positive' ranks higher than 'negative').
     */
   def auc(truth: Array[Int], probability: Array[Double]): Double = AUC.of(truth, probability)
+  /** Log loss is a evaluation metric for binary classifiers and it is sometimes
+    * the optimization objective as well in case of logistic regression and neural
+    * networks. Log Loss takes into account the uncertainty of the prediction
+    * based on how much it varies from the actual label. This provides a more
+    * nuanced view of the performance of the model. In general, minimizing
+    * Log Loss gives greater accuracy for the classifier. However, it is
+    * susceptible in case of imbalanced data.
+    */
+  def logloss(truth: Array[Int], probability: Array[Double]): Double = LogLoss.of(truth, probability)
+  /** Cross entropy generalizes the log loss metric to multiclass problems. */
+  def crossentropy(truth: Array[Int], probability: Array[Array[Double]]): Double = CrossEntropy.of(truth, probability)
+
   /**
     * MCC is a correlation coefficient between prediction and actual values.
     * It is considered as a balanced measure for binary classification, even in unbalanced data sets.
@@ -134,12 +146,12 @@ package object validation {
     }
 
     println("testing...")
-    val pred = time("testing") {
+    val prediction = time("testing") {
       testx.map(classifier.predict(_))
     }
 
-    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -159,13 +171,13 @@ package object validation {
     }
 
     println("testing...")
-    val pred = time("testing") {
+    val prediction = time("testing") {
       classifier.predict(test)
     }
 
     val testy = formula.y(test).toIntArray
-    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -189,18 +201,18 @@ package object validation {
     }
 
     println("testing...")
-    val pred = time("testing") {
+    val prediction = time("testing") {
       testx.map(classifier.predict(_))
     }
 
-    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, pred)))
-    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, pred)))
-    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, pred)))
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
+    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
+    println("F_1 Score = %.2f%%" format (100.0 * FScore.F1.score(testy, prediction)))
+    println("F_2 Score = %.2f%%" format (100.0 * FScore.F2.score(testy, prediction)))
+    println("F_0.5 Score = %.2f%%" format (100.0 * FScore.FHalf.score(testy, prediction)))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -221,19 +233,19 @@ package object validation {
     }
 
     println("testing...")
-    val pred = time("testing") {
+    val prediction = time("testing") {
       classifier.predict(test)
     }
 
     val testy = formula.y(test).toIntArray
-    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, pred)))
-    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, pred)))
-    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, pred)))
-    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, pred)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, pred)))
-    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, pred)))
-    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, pred)))
-    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, pred))
+    println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
+    println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
+    println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
+    println("F_1 Score = %.2f%%" format (100.0 * FScore.F1.score(testy, prediction)))
+    println("F_2 Score = %.2f%%" format (100.0 * FScore.F2.score(testy, prediction)))
+    println("F_0.5 Score = %.2f%%" format (100.0 * FScore.FHalf.score(testy, prediction)))
+    println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
@@ -271,9 +283,9 @@ package object validation {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
     println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
     println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, prediction)))
-    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, prediction)))
-    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, prediction)))
+    println("F_1 Score = %.2f%%" format (100.0 * FScore.F1.score(testy, prediction)))
+    println("F_2 Score = %.2f%%" format (100.0 * FScore.F2.score(testy, prediction)))
+    println("F_0.5 Score = %.2f%%" format (100.0 * FScore.FHalf.score(testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.of(testy, probability)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
@@ -313,21 +325,21 @@ package object validation {
     println("Sensitivity/Recall = %.2f%%" format (100.0 * Sensitivity.of(testy, prediction)))
     println("Specificity = %.2f%%" format (100.0 * Specificity.of(testy, prediction)))
     println("Precision = %.2f%%" format (100.0 * Precision.of(testy, prediction)))
-    println("F1-Score = %.2f%%" format (100.0 * FMeasure.of(1.0, testy, prediction)))
-    println("F2-Score = %.2f%%" format (100.0 * FMeasure.of(2.0, testy, prediction)))
-    println("F0.5-Score = %.2f%%" format (100.0 * FMeasure.of(0.5, testy, prediction)))
+    println("F_1 Score = %.2f%%" format (100.0 * FScore.F1.score(testy, prediction)))
+    println("F_2 Score = %.2f%%" format (100.0 * FScore.F2.score(testy, prediction)))
+    println("F_0.5 Score = %.2f%%" format (100.0 * FScore.FHalf.score(testy, prediction)))
     println("AUC = %.2f%%" format (100.0 * AUC.of(testy, probability)))
     println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
 
     classifier
   }
 
-  private def measuresOrAccuracy(measures: collection.Seq[ClassificationMeasure]): collection.Seq[ClassificationMeasure] = {
-    if (measures.isEmpty) Seq(new Accuracy) else measures
+  private def metricsOrAccuracy(metrics: collection.Seq[ClassificationMetric]): collection.Seq[ClassificationMetric] = {
+    if (metrics.isEmpty) Seq(new Accuracy) else metrics
   }
 
-  private def measuresOrRMSE(measures: collection.Seq[RegressionMeasure]): collection.Seq[RegressionMeasure] = {
-    if (measures.isEmpty) Seq(new RMSE) else measures
+  private def metricsOrR2(metrics: collection.Seq[RegressionMetric]): collection.Seq[RegressionMetric] = {
+    if (metrics.isEmpty) Seq(new R2) else metrics
   }
 
   object loocv {
@@ -342,17 +354,17 @@ package object validation {
       *
       * @param x        data samples.
       * @param y        sample labels.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def classification[T <: AnyRef](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef](x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
       val prediction = LOOCV.classification(x, y, trainer)
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-      measuresOrAccuracy(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: ${100 * result}%.2f%%")
+      metricsOrAccuracy(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: ${100 * result}%.2f%%")
         result
       }.toArray
     }
@@ -361,18 +373,18 @@ package object validation {
       *
       * @param formula  model formula.
       * @param data     data samples.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def classification(formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+    def classification(formula: Formula, data: DataFrame, metrics: ClassificationMetric*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
       val prediction = LOOCV.classification(formula, data, trainer)
       val y = formula.y(data).toIntArray
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-      measuresOrAccuracy(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: ${100 * result}%.2f%%")
+      metricsOrAccuracy(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: ${100 * result}%.2f%%")
         result
       }.toArray
     }
@@ -381,16 +393,16 @@ package object validation {
       *
       * @param x        data samples.
       * @param y        response variable.
-      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param metrics  validation metrics such as MSE, AbsoluteDeviation, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def regression[T <: AnyRef](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = LOOCV.regression(x, y, trainer)
 
-      measuresOrRMSE(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: $result%.4f")
+      metricsOrR2(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: $result%.4f")
         result
       }.toArray
     }
@@ -399,17 +411,17 @@ package object validation {
       *
       * @param formula  model formula.
       * @param data     data samples.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def regression(formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+    def regression(formula: Formula, data: DataFrame, metrics: RegressionMetric*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
       val prediction = LOOCV.regression(formula, data, trainer)
       val y = formula.y(data).toDoubleArray
 
-      measuresOrRMSE(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: $result%.4f")
+      metricsOrR2(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: $result%.4f")
         result
       }.toArray
     }
@@ -431,17 +443,17 @@ package object validation {
       * @param x        data samples.
       * @param y        sample labels.
       * @param k        k-fold cross validation.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def classification[T <: AnyRef](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef](k: Int, x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
       val prediction = CrossValidation.classification(k, x, y, trainer)
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-      measuresOrAccuracy(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: ${100 * result}%.2f%%")
+      metricsOrAccuracy(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: ${100 * result}%.2f%%")
         result
       }.toArray
     }
@@ -451,18 +463,18 @@ package object validation {
       * @param formula  model formula.
       * @param data     data samples.
       * @param k        k-fold cross validation.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def classification(k: Int, formula: Formula, data: DataFrame, measures: ClassificationMeasure*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+    def classification(k: Int, formula: Formula, data: DataFrame, metrics: ClassificationMetric*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
       val prediction = CrossValidation.classification(k, formula, data, trainer)
       val y = formula.y(data).toIntArray
       println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
 
-      measuresOrAccuracy(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: ${100 * result}%.2f%%")
+      metricsOrAccuracy(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: ${100 * result}%.2f%%")
         result
       }.toArray
     }
@@ -472,16 +484,16 @@ package object validation {
       * @param x        data samples.
       * @param y        response variable.
       * @param k        k-fold cross validation.
-      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param metrics  validation metrics such as MSE, AbsoluteDeviation, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def regression[T <: AnyRef](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       val prediction = CrossValidation.regression(k, x, y, trainer)
 
-      measuresOrRMSE(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: $result%.4f")
+      metricsOrR2(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: $result%.4f")
         result
       }.toArray
     }
@@ -491,17 +503,17 @@ package object validation {
       * @param formula  model formula.
       * @param data     data samples.
       * @param k        k-fold cross validation.
-      * @param measures validation measures such as accuracy, specificity, etc.
+      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
-      * @return measure results.
+      * @return metric scores.
       */
-    def regression(k: Int, formula: Formula, data: DataFrame, measures: RegressionMeasure*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+    def regression(k: Int, formula: Formula, data: DataFrame, metrics: RegressionMetric*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
       val prediction = CrossValidation.regression(k, formula, data, trainer)
       val y = formula.y(data).toDoubleArray
 
-      measuresOrRMSE(measures).map { measure =>
-        val result = measure.measure(y, prediction)
-        println(f"$measure%s: $result%.4f")
+      metricsOrR2(metrics).map { metric =>
+        val result = metric.score(y, prediction)
+        println(f"$metric%s: $result%.4f")
         result
       }.toArray
     }
@@ -542,11 +554,11 @@ package object validation {
       * @param x        data samples.
       * @param y        response variable.
       * @param k        k-round bootstrap estimation.
-      * @param measures validation measures such as MSE, AbsoluteDeviation, etc.
+      * @param metrics  validation metrics such as MSE, AbsoluteDeviation, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return the root mean squared error of each round.
       */
-    def regression[T <: AnyRef](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef](x: Array[T], y: Array[Double], k: Int, metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
       Bootstrap.regression(k, x, y, trainer)
     }
 

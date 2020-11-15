@@ -15,19 +15,11 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.validation;
-
 /**
- * An abstract interface to measure the regression performance.
+ * Sampling is concerned with the selection of a subset of individuals
+ * from within a statistical population to estimate characteristics of
+ * the whole population.
  *
  * @author Haifeng Li
  */
-public interface RegressionMeasure {
-
-    /**
-     * Returns an index to measure the quality of regression.
-     * @param truth the true response values.
-     * @param prediction the predicted response values.
-     */
-    double measure(double[] truth, double[] prediction);
-}
+package smile.stat.sampling;

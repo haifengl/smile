@@ -15,11 +15,20 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
+package smile.validation;
+
+import java.io.Serializable;
+
 /**
- * Sampling is concerned with the selection of a subset of individuals
- * from within a statistical population to estimate characteristics of
- * the whole population.
+ * An abstract interface to measure the probabilistic classification performance.
  *
  * @author Haifeng Li
  */
-package smile.sampling;
+public interface ProbabilisticClassificationMetric extends Serializable {
+    /**
+     * Returns a score to measure the quality of classification.
+     * @param truth the true class labels.
+     * @param probability The posterior probability of positive class.
+     */
+    double score(int[] truth, double[] probability);
+}

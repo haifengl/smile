@@ -43,8 +43,9 @@ public class HammingDistance implements Distance<BitSet> {
 
     @Override
     public double d(BitSet x, BitSet y) {
-        if (x.size() != y.size())
+        if (x.size() != y.size()) {
             throw new IllegalArgumentException(String.format("BitSets have different length: x[%d], y[%d]", x.size(), y.size()));
+        }
 
         int dist = 0;
         for (int i = 0; i < x.size(); i++) {

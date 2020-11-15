@@ -24,6 +24,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.projection.Projection;
+import smile.sort.QuickSort;
 import smile.util.IntSet;
 
 /**
@@ -233,7 +234,21 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         // Within class scatter
         Matrix Sw = St.sub(1.0, Sb);
         Matrix SwInvSb = Sw.inverse().mm(Sb);
-        Matrix scaling = SwInvSb.eigen(false, true, true).Vr.submatrix(0, 0, p-1, L-1);
+        Matrix.EVD evd = SwInvSb.eigen(false, true, true);
+
+        double[] w = new double[p];
+        for (int i = 0; i < p; i++) {
+            w[i] = -(evd.wr[i] * evd.wr[i] + evd.wi[i] * evd.wi[i]);
+        }
+        int[] index = QuickSort.sort(w);
+
+        Matrix scaling = new Matrix(p, L);
+        for (int j = 0; j < L; j++) {
+            int l = index[j];
+            for (int i = 0; i < p; i++) {
+                scaling.set(i, j, evd.Vr.get(i, l));
+            }
+        }
 
         return scaling;
     }

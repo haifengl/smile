@@ -30,6 +30,7 @@ import smile.data.formula._
 import smile.feature.Standardizer
 import smile.read
 import smile.math.MathEx
+import smile.math.TimeFunction
 import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
@@ -109,21 +110,21 @@ object USPS {
 
     println("Training Neural Network, 10 epoch...")
     val net = new MLP(256,
-      Layer.sigmoid(768),
-      Layer.sigmoid(192),
-      Layer.sigmoid(30),
+      Layer.rectifier(768),
+      Layer.rectifier(192),
+      Layer.rectifier(30),
       Layer.mle(k, OutputFunction.SIGMOID)
     )
-    net.setLearningRate(0.1)
-    net.setMomentum(0.0)
+    net.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001))
 
-    (0 until 10).foreach(epoch => {
+    (1 to 10).foreach(epoch => {
       println("----- epoch %d -----" format epoch)
       MathEx.permutate(n).foreach(i =>
         net.update(scaledX(i), y(i))
       )
       val prediction = Validation.test(net, scaledTestX)
       println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+      println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
     })
   }
 }

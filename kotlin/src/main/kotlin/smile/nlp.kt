@@ -217,7 +217,7 @@ fun tfidf(corpus: List<DoubleArray>): List<DoubleArray> {
  * @return TF-IDF feature vector
  */
 fun tfidf(bag: DoubleArray, n: Int, df: IntArray): DoubleArray {
-    val maxtf = bag.max() ?: 0.0
+    val maxtf = bag.maxOrNull() ?: 0.0
     val features = DoubleArray(bag.size)
     for (i in features.indices) {
         features[i] = tfidf(bag[i], maxtf, n, df[i])

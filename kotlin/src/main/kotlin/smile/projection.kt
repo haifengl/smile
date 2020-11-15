@@ -79,8 +79,8 @@ fun pca(data: Array<DoubleArray>, cor: Boolean = false): PCA {
  * @param data training data.
  * @param k the number of principal component to learn.
  */
-fun ppca(data: Array<DoubleArray>, k: Int): PPCA  {
-    return PPCA.fit(data, k)
+fun ppca(data: Array<DoubleArray>, k: Int): ProbabilisticPCA  {
+    return ProbabilisticPCA.fit(data, k)
 }
 
 /**
