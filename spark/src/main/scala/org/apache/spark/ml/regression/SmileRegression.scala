@@ -56,7 +56,8 @@ private[ml] object SmileRegressionParams {
       params
         .filter { case ParamPair(p, _) => p.name != "trainer" }
         .map { case ParamPair(p, v) => p.name -> parse(p.jsonEncode(v)) }
-        .toList)
+        .toList
+    )
 
     DefaultParamsWriter.saveMetadata(instance, path, sc, extraMetadata, Some(jsonParams))
   }
@@ -91,38 +92,28 @@ class SmileRegression(override val uid: String)
       instr.logParams(this, labelCol, featuresCol, predictionCol)
 
       val spark = dataset.sparkSession
+      val sc = spark.sparkContext
 
       val df = dataset.select($(labelCol), $(featuresCol))
 
-      val handlePersistence = dataset.storageLevel == StorageLevel.NONE && (df.storageLevel == StorageLevel.NONE)
-      if (handlePersistence) {
-        df.persist(StorageLevel.MEMORY_AND_DISK)
-      }
+      val persist = dataset.storageLevel == StorageLevel.NONE && (df.storageLevel == StorageLevel.NONE)
+      if (persist) df.persist(StorageLevel.MEMORY_AND_DISK)
 
       val x = df.select(getFeaturesCol).collect().map(row => row.getAs[Vector](0).toArray)
       val y = df.select(getLabelCol).collect().map(row => row.getDouble(0))
 
-      val sc = spark.sparkContext
-
       val trainersRDD = sc.parallelize(Seq(getTrainer))
+      val model = trainersRDD.map(_.apply(x, y)).collect()(0)
 
-      val model = trainersRDD
-        .map(trainer => {
-          trainer.apply(x, y)
-        })
-        .collect()(0)
-
-      if (handlePersistence) {
-        df.unpersist()
-      }
+      if (persist) df.unpersist()
 
       new SmileRegressionModel(model)
     }
 
   override def copy(extra: ParamMap): SmileRegression = {
-    val copied = new SmileRegression(uid)
-    copyValues(copied, extra)
-    copied.setTrainer(copied.getTrainer)
+    val copy = new SmileRegression(uid)
+    copyValues(copy, extra)
+    copy.setTrainer(getTrainer)
   }
 
   override def write: MLWriter = new SmileRegression.SmileRegressionWriter(this)
@@ -174,8 +165,8 @@ class SmileRegressionModel(override val uid: String, val model: smile.regression
   }
 
   override def copy(extra: ParamMap): SmileRegressionModel = {
-    val copied = new SmileRegressionModel(uid, model)
-    copyValues(copied, extra).setParent(parent)
+    val copy = new SmileRegressionModel(uid, model)
+    copyValues(copy, extra).setParent(parent)
   }
 
   override def write: MLWriter = new SmileRegressionModel.SmileRegressionModelWriter(this)
@@ -198,9 +189,9 @@ object SmileRegressionModel extends MLReadable[SmileRegressionModel] {
         objectOut.writeObject(instance.model)
         objectOut.close()
       } catch {
-        case ex: Exception =>
-          ex.printStackTrace()
+        case ex: Exception => ex.printStackTrace()
       }
+
       SmileRegressionParams.saveImpl(instance, path, sc)
     }
   }
@@ -213,7 +204,7 @@ object SmileRegressionModel extends MLReadable[SmileRegressionModel] {
     override def load(path: String): SmileRegressionModel = {
       val metadata = SmileRegressionParams.loadImpl(path, sc, className)
       val fs = FileSystem.get(sc.hadoopConfiguration)
-      val res = try {
+      val impl = try {
         val fileIn = fs.open(new Path(path, "model"))
         val objectIn = new ObjectInputStream(fileIn)
         val obj = objectIn.readObject
@@ -224,11 +215,14 @@ object SmileRegressionModel extends MLReadable[SmileRegressionModel] {
           ex.printStackTrace()
           return null
       }
-      val tmp = new SmileRegressionModel(
+
+      val model = new SmileRegressionModel(
         metadata.uid,
-        res.asInstanceOf[smile.regression.Regression[Array[Double]]])
-      metadata.getAndSetParams(tmp)
-      tmp
+        impl.asInstanceOf[smile.regression.Regression[Array[Double]]]
+      )
+
+      metadata.getAndSetParams(model)
+      model
     }
   }
 }

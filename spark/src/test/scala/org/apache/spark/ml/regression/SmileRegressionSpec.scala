@@ -17,6 +17,8 @@
 
 package org.apache.spark.ml.regression
 
+import java.nio.file.Files
+
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.sql.SparkSession
 import org.specs2.mutable._
@@ -36,33 +38,33 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
   "SmileRegression" should {
     "have the same performances after saving and loading back the model" in {
 
-      val raw = spark.read.format("libsvm").load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+      val raw = spark.read
+        .format("libsvm")
+        .load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
 
-      val trainer = { (x: Array[Array[Double]], y: Array[Double]) => {
-        val neurons = RBF.fit(x, 3)
+      val trainer = (x: Array[Array[Double]], y: Array[Double]) => {
+        val neurons = RBF.fit(x, 30)
         RBFNetwork.fit(x, y, neurons)
-        }
       }
 
-      val sr = new SmileRegression()
-        .setTrainer(trainer)
-
-      val re = new RegressionEvaluator()
-        .setLabelCol("label")
-        .setPredictionCol("prediction")
+      val rbf = new SmileRegression().setTrainer(trainer)
+      val eval = new RegressionEvaluator().setLabelCol("label").setPredictionCol("prediction")
 
       val data = raw
       data.cache()
 
       time {
-        val model = sr.fit(data)
-        val res = re.evaluate(model.transform(data))
+        val model = rbf.fit(data)
+        val metric = eval.evaluate(model.transform(data))
+        println(s"Evaluation result = $metric")
 
-        println(res)
+        val temp = Files.createTempFile("smile-test-", ".tmp")
+        val path = temp.normalize().toString
+        model.write.overwrite().save(path)
+        temp.toFile().deleteOnExit()
 
-        model.write.overwrite().save("/tmp/bonjour")
-        val loaded = SmileRegressionModel.load("/tmp/bonjour")
-        re.evaluate(loaded.transform(data)) mustEqual re.evaluate(model.transform(data))
+        val loaded = SmileRegressionModel.load(path)
+        eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))
       }
     }
   }
@@ -71,7 +73,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
     val t0 = System.nanoTime()
     val result = block // call-by-name
     val t1 = System.nanoTime()
-    println("Elapsed time: " + (t1 - t0) + "ns")
+    println(f"Elapsed time: ${(t1 - t0)/1E9}%.3f s")
     result
   }
 
