@@ -30,7 +30,7 @@ import smile.io.Read
 import smile.util.Paths
 import smile.validation.{AUC, Accuracy, Hyperparameters, LogLoss, Precision, Recall}
 
-class GridSpec extends Specification with BeforeAll with AfterAll{
+class HpoSpec extends Specification with BeforeAll with AfterAll{
 
   implicit var spark: SparkSession = _
 
@@ -39,7 +39,7 @@ class GridSpec extends Specification with BeforeAll with AfterAll{
   }
 
   "SparkCrossValidation" should {
-    "Grid search on mushrooms" in {
+    "Random search on mushrooms" in {
 
       val mushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
       val formula = Formula.lhs("class")
