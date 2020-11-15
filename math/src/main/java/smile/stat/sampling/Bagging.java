@@ -15,11 +15,10 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.sampling;
+package smile.stat.sampling;
 
 import java.util.Arrays;
 import java.util.stream.Collectors;
-import smile.classification.ClassLabels;
 import smile.math.MathEx;
 
 /**
@@ -73,14 +72,11 @@ public class Bagging {
     /**
      * Stratified sampling.
      *
-     * @param strata strata labels.
+     * @param y strata labels in [0, k).
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    public static Bagging strateify(int[] strata, double subsample) {
-        ClassLabels codec = ClassLabels.fit(strata);
-        int k = codec.k;
-        int[] y = codec.y;
-
+    public static Bagging strateify(int[] y, double subsample) {
+        int k = MathEx.max(y);
         int n = y.length;
 
         // # of samples in each strata

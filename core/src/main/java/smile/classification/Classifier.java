@@ -49,12 +49,12 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     int predict(T x);
 
     /**
-     * Returns the real-valued decision function value.
+     * The classification score function.
      *
      * @param x the instance to be classified.
      * @return the prediction score.
      */
-    default double f(T x) {
+    default double score(T x) {
         throw new UnsupportedOperationException();
     }
 
@@ -80,6 +80,6 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
 
     @Override
     default double applyAsDouble(T x) {
-        return f(x);
+        return score(x);
     }
 }

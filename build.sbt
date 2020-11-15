@@ -4,11 +4,11 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.5.2",
-  javacOptions in (Compile, compile) ++= Seq("-source", "14", "-target", "14", "--enable-preview", "-Xlint:preview", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
-  javacOptions in (Compile, doc) ++= Seq("-source", "14", "--enable-preview", "-Xdoclint:none"),
+  version := "2.6.0",
+  javacOptions in (Compile, compile) ++= Seq("-source", "15", "-target", "15", "--enable-preview", "-Xlint:preview", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
+  javacOptions in (Compile, doc) ++= Seq("-source", "15", "--enable-preview", "-Xdoclint:none"),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
-  libraryDependencies += "junit" % "junit" % "4.13" % "test",
+  libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
   scalaVersion := "2.13.3",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
@@ -49,12 +49,12 @@ lazy val commonSettings = Seq(
   )
 )
 
-lazy val nonPubishSettings = commonSettings ++ Seq(
+lazy val skipPublishSettings = commonSettings ++ Seq(
   publish / skip := true
 )
 
-lazy val root = project.in(file(".")).settings(nonPubishSettings: _*)
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, shell)
+lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
+  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -70,18 +70,20 @@ lazy val interpolation = project.in(file("interpolation")).settings(commonSettin
 
 lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, io % "test")
 
+//lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
+
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 
 lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(core)
 
-lazy val demo = project.in(file("demo")).settings(nonPubishSettings: _*).dependsOn(core, io, interpolation, plot)
+lazy val demo = project.in(file("demo")).settings(skipPublishSettings: _*).dependsOn(core, io, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(nonPubishSettings: _*).dependsOn(core, scala)
+lazy val benchmark = project.in(file("benchmark")).settings(skipPublishSettings: _*).dependsOn(core, scala)
 
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
-//lazy val spark = project.in(file("spark")).settings(commonSettings: _*).dependsOn(data)
+lazy val spark = project.in(file("spark")).settings(skipPublishSettings: _*).dependsOn(core, data, io % "test")
 
-lazy val shell = project.in(file("shell")).settings(nonPubishSettings: _*).dependsOn(benchmark, demo, scala)
+lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(benchmark, demo, scala)

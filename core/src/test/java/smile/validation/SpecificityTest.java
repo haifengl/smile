@@ -64,7 +64,7 @@ public class SpecificityTest {
         };
         Specificity instance = new Specificity();
         double expResult = 0.9714;
-        double result = instance.measure(truth, prediction);
+        double result = instance.score(truth, prediction);
         assertEquals(expResult, result, 1E-4);
     }
 }

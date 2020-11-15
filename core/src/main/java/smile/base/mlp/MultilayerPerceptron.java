@@ -17,6 +17,9 @@
 
 package smile.base.mlp;
 
+import smile.math.TimeFunction;
+
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.stream.Collectors;
@@ -52,19 +55,31 @@ public abstract class MultilayerPerceptron implements Serializable {
     /**
      * The buffer to store desired target value of training instance.
      */
-    protected double[] target;
+    protected transient ThreadLocal<double[]> target;
     /**
-     * learning rate
+     * The learning rate.
      */
-    protected double eta = 0.1;
+    protected TimeFunction learningRate = TimeFunction.constant(0.01);
     /**
-     * momentum factor
+     * The momentum factor.
      */
-    protected double alpha = 0.0;
+    protected TimeFunction momentum = TimeFunction.constant(0.0);
     /**
-     * weight decay factor, which is also a regularization term.
+     * The discounting factor for the history/coming gradient in RMSProp.
+     */
+    protected double rho = 0.0;
+    /**
+     * A small constant for numerical stability in RMSProp.
+     */
+    protected double epsilon = 1E-07;
+    /**
+     * The L2 regularization factor, which is also the weight decay factor.
      */
     protected double lambda = 0.0;
+    /**
+     * The training iterations.
+     */
+    protected int t = 0;
 
     /**
      * Constructor.
@@ -92,38 +107,67 @@ public abstract class MultilayerPerceptron implements Serializable {
         this.net = Arrays.copyOf(net, net.length - 1);
         this.p = net[0].getInputSize();
 
-        target = new double[output.getOutputSize()];
+        init();
+    }
+
+    /**
+     * Initializes the workspace when deserializing the object.
+     */
+    private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
+        in.defaultReadObject();
+        init();
+    }
+
+    /**
+     * Initializes the workspace.
+     */
+    private void init() {
+        target = new ThreadLocal<double[]>() {
+            protected synchronized double[] initialValue() {
+                return new double[output.getOutputSize()];
+            }
+        };
     }
 
     @Override
     public String toString() {
-        return String.format("x(%d) -> %s -> %s(eta = %.2f, alpha = %.2f, lambda = %.2f)", p,
+        return String.format("x(%d) -> %s -> %s(learning rate = %s, momentum = %s, weight decay = %.2f)", p,
                 Arrays.stream(net).map(Object::toString).collect(Collectors.joining(" -> ")),
-                output, eta, alpha, lambda);
+                output, learningRate, momentum, lambda);
     }
 
     /**
      * Sets the learning rate.
-     * @param eta the learning rate.
+     * @param rate the learning rate.
      */
-    public void setLearningRate(double eta) {
-        if (eta <= 0) {
-            throw new IllegalArgumentException("Invalid learning rate: " + eta);
-        }
-
-        this.eta = eta;
+    public void setLearningRate(TimeFunction rate) {
+        this.learningRate = rate;
     }
 
     /**
-     * Sets the momentum factor. alpha = 0.0 means no momentum.
-     * @param alpha the momentum factor.
+     * Sets the momentum factor. momentum = 0.0 means no momentum.
+     * @param momentum the momentum factor.
      */
-    public void setMomentum(double alpha) {
-        if (alpha < 0.0 || alpha >= 1.0) {
-            throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
+    public void setMomentum(TimeFunction momentum) {
+        this.momentum = momentum;
+    }
+
+    /**
+     * Sets RMSProp parameters.
+     * @param rho The discounting factor for the history/coming gradient.
+     * @param epsilon A small constant for numerical stability.
+     */
+    public void setRMSProp(double rho, double epsilon) {
+        if (rho < 0.0 || rho >= 1.0) {
+            throw new IllegalArgumentException("Invalid rho = " + rho);
         }
 
-        this.alpha = alpha;
+        if (epsilon <= 0.0) {
+            throw new IllegalArgumentException("Invalid epsilon = " + epsilon);
+        }
+
+        this.rho = rho;
+        this.epsilon = epsilon;
     }
 
     /**
@@ -132,7 +176,7 @@ public abstract class MultilayerPerceptron implements Serializable {
      * w = w * (1 - 2 * eta * lambda).
      */
     public void setWeightDecay(double lambda) {
-        if (lambda < 0.0 || lambda > 0.1) {
+        if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid weight decay factor: " + lambda);
         }
 
@@ -143,14 +187,14 @@ public abstract class MultilayerPerceptron implements Serializable {
      * Returns the learning rate.
      */
     public double getLearningRate() {
-        return eta;
+        return learningRate.apply(t);
     }
 
     /**
      * Returns the momentum factor.
      */
     public double getMomentum() {
-        return alpha;
+        return momentum.apply(t);
     }
 
     /**
@@ -174,39 +218,78 @@ public abstract class MultilayerPerceptron implements Serializable {
 
     /**
      * Propagates the errors back through the network.
+     * @param update the flag if update the weights directly.
+     *               It should be false for (mini-)batch.
      */
-    protected void backpropagate(double[] x) {
-        output.computeError(target, 1.0);
+    protected void backpropagate(double[] x, boolean update) {
+        output.computeOutputGradient(target.get(), 1.0);
 
         Layer upper = output;
         for (int i = net.length - 1; i >= 0; i--) {
-            double[] error = net[i].gradient();
-            upper.backpropagate(error);
+            upper.backpropagate(net[i].gradient());
             upper = net[i];
         }
         // first hidden layer
         upper.backpropagate(null);
 
-        for (Layer layer : net) {
-            layer.computeUpdate(eta, alpha, x);
-            x = layer.output();
-        }
+        if (update) {
+            double eta = learningRate.apply(t);
+            if (eta <= 0) {
+                throw new IllegalArgumentException("Invalid learning rate: " + eta);
+            }
 
-        output.computeUpdate(eta, alpha, x);
+            double alpha = momentum.apply(t);
+            if (alpha < 0.0 || alpha >= 1.0) {
+                throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
+            }
+
+            double decay = 1.0 - 2 * eta * lambda;
+            if (decay < 0.9) {
+                throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or L2 regularization (lambda = %.2f) such that weight decay = %.2f", eta, lambda, decay));
+            }
+
+            for (Layer layer : net) {
+                layer.computeGradientUpdate(x, eta, alpha, decay);
+                x = layer.output();
+            }
+
+            output.computeGradientUpdate(x, eta, alpha, decay);
+        } else {
+            for (Layer layer : net) {
+                layer.computeGradient(x);
+                x = layer.output();
+            }
+
+            output.computeGradient(x);
+        }
     }
 
-    /** Updates the weights. */
-    protected void update() {
+    /**
+     * Updates the weights for mini-batch training.
+     *
+     * @param m the mini-batch size.
+     */
+    protected void update(int m) {
+        double eta = learningRate.apply(t);
+        if (eta <= 0) {
+            throw new IllegalArgumentException("Invalid learning rate: " + eta);
+        }
+
+        double alpha = momentum.apply(t);
+        if (alpha < 0.0 || alpha >= 1.0) {
+            throw new IllegalArgumentException("Invalid momentum factor: " + alpha);
+        }
+
         double decay = 1.0 - 2 * eta * lambda;
         if (decay < 0.9) {
             throw new IllegalStateException(String.format("Invalid learning rate (eta = %.2f) and/or decay (lambda = %.2f)", eta, lambda));
         }
 
         for (Layer layer : net) {
-            layer.update(alpha, decay);
+            layer.update(m, eta, alpha, decay, rho, epsilon);
         }
 
-        output.update(alpha, decay);
+        output.update(m, eta, alpha, decay, rho, epsilon);
     }
 }
 

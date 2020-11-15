@@ -39,9 +39,18 @@ import smile.sort.QuickSort;
  *
  * @author Haifeng Li
  */
-public class AUC {
+public class AUC implements ProbabilisticClassificationMetric {
+    private static final long serialVersionUID = 2L;
+    /** Default instance. */
+    public final static AUC instance = new AUC();
+
+    @Override
+    public double score(int[] truth, double[] probability) {
+        return of(truth, probability);
+    }
+
     /**
-     * Caulculate AUC for binary classifier.
+     * Calculates AUC for binary classifier.
      * @param truth The sample labels
      * @param probability The posterior probability of positive class.
      * @return AUC
@@ -92,5 +101,10 @@ public class AUC {
 
         auc = (auc - (pos * (pos+1) / 2.0)) / (pos * neg);
         return auc;
+    }
+
+    @Override
+    public String toString() {
+        return "AUC";
     }
 }

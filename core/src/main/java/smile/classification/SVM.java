@@ -97,7 +97,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
 
     @Override
     public int predict(T x) {
-        return f(x) > 0 ? +1 : -1;
+        return score(x) > 0 ? +1 : -1;
     }
 
     /**

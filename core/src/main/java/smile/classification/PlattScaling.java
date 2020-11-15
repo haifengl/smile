@@ -210,7 +210,7 @@ public class PlattScaling implements Serializable {
         int n = y.length;
         double[] scores = new double[n];
         for (int i = 0; i < n; i++) {
-            scores[i] = model.f(x[i]);
+            scores[i] = model.score(x[i]);
         }
 
         return fit(scores, y);

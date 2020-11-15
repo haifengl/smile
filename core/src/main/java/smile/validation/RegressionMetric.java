@@ -17,17 +17,18 @@
 
 package smile.validation;
 
+import java.io.Serializable;
+
 /**
- * An abstract interface to measure the classification performance.
+ * An abstract interface to measure the regression performance.
  *
  * @author Haifeng Li
  */
-public interface ClassificationMeasure {
-
+public interface RegressionMetric extends Serializable {
     /**
-     * Returns an index to measure the quality of classification.
-     * @param truth the true class labels.
-     * @param prediction the predicted class labels.
+     * Returns a score to measure the quality of regression.
+     * @param truth the true response values.
+     * @param prediction the predicted response values.
      */
-    double measure(int[] truth, int[] prediction);
+    double score(double[] truth, double[] prediction);
 }

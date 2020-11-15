@@ -1,8 +1,5 @@
 # Smile
 
-[![Donate](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XKU5BZX7XHPQ6)
-[![Join the chat at https://gitter.im/haifengl/smile](https://badges.gitter.im/haifengl/smile.svg)](https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
 [Smile (Statistical Machine Intelligence and Learning Engine)](https://haifengl.github.io/)
 is a fast and comprehensive machine learning, NLP, linear algebra,
 graph, interpolation, and visualization system in Java and Scala.

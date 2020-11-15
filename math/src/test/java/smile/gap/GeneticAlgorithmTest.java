@@ -49,14 +49,14 @@ public class GeneticAlgorithmTest {
     public void tearDown() {
     }
 
-    class Knapnack implements FitnessMeasure<BitString> {
+    class Knapnack implements Fitness<BitString> {
 
         int limit = 9; // weight limit
         int[] weight = {2, 3, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
         double[] reward = {6, 6, 6, 5, 1.3, 1.2, 1.1, 1.0, 1.1, 1.3, 1.0, 1.0, 0.9, 0.8, 0.6};
 
         @Override
-        public double fit(BitString chromosome) {
+        public double score(BitString chromosome) {
             double wsum = 0.0;
             double rew = 0.0;
             byte[] bits = chromosome.bits();

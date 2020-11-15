@@ -43,8 +43,9 @@ public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
      * @param sigma the smooth/width parameter of Laplacian kernel.
      */
     public SparseLaplacianKernel(double sigma) {
-        if (sigma <= 0)
+        if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive.");
+        }
 
         this.gamma = 1.0 / sigma;
     }
