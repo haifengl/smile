@@ -45,10 +45,10 @@ package object spark {
     def toSpark(implicit spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df)
   }
 
-  /** Classification hyper-parameter optimization. */
-  object classification {
+  /** Hyper-parameter optimization. */
+  object hpo {
     /**
-      * Distributed hyper-parameter optimization with cross validation.
+      * Distributed hyper-parameter optimization with cross validation for classification.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
@@ -60,7 +60,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
+    def classification[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
                                    (trainer: (Array[T], Array[Int], Properties) => Classifier[T])
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -91,7 +91,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization with cross validation.
+      * Distributed hyper-parameter optimization with cross validation for classification.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
@@ -103,7 +103,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
+    def classification[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
                                    (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier)
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -135,7 +135,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization.
+      * Distributed hyper-parameter optimization for classification.
       *
       * @param spark          spark session.
       * @param x              training samples.
@@ -148,7 +148,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
+    def classification[T <: Object : ClassTag](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
                                    (trainer: (Array[T], Array[Int], Properties) => Classifier[T])
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -182,7 +182,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization.
+      * Distributed hyper-parameter optimization for classification.
       *
       * @param spark          spark session.
       * @param formula        model formula.
@@ -194,7 +194,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
+    def classification[T <: Object : ClassTag](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
                                    (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier)
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -224,12 +224,9 @@ package object spark {
 
       scores
     }
-  }
 
-  /** Regression hyper-parameter optimization. */
-  object regression {
     /**
-      * Distributed hyper-parameter optimization with cross validation.
+      * Distributed hyper-parameter optimization with cross validation for regression.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
@@ -241,7 +238,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
+    def regression[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
                                    (trainer: (Array[T], Array[Double], Properties) => Regression[T])
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -272,7 +269,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization with cross validation.
+      * Distributed hyper-parameter optimization with cross validation for regression.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
@@ -284,7 +281,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
+    def regression[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
                                    (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -316,7 +313,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization.
+      * Distributed hyper-parameter optimization for regression.
       *
       * @param spark          spark session.
       * @param x              training samples.
@@ -329,7 +326,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
+    def regression[T <: Object : ClassTag](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
                                    (trainer: (Array[T], Array[Double], Properties) => Regression[T])
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
@@ -363,7 +360,7 @@ package object spark {
     }
 
     /**
-      * Distributed hyper-parameter optimization.
+      * Distributed hyper-parameter optimization for regression.
       *
       * @param spark          spark session.
       * @param k              k-fold cross validation.
@@ -376,7 +373,7 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def hpo[T <: Object : ClassTag](k: Int, formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
+    def regression[T <: Object : ClassTag](k: Int, formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
                                    (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
                                    (implicit spark: SparkSession): Array[Array[Double]] = {
       val sc = spark.sparkContext
