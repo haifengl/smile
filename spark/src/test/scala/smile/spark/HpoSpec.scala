@@ -28,7 +28,7 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.io.Read
 import smile.util.Paths
-import smile.validation.{AUC, Accuracy, Hyperparameters, LogLoss, Precision, Recall}
+import smile.validation.{Accuracy, Hyperparameters, Precision, Recall}
 
 class HpoSpec extends Specification with BeforeAll with AfterAll{
 
@@ -52,7 +52,7 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
       val configurations = hp.random().limit(10).collect(Collectors.toList()).asScala
       val metrics = Seq(Accuracy.instance, Precision.instance, Recall.instance)
 
-      val scores = classification.hpo(5, formula, mushrooms, configurations, metrics: _*) {
+      val scores = hpo.classification(5, formula, mushrooms, configurations, metrics: _*) {
         (formula: Formula, data: DataFrame, prop: Properties) => RandomForest.fit(formula, data, prop)
       }
 
