@@ -40,7 +40,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class HyperbolicTangentKernel implements MercerKernel<double[]> {
+public class HyperbolicTangentKernel implements MercerKernel<double[]>, DotProductKernel {
     private static final long serialVersionUID = 1L;
 
     private double scale;
@@ -64,6 +64,11 @@ public class HyperbolicTangentKernel implements MercerKernel<double[]> {
     @Override
     public String toString() {
         return String.format("Hyperbolic Tangent Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    }
+
+    @Override
+    public double k(double dot) {
+        return Math.tanh(scale * dot + offset);
     }
 
     @Override

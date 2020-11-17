@@ -24,7 +24,7 @@ package smile.math.kernel;
  *
  * @author Haifeng Li
  */
-public class BinarySparseLinearKernel implements MercerKernel<int[]> {
+public class BinarySparseLinearKernel implements MercerKernel<int[]>, DotProductKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -36,6 +36,11 @@ public class BinarySparseLinearKernel implements MercerKernel<int[]> {
     @Override
     public String toString() {
         return "Sparse Binary Linear Kernel";
+    }
+
+    @Override
+    public double k(double dot) {
+        return dot;
     }
 
     @Override

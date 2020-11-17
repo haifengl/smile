@@ -29,7 +29,7 @@ package smile.math.kernel;
  *
  * @author Haifeng Li
  */
-public class BinarySparseLaplacianKernel implements MercerKernel<int[]> {
+public class BinarySparseLaplacianKernel implements MercerKernel<int[]>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -52,6 +52,11 @@ public class BinarySparseLaplacianKernel implements MercerKernel<int[]> {
     @Override
     public String toString() {
         return String.format("Sparse Binary Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * Math.sqrt(dist));
     }
 
     @Override

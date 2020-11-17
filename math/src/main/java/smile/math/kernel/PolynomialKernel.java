@@ -30,7 +30,7 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class PolynomialKernel implements MercerKernel<double[]> {
+public class PolynomialKernel implements MercerKernel<double[]>, DotProductKernel {
     private static final long serialVersionUID = 1L;
 
     private int degree;
@@ -64,6 +64,11 @@ public class PolynomialKernel implements MercerKernel<double[]> {
     @Override
     public String toString() {
         return String.format("Polynomial Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    }
+
+    @Override
+    public double k(double dot) {
+        return Math.pow(scale * dot + offset, degree);
     }
 
     @Override

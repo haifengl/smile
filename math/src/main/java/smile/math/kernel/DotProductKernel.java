@@ -21,44 +21,43 @@ import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
- * Isotropic kernel. If the kernel is a function only of <code>|x − y|</code>
- * then it is called isotropic. It is thus invariant to all rigid motions.
+ * Dot product kernel that depends only on the dot product of x and y.
  *
  * @author Haifeng Li
  */
-public interface IsotropicKernel {
+public interface DotProductKernel {
     /**
      * Kernel function.
-     * @param dist the squared distance.
+     * @param dot the dot product.
      */
-    double k(double dist);
+    double k(double dot);
 
     /**
      * Kernel function.
      * This is simply for Scala convenience.
      */
-    default double apply(double dist) {
-        return k(dist);
+    default double apply(double dot) {
+        return k(dot);
     }
 
     /**
      * Returns the kernel matrix.
      *
-     * @param pdist the pairwise squared distance matrix.
+     * @param pdot the pairwise dot product matrix.
      * @return the kernel matrix.
      */
-    default Matrix K(Matrix pdist) {
-        if (pdist.nrows() != pdist.ncols()) {
-            throw new IllegalArgumentException("pdist is not square");
+    default Matrix K(Matrix pdot) {
+        if (pdot.nrows() != pdot.ncols()) {
+            throw new IllegalArgumentException("pdot is not square");
         }
 
-        int n = pdist.nrows();
+        int n = pdot.nrows();
         Matrix K = new Matrix(n, n);
 
         for (int j = 0; j < n; j++) {
-            K.set(j, j, k(pdist.get(j, j)));
+            K.set(j, j, k(pdot.get(j, j)));
             for (int i = j+1; i < n; i++) {
-                double k = k(pdist.get(i, j));
+                double k = k(pdot.get(i, j));
                 K.set(i, j, k);
                 K.set(j, i, k);
             }
