@@ -21,7 +21,7 @@ import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
- * Dot product kernel that depends only on the dot product of x and y.
+ * Dot product kernel depends only on the dot product of x and y.
  *
  * @author Haifeng Li
  */

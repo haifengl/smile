@@ -21,8 +21,9 @@ import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
- * Isotropic kernel. If the kernel is a function only of <code>|x − y|</code>
- * then it is called isotropic. It is thus invariant to all rigid motions.
+ * Isotropic kernel. If the kernel is a function only of the distance
+ * <code>|x − y|</code>, it is called isotropic. It is thus invariant
+ * to all rigid motions.
  *
  * @author Haifeng Li
  */
