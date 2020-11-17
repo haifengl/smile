@@ -2071,7 +2071,7 @@ public class Matrix extends DMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public double det() {
             int m = lu.m;
@@ -2081,7 +2081,7 @@ public class Matrix extends DMatrix {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            double d = 1.0f;
+            double d = 1.0;
             for (int j = 0; j < n; j++) {
                 d *= lu.get(j, j);
             }
@@ -2190,15 +2190,29 @@ public class Matrix extends DMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public double det() {
-            double d = 1.0f;
-            for (int i = 0; i < lu.n; i++) {
+            int n = lu.n;
+            double d = 1.0;
+            for (int i = 0; i < n; i++) {
                 d *= lu.get(i, i);
             }
 
             return d * d;
+        }
+
+        /**
+         * Returns the log of matrix determinant.
+         */
+        public double logdet() {
+            int n = lu.n;
+            double d = 0.0;
+            for (int i = 0; i < n; i++) {
+                d += Math.log(lu.get(i, i));
+            }
+
+            return 2.0 * d;
         }
 
         /**

@@ -2072,7 +2072,7 @@ public class FloatMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
             int m = lu.m;
@@ -2082,7 +2082,7 @@ public class FloatMatrix extends SMatrix {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            float d = 1.0f;
+            double d = 1.0;
             for (int j = 0; j < n; j++) {
                 d *= lu.get(j, j);
             }
@@ -2093,7 +2093,7 @@ public class FloatMatrix extends SMatrix {
                 }
             }
 
-            return d;
+            return (float) d;
         }
 
         /**
@@ -2191,15 +2191,28 @@ public class FloatMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
-            float d = 1.0f;
+            double d = 1.0;
             for (int i = 0; i < lu.n; i++) {
                 d *= lu.get(i, i);
             }
 
-            return d * d;
+            return (float) (d * d);
+        }
+
+        /**
+         * Returns the log of matrix determinant.
+         */
+        public float logdet() {
+            int n = lu.n;
+            double d = 0.0;
+            for (int i = 0; i < n; i++) {
+                d += Math.log(lu.get(i, i));
+            }
+
+            return (float) (2.0 * d);
         }
 
         /**
