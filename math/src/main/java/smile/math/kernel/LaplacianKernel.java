@@ -29,7 +29,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class LaplacianKernel implements MercerKernel<double[]> {
+public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -52,6 +52,11 @@ public class LaplacianKernel implements MercerKernel<double[]> {
     @Override
     public String toString() {
         return String.format("Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * Math.sqrt(dist));
     }
 
     @Override

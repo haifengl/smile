@@ -30,7 +30,7 @@ import smile.util.SparseArray;
 
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
+public class SparseLaplacianKernel implements MercerKernel<SparseArray>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -53,6 +53,11 @@ public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
     @Override
     public String toString() {
         return String.format("Sparse Laplacian kernel (\u02E0 = %.4f)", 1.0/gamma);
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * Math.sqrt(dist));
     }
 
     @Override

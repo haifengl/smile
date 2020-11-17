@@ -31,7 +31,7 @@ package smile.math.kernel;
 
  * @author Haifeng Li
  */
-public class BinarySparseGaussianKernel implements MercerKernel<int[]> {
+public class BinarySparseGaussianKernel implements MercerKernel<int[]>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -54,6 +54,11 @@ public class BinarySparseGaussianKernel implements MercerKernel<int[]> {
     @Override
     public String toString() {
         return String.format("Sparse Binary Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * dist);
     }
 
     @Override

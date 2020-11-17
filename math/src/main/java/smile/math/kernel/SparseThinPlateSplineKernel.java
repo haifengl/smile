@@ -31,7 +31,7 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
+public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -54,6 +54,11 @@ public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
     @Override
     public String toString() {
         return String.format("Sparse Thin Plate Spline Kernel (\u02E0 = %.4f)", sigma);
+    }
+
+    @Override
+    public double k(double dist) {
+        return dist/(sigma*sigma) * Math.log(Math.sqrt(dist)/sigma);
     }
 
     @Override

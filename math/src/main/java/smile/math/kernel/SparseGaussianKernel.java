@@ -33,7 +33,7 @@ import smile.util.SparseArray;
 
  * @author Haifeng Li
  */
-public class SparseGaussianKernel implements MercerKernel<SparseArray> {
+public class SparseGaussianKernel implements MercerKernel<SparseArray>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -56,6 +56,11 @@ public class SparseGaussianKernel implements MercerKernel<SparseArray> {
     @Override
     public String toString() {
         return String.format("Sparse Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * dist);
     }
 
     @Override

@@ -32,7 +32,7 @@ import smile.math.MathEx;
 
  * @author Haifeng Li
  */
-public class GaussianKernel implements MercerKernel<double[]> {
+public class GaussianKernel implements MercerKernel<double[]>, IsotropicKernel {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -55,6 +55,11 @@ public class GaussianKernel implements MercerKernel<double[]> {
     @Override
     public String toString() {
         return String.format("Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * dist);
     }
 
     @Override

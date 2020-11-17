@@ -23,53 +23,28 @@ import smile.math.matrix.Matrix;
 /**
  * Isotropic kernel. If the kernel is a function only of <code>|x − y|</code>
  * then it is called isotropic. It is thus invariant to all rigid motions.
- * If a covariance function depends only on the dot product of x and y,
- * we call it a dot product covariance function.
  *
  * @author Haifeng Li
  */
 public interface IsotropicKernel {
     /**
      * Kernel function.
-     * @param d the distance <code>|x − y|</code>.
+     * @param dist the squared distance.
      */
-    double k(double d);
+    double k(double dist);
 
     /**
      * Kernel function.
      * This is simply for Scala convenience.
      */
-    default double apply(double d) {
-        return k(d);
+    default double apply(double dist) {
+        return k(dist);
     }
 
     /**
      * Returns the kernel matrix.
      *
-     * @param pdist the pairwise distance matrix.
-     * @return the kernel matrix.
-     */
-    default Matrix K(double[][] pdist) {
-        int n = pdist.length;
-        Matrix K = new Matrix(n, n);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                double k = k(pdist[i][j]);
-                K.set(i, j, k);
-                K.set(j, i, k);
-            }
-            K.set(i, i, k(pdist[i][i]));
-        }
-
-        K.uplo(UPLO.LOWER);
-        return K;
-    }
-
-    /**
-     * Returns the kernel matrix.
-     *
-     * @param pdist the pairwise distance matrix.
+     * @param pdist the pairwise squared distance matrix.
      * @return the kernel matrix.
      */
     default Matrix K(Matrix pdist) {
@@ -81,12 +56,12 @@ public interface IsotropicKernel {
         Matrix K = new Matrix(n, n);
 
         for (int j = 0; j < n; j++) {
-            for (int i = 0; i < i; i++) {
+            K.set(j, j, k(pdist.get(j, j)));
+            for (int i = j+1; i < n; i++) {
                 double k = k(pdist.get(i, j));
                 K.set(i, j, k);
                 K.set(j, i, k);
             }
-            K.set(j, j, k(pdist.get(j, j)));
         }
 
         K.uplo(UPLO.LOWER);
