@@ -64,14 +64,13 @@ public class GaussianProcessRegressionTest {
         double[][] longley = MathEx.clone(Longley.x);
         MathEx.standardize(longley);
 
-        KernelMachine<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
-        System.out.println(model);
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
 
         double[] prediction = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("RMSE = " + rmse);
-        assertEquals(3.978109808216234, rmse, 1E-4);
+        assertEquals(2.749193150193674, rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -124,14 +123,11 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(76.32510156134408, rmse, 1E-4);
-        assertEquals(68.68104843938221, sparseRMSE, 1E-4);
-        assertEquals(65.9687213249394, nystromRMSE, 1E-4);
+        assertEquals(76.20610792727746, rmse, 1E-4);
+        assertEquals(68.45870366386313, sparseRMSE, 1E-4);
+        assertEquals(65.74555877623769, nystromRMSE, 1E-4);
     }
-    
-    /**
-     * Test of learn method, of class GaussianProcessRegression.
-     */
+
     @Test(expected = Test.None.class)
     public void test2DPlanes() throws Exception {
         System.out.println("2dplanes");
@@ -193,9 +189,6 @@ public class GaussianProcessRegressionTest {
         assertEquals(2.109326738693354, nystromRMSE, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class GaussianProcessRegression.
-     */
     @Test(expected = Test.None.class)
     public void testAilerons() throws Exception {
         System.out.println("ailerons");
@@ -256,14 +249,11 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(2.163041768091070, rmse, 1E-4);
-        assertEquals(2.287503841914310, sparseRMSE, 1E-4);
-        assertEquals(2.210658612900254, nystromRMSE, 1E-4);
+        assertEquals(2.164701537672616, rmse, 1E-4);
+        assertEquals(2.289313739055932, sparseRMSE, 1E-4);
+        assertEquals(2.212407035135691, nystromRMSE, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class GaussianProcessRegression.
-     */
     @Test(expected = Test.None.class)
     public void testBank32nh() throws Exception {
         System.out.println("bank32nh");
@@ -323,12 +313,9 @@ public class GaussianProcessRegressionTest {
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(0.08434491755621974, rmse, 1E-4);
         assertEquals(0.08494071211767774, sparseRMSE, 1E-4);
-        assertEquals(0.346626208923527, nystromRMSE, 1E-4);
+        assertEquals(0.34623422758160893, nystromRMSE, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class GaussianProcessRegression.
-     */
     @Test(expected = Test.None.class)
     public void testPuma8nh() throws Exception {
         System.out.println("puma8nh");
@@ -385,14 +372,11 @@ public class GaussianProcessRegressionTest {
         System.out.println("Regular 10-CV RMSE = " + rmse);
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
-        assertEquals(4.441587058240469, rmse, 1E-4);
-        assertEquals(4.421052805028641, sparseRMSE, 1E-4);
-        assertEquals(4.414595386286706, nystromRMSE, 1E-4);
+        assertEquals(4.441690979075472, rmse, 1E-4);
+        assertEquals(4.421352271422635, sparseRMSE, 1E-4);
+        assertEquals(4.414866025541026, nystromRMSE, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class GaussianProcessRegression.
-     */
     @Test(expected = Test.None.class)
     public void testKin8nm() throws Exception {
         System.out.println("kin8nm");
@@ -449,7 +433,7 @@ public class GaussianProcessRegressionTest {
         System.out.println("Sparse 10-CV RMSE = " + sparseRMSE);
         System.out.println("Nystrom 10-CV RMSE = " + nystromRMSE);
         assertEquals(0.20205594684848896, rmse, 1E-4);
-        assertEquals(0.19819268891978126, sparseRMSE, 1E-4);
-        assertEquals(0.19562556001290177, nystromRMSE, 1E-4);
+        assertEquals(0.19840126234796535, sparseRMSE, 1E-4);
+        assertEquals(0.19580679837507917, nystromRMSE, 1E-4);
     }
 }
