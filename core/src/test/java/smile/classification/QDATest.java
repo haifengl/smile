@@ -26,8 +26,8 @@ import smile.data.BreastCancer;
 import smile.data.Iris;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
-import smile.validation.Error;
 import smile.validation.LOOCV;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 

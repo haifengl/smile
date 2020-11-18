@@ -26,10 +26,10 @@ import smile.base.mlp.Layer;
 import smile.base.mlp.LayerBuilder;
 import smile.data.*;
 import smile.feature.Standardizer;
+import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.validation.CrossValidation;
-import smile.math.MathEx;
-import smile.validation.RMSE;
+import smile.validation.metric.RMSE;
 import static org.junit.Assert.assertEquals;
 
 /**

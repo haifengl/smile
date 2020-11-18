@@ -17,6 +17,10 @@
 
 package smile.classification;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.util.Arrays;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -29,13 +33,9 @@ import smile.data.USPS;
 import smile.math.MathEx;
 import smile.util.Paths;
 import smile.validation.CrossValidation;
-import smile.validation.Error;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.Arrays;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 

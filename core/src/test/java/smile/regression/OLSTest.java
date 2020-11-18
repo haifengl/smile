@@ -29,8 +29,8 @@ import smile.data.Longley;
 import smile.data.Prostate;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
-import smile.validation.RMSE;
 import smile.validation.Validation;
+import smile.validation.metric.RMSE;
 
 /**
  *

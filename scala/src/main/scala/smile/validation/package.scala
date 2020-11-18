@@ -22,6 +22,7 @@ import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
 import smile.util.{time, toJavaBiFunction, toJavaFunction}
+import smile.validation.metric._
 
 /** Model validation.
   *

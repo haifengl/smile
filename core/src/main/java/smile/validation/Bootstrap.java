@@ -18,7 +18,6 @@
 package smile.validation;
 
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
@@ -26,6 +25,8 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
+import smile.validation.metric.Accuracy;
+import smile.validation.metric.RMSE;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic

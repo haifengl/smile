@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.stream.IntStream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,10 +26,8 @@ import org.junit.Test;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.validation.CrossValidation;
-import smile.validation.RMSE;
 import smile.validation.Validation;
-
-import java.util.stream.IntStream;
+import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
 

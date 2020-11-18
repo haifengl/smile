@@ -19,7 +19,7 @@ package smile.clustering;
 
 import smile.clustering.linkage.*;
 import smile.data.USPS;
-import smile.validation.*;
+import smile.validation.metric.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
