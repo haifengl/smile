@@ -218,10 +218,10 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     /**
      * Predicts the mean and standard deviation of an instance.
      * @param x an instance.
-     * @param musd an output array of the estimated mean and standard deviation.
+     * @param estimation an output array of the estimated mean and standard deviation.
      * @return the estimated mean value.
      */
-    public double predict(T x, double[] musd) {
+    public double predict(T x, double[] estimation) {
         if (cholesky == null) {
             throw new UnsupportedOperationException("The Cholesky decomposition of kernel matrix is not available.");
         }
@@ -239,8 +239,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         mu = mu * this.sd + this.mean;
         sd *= this.sd;
 
-        musd[0] = mu;
-        musd[1] = sd;
+        estimation[0] = mu;
+        estimation[1] = sd;
 
         return mu;
     }
