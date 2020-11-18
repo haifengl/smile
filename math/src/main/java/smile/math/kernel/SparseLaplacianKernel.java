@@ -21,7 +21,7 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Laplacian Kernel on sparse data.
+ * Laplacian Kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -33,7 +33,7 @@ import smile.util.SparseArray;
 public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
      */
     public SparseLaplacianKernel(double sigma) {
         super(sigma);

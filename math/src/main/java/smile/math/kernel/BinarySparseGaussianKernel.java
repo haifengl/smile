@@ -20,7 +20,7 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The Gaussian Kernel on binary sparse data.
+ * Gaussian Kernel, also referred as RBF kernel or squared exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
@@ -36,7 +36,7 @@ import smile.math.MathEx;
 public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel<int[]> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Gaussian kernel.
+     * @param sigma The length scale of kernel.
      */
     public BinarySparseGaussianKernel(double sigma) {
         super(sigma);
@@ -44,6 +44,6 @@ public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel
 
     @Override
     public double k(int[] x, int[] y) {
-        return k(MathEx.squaredDistance(x, y));
+        return k(MathEx.distance(x, y));
     }
 }

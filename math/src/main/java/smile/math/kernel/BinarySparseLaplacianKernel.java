@@ -17,8 +17,10 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
- * The Laplacian Kernel on binary sparse data.
+ * Laplacian Kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -34,7 +36,7 @@ public class BinarySparseLaplacianKernel extends Laplacian implements MercerKern
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
      */
     public BinarySparseLaplacianKernel(double sigma) {
         super(sigma);
@@ -42,30 +44,6 @@ public class BinarySparseLaplacianKernel extends Laplacian implements MercerKern
 
     @Override
     public double k(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
-        double d = 0.0;
-        int p1 = 0, p2 = 0;
-        while (p1 < x.length && p2 < y.length) {
-            int i1 = x[p1];
-            int i2 = y[p2];
-            if (i1 == i2) {
-                p1++;
-                p2++;
-            } else if (i1 > i2) {
-                d++;
-                p2++;
-            } else {
-                d++;
-                p1++;
-            }
-        }
-
-        d += x.length - p1;
-        d += y.length - p2;
-
-        return k(Math.sqrt(d));
+        return k(MathEx.distance(x, y));
     }
 }
