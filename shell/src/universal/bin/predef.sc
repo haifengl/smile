@@ -44,6 +44,7 @@ import smile.plot.Render.{renderVega, renderCanvas, renderPlotGrid}
 import smile.json._
 import smile.interpolation._
 import smile.validation._
+import smile.validation.metric._
 import smile.association._
 import smile.base.cart.SplitRule
 import smile.base.mlp._
