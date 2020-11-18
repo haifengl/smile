@@ -31,66 +31,17 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray>, IsotropicKernel {
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The width of the kernel.
-     */
-    private double sigma;
-
+public class SparseThinPlateSplineKernel extends ThinPlateSpline implements MercerKernel<SparseArray> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Thin Plate Spline kernel.
+     * @param sigma The length scale of kernel.
      */
     public SparseThinPlateSplineKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive: " + sigma);
-        }
-
-        this.sigma = sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Thin Plate Spline Kernel (sigma = %.4f)", sigma);
-    }
-
-    @Override
-    public double k(double dist) {
-        return dist/(sigma*sigma) * Math.log(Math.sqrt(dist)/sigma);
+        super(sigma);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        Iterator<SparseArray.Entry> it1 = x.iterator();
-        Iterator<SparseArray.Entry> it2 = y.iterator();
-        SparseArray.Entry e1 = it1.hasNext() ? it1.next() : null;
-        SparseArray.Entry e2 = it2.hasNext() ? it2.next() : null;
-
-        double s = 0.0;
-        while (e1 != null && e2 != null) {
-            if (e1.i == e2.i) {
-                s += MathEx.sqr(e1.x - e2.x);
-                e1 = it1.hasNext() ? it1.next() : null;
-                e2 = it2.hasNext() ? it2.next() : null;
-            } else if (e1.i > e2.i) {
-                s += MathEx.sqr(e2.x);
-                e2 = it2.hasNext() ? it2.next() : null;
-            } else {
-                s += MathEx.sqr(e1.x);
-                e1 = it1.hasNext() ? it1.next() : null;
-            }
-        }
-        
-        while (it1.hasNext()) {
-            s += MathEx.sqr(it1.next().x);
-        }
-
-        while (it2.hasNext()) {
-            s += MathEx.sqr(it2.next().x);
-        }
-
-        return s/(sigma*sigma) * Math.log(Math.sqrt(s)/sigma);
+        return k(MathEx.distance(x, y));
     }
 }

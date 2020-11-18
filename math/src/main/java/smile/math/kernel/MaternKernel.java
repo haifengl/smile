@@ -37,11 +37,11 @@ import smile.math.MathEx;
 public class MaternKernel extends Matern implements MercerKernel<double[]> {
     /**
      * Constructor.
-     * @param length The length scale of the kernel function.
+     * @param sigma The length scale of the kernel function.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public MaternKernel(double length, int nu) {
-        super(length, nu);
+    public MaternKernel(double sigma, int nu) {
+        super(sigma, nu);
     }
 
     @Override

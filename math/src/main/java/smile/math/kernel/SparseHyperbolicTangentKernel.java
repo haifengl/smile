@@ -41,35 +41,22 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 2L;
-
-    private double scale;
-    private double offset;
-
+public class SparseHyperbolicTangentKernel extends HyperbolicTangent implements MercerKernel<SparseArray> {
     /**
      * Constructor with scale 1.0 and offset 0.0.
      */
     public SparseHyperbolicTangentKernel() {
-        this(1.0, 0.0);
     }
 
     /**
      * Constructor.
      */
     public SparseHyperbolicTangentKernel(double scale, double offset) {
-        this.scale = scale;
-        this.offset = offset;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Hyperbolic Tangent Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+        super(scale, offset);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        double dot = MathEx.dot(x, y);
-        return Math.tanh(scale * dot + offset);
+        return k(MathEx.dot(x, y));
     }
 }

@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
  * The hyperbolic tangent kernel on binary sparse data.
  * <p>
@@ -41,50 +43,23 @@ package smile.math.kernel;
  *
  * @author Haifeng Li
  */
-public class BinarySparseHyperbolicTangentKernel implements MercerKernel<int[]> {
-    private static final long serialVersionUID = 2L;
-
-    private double scale;
-    private double offset;
-
+public class BinarySparseHyperbolicTangentKernel extends HyperbolicTangent implements MercerKernel<int[]> {
     /**
      * Constructor with scale 1.0 and offset 0.0.
      */
     public BinarySparseHyperbolicTangentKernel() {
-        this(1, 0);
+
     }
 
     /**
      * Constructor.
      */
     public BinarySparseHyperbolicTangentKernel(double scale, double offset) {
-        this.scale = scale;
-        this.offset = offset;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Binary Hyperbolic Tangent Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+        super(scale, offset);
     }
 
     @Override
     public double k(int[] x, int[] y) {
-        double dot = 0.0;
-
-        for (int p1 = 0, p2 = 0; p1 < x.length && p2 < y.length; ) {
-            int i1 = x[p1];
-            int i2 = y[p2];
-            if (i1 == i2) {
-                dot++;
-                p1++;
-                p2++;
-            } else if (i1 > i2) {
-                p2++;
-            } else {
-                p1++;
-            }
-        }
-
-        return Math.tanh(scale * dot + offset);
+        return k(MathEx.dot(x, y));
     }
 }

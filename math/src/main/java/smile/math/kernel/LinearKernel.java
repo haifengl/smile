@@ -32,11 +32,12 @@ public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
      * Constructor.
      */
     public LinearKernel() {
+
     }
 
     @Override
     public String toString() {
-        return "Linear Kernel";
+        return "LinearKernel";
     }
 
     @Override

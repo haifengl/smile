@@ -30,50 +30,23 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class PolynomialKernel implements MercerKernel<double[]>, DotProductKernel {
-    private static final long serialVersionUID = 2L;
-
-    private int degree;
-    private double scale;
-    private double offset;
-
+public class PolynomialKernel extends Polynomial implements MercerKernel<double[]> {
     /**
      * Constructor with scale 1 and bias 0.
      */
     public PolynomialKernel(int degree) {
-        this(degree, 1.0, 0.0);
+        super(degree);
     }
 
     /**
      * Constructor.
      */
     public PolynomialKernel(int degree, double scale, double offset) {
-        if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree: " + degree);
-        }
-
-        if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition: " + offset);
-        }
-        
-        this.degree = degree;
-        this.scale = scale;
-        this.offset = offset;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Polynomial Kernel (scale = %.4f, offset = %.4f)", scale, offset);
-    }
-
-    @Override
-    public double k(double dot) {
-        return Math.pow(scale * dot + offset, degree);
+        super(degree, scale, offset);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        double dot = MathEx.dot(x, y);
-        return Math.pow(scale * dot + offset, degree);
+        return k(MathEx.dot(x, y));
     }
 }

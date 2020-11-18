@@ -40,33 +40,43 @@ public class Matern implements IsotropicKernel {
     /**
      * The length scale of the kernel.
      */
-    private double length;
+    private final double sigma;
     /**
      * The smoothness of the kernel.
      */
-    private double nu;
+    private final double nu;
 
     /**
      * Constructor.
-     * @param length The length scale of kernel.
+     * @param sigma The length scale of kernel.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public Matern(double length, int nu) {
-        if (length <= 0) {
-            throw new IllegalArgumentException("The length scale is not positive: " + length);
+    public Matern(double sigma, int nu) {
+        if (sigma <= 0) {
+            throw new IllegalArgumentException("The length scale is not positive: " + sigma);
         }
 
         if (nu != 1.5 && nu != 2.5 && nu != 0.5 && !Double.isInfinite(nu)) {
             throw new IllegalArgumentException("nu must be 0.5, 1.5, 2.5 or Info: " + nu);
         }
 
-        this.length = length;
+        this.sigma = sigma;
         this.nu = nu;
+    }
+
+    /** Returns the length scale of kernel. */
+    public double scale() {
+        return sigma;
+    }
+
+    /** Returns the smoothness of kernel. */
+    public double smoothness() {
+        return nu;
     }
 
     @Override
     public String toString() {
-        return String.format("Matern(%.4f, %.1f)", length, nu);
+        return String.format("Matern(%.4f, %.1f)", sigma, nu);
     }
 
     @Override
@@ -76,7 +86,7 @@ public class Matern implements IsotropicKernel {
 
     @Override
     public double k(double dist) {
-        double d = dist / length;
+        double d = dist / sigma;
 
         if (nu == 1.5) {
             d *= SQRT3;

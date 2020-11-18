@@ -38,11 +38,11 @@ import smile.util.SparseArray;
 public class SparseMaternKernel extends Matern implements MercerKernel<SparseArray> {
     /**
      * Constructor.
-     * @param length The length scale of kernel.
+     * @param sigma The length scale of kernel.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public SparseMaternKernel(double length, int nu) {
-        super(length, nu);
+    public SparseMaternKernel(double sigma, int nu) {
+        super(sigma, nu);
     }
 
     @Override
