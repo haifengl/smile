@@ -17,37 +17,49 @@
 
 package smile.math.kernel;
 
-import smile.math.MathEx;
-import smile.util.SparseArray;
-
 /**
- * The polynomial kernel on sparse data.
+ * The Thin Plate Spline Kernel.
  * <p>
  * <pre>
- *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
+ *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
  * </pre>
- * where &gamma; is the scale of the used inner product, &lambda; the offset of
- * the used inner product, and <i>d</i> the order of the polynomial kernel.
- * 
+ * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ *
  * @author Haifeng Li
  */
-public class SparsePolynomialKernel extends Polynomial implements MercerKernel<SparseArray> {
+public class ThinPlateSpline implements IsotropicKernel {
+    private static final long serialVersionUID = 2L;
+
     /**
-     * Constructor with scale 1 and bias 0.
+     * The length scale of the kernel.
      */
-    public SparsePolynomialKernel(int degree) {
-        super(degree);
-    }
+    private final double sigma;
 
     /**
      * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    public SparsePolynomialKernel(int degree, double scale, double offset) {
-        super(degree, scale, offset);
+    public ThinPlateSpline(double sigma) {
+        if (sigma <= 0) {
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
+        }
+
+        this.sigma = sigma;
+    }
+
+    /** Returns the length scale of kernel. */
+    public double scale() {
+        return sigma;
     }
 
     @Override
-    public double k(SparseArray x, SparseArray y) {
-        return k(MathEx.dot(x, y));
+    public String toString() {
+        return String.format("ThinPlateSpline(%.4f)", sigma);
+    }
+
+    @Override
+    public double k(double dist) {
+        double d = dist / sigma;
+        return d * d * Math.log(d);
     }
 }

@@ -17,37 +17,70 @@
 
 package smile.math.kernel;
 
-import smile.math.MathEx;
-import smile.util.SparseArray;
-
 /**
- * The polynomial kernel on sparse data.
+ * The polynomial kernel.
  * <p>
  * <pre>
  *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
  * </pre>
  * where &gamma; is the scale of the used inner product, &lambda; the offset of
  * the used inner product, and <i>d</i> the order of the polynomial kernel.
- * 
+ *
  * @author Haifeng Li
  */
-public class SparsePolynomialKernel extends Polynomial implements MercerKernel<SparseArray> {
+public class Polynomial implements DotProductKernel {
+    private static final long serialVersionUID = 2L;
+
+    private final int degree;
+    private final double scale;
+    private final double offset;
+
     /**
      * Constructor with scale 1 and bias 0.
      */
-    public SparsePolynomialKernel(int degree) {
-        super(degree);
+    public Polynomial(int degree) {
+        this(degree, 1.0, 0.0);
     }
 
     /**
      * Constructor.
      */
-    public SparsePolynomialKernel(int degree, double scale, double offset) {
-        super(degree, scale, offset);
+    public Polynomial(int degree, double scale, double offset) {
+        if (degree <= 0) {
+            throw new IllegalArgumentException("Non-positive polynomial degree: " + degree);
+        }
+
+        if (offset < 0.0) {
+            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition: " + offset);
+        }
+
+        this.degree = degree;
+        this.scale = scale;
+        this.offset = offset;
+    }
+
+    /** Returns the degree of kernel. */
+    public int degree() {
+        return degree;
+    }
+
+    /** Returns the scale of kernel. */
+    public double scale() {
+        return scale;
+    }
+
+    /** Returns the offset of kernel. */
+    public double offset() {
+        return offset;
     }
 
     @Override
-    public double k(SparseArray x, SparseArray y) {
-        return k(MathEx.dot(x, y));
+    public String toString() {
+        return String.format("PolynomialKernel(%d, %.4f, %.4f)", degree, scale, offset);
+    }
+
+    @Override
+    public double k(double dot) {
+        return Math.pow(scale * dot + offset, degree);
     }
 }

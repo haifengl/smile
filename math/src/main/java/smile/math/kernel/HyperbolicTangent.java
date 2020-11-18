@@ -20,7 +20,7 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The hyperbolic tangent kernel on binary sparse data.
+ * The hyperbolic tangent kernel.
  * <p>
  * <pre>
  *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
@@ -37,29 +37,47 @@ import smile.math.MathEx;
  * since the kernel matrix may not be positive semi-definite. Besides, it was
  * reported the hyperbolic tangent kernel is not better than the Gaussian kernel
  * in general.
- * <p>
- * The kernel works sparse binary array as int[], which are the indices of
- * nonzero elements.
  *
  * @author Haifeng Li
  */
-public class BinarySparseHyperbolicTangentKernel extends HyperbolicTangent implements MercerKernel<int[]> {
-    /**
-     * Constructor with scale 1.0 and offset 0.0.
-     */
-    public BinarySparseHyperbolicTangentKernel() {
+public class HyperbolicTangent implements DotProductKernel {
+    private static final long serialVersionUID = 2L;
 
+    private final double scale;
+    private final double offset;
+
+    /**
+     * Constructor.
+     */
+    public HyperbolicTangent() {
+        this(1, 0);
     }
 
     /**
      * Constructor.
      */
-    public BinarySparseHyperbolicTangentKernel(double scale, double offset) {
-        super(scale, offset);
+    public HyperbolicTangent(double scale, double offset) {
+        this.scale = scale;
+        this.offset = offset;
+    }
+
+    /** Returns the scale of kernel. */
+    public double scale() {
+        return scale;
+    }
+
+    /** Returns the offset of kernel. */
+    public double offset() {
+        return offset;
     }
 
     @Override
-    public double k(int[] x, int[] y) {
-        return k(MathEx.dot(x, y));
+    public String toString() {
+        return String.format("HyperbolicTangent(%.4f, %.4f)", scale, offset);
+    }
+
+    @Override
+    public double k(double dot) {
+        return Math.tanh(scale * dot + offset);
     }
 }
