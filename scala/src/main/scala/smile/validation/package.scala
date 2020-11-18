@@ -98,7 +98,7 @@ package object validation {
     * MCC of 0 means the model is not better then random.
     *
     */
-  def mcc(truth: Array[Int], prediction: Array[Int]): Double = MCC.of(truth, prediction)
+  def mcc(truth: Array[Int], prediction: Array[Int]): Double = MatthewsCorrelation.of(truth, prediction)
 
   /** Mean squared error. */
   def mse(truth: Array[Double], prediction: Array[Double]): Double = MSE.of(truth, prediction)

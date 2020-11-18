@@ -25,9 +25,9 @@ import static org.junit.Assert.assertEquals;
  *
  * @author digital-thinking
  */
-public class MCCTest {
+public class MatthewsCorrelationTest {
 
-    public MCCTest() {
+    public MatthewsCorrelationTest() {
     }
 
     @BeforeClass
@@ -61,7 +61,7 @@ public class MCCTest {
         };
 
         double expResult = 0.83068;
-        double result = MCC.of(truth, prediction);
+        double result = MatthewsCorrelation.of(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 
@@ -72,7 +72,7 @@ public class MCCTest {
         int[] prediction = {0, 1, 0, 1, 0, 1, 0, 1};
 
         double expResult = 0;
-        double result = MCC.of(truth, prediction);
+        double result = MatthewsCorrelation.of(truth, prediction);
         assertEquals(expResult, result, 1E-5);
     }
 
