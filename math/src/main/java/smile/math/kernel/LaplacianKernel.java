@@ -20,7 +20,7 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The Laplacian Kernel.
+ * Laplacian Kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -32,7 +32,7 @@ import smile.math.MathEx;
 public class LaplacianKernel extends Laplacian implements MercerKernel<double[]> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
      */
     public LaplacianKernel(double sigma) {
         super(sigma);
