@@ -20,6 +20,7 @@ package smile.math.matrix;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -768,6 +769,26 @@ public class Matrix extends DMatrix {
             }
         }
         return this;
+    }
+
+    /** Element-wise addition A += B */
+    public Matrix add(Matrix B) {
+        return add(1.0, B);
+    }
+
+    /** Element-wise subtraction A -= B */
+    public Matrix sub(Matrix B) {
+        return sub(1.0, B);
+    }
+
+    /** Element-wise multiplication A *= B */
+    public Matrix mul(Matrix B) {
+        return mul(1.0, B);
+    }
+
+    /** Element-wise division A /= B */
+    public Matrix div(Matrix B) {
+        return div(1.0, B);
     }
 
     /** Element-wise addition A += alpha * B */
@@ -1609,7 +1630,8 @@ public class Matrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class SVD {
+    public static class SVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
          */
@@ -1890,7 +1912,8 @@ public class Matrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class EVD {
+    public static class EVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
          * By default the eigenvalues and eigenvectors are not always in
@@ -2031,7 +2054,8 @@ public class Matrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class LU {
+    public static class LU implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
          */
@@ -2170,8 +2194,8 @@ public class Matrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */
@@ -2264,7 +2288,8 @@ public class Matrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class QR {
+    public static class QR implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.
          */

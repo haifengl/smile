@@ -20,6 +20,7 @@ package smile.math.matrix;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -769,6 +770,26 @@ public class FloatMatrix extends SMatrix {
             }
         }
         return this;
+    }
+
+    /** Element-wise addition A += B */
+    public FloatMatrix add(FloatMatrix B) {
+        return add(1.0f, B);
+    }
+
+    /** Element-wise subtraction A -= B */
+    public FloatMatrix sub(FloatMatrix B) {
+        return sub(1.0f, B);
+    }
+
+    /** Element-wise multiplication A *= B */
+    public FloatMatrix mul(FloatMatrix B) {
+        return mul(1.0f, B);
+    }
+
+    /** Element-wise division A /= B */
+    public FloatMatrix div(FloatMatrix B) {
+        return div(1.0f, B);
     }
 
     /** Element-wise addition A += alpha * B */
@@ -1610,7 +1631,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class SVD {
+    public static class SVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
          */
@@ -1891,7 +1913,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class EVD {
+    public static class EVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
          * By default the eigenvalues and eigenvectors are not always in
@@ -2032,7 +2055,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class LU {
+    public static class LU implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
          */
@@ -2171,8 +2195,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */
@@ -2264,7 +2288,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class QR {
+    public static class QR implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.
          */
