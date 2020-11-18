@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
  * The Gaussian Kernel on binary sparse data.
  * <p>
@@ -42,27 +44,6 @@ public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel
 
     @Override
     public double k(int[] x, int[] y) {
-        double d = 0.0;
-
-        int p1 = 0, p2 = 0;
-        while (p1 < x.length && p2 < y.length) {
-            int i1 = x[p1];
-            int i2 = y[p2];
-            if (i1 == i2) {
-                p1++;
-                p2++;
-            } else if (i1 > i2) {
-                d++;
-                p2++;
-            } else {
-                d++;
-                p1++;
-            }
-        }
-
-        d += x.length - p1;
-        d += y.length - p2;
-
-        return k(d);
+        return k(MathEx.squaredDistance(x, y));
     }
 }
