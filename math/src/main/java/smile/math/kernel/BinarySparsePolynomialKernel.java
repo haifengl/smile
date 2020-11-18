@@ -31,7 +31,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class BinarySparsePolynomialKernel implements MercerKernel<int[]>, DotProductKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private int degree;
     private double scale;

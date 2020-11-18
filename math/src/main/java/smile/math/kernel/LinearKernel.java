@@ -26,7 +26,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.

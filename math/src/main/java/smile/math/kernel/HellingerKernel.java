@@ -23,7 +23,7 @@ package smile.math.kernel;
  * @author Diego Catalano
  */
 public class HellingerKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
     
     /**
      * Constructor.

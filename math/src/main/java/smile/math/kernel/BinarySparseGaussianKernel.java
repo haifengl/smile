@@ -32,7 +32,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class BinarySparseGaussianKernel implements MercerKernel<int[]>, IsotropicKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The width of the kernel.

@@ -32,7 +32,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray>, IsotropicKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The width of the kernel.

@@ -42,7 +42,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private double scale;
     private double offset;

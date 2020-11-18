@@ -30,7 +30,7 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The width of the kernel.
