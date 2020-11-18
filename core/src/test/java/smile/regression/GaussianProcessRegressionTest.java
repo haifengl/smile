@@ -29,6 +29,9 @@ import smile.math.kernel.GaussianKernel;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RMSE;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -64,13 +67,25 @@ public class GaussianProcessRegressionTest {
         double[][] longley = MathEx.clone(Longley.x);
         MathEx.standardize(longley);
 
-        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
-
         double[] prediction = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(8.0), 0.2));
         double rmse = RMSE.of(Longley.y, prediction);
 
         System.out.println("RMSE = " + rmse);
         assertEquals(2.749193150193674, rmse, 1E-4);
+
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
+        System.out.println(model);
+
+        GaussianProcessRegression<double[]>.Prediction pred = model.eval(Arrays.copyOf(longley, 10));
+        System.out.println(pred);
+
+        int n = pred.mu.length;
+        double[] musd = new double[2];
+        for (int i = 0; i < n; i++) {
+            model.predict(longley[i], musd);
+            assertEquals(musd[0], pred.mu[i], 1E-7);
+            assertEquals(musd[1], pred.sd[i], 1E-7);
+        }
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
