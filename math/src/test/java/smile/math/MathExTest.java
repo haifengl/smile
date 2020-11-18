@@ -537,7 +537,7 @@ public class MathExTest {
         };
 
         double[][] d = new double[3][3];
-        MathEx.pdist(data, d, true, true);
+        MathEx.pdist(data, d, MathEx::squaredDistance, true);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < i; j++) {
                 assertEquals(MathEx.squaredDistance(data[i], data[j]), d[i][j], 1E-10);
