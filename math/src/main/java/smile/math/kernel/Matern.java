@@ -17,8 +17,6 @@
 
 package smile.math.kernel;
 
-import smile.math.MathEx;
-
 /**
  * The class of Matérn kernels is a generalization of the RBF.
  * It has an additional parameter nu which controls the smoothness of
@@ -28,21 +26,78 @@ import smile.math.MathEx;
  * absolute exponential kernel. The Matern kernel become especially simple
  * when nu is half-integer. Important intermediate values are 3/2
  * (once differentiable functions) and 5/2 (twice differentiable functions).
- *
+
  * @author Haifeng Li
  */
-public class MaternKernel extends Matern implements MercerKernel<double[]> {
+public class Matern implements IsotropicKernel {
+    private static final long serialVersionUID = 2L;
+    private static final double SQRT3 = Math.sqrt(3);
+    private static final double SQRT5 = Math.sqrt(5);
+
+    /**
+     * The length scale of the kernel.
+     */
+    private double length;
+    /**
+     * The smoothness of the kernel.
+     */
+    private double nu;
+
     /**
      * Constructor.
      * @param length The length scale of the kernel function.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public MaternKernel(double length, int nu) {
-        super(length, nu);
+    public Matern(double length, int nu) {
+        if (length <= 0) {
+            throw new IllegalArgumentException("The length scale is not positive: " + length);
+        }
+
+        if (nu != 1.5 && nu != 2.5 && nu != 0.5 && !Double.isInfinite(nu)) {
+            throw new IllegalArgumentException("nu must be 0.5, 1.5, 2.5 or Info: " + nu);
+        }
+
+        this.length = length;
+        this.nu = nu;
     }
 
     @Override
-    public double k(double[] x, double[] y) {
-        return k(MathEx.distance(x, y));
+    public String toString() {
+        return String.format("Matern(length = %.4f, nu = %.1f)", length, nu);
+    }
+
+    @Override
+    public double f(double dist) {
+        return k(dist);
+    }
+
+    @Override
+    public double k(double dist) {
+        double d = dist / length;
+
+        if (nu == 1.5) {
+            d *= SQRT3;
+            return (1.0 + d) * Math.exp(-d);
+        }
+
+        if (nu == 2.5) {
+            d *= SQRT5;
+            return (1.0 + d) * Math.exp(-d);
+        }
+
+        if (nu == 1.5) {
+            d *= SQRT3;
+            return (1.0 + d + d * d / 3.0) * Math.exp(-d);
+        }
+
+        if (nu == 0.5) {
+            return Math.exp(-d);
+        }
+
+        if (Double.isInfinite(nu)) {
+            return Math.exp(-0.5 * d * d);
+        }
+
+        throw new IllegalStateException("Unsupported nu = " + nu);
     }
 }

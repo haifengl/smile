@@ -32,76 +32,18 @@ import smile.util.SparseArray;
 
  * @author Haifeng Li
  */
-public class SparseMaternKernel implements MercerKernel<SparseArray>, IsotropicKernel {
-    private static final long serialVersionUID = 2L;
-    private static final double SQRT3 = Math.sqrt(3);
-    private static final double SQRT5 = Math.sqrt(5);
-
-    /**
-     * The length scale of the kernel.
-     */
-    private double length;
-    /**
-     * The smoothness of the kernel.
-     */
-    private double nu;
-
+public class SparseMaternKernel extends Matern implements MercerKernel<SparseArray> {
     /**
      * Constructor.
      * @param length The length scale of the kernel function.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
     public SparseMaternKernel(double length, int nu) {
-        if (length <= 0) {
-            throw new IllegalArgumentException("The length scale is not positive: " + length);
-        }
-
-        if (nu != 1.5 && nu != 2.5 && nu != 0.5 && !Double.isInfinite(nu)) {
-            throw new IllegalArgumentException("nu must be 0.5, 1.5, 2.5 or Info: " + nu);
-        }
-
-        this.length = length;
-        this.nu = nu;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Matern Kernel (length = %.4f, nu = %.1f)", length, nu);
-    }
-
-    @Override
-    public double k(double dist) {
-        double d = dist / length;
-
-        if (nu == 1.5) {
-            d *= SQRT3;
-            return (1.0 + d) * Math.exp(-d);
-        }
-
-        if (nu == 2.5) {
-            d *= SQRT5;
-            return (1.0 + d) * Math.exp(-d);
-        }
-
-        if (nu == 1.5) {
-            d *= SQRT3;
-            return (1.0 + d + d * d / 3.0) * Math.exp(-d);
-        }
-
-        if (nu == 0.5) {
-            return Math.exp(-d);
-        }
-
-        if (Double.isInfinite(nu)) {
-            return Math.exp(-0.5 * d * d);
-        }
-
-        throw new IllegalStateException("Unsupported nu = " + nu);
+        super(length, nu);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        double d = MathEx.distance(x, y);
-        return k(d);
+        return k(MathEx.distance(x, y));
     }
 }

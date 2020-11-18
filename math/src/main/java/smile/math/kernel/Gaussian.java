@@ -17,30 +17,46 @@
 
 package smile.math.kernel;
 
-import smile.math.MathEx;
-import smile.util.SparseArray;
-
 /**
- * The Laplacian Kernel on sparse data.
+ * The Gaussian Kernel.
  * <p>
  * <pre>
- *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
+ *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
  * </pre>
  * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ * <p>
+ * The Gaussian kernel is a good choice for a great deal of applications,
+ * although sometimes it is remarked as being overused.
 
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
+public class Gaussian implements IsotropicKernel {
+    private static final long serialVersionUID = 2L;
+
+    /**
+     * The width of the kernel.
+     */
+    private double gamma;
+
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma the smooth/width parameter of Gaussian kernel.
      */
-    public SparseLaplacianKernel(double sigma) {
-        super(sigma);
+    public Gaussian(double sigma) {
+        if (sigma <= 0) {
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
+        }
+
+        this.gamma = 0.5 / (sigma * sigma);
     }
 
     @Override
-    public double k(SparseArray x, SparseArray y) {
-        return k(MathEx.distance(x, y));
+    public String toString() {
+        return String.format("Gaussian(sigma = %.4f)", Math.sqrt(0.5/gamma));
+    }
+
+    @Override
+    public double k(double dist) {
+        return Math.exp(-gamma * dist);
     }
 }
