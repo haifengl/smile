@@ -2716,19 +2716,27 @@ public class MathEx {
     }
 
     /**
-     * Returns the dot product between two vectors.
+     * Returns the dot product between two binary sparse arrays,
+     * which are the indices of nonzero elements in ascending order.
      */
     public static int dot(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException("Arrays have different length.");
+        int dot = 0;
+
+        for (int p1 = 0, p2 = 0; p1 < x.length && p2 < y.length; ) {
+            int i1 = x[p1];
+            int i2 = y[p2];
+            if (i1 == i2) {
+                dot++;
+                p1++;
+                p2++;
+            } else if (i1 > i2) {
+                p2++;
+            } else {
+                p1++;
+            }
         }
 
-        int p = 0;
-        for (int i = 0; i < x.length; i++) {
-            p += x[i] * y[i];
-        }
-
-        return p;
+        return dot;
     }
 
     /**
