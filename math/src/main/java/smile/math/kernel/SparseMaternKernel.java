@@ -18,6 +18,7 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
+import smile.util.SparseArray;
 
 /**
  * The class of Matérn kernels is a generalization of the RBF.
@@ -31,7 +32,7 @@ import smile.math.MathEx;
 
  * @author Haifeng Li
  */
-public class MaternKernel implements MercerKernel<double[]>, IsotropicKernel {
+public class SparseMaternKernel implements MercerKernel<SparseArray>, IsotropicKernel {
     private static final long serialVersionUID = 2L;
     private static final double SQRT3 = Math.sqrt(3);
     private static final double SQRT5 = Math.sqrt(5);
@@ -50,7 +51,7 @@ public class MaternKernel implements MercerKernel<double[]>, IsotropicKernel {
      * @param length The length scale of the kernel function.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public MaternKernel(double length, int nu) {
+    public SparseMaternKernel(double length, int nu) {
         if (length <= 0) {
             throw new IllegalArgumentException("The length scale is not positive: " + length);
         }
@@ -99,7 +100,7 @@ public class MaternKernel implements MercerKernel<double[]>, IsotropicKernel {
     }
 
     @Override
-    public double k(double[] x, double[] y) {
+    public double k(SparseArray x, SparseArray y) {
         double d = MathEx.distance(x, y);
         return k(d);
     }
