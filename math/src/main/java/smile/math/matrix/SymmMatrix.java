@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
@@ -254,7 +255,8 @@ public class SymmMatrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class BunchKaufman {
+    public static class BunchKaufman implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Bunch–Kaufman decomposition.
          */
@@ -383,8 +385,8 @@ public class SymmMatrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */

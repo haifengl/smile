@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
 import java.nio.DoubleBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
@@ -376,7 +377,8 @@ public class BandMatrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class LU {
+    public static class LU implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
          */
@@ -515,8 +517,8 @@ public class BandMatrix extends DMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */
