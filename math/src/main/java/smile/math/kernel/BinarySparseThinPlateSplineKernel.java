@@ -43,7 +43,7 @@ public class BinarySparseThinPlateSplineKernel implements MercerKernel<int[]>, I
      */
     public BinarySparseThinPlateSplineKernel(double sigma) {
         if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.sigma = sigma;

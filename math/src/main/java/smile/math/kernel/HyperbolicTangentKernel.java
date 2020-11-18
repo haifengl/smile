@@ -73,10 +73,6 @@ public class HyperbolicTangentKernel implements MercerKernel<double[]>, DotProdu
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
         double dot = MathEx.dot(x, y);
         return Math.tanh(scale * dot + offset);
     }

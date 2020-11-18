@@ -43,7 +43,7 @@ public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel 
      */
     public LaplacianKernel(double sigma) {
         if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.gamma = 1.0 / sigma;
@@ -61,10 +61,6 @@ public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel 
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
         return Math.exp(-gamma * MathEx.distance(x, y));
     }
 }
