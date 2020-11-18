@@ -51,7 +51,7 @@ public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel 
 
     @Override
     public String toString() {
-        return String.format("Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+        return String.format("Laplacian Kernel (sigma = %.4f)", 1.0/gamma);
     }
 
     @Override

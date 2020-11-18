@@ -52,7 +52,7 @@ public class SparseLaplacianKernel implements MercerKernel<SparseArray>, Isotrop
 
     @Override
     public String toString() {
-        return String.format("Sparse Laplacian kernel (\u02E0 = %.4f)", 1.0/gamma);
+        return String.format("Sparse Laplacian kernel (sigma = %.4f)", 1.0/gamma);
     }
 
     @Override

@@ -54,7 +54,7 @@ public class GaussianKernel implements MercerKernel<double[]>, IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+        return String.format("Gaussian Kernel (sigma = %.4f)", Math.sqrt(0.5/gamma));
     }
 
     @Override

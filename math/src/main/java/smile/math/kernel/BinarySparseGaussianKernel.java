@@ -53,7 +53,7 @@ public class BinarySparseGaussianKernel implements MercerKernel<int[]>, Isotropi
 
     @Override
     public String toString() {
-        return String.format("Sparse Binary Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+        return String.format("Sparse Binary Gaussian Kernel (sigma = %.4f)", Math.sqrt(0.5/gamma));
     }
 
     @Override
