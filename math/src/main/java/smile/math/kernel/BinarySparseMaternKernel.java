@@ -20,30 +20,29 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The Gaussian Kernel on binary sparse data.
- * <p>
- * <pre>
- *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
- * </pre>
- * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel. The kernel works
- * on sparse binary array as int[], which are the indices of nonzero elements.
- * <p>
- * The Gaussian kernel is a good choice for a great deal of applications,
- * although sometimes it is remarked as being overused.
-
+ * The class of Matérn kernels is a generalization of the RBF.
+ * It has an additional parameter nu which controls the smoothness of
+ * the kernel function. The smaller nu, the less smooth the approximated
+ * function is. As nu -> inf, the kernel becomes equivalent to the
+ * Gaussian/RBF kernel. When nu = 1/2, the kernel becomes identical to the
+ * absolute exponential kernel. The Matern kernel become especially simple
+ * when nu is half-integer. Important intermediate values are 3/2
+ * (once differentiable functions) and 5/2 (twice differentiable functions).
+ *
  * @author Haifeng Li
  */
-public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel<int[]> {
+public class BinarySparseMaternKernel extends Matern implements MercerKernel<int[]> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Gaussian kernel.
+     * @param length The length scale of the kernel function.
+     * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public BinarySparseGaussianKernel(double sigma) {
-        super(sigma);
+    public BinarySparseMaternKernel(double length, int nu) {
+        super(length, nu);
     }
 
     @Override
     public double k(int[] x, int[] y) {
-        return k(MathEx.squaredDistance(x, y));
+        return k(MathEx.distance(x, y));
     }
 }
