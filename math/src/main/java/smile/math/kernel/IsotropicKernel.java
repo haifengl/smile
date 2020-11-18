@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+
+import smile.math.Function;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
@@ -27,20 +29,18 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public interface IsotropicKernel {
+public interface IsotropicKernel extends Function {
+
+    @Override
+    default double f(double dist) {
+        return k(dist);
+    }
+
     /**
      * Kernel function.
      * @param dist the squared distance.
      */
     double k(double dist);
-
-    /**
-     * Kernel function.
-     * This is simply for Scala convenience.
-     */
-    default double apply(double dist) {
-        return k(dist);
-    }
 
     /**
      * Returns the kernel matrix.

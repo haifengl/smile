@@ -30,38 +30,17 @@ import smile.util.SparseArray;
 
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel implements MercerKernel<SparseArray>, IsotropicKernel {
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The width of the kernel.
-     */
-    private double gamma;
-
+public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
     /**
      * Constructor.
      * @param sigma the smooth/width parameter of Laplacian kernel.
      */
     public SparseLaplacianKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive: " + sigma);
-        }
-
-        this.gamma = 1.0 / sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Laplacian kernel (sigma = %.4f)", 1.0/gamma);
-    }
-
-    @Override
-    public double k(double dist) {
-        return Math.exp(-gamma * Math.sqrt(dist));
+        super(sigma);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * MathEx.distance(x, y));
+        return k(MathEx.distance(x, y));
     }
 }

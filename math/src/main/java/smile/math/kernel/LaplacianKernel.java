@@ -29,38 +29,17 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class LaplacianKernel implements MercerKernel<double[]>, IsotropicKernel {
-    private static final long serialVersionUID = 2L;
-
-    /**
-     * The width of the kernel.
-     */
-    private double gamma;
-
+public class LaplacianKernel extends Laplacian implements MercerKernel<double[]> {
     /**
      * Constructor.
      * @param sigma the smooth/width parameter of Laplacian kernel.
      */
     public LaplacianKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive: " + sigma);
-        }
-
-        this.gamma = 1.0 / sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Laplacian Kernel (sigma = %.4f)", 1.0/gamma);
-    }
-
-    @Override
-    public double k(double dist) {
-        return Math.exp(-gamma * Math.sqrt(dist));
+        super(sigma);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        return Math.exp(-gamma * MathEx.distance(x, y));
+        return k(MathEx.distance(x, y));
     }
 }
