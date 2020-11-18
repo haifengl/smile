@@ -45,7 +45,7 @@ public class BinarySparseGaussianKernel implements MercerKernel<int[]>, Isotropi
      */
     public BinarySparseGaussianKernel(double sigma) {
         if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.gamma = 0.5 / (sigma * sigma);

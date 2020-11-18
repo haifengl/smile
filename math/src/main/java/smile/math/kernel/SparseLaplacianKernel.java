@@ -44,7 +44,7 @@ public class SparseLaplacianKernel implements MercerKernel<SparseArray>, Isotrop
      */
     public SparseLaplacianKernel(double sigma) {
         if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
+            throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.gamma = 1.0 / sigma;

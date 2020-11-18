@@ -49,11 +49,11 @@ public class PolynomialKernel implements MercerKernel<double[]>, DotProductKerne
      */
     public PolynomialKernel(int degree, double scale, double offset) {
         if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree.");
+            throw new IllegalArgumentException("Non-positive polynomial degree: " + degree);
         }
 
         if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition.");
+            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition: " + offset);
         }
         
         this.degree = degree;
@@ -73,10 +73,6 @@ public class PolynomialKernel implements MercerKernel<double[]>, DotProductKerne
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
-
         double dot = MathEx.dot(x, y);
         return Math.pow(scale * dot + offset, degree);
     }

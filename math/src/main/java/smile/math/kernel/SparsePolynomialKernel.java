@@ -50,11 +50,11 @@ public class SparsePolynomialKernel implements MercerKernel<SparseArray>, DotPro
      */
     public SparsePolynomialKernel(int degree, double scale, double offset) {
         if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree.");
+            throw new IllegalArgumentException("Non-positive polynomial degree: " + degree);
         }
 
         if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition.");
+            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition: " + offset);
         }
         
         this.degree = degree;
