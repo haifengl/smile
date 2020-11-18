@@ -51,7 +51,7 @@ public class BinarySparseLaplacianKernel implements MercerKernel<int[]>, Isotrop
 
     @Override
     public String toString() {
-        return String.format("Sparse Binary Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+        return String.format("Sparse Binary Laplacian Kernel (sigma = %.4f)", 1.0/gamma);
     }
 
     @Override

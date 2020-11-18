@@ -55,7 +55,7 @@ public class SparseGaussianKernel implements MercerKernel<SparseArray>, Isotropi
 
     @Override
     public String toString() {
-        return String.format("Sparse Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+        return String.format("Sparse Gaussian Kernel (sigma = %.4f)", Math.sqrt(0.5/gamma));
     }
 
     @Override

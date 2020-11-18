@@ -51,7 +51,7 @@ public class BinarySparseThinPlateSplineKernel implements MercerKernel<int[]>, I
 
     @Override
     public String toString() {
-        return String.format("Sparse Linear Thin Plate Spline Kernel (\u02E0 = %.4f)", sigma);
+        return String.format("Sparse Linear Thin Plate Spline Kernel (sigma = %.4f)", sigma);
     }
 
     @Override
