@@ -42,7 +42,7 @@ package smile.math.kernel;
  * @author Haifeng Li
  */
 public class BinarySparseHyperbolicTangentKernel implements MercerKernel<int[]> {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private double scale;
     private double offset;

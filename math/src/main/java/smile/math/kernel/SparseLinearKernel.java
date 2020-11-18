@@ -27,7 +27,7 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public class SparseLinearKernel implements MercerKernel<SparseArray>, DotProductKernel {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
