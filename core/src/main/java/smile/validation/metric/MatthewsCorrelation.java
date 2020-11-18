@@ -27,10 +27,10 @@ package smile.validation.metric;
  *
  * @author digital-thinking
  */
-public class MCC implements ClassificationMetric {
+public class MatthewsCorrelation implements ClassificationMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MCC instance = new MCC();
+    public final static MatthewsCorrelation instance = new MatthewsCorrelation();
 
     @Override
     public double score(int[] truth, int[] prediction) {

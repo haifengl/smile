@@ -18,7 +18,6 @@
 package smile.benchmark
 
 import java.util
-
 import scala.language.postfixOps
 import smile.base.rbf.RBF
 import smile.base.mlp.{Layer, OutputFunction}
