@@ -112,7 +112,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      */
     private Matrix.Cholesky cholesky;
 
-    /** The prediction results. */
+    /** The joint prediction of multiple data points. */
     public class JointPrediction {
         /** The query points where the GP is evaluated. */
         public final T[] x;
