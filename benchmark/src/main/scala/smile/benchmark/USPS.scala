@@ -35,6 +35,7 @@ import smile.math.distance.EuclideanDistance
 import smile.math.kernel.GaussianKernel
 import smile.math.rbf.GaussianRadialBasis
 import smile.validation._
+import smile.validation.metric._
 import smile.util._
 
 /**
