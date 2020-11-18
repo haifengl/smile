@@ -19,9 +19,9 @@ package smile.regression;
 
 import java.util.Properties;
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
+import smile.util.Strings;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -96,7 +96,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     /**
      * The standard deviation of responsible variable.
      */
-    public final double std;
+    public final double sd;
     /**
      * The variance of noise.
      */
@@ -107,20 +107,34 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      */
     public final double L;
     /**
-     * The inverse of kernel matrix.
+     * The Cholesky decomposition of kernel matrix.
      */
-    private Matrix Kinv;
+    private Matrix.Cholesky cholesky;
 
-    /**
-     * Constructor.
-     * @param kernel Kernel function.
-     * @param regressors The regressors.
-     * @param weight The weights of regressors.
-     * @param Kinv The inverse of kernel matrix.
-     * @param noise The variance of noise.
-     */
-    public GaussianProcessRegression(MercerKernel<T> kernel, T[] regressors, double[] weight, Matrix Kinv, double noise) {
-        this(kernel, regressors, weight, Kinv, noise, 0.0, 1.0, Double.NaN);
+    /** The prediction results. */
+    public class Prediction {
+        /** The query points where the GP is evaluated. */
+        public final T[] x;
+        /** The mean of predictive distribution at query points. */
+        public final double[] mu;
+        /** The standard deviation of predictive distribution at query points. */
+        public final double[] sd;
+        /** The covariance matrix of joint predictive distribution at query points. */
+        public final Matrix cov;
+
+        /** Constructor. */
+        public Prediction(T[] x, double[] mu, double[] sd, Matrix cov) {
+            this.x = x;
+            this.mu = mu;
+            this.sd = sd;
+            this.cov = cov;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("GaussianProcessRegression.Prediction {\n  mean    = %s\n  std.dev = %s\n  cov     = %s\n}",
+                    Strings.toString(mu), Strings.toString(sd), cov.toString(true));
+        }
     }
 
     /**
@@ -128,13 +142,37 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param kernel Kernel function.
      * @param regressors The regressors.
      * @param weight The weights of regressors.
-     * @param Kinv The inverse of kernel matrix.
+     * @param noise The variance of noise.
+     */
+    public GaussianProcessRegression(MercerKernel<T> kernel, T[] regressors, double[] weight, double noise) {
+        this(kernel, regressors, weight, noise, 0.0, 1.0);
+    }
+
+    /**
+     * Constructor.
+     * @param kernel Kernel function.
+     * @param regressors The regressors.
+     * @param weight The weights of regressors.
      * @param noise The variance of noise.
      * @param mean The mean of responsible variable.
-     * @param std The standard deviation of responsible variable.
+     * @param sd The standard deviation of responsible variable.
+     */
+    public GaussianProcessRegression(MercerKernel<T> kernel, T[] regressors, double[] weight, double noise, double mean, double sd) {
+        this(kernel, regressors, weight, noise, mean, sd, null, Double.NaN);
+    }
+
+    /**
+     * Constructor.
+     * @param kernel Kernel function.
+     * @param regressors The regressors.
+     * @param weight The weights of regressors.
+     * @param noise The variance of noise.
+     * @param mean The mean of responsible variable.
+     * @param sd The standard deviation of responsible variable.
+     * @param cholesky The Cholesky decomposition of kernel matrix.
      * @param L The log marginal likelihood.
      */
-    public GaussianProcessRegression(MercerKernel<T> kernel, T[] regressors, double[] weight, Matrix Kinv, double noise, double mean, double std, double L) {
+    public GaussianProcessRegression(MercerKernel<T> kernel, T[] regressors, double[] weight, double noise, double mean, double sd, Matrix.Cholesky cholesky, double L) {
         if (noise < 0.0) {
             throw new IllegalArgumentException("Invalid noise variance: " + noise);
         }
@@ -142,11 +180,11 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         this.kernel = kernel;
         this.regressors = regressors;
         this.w = weight;
-        this.Kinv = Kinv;
         this.noise = noise;
-        this.L = L;
         this.mean = mean;
-        this.std = std;
+        this.sd = sd;
+        this.cholesky = cholesky;
+        this.L = L;
     }
 
     @Override
@@ -158,47 +196,83 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             mu += w[i] * kernel.k(x, regressors[i]);
         }
 
-        return mu * this.std + this.mean;
+        return mu * sd + mean;
     }
 
     /**
      * Predicts the mean and standard deviation of an instance.
      * @param x an instance.
-     * @param mustd an output array of the estimated mean and standard deviation.
+     * @param musd an output array of the estimated mean and standard deviation.
      * @return the estimated mean value.
      */
-    public double predict(T x, double[] mustd) {
-        if (Kinv == null) {
-            throw new UnsupportedOperationException("The inverse of kernel matrix is not available.");
+    public double predict(T x, double[] musd) {
+        if (cholesky == null) {
+            throw new UnsupportedOperationException("The Cholesky decomposition of kernel matrix is not available.");
         }
 
         int n = regressors.length;
         double[] k = new double[n];
-
         for (int i = 0; i < n; i++) {
             k[i] = kernel.k(x, regressors[i]);
         }
 
-        double mu = 0.0;
-        for (int i = 0; i < n; i++) {
-            mu += w[i] * k[i];
-        }
+        double[] Kx = cholesky.solve(k);
+        double mu = MathEx.dot(w, k);
+        double sd = Math.sqrt(kernel.k(x, x) - MathEx.dot(Kx, k));
 
-        double std = Math.sqrt(kernel.k(x, x) - Kinv.xAx(k));
+        mu = mu * this.sd + this.mean;
+        sd *= this.sd;
 
-        mu = mu * this.std + this.mean;
-        std = std * this.std;
-
-        mustd[0] = mu;
-        mustd[1] = std;
+        musd[0] = mu;
+        musd[1] = sd;
 
         return mu;
     }
 
+    /**
+     * Evaluates the Gaussian Process at some query points.
+     * @param samples query points.
+     * @return The mean, standard deviation and covariances of GP at query points.
+     */
+    public Prediction eval(T[] samples) {
+        if (cholesky == null) {
+            throw new UnsupportedOperationException("The Cholesky decomposition of kernel matrix is not available.");
+        }
+
+        Matrix Kx = kernel.K(samples);
+        Matrix Kt = kernel.K(samples, regressors);
+
+        System.out.println(Kx);
+        Matrix Kv = Kt.transpose().clone();
+        cholesky.solve(Kv);
+        System.out.println(Kt.mm(Kv));
+        Matrix cov = Kx.sub(Kt.mm(Kv));
+        cov.mul(sd * sd);
+
+        double[] mu = Kt.mv(w);
+        double[] std = cov.diag();
+        int m = samples.length;
+        for (int i = 0; i < m; i++) {
+            mu[i] = mu[i] * sd + mean;
+            std[i] = Math.sqrt(std[i]);
+        }
+
+        return new Prediction(samples, mu, std, cov);
+    }
 
     @Override
     public String toString() {
-        return String.format("GaussianProcessRegression (%s): %d regressors", kernel, regressors.length);
+        StringBuffer sb = new StringBuffer("GaussianProcessRegression {\n");
+        sb.append("  kernel: ").append(kernel).append(",\n");
+        sb.append("  regressors: ").append(regressors.length).append(",\n");
+        sb.append("  mean: ").append(String.format("%.4f,\n", mean));
+        sb.append("  std.dev: ").append(String.format("%.4f,\n", sd));
+        sb.append("  noise: ").append(String.format("%.4f", noise));
+        if (!Double.isNaN(L)) {
+            sb.append(",\n  log marginal likelihood: ").append(String.format("%.4f", L));
+        }
+        sb.append("\n}");
+        return sb.toString();
     }
 
     /**
@@ -244,37 +318,29 @@ public class GaussianProcessRegression<T> implements Regression<T> {
 
         int n = x.length;
         double mean = 0.0;
-        double std = 1.0;
+        double sd = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            std = MathEx.sd(y);
+            sd = MathEx.sd(y);
 
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / std;
+                target[i] = (y[i] - mean) / sd;
             }
             y = target;
         }
 
-        Matrix K = new Matrix(n, n);
-        K.uplo(UPLO.LOWER);
+        Matrix K = kernel.K(x);
         for (int i = 0; i < n; i++) {
-            for (int j = 0; j <= i; j++) {
-                double k = kernel.k(x[i], x[j]);
-                K.set(i, j, k);
-                K.set(j, i, k);
-            }
-
             K.add(i, i, noise);
         }
 
         Matrix.Cholesky cholesky = K.cholesky(true);
         double[] w = cholesky.solve(y);
 
-        Matrix Kinv = cholesky.inverse();
-        double L = -0.5 * (Kinv.xAx(y) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
+        double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
 
-        return new GaussianProcessRegression<>(kernel, x, w, Kinv, noise, mean, std, L);
+        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd, cholesky, L);
     }
 
     /**
@@ -326,45 +392,29 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             throw new IllegalArgumentException("Invalid noise variance = " + noise);
         }
 
-        int n = x.length;
-        int m = t.length;
-
         double mean = 0.0;
-        double std = 1.0;
+        double sd = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            std = MathEx.sd(y);
+            sd = MathEx.sd(y);
 
+            int n = x.length;
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / std;
+                target[i] = (y[i] - mean) / sd;
             }
             y = target;
         }
 
-        Matrix G = new Matrix(n, m);
-        for (int j = 0; j < m; j++) {
-            for (int i = 0; i < n; i++) {
-                G.set(i, j, kernel.k(x[i], t[j]));
-            }
-        }
-
+        Matrix G = kernel.K(x, t);
         Matrix K = G.ata();
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j <= i; j++) {
-                double k = K.get(j, i) + noise * kernel.k(t[i], t[j]);
-                K.set(j, i, k);
-                K.set(i, j, k);
-            }
-        }
-
-        double[] Gty = G.tv(y);
-
+        Matrix Kt = kernel.K(t);
+        K.add(noise, Kt);
         Matrix.LU lu = K.lu(true);
+        double[] Gty = G.tv(y);
         double[] w = lu.solve(Gty);
 
-        Matrix Kinv = lu.inverse();
-        return new GaussianProcessRegression<>(kernel, t, w, Kinv, noise, mean, std, Double.NaN);
+        return new GaussianProcessRegression<>(kernel, t, w, noise, mean, sd);
     }
 
     /**
@@ -418,35 +468,20 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         int m = t.length;
 
         double mean = 0.0;
-        double std = 1.0;
+        double sd = 1.0;
         if (normalize) {
             mean = MathEx.mean(y);
-            std = MathEx.sd(y);
+            sd = MathEx.sd(y);
 
             double[] target = new double[n];
             for (int i = 0; i < n; i++) {
-                target[i] = (y[i] - mean) / std;
+                target[i] = (y[i] - mean) / sd;
             }
             y = target;
         }
 
-        Matrix E = new Matrix(n, m);
-        for (int j = 0; j < m; j++) {
-            for (int i = 0; i < n; i++) {
-                E.set(i, j, kernel.k(x[i], t[j]));
-            }
-        }
-
-        Matrix W = new Matrix(m, m);
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j <= i; j++) {
-                double k = kernel.k(t[i], t[j]);
-                W.set(i, j, k);
-                W.set(j, i, k);
-            }
-        }
-
-        W.uplo(UPLO.LOWER);
+        Matrix E = kernel.K(x, t);
+        Matrix W = kernel.K(t);
         Matrix.EVD eigen = W.eigen(false, true, true).sort();
         Matrix U = eigen.Vr;
         Matrix D = eigen.diag();
@@ -472,6 +507,6 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             w[i] = (y[i] - w[i]) / noise;
         }
 
-        return new GaussianProcessRegression<>(kernel, x, w, null, noise, mean, std, Double.NaN);
+        return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
     }
 }
