@@ -17,17 +17,16 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import smile.data.Movie;
 import smile.math.MathEx;
-import smile.validation.Error;
+import smile.validation.CrossValidation;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.validation.CrossValidation;
-
-import java.util.Arrays;
 
 import static org.junit.Assert.*;
 

@@ -25,9 +25,9 @@ import org.junit.Test;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
-import smile.validation.Error;
 import smile.validation.LOOCV;
 import smile.validation.Validation;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 

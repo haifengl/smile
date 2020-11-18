@@ -25,7 +25,7 @@ import org.junit.Test;
 import java.util.Arrays;
 import smile.data.*;
 import smile.util.SparseArray;
-import smile.validation.Error;
+import smile.validation.metric.Error;
 import static org.junit.Assert.*;
 
 /**

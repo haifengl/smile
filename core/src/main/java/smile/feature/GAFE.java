@@ -26,7 +26,7 @@ import smile.gap.*;
 import smile.math.MathEx;
 import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
-import smile.validation.*;
+import smile.validation.metric.*;
 
 /**
  * Genetic algorithm based feature selection. This method finds many (random)

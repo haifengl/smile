@@ -25,7 +25,7 @@ import org.junit.Test;
 import smile.data.GaussianMixture;
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.*;
+import smile.validation.metric.*;
 
 import static org.junit.Assert.*;
 

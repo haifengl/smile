@@ -28,6 +28,7 @@ import smile.classification.DecisionTree;
 import smile.data.Abalone;
 import smile.data.USPS;
 import smile.regression.RegressionTree;
+import smile.validation.metric.*;
 
 /**
  *

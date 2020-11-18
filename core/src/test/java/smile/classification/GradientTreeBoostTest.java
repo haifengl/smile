@@ -20,12 +20,13 @@ package smile.classification;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
+import smile.validation.metric.Accuracy;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.validation.Error;
 
 import static org.junit.Assert.assertEquals;
 

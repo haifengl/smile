@@ -34,8 +34,8 @@ import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.BinarySparseGaussianKernel;
 import smile.util.SparseArray;
-import smile.validation.Error;
 import smile.validation.Validation;
+import smile.validation.metric.Error;
 
 /**
  *

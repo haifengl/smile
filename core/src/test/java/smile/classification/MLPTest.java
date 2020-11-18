@@ -32,8 +32,8 @@ import smile.feature.WinsorScaler;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.validation.CrossValidation;
-import smile.validation.Error;
 import smile.validation.Validation;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 

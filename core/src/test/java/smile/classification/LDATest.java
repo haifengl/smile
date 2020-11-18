@@ -25,7 +25,7 @@ import org.junit.Test;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
-import smile.validation.Error;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 

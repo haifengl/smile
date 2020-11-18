@@ -30,8 +30,8 @@ import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
-import smile.validation.RMSE;
 import smile.validation.Validation;
+import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.*;
 

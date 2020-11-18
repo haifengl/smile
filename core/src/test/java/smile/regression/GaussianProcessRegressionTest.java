@@ -28,10 +28,9 @@ import smile.data.*;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
 import smile.math.matrix.Matrix;
-import smile.util.Strings;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
-import smile.validation.RMSE;
+import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
 

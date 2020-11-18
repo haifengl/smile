@@ -17,13 +17,13 @@
 
 package smile.classification;
 
+import java.util.stream.IntStream;
 import smile.data.Iris;
 import smile.data.WeatherNominal;
 import smile.stat.distribution.EmpiricalDistribution;
 import smile.util.IntSet;
-import smile.validation.Error;
 import smile.validation.LOOCV;
-import java.util.stream.IntStream;
+import smile.validation.metric.Error;
 
 import org.junit.After;
 import org.junit.AfterClass;
