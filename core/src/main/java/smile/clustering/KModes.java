@@ -51,7 +51,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
     }
 
     @Override
-    public double distance(int[] x, int[] y) {
+    protected double distance(int[] x, int[] y) {
         return HammingDistance.d(x, y);
     }
 
