@@ -20,7 +20,7 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The Thin Plate Spline Kernel.
+ * The Thin Plate Spline kernel.
  * <p>
  * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)

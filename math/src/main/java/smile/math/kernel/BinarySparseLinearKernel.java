@@ -38,7 +38,7 @@ public class BinarySparseLinearKernel implements MercerKernel<int[]>, DotProduct
 
     @Override
     public String toString() {
-        return "LinearKernel";
+        return "LinearKernel()";
     }
 
     @Override

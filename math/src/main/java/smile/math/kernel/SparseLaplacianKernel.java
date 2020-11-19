@@ -21,7 +21,7 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * Laplacian Kernel, also referred as exponential kernel.
+ * Laplacian kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>

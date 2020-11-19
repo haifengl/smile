@@ -76,7 +76,7 @@ public class Matern implements IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("Matern(%.4f, %.1f)", sigma, nu);
+        return String.format("MaternKernel(%.4f, %.1f)", sigma, nu);
     }
 
     @Override

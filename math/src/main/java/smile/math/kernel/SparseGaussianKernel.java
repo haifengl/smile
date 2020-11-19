@@ -21,7 +21,7 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * Gaussian Kernel, also referred as RBF kernel or squared exponential kernel.
+ * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>

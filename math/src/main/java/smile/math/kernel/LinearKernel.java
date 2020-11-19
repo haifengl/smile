@@ -37,7 +37,7 @@ public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
 
     @Override
     public String toString() {
-        return "LinearKernel";
+        return "LinearKernel()";
     }
 
     @Override
