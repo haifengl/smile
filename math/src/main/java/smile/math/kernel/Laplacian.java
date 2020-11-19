@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 /**
- * Laplacian Kernel, also referred as exponential kernel.
+ * Laplacian kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -54,7 +54,7 @@ public class Laplacian implements IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("Laplacian(%.4f)", sigma);
+        return String.format("LaplacianKernel(%.4f)", sigma);
     }
 
     @Override

@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 /**
- * Gaussian Kernel, also referred as RBF kernel or squared exponential kernel.
+ * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>
@@ -57,7 +57,7 @@ public class Gaussian implements IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("Gaussian(%.4f)", sigma);
+        return String.format("GaussianKernel(%.4f)", sigma);
     }
 
     @Override

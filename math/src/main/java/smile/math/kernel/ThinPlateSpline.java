@@ -18,7 +18,7 @@
 package smile.math.kernel;
 
 /**
- * The Thin Plate Spline Kernel.
+ * The Thin Plate Spline kernel.
  * <p>
  * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
@@ -54,7 +54,7 @@ public class ThinPlateSpline implements IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("ThinPlateSpline(%.4f)", sigma);
+        return String.format("ThinPlateSplineKernel(%.4f)", sigma);
     }
 
     @Override
