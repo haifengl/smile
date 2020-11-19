@@ -68,7 +68,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
     }
 
     @Override
-    public double distance(double[] x, SparseArray y) {
+    protected double distance(double[] x, SparseArray y) {
         return MathEx.JensenShannonDivergence(x, y);
     }
 
