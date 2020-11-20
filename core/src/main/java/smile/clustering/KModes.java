@@ -17,10 +17,11 @@
 
 package smile.clustering;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
-import smile.classification.ClassLabels;
 import smile.math.MathEx;
 import smile.math.distance.HammingDistance;
+import smile.util.IntSet;
 
 /**
  * K-Modes clustering. K-Modes is the binary equivalent for K-Means.
@@ -82,11 +83,11 @@ public class KModes extends CentroidClustering<int[], int[]> {
         int n = data.length;
         int d = data[0].length;
 
-        ClassLabels[] codec = IntStream.range(0, d).parallel().mapToObj(j -> {
+        Codec[] codec = IntStream.range(0, d).parallel().mapToObj(j -> {
             int[] x = new int[n];
             for (int i = 0; i < n; i++) x[i] = data[i][j];
-            return ClassLabels.fit(x);
-        }).toArray(ClassLabels[]::new);
+            return new Codec(x);
+        }).toArray(Codec[]::new);
 
         int[] y = new int[n];
         int[][] medoids = new int[k][];
@@ -114,10 +115,41 @@ public class KModes extends CentroidClustering<int[], int[]> {
         return new KModes(distortion, centroids, y);
     }
 
+    /** Maps column values to compact range. */
+    private static class Codec {
+        /** The number of unique values. */
+        public final int k;
+        /** The values in [0, k). */
+        public final int[] x;
+        /** The map of value to index. */
+        public final IntSet encoder;
+
+        public Codec(int[] x) {
+            int[] y = MathEx.unique(x);
+            Arrays.sort(y);
+
+            this.x = x;
+            this.k = y.length;
+            this.encoder = new IntSet(y);
+
+            if (y[0] != 0 || y[k-1] != k-1) {
+                int n = x.length;
+                for (int i = 0; i < n; i++) {
+                    x[i] = encoder.indexOf(x[i]);
+                }
+            }
+        }
+
+        /** Returns the original value. */
+        public int valueOf(int i) {
+            return encoder.valueOf(i);
+        }
+    }
+
     /**
      * Calculates the new centroids in the new clusters.
      */
-    private static void updateCentroids(int[][] centroids, int[][] data, int[] y, ClassLabels[] codec) {
+    private static void updateCentroids(int[][] centroids, int[][] data, int[] y, Codec[] codec) {
         int n = data.length;
         int k = centroids.length;
         int d = centroids[0].length;
@@ -125,14 +157,17 @@ public class KModes extends CentroidClustering<int[], int[]> {
         IntStream.range(0, k).parallel().forEach(cluster -> {
             int[] centroid = centroids[cluster];
             for (int j = 0; j < d; j++) {
+                // constant column
+                if (codec[j].k <= 1) continue;
+
                 int[] count = new int[codec[j].k];
-                int[] x = codec[j].y;
+                int[] x = codec[j].x;
                 for (int i = 0; i < n; i++) {
                     if (y[i] == cluster) {
                         count[x[i]]++;
                     }
                 }
-                centroid[j] = codec[j].labels.valueOf(MathEx.whichMax(count));
+                centroid[j] = codec[j].valueOf(MathEx.whichMax(count));
             }
         });
     }
