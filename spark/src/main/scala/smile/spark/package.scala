@@ -25,7 +25,8 @@ import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
-import smile.validation.{Accuracy, ClassificationMetric, CrossValidation, R2, RegressionMetric}
+import smile.validation.CrossValidation
+import smile.validation.metric.{Accuracy, ClassificationMetric, R2, RegressionMetric}
 
 /**
   * Package for better integration of Spark MLLib Pipelines and SMILE

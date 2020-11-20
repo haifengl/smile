@@ -28,7 +28,8 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.io.Read
 import smile.util.Paths
-import smile.validation.{Accuracy, Hyperparameters, Precision, Recall}
+import smile.validation.Hyperparameters
+import smile.validation.metric.{Accuracy, Precision, Recall}
 
 class HpoSpec extends Specification with BeforeAll with AfterAll{
 
