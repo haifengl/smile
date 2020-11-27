@@ -32,21 +32,56 @@ import smile.math.MathEx;
  */
 public class PolynomialKernel extends Polynomial implements MercerKernel<double[]> {
     /**
-     * Constructor with scale 1 and bias 0.
+     * Constructor with scale 1 and offset 0.
      */
     public PolynomialKernel(int degree) {
-        super(degree);
+        this(degree, 1.0, 0.0);
     }
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public PolynomialKernel(int degree, double scale, double offset) {
-        super(degree, scale, offset);
+        this(degree, scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
+    }
+
+    /**
+     * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public PolynomialKernel(int degree, double scale, double offset, double[] lo, double[] hi) {
+        super(degree, scale, offset, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
         return k(MathEx.dot(x, y));
+    }
+
+    @Override
+    public PolynomialKernel of(double[] params) {
+        return new PolynomialKernel(degree, params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { degree, scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

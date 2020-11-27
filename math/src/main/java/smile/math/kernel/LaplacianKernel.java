@@ -35,11 +35,41 @@ public class LaplacianKernel extends Laplacian implements MercerKernel<double[]>
      * @param sigma The length scale of kernel.
      */
     public LaplacianKernel(double sigma) {
-        super(sigma);
+        this(sigma, 1E-05, 1E5);
+    }
+
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public LaplacianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
         return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public LaplacianKernel of(double[] params) {
+        return new LaplacianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

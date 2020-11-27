@@ -37,15 +37,47 @@ import smile.math.MathEx;
 public class MaternKernel extends Matern implements MercerKernel<double[]> {
     /**
      * Constructor.
-     * @param sigma The length scale of the kernel function.
+     * @param sigma The length scale of kernel.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
      */
-    public MaternKernel(double sigma, int nu) {
-        super(sigma, nu);
+    public MaternKernel(double sigma, double nu) {
+        this(sigma, nu, 1E-05, 1E5);
+    }
+
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
+     *           The smoothness parameter is fixed during hyperparameter for tuning.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public MaternKernel(double sigma, double nu, double lo, double hi) {
+        super(sigma, nu, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
         return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public MaternKernel of(double[] params) {
+        return new MaternKernel(params[0], nu, lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma, nu };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

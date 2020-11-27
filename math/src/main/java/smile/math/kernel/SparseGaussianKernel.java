@@ -39,11 +39,41 @@ public class SparseGaussianKernel extends Gaussian implements MercerKernel<Spars
      * @param sigma The length scale of kernel.
      */
     public SparseGaussianKernel(double sigma) {
-        super(sigma);
+        this(sigma, 1E-05, 1E5);
+    }
+
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public SparseGaussianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
         return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public SparseGaussianKernel of(double[] params) {
+        return new SparseGaussianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

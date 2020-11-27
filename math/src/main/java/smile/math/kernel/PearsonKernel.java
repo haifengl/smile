@@ -40,6 +40,10 @@ public class PearsonKernel implements MercerKernel<double[]> {
     private final double sigma;
     /** The coefficient 4 * (2 ^ (1/omega) - 1) / (sigma^2). */
     private final double C;
+    /** The lower bound of omega and sigma. */
+    private final double[] lo;
+    /** The upper bound of omega and sigma. */
+    private final double[] hi;
 
     /**
      * Constructor.
@@ -47,9 +51,20 @@ public class PearsonKernel implements MercerKernel<double[]> {
      * @param omega The tailing factor of the peak.
      */
     public PearsonKernel(double sigma, double omega) {
+        this(sigma, omega, new double[]{1E-5, 0.2}, new double[]{1E5, 2.0});
+    }
+
+    /**
+     * Constructor.
+     * @param sigma Pearson width.
+     * @param omega The tailing factor of the peak.
+     */
+    public PearsonKernel(double sigma, double omega, double[] lo, double[] hi) {
         this.omega = omega;
         this.sigma = sigma;
         this.C = 4.0 * (Math.pow(2.0, 1.0 / omega) - 1.0) / (sigma * sigma);
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /**
@@ -75,5 +90,25 @@ public class PearsonKernel implements MercerKernel<double[]> {
     public double k(double[] x, double[] y) {
         double d = MathEx.squaredDistance(x, y);
         return 1.0 / Math.pow(1.0 + C * d, omega);
+    }
+
+    @Override
+    public PearsonKernel of(double[] params) {
+        return new PearsonKernel(params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { omega, sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

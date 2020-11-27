@@ -31,21 +31,21 @@ package smile.math.kernel;
 public class Polynomial implements DotProductKernel {
     private static final long serialVersionUID = 2L;
 
-    private final int degree;
-    private final double scale;
-    private final double offset;
-
-    /**
-     * Constructor with scale 1 and bias 0.
-     */
-    public Polynomial(int degree) {
-        this(degree, 1.0, 0.0);
-    }
+    final int degree;
+    final double scale;
+    final double offset;
+    final double[] lo;
+    final double[] hi;
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
      */
-    public Polynomial(int degree, double scale, double offset) {
+    public Polynomial(int degree, double scale, double offset, double[] lo, double[] hi) {
         if (degree <= 0) {
             throw new IllegalArgumentException("Non-positive polynomial degree: " + degree);
         }
@@ -57,6 +57,8 @@ public class Polynomial implements DotProductKernel {
         this.degree = degree;
         this.scale = scale;
         this.offset = offset;
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /** Returns the degree of kernel. */

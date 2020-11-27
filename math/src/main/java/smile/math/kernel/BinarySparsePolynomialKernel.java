@@ -34,21 +34,56 @@ import smile.math.MathEx;
  */
 public class BinarySparsePolynomialKernel extends Polynomial implements MercerKernel<int[]> {
     /**
-     * Constructor with scale 1 and bias 0.
+     * Constructor with scale 1 and offset 0.
      */
     public BinarySparsePolynomialKernel(int degree) {
-        super(degree);
+        this(degree, 1.0, 0.0);
     }
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public BinarySparsePolynomialKernel(int degree, double scale, double offset) {
-        super(degree, scale, offset);
+        this(degree, scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
+    }
+
+    /**
+     * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public BinarySparsePolynomialKernel(int degree, double scale, double offset, double[] lo, double[] hi) {
+        super(degree, scale, offset, lo, hi);
     }
 
     @Override
     public double k(int[] x, int[] y) {
         return k(MathEx.dot(x, y));
+    }
+
+    @Override
+    public BinarySparsePolynomialKernel of(double[] params) {
+        return new BinarySparsePolynomialKernel(degree, params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { degree, scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

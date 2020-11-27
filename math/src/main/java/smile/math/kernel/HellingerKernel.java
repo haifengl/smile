@@ -53,4 +53,24 @@ public class HellingerKernel implements MercerKernel<double[]> {
 
         return sum;
     }
+
+    @Override
+    public LinearKernel of(double[] params) {
+        return new LinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
+    }
 }

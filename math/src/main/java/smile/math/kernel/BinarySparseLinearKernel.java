@@ -50,4 +50,24 @@ public class BinarySparseLinearKernel implements MercerKernel<int[]>, DotProduct
     public double k(int[] x, int[] y) {
         return MathEx.dot(x, y);
     }
+
+    @Override
+    public BinarySparseLinearKernel of(double[] params) {
+        return new BinarySparseLinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
+    }
 }

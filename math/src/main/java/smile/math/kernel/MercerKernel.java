@@ -52,7 +52,7 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
+public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable {
 
     /**
      * Kernel function.
@@ -70,57 +70,6 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
     @Override
     default double applyAsDouble(T x, T y) {
         return k(x, y);
-    }
-
-    /**
-     * The sum kernel takes two kernels and combines them via k1(x, y) + k2(x, y)
-     * @param k1 the kernel to combine.
-     * @param k2 the kernel to combine.
-     * @return the sum kernel.
-     */
-    static <T> MercerKernel sum(MercerKernel<T> k1, MercerKernel<T> k2) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return k1.k(x, y) + k2.k(x, y);
-            }
-        };
-    }
-
-    /**
-     * The product kernel takes two kernels and combines them via k1(x, y) * k2(x, y)
-     * . The Product kernel takes two kernels
-     *  and
-     *  and combines them via
-     * . The Exponentiation kernel takes one base kernel and a scalar parameter  and combines them via
-     * @param k1 the kernel to combine.
-     * @param k2 the kernel to combine.
-     * @return the product kernel.
-     */
-    static <T> MercerKernel product(MercerKernel<T> k1, MercerKernel<T> k2) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return k1.k(x, y) + k2.k(x, y);
-            }
-        };
-    }
-
-    /**
-     * The pow kernel takes one base kernel and a scalar parameter
-     * and combines them via k(x, y) ^ p.
-     *
-     * @param k the base kernel.
-     * @param p the exponent.
-     * @return the power kernel.
-     */
-    static <T> MercerKernel pow(MercerKernel<T> k, double p) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return Math.pow(k.k(x, y), p);
-            }
-        };
     }
 
     /**
@@ -163,4 +112,16 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
 
         return K;
     }
+
+    /** Returns the same kind kernel with the new hyperparameters. */
+    MercerKernel<T> of(double[] params);
+
+    /** Returns the hyperparameters of kernel. */
+    double[] hyperparameters();
+
+    /** Returns the lower bound of hyperparameters for hyperparameter tuning. */
+    double[] lo();
+
+    /** Returns the upper bound of hyperparameters for hyperparameter tuning. */
+    double[] hi();
 }

@@ -50,4 +50,24 @@ public class SparseLinearKernel implements MercerKernel<SparseArray>, DotProduct
     public double k(SparseArray x, SparseArray y) {        
         return MathEx.dot(x, y);
     }
+
+    @Override
+    public SparseLinearKernel of(double[] params) {
+        return new SparseLinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
+    }
 }

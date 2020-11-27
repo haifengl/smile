@@ -17,60 +17,60 @@
 
 package smile.math.kernel;
 
-import smile.math.MathEx;
-import smile.util.SparseArray;
+import java.util.Arrays;
+import java.util.stream.DoubleStream;
 
 /**
- * Laplacian kernel, also referred as exponential kernel.
- * <p>
- * <pre>
- *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
- * </pre>
- * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
-
+ * The sum kernel takes two kernels and combines them via k1(x, y) + k2(x, y)
+ *
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
-    /**
-     * Constructor.
-     * @param sigma The length scale of kernel.
-     */
-    public SparseLaplacianKernel(double sigma) {
-        this(sigma, 1E-05, 1E5);
-    }
+public class SumKernel<T> implements MercerKernel<T> {
+    private final MercerKernel<T> k1;
+    private final MercerKernel<T> k2;
 
     /**
      * Constructor.
-     * @param sigma The length scale of kernel.
-     * @param lo The lower bound of length scale for hyperparameter tuning.
-     * @param hi The upper bound of length scale for hyperparameter tuning.
+     * @param k1 the kernel to combine.
+     * @param k2 the kernel to combine.
      */
-    public SparseLaplacianKernel(double sigma, double lo, double hi) {
-        super(sigma, lo, hi);
+    public SumKernel(MercerKernel<T> k1, MercerKernel<T> k2) {
+        this.k1 = k1;
+        this.k2 = k2;
     }
 
     @Override
-    public double k(SparseArray x, SparseArray y) {
-        return k(MathEx.distance(x, y));
+    public double k(T x, T y) {
+        return k1.k(x, y) + k2.k(x, y);
     }
 
     @Override
-    public SparseLaplacianKernel of(double[] params) {
-        return new SparseLaplacianKernel(params[0], lo, hi);
+    public MercerKernel<T> of(double[] params) {
+        int n1 = k1.lo().length;
+        return new SumKernel<>(k1.of(params), k2.of(Arrays.copyOfRange(params, n1, params.length)));
     }
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { sigma };
+        return DoubleStream.concat(
+                Arrays.stream(k1.hyperparameters()),
+                Arrays.stream(k2.hyperparameters())
+        ).toArray();
     }
 
     @Override
     public double[] lo() {
-        return new double[] { lo };
+        return DoubleStream.concat(
+                Arrays.stream(k1.lo()),
+                Arrays.stream(k2.lo())
+        ).toArray();
     }
 
     @Override
     public double[] hi() {
-        return new double[] { hi };
+        return DoubleStream.concat(
+                Arrays.stream(k1.hi()),
+                Arrays.stream(k2.hi())
+        ).toArray();
     }
 }
