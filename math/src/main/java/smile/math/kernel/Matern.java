@@ -37,21 +37,24 @@ public class Matern implements IsotropicKernel {
     private static final double SQRT3 = Math.sqrt(3);
     private static final double SQRT5 = Math.sqrt(5);
 
-    /**
-     * The length scale of the kernel.
-     */
-    private final double sigma;
-    /**
-     * The smoothness of the kernel.
-     */
-    private final double nu;
+    /** The length scale of the kernel. */
+    final double sigma;
+    /** The smoothness of the kernel. */
+    final double nu;
+    /** The lower bound of length scale for hyperparameter tuning. */
+    final double lo;
+    /** The upper bound of length scale for hyperparameter tuning. */
+    final double hi;
 
     /**
      * Constructor.
      * @param sigma The length scale of kernel.
      * @param nu The smoothness of the kernel function. Only 0.5, 1.5, 2.5 and Inf are accepted.
+     *           The smoothness parameter is fixed during hyperparameter for tuning.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public Matern(double sigma, int nu) {
+    public Matern(double sigma, double nu, double lo, double hi) {
         if (sigma <= 0) {
             throw new IllegalArgumentException("The length scale is not positive: " + sigma);
         }
@@ -62,6 +65,8 @@ public class Matern implements IsotropicKernel {
 
         this.sigma = sigma;
         this.nu = nu;
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /** Returns the length scale of kernel. */

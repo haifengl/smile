@@ -30,21 +30,27 @@ package smile.math.kernel;
 public class Laplacian implements IsotropicKernel {
     private static final long serialVersionUID = 2L;
 
-    /**
-     * The length scale of the kernel.
-     */
-    private final double sigma;
+    /** The length scale of the kernel. */
+    final double sigma;
+    /** The lower bound of length scale for hyperparameter tuning. */
+    final double lo;
+    /** The upper bound of length scale for hyperparameter tuning. */
+    final double hi;
 
     /**
      * Constructor.
      * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public Laplacian(double sigma) {
+    public Laplacian(double sigma, double lo, double hi) {
         if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.sigma = sigma;
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /** Returns the length scale of kernel. */

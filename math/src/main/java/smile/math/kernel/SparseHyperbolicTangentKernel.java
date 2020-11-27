@@ -46,17 +46,51 @@ public class SparseHyperbolicTangentKernel extends HyperbolicTangent implements 
      * Constructor with scale 1.0 and offset 0.0.
      */
     public SparseHyperbolicTangentKernel() {
+        this(1.0, 0.0);
     }
 
     /**
      * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public SparseHyperbolicTangentKernel(double scale, double offset) {
-        super(scale, offset);
+        this(scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
+    }
+
+    /**
+     * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public SparseHyperbolicTangentKernel(double scale, double offset, double[] lo, double[] hi) {
+        super(scale, offset, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
         return k(MathEx.dot(x, y));
+    }
+
+    @Override
+    public SparseHyperbolicTangentKernel of(double[] params) {
+        return new SparseHyperbolicTangentKernel(params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

@@ -49,4 +49,24 @@ public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
     public double k(double[] x, double[] y) {
         return MathEx.dot(x, y);
     }
+
+    @Override
+    public LinearKernel of(double[] params) {
+        return new LinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
+    }
 }

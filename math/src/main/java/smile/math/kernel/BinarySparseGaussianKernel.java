@@ -39,11 +39,41 @@ public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel
      * @param sigma The length scale of kernel.
      */
     public BinarySparseGaussianKernel(double sigma) {
-        super(sigma);
+        this(sigma, 1E-05, 1E5);
+    }
+
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public BinarySparseGaussianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(int[] x, int[] y) {
         return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public BinarySparseGaussianKernel of(double[] params) {
+        return new BinarySparseGaussianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

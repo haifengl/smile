@@ -33,18 +33,26 @@ public class ThinPlateSpline implements IsotropicKernel {
     /**
      * The length scale of the kernel.
      */
-    private final double sigma;
+    final double sigma;
+    /** The lower bound of length scale for hyperparameter tuning. */
+    final double lo;
+    /** The upper bound of length scale for hyperparameter tuning. */
+    final double hi;
 
     /**
      * Constructor.
      * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public ThinPlateSpline(double sigma) {
+    public ThinPlateSpline(double sigma, double lo, double hi) {
         if (sigma <= 0) {
             throw new IllegalArgumentException("sigma is not positive: " + sigma);
         }
 
         this.sigma = sigma;
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /** Returns the length scale of kernel. */
