@@ -17,6 +17,7 @@
 
 package smile.math;
 
+import smile.util.Strings;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,7 +32,34 @@ import static org.junit.Assert.*;
  */
 public class BFGSTest {
 
+    DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+        @Override
+        public double f(double[] x) {
+            double f = 0.0;
+            for (int j = 1; j <= x.length; j += 2) {
+                double t1 = 1.0 - x[j - 1];
+                double t2 = 10.0 * (x[j] - x[j - 1] * x[j - 1]);
+                f = f + t1 * t1 + t2 * t2;
+            }
+            return f;
+        }
+
+        @Override
+        public double g(double[] x, double[] g) {
+            double f = 0.0;
+            for (int j = 1; j <= x.length; j += 2) {
+                double t1 = 1.0 - x[j - 1];
+                double t2 = 10.0 * (x[j] - x[j - 1] * x[j - 1]);
+                g[j + 1 - 1] = 20.0 * t2;
+                g[j - 1] = -2.0 * (x[j - 1] * g[j + 1 - 1] + t1);
+                f = f + t1 * t1 + t2 * t2;
+            }
+            return f;
+        }
+    };
+
     public BFGSTest() {
+
     }
 
     @BeforeClass
@@ -51,88 +79,133 @@ public class BFGSTest {
     }
 
     /**
-     * Test L-BFGS.
-     */
-    @Test
-    public void testLBFGS() {
-        System.out.println("L-BFGS");
-        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
-
-            @Override
-            public double f(double[] x) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-
-            @Override
-            public double g(double[] x, double[] g) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    g[j + 1 - 1] = 2.e1 * t2;
-                    g[j - 1] = -2.e0 * (x[j - 1] * g[j + 1 - 1] + t1);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
-            }
-        };
-
-        double[] x = new double[100];
-        for (int j = 1; j <= x.length; j += 2) {
-            x[j - 1] = -1.2e0;
-            x[j + 1 - 1] = 1.e0;
-        }
-
-        double result = BFGS.minimize(func, 5, x, 1E-5, 500);
-        assertEquals(3.2760183604E-14, result, 1E-15);
-    }
-
-    /**
      * Test BFGS.
      */
     @Test
     public void testBFGS() {
         System.out.println("BFGS");
-        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
+        double[] x = new double[100];
+        for (int j = 1; j <= x.length; j += 2) {
+            x[j - 1] = -1.2;
+            x[j] = 1.2;
+        }
+
+        double result = BFGS.minimize(func, x, 1E-5, 500);
+        System.out.println(Strings.toString(x));
+        assertEquals(3.448974035627997E-10, result, 1E-15);
+    }
+
+    /**
+     * Test L-BFGS.
+     */
+    @Test
+    public void testLBFGS() {
+        System.out.println("L-BFGS");
+
+        double[] x = new double[100];
+        for (int j = 1; j <= x.length; j += 2) {
+            x[j - 1] = -1.2;
+            x[j] = 1.2;
+        }
+
+        double result = BFGS.minimize(func, 5, x, 1E-5, 500);
+        System.out.println(Strings.toString(x));
+        assertEquals(2.2877072513327043E-15, result, 1E-15);
+    }
+
+    /**
+     * Test L-BFGS-B.
+     */
+    @Test
+    public void testLBFGSB() {
+        System.out.println("L-BFGS-B");
+
+        double[] x = new double[100];
+        double[] l = new double[100];
+        double[] u = new double[100];
+        for (int j = 1; j <= x.length; j += 2) {
+            x[j - 1] = -1.2;
+            x[j] = 1.2;
+
+            l[j - 1] = 1.2;
+            u[j - 1] = 2.5;
+            l[j] = -2.5;
+            u[j] = 0.8;
+        }
+
+        double result = BFGS.minimize(func, 5, x, l, u, 1E-8, 500);
+        System.out.println(Strings.toString(x));
+        assertEquals(2050, result, 1E-7);
+    }
+
+    /**
+     * Test L-BFGS-B.
+     */
+    @Test
+    public void testLBFGSB2() {
+        System.out.println("L-BFGS-B: (x_0 - 3)^2 + (x_1 - 4)^2 + 1");
+
+        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
             @Override
             public double f(double[] x) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
+                double x0 = x[0] - 3;
+                double x1 = x[1] - 4;
+                return x0 * x0 + x1 * x1 + 1;
             }
 
             @Override
             public double g(double[] x, double[] g) {
-                double f = 0.0;
-                for (int j = 1; j <= x.length; j += 2) {
-                    double t1 = 1.e0 - x[j - 1];
-                    double t2 = 1.e1 * (x[j] - x[j - 1] * x[j - 1]);
-                    g[j + 1 - 1] = 2.e1 * t2;
-                    g[j - 1] = -2.e0 * (x[j - 1] * g[j + 1 - 1] + t1);
-                    f = f + t1 * t1 + t2 * t2;
-                }
-                return f;
+                double x0 = x[0] - 3;
+                double x1 = x[1] - 4;
+                g[0] = 2 * x0;
+                g[1] = 2 * x1;
+                return x0 * x0 + x1 * x1 + 1;
             }
         };
 
-        double[] x = new double[100];
-        for (int j = 1; j <= x.length; j += 2) {
-            x[j - 1] = -1.2e0;
-            x[j + 1 - 1] = 1.e0;
-        }
+        double[] x = new double[2];
+        double[] l = {3.5, 3.5};
+        double[] u = {5.0, 5.0};
 
-        double result = BFGS.minimize(func, x, 1E-5, 500);
-        assertEquals(2.2388137801857536E-12, result, 1E-15);
+        double result = BFGS.minimize(func, 5, x, l, u, 1E-8, 500);
+        assertEquals(3.5, x[0], 1E-15);
+        assertEquals(4.0, x[1], 1E-15);
+        assertEquals(1.25, result, 1E-15);
+    }
+
+    /**
+     * Test L-BFGS-B.
+     */
+    @Test
+    public void testLBFGSB3() {
+        System.out.println("L-BFGS-B: x_0 ^ 4 + (x_0 - 3)^2 + (x_1 - 4)^2 + 1");
+
+        DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+            @Override
+            public double f(double[] x) {
+                double x0 = x[0] - 3;
+                double x1 = x[1] - 4;
+                return Math.pow(x[0], 4) + x0 * x0 + x1 * x1 + 1;
+            }
+
+            @Override
+            public double g(double[] x, double[] g) {
+                double x0 = x[0] - 3;
+                double x1 = x[1] - 4;
+                g[0] = 4 * Math.pow(x[0], 3) + 2 * x0;
+                g[1] = 2 * x1;
+                return Math.pow(x[0], 4) + x0 * x0 + x1 * x1 + 1;
+            }
+        };
+
+        double[] x = new double[2];
+        double[] l = {3.5, 3.5};
+        double[] u = {5.0, 5.0};
+
+        double result = BFGS.minimize(func, 5, x, l, u, 1E-8, 500);
+        assertEquals(3.5, x[0], 1E-15);
+        assertEquals(4.0, x[1], 1E-15);
+        assertEquals(151.3125, result, 1E-15);
     }
 }
