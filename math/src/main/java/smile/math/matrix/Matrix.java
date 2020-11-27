@@ -548,6 +548,56 @@ public class Matrix extends DMatrix {
         return array;
     }
 
+    /** Returns the i-th row. */
+    public double[] row(int i) {
+        double[] x = new double[n];
+
+        for (int j = 0; j < n; j++) {
+            x[j] = get(i, j);
+        }
+
+        return x;
+    }
+
+    /** Returns the j-th column. */
+    public double[] col(int j) {
+        double[] x = new double[m];
+
+        for (int i = 0; i < m; i++) {
+            x[i] = get(i, j);
+        }
+
+        return x;
+    }
+
+    /** Returns the matrix of selected rows. */
+    public Matrix row(int... rows) {
+        Matrix x = new Matrix(rows.length, n);
+
+        for (int i = 0; i < rows.length; i++) {
+            int row = rows[i];
+            for (int j = 0; j < n; j++) {
+                x.set(i, j, get(row, j));
+            }
+        }
+
+        return x;
+    }
+
+    /** Returns the matrix of selected columns. */
+    public Matrix col(int... cols) {
+        Matrix x = new Matrix(m, cols.length);
+
+        for (int j = 0; j < cols.length; j++) {
+            int col = cols[j];
+            for (int i = 0; i < m; i++) {
+                x.set(i, j, get(i, col));
+            }
+        }
+
+        return x;
+    }
+
     /**
      * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
      * The content of the submatrix will be that of this matrix. Changes to this
