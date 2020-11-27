@@ -112,7 +112,7 @@ public class TSNE implements Serializable {
             D = X;
         } else {
             D = new double[n][n];
-            MathEx.pdist(X, D, MathEx::squaredDistance, false);
+            MathEx.pdist(X, D, MathEx::squaredDistance);
         }
 
         coordinates = new double[n][d];

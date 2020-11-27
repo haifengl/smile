@@ -2303,29 +2303,13 @@ public class MathEx {
     }
 
     /**
-     * Returns a square matrix.
-     * @param n the size of matrix.
-     * @param half If true, the matrix is lower half to save space.
-     * @return the square matrix.
-     */
-    private static double[][] squareMatrix(int n, boolean half) {
-        double[][] dist = half ? new double[n][] : new double[n][n];
-        if (half) {
-            for (int i = 0; i < n; i++) {
-                dist[i] = new double[i];
-            }
-        }
-        return dist;
-    }
-
-    /**
      * Returns the pairwise distance matrix of multiple binary sparse vectors.
      * @param x Each row is a binary sparse array, which are the indices of
      *          nonzero elements in ascending order.
      * @return a full pairwise distance matrix.
      */
-    public static double[][] pdist(int[][] x) {
-        return pdist(x, false, false);
+    public static Matrix pdist(int[][] x) {
+        return pdist(x, false);
     }
 
     /**
@@ -2333,16 +2317,14 @@ public class MathEx {
      * @param x Each row is a binary sparse array, which are the indices of
      *          nonzero elements in ascending order.
      * @param squared If true, compute the squared Euclidean distance.
-     * @param half If true, only the lower half of distance matrix will be computed.
      * @return the pairwise distance matrix.
      */
-    public static double[][] pdist(int[][] x, boolean squared, boolean half) {
+    public static Matrix pdist(int[][] x, boolean squared) {
         int n = x.length;
+        double[][] dist = new double[n][n];
 
-        double[][] dist = squareMatrix(n, half);
-        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
-
-        return dist;
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
     }
 
     /**
@@ -2350,24 +2332,22 @@ public class MathEx {
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @return a full pairwise distance matrix.
      */
-    public static double[][] pdist(float[][] x) {
-        return pdist(x, false, false);
+    public static Matrix pdist(float[][] x) {
+        return pdist(x, false);
     }
 
     /**
      * Returns the pairwise distance matrix of multiple vectors.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @param squared If true, compute the squared Euclidean distance.
-     * @param half If true, only the lower half of distance matrix will be computed.
      * @return the pairwise distance matrix.
      */
-    public static double[][] pdist(float[][] x, boolean squared, boolean half) {
+    public static Matrix pdist(float[][] x, boolean squared) {
         int n = x.length;
+        double[][] dist = new double[n][n];
 
-        double[][] dist = squareMatrix(n, half);
-        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
-
-        return dist;
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
     }
 
     /**
@@ -2375,24 +2355,22 @@ public class MathEx {
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @return a full pairwise distance matrix.
      */
-    public static double[][] pdist(double[][] x) {
-        return pdist(x, false, false);
+    public static Matrix pdist(double[][] x) {
+        return pdist(x, false);
     }
 
     /**
      * Returns the pairwise distance matrix of multiple vectors.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
      * @param squared If true, compute the squared Euclidean distance.
-     * @param half If true, only the lower half of distance matrix will be computed.
      * @return the pairwise distance matrix.
      */
-    public static double[][] pdist(double[][] x, boolean squared, boolean half) {
+    public static Matrix pdist(double[][] x, boolean squared) {
         int n = x.length;
+        double[][] dist = new double[n][n];
 
-        double[][] dist = squareMatrix(n, half);
-        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
-
-        return dist;
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
     }
 
     /**
@@ -2400,41 +2378,37 @@ public class MathEx {
      * @param x Each row is the sparse array of observations
      * @return a full pairwise distance matrix.
      */
-    public static double[][] pdist(SparseArray[] x) {
-        return pdist(x, false, false);
+    public static Matrix pdist(SparseArray[] x) {
+        return pdist(x, false);
     }
 
     /**
      * Returns the pairwise distance matrix of multiple vectors.
      * @param x Each row is the sparse array of observations
      * @param squared If true, compute the squared Euclidean distance.
-     * @param half If true, only the lower half of distance matrix will be computed.
      * @return the pairwise distance matrix.
      */
-    public static double[][] pdist(SparseArray[] x, boolean squared, boolean half) {
+    public static Matrix pdist(SparseArray[] x, boolean squared) {
         int n = x.length;
+        double[][] dist = new double[n][n];
 
-        double[][] dist = squareMatrix(n, half);
-        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
-
-        return dist;
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
     }
 
     /**
      * Computes the pairwise distance matrix of multiple vectors.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
-     * @param dist The output distance matrix.
+     * @param d The output distance matrix. It may be only the lower half.
      * @param distance The distance lambda.
-     * @param half If true, only the lower half of dist will be referenced.
-     * @param dist The distance matrix.
      */
-    public static <T> void pdist(T[] x, double[][] dist, Distance<T> distance, boolean half) {
+    public static <T> void pdist(T[] x, double[][] d, Distance<T> distance) {
         int n = x.length;
 
-        if (half) {
+        if (d[0].length < n) {
             IntStream.range(0, n).parallel().forEach(i -> {
                 T xi = x[i];
-                double[] di = dist[i];
+                double[] di = d[i];
                 for (int j = 0; j < i; j++) {
                     di[j] = distance.d(xi, x[j]);
                 }
@@ -2442,7 +2416,7 @@ public class MathEx {
         } else {
             IntStream.range(0, n).parallel().forEach(i -> {
                 T xi = x[i];
-                double[] di = dist[i];
+                double[] di = d[i];
                 for (int j = 0; j < n; j++) {
                     di[j] = distance.d(xi, x[j]);
                 }

@@ -22,7 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
+import smile.math.matrix.Matrix;
 import static org.junit.Assert.*;
 
 /**
@@ -520,10 +520,10 @@ public class MathExTest {
                 {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785}
         };
 
-        double[][] d = MathEx.pdist(data);
+        Matrix d = MathEx.pdist(data);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < 3; j++) {
-                assertEquals(MathEx.distance(data[i], data[j]), d[i][j], 1E-10);
+                assertEquals(MathEx.distance(data[i], data[j]), d.get(i, j), 1E-10);
             }
         }
     }
@@ -536,15 +536,15 @@ public class MathExTest {
                 {-3.9749544, -1.6219752, 0.9094410, 0.1106760, -0.0071785}
         };
 
-        double[][] d = new double[3][3];
-        MathEx.pdist(data, d, MathEx::squaredDistance, true);
+        double[][] d = new double[3][];
+        for (int i = 0; i < 3; i++) {
+            d[i] = new double[i];
+        }
+
+        MathEx.pdist(data, d, MathEx::squaredDistance);
         for (int i = 0; i < 3; i++) {
             for (int j = 0; j < i; j++) {
                 assertEquals(MathEx.squaredDistance(data[i], data[j]), d[i][j], 1E-10);
-            }
-
-            for (int j = i; j < 3; j++) {
-                assertEquals(0.0, d[i][j], 1E-10);
             }
         }
     }
