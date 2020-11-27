@@ -49,6 +49,6 @@ public class MeanAbsoluteDeviation implements RegressionMetric {
 
     @Override
     public String toString() {
-        return "Mean Absolute Deviation";
+        return "MAD";
     }
 }

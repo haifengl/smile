@@ -160,6 +160,6 @@ public class NormalizedMutualInformation implements ClusteringMetric {
 
     @Override
     public String toString() {
-        return "Normalized Mutual Information";
+        return String.format("NormalizedMutualInformation(%s)", method);
     }
 }

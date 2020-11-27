@@ -82,6 +82,6 @@ public class RandIndex implements ClusteringMetric {
 
     @Override
     public String toString() {
-        return "Rand Index";
+        return "RandIndex";
     }
 }
