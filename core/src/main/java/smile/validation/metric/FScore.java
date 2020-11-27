@@ -88,4 +88,9 @@ public class FScore implements ClassificationMetric {
         double r = Recall.of(truth, prediction);
         return (1 + beta2) * (p * r) / (beta2 * p + r);
     }
+
+    @Override
+    public String toString() {
+        return String.format("F-Score(%f)", beta);
+    }
 }

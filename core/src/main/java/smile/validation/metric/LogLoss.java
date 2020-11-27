@@ -67,6 +67,6 @@ public class LogLoss implements ProbabilisticClassificationMetric {
 
     @Override
     public String toString() {
-        return "Log Loss";
+        return "LogLoss";
     }
 }

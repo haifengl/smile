@@ -164,6 +164,6 @@ public class AdjustedMutualInformation implements ClusteringMetric {
 
     @Override
     public String toString() {
-        return "Adjusted Mutual Information";
+        return String.format("AdjustedMutualInformation(%s)", method);
     }
 }

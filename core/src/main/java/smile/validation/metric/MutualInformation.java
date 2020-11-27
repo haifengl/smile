@@ -69,6 +69,6 @@ public class MutualInformation implements ClusteringMetric {
 
     @Override
     public String toString() {
-        return "Mutual Information";
+        return "MutualInformation";
     }
 }

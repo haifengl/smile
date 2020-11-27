@@ -69,6 +69,6 @@ public class Fallout implements ClassificationMetric {
 
     @Override
     public String toString() {
-        return "Fall-out";
+        return "FallOut";
     }
 }

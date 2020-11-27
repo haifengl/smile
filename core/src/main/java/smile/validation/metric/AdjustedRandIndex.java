@@ -95,6 +95,6 @@ public class AdjustedRandIndex implements ClusteringMetric {
 
     @Override
     public String toString() {
-        return "Adjusted Rand Index";
+        return "AdjustedRandIndex";
     }
 }

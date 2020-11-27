@@ -68,6 +68,6 @@ public class FDR implements ClassificationMetric {
 
     @Override
     public String toString() {
-        return "False Discovery Rate";
+        return "FDR";
     }
 }

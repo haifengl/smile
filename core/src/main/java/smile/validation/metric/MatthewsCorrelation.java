@@ -63,6 +63,6 @@ public class MatthewsCorrelation implements ClassificationMetric {
 
     @Override
     public String toString() {
-        return "MCC";
+        return "MatthewsCorrelation";
     }
 }
