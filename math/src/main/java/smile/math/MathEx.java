@@ -23,7 +23,9 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import smile.math.blas.UPLO;
 import smile.math.distance.Distance;
+import smile.math.matrix.Matrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
@@ -2301,12 +2303,12 @@ public class MathEx {
     }
 
     /**
-     * Returns a pairwise distance matrix.
+     * Returns a square matrix.
      * @param n the size of matrix.
      * @param half If true, the matrix is lower half to save space.
-     * @return the distance matrix.
+     * @return the square matrix.
      */
-    private static double[][] pdist(int n, boolean half) {
+    private static double[][] squareMatrix(int n, boolean half) {
         double[][] dist = half ? new double[n][] : new double[n][n];
         if (half) {
             for (int i = 0; i < n; i++) {
@@ -2337,7 +2339,7 @@ public class MathEx {
     public static double[][] pdist(int[][] x, boolean squared, boolean half) {
         int n = x.length;
 
-        double[][] dist = pdist(n, half);
+        double[][] dist = squareMatrix(n, half);
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
 
         return dist;
@@ -2362,7 +2364,7 @@ public class MathEx {
     public static double[][] pdist(float[][] x, boolean squared, boolean half) {
         int n = x.length;
 
-        double[][] dist = pdist(n, half);
+        double[][] dist = squareMatrix(n, half);
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
 
         return dist;
@@ -2387,7 +2389,7 @@ public class MathEx {
     public static double[][] pdist(double[][] x, boolean squared, boolean half) {
         int n = x.length;
 
-        double[][] dist = pdist(n, half);
+        double[][] dist = squareMatrix(n, half);
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
 
         return dist;
@@ -2412,15 +2414,16 @@ public class MathEx {
     public static double[][] pdist(SparseArray[] x, boolean squared, boolean half) {
         int n = x.length;
 
-        double[][] dist = pdist(n, half);
+        double[][] dist = squareMatrix(n, half);
         pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance, half);
 
         return dist;
     }
 
     /**
-     * Returns the pairwise distance matrix of multiple vectors.
+     * Computes the pairwise distance matrix of multiple vectors.
      * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param dist The output distance matrix.
      * @param distance The distance lambda.
      * @param half If true, only the lower half of dist will be referenced.
      * @param dist The distance matrix.
@@ -2794,6 +2797,86 @@ public class MathEx {
         }
         
         return sum;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of binary sparse vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(int[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            int[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of float vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(float[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            float[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of double vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(double[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            double[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(SparseArray[] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            SparseArray xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
     }
 
     /**
