@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.validation;
+package smile.validation.metric;
 
 /**
  * Cross entropy generalizes the log loss metric to multiclass problems.
