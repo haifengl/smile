@@ -79,7 +79,7 @@ public class BinarySparsePolynomialKernel extends Polynomial implements MercerKe
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { degree, scale, offset };
+        return new double[] { scale, offset };
     }
 
     @Override

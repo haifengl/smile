@@ -74,7 +74,7 @@ public class SparseMaternKernel extends Matern implements MercerKernel<SparseArr
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { sigma, nu };
+        return new double[] { sigma };
     }
 
     @Override

@@ -73,7 +73,7 @@ public class BinarySparseMaternKernel extends Matern implements MercerKernel<int
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { sigma, nu };
+        return new double[] { sigma };
     }
 
     @Override

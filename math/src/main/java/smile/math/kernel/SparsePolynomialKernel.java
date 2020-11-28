@@ -78,7 +78,7 @@ public class SparsePolynomialKernel extends Polynomial implements MercerKernel<S
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { degree, scale, offset };
+        return new double[] { scale, offset };
     }
 
     @Override
