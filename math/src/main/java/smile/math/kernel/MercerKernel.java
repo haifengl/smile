@@ -138,7 +138,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         Matrix K = new Matrix(m, n);
         IntStream.range(0, n).parallel().forEach(j -> {
             T yj = y[j];
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < m; i++) {
                 K.set(i, j, k(x[i], yj));
             }
         });
