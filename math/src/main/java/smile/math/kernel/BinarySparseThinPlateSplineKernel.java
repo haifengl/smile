@@ -56,6 +56,11 @@ public class BinarySparseThinPlateSplineKernel extends ThinPlateSpline implement
     }
 
     @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public BinarySparseThinPlateSplineKernel of(double[] params) {
         return new BinarySparseThinPlateSplineKernel(params[0], lo, hi);
     }

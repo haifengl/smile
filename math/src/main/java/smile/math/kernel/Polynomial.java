@@ -85,4 +85,14 @@ public class Polynomial implements DotProductKernel {
     public double k(double dot) {
         return Math.pow(scale * dot + offset, degree);
     }
+
+    @Override
+    public double[] kg(double dot) {
+        double[] g = new double[3];
+        double pow = Math.pow(scale * dot + offset, degree-1);
+        g[0] = Math.pow(scale * dot + offset, degree);
+        g[1] = dot * pow;
+        g[2] = pow;
+        return g;
+    }
 }

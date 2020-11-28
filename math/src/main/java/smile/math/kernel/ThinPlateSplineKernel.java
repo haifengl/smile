@@ -55,6 +55,11 @@ public class ThinPlateSplineKernel extends ThinPlateSpline implements MercerKern
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public ThinPlateSplineKernel of(double[] params) {
         return new ThinPlateSplineKernel(params[0], lo, hi);
     }

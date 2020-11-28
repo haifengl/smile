@@ -63,6 +63,11 @@ public class SparseMaternKernel extends Matern implements MercerKernel<SparseArr
     }
 
     @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public SparseMaternKernel of(double[] params) {
         return new SparseMaternKernel(params[0], nu, lo, hi);
     }

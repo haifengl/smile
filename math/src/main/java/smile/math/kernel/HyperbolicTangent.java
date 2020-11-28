@@ -79,4 +79,15 @@ public class HyperbolicTangent implements DotProductKernel {
     public double k(double dot) {
         return Math.tanh(scale * dot + offset);
     }
+
+    @Override
+    public double[] kg(double dot) {
+        double[] g = new double[3];
+        double cosh = Math.cosh(scale * dot + offset);
+        double sech = 1.0 / (cosh * cosh);
+        g[0] = Math.tanh(scale * dot + offset);
+        g[1] = dot * sech;
+        g[2] = sech;
+        return g;
+    }
 }

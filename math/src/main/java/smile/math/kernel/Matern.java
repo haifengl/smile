@@ -113,4 +113,30 @@ public class Matern implements IsotropicKernel {
 
         throw new IllegalStateException("Unsupported nu = " + nu);
     }
+
+    @Override
+    public double[] kg(double dist) {
+        double d = dist / sigma;
+        double k, g;
+
+        if (nu == 1.5) {
+            d *= SQRT3;
+            k = (1.0 + d) * Math.exp(-d);
+            g = (2.0 + d) * Math.exp(-d) * d / sigma;
+        } else if (nu == 2.5) {
+            d *= SQRT5;
+            k = (1.0 + d) * Math.exp(-d);
+            g = (2.0 + d) * Math.exp(-d) * d / sigma;
+        } else if (nu == 0.5) {
+            k = Math.exp(-d);
+            g = k * d / sigma;
+        } else if (Double.isInfinite(nu)) {
+            k = Math.exp(-0.5 * d * d);
+            g = k * d * d / sigma;
+        } else {
+            throw new IllegalStateException("Unsupported nu = " + nu);
+        }
+
+        return new double[] { k, g };
+    }
 }

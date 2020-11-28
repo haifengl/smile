@@ -74,6 +74,11 @@ public class HyperbolicTangentKernel extends HyperbolicTangent implements Mercer
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public HyperbolicTangentKernel of(double[] params) {
         return new HyperbolicTangentKernel(params[0], params[1], lo, hi);
     }

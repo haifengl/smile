@@ -70,4 +70,14 @@ public class ThinPlateSpline implements IsotropicKernel {
         double d = dist / sigma;
         return d * d * Math.log(d);
     }
+
+    @Override
+    public double[] kg(double dist) {
+        double[] g = new double[2];
+        double d = dist / sigma;
+        double k = d * d * Math.log(d);
+        g[0] = k;
+        g[1] = -d * d * (2.0 * Math.log(d) + 1.0) / sigma;
+        return g;
+    }
 }

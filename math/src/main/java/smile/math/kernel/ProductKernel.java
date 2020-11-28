@@ -45,6 +45,28 @@ public class ProductKernel<T> implements MercerKernel<T> {
     }
 
     @Override
+    public double[] kg(T x, T y) {
+        double[] kg1 = k1.kg(x, y);
+        double[] kg2 = k2.kg(x, y);
+        double[] kg = new double[kg1.length + kg2.length - 1];
+
+        double k1 = kg1[0];
+        double k2 = kg2[0];
+        kg[0] = k1 + k2;
+
+        int n1 = kg1.length;
+        for (int i = 1; i < n1; i++) {
+            kg[i] = kg1[i] * k2;
+        }
+
+        int n2 = kg2.length;
+        for (int i = 1; i < n2; i++) {
+            kg[n1+i-1] = kg2[i] * k1;
+        }
+        return kg;
+    }
+
+    @Override
     public MercerKernel<T> of(double[] params) {
         int n1 = k1.lo().length;
         return new ProductKernel<>(k1.of(params), k2.of(Arrays.copyOfRange(params, n1, params.length)));

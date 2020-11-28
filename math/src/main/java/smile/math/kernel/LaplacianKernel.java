@@ -54,6 +54,11 @@ public class LaplacianKernel extends Laplacian implements MercerKernel<double[]>
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public LaplacianKernel of(double[] params) {
         return new LaplacianKernel(params[0], lo, hi);
     }

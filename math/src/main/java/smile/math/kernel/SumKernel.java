@@ -45,6 +45,17 @@ public class SumKernel<T> implements MercerKernel<T> {
     }
 
     @Override
+    public double[] kg(T x, T y) {
+        double[] kg1 = k1.kg(x, y);
+        double[] kg2 = k2.kg(x, y);
+        double[] kg = new double[kg1.length + kg2.length - 1];
+        kg[0] = kg1[0] + kg2[0];
+        System.arraycopy(kg1, 1, kg, 1, kg1.length-1);
+        System.arraycopy(kg2, 1, kg, kg1.length, kg2.length-1);
+        return kg;
+    }
+
+    @Override
     public MercerKernel<T> of(double[] params) {
         int n1 = k1.lo().length;
         return new SumKernel<>(k1.of(params), k2.of(Arrays.copyOfRange(params, n1, params.length)));

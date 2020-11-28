@@ -60,6 +60,11 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     double k(T x, T y);
 
     /**
+     * Computes the kernel and its gradient over hyperparameters.
+     */
+    double[] kg(T x, T y);
+
+    /**
      * Kernel function.
      * This is simply for Scala convenience.
      */
@@ -73,7 +78,35 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     }
 
     /**
-     * Returns the kernel matrix.
+     * Computes the kernel and gradient matrices.
+     *
+     * @param x samples.
+     * @return the kernel and gradient matrices.
+     */
+    default Matrix[] KG(T[] x) {
+        int n = x.length;
+        int m = lo().length;
+        Matrix[] K = new Matrix[m + 1];
+        for (int i = 0; i <= m; i++) {
+            K[i] = new Matrix(n, n);
+            K[i].uplo(UPLO.LOWER);
+        }
+
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T xj = x[j];
+            for (int i = 0; i < n; i++) {
+                double[] kg = kg(x[i], xj);
+                for (int l = 0; l <= m; l++) {
+                    K[l].set(i, j, kg[l]);
+                }
+            }
+        });
+
+        return K;
+    }
+
+    /**
+     * Computes the kernel matrix.
      *
      * @param x samples.
      * @return the kernel matrix.
@@ -81,10 +114,10 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     default Matrix K(T[] x) {
         int n = x.length;
         Matrix K = new Matrix(n, n);
-        IntStream.range(0, n).parallel().forEach(i -> {
-            T xi = x[i];
-            for (int j = 0; j < n; j++) {
-                K.set(i, j, k(xi, x[j]));
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T xj = x[j];
+            for (int i = 0; i < n; i++) {
+                K.set(i, j, k(x[i], xj));
             }
         });
 
@@ -103,10 +136,10 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         int m = x.length;
         int n = y.length;
         Matrix K = new Matrix(m, n);
-        IntStream.range(0, m).parallel().forEach(i -> {
-            T xi = x[i];
-            for (int j = 0; j < n; j++) {
-                K.set(i, j, k(xi, y[j]));
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T yj = y[j];
+            for (int i = 0; i < n; i++) {
+                K.set(i, j, k(x[i], yj));
             }
         });
 

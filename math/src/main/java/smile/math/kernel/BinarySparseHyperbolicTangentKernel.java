@@ -77,6 +77,11 @@ public class BinarySparseHyperbolicTangentKernel extends HyperbolicTangent imple
     }
 
     @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public BinarySparseHyperbolicTangentKernel of(double[] params) {
         return new BinarySparseHyperbolicTangentKernel(params[0], params[1], lo, hi);
     }
