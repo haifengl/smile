@@ -89,7 +89,12 @@ public class PearsonKernel implements MercerKernel<double[]> {
     @Override
     public double k(double[] x, double[] y) {
         double d = MathEx.squaredDistance(x, y);
-        return 1.0 / Math.pow(1.0 + C * d, omega);
+        return Math.pow(1.0 + C * d, -omega);
+    }
+
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        throw new UnsupportedOperationException();
     }
 
     @Override

@@ -57,6 +57,11 @@ public class GaussianKernel extends Gaussian implements MercerKernel<double[]> {
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public GaussianKernel of(double[] params) {
         return new GaussianKernel(params[0], lo, hi);
     }

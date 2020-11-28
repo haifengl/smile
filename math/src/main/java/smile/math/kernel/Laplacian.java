@@ -67,4 +67,14 @@ public class Laplacian implements IsotropicKernel {
     public double k(double dist) {
         return Math.exp(-dist / sigma);
     }
+
+    @Override
+    public double[] kg(double dist) {
+        double[] g = new double[2];
+        double d = dist / sigma;
+        double k = Math.exp(-d);
+        g[0] = k;
+        g[1] = k * d / sigma;
+        return g;
+    }
 }

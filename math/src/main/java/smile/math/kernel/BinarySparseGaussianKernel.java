@@ -18,6 +18,10 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
+import smile.math.blas.UPLO;
+import smile.math.matrix.Matrix;
+
+import java.util.stream.IntStream;
 
 /**
  * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
@@ -55,6 +59,11 @@ public class BinarySparseGaussianKernel extends Gaussian implements MercerKernel
     @Override
     public double k(int[] x, int[] y) {
         return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
     }
 
     @Override

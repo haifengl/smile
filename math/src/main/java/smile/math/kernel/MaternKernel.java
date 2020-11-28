@@ -62,6 +62,11 @@ public class MaternKernel extends Matern implements MercerKernel<double[]> {
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public MaternKernel of(double[] params) {
         return new MaternKernel(params[0], nu, lo, hi);
     }

@@ -62,6 +62,11 @@ public class BinarySparseMaternKernel extends Matern implements MercerKernel<int
     }
 
     @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public BinarySparseMaternKernel of(double[] params) {
         return new BinarySparseMaternKernel(params[0], nu, lo, hi);
     }

@@ -17,6 +17,8 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
  * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
  * <p>
@@ -70,5 +72,15 @@ public class Gaussian implements IsotropicKernel {
     public double k(double dist) {
         double d = dist / sigma;
         return Math.exp(-0.5 * d * d);
+    }
+
+    @Override
+    public double[] kg(double dist) {
+        double[] g = new double[2];
+        double d = dist / sigma;
+        double k = Math.exp(-0.5 * d * d);
+        g[0] = k;
+        g[1] = k * d * d / sigma;
+        return g;
     }
 }

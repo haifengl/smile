@@ -68,6 +68,11 @@ public class BinarySparsePolynomialKernel extends Polynomial implements MercerKe
     }
 
     @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public BinarySparsePolynomialKernel of(double[] params) {
         return new BinarySparsePolynomialKernel(degree, params[0], params[1], lo, hi);
     }

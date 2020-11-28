@@ -66,6 +66,11 @@ public class PolynomialKernel extends Polynomial implements MercerKernel<double[
     }
 
     @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public PolynomialKernel of(double[] params) {
         return new PolynomialKernel(degree, params[0], params[1], lo, hi);
     }

@@ -55,6 +55,11 @@ public class SparseLaplacianKernel extends Laplacian implements MercerKernel<Spa
     }
 
     @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public SparseLaplacianKernel of(double[] params) {
         return new SparseLaplacianKernel(params[0], lo, hi);
     }

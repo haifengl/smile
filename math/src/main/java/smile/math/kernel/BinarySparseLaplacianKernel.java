@@ -58,6 +58,11 @@ public class BinarySparseLaplacianKernel extends Laplacian implements MercerKern
     }
 
     @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public BinarySparseLaplacianKernel of(double[] params) {
         return new BinarySparseLaplacianKernel(params[0], lo, hi);
     }

@@ -56,6 +56,11 @@ public class SparseThinPlateSplineKernel extends ThinPlateSpline implements Merc
     }
 
     @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
     public SparseThinPlateSplineKernel of(double[] params) {
         return new SparseThinPlateSplineKernel(params[0], lo, hi);
     }

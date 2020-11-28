@@ -67,6 +67,11 @@ public class SparsePolynomialKernel extends Polynomial implements MercerKernel<S
     }
 
     @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public SparsePolynomialKernel of(double[] params) {
         return new SparsePolynomialKernel(degree, params[0], params[1], lo, hi);
     }

@@ -75,6 +75,11 @@ public class SparseHyperbolicTangentKernel extends HyperbolicTangent implements 
     }
 
     @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
     public SparseHyperbolicTangentKernel of(double[] params) {
         return new SparseHyperbolicTangentKernel(params[0], params[1], lo, hi);
     }
