@@ -438,9 +438,11 @@ package object regression {
       * @param kernel the Mercer kernel.
       * @param noise  the noise variance, which also works as a regularization parameter.
       * @param normalize the option to normalize the response variable.
+      * @param tol       the stopping tolerance for HPO.
+      * @param maxIter   the maximum number of iterations for HPO. No HPO if maxIter <= 0.
       */
-    def apply[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true): GaussianProcessRegression[T] = time("Gaussian Process Regression") {
-      GaussianProcessRegression.fit(x, y, kernel, noise, normalize)
+    def apply[T <: AnyRef](x: Array[T], y: Array[Double], kernel: MercerKernel[T], noise: Double, normalize: Boolean = true, tol: Double = 1E-5, maxIter: Int = 0): GaussianProcessRegression[T] = time("Gaussian Process Regression") {
+      GaussianProcessRegression.fit(x, y, kernel, noise, normalize, tol, maxIter)
     }
 
     /** Fits an approximate Gaussian process model with a subset of regressors.

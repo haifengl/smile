@@ -17,7 +17,11 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.Properties;
+
+import smile.math.BFGS;
+import smile.math.DifferentiableMultivariateFunction;
 import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
@@ -250,7 +254,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param samples query points.
      * @return The mean, standard deviation and covariances of GP at query points.
      */
-    public JointPrediction eval(T[] samples) {
+    public JointPrediction query(T[] samples) {
         if (cholesky == null) {
             throw new UnsupportedOperationException("The Cholesky decomposition of kernel matrix is not available.");
         }
@@ -299,18 +303,20 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties prop) {
         double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
         boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
-        return fit(x, y, kernel, noise, normalize);
+        double tol = Double.valueOf(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
+        int maxIter = Integer.valueOf(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
+        return fit(x, y, kernel, noise, normalize, tol, maxIter);
     }
 
     /**
-     * Fits an approximate Gaussian process model by the method of subset of regressors.
+     * Fits a regular Gaussian process model by the method of subset of regressors.
      * @param x the training dataset.
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise) {
-        return fit(x, y, kernel, noise, true);
+        return fit(x, y, kernel, noise,true,1E-5, 0);
     }
 
     /**
@@ -319,9 +325,11 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
-     * @param normalize the option to normalize the response variable.
+     * @param normalize the flag if normalize the response variable.
+     * @param tol the stopping tolerance for HPO.
+     * @param maxIter the maximum number of iterations for HPO. No HPO if maxIter <= 0.
      */
-    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize) {
+    public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -342,6 +350,25 @@ public class GaussianProcessRegression<T> implements Regression<T> {
                 target[i] = (y[i] - mean) / sd;
             }
             y = target;
+        }
+
+        if (maxIter > 0) {
+            LogMarginalLikelihood<T> objective = new LogMarginalLikelihood<>(x, y, kernel);
+            double[] hp = kernel.hyperparameters();
+            double[] lo = kernel.lo();
+            double[] hi = kernel.hi();
+
+            int m = lo.length;
+            double[] params = Arrays.copyOf(hp, m + 1);
+            double[] l = Arrays.copyOf(lo, m + 1);
+            double[] u = Arrays.copyOf(hi, m + 1);
+            params[m] = noise;
+            l[m] = 1E-10;
+            u[m] = 1E5;
+
+            double L = -BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
+            kernel = kernel.of(params);
+            noise = params[params.length - 1];
         }
 
         Matrix K = kernel.K(x);
@@ -522,5 +549,63 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         }
 
         return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
+    }
+
+    private static class LogMarginalLikelihood<T> implements DifferentiableMultivariateFunction {
+        final T[] x;
+        final double[] y;
+        MercerKernel<T> kernel;
+
+        public LogMarginalLikelihood(T[] x, double[] y, MercerKernel<T> kernel) {
+            this.x = x;
+            this.y = y;
+            this.kernel = kernel;
+        }
+
+        @Override
+        public double f(double[] params) {
+            kernel = kernel.of(params);
+            double noise = params[params.length - 1];
+
+            Matrix K = kernel.K(x);
+            int n = x.length;
+            for (int i = 0; i < n; i++) {
+                K.add(i, i, noise);
+            }
+
+            Matrix.Cholesky cholesky = K.cholesky(true);
+            double[] w = cholesky.solve(y);
+
+            double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
+            return -L;
+        }
+
+        @Override
+        public double g(double[] params, double[] g) {
+            kernel = kernel.of(params);
+            double noise = params[params.length - 1];
+
+            Matrix[] K = kernel.KG(x);
+            Matrix Ky = K[0];
+
+            int n = x.length;
+            for (int i = 0; i < n; i++) {
+                Ky.add(i, i, noise);
+            }
+
+            Matrix.Cholesky cholesky = Ky.cholesky(true);
+            Matrix Kinv = cholesky.inverse();
+            double[] w = Kinv.mv(y);
+
+            g[g.length - 1] = -(MathEx.dot(w, w) - Kinv.trace()) / 2;
+            for (int i = 1; i < g.length; i++) {
+                Matrix Kg = K[i];
+                double gi = Kg.xAx(w) -  Kinv.mm(Kg).trace();
+                g[i-1] = -gi / 2;
+            }
+
+            double L = -0.5 * (MathEx.dot(y, w) + cholesky.logdet() + n * Math.log(2.0 * Math.PI));
+            return -L;
+        }
     }
 }

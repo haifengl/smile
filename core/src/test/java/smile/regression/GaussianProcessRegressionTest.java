@@ -27,6 +27,7 @@ import smile.clustering.KMeans;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
+import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
@@ -76,7 +77,7 @@ public class GaussianProcessRegressionTest {
         GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2);
         System.out.println(model);
 
-        GaussianProcessRegression<double[]>.JointPrediction joint = model.eval(Arrays.copyOf(longley, 10));
+        GaussianProcessRegression<double[]>.JointPrediction joint = model.query(Arrays.copyOf(longley, 10));
         System.out.println(joint);
 
         int n = joint.mu.length;
@@ -93,6 +94,30 @@ public class GaussianProcessRegressionTest {
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
+    }
+
+    @Test(expected = Test.None.class)
+    public void testHPO() throws Exception {
+        System.out.println("HPO longley");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        double[][] longley = MathEx.clone(Longley.x);
+        MathEx.standardize(longley);
+
+        GaussianProcessRegression<double[]> model = GaussianProcessRegression.fit(longley, Longley.y, new GaussianKernel(8.0), 0.2, true, 1E-5, 500);
+        System.out.println(model);
+        assertEquals(-0.8996, model.L, 1E-4);
+        assertEquals(0.0137, model.noise, 1E-4);
+
+        MercerKernel<double[]> kernel = model.kernel;
+        double noise = model.noise;
+
+        double[] prediction = LOOCV.regression(longley, Longley.y, (xi, yi) -> GaussianProcessRegression.fit(xi, yi, kernel, noise));
+        double rmse = RMSE.of(Longley.y, prediction);
+
+        System.out.println("RMSE = " + rmse);
+        assertEquals(1.7104324629599073, rmse, 1E-4);
     }
 
     @Test
