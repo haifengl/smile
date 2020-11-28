@@ -77,7 +77,7 @@ public class PolynomialKernel extends Polynomial implements MercerKernel<double[
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { degree, scale, offset };
+        return new double[] { scale, offset };
     }
 
     @Override

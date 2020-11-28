@@ -73,7 +73,7 @@ public class MaternKernel extends Matern implements MercerKernel<double[]> {
 
     @Override
     public double[] hyperparameters() {
-        return new double[] { sigma, nu };
+        return new double[] { sigma };
     }
 
     @Override
