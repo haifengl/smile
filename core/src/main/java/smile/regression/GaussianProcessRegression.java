@@ -19,7 +19,6 @@ package smile.regression;
 
 import java.util.Arrays;
 import java.util.Properties;
-
 import smile.math.BFGS;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.MathEx;

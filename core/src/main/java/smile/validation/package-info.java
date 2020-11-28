@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 /**
- * Model validation.
+ * Model validation and selection.
  * 
  * @author Haifeng Li
  */

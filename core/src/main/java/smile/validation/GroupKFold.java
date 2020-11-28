@@ -30,13 +30,18 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
- * GroupKfold is a cross validation technique that splits the data by respecting additional information about groups.
- * Each sample belongs to a certain group and each group can have multiple samples. The goal of the split is then
- * to assure that no samples from the same group are present in the training and testing subsets in a single fold.
- * This is useful when the i.i.d. assumption is known to be broken by the underlying process generating the data.
- * E.g. when we have multiple samples by the same user and want to make sure that the model learns the concept
- * we are interested in rather than user-specific features that don't generalize to unseen users, this approach could
- * be used. The implementation is inspired by scikit-learn's implementation of sklearn.model_selection.GroupKFold.
+ * GroupKfold is a cross validation technique that splits the data by
+ * respecting additional information about groups. Each sample belongs
+ * to a certain group and each group can have multiple samples. The goal
+ * of the split is then to assure that no samples from the same group
+ * are present in the training and testing subsets in a single fold.
+ * This is useful when the i.i.d. assumption is known to be broken by
+ * the underlying process generating the data. For example, when we have
+ * multiple samples by the same user and want to make sure that the model
+ * learns the concept we are interested in rather than user-specific
+ * features that don't generalize to unseen users, this approach could
+ * be used. The implementation is inspired by scikit-learn's
+ * implementation of sklearn.model_selection.GroupKFold.
  *
  * @author Nejc Ilenic
  */
