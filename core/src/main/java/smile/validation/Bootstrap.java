@@ -17,16 +17,14 @@
 
 package smile.validation;
 
+import java.io.Serializable;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
-import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
-import smile.validation.metric.Accuracy;
-import smile.validation.metric.RMSE;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
@@ -38,19 +36,14 @@ import smile.validation.metric.RMSE;
  *
  * @author Haifeng Li
  */
-public class Bootstrap {
+public class Bootstrap implements Serializable {
+    private static final long serialVersionUID = 2L;
+
     /**
-     * The number of rounds of cross validation.
+     * The bootstrap samples and OOB (out-of-bag) samples as test data.
      */
-    public final int k;
-    /**
-     * The index of training instances.
-     */
-    public final int[][] train;
-    /**
-     * The index of testing instances.
-     */
-    public final int[][] test;
+    public final Split[] splits;
+
 
     /**
      * Constructor.
@@ -66,146 +59,82 @@ public class Bootstrap {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 
-        this.k = k;
-        train = new int[k][n];
-        test = new int[k][];
+        splits = new Split[k];
 
         for (int j = 0; j < k; j++) {
             boolean[] hit = new boolean[n];
             int hits = 0;
 
+            int[] train = new int[n];
             for (int i = 0; i < n; i++) {
                 int r = MathEx.randomInt(n);
-                train[j][i] = r;
+                train[i] = r;
                 if (!hit[r]) {
                     hits++;
                     hit[r] = true;
                 }
             }
 
-            test[j] = new int[n - hits];
+            int[] test = new int[n - hits];
             for (int i = 0, p = 0; i < n; i++) {
                 if (!hit[i]) {
-                    test[j][p++] = i;
+                    test[p++] = i;
                 }
             }
+
+            splits[j] = new Split(train, test);
         }
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the error rates of each round.
+     * Runs classification bootstrap validation.
+     * @param k k-fold bootstrap sampling.
+     * @param x the samples.
+     * @param y the sample labels.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public <T> double[] classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
-        double[] error = new double[k];
-
-        for (int i = 0; i < k; i++) {
-            T[] trainx = MathEx.slice(x, train[i]);
-            int[] trainy = MathEx.slice(y, train[i]);
-            T[] testx = MathEx.slice(x, test[i]);
-            int[] testy = MathEx.slice(y, test[i]);
-
-            Classifier<T> model = trainer.apply(trainx, trainy);
-            int[] prediction = model.predict(testx);
-            error[i] = 1 - Accuracy.of(testy, prediction);
-        }
-
-        return error;
+    public static <T, M extends Classifier<T>> ClassificationValidations<T, M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        CrossValidation cv = new CrossValidation(x.length, k);
+        return ClassificationValidation.of(cv.splits, x, y, trainer);
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the error rates of each round.
+     * Runs classification bootstrap validation.
+     * @param k k-fold bootstrap sampling.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public double[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
-        double[] error = new double[k];
-
-        for (int i = 0; i < k; i++) {
-            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
-
-            DataFrame oob = data.of(test[i]);
-            int[] prediction = model.predict(oob);
-            int[] testy = model.formula().y(oob).toIntArray();
-
-            error[i] = 1 - Accuracy.of(testy, prediction);
-        }
-
-        return error;
+    public static <M extends Classifier<Tuple>> ClassificationValidations<Tuple, M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        CrossValidation cv = new CrossValidation(data.size(), k);
+        return ClassificationValidation.of(cv.splits, formula, data, trainer);
     }
 
     /**
-     * Runs bootstrap tests.
-     * @return the root mean squared error of each round.
+     * Runs regression bootstrap validation.
+     * @param k k-fold bootstrap sampling.
+     * @param x the samples.
+     * @param y the response variable.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public <T> double[] regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        double[] rmse = new double[k];
-
-        for (int i = 0; i < k; i++) {
-            T[] trainx = MathEx.slice(x, train[i]);
-            double[] trainy = MathEx.slice(y, train[i]);
-            T[] testx = MathEx.slice(x, test[i]);
-            double[] testy = MathEx.slice(y, test[i]);
-
-            Regression<T> model = trainer.apply(trainx, trainy);
-            double[] prediction = model.predict(testx);
-            rmse[i] = RMSE.of(testy, prediction);
-        }
-
-        return rmse;
+    public static <T, M extends Regression<T>> RegressionValidations<T, M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+        CrossValidation cv = new CrossValidation(x.length, k);
+        return RegressionValidation.of(cv.splits, x, y, trainer);
     }
 
     /**
-     * Runs bootstrap tests.
-     * @return the root mean squared error of each round.
+     * Runs regression bootstrap validation.
+     * @param k k-fold bootstrap sampling.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public double[] regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
-        double[] rmse = new double[k];
-
-        for (int i = 0; i < k; i++) {
-            DataFrameRegression model = trainer.apply(formula, data.of(train[i]));
-            DataFrame oob = data.of(test[i]);
-            double[] prediction = model.predict(oob);
-            double[] testy = model.formula().y(oob).toDoubleArray();
-
-            rmse[i] = RMSE.of(testy, prediction);
-        }
-
-        return rmse;
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the error rates of each round.
-     */
-    public static <T> double[] classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
-        Bootstrap cv = new Bootstrap(x.length, k);
-        return cv.classification(x, y, trainer);
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the error rates of each round.
-     */
-    public static double[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
-        Bootstrap cv = new Bootstrap(data.size(), k);
-        return cv.classification(formula, data, trainer);
-    }
-
-    /**
-     * Runs bootstrap tests.
-     * @return the root mean squared error of each round.
-     */
-    public static <T> double[] regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        Bootstrap cv = new Bootstrap(x.length, k);
-        return cv.regression(x, y, trainer);
-    }
-
-    /**
-     * Runs bootstrap tests.
-     * @return the root mean squared error of each round.
-     */
-    public static double[] regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
-        Bootstrap cv = new Bootstrap(data.size(), k);
-        return cv.regression(formula, data, trainer);
+    public static <M extends Regression<Tuple>> RegressionValidations<Tuple, M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        CrossValidation cv = new CrossValidation(data.size(), k);
+        return RegressionValidation.of(cv.splits, formula, data, trainer);
     }
 }
