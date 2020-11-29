@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
-import smile.classification.DataFrameClassifier;
 import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -156,7 +155,7 @@ public class LOOCV implements Serializable {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static <M extends Classifier<Tuple>> ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+    public static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, Classifier<Tuple>> trainer) {
         int[] y = formula.y(data).toIntArray();
         int k = MathEx.unique(y).length;
         int n = y.length;
@@ -170,7 +169,7 @@ public class LOOCV implements Serializable {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            M model = trainer.apply(formula, data.of(cv.train[i]));
+            Classifier<Tuple> model = trainer.apply(formula, data.of(cv.train[i]));
             fitTime += System.nanoTime() - start;
 
             if (model instanceof SoftClassifier) {
@@ -261,7 +260,7 @@ public class LOOCV implements Serializable {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static <M extends Regression<Tuple>> RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+    public static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, Regression<Tuple>> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         double[] y = formula.y(data).toDoubleArray();
@@ -271,7 +270,7 @@ public class LOOCV implements Serializable {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            M model = trainer.apply(formula, data.of(cv.train[i]));
+            Regression<Tuple> model = trainer.apply(formula, data.of(cv.train[i]));
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
