@@ -17,16 +17,16 @@
 
 package smile
 
-import java.util.Properties;
+import java.util.Properties
 import java.util.function.BiFunction
+
 import scala.reflect.ClassTag
 import org.apache.spark.sql.SparkSession
-import smile.classification.{Classifier, DataFrameClassifier}
-import smile.data.DataFrame
+import smile.classification.Classifier
+import smile.data.{DataFrame, Tuple}
 import smile.data.formula.Formula
-import smile.regression.{DataFrameRegression, Regression}
-import smile.validation.CrossValidation
-import smile.validation.metric.{Accuracy, ClassificationMetric, R2, RegressionMetric}
+import smile.regression.Regression
+import smile.validation._
 
 /**
   * Package for better integration of Spark MLLib Pipelines and SMILE
@@ -56,37 +56,31 @@ package object spark {
       * @param x              training samples.
       * @param y              training labels.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
-                                   (trainer: (Array[T], Array[Int], Properties) => Classifier[T])
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def classification[T <: Object : ClassTag, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties])
+                                                       (trainer: (Array[T], Array[Int], Properties) => M)
+                                                       (implicit spark: SparkSession): Array[ClassificationValidations[T, M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
-        val biFunctionTrainer = new BiFunction[Array[T], Array[Int], Classifier[T]] {
-          override def apply(x: Array[T], y: Array[Int]): Classifier[T] = trainer(x, y, prop)
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Int], M] {
+          override def apply(x: Array[T], y: Array[Int]): M = trainer(x, y, prop)
         }
 
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val metrics = metricsBroadcasted.value
 
-        val prediction = CrossValidation.classification(k, x, y, biFunctionTrainer)
-        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map(_.score(y, prediction)).toArray
+        CrossValidation.classification(k, x, y, biFunctionTrainer)
       }).collect()
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -99,38 +93,31 @@ package object spark {
       * @param formula        model formula.
       * @param data           training data.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
-                                   (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier)
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def classification[M <: Classifier[Tuple]](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
+                                              (trainer: (Formula, DataFrame, Properties) => M)
+                                              (implicit spark: SparkSession): Array[ClassificationValidations[Tuple, M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
       val dataBroadcasted = sc.broadcast(data)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
-        val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameClassifier] {
-          override def apply(formula: Formula, data: DataFrame): DataFrameClassifier = trainer(formula, data, prop)
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
+          override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
         val formula = formulaBroadcasted.value
         val data = dataBroadcasted.value
-        val y = formula.y(data).toIntArray
-        val metrics = metricsBroadcasted.value
 
-        val prediction = CrossValidation.classification(k, formula, data, biFunctionTrainer)
-        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map(_.score(y, prediction)).toArray
+        CrossValidation.classification(k, formula, data, biFunctionTrainer)
       }).collect()
 
       formulaBroadcasted.destroy()
       dataBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -144,40 +131,37 @@ package object spark {
       * @param testx          test samples.
       * @param testy          test labels.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties], metrics: ClassificationMetric*)
-                                   (trainer: (Array[T], Array[Int], Properties) => Classifier[T])
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def classification[T <: Object : ClassTag, M <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties])
+                                                       (trainer: (Array[T], Array[Int], Properties) => M)
+                                                       (implicit spark: SparkSession): Array[ClassificationValidation[T, M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
       val testxBroadcasted = sc.broadcast(testx)
       val testyBroadcasted = sc.broadcast(testy)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Int], M] {
+          override def apply(x: Array[T], y: Array[Int]): M = trainer(x, y, prop)
+        }
+
         val x = xBroadcasted.value
         val y = yBroadcasted.value
         val testx = xBroadcasted.value
         val testy = yBroadcasted.value
-        val metrics = metricsBroadcasted.value
 
-        val model = trainer(x, y, prop)
-        val prediction = model.predict(testx)
-        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map(_.score(testy, prediction)).toArray
+        ClassificationValidation.of(x, y, testx, testy, biFunctionTrainer)
       }).collect()
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
       testxBroadcasted.destroy()
       testyBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -190,38 +174,34 @@ package object spark {
       * @param train          training data.
       * @param test           test data.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: ClassificationMetric*)
-                                   (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier)
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def classification[M <: Classifier[Tuple]](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
+                                              (trainer: (Formula, DataFrame, Properties) => M)
+                                              (implicit spark: SparkSession): Array[ClassificationValidation[Tuple, M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
       val trainBroadcasted = sc.broadcast(train)
       val testBroadcasted = sc.broadcast(test)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
+          override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
+        }
+
         val formula = formulaBroadcasted.value
         val train = trainBroadcasted.value
         val test = testBroadcasted.value
-        val testy = formula.y(test).toIntArray
-        val metrics = metricsBroadcasted.value
 
-        val model = trainer(formula, train, prop)
-        val prediction = model.predict(test)
-        val metricsOrAccuracy = if (metrics.isEmpty) Seq(Accuracy.instance) else metrics
-        metricsOrAccuracy.map(_.score(testy, prediction)).toArray
+        ClassificationValidation.of(formula, train, test, biFunctionTrainer)
       }).collect()
 
       formulaBroadcasted.destroy()
       trainBroadcasted.destroy()
       testBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -234,37 +214,31 @@ package object spark {
       * @param x              training samples.
       * @param y              response variable.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
-                                   (trainer: (Array[T], Array[Double], Properties) => Regression[T])
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def regression[T <: Object : ClassTag, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties])
+                                                   (trainer: (Array[T], Array[Double], Properties) => M)
+                                                   (implicit spark: SparkSession): Array[RegressionValidations[T, M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
-        val biFunctionTrainer = new BiFunction[Array[T], Array[Double], Regression[T]] {
-          override def apply(x: Array[T], y: Array[Double]): Regression[T] = trainer(x, y, prop)
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Double], M] {
+          override def apply(x: Array[T], y: Array[Double]): M = trainer(x, y, prop)
         }
 
         val x = xBroadcasted.value
         val y = yBroadcasted.value
-        val metrics = metricsBroadcasted.value
 
-        val prediction = CrossValidation.regression(k, x, y, biFunctionTrainer)
-        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
-        metricsOrR2.map(_.score(y, prediction)).toArray
+        CrossValidation.regression(k, x, y, biFunctionTrainer)
       }).collect()
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -277,38 +251,32 @@ package object spark {
       * @param formula        model formula.
       * @param data           training data.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
-                                   (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def regression[M <: Regression[Tuple]](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
+                                          (trainer: (Formula, DataFrame, Properties) => M)
+                                          (implicit spark: SparkSession): Array[RegressionValidations[Tuple, M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
       val dataBroadcasted = sc.broadcast(data)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
-        val biFunctionTrainer = new BiFunction[Formula, DataFrame, DataFrameRegression] {
-          override def apply(formula: Formula, data: DataFrame): DataFrameRegression = trainer(formula, data, prop)
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
+          override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
         val formula = formulaBroadcasted.value
         val data = dataBroadcasted.value
         val y = formula.y(data).toDoubleArray
-        val metrics = metricsBroadcasted.value
 
-        val prediction = CrossValidation.regression(k, formula, data, biFunctionTrainer)
-        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
-        metricsOrR2.map(_.score(y, prediction)).toArray
+        CrossValidation.regression(k, formula, data, biFunctionTrainer)
       }).collect()
 
       formulaBroadcasted.destroy()
       dataBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -322,40 +290,37 @@ package object spark {
       * @param testx          test samples.
       * @param testy          test labels.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties], metrics: RegressionMetric*)
-                                   (trainer: (Array[T], Array[Double], Properties) => Regression[T])
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def regression[T <: Object : ClassTag, M <: Regression[T]](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties])
+                                                   (trainer: (Array[T], Array[Double], Properties) => M)
+                                                   (implicit spark: SparkSession): Array[RegressionValidation[T, M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
       val yBroadcasted = sc.broadcast(y)
       val testxBroadcasted = sc.broadcast(testx)
       val testyBroadcasted = sc.broadcast(testy)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
+        val biFunctionTrainer = new BiFunction[Array[T], Array[Double], M] {
+          override def apply(x: Array[T], y: Array[Double]): M = trainer(x, y, prop)
+        }
+
         val x = xBroadcasted.value
         val y = yBroadcasted.value
         val testx = testxBroadcasted.value
         val testy = testyBroadcasted.value
-        val metrics = metricsBroadcasted.value
 
-        val model = trainer(x, y, prop)
-        val prediction = model.predict(testx)
-        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
-        metricsOrR2.map(_.score(testy, prediction)).toArray
+        RegressionValidation.of(x, y, testx, testy, biFunctionTrainer)
       }).collect()
 
       xBroadcasted.destroy()
       yBroadcasted.destroy()
       testxBroadcasted.destroy()
       testyBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
@@ -364,43 +329,38 @@ package object spark {
       * Distributed hyper-parameter optimization for regression.
       *
       * @param spark          spark session.
-      * @param k              k-fold cross validation.
       * @param formula        model formula.
       * @param train          training data.
       * @param test           test data.
       * @param configurations hyper-parameter configurations.
-      * @param metrics        classification metrics.
       * @param trainer        classifier trainer.
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag](k: Int, formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties], metrics: RegressionMetric*)
-                                   (trainer: (Formula, DataFrame, Properties) => DataFrameRegression)
-                                   (implicit spark: SparkSession): Array[Array[Double]] = {
+    def regression[M <: Regression[Tuple]](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
+                                          (trainer: (Formula, DataFrame, Properties) => M)
+                                          (implicit spark: SparkSession): Array[RegressionValidation[Tuple, M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
       val trainBroadcasted = sc.broadcast(train)
       val testBroadcasted = sc.broadcast(test)
-      val metricsBroadcasted = sc.broadcast(metrics)
 
       val scores = sc.parallelize(configurations).map(prop => {
+        val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
+          override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
+        }
+
         val formula = formulaBroadcasted.value
         val train = trainBroadcasted.value
         val test = trainBroadcasted.value
-        val testy = formula.y(test).toDoubleArray
-        val metrics = metricsBroadcasted.value
 
-        val model = trainer(formula, train, prop)
-        val prediction = model.predict(test)
-        val metricsOrR2 = if (metrics.isEmpty) Seq(R2.instance) else metrics
-        metricsOrR2.map(_.score(testy, prediction)).toArray
+        RegressionValidation.of(formula, train, test, biFunctionTrainer)
       }).collect()
 
       formulaBroadcasted.destroy()
       trainBroadcasted.destroy()
       testBroadcasted.destroy()
-      metricsBroadcasted.destroy()
 
       scores
     }
