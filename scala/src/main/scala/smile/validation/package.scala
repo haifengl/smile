@@ -355,76 +355,48 @@ package object validation {
       *
       * @param x        data samples.
       * @param y        sample labels.
-      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return metric scores.
       */
-    def classification[T <: AnyRef](x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
-      val prediction = LOOCV.classification(x, y, trainer)
-      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
-
-      metricsOrAccuracy(metrics).map { metric =>
-        val result = metric.score(y, prediction)
-        println(f"$metric%s: ${100 * result}%.2f%%")
-        result
-      }.toArray
+    def classification[T <: AnyRef](x: Array[T], y: Array[Int])
+                                   (trainer: (Array[T], Array[Int]) => Classifier[T]): ClassificationMetrics = {
+      LOOCV.classification(x, y, trainer)
     }
 
     /** Leave-one-out cross validation on a data frame classifier.
       *
       * @param formula  model formula.
       * @param data     data samples.
-      * @param metrics validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return metric scores.
       */
-    def classification(formula: Formula, data: DataFrame, metrics: ClassificationMetric*)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
-      val prediction = LOOCV.classification(formula, data, trainer)
-      val y = formula.y(data).toIntArray
-      println("Confusion Matrix: %s" format ConfusionMatrix.of(y, prediction))
-
-      metricsOrAccuracy(metrics).map { metric =>
-        val result = metric.score(y, prediction)
-        println(f"$metric%s: ${100 * result}%.2f%%")
-        result
-      }.toArray
+    def classification(formula: Formula, data: DataFrame)
+                      (trainer: (Formula, DataFrame) => Classifier[Tuple]): ClassificationMetrics = {
+      LOOCV.classification(formula, data, trainer)
     }
 
     /** Leave-one-out cross validation on a generic regression model.
       *
       * @param x        data samples.
       * @param y        response variable.
-      * @param metrics  validation metrics such as MSE, AbsoluteDeviation, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return metric scores.
       */
-    def regression[T <: AnyRef](x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
-      val prediction = LOOCV.regression(x, y, trainer)
-
-      metricsOrR2(metrics).map { metric =>
-        val result = metric.score(y, prediction)
-        println(f"$metric%s: $result%.4f")
-        result
-      }.toArray
+    def regression[T <: AnyRef](x: Array[T], y: Array[Double])
+                               (trainer: (Array[T], Array[Double]) => Regression[T]): RegressionMetrics = {
+      LOOCV.regression(x, y, trainer)
     }
 
     /** Leave-one-out cross validation on a data frame regression model.
       *
       * @param formula  model formula.
       * @param data     data samples.
-      * @param metrics  validation metrics such as accuracy, specificity, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return metric scores.
       */
-    def regression(formula: Formula, data: DataFrame, metrics: RegressionMetric*)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
-      val prediction = LOOCV.regression(formula, data, trainer)
-      val y = formula.y(data).toDoubleArray
-
-      metricsOrR2(metrics).map { metric =>
-        val result = metric.score(y, prediction)
-        println(f"$metric%s: $result%.4f")
-        result
-      }.toArray
+    def regression(formula: Formula, data: DataFrame)
+                  (trainer: (Formula, DataFrame) => Regression[Tuple]): RegressionMetrics = {
+      LOOCV.regression(formula, data, trainer)
     }
   }
 
