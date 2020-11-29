@@ -17,13 +17,13 @@
 
 package smile.validation;
 
+import java.io.Serializable;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
-import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
+import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 
 /**
@@ -40,19 +40,13 @@ import smile.regression.Regression;
  *
  * @author Haifeng Li
  */
-public class CrossValidation {
+public class CrossValidation implements Serializable {
+    private static final long serialVersionUID = 2L;
+
     /**
-     * The number of rounds of cross validation.
+     * The k-fold splits.
      */
-    public final int k;
-    /**
-     * The index of training instances.
-     */
-    public final int[][] train;
-    /**
-     * The index of testing instances.
-     */
-    public final int[][] test;
+    public final Split[] splits;
 
     /**
      * Constructor.
@@ -78,7 +72,7 @@ public class CrossValidation {
             throw new IllegalArgumentException("Invalid number of CV rounds: " + k);
         }
 
-        this.k = k;
+        splits = new Split[k];
 
         int[] index;
         if (permutate){
@@ -91,137 +85,75 @@ public class CrossValidation {
             }
         }
 
-        train = new int[k][];
-        test = new int[k][];
-
         int chunk = n / k;
         for (int i = 0; i < k; i++) {
             int start = chunk * i;
             int end = chunk * (i + 1);
             if (i == k-1) end = n;
 
-            train[i] = new int[n - end + start];
-            test[i] = new int[end - start];
+            int[] train = new int[n - end + start];
+            int[] test = new int[end - start];
             for (int j = 0, p = 0, q = 0; j < n; j++) {
                 if (j >= start && j < end) {
-                    test[i][p++] = index[j];
+                    test[p++] = index[j];
                 } else {
-                    train[i][q++] = index[j];
+                    train[q++] = index[j];
                 }
             }
+
+            splits[i] = new Split(train, test);
         }
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the predictions.
+     * Runs classification cross validation.
+     * @param k k-fold cross validation.
+     * @param x the samples.
+     * @param y the sample labels.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public <T> int[] classification(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
-        int[] prediction = new int[x.length];
-
-        for (int i = 0; i < k; i++) {
-            T[] trainx = MathEx.slice(x, train[i]);
-            int[] trainy = MathEx.slice(y, train[i]);
-
-            Classifier<T> model = trainer.apply(trainx, trainy);
-
-            for (int j : test[i]) {
-                prediction[j] = model.predict(x[j]);
-            }
-        }
-
-        return prediction;
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the predictions.
-     */
-    public int[] classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
-        int[] prediction = new int[data.size()];
-
-        for (int i = 0; i < k; i++) {
-            DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
-            for (int j : test[i]) {
-                prediction[j] = model.predict(data.get(j));
-            }
-        }
-
-        return prediction;
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the predictions.
-     */
-    public <T> double[] regression(T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
-        double[] prediction = new double[x.length];
-
-        for (int i = 0; i < k; i++) {
-            T[] trainx = MathEx.slice(x, train[i]);
-            double[] trainy = MathEx.slice(y, train[i]);
-
-            Regression<T> model = trainer.apply(trainx, trainy);
-
-            for (int j : test[i]) {
-                prediction[j] = model.predict(x[j]);
-            }
-        }
-
-        return prediction;
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the predictions.
-     */
-    public double[] regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
-        double[] prediction = new double[data.size()];
-
-        for (int i = 0; i < k; i++) {
-            DataFrameRegression model = trainer.apply(formula, data.of(train[i]));
-
-            for (int j : test[i]) {
-                prediction[j] = model.predict(data.get(j));
-            }
-        }
-
-        return prediction;
-    }
-
-    /**
-     * Runs cross validation tests.
-     * @return the predictions.
-     */
-    public static <T> int[] classification(int k, T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
+    public static <T, M extends Classifier<T>> ClassificationValidations<T, M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
-        return cv.classification(x, y, trainer);
+        return ClassificationValidation.of(cv.splits, x, y, trainer);
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the predictions.
+     * Runs classification cross validation.
+     * @param k k-fold cross validation.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public static int[] classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
+    public static <M extends Classifier<Tuple>> ClassificationValidations<Tuple, M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
-        return cv.classification(formula, data, trainer);
+        return ClassificationValidation.of(cv.splits, formula, data, trainer);
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the predictions.
+     * Runs regression cross validation.
+     * @param k k-fold cross validation.
+     * @param x the samples.
+     * @param y the response variable.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public static <T> double[] regression(int k, T[] x, double[] y, BiFunction<T[], double[], Regression<T>> trainer) {
+    public static <T, M extends Regression<T>> RegressionValidations<T, M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
-        return cv.regression(x, y, trainer);
+        return RegressionValidation.of(cv.splits, x, y, trainer);
     }
 
     /**
-     * Runs cross validation tests.
-     * @return the predictions.
+     * Runs regression cross validation.
+     * @param k k-fold cross validation.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @return the validation results.
      */
-    public static double[] regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
+    public static <M extends Regression<Tuple>> RegressionValidations<Tuple, M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
-        return cv.regression(formula, data, trainer);
+        return RegressionValidation.of(cv.splits, formula, data, trainer);
     }
 }

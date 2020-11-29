@@ -25,7 +25,7 @@ import smile.data.DataFrame;
 
 /**
  * A utility class for validating predictive models on test data.
- * 
+ *
  * @author Haifeng
  */
 public interface Validation {
