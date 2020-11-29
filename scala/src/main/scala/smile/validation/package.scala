@@ -507,7 +507,8 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the error rates of each round.
       */
-    def classification[T <: AnyRef](k: Int, x: Array[T], y: Array[Int])(trainer: (Array[T], Array[Int]) => Classifier[T]): Array[Double] = {
+    def classification[T <: AnyRef, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+                                                       (trainer: (Array[T], Array[Int]) => M): ClassificationValidations[T, M] = {
       Bootstrap.classification(k, x, y, trainer)
     }
 
@@ -518,7 +519,8 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the error rates of each round.
       */
-    def classification(k: Int, formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => DataFrameClassifier): Array[Double] = {
+    def classification[M <: Classifier[Tuple]](k: Int, formula: Formula, data: DataFrame)
+                                              (trainer: (Formula, DataFrame) => M): ClassificationValidations[Tuple, M] = {
       Bootstrap.classification(k, formula, data, trainer)
     }
 
@@ -527,11 +529,11 @@ package object validation {
       * @param x        data samples.
       * @param y        response variable.
       * @param k        k-round bootstrap estimation.
-      * @param metrics  validation metrics such as MSE, AbsoluteDeviation, etc.
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return the root mean squared error of each round.
       */
-    def regression[T <: AnyRef](x: Array[T], y: Array[Double], k: Int, metrics: RegressionMetric*)(trainer: (Array[T], Array[Double]) => Regression[T]): Array[Double] = {
+    def regression[T <: AnyRef, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+                                                   (trainer: (Array[T], Array[Double]) => M): RegressionValidations[T, M] = {
       Bootstrap.regression(k, x, y, trainer)
     }
 
@@ -542,7 +544,8 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return the root mean squared error of each round.
       */
-    def regression(k: Int, formula: Formula, data: DataFrame)(trainer: (Formula, DataFrame) => DataFrameRegression): Array[Double] = {
+    def regression[M <: Regression[Tuple]](k: Int, formula: Formula, data: DataFrame)
+                                          (trainer: (Formula, DataFrame) => M): RegressionValidations[Tuple, M] = {
       Bootstrap.regression(k, formula, data, trainer)
     }
   }
