@@ -19,7 +19,7 @@ package smile.validation.metric;
 
 /**
  * Matthews correlation coefficient. The MCC is in essence a correlation
- * coefficient between the observed and predicted binary classifications
+ * coefficient between the observed and predicted binary classifications.
  * It is considered as a balanced measure for binary classification,
  * even in unbalanced data sets. It  varies between -1 (perfect
  * disagreement) and +1 (perfect agreement). When it is 0,
