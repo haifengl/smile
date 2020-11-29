@@ -71,7 +71,7 @@ public class ValidationTest {
         RegressionTree model = RegressionTree.fit(Abalone.formula, Abalone.train);
         double[] prediction = Validation.test(model, Abalone.test);
         double rmse = RMSE.of(Abalone.testy, prediction);
-        double mad = MeanAbsoluteDeviation.of(Abalone.testy, prediction);
+        double mad = MAD.of(Abalone.testy, prediction);
         System.out.println("RMSE = " + rmse);
         System.out.println("MAD = " + mad);
         assertEquals(2.5567, rmse, 1E-4);
