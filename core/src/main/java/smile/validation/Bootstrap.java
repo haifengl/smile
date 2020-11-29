@@ -95,7 +95,7 @@ public class Bootstrap implements Serializable {
      * @return the validation results.
      */
     public static <T, M extends Classifier<T>> ClassificationValidations<T, M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        CrossValidation cv = new CrossValidation(x.length, k);
+        Bootstrap cv = new Bootstrap(x.length, k);
         return ClassificationValidation.of(cv.splits, x, y, trainer);
     }
 
@@ -108,7 +108,7 @@ public class Bootstrap implements Serializable {
      * @return the validation results.
      */
     public static <M extends Classifier<Tuple>> ClassificationValidations<Tuple, M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        CrossValidation cv = new CrossValidation(data.size(), k);
+        Bootstrap cv = new Bootstrap(data.size(), k);
         return ClassificationValidation.of(cv.splits, formula, data, trainer);
     }
 
@@ -121,7 +121,7 @@ public class Bootstrap implements Serializable {
      * @return the validation results.
      */
     public static <T, M extends Regression<T>> RegressionValidations<T, M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
-        CrossValidation cv = new CrossValidation(x.length, k);
+        Bootstrap cv = new Bootstrap(x.length, k);
         return RegressionValidation.of(cv.splits, x, y, trainer);
     }
 
@@ -134,7 +134,7 @@ public class Bootstrap implements Serializable {
      * @return the validation results.
      */
     public static <M extends Regression<Tuple>> RegressionValidations<Tuple, M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        CrossValidation cv = new CrossValidation(data.size(), k);
+        Bootstrap cv = new Bootstrap(data.size(), k);
         return RegressionValidation.of(cv.splits, formula, data, trainer);
     }
 }
