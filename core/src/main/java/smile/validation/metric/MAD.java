@@ -22,10 +22,10 @@ package smile.validation.metric;
  * 
  * @author Haifeng Li
  */
-public class MeanAbsoluteDeviation implements RegressionMetric {
+public class MAD implements RegressionMetric {
     private static final long serialVersionUID = 2L;
     /** Default instance. */
-    public final static MeanAbsoluteDeviation instance = new MeanAbsoluteDeviation();
+    public final static MAD instance = new MAD();
 
     @Override
     public double score(double[] truth, double[] prediction) {
