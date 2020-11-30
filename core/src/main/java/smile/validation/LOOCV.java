@@ -21,12 +21,14 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
 import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
+import smile.regression.DataFrameRegression;
 import smile.validation.metric.*;
 
 /**
@@ -155,7 +157,7 @@ public class LOOCV implements Serializable {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, Classifier<Tuple>> trainer) {
+    public static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int[] y = formula.y(data).toIntArray();
         int k = MathEx.unique(y).length;
         int n = y.length;
@@ -169,7 +171,7 @@ public class LOOCV implements Serializable {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            Classifier<Tuple> model = trainer.apply(formula, data.of(cv.train[i]));
+            DataFrameClassifier model = trainer.apply(formula, data.of(cv.train[i]));
             fitTime += System.nanoTime() - start;
 
             if (model instanceof SoftClassifier) {
@@ -260,7 +262,7 @@ public class LOOCV implements Serializable {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
-    public static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, Regression<Tuple>> trainer) {
+    public static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         int n = data.size();
         LOOCV cv = new LOOCV(n);
         double[] y = formula.y(data).toDoubleArray();
@@ -270,7 +272,7 @@ public class LOOCV implements Serializable {
 
         for (int i = 0; i < n; i++) {
             long start = System.nanoTime();
-            Regression<Tuple> model = trainer.apply(formula, data.of(cv.train[i]));
+            DataFrameRegression model = trainer.apply(formula, data.of(cv.train[i]));
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
