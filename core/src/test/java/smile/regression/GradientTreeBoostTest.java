@@ -22,6 +22,8 @@ import smile.data.*;
 import smile.data.formula.Formula;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
+import smile.validation.RegressionMetrics;
+import smile.validation.RegressionValidations;
 import smile.validation.metric.RMSE;
 import smile.math.MathEx;
 import org.junit.After;
@@ -76,10 +78,10 @@ public class GradientTreeBoostTest {
             System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
-        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> GradientTreeBoost.fit(f, x));
-        double rmse = RMSE.of(Longley.y, prediction);
-        System.out.println("LOOCV RMSE = " + rmse);
-        assertEquals(3.545378550497016, rmse, 1E-4);
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> GradientTreeBoost.fit(f, x));
+
+        System.out.println(metrics);
+        assertEquals(3.545378550497016, metrics.rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -97,10 +99,11 @@ public class GradientTreeBoostTest {
             System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> GradientTreeBoost.fit(f, x, loss, 100, 20, 6, 5, 0.05, 0.7));
-        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
-        System.out.format("10-CV RMSE = %.4f%n", rmse);
-        assertEquals(expected, rmse, 1E-4);
+        RegressionValidations<GradientTreeBoost> result = CrossValidation.regression(10, formula, data,
+                (f, x) -> GradientTreeBoost.fit(f, x, loss, 100, 20, 6, 5, 0.05, 0.7));
+
+        System.out.println(result);
+        assertEquals(expected, result.avg.rmse, 1E-4);
     }
 
     @Test

@@ -70,11 +70,10 @@ public class AdaBoostTest {
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));
-        int error = Error.of(WeatherNominal.y, prediction);
-
-        System.out.println("Error = " + error);
-        assertEquals(5, error);
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
+                (f, x) -> AdaBoost.fit(f, x, 20, 5, 8, 1));
+        System.out.println(metrics);
+        assertEquals(5, metrics.accuracy);
     }
 
     @Test
@@ -89,10 +88,10 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(7, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data,
+                (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
+        System.out.println(metrics);
+        assertEquals(7, metrics.accuracy);
     }
 
     @Test
@@ -100,11 +99,10 @@ public class AdaBoostTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
-        int error = Error.of(PenDigits.y, prediction);
-
-        System.out.println("Error = " + error);
-        assertEquals(356, error);
+        ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+                (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
+        System.out.println(result);
+        assertEquals(356, result.avg.accuracy);
     }
 
     @Test
@@ -112,11 +110,11 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+                (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
 
-        System.out.println("Error = " + error);
-        assertEquals(19, error);
+        System.out.println(result);
+        assertEquals(19, result.avg.accuracy);
     }
 
     @Test

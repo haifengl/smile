@@ -26,6 +26,7 @@ import org.junit.Test;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.validation.CrossValidation;
+import smile.validation.RegressionValidations;
 import smile.validation.Validation;
 import smile.validation.metric.RMSE;
 
@@ -109,7 +110,7 @@ public class RLSTest {
     public void testOnlineLearn(String name, Formula formula, DataFrame data){
         System.out.println(name);
 
-        double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> {
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, formula, data, (f, x) -> {
             int n = x.size();
             DataFrame batch = x.of(IntStream.range(0, n/2).toArray());
             DataFrame online = x.of(IntStream.range(n/2, n).toArray());
@@ -117,8 +118,8 @@ public class RLSTest {
             model.update(online);
             return model;
         });
-        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
-        System.out.format("10-CV RMSE = %.4f%n", rmse);
+
+        System.out.println(result.avg);
     }
     
     @Test

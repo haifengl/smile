@@ -32,9 +32,7 @@ import smile.data.PenDigits;
 import smile.data.USPS;
 import smile.math.MathEx;
 import smile.util.Paths;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
+import smile.validation.*;
 import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
@@ -68,10 +66,10 @@ public class FLDTest {
     public void testIris() {
         System.out.println("Iris");
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> FLD.fit(x, y));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(3, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> FLD.fit(x, y));
+
+        System.out.println(metrics);
+        assertEquals(3, metrics.accuracy);
     }
 
     @Test
@@ -79,11 +77,11 @@ public class FLDTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> FLD.fit(x, y));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<FLD> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> FLD.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(921, error);
+        System.out.println(result);
+        assertEquals(921, result.avg.accuracy);
     }
 
     @Test
@@ -91,11 +89,11 @@ public class FLDTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> FLD.fit(x, y));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<FLD> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> FLD.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(20, error);
+        System.out.println(result);
+        assertEquals(20, result.avg.accuracy);
     }
 
     @Test(expected = Test.None.class)
@@ -133,9 +131,10 @@ public class FLDTest {
         }
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(5, x, y, (xi, yi) -> FLD.fit(xi, yi));
-        int error = Error.of(y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(9, error);
+        ClassificationValidations<FLD> result = CrossValidation.classification(5, x, y,
+                (xi, yi) -> FLD.fit(xi, yi));
+
+        System.out.println(result);
+        assertEquals(9, result.avg.accuracy);
     }
 }

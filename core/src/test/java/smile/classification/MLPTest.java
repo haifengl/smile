@@ -31,6 +31,7 @@ import smile.feature.Standardizer;
 import smile.feature.WinsorScaler;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
+import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
 import smile.validation.Validation;
 import smile.validation.metric.Error;
@@ -73,7 +74,7 @@ public class MLPTest {
         int k = MathEx.max(PenDigits.y) + 1;
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
             MLP model = new MLP(p,
                     Layer.sigmoid(50),
                     Layer.mle(k, OutputFunction.SIGMOID)
@@ -92,9 +93,8 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.of(PenDigits.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(100, error);
+        System.out.println(result);
+        assertEquals(100, result.avg.accuracy);
     }
 
     @Test
@@ -107,7 +107,7 @@ public class MLPTest {
         int p = x[0].length;
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
             MLP model = new MLP(p,
                     Layer.sigmoid(60),
                     Layer.mle(1, OutputFunction.SIGMOID)
@@ -126,9 +126,8 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.of(BreastCancer.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(11, error);
+        System.out.println(result);
+        assertEquals(11, result.avg.accuracy);
     }
 
     @Test

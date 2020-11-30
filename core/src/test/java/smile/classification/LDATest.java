@@ -58,10 +58,10 @@ public class LDATest {
     public void testIris() {
         System.out.println("Iris");
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(22, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
+
+        System.out.println(metrics);
+        assertEquals(22, metrics.accuracy);
     }
 
     @Test
@@ -69,11 +69,11 @@ public class LDATest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<LDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> LDA.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(884, error);
+        System.out.println(result);
+        assertEquals(884, result.avg.accuracy);
     }
 
     @Test
@@ -81,11 +81,11 @@ public class LDATest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<LDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> LDA.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(42, error);
+        System.out.println(result);
+        assertEquals(42, result.avg.accuracy);
     }
 
     @Test(expected = Test.None.class)

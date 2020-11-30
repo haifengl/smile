@@ -28,8 +28,7 @@ import smile.data.*;
 import smile.feature.Standardizer;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
-import smile.validation.CrossValidation;
-import smile.validation.metric.RMSE;
+import smile.validation.*;
 import static org.junit.Assert.assertEquals;
 
 /**
@@ -85,7 +84,7 @@ public class MLPTest {
         x = scaler.transform(x);
         int p = x[0].length;
 
-        double[] prediction = CrossValidation.regression(10, x, y, (xi, yi) -> {
+        RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
             MLP model = new MLP(p, builders);
             // small learning rate and weight decay to counter exploding gradient
             model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
@@ -100,10 +99,9 @@ public class MLPTest {
 
             return model;
         });
-        double rmse = RMSE.of(y, prediction);
 
-        System.out.format("10-CV RMSE = %.4f%n", rmse);
-        assertEquals(expected, rmse, 1E-4);
+        System.out.println(result);
+        assertEquals(expected, result.avg.rmse, 1E-4);
     }
 
     @Test
