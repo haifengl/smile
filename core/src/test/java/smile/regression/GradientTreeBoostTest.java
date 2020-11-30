@@ -113,9 +113,9 @@ public class GradientTreeBoostTest {
         test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2159);
         test(Loss.ls(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.ls(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0845);
-        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1293);
-        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60604.6920);
-        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2487);
+        test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0904);
+        test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60581.4183);
+        test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2482);
         test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
     }
 
@@ -126,9 +126,9 @@ public class GradientTreeBoostTest {
         test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2958);
         test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
-        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1389);
-        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
-        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
+        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
         test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
@@ -139,9 +139,9 @@ public class GradientTreeBoostTest {
         test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2958);
         test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
-        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1389);
-        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66772.6697);
-        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2495);
+        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
         test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
@@ -152,9 +152,9 @@ public class GradientTreeBoostTest {
         test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2228);
         test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0853);
-        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1513);
-        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62115.9896);
-        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2435);
+        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1155);
+        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62090.2639);
+        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2429);
         test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
     }
 

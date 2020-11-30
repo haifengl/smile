@@ -110,9 +110,9 @@ public class MLPTest {
         test("2dplanes", Planes.x, Planes.y, 1.5173, Layer.rectifier(50), Layer.sigmoid(30));
         test("abalone", Abalone.x, Abalone.y, 2.5296, Layer.rectifier(40), Layer.sigmoid(30));
         test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
-        test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1220, Layer.rectifier(65), Layer.sigmoid(30));
-        test("cal_housing", CalHousing.x, CalHousing.y, 115675.2492, Layer.rectifier(40), Layer.sigmoid(30));
-        test("puma8nh", Puma8NH.x, Puma8NH.y, 3.9613, Layer.rectifier(40), Layer.sigmoid(30));
-        test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2640, Layer.rectifier(40), Layer.sigmoid(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, 115668.7941, Layer.rectifier(40), Layer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, 3.9609, Layer.rectifier(40), Layer.sigmoid(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2638, Layer.rectifier(40), Layer.sigmoid(30));
     }
 }

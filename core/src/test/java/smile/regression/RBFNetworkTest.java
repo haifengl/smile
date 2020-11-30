@@ -117,7 +117,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.00024, result.avg.rmse, 1E-5);
+        assertEquals(0.00025, result.avg.rmse, 1E-5);
     }
 
     @Test

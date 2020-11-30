@@ -149,9 +149,9 @@ public class RandomForestTest {
         test("abalone", Abalone.formula, Abalone.train, 2.1888);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5632);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5620);
+        test("cal_housing", CalHousing.formula, CalHousing.data, 58550.8159);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3147);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
