@@ -129,7 +129,7 @@ public class RandomForestTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(metrics);
-        assertEquals(0.9467, metrics.accuracy, 1E-4);
+        assertEquals(0.9533, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -141,7 +141,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(195, result.avg.accuracy, 1E-4);
+        assertEquals(0.9709, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -153,7 +153,7 @@ public class RandomForestTest {
                 (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
         System.out.println(result);
-        assertEquals(27, result.avg.accuracy, 1E-4);
+        assertEquals(0.9550, result.avg.accuracy, 1E-4);
     }
 
     @Test

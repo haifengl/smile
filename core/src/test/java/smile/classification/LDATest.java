@@ -73,7 +73,7 @@ public class LDATest {
                 (x, y) -> LDA.fit(x, y));
 
         System.out.println(result);
-        assertEquals(884, result.avg.accuracy, 1E-4);
+        assertEquals(0.8820, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class LDATest {
                 (x, y) -> LDA.fit(x, y));
 
         System.out.println(result);
-        assertEquals(42, result.avg.accuracy, 1E-4);
+        assertEquals(0.9272, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)

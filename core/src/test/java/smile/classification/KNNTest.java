@@ -105,7 +105,7 @@ public class KNNTest {
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(40, result.avg.accuracy, 1E-4);
+        assertEquals(0.9947, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class KNNTest {
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(44, result.avg.accuracy, 1E-4);
+        assertEquals(0.9232, result.avg.accuracy, 1E-4);
     }
 
     @Test
