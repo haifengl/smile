@@ -106,7 +106,7 @@ public class SVRTest {
                 (x, y) -> SVR.fit(x, y, kernel, 1.5, 100, 1E-3));
 
         System.out.println(result);
-        assertEquals(2.1098, result.metrics.rmse, 1E-4);
+        assertEquals(2.1092, result.metrics.rmse, 1E-4);
     }
 
     @Test
