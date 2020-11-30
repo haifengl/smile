@@ -17,11 +17,11 @@
 
 package smile
 
-import smile.classification.{Classifier, DataFrameClassifier, SoftClassifier}
-import smile.data.{DataFrame, Tuple}
+import smile.classification.{Classifier, DataFrameClassifier}
+import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
-import smile.util.{time, toJavaBiFunction, toJavaFunction}
+import smile.util.{toJavaBiFunction, toJavaFunction}
 import smile.validation.metric._
 
 /** Model validation.
@@ -216,7 +216,7 @@ package object validation {
       * @return metric scores.
       */
     def classification(formula: Formula, data: DataFrame)
-                      (trainer: (Formula, DataFrame) => Classifier[Tuple]): ClassificationMetrics = {
+                      (trainer: (Formula, DataFrame) => DataFrameClassifier): ClassificationMetrics = {
       LOOCV.classification(formula, data, trainer)
     }
 
@@ -240,7 +240,7 @@ package object validation {
       * @return metric scores.
       */
     def regression(formula: Formula, data: DataFrame)
-                  (trainer: (Formula, DataFrame) => Regression[Tuple]): RegressionMetrics = {
+                  (trainer: (Formula, DataFrame) => DataFrameRegression): RegressionMetrics = {
       LOOCV.regression(formula, data, trainer)
     }
   }
