@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
 import smile.classification.SoftClassifier;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
@@ -33,12 +34,11 @@ import smile.validation.metric.*;
 /**
  * Classification model validation results.
  *
- * @type T the instance type.
- * @type M the model type.
+ * @param <M> the model type.
  *
  * @author Haifeng
  */
-public class ClassificationValidation<T, M extends Classifier<T>> implements Serializable {
+public class ClassificationValidation<M> implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The model. */
@@ -87,7 +87,7 @@ public class ClassificationValidation<T, M extends Classifier<T>> implements Ser
     /**
      * Trains and validates a model on a train/validation split.
      */
-    public static <T, M extends Classifier<T>> ClassificationValidation<T, M> of(T[] x, int[] y, T[] testx, int[] testy, BiFunction<T[], int[], M> trainer) {
+    public static <T, M extends Classifier<T>> ClassificationValidation<M> of(T[] x, int[] y, T[] testx, int[] testy, BiFunction<T[], int[], M> trainer) {
         int k = MathEx.unique(y).length;
         long start = System.nanoTime();
         M model = trainer.apply(x, y);
@@ -139,8 +139,8 @@ public class ClassificationValidation<T, M extends Classifier<T>> implements Ser
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <T, M extends Classifier<T>> ClassificationValidations<T, M> of(Split[] splits, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        List<ClassificationValidation<T, M>> rounds = new ArrayList<>(splits.length);
+    public static <T, M extends Classifier<T>> ClassificationValidations<M> of(Split[] splits, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        List<ClassificationValidation<M>> rounds = new ArrayList<>(splits.length);
 
         for (Split split : splits) {
             T[] trainx = MathEx.slice(x, split.train);
@@ -157,7 +157,8 @@ public class ClassificationValidation<T, M extends Classifier<T>> implements Ser
     /**
      * Trains and validates a model on a train/validation split.
      */
-    public static <M extends Classifier<Tuple>> ClassificationValidation<Tuple, M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
+    @SuppressWarnings("unchecked")
+    public static <M extends DataFrameClassifier> ClassificationValidation<M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
         int[] y = formula.y(train).toIntArray();
         int[] testy = formula.y(test).toIntArray();
 
@@ -218,8 +219,8 @@ public class ClassificationValidation<T, M extends Classifier<T>> implements Ser
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Classifier<Tuple>> ClassificationValidations<Tuple, M> of(Split[] splits, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        List<ClassificationValidation<Tuple, M>> rounds = new ArrayList<>(splits.length);
+    public static <M extends DataFrameClassifier> ClassificationValidations<M> of(Split[] splits, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        List<ClassificationValidation<M>> rounds = new ArrayList<>(splits.length);
 
         for (Split split : splits) {
             rounds.add(of(formula, data.of(split.train), data.of(split.test), trainer));

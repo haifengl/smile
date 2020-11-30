@@ -19,13 +19,12 @@ package smile
 
 import java.util.Properties
 import java.util.function.BiFunction
-
 import scala.reflect.ClassTag
 import org.apache.spark.sql.SparkSession
-import smile.classification.Classifier
-import smile.data.{DataFrame, Tuple}
+import smile.classification.{Classifier, DataFrameClassifier}
+import smile.data.DataFrame
 import smile.data.formula.Formula
-import smile.regression.Regression
+import smile.regression.{Regression, DataFrameRegression}
 import smile.validation._
 
 /**
@@ -60,9 +59,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties])
+    def classification[T <: AnyRef : ClassTag, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int], configurations: Seq[Properties])
                                                        (trainer: (Array[T], Array[Int], Properties) => M)
-                                                       (implicit spark: SparkSession): Array[ClassificationValidations[T, M]] = {
+                                                       (implicit spark: SparkSession): Array[ClassificationValidations[M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
@@ -97,9 +96,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[M <: Classifier[Tuple]](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
+    def classification[M <: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
                                               (trainer: (Formula, DataFrame, Properties) => M)
-                                              (implicit spark: SparkSession): Array[ClassificationValidations[Tuple, M]] = {
+                                              (implicit spark: SparkSession): Array[ClassificationValidations[M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
@@ -135,9 +134,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[T <: Object : ClassTag, M <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties])
+    def classification[T <: AnyRef : ClassTag, M <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int], configurations: Seq[Properties])
                                                        (trainer: (Array[T], Array[Int], Properties) => M)
-                                                       (implicit spark: SparkSession): Array[ClassificationValidation[T, M]] = {
+                                                       (implicit spark: SparkSession): Array[ClassificationValidation[M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
@@ -178,9 +177,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def classification[M <: Classifier[Tuple]](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
+    def classification[M <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
                                               (trainer: (Formula, DataFrame, Properties) => M)
-                                              (implicit spark: SparkSession): Array[ClassificationValidation[Tuple, M]] = {
+                                              (implicit spark: SparkSession): Array[ClassificationValidation[M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
@@ -218,9 +217,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties])
+    def regression[T <: AnyRef : ClassTag, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double], configurations: Seq[Properties])
                                                    (trainer: (Array[T], Array[Double], Properties) => M)
-                                                   (implicit spark: SparkSession): Array[RegressionValidations[T, M]] = {
+                                                   (implicit spark: SparkSession): Array[RegressionValidations[M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
@@ -255,9 +254,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[M <: Regression[Tuple]](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
+    def regression[M <: DataFrameRegression](k: Int, formula: Formula, data: DataFrame, configurations: Seq[Properties])
                                           (trainer: (Formula, DataFrame, Properties) => M)
-                                          (implicit spark: SparkSession): Array[RegressionValidations[Tuple, M]] = {
+                                          (implicit spark: SparkSession): Array[RegressionValidations[M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)
@@ -294,9 +293,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[T <: Object : ClassTag, M <: Regression[T]](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties])
+    def regression[T <: AnyRef : ClassTag, M <: Regression[T]](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double], configurations: Seq[Properties])
                                                    (trainer: (Array[T], Array[Double], Properties) => M)
-                                                   (implicit spark: SparkSession): Array[RegressionValidation[T, M]] = {
+                                                   (implicit spark: SparkSession): Array[RegressionValidation[M]] = {
       val sc = spark.sparkContext
 
       val xBroadcasted = sc.broadcast(x)
@@ -337,9 +336,9 @@ package object spark {
       * @return a matrix of classification metrics. The rows are per model.
       *         The columns are per metric.
       */
-    def regression[M <: Regression[Tuple]](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
+    def regression[M <: DataFrameRegression](formula: Formula, train: DataFrame, test: DataFrame, configurations: Seq[Properties])
                                           (trainer: (Formula, DataFrame, Properties) => M)
-                                          (implicit spark: SparkSession): Array[RegressionValidation[Tuple, M]] = {
+                                          (implicit spark: SparkSession): Array[RegressionValidation[M]] = {
       val sc = spark.sparkContext
 
       val formulaBroadcasted = sc.broadcast(formula)

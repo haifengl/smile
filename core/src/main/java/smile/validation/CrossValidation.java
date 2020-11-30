@@ -20,11 +20,12 @@ package smile.validation;
 import java.io.Serializable;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
+import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
+import smile.regression.DataFrameRegression;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -113,7 +114,7 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Classifier<T>> ClassificationValidations<T, M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+    public static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
         return ClassificationValidation.of(cv.splits, x, y, trainer);
     }
@@ -126,7 +127,7 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends Classifier<Tuple>> ClassificationValidations<Tuple, M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+    public static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return ClassificationValidation.of(cv.splits, formula, data, trainer);
     }
@@ -139,7 +140,7 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Regression<T>> RegressionValidations<T, M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+    public static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         CrossValidation cv = new CrossValidation(x.length, k);
         return RegressionValidation.of(cv.splits, x, y, trainer);
     }
@@ -152,7 +153,7 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends Regression<Tuple>> RegressionValidations<Tuple, M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+    public static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         CrossValidation cv = new CrossValidation(data.size(), k);
         return RegressionValidation.of(cv.splits, formula, data, trainer);
     }

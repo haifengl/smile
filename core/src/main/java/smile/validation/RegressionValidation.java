@@ -24,19 +24,18 @@ import java.util.function.BiFunction;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.data.DataFrame;
-import smile.data.Tuple;
+import smile.regression.DataFrameRegression;
 import smile.regression.Regression;
 import smile.validation.metric.*;
 
 /**
  * Regression model validation results.
  *
- * @type T the instance type.
- * @type M the model type.
+ * @param <M> the regression model type.
  *
  * @author Haifeng
  */
-public class RegressionValidation<T, M extends Regression<T>> implements Serializable {
+public class RegressionValidation<M> implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The model. */
@@ -58,7 +57,7 @@ public class RegressionValidation<T, M extends Regression<T>> implements Seriali
     /**
      * Trains and validates a model on a train/validation split.
      */
-    public static <T, M extends Regression<T>> RegressionValidation<T, M> of(T[] x, double[] y, T[] testx, double[] testy, BiFunction<T[], double[], M> trainer) {
+    public static <T, M extends Regression<T>> RegressionValidation<M> of(T[] x, double[] y, T[] testx, double[] testy, BiFunction<T[], double[], M> trainer) {
         long start = System.nanoTime();
         M model = trainer.apply(x, y);
         double fitTime = (System.nanoTime() - start) / 1E6;
@@ -80,8 +79,8 @@ public class RegressionValidation<T, M extends Regression<T>> implements Seriali
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <T, M extends Regression<T>> RegressionValidations<T, M> of(Split[] splits, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
-        List<RegressionValidation<T, M>> rounds = new ArrayList<>(splits.length);
+    public static <T, M extends Regression<T>> RegressionValidations<M> of(Split[] splits, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+        List<RegressionValidation<M>> rounds = new ArrayList<>(splits.length);
 
         for (Split split : splits) {
             T[] trainx = MathEx.slice(x, split.train);
@@ -98,7 +97,7 @@ public class RegressionValidation<T, M extends Regression<T>> implements Seriali
     /**
      * Trains and validates a model on a train/validation split.
      */
-    public static <M extends Regression<Tuple>> RegressionValidation<Tuple, M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
+    public static <M extends DataFrameRegression> RegressionValidation<M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
         double[] testy = formula.y(test).toDoubleArray();
 
         long start = System.nanoTime();
@@ -126,8 +125,8 @@ public class RegressionValidation<T, M extends Regression<T>> implements Seriali
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <M extends Regression<Tuple>> RegressionValidations<Tuple, M> of(Split[] splits, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        List<RegressionValidation<Tuple, M>> rounds = new ArrayList<>(splits.length);
+    public static <M extends DataFrameRegression> RegressionValidations<M> of(Split[] splits, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        List<RegressionValidation<M>> rounds = new ArrayList<>(splits.length);
 
         for (Split split : splits) {
             rounds.add(of(formula, data.of(split.train), data.of(split.test), trainer));
