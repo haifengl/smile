@@ -40,13 +40,19 @@ public class RegressionValidation<M> implements Serializable {
 
     /** The model. */
     public final M model;
+    /** The true response variable of validation data. */
+    public final double[] truth;
+    /** The model prediction. */
+    public final double[] prediction;
     /** The regression metrics. */
     public final RegressionMetrics metrics;
 
     /** Constructor. */
-    public RegressionValidation(M model, double fitTime, double scoreTime, double rss, double mse, double rmse, double mad, double r2) {
+    public RegressionValidation(M model, double[] truth, double[] prediction, RegressionMetrics metrics) {
         this.model = model;
-        this.metrics = new RegressionMetrics(fitTime, scoreTime, rss, mse, rmse, mad, r2);
+        this.truth = truth;
+        this.prediction = prediction;
+        this.metrics = metrics;
     }
 
     @Override
@@ -66,13 +72,14 @@ public class RegressionValidation<M> implements Serializable {
         double[] prediction = model.predict(testx);
         double scoreTime = (System.nanoTime() - start) / 1E6;
 
-        return new RegressionValidation<>(model, fitTime, scoreTime,
+        RegressionMetrics metrics = new RegressionMetrics(fitTime, scoreTime,
                 RSS.of(testy, prediction),
                 MSE.of(testy, prediction),
                 RMSE.of(testy, prediction),
                 MAD.of(testy, prediction),
                 R2.of(testy, prediction)
         );
+        return new RegressionValidation<>(model, testy, prediction, metrics);
     }
 
     /**
@@ -112,13 +119,14 @@ public class RegressionValidation<M> implements Serializable {
         }
         double scoreTime = (System.nanoTime() - start) / 1E6;
 
-        return new RegressionValidation<>(model, fitTime, scoreTime,
+        RegressionMetrics metrics = new RegressionMetrics(fitTime, scoreTime,
                 RSS.of(testy, prediction),
                 MSE.of(testy, prediction),
                 RMSE.of(testy, prediction),
                 MAD.of(testy, prediction),
                 R2.of(testy, prediction)
         );
+        return new RegressionValidation<>(model, testy, prediction, metrics);
     }
 
     /**
