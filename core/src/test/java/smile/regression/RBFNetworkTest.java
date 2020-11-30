@@ -85,7 +85,7 @@ public class RBFNetworkTest {
 
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork> result = CrossValidation.regression(10, x, CPU.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, CPU.y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
@@ -98,7 +98,7 @@ public class RBFNetworkTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        RegressionValidations<RBFNetwork> result = CrossValidation.regression(10, Planes.x, Planes.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, Planes.x, Planes.y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
@@ -113,7 +113,7 @@ public class RBFNetworkTest {
 
         double[][] x = MathEx.clone(Ailerons.x);
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork> result = CrossValidation.regression(10, x, Ailerons.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, Ailerons.y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
@@ -128,7 +128,7 @@ public class RBFNetworkTest {
 
         double[][] x = MathEx.clone(Bank32nh.x);
         MathEx.standardize(x);
-        RegressionValidations<RBFNetwork> result = CrossValidation.regression(10, x, Bank32nh.y,
+        RegressionValidations<RBFNetwork<double[]>> result = CrossValidation.regression(10, x, Bank32nh.y,
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);

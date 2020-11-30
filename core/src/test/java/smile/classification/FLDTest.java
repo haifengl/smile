@@ -81,7 +81,7 @@ public class FLDTest {
                 (x, y) -> FLD.fit(x, y));
 
         System.out.println(result);
-        assertEquals(921, result.avg.accuracy, 1E-4);
+        assertEquals(0.8771, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class FLDTest {
                 (x, y) -> FLD.fit(x, y));
 
         System.out.println(result);
-        assertEquals(20, result.avg.accuracy, 1E-4);
+        assertEquals(0.9655, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)

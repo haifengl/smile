@@ -64,7 +64,7 @@ public class QDATest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> QDA.fit(x, y));
 
         System.out.println(metrics);
-        assertEquals(4, metrics.accuracy);
+        assertEquals(0.9733, metrics.accuracy, 1E-4);
 
         QDA model = QDA.fit(Iris.x, Iris.y);
         java.nio.file.Path temp = smile.data.Serialize.write(model);
@@ -80,6 +80,6 @@ public class QDATest {
                 (x, y) -> QDA.fit(x, y));
 
         System.out.println(result);
-        assertEquals(24, result.avg.accuracy);
+        assertEquals(0.9589, result.avg.accuracy, 1E-4);
     }
 }

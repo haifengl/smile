@@ -102,7 +102,7 @@ public class AdaBoostTest {
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
         System.out.println(result);
-        assertEquals(356, result.avg.accuracy, 1E-4);
+        assertEquals(0.9525, result.avg.accuracy, 1E-4);
     }
 
     @Test

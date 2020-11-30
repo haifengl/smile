@@ -72,7 +72,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(metrics);
-        assertEquals(6, metrics.accuracy);
+        assertEquals(0.5714, metrics.accuracy, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -94,7 +94,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(metrics);
-        assertEquals(8, metrics.accuracy);
+        assertEquals(0.9467, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -106,7 +106,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(143, result.avg.accuracy);
+        assertEquals(0.9809, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -118,7 +118,7 @@ public class GradientTreeBoostTest {
                 (f, x) -> GradientTreeBoost.fit(f, x, 100, 20, 6, 5, 0.05, 0.7));
 
         System.out.println(result);
-        assertEquals(21, result.avg.accuracy);
+        assertEquals(0.9640, result.avg.accuracy, 1E-4);
     }
 
     @Test

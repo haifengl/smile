@@ -66,7 +66,7 @@ public class RDATest {
             ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
 
             System.out.format("alpha = %.1f, metrics = %s%n", alpha, metrics);
-            assertEquals(expected[i], metrics.accuracy);
+            assertEquals(1.0 - expected[i]/150.0, metrics.accuracy, 1E-4);
         }
     }
 
@@ -79,7 +79,7 @@ public class RDATest {
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
-        assertEquals(103, result.avg.accuracy);
+        assertEquals(0.9863, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -91,7 +91,7 @@ public class RDATest {
                 (x, y) -> RDA.fit(x, y, 0.9));
 
         System.out.println(result);
-        assertEquals(31, result.avg.accuracy);
+        assertEquals(0.9461, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)

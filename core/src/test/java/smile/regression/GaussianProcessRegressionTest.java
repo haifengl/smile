@@ -127,10 +127,10 @@ public class GaussianProcessRegressionTest {
         double[][] x = MathEx.clone(CPU.x);
         MathEx.standardize(x);
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, x, CPU.y,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, x, CPU.y,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(47.02), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -144,7 +144,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, x, CPU.y, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -183,10 +183,10 @@ public class GaussianProcessRegressionTest {
             datay[i] = y[permutation[i]];
         }
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, datax, datay,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.866), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -200,7 +200,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -243,10 +243,10 @@ public class GaussianProcessRegressionTest {
             datay[i] = y[permutation[i]];
         }
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, datax, datay,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(183.96), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -260,7 +260,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -300,10 +300,10 @@ public class GaussianProcessRegressionTest {
             datay[i] = y[permutation[i]];
         }
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, datax, datay,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(55.3), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -317,7 +317,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -356,10 +356,10 @@ public class GaussianProcessRegressionTest {
             datay[i] = y[permutation[i]];
         }
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, datax, datay,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(38.63), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -373,7 +373,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -411,10 +411,10 @@ public class GaussianProcessRegressionTest {
             datay[i] = y[permutation[i]];
         }
 
-        RegressionValidations<GaussianProcessRegression> result = CrossValidation.regression(10, datax, datay,
+        RegressionValidations<GaussianProcessRegression<double[]>> result = CrossValidation.regression(10, datax, datay,
                 (xi, yi) -> GaussianProcessRegression.fit(xi, yi, new GaussianKernel(34.97), 0.1));
 
-        RegressionValidations<GaussianProcessRegression> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> sparseResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
@@ -428,7 +428,7 @@ public class GaussianProcessRegressionTest {
             return GaussianProcessRegression.fit(xi, yi, centers, new GaussianKernel(r0), 0.1);
         });
 
-        RegressionValidations<GaussianProcessRegression> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
+        RegressionValidations<GaussianProcessRegression<double[]>> nystromResult = CrossValidation.regression(10, datax, datay, (xi, yi) -> {
             KMeans kmeans = KMeans.fit(xi, 30);
             double[][] centers = kmeans.centroids;
             double r0 = 0.0;
