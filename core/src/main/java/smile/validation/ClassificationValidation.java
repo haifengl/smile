@@ -43,40 +43,64 @@ public class ClassificationValidation<M> implements Serializable {
 
     /** The model. */
     public final M model;
+    /** The true class labels of validation data. */
+    public final int[] truth;
+    /** The model prediction. */
+    public final int[] prediction;
+    /** The posteriori probability of prediction if the model is a soft classifier. */
+    public final double[][] posteriori;
     /** The confusion matrix. */
     public final ConfusionMatrix confusion;
     /** The classification metrics. */
     public final ClassificationMetrics metrics;
 
     /** Constructor. */
-    public ClassificationValidation(M model, double fitTime, double scoreTime, ConfusionMatrix confusion, double accuracy) {
-        this(model, fitTime, scoreTime, confusion, accuracy, Double.NaN);
+    public ClassificationValidation(M model, int[] truth, int[] prediction, double fitTime, double scoreTime) {
+        this(model, truth, prediction, null, fitTime, scoreTime);
     }
 
-    /** Constructor of multiclass soft classifier validation. */
-    public ClassificationValidation(M model, double fitTime, double scoreTime, ConfusionMatrix confusion, double accuracy, double crossentropy) {
+    /** Constructor of soft classifier validation. */
+    public ClassificationValidation(M model, int[] truth, int[] prediction, double[][] posteriori, double fitTime, double scoreTime) {
         this.model = model;
-        this.confusion = confusion;
-        this.metrics = new ClassificationMetrics(fitTime, scoreTime, accuracy,
-                Double.NaN, Double.NaN, Double.NaN, Double.NaN, Double.NaN,
-                Double.NaN, Double.NaN, crossentropy);
-    }
+        this.truth = truth;
+        this.prediction = prediction;
+        this.posteriori = posteriori;
+        this.confusion = ConfusionMatrix.of(truth, prediction);
 
-    /** Constructor of binary classifier validation. */
-    public ClassificationValidation(M model, double fitTime, double scoreTime, ConfusionMatrix confusion,
-                                    double accuracy, double sensitivity, double specificity,
-                                    double precision, double f1, double mcc) {
-        this(model, fitTime, scoreTime, confusion, accuracy, sensitivity, specificity, precision, f1, mcc, Double.NaN, Double.NaN);
-    }
-
-    /** Constructor of binary soft classifier validation. */
-    public ClassificationValidation(M model, double fitTime, double scoreTime, ConfusionMatrix confusion,
-                                    double accuracy, double sensitivity, double specificity, double precision,
-                                    double f1, double mcc, double auc, double logloss) {
-        this.model = model;
-        this.confusion = confusion;
-        this.metrics = new ClassificationMetrics(fitTime, scoreTime, accuracy,
-                sensitivity, specificity, precision, f1, mcc, auc, logloss, logloss);
+        int k = MathEx.unique(truth).length;
+        if (k == 2) {
+            if (posteriori == null) {
+                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                        Accuracy.of(truth, prediction),
+                        Sensitivity.of(truth, prediction),
+                        Specificity.of(truth, prediction),
+                        Precision.of(truth, prediction),
+                        FScore.F1.score(truth, prediction),
+                        MatthewsCorrelation.of(truth, prediction)
+                );
+            } else {
+                double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
+                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                        Accuracy.of(truth, prediction),
+                        Sensitivity.of(truth, prediction),
+                        Specificity.of(truth, prediction),
+                        Precision.of(truth, prediction),
+                        FScore.F1.score(truth, prediction),
+                        MatthewsCorrelation.of(truth, prediction),
+                        AUC.of(truth, probability),
+                        LogLoss.of(truth, probability)
+                );
+            }
+        } else {
+            if (posteriori == null) {
+                metrics = new ClassificationMetrics(fitTime, scoreTime, Accuracy.of(truth, prediction));
+            } else {
+                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                        Accuracy.of(truth, prediction),
+                        CrossEntropy.of(truth, posteriori)
+                );
+            }
+        }
     }
 
     @Override
@@ -99,39 +123,13 @@ public class ClassificationValidation<M> implements Serializable {
             int[] prediction = ((SoftClassifier<T>) model).predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            ConfusionMatrix confusion = ConfusionMatrix.of(testy, prediction);
-            double accuracy = Accuracy.of(testy, prediction);
-            if (k == 2) {
-                double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy,
-                        Sensitivity.of(testy, prediction),
-                        Specificity.of(testy, prediction),
-                        Precision.of(testy, prediction),
-                        FScore.F1.score(testy, prediction),
-                        MatthewsCorrelation.of(testy, prediction),
-                        AUC.of(testy, probability),
-                        LogLoss.of(testy, probability));
-            } else {
-                return new ClassificationValidation<>(model, fitTime, scoreTime,
-                        confusion, accuracy, CrossEntropy.of(testy, posteriori));
-            }
+            return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
         } else {
             start = System.nanoTime();
             int[] prediction = model.predict(testx);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            ConfusionMatrix confusion = ConfusionMatrix.of(testy, prediction);
-            double accuracy = Accuracy.of(testy, prediction);
-            if (k == 2) {
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy,
-                        Sensitivity.of(testy, prediction),
-                        Specificity.of(testy, prediction),
-                        Precision.of(testy, prediction),
-                        FScore.F1.score(testy, prediction),
-                        MatthewsCorrelation.of(testy, prediction));
-            } else {
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy);
-            }
+            return new ClassificationValidation<>(model, testy, prediction, fitTime, scoreTime);
         }
     }
 
@@ -177,21 +175,7 @@ public class ClassificationValidation<M> implements Serializable {
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            ConfusionMatrix confusion = ConfusionMatrix.of(testy, prediction);
-            double accuracy = Accuracy.of(testy, prediction);
-            if (k == 2) {
-                double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy,
-                        Sensitivity.of(testy, prediction),
-                        Specificity.of(testy, prediction),
-                        Precision.of(testy, prediction),
-                        FScore.F1.score(testy, prediction),
-                        MatthewsCorrelation.of(testy, prediction),
-                        AUC.of(testy, probability),
-                        LogLoss.of(testy, probability));
-            } else {
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy, CrossEntropy.of(testy, posteriori));
-            }
+            return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
         } else {
             start = System.nanoTime();
             int[] prediction = new int[n];
@@ -200,18 +184,7 @@ public class ClassificationValidation<M> implements Serializable {
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            ConfusionMatrix confusion = ConfusionMatrix.of(testy, prediction);
-            double accuracy = Accuracy.of(testy, prediction);
-            if (k == 2) {
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy,
-                        Sensitivity.of(testy, prediction),
-                        Specificity.of(testy, prediction),
-                        Precision.of(testy, prediction),
-                        FScore.F1.score(testy, prediction),
-                        MatthewsCorrelation.of(testy, prediction));
-            } else {
-                return new ClassificationValidation<>(model, fitTime, scoreTime, confusion, accuracy);
-            }
+            return new ClassificationValidation<>(model, testy, prediction, fitTime, scoreTime);
         }
     }
 

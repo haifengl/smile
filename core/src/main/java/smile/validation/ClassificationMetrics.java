@@ -47,9 +47,53 @@ public class ClassificationMetrics implements Serializable {
     public final double crossentropy;
 
     /** Constructor. */
+    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy) {
+        this(fitTime, scoreTime, accuracy, Double.NaN);
+    }
+
+    /** Constructor of multiclass soft classifier validation. */
+    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy, double crossentropy) {
+        this.fitTime = fitTime;
+        this.scoreTime = scoreTime;
+        this.accuracy = accuracy;
+        this.crossentropy = crossentropy;
+        this.sensitivity = Double.NaN;
+        this.specificity = Double.NaN;
+        this.precision = Double.NaN;
+        this.f1 = Double.NaN;
+        this.mcc = Double.NaN;
+        this.auc = Double.NaN;
+        this.logloss = Double.NaN;
+    }
+
+    /** Constructor of binary classifier validation. */
     public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
-                   double sensitivity, double specificity, double precision,
-                   double f1, double mcc, double auc, double logloss, double crossentropy) {
+                                 double sensitivity, double specificity, double precision,
+                                 double f1, double mcc) {
+        this(fitTime, scoreTime, accuracy, sensitivity, specificity, precision, f1, mcc, Double.NaN, Double.NaN);
+    }
+
+    /** Constructor of binary soft classifier validation. */
+    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
+                                 double sensitivity, double specificity, double precision,
+                                 double f1, double mcc, double auc, double logloss) {
+        this.fitTime = fitTime;
+        this.scoreTime = scoreTime;
+        this.accuracy = accuracy;
+        this.sensitivity = sensitivity;
+        this.specificity = specificity;
+        this.precision = precision;
+        this.f1 = f1;
+        this.mcc = mcc;
+        this.auc = auc;
+        this.logloss = logloss;
+        this.crossentropy = logloss;
+    }
+
+    /** Constructor. */
+    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
+                                 double sensitivity, double specificity, double precision,
+                                 double f1, double mcc, double auc, double logloss, double crossentropy) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
         this.accuracy = accuracy;
