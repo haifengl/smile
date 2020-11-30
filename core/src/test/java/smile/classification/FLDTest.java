@@ -69,7 +69,7 @@ public class FLDTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> FLD.fit(x, y));
 
         System.out.println(metrics);
-        assertEquals(3, metrics.accuracy);
+        assertEquals(0.98, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -81,7 +81,7 @@ public class FLDTest {
                 (x, y) -> FLD.fit(x, y));
 
         System.out.println(result);
-        assertEquals(921, result.avg.accuracy);
+        assertEquals(921, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -93,7 +93,7 @@ public class FLDTest {
                 (x, y) -> FLD.fit(x, y));
 
         System.out.println(result);
-        assertEquals(20, result.avg.accuracy);
+        assertEquals(20, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)
@@ -135,6 +135,6 @@ public class FLDTest {
                 (xi, yi) -> FLD.fit(xi, yi));
 
         System.out.println(result);
-        assertEquals(9, result.avg.accuracy);
+        assertEquals(9, result.avg.accuracy, 1E-4);
     }
 }

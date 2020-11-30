@@ -144,9 +144,9 @@ public class RandomForestTest {
 
     @Test
     public void testAll() {
-        test("CPU", CPU.formula, CPU.data, 75.0190);
+        test("CPU", CPU.formula, CPU.data, 69.3312);
         test("2dplanes", Planes.formula, Planes.data, 1.3574);
-        test("abalone", Abalone.formula, Abalone.train, 2.1932);
+        test("abalone", Abalone.formula, Abalone.train, 2.1888);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
         test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5632);

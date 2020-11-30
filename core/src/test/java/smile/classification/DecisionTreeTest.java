@@ -91,7 +91,7 @@ public class DecisionTreeTest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
 
         System.out.println(metrics);
-        assertEquals(9, metrics.accuracy);
+        assertEquals(0.94, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -103,7 +103,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(351, result.avg.accuracy);
+        assertEquals(351, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -115,7 +115,7 @@ public class DecisionTreeTest {
                 (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
         System.out.println(result);
-        assertEquals(42, result.avg.accuracy);
+        assertEquals(42, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -134,7 +134,7 @@ public class DecisionTreeTest {
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(43, error);
+        assertEquals(43, error, 1E-4);
     }
 
     @Test

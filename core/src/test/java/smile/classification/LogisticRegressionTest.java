@@ -62,7 +62,7 @@ public class LogisticRegressionTest {
                 (x, y) -> LogisticRegression.fit(x, y));
 
         System.out.println(metrics);
-        assertEquals(5, metrics.accuracy);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class LogisticRegressionTest {
                 (x, y) -> LogisticRegression.fit(x, y));
 
         System.out.println(metrics);
-        assertEquals(4, metrics.accuracy);
+        assertEquals(4, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class LogisticRegressionTest {
                 (x, y) -> LogisticRegression.fit(x, y));
 
         System.out.println(result);
-        assertEquals(339, result.avg.accuracy);
+        assertEquals(339, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -97,7 +97,7 @@ public class LogisticRegressionTest {
                 (x, y) -> LogisticRegression.fit(x, y));
 
         System.out.println(result);
-        assertEquals(26, result.avg.accuracy);
+        assertEquals(26, result.avg.accuracy, 1E-4);
     }
 
     @Test

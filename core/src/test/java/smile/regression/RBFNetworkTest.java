@@ -89,7 +89,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(24.967181232853843, result.avg.rmse, 1E-4);
+        assertEquals(18.0997, result.avg.rmse, 1E-4);
     }
 
     @Test
@@ -102,7 +102,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(1.7161562336830596, result.avg.rmse, 1E-4);
+        assertEquals(1.7087, result.avg.rmse, 1E-4);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(2.440061343792136E-4, result.avg.rmse, 1E-4);
+        assertEquals(0.00024, result.avg.rmse, 1E-5);
     }
 
     @Test
@@ -132,6 +132,6 @@ public class RBFNetworkTest {
                 (xi, yi) -> RBFNetwork.fit(xi, yi, RBF.fit(xi, 20, 5.0)));
 
         System.out.println(result);
-        assertEquals(0.08711993434501915, result.avg.rmse, 1E-4);
+        assertEquals(0.0869, result.avg.rmse, 1E-4);
     }
 }

@@ -70,18 +70,16 @@ public class LASSOTest {
         double[] y = {6, 5.2, 6.2, 5, 6};
 
         DataFrame df = DataFrame.of(A).merge(DoubleVector.of("y", y));
-        Formula formula = Formula.lhs("y");
-        LinearModel model = LASSO.fit(formula, df, 0.1, 0.001, 500);
-        System.out.println(model);
+        RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
+                (formula, data) -> LASSO.fit(formula, data, 0.1, 0.001, 500));
 
-        double[] prediction = Validation.test(model, df);
-        double rmse = RMSE.of(y, prediction);
-        System.out.println("RMSE = " + rmse);
+        System.out.println(result.model);
+        System.out.println(result);
         
-        assertEquals(5.0259443688265355, model.intercept(), 1E-7);
+        assertEquals(5.0259443688265355, result.model.intercept(), 1E-7);
         double[] w = {0.9659945126777854, -3.7147706312985876E-4, 0.9553629503697613, 9.416740009376934E-4};
         for (int i = 0; i < w.length; i++) {
-            assertEquals(w[i], model.coefficients()[i], 1E-5);
+            assertEquals(w[i], result.model.coefficients()[i], 1E-5);
         }
     }
 
@@ -96,7 +94,7 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(metrics);
-        assertEquals(1.4146564289679233, metrics.rmse, 1E-4);
+        assertEquals(1.4146, metrics.rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -115,6 +113,6 @@ public class LASSOTest {
                 (f, x) -> LASSO.fit(f, x, 0.1));
 
         System.out.println(result);
-        assertEquals(55.27298388642968, result.avg.rmse, 1E-4);
+        assertEquals(51.0009, result.avg.rmse, 1E-4);
     }
 }
