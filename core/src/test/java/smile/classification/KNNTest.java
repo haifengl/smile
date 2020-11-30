@@ -60,19 +60,19 @@ public class KNNTest {
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y));
         System.out.println("1-NN Error: " + metrics);
-        assertEquals(7, metrics.accuracy);
+        assertEquals(0.5, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 3));
         System.out.println("3-NN Error: " + metrics);
-        assertEquals(5, metrics.accuracy);
+        assertEquals(0.6429, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 5));
         System.out.println("5-NN Error: " + metrics);
-        assertEquals(4, metrics.accuracy);
+        assertEquals(0.7143, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y,7));
         System.out.println("7-NN Error: " + metrics);
-        assertEquals(5, metrics.accuracy);
+        assertEquals(0.6429, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -81,19 +81,19 @@ public class KNNTest {
 
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,1));
         System.out.println("1-NN Error: " + metrics);
-        assertEquals(6, metrics.accuracy);
+        assertEquals(0.96, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,3));
         System.out.println("3-NN Error: " + metrics);
-        assertEquals(6, metrics.accuracy);
+        assertEquals(0.96, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,5));
         System.out.println("5-NN Error: " + metrics);
-        assertEquals(5, metrics.accuracy);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
 
         metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,7));
         System.out.println("7-NN Error: " + metrics);
-        assertEquals(5, metrics.accuracy);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -105,7 +105,7 @@ public class KNNTest {
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(40, result.avg.accuracy);
+        assertEquals(40, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -117,7 +117,7 @@ public class KNNTest {
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
-        assertEquals(44, result.avg.accuracy);
+        assertEquals(44, result.avg.accuracy, 1E-4);
     }
 
     @Test

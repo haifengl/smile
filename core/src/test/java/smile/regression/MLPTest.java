@@ -106,9 +106,9 @@ public class MLPTest {
 
     @Test
     public void testReLUSigmoid() {
-        test("CPU", CPU.x, CPU.y, 138.4294, Layer.rectifier(30), Layer.sigmoid(30));
-        test("2dplanes", Planes.x, Planes.y, 1.5177, Layer.rectifier(50), Layer.sigmoid(30));
-        test("abalone", Abalone.x, Abalone.y, 2.5331, Layer.rectifier(40), Layer.sigmoid(30));
+        test("CPU", CPU.x, CPU.y, 121.9408, Layer.rectifier(30), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, 1.5173, Layer.rectifier(50), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, 2.5296, Layer.rectifier(40), Layer.sigmoid(30));
         test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
         test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1220, Layer.rectifier(65), Layer.sigmoid(30));
         test("cal_housing", CalHousing.x, CalHousing.y, 115675.2492, Layer.rectifier(40), Layer.sigmoid(30));

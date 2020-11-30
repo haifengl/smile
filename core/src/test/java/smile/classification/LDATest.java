@@ -61,7 +61,7 @@ public class LDATest {
         ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
 
         System.out.println(metrics);
-        assertEquals(22, metrics.accuracy);
+        assertEquals(0.8533, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -73,7 +73,7 @@ public class LDATest {
                 (x, y) -> LDA.fit(x, y));
 
         System.out.println(result);
-        assertEquals(884, result.avg.accuracy);
+        assertEquals(884, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -85,7 +85,7 @@ public class LDATest {
                 (x, y) -> LDA.fit(x, y));
 
         System.out.println(result);
-        assertEquals(42, result.avg.accuracy);
+        assertEquals(42, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)

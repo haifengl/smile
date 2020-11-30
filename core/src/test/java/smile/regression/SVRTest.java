@@ -61,7 +61,7 @@ public class SVRTest {
         RegressionMetrics metrics = LOOCV.regression(Longley.x, Longley.y, (x, y) -> SVR.fit(x, y, 2.0, 10.0, 1E-3));
 
         System.out.println("LOOCV RMSE = " + metrics.rmse);
-        assertEquals(1.6140026106705365, metrics.rmse, 1E-4);
+        assertEquals(1.6140, metrics.rmse, 1E-4);
 
         Regression<double[]> model = SVR.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
         java.nio.file.Path temp = smile.data.Serialize.write(model);
@@ -80,7 +80,7 @@ public class SVRTest {
                 (xi, yi) -> SVR.fit(xi, yi,40.0, 10.0, 1E-3));
 
         System.out.println(result);
-        assertEquals(54.63430240465948, result.avg.rmse, 1E-4);
+        assertEquals(47.1872, result.avg.rmse, 1E-4);
     }
 
     @Test
@@ -102,10 +102,11 @@ public class SVRTest {
         GaussianKernel kernel = new GaussianKernel(5.0);
         KernelMachine<double[]> model = SVR.fit(Abalone.x, Abalone.y, kernel, 1.5, 100, 1E-3);
 
-        double[] prediction = Validation.test(model, Abalone.testx);
-        double rmse = RMSE.of(Abalone.testy, prediction);
-        System.out.println("Test RMSE = " + rmse);
-        assertEquals(2.1098880372502586, rmse, 1E-3);
+        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(Abalone.x, Abalone.y, Abalone.testx, Abalone.testy,
+                (x, y) -> SVR.fit(x, y, kernel, 1.5, 100, 1E-3));
+
+        System.out.println(result);
+        assertEquals(2.1098, result.metrics.rmse, 1E-4);
     }
 
     @Test
@@ -118,6 +119,6 @@ public class SVRTest {
                 (x, y) -> SVR.fit(x, y, kernel, 50, 1000, 1E-3));
 
         System.out.println(result);
-        assertEquals(61.710080572519516, result.avg.rmse, 1E-4);
+        assertEquals(61.5148, result.avg.rmse, 1E-4);
     }
 }

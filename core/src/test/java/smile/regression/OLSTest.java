@@ -118,7 +118,7 @@ public class OLSTest {
         RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data, (f, x) -> OLS.fit(f, x));
 
         System.out.println(result);
-        assertEquals(55.272997, result.avg.rmse, 1E-4);
+        assertEquals(51.0009, result.avg.rmse, 1E-4);
     }
 
     /**
