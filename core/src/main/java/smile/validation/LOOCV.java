@@ -157,6 +157,7 @@ public class LOOCV implements Serializable {
      * Runs leave-one-out cross validation tests.
      * @return the predictions.
      */
+    @SuppressWarnings("unchecked")
     public static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int[] y = formula.y(data).toIntArray();
         int k = MathEx.unique(y).length;

@@ -103,17 +103,17 @@ public class ClassificationValidations<M> implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("{\n");
-        sb.append(String.format("  fit time: %.3f ms +/- %.3f,\n", avg.fitTime, sd.fitTime));
-        sb.append(String.format("  score time: %.3f ms +/- %.3f,\n", avg.scoreTime, sd.scoreTime));
-        sb.append(String.format("  accuracy: %.2f%% +/- %.2f", 100 * avg.accuracy, 100 * sd.accuracy));
-        if (!Double.isNaN(avg.sensitivity)) sb.append(String.format(",\n  sensitivity: %.2f%% +/- %.2f", 100 * avg.sensitivity, 100 * sd.sensitivity));
-        if (!Double.isNaN(avg.specificity)) sb.append(String.format(",\n  specificity: %.2f%% +/- %.2f", 100 * avg.specificity, 100 * sd.specificity));
-        if (!Double.isNaN(avg.precision)) sb.append(String.format(",\n  precision: %.2f%% +/- %.2f", 100 * avg.precision, 100 * sd.precision));
-        if (!Double.isNaN(avg.f1)) sb.append(String.format(",\n  F1 score: %.2f%% +/- %.2f", 100 * avg.f1, 100 * sd.f1));
-        if (!Double.isNaN(avg.mcc)) sb.append(String.format(",\n  MCC: %.2f%% +/- %.2f", 100 * avg.mcc, 100 * sd.mcc));
-        if (!Double.isNaN(avg.auc)) sb.append(String.format(",\n  AUC: %.2f%% +/- %.2f", 100 * avg.auc, 100 * sd.auc));
-        if (!Double.isNaN(avg.logloss)) sb.append(String.format(",\n  log loss: %.4f +/- %.4f", avg.logloss, sd.logloss));
-        else if (!Double.isNaN(avg.crossentropy)) sb.append(String.format(",\n  cross entropy: %.4f +/- %.4f", avg.crossentropy, sd.crossentropy));
+        sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime, sd.fitTime));
+        sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime, sd.scoreTime));
+        sb.append(String.format("  accuracy: %.2f%% ± %.2f", 100 * avg.accuracy, 100 * sd.accuracy));
+        if (!Double.isNaN(avg.sensitivity)) sb.append(String.format(",\n  sensitivity: %.2f%% ± %.2f", 100 * avg.sensitivity, 100 * sd.sensitivity));
+        if (!Double.isNaN(avg.specificity)) sb.append(String.format(",\n  specificity: %.2f%% ± %.2f", 100 * avg.specificity, 100 * sd.specificity));
+        if (!Double.isNaN(avg.precision)) sb.append(String.format(",\n  precision: %.2f%% ± %.2f", 100 * avg.precision, 100 * sd.precision));
+        if (!Double.isNaN(avg.f1)) sb.append(String.format(",\n  F1 score: %.2f%% ± %.2f", 100 * avg.f1, 100 * sd.f1));
+        if (!Double.isNaN(avg.mcc)) sb.append(String.format(",\n  MCC: %.2f%% ± %.2f", 100 * avg.mcc, 100 * sd.mcc));
+        if (!Double.isNaN(avg.auc)) sb.append(String.format(",\n  AUC: %.2f%% ± %.2f", 100 * avg.auc, 100 * sd.auc));
+        if (!Double.isNaN(avg.logloss)) sb.append(String.format(",\n  log loss: %.4f ± %.4f", avg.logloss, sd.logloss));
+        else if (!Double.isNaN(avg.crossentropy)) sb.append(String.format(",\n  cross entropy: %.4f ± %.4f", avg.crossentropy, sd.crossentropy));
         sb.append("\n}");
         return sb.toString();
     }
