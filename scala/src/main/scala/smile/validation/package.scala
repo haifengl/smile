@@ -141,7 +141,7 @@ package object validation {
       * @return the trained classifier.
       */
     def classification[T <: AnyRef, M <: Classifier[T]](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])
-                                             (trainer: (Array[T], Array[Int]) => M): ClassificationValidation[T, M] = {
+                                             (trainer: (Array[T], Array[Int]) => M): ClassificationValidation[M] = {
       ClassificationValidation.of(x, y, testx, testy, trainer)
     }
 
@@ -153,8 +153,8 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the trained classifier.
       */
-    def classification[M <: Classifier[Tuple]](formula: Formula, train: DataFrame, test: DataFrame)
-                                    (trainer: (Formula, DataFrame) => M): ClassificationValidation[Tuple, M] = {
+    def classification[M <: DataFrameClassifier](formula: Formula, train: DataFrame, test: DataFrame)
+                                    (trainer: (Formula, DataFrame) => M): ClassificationValidation[M] = {
       ClassificationValidation.of(formula, train, test, trainer)
     }
 
@@ -170,7 +170,7 @@ package object validation {
       * @return the trained classifier.
       */
     def regression[T <: AnyRef, M <: Regression[T]](x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double])
-                                             (trainer: (Array[T], Array[Double]) => M): RegressionValidation[T, M] = {
+                                             (trainer: (Array[T], Array[Double]) => M): RegressionValidation[M] = {
       RegressionValidation.of(x, y, testx, testy, trainer)
     }
 
@@ -182,8 +182,8 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the trained classifier.
       */
-    def regression[M <: Regression[Tuple]](formula: Formula, train: DataFrame, test: DataFrame)
-                                    (trainer: (Formula, DataFrame) => M): RegressionValidation[Tuple, M] = {
+    def regression[M <: DataFrameRegression](formula: Formula, train: DataFrame, test: DataFrame)
+                                    (trainer: (Formula, DataFrame) => M): RegressionValidation[M] = {
       RegressionValidation.of(formula, train, test, trainer)
     }
   }
@@ -265,7 +265,7 @@ package object validation {
       * @return metric scores.
       */
     def classification[T <: AnyRef, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
-                                                       (trainer: (Array[T], Array[Int]) => M): ClassificationValidations[T, M] = {
+                                                       (trainer: (Array[T], Array[Int]) => M): ClassificationValidations[M] = {
       CrossValidation.classification(k, x, y, trainer)
     }
 
@@ -277,8 +277,8 @@ package object validation {
       * @param trainer  a code block to return a classifier trained on the given data.
       * @return metric scores.
       */
-    def classification[M <: Classifier[Tuple]](k: Int, formula: Formula, data: DataFrame)
-                                              (trainer: (Formula, DataFrame) => M): ClassificationValidations[Tuple, M] = {
+    def classification[M <: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+                                              (trainer: (Formula, DataFrame) => M): ClassificationValidations[M] = {
       CrossValidation.classification(k, formula, data, trainer)
     }
 
@@ -291,7 +291,7 @@ package object validation {
       * @return metric scores.
       */
     def regression[T <: AnyRef, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double])
-                                                   (trainer: (Array[T], Array[Double]) => M): RegressionValidations[T, M] = {
+                                                   (trainer: (Array[T], Array[Double]) => M): RegressionValidations[M] = {
       CrossValidation.regression(k, x, y, trainer)
     }
 
@@ -303,8 +303,8 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return metric scores.
       */
-    def regression[M <: Regression[Tuple]](k: Int, formula: Formula, data: DataFrame)
-                                          (trainer: (Formula, DataFrame) => M): RegressionValidations[Tuple, M] = {
+    def regression[M <: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+                                          (trainer: (Formula, DataFrame) => M): RegressionValidations[M] = {
       CrossValidation.regression(k, formula, data, trainer)
     }
   }
@@ -325,7 +325,7 @@ package object validation {
       * @return the error rates of each round.
       */
     def classification[T <: AnyRef, M <: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
-                                                       (trainer: (Array[T], Array[Int]) => M): ClassificationValidations[T, M] = {
+                                                       (trainer: (Array[T], Array[Int]) => M): ClassificationValidations[M] = {
       Bootstrap.classification(k, x, y, trainer)
     }
 
@@ -336,8 +336,8 @@ package object validation {
       * @param trainer a code block to return a classifier trained on the given data.
       * @return the error rates of each round.
       */
-    def classification[M <: Classifier[Tuple]](k: Int, formula: Formula, data: DataFrame)
-                                              (trainer: (Formula, DataFrame) => M): ClassificationValidations[Tuple, M] = {
+    def classification[M <: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+                                              (trainer: (Formula, DataFrame) => M): ClassificationValidations[M] = {
       Bootstrap.classification(k, formula, data, trainer)
     }
 
@@ -350,7 +350,7 @@ package object validation {
       * @return the root mean squared error of each round.
       */
     def regression[T <: AnyRef, M <: Regression[T]](k: Int, x: Array[T], y: Array[Double])
-                                                   (trainer: (Array[T], Array[Double]) => M): RegressionValidations[T, M] = {
+                                                   (trainer: (Array[T], Array[Double]) => M): RegressionValidations[M] = {
       Bootstrap.regression(k, x, y, trainer)
     }
 
@@ -361,8 +361,8 @@ package object validation {
       * @param trainer  a code block to return a regression model trained on the given data.
       * @return the root mean squared error of each round.
       */
-    def regression[M <: Regression[Tuple]](k: Int, formula: Formula, data: DataFrame)
-                                          (trainer: (Formula, DataFrame) => M): RegressionValidations[Tuple, M] = {
+    def regression[M <: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+                                          (trainer: (Formula, DataFrame) => M): RegressionValidations[M] = {
       Bootstrap.regression(k, formula, data, trainer)
     }
   }

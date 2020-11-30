@@ -20,21 +20,19 @@ package smile.validation;
 import java.io.Serializable;
 import java.util.List;
 import smile.math.MathEx;
-import smile.regression.Regression;
 
 /**
  * Regression model validation results.
  *
- * @type T the instance type.
- * @type M the model type.
+ * @param <M> the regression model type.
  *
  * @author Haifeng
  */
-public class RegressionValidations<T, M extends Regression<T>> implements Serializable {
+public class RegressionValidations<M> implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The multiple round validations. */
-    public final List<RegressionValidation<T, M>> rounds;
+    public final List<RegressionValidation<M>> rounds;
 
     /** The average of metrics. */
     public final RegressionMetrics avg;
@@ -43,7 +41,7 @@ public class RegressionValidations<T, M extends Regression<T>> implements Serial
     public final RegressionMetrics sd;
 
     /** Constructor. */
-    public RegressionValidations(List<RegressionValidation<T, M>> rounds) {
+    public RegressionValidations(List<RegressionValidation<M>> rounds) {
         this.rounds = rounds;
 
         int k = rounds.size();

@@ -19,22 +19,20 @@ package smile.validation;
 
 import java.io.Serializable;
 import java.util.List;
-import smile.classification.Classifier;
 import smile.math.MathEx;
 
 /**
  * Classification model validation results.
  *
- * @type T the instance type.
- * @type M the model type.
+ * @param <M> the model type.
  *
  * @author Haifeng
  */
-public class ClassificationValidations<T, M extends Classifier<T>> implements Serializable {
+public class ClassificationValidations<M> implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The multiple round validations. */
-    public final List<ClassificationValidation<T, M>> rounds;
+    public final List<ClassificationValidation<M>> rounds;
 
     /** The average of metrics. */
     public final ClassificationMetrics avg;
@@ -43,7 +41,7 @@ public class ClassificationValidations<T, M extends Classifier<T>> implements Se
     public final ClassificationMetrics sd;
 
     /** Constructor. */
-    public ClassificationValidations(List<ClassificationValidation<T, M>> rounds) {
+    public ClassificationValidations(List<ClassificationValidation<M>> rounds) {
         this.rounds = rounds;
 
         int k = rounds.size();
