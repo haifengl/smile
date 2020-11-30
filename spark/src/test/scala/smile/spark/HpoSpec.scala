@@ -50,22 +50,16 @@ class HpoSpec extends Specification with BeforeAll with AfterAll{
         .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
 
       val configurations = hp.random().limit(10).collect(Collectors.toList()).asScala
-      val metrics = Seq(Accuracy.instance, Precision.instance, Recall.instance)
-
-      val scores = hpo.classification(5, formula, mushrooms, configurations, metrics: _*) {
+      val scores = hpo.classification(5, formula, mushrooms, configurations) {
         (formula: Formula, data: DataFrame, prop: Properties) => RandomForest.fit(formula, data, prop)
       }
 
       (0 until configurations.length) foreach { i =>
         print(configurations(i))
-        (0 until metrics.length) foreach { j =>
-          print(f"  ${metrics(j)} = ${100.0 * scores(i)(j)}%6.2f%%")
-        }
-        println
+        println(scores(i))
       }
 
       scores.length mustEqual configurations.length
-      scores(0).length mustEqual metrics.length
     }
   }
 

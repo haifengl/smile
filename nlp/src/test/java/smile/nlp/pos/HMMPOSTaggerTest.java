@@ -151,10 +151,10 @@ public class HMMPOSTaggerTest {
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, cv.train[i]);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.train[i]);
-            String[][] testx = MathEx.slice(x, cv.test[i]);
-            PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
+            String[][] trainx = MathEx.slice(x, cv.splits[i].train);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.splits[i].train);
+            String[][] testx = MathEx.slice(x, cv.splits[i].test);
+            PennTreebankPOS[][] testy = MathEx.slice(y, cv.splits[i].test);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
@@ -189,10 +189,10 @@ public class HMMPOSTaggerTest {
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, cv.train[i]);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.train[i]);
-            String[][] testx = MathEx.slice(x, cv.test[i]);
-            PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
+            String[][] trainx = MathEx.slice(x, cv.splits[i].train);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.splits[i].train);
+            String[][] testx = MathEx.slice(x, cv.splits[i].test);
+            PennTreebankPOS[][] testy = MathEx.slice(y, cv.splits[i].test);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
