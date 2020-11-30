@@ -58,23 +58,21 @@ public class ValidationTest {
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DecisionTree model = DecisionTree.fit(USPS.formula, USPS.train);
-        int[] prediction = Validation.test(model, USPS.test);
-        double accuracy = Accuracy.of(USPS.testy, prediction);
-        System.out.println("accuracy = " + accuracy);
-        assertEquals(0.8340, accuracy, 1E-4);
+        ClassificationValidation<DecisionTree> result = ClassificationValidation.of(USPS.formula, USPS.train, USPS.test,
+                (formula, data) -> DecisionTree.fit(formula, data));
+
+        System.out.println(result);
+        assertEquals(0.8340, result.metrics.accuracy, 1E-4);
     }
 
     @Test
-    public void testCPU() {
+    public void testAbalone() {
         System.out.println("Abalone");
-        RegressionTree model = RegressionTree.fit(Abalone.formula, Abalone.train);
-        double[] prediction = Validation.test(model, Abalone.test);
-        double rmse = RMSE.of(Abalone.testy, prediction);
-        double mad = MAD.of(Abalone.testy, prediction);
-        System.out.println("RMSE = " + rmse);
-        System.out.println("MAD = " + mad);
-        assertEquals(2.5567, rmse, 1E-4);
-        assertEquals(1.8666, mad, 1E-4);
+        RegressionValidation<RegressionTree> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test,
+                (formula, data) -> RegressionTree.fit(formula, data));
+
+        System.out.println(result);
+        assertEquals(2.5567, result.metrics.rmse, 1E-4);
+        assertEquals(1.8666, result.metrics.mad, 1E-4);
     }
 }
