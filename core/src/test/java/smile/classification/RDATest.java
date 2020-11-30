@@ -27,9 +27,7 @@ import smile.data.Iris;
 import smile.data.PenDigits;
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
+import smile.validation.*;
 import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
@@ -65,10 +63,10 @@ public class RDATest {
         int[] expected = {22, 24, 20, 19, 16, 12, 11, 9, 6, 3, 4};
         for (int i = 0; i <= 10; i++) {
             double alpha = i * 0.1;
-            int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
-            int error = Error.of(Iris.y, prediction);
-            System.out.format("alpha = %.1f, error = %d%n", alpha, error);
-            assertEquals(expected[i], error);
+            ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
+
+            System.out.format("alpha = %.1f, metrics = %s%n", alpha, metrics);
+            assertEquals(expected[i], metrics.accuracy);
         }
     }
 
@@ -77,11 +75,11 @@ public class RDATest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RDA.fit(x, y, 0.9));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<RDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RDA.fit(x, y, 0.9));
 
-        System.out.println("Error = " + error);
-        assertEquals(103, error);
+        System.out.println(result);
+        assertEquals(103, result.avg.accuracy);
     }
 
     @Test
@@ -89,11 +87,11 @@ public class RDATest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RDA.fit(x, y, 0.9));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<RDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RDA.fit(x, y, 0.9));
 
-        System.out.println("Error = " + error);
-        assertEquals(31, error);
+        System.out.println(result);
+        assertEquals(31, result.avg.accuracy);
     }
 
     @Test(expected = Test.None.class)

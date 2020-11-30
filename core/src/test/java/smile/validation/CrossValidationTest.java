@@ -61,13 +61,13 @@ public class CrossValidationTest {
                 hit[j] = false;
             }
 
-            int[] train = instance.train[i];
+            int[] train = instance.splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 assertFalse(hit[train[j]]);
                 hit[train[j]] = true;
             }
 
-            int[] test = instance.test[i];
+            int[] test = instance.splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -87,7 +87,7 @@ public class CrossValidationTest {
         CrossValidation instance = new CrossValidation(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = instance.test[i];
+            int[] test = instance.splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;

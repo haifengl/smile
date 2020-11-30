@@ -20,15 +20,13 @@ package smile.classification;
 import smile.base.cart.SplitRule;
 import smile.data.*;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
+import smile.validation.*;
 import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.validation.Validation;
 
 import static org.junit.Assert.*;
 
@@ -72,10 +70,10 @@ public class DecisionTreeTest {
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
-        int error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(7, error);
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
+
+        System.out.println(metrics);
+        assertEquals(7, metrics.accuracy);
     }
 
     @Test
@@ -90,10 +88,10 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(9, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
+
+        System.out.println(metrics);
+        assertEquals(9, metrics.accuracy);
     }
 
     @Test
@@ -101,11 +99,11 @@ public class DecisionTreeTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<DecisionTree> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
-        System.out.println("Error = " + error);
-        assertEquals(351, error);
+        System.out.println(result);
+        assertEquals(351, result.avg.accuracy);
     }
 
     @Test
@@ -113,11 +111,11 @@ public class DecisionTreeTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<DecisionTree> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
-        System.out.println("Error = " + error);
-        assertEquals(42, error);
+        System.out.println(result);
+        assertEquals(42, result.avg.accuracy);
     }
 
     @Test

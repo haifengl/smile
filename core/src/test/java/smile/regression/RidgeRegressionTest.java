@@ -25,9 +25,7 @@ import org.junit.Test;
 import smile.data.CPU;
 import smile.data.Longley;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
-import smile.validation.metric.RMSE;
+import smile.validation.*;
 
 import static org.junit.Assert.*;
 
@@ -69,11 +67,11 @@ public class RidgeRegressionTest {
         assertEquals(7.218054e-01, model.coefficients()[4], 1E-7);
         assertEquals(5.884884e-01, model.coefficients()[5], 1E-7);
 
-        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> RidgeRegression.fit(f, x, 0.1));
-        double rmse = RMSE.of(Longley.y, prediction);
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+                (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
-        System.out.println("LOOCV RMSE = " + rmse);
-        assertEquals(1.7288188, rmse, 1E-7);
+        System.out.println(metrics);
+        assertEquals(1.7288188, metrics.rmse, 1E-7);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -88,10 +86,10 @@ public class RidgeRegressionTest {
         LinearModel model = RidgeRegression.fit(CPU.formula, CPU.data, 0.1);
         System.out.println(model);
 
-        double[] prediction = CrossValidation.regression(10, CPU.formula, CPU.data, (f, x) -> RidgeRegression.fit(f, x, 0.1));
-        double rmse = RMSE.of(CPU.y, prediction);
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data,
+                (f, x) -> RidgeRegression.fit(f, x, 0.1));
 
-        System.out.println("10-CV RMSE = " + rmse);
-        assertEquals(55.268333864, rmse, 1E-7);
+        System.out.println(result);
+        assertEquals(55.268333864, result.avg.rmse, 1E-7);
     }
 }

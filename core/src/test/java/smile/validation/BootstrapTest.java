@@ -67,12 +67,12 @@ public class BootstrapTest {
                 hit[j] = false;
             }
 
-            int[] train = instance.train[i];
+            int[] train = instance.splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 hit[train[j]] = true;
             }
 
-            int[] test = instance.test[i];
+            int[] test = instance.splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -96,12 +96,12 @@ public class BootstrapTest {
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = instance.train[i];
+            int[] train = instance.splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 trainhit[train[j]]++;
             }
 
-            int[] test = instance.test[i];
+            int[] test = instance.splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 testhit[test[j]]++;
             }
@@ -120,19 +120,19 @@ public class BootstrapTest {
     public void testIris() {
         System.out.println("Iris");
 
-        double[] error = Bootstrap.classification(100, Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
+        ClassificationValidations<DecisionTree> result = Bootstrap.classification(100, Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
 
-        System.out.println("100-fold bootstrap error rate average = " + MathEx.mean(error));
-        System.out.println("100-fold bootstrap error rate std.dev = " + MathEx.sd(error));
+        System.out.println("100-fold bootstrap accuracy average = " + result.avg.accuracy);
+        System.out.println("100-fold bootstrap accuracy std.dev = " + result.sd.accuracy);
     }
 
     @Test
     public void testCPU() {
         System.out.println("CPU");
 
-        double[] rmse = Bootstrap.regression(100, CPU.formula, CPU.data, (f, x) -> RegressionTree.fit(f, x));
+        RegressionValidations<RegressionTree> result = Bootstrap.regression(100, CPU.formula, CPU.data, (f, x) -> RegressionTree.fit(f, x));
 
-        System.out.println("100-fold bootstrap RMSE average = " + MathEx.mean(rmse));
-        System.out.println("100-fold bootstrap RMSE std.dev = " + MathEx.sd(rmse));
+        System.out.println("100-fold bootstrap RMSE average = " + result.avg.rmse);
+        System.out.println("100-fold bootstrap RMSE std.dev = " + result.sd.rmse);
     }
 }
