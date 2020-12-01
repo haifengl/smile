@@ -27,6 +27,10 @@ public class ClassificationMetrics implements Serializable {
     public final double fitTime;
     /** The time in milliseconds of scoring the validation data. */
     public final double scoreTime;
+    /** The validation data size. */
+    public final int size;
+    /** The number of errors. */
+    public final int error;
     /** The accuracy on validation data. */
     public final double accuracy;
     /** The sensitivity on validation data. */
@@ -47,14 +51,16 @@ public class ClassificationMetrics implements Serializable {
     public final double crossentropy;
 
     /** Constructor. */
-    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy) {
-        this(fitTime, scoreTime, accuracy, Double.NaN);
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy) {
+        this(fitTime, scoreTime, size, error, accuracy, Double.NaN);
     }
 
     /** Constructor of multiclass soft classifier validation. */
-    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy, double crossentropy) {
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy, double crossentropy) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
+        this.size = size;
+        this.error = error;
         this.accuracy = accuracy;
         this.crossentropy = crossentropy;
         this.sensitivity = Double.NaN;
@@ -67,18 +73,21 @@ public class ClassificationMetrics implements Serializable {
     }
 
     /** Constructor of binary classifier validation. */
-    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
-                                 double sensitivity, double specificity, double precision,
-                                 double f1, double mcc) {
-        this(fitTime, scoreTime, accuracy, sensitivity, specificity, precision, f1, mcc, Double.NaN, Double.NaN);
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
+                                 double accuracy, double sensitivity, double specificity,
+                                 double precision, double f1, double mcc) {
+        this(fitTime, scoreTime, size, error, accuracy, sensitivity, specificity, precision, f1, mcc, Double.NaN, Double.NaN);
     }
 
     /** Constructor of binary soft classifier validation. */
-    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
-                                 double sensitivity, double specificity, double precision,
-                                 double f1, double mcc, double auc, double logloss) {
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
+                                 double accuracy, double sensitivity, double specificity,
+                                 double precision, double f1, double mcc, double auc,
+                                 double logloss) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
+        this.size = size;
+        this.error = error;
         this.accuracy = accuracy;
         this.sensitivity = sensitivity;
         this.specificity = specificity;
@@ -91,11 +100,14 @@ public class ClassificationMetrics implements Serializable {
     }
 
     /** Constructor. */
-    public ClassificationMetrics(double fitTime, double scoreTime, double accuracy,
-                                 double sensitivity, double specificity, double precision,
-                                 double f1, double mcc, double auc, double logloss, double crossentropy) {
+    public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
+                                 double accuracy, double sensitivity, double specificity,
+                                 double precision, double f1, double mcc, double auc,
+                                 double logloss, double crossentropy) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
+        this.size = size;
+        this.error = error;
         this.accuracy = accuracy;
         this.sensitivity = sensitivity;
         this.specificity = specificity;
@@ -112,6 +124,8 @@ public class ClassificationMetrics implements Serializable {
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms,\n", fitTime));
         sb.append(String.format("  score time: %.3f ms,\n", scoreTime));
+        sb.append(String.format("  validation data size: %d,\n", size));
+        sb.append(String.format("  error: %d,\n", error));
         sb.append(String.format("  accuracy: %.2f%%", 100 * accuracy));
         if (!Double.isNaN(sensitivity)) sb.append(String.format(",\n  sensitivity: %.2f%%", 100 * sensitivity));
         if (!Double.isNaN(specificity)) sb.append(String.format(",\n  specificity: %.2f%%", 100 * specificity));

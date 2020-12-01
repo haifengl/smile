@@ -30,6 +30,7 @@ import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.validation.metric.*;
+import smile.validation.metric.Error;
 
 /**
  * Classification model validation results.
@@ -70,7 +71,8 @@ public class ClassificationValidation<M> implements Serializable {
         int k = MathEx.unique(truth).length;
         if (k == 2) {
             if (posteriori == null) {
-                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                        Error.of(truth, prediction),
                         Accuracy.of(truth, prediction),
                         Sensitivity.of(truth, prediction),
                         Specificity.of(truth, prediction),
@@ -80,7 +82,8 @@ public class ClassificationValidation<M> implements Serializable {
                 );
             } else {
                 double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
-                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                        Error.of(truth, prediction),
                         Accuracy.of(truth, prediction),
                         Sensitivity.of(truth, prediction),
                         Specificity.of(truth, prediction),
@@ -93,9 +96,12 @@ public class ClassificationValidation<M> implements Serializable {
             }
         } else {
             if (posteriori == null) {
-                metrics = new ClassificationMetrics(fitTime, scoreTime, Accuracy.of(truth, prediction));
+                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                        Error.of(truth, prediction),
+                        Accuracy.of(truth, prediction));
             } else {
-                metrics = new ClassificationMetrics(fitTime, scoreTime,
+                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
+                        Error.of(truth, prediction),
                         Accuracy.of(truth, prediction),
                         CrossEntropy.of(truth, posteriori)
                 );

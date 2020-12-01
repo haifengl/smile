@@ -27,6 +27,8 @@ public class RegressionMetrics implements Serializable {
     public final double fitTime;
     /** The time in milliseconds of scoring the validation data. */
     public final double scoreTime;
+    /** The validation data size. */
+    public final int size;
     /** The residual sum of squares. on validation data. */
     public final double rss;
     /** The mean squared error on validation data. */
@@ -39,9 +41,10 @@ public class RegressionMetrics implements Serializable {
     public final double r2;
 
     /** Constructor. */
-    public RegressionMetrics(double fitTime, double scoreTime, double rss, double mse, double rmse, double mad, double r2) {
+    public RegressionMetrics(double fitTime, double scoreTime, int size, double rss, double mse, double rmse, double mad, double r2) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
+        this.size = size;
         this.rss = rss;
         this.mse = mse;
         this.rmse = rmse;
@@ -54,6 +57,7 @@ public class RegressionMetrics implements Serializable {
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms,\n", fitTime));
         sb.append(String.format("  score time: %.3f ms,\n", scoreTime));
+        sb.append(String.format("  validation data size:: %d,\n", size));
         sb.append(String.format("  RSS: %.4f,\n", rss));
         sb.append(String.format("  MSE: %.4f,\n", mse));
         sb.append(String.format("  RMSE: %.4f,\n", rmse));

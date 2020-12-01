@@ -47,6 +47,8 @@ public class ClassificationValidations<M> implements Serializable {
         int k = rounds.size();
         double[] fitTime = new double[k];
         double[] scoreTime = new double[k];
+        int[] size = new int[k];
+        int[] error = new int[k];
         double[] accuracy = new double[k];
         double[] sensitivity = new double[k];
         double[] specificity = new double[k];
@@ -61,6 +63,8 @@ public class ClassificationValidations<M> implements Serializable {
             ClassificationMetrics metrics = rounds.get(i).metrics;
             fitTime[i] = metrics.fitTime;
             scoreTime[i] = metrics.scoreTime;
+            size[i] = metrics.size;
+            error[i] = metrics.error;
             accuracy[i] = metrics.accuracy;
             sensitivity[i] = metrics.sensitivity;
             specificity[i] = metrics.specificity;
@@ -75,6 +79,8 @@ public class ClassificationValidations<M> implements Serializable {
         avg = new ClassificationMetrics(
                 MathEx.mean(fitTime),
                 MathEx.mean(scoreTime),
+                (int) Math.round(MathEx.mean(size)),
+                (int) Math.round(MathEx.mean(error)),
                 MathEx.mean(accuracy),
                 MathEx.mean(sensitivity),
                 MathEx.mean(specificity),
@@ -88,6 +94,8 @@ public class ClassificationValidations<M> implements Serializable {
         sd = new ClassificationMetrics(
                 MathEx.sd(fitTime),
                 MathEx.sd(scoreTime),
+                (int) Math.round(MathEx.sd(size)),
+                (int) Math.round(MathEx.sd(error)),
                 MathEx.sd(accuracy),
                 MathEx.sd(sensitivity),
                 MathEx.sd(specificity),
@@ -105,6 +113,8 @@ public class ClassificationValidations<M> implements Serializable {
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime, sd.fitTime));
         sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime, sd.scoreTime));
+        sb.append(String.format("  validation data size: %d ± %d,\n", avg.size, sd.size));
+        sb.append(String.format("  error: %d ± %d,\n", avg.error, sd.error));
         sb.append(String.format("  accuracy: %.2f%% ± %.2f", 100 * avg.accuracy, 100 * sd.accuracy));
         if (!Double.isNaN(avg.sensitivity)) sb.append(String.format(",\n  sensitivity: %.2f%% ± %.2f", 100 * avg.sensitivity, 100 * sd.sensitivity));
         if (!Double.isNaN(avg.specificity)) sb.append(String.format(",\n  specificity: %.2f%% ± %.2f", 100 * avg.specificity, 100 * sd.specificity));
