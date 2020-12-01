@@ -47,6 +47,7 @@ public class RegressionValidations<M> implements Serializable {
         int k = rounds.size();
         double[] fitTime = new double[k];
         double[] scoreTime = new double[k];
+        int[] size = new int[k];
         double[] rss = new double[k];
         double[] mse = new double[k];
         double[] rmse = new double[k];
@@ -57,6 +58,7 @@ public class RegressionValidations<M> implements Serializable {
             RegressionMetrics metrics = rounds.get(i).metrics;
             fitTime[i] = metrics.fitTime;
             scoreTime[i] = metrics.scoreTime;
+            size[i] = metrics.size;
             rss[i] = metrics.rss;
             mse[i] = metrics.mse;
             rmse[i] = metrics.rmse;
@@ -67,6 +69,7 @@ public class RegressionValidations<M> implements Serializable {
         avg = new RegressionMetrics(
                 MathEx.mean(fitTime),
                 MathEx.mean(scoreTime),
+                (int) Math.round(MathEx.mean(size)),
                 MathEx.mean(rss),
                 MathEx.mean(mse),
                 MathEx.mean(rmse),
@@ -76,6 +79,7 @@ public class RegressionValidations<M> implements Serializable {
         sd = new RegressionMetrics(
                 MathEx.sd(fitTime),
                 MathEx.sd(scoreTime),
+                (int) Math.round(MathEx.sd(size)),
                 MathEx.sd(rss),
                 MathEx.sd(mse),
                 MathEx.sd(rmse),
@@ -89,6 +93,7 @@ public class RegressionValidations<M> implements Serializable {
         StringBuilder sb = new StringBuilder("{\n");
         sb.append(String.format("  fit time: %.3f ms ± %.3f,\n", avg.fitTime, sd.fitTime));
         sb.append(String.format("  score time: %.3f ms ± %.3f,\n", avg.scoreTime, sd.scoreTime));
+        sb.append(String.format("  validation data size:: %d ± %d,\n", avg.size, sd.size));
         sb.append(String.format("  RSS: %.4f ± %.4f,\n", avg.rss, sd.rss));
         sb.append(String.format("  MSE: %.4f ± %.4f,\n", avg.mse, sd.mse));
         sb.append(String.format("  RMSE: %.4f ± %.4f,\n", avg.rmse, sd.rmse));
