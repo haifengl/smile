@@ -125,13 +125,13 @@ public class RBFNetworkTest {
         MathEx.standardize(testx);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30));
-        int[] prediction = Validation.test(model, testx);
+        int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.println("RBF Network Error = " + error);
         assertEquals(123, error);
 
         model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30), true);
-        prediction = Validation.test(model, testx);
+        prediction = model.predict(testx);
         error = Error.of(Segment.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(110, error);
@@ -148,13 +148,13 @@ public class RBFNetworkTest {
         RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(USPS.x, USPS.y, neurons);
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.println("RBF Network Error = " + error);
         assertEquals(142, error);
 
         model = RBFNetwork.fit(USPS.x, USPS.y, neurons, true);
-        prediction = Validation.test(model, USPS.testx);
+        prediction = model.predict(USPS.testx);
         error = Error.of(USPS.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(143, error);

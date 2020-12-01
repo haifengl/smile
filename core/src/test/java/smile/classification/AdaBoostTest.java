@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
@@ -110,10 +111,19 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
+        AdaBoost model = AdaBoost.fit(BreastCancer.formula, BreastCancer.data, 200, 20, 4, 1);
+        System.out.println(Error.of(BreastCancer.y, model.predict(BreastCancer.data)));
+
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
                 (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
 
         System.out.println(result);
+        int[] truth = result.rounds.stream().flatMapToInt(round -> Arrays.stream(round.truth)).toArray();
+        int[] prediction = result.rounds.stream().flatMapToInt(round -> Arrays.stream(round.prediction)).toArray();
+        System.out.println(Error.of(truth, prediction));
+        System.out.println(Arrays.toString(truth));
+        System.out.println(Arrays.toString(prediction));
+        for (ClassificationValidation cv : result.rounds) System.out.println(cv);
         assertEquals(19, result.avg.accuracy, 1E-4);
     }
 
@@ -129,9 +139,7 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, Segment.test);
-        int error = Error.of(Segment.testy, prediction);
-
+        int error = Error.of(Segment.testy, model.predict(Segment.test));
         System.out.println("Error = " + error);
         assertEquals(30, error);
 
@@ -154,9 +162,7 @@ public class AdaBoostTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
-        int error = Error.of(USPS.testy, prediction);
-
+        int error = Error.of(USPS.testy, model.predict(USPS.test));
         System.out.println("Error = " + error);
         assertEquals(152, error);
 

@@ -33,7 +33,6 @@ import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
-import smile.validation.Validation;
 import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
@@ -158,7 +157,7 @@ public class MLPTest {
                 model.update(x[i], Segment.y[i]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -192,7 +191,7 @@ public class MLPTest {
                 model.update(x[permutation[i]], Segment.y[permutation[i]]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -229,7 +228,7 @@ public class MLPTest {
                 model.update(x[i], USPS.y[i]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(USPS.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -282,7 +281,7 @@ public class MLPTest {
                 model.update(x[permutation[i]], USPS.y[permutation[i]]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(USPS.testy, prediction);
             System.out.println("Test Error = " + error);
         }

@@ -106,7 +106,7 @@ public class LogisticRegressionTest {
 
         LogisticRegression model = LogisticRegression.fit(Segment.x, Segment.y, 0.05, 1E-3, 1000);
 
-        int[] prediction = Validation.test(model, Segment.testx);
+        int[] prediction = model.predict(Segment.testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(50, error);
@@ -123,7 +123,7 @@ public class LogisticRegressionTest {
             t += Segment.testx.length;
         }
 
-        prediction = Validation.test(model, Segment.testx);
+        prediction = model.predict(Segment.testx);
         error = Error.of(Segment.testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(39, error);
@@ -135,7 +135,7 @@ public class LogisticRegressionTest {
 
         LogisticRegression model = LogisticRegression.fit(USPS.x, USPS.y, 0.3, 1E-3, 1000);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.println("Error = " + error);
         assertEquals(185, error);
@@ -152,7 +152,7 @@ public class LogisticRegressionTest {
             t += USPS.testx.length;
         }
 
-        prediction = Validation.test(model, USPS.testx);
+        prediction = model.predict(USPS.testx);
         error = Error.of(USPS.testy, prediction);
         System.out.println("Error after online update = " + error);
         assertEquals(184, error);

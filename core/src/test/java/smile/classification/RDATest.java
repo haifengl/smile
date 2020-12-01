@@ -100,7 +100,7 @@ public class RDATest {
 
         RDA model = RDA.fit(USPS.x, USPS.y, 0.7);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);

@@ -162,9 +162,9 @@ public class RandomForestTest {
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
         RandomForest forest = forest1.merge(forest2);
-        double rmse1 = RMSE.of(Abalone.testy, Validation.test(forest1, Abalone.test));
-        double rmse2 = RMSE.of(Abalone.testy, Validation.test(forest2, Abalone.test));
-        double rmse  = RMSE.of(Abalone.testy, Validation.test(forest,  Abalone.test));
+        double rmse1 = RMSE.of(Abalone.testy, forest1.predict(Abalone.test));
+        double rmse2 = RMSE.of(Abalone.testy, forest2.predict(Abalone.test));
+        double rmse  = RMSE.of(Abalone.testy, forest.predict(Abalone.test));
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);

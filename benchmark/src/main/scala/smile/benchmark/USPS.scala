@@ -127,7 +127,7 @@ object USPS {
       MathEx.permutate(n).foreach(i =>
         net.update(scaledX(i), y(i))
       )
-      val prediction = Validation.test(net, scaledTestX)
+      val prediction = net.predict(scaledTestX)
       println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
       println("Confusion Matrix: %s" format ConfusionMatrix.of(testy, prediction))
     })

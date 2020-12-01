@@ -126,7 +126,7 @@ public class KNNTest {
 
         KNN<double[]> model = KNN.fit(Segment.x, Segment.y, 1);
 
-        int[] prediction = Validation.test(model, Segment.testx);
+        int[] prediction = model.predict(Segment.testx);
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -139,7 +139,7 @@ public class KNNTest {
 
         KNN<double[]> model = KNN.fit(USPS.x, USPS.y);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
