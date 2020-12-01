@@ -27,7 +27,6 @@ import smile.data.*;
 import smile.data.formula.Formula;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
-import smile.validation.Validation;
 import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
@@ -67,13 +66,13 @@ public class RLSTest {
         DataFrame batch = Longley.data.of(IntStream.range(0, n/2).toArray());
         DataFrame online = Longley.data.of(IntStream.range(n/2, n).toArray());
         LinearModel model = OLS.fit(Longley.formula, batch);
-        double[] prediction = Validation.test(model, online);
+        double[] prediction = model.predict(online);
         double rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Batch RMSE = " + rmse);
         assertEquals(6.229663, rmse, 1E-4);
 
         model.update(online);
-        prediction = Validation.test(model, online);
+        prediction = model.predict(online);
         rmse = RMSE.of(Longley.formula.y(online).toDoubleArray(), prediction);
         System.out.println("Online RMSE = " + rmse);
         assertEquals(0.973663, rmse, 1E-4);
@@ -92,13 +91,13 @@ public class RLSTest {
         LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
         System.out.println(model);
 
-        double[] prediction = Validation.test(model, Prostate.test);
+        double[] prediction = model.predict(Prostate.test);
         double rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);
 
         model.update(Prostate.test);
-        prediction = Validation.test(model, Prostate.test);
+        prediction = model.predict(Prostate.test);
         rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE after online = " + rmse);
         assertEquals(0.643182, rmse, 1E-4);

@@ -94,7 +94,7 @@ public class LDATest {
 
         LDA model = LDA.fit(USPS.x, USPS.y);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);

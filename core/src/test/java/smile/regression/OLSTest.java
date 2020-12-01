@@ -30,7 +30,6 @@ import smile.data.Prostate;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.RegressionValidations;
-import smile.validation.Validation;
 import smile.validation.metric.RMSE;
 
 /**
@@ -131,7 +130,7 @@ public class OLSTest {
         LinearModel model = OLS.fit(Prostate.formula, Prostate.train);
         System.out.println(model);
 
-        double[] prediction = Validation.test(model, Prostate.test);
+        double[] prediction = model.predict(Prostate.test);
         double rmse = RMSE.of(Prostate.testy, prediction);
         System.out.println("RMSE on test data = " + rmse);
         assertEquals(0.721993, rmse, 1E-4);

@@ -100,18 +100,16 @@ public class FLDTest {
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        FLD model = FLD.fit(USPS.x, USPS.y);
+        ClassificationValidation<FLD> result = ClassificationValidation.of(USPS.x, USPS.y, USPS.testx, USPS.testy,
+                (x, y) -> FLD.fit(x, y));
 
-        int error = Error.of(USPS.testy, Validation.test(model, USPS.testx));
-        System.out.println("Error = " + error);
-        assertEquals(262, error);
+        System.out.println(result);
+        assertEquals(262, result.metrics.error);
 
-        java.nio.file.Path temp = smile.data.Serialize.write(model);
-        model = (FLD) smile.data.Serialize.read(temp);
+        java.nio.file.Path temp = smile.data.Serialize.write(result.model);
+        FLD model = (FLD) smile.data.Serialize.read(temp);
 
-        Validation.test(model, USPS.testx);
-        error = Error.of(USPS.testy, Validation.test(model, USPS.testx));
-        System.out.println("Error = " + error);
+        int error = Error.of(USPS.testy, model.predict(USPS.testx));
         assertEquals(262, error);
     }
 
@@ -135,6 +133,6 @@ public class FLDTest {
                 (xi, yi) -> FLD.fit(xi, yi));
 
         System.out.println(result);
-        assertEquals(9, result.avg.accuracy, 1E-4);
+        assertEquals(0.8524, result.avg.accuracy, 1E-4);
     }
 }

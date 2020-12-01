@@ -167,7 +167,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, Segment.test);
+        int[] prediction = model.predict(Segment.test);
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -191,7 +191,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -216,7 +216,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -230,13 +230,13 @@ public class RandomForestTest {
         }
 
         // The old model should not be modified.
-        prediction = Validation.test(model, USPS.test);
+        prediction = model.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(118, error);
 
-        prediction = Validation.test(lean, USPS.test);
+        prediction = lean.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);
