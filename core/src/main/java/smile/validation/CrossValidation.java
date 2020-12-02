@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 import smile.classification.Classifier;
@@ -26,6 +27,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
 import smile.regression.DataFrameRegression;
+import smile.sort.QuickSort;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -56,10 +58,10 @@ public interface CrossValidation {
      * Creates a k-fold cross validation.
      * @param n the number of samples.
      * @param k the number of rounds of cross validation.
-     * @param permutate the flag if permutate the data.
+     * @param shuffle whether to shuffle samples before splitting.
      * @return k-fold data splits.
      */
-    static Split[] of(int n, int k, boolean permutate) {
+    static Split[] of(int n, int k, boolean shuffle) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -71,7 +73,7 @@ public interface CrossValidation {
         Split[] splits = new Split[k];
 
         int[] index = IntStream.range(0, n).toArray();
-        if (permutate){
+        if (shuffle){
             MathEx.permutate(index);
         }
 
@@ -92,6 +94,80 @@ public interface CrossValidation {
             }
 
             splits[i] = new Split(train, test);
+        }
+
+        return splits;
+    }
+
+    /**
+     * Cross validation with non-overlapping groups.
+     * The same group will not appear in two different folds (the number
+     * of distinct groups has to be at least equal to the number of folds).
+     * The folds are approximately balanced in the sense that the number
+     * of distinct groups is approximately the same in each fold.
+     * <p>
+     * This is useful when the i.i.d. assumption is known to be broken by
+     * the underlying process generating the data. For example, when we have
+     * multiple samples by the same user and want to make sure that the model
+     * doesn't learn user-specific features that don't generalize to unseen
+     * users, this approach could be used.
+     *
+     * @param group the group labels for the samples in [0, g), where g
+     *              is the number of groups.
+     * @param k the number of folds.
+     */
+    static Split[] group(int[] group, int k) {
+        if (k < 0) {
+            throw new IllegalArgumentException("Invalid number of folds: " + k);
+        }
+
+        int[] unique = MathEx.unique(group);
+        int g = unique.length;
+
+        if (k > g) {
+            throw new IllegalArgumentException("k-fold must be not greater than the than number of groups");
+        }
+
+        Arrays.sort(unique);
+        for (int i = 0; i < g; i++) {
+            if (unique[i] != i) {
+                throw new IllegalArgumentException("Group indices between [0, numGroups) have to exist");
+            }
+        }
+
+        // sort the groups by number of samples so that we can distribute
+        // test samples from largest groups first
+        int[] ni = new int[g];
+        for (int i : group) ni[i]++;
+
+        int[] index = QuickSort.sort(ni);
+
+        // distribute test samples into k folds one group at a time,
+        // from the largest to the smallest group,
+        // always putting test samples into the fold with the fewest samples
+        int[] foldSize = new int[k];
+        int[] group2Fold = new int[g];
+
+        for (int i = g - 1; i >= 0; i--) {
+            int smallestFold = MathEx.whichMin(foldSize);
+            foldSize[smallestFold] += ni[i];
+            group2Fold[index[i]] = smallestFold;
+        }
+
+        int n = group.length;
+        Split[] splits = new Split[k];
+        for (int i = 0; i < k; i++) {
+            int[] train = new int[n - foldSize[i]];
+            int[] test = new int[foldSize[i]];
+            splits[i] = new Split(train, test);
+
+            for (int j = 0, trainIndex = 0, testIndex = 0; j < n; j++) {
+                if (group2Fold[group[j]] == i) {
+                    test[testIndex++] = j;
+                } else {
+                    train[trainIndex++] = j;
+                }
+            }
         }
 
         return splits;
