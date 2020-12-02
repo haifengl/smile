@@ -28,6 +28,7 @@ import smile.math.MathEx;
 import smile.regression.Regression;
 import smile.regression.DataFrameRegression;
 import smile.sort.QuickSort;
+import smile.util.IntSet;
 
 /**
  * Cross-validation is a technique for assessing how the results of a
@@ -129,10 +130,15 @@ public interface CrossValidation {
         }
 
         Arrays.sort(unique);
-        for (int i = 0; i < g; i++) {
-            if (unique[i] != i) {
-                throw new IllegalArgumentException("Group indices between [0, numGroups) have to exist");
+        IntSet encoder = new IntSet(unique);
+
+        int n = group.length;
+        if (unique[0] != 0 || unique[g-1] != g-1) {
+            int[] y = new int[n];
+            for (int i = 0; i < n; i++) {
+                y[i] = encoder.indexOf(group[i]);
             }
+            group = y;
         }
 
         // sort the groups by number of samples so that we can distribute
@@ -154,7 +160,6 @@ public interface CrossValidation {
             group2Fold[index[i]] = smallestFold;
         }
 
-        int n = group.length;
         Split[] splits = new Split[k];
         for (int i = 0; i < k; i++) {
             int[] train = new int[n - foldSize[i]];

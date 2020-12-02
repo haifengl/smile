@@ -55,12 +55,6 @@ public class GroupKFoldTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidGroupsParameter() {
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 4};
-        CrossValidation.group(groups, 3);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testInvalidGroupsKParameters() {
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
         CrossValidation.group(groups, 4);
