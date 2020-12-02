@@ -101,7 +101,7 @@ public class KNNTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<KNN> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);
@@ -113,7 +113,7 @@ public class KNNTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<KNN> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
                 (x, y) -> KNN.fit(x, y, 3));
 
         System.out.println(result);

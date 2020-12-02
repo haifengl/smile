@@ -61,9 +61,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 
@@ -89,9 +89,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
 
             for (int i : split.train) {
@@ -115,9 +115,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 
@@ -138,9 +138,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
 
             for (int i : split.train) {
@@ -164,9 +164,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 
@@ -187,9 +187,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
 
             for (int i : split.train) {
@@ -213,9 +213,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 
@@ -236,9 +236,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
 
             for (int i : split.train) {
@@ -262,9 +262,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 
@@ -285,9 +285,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
 
             for (int i : split.train) {
@@ -311,9 +311,9 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch TWCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        CrossValidation cv = new CrossValidation(Movie.x.length, 10);
+        Split[] splits = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : cv.splits) {
+        for (Split split : splits) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.TWCNB, 2, Movie.feature.length);
             bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
 

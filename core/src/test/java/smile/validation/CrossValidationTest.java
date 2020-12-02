@@ -54,20 +54,20 @@ public class CrossValidationTest {
         System.out.println("Complete");
         int n = 57;
         int k = 5;
-        CrossValidation instance = new CrossValidation(n, k);
+        Split[] splits = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = instance.splits[i].train;
+            int[] train = splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 assertFalse(hit[train[j]]);
                 hit[train[j]] = true;
             }
 
-            int[] test = instance.splits[i].test;
+            int[] test = splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -84,10 +84,10 @@ public class CrossValidationTest {
         System.out.println("Orthogonal");
         int n = 57;
         int k = 5;
-        CrossValidation instance = new CrossValidation(n, k);
+        Split[] splits = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = instance.splits[i].test;
+            int[] test = splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;

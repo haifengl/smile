@@ -17,8 +17,8 @@
 
 package smile.validation;
 
-import java.io.Serializable;
 import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
@@ -41,30 +41,25 @@ import smile.regression.DataFrameRegression;
  *
  * @author Haifeng Li
  */
-public class CrossValidation implements Serializable {
-    private static final long serialVersionUID = 2L;
-
+public interface CrossValidation {
     /**
-     * The k-fold splits.
-     */
-    public final Split[] splits;
-
-    /**
-     * Constructor.
+     * Creates a k-fold cross validation.
      * @param n the number of samples.
      * @param k the number of rounds of cross validation.
+     * @return k-fold data splits.
      */
-    public CrossValidation(int n, int k) {
-        this(n, k, true);
+    static Split[] of(int n, int k) {
+        return of(n, k, true);
     }
-    
+
     /**
-     * Constructor.
+     * Creates a k-fold cross validation.
      * @param n the number of samples.
      * @param k the number of rounds of cross validation.
-     * @param permutate determiner of index permutation
+     * @param permutate the flag if permutate the data.
+     * @return k-fold data splits.
      */
-    public CrossValidation(int n, int k, boolean permutate) {
+    static Split[] of(int n, int k, boolean permutate) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -73,17 +68,11 @@ public class CrossValidation implements Serializable {
             throw new IllegalArgumentException("Invalid number of CV rounds: " + k);
         }
 
-        splits = new Split[k];
+        Split[] splits = new Split[k];
 
-        int[] index;
+        int[] index = IntStream.range(0, n).toArray();
         if (permutate){
-            index = MathEx.permutate(n);
-        }
-        else{
-            index = new int[n];
-            for (int i = 0; i < n; i++) {
-                index[i] = i;
-            }
+            MathEx.permutate(index);
         }
 
         int chunk = n / k;
@@ -104,6 +93,8 @@ public class CrossValidation implements Serializable {
 
             splits[i] = new Split(train, test);
         }
+
+        return splits;
     }
 
     /**
@@ -114,9 +105,8 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        CrossValidation cv = new CrossValidation(x.length, k);
-        return ClassificationValidation.of(cv.splits, x, y, trainer);
+    static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        return ClassificationValidation.of(of(x.length, k), x, y, trainer);
     }
 
     /**
@@ -127,9 +117,8 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        CrossValidation cv = new CrossValidation(data.size(), k);
-        return ClassificationValidation.of(cv.splits, formula, data, trainer);
+    static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        return ClassificationValidation.of(of(data.size(), k), formula, data, trainer);
     }
 
     /**
@@ -140,9 +129,8 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
-        CrossValidation cv = new CrossValidation(x.length, k);
-        return RegressionValidation.of(cv.splits, x, y, trainer);
+    static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+        return RegressionValidation.of(of(x.length, k), x, y, trainer);
     }
 
     /**
@@ -153,8 +141,7 @@ public class CrossValidation implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        CrossValidation cv = new CrossValidation(data.size(), k);
-        return RegressionValidation.of(cv.splits, formula, data, trainer);
+    static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        return RegressionValidation.of(of(data.size(), k), formula, data, trainer);
     }
 }
