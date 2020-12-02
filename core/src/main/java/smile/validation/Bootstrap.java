@@ -17,7 +17,6 @@
 
 package smile.validation;
 
-import java.io.Serializable;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
@@ -37,21 +36,14 @@ import smile.regression.DataFrameRegression;
  *
  * @author Haifeng Li
  */
-public class Bootstrap implements Serializable {
-    private static final long serialVersionUID = 2L;
-
+public interface Bootstrap {
     /**
-     * The bootstrap samples and OOB (out-of-bag) samples as test data.
-     */
-    public final Split[] splits;
-
-
-    /**
-     * Constructor.
+     * Creates k rounds of bootstrap sampling.
      * @param n the number of samples.
      * @param k the number of rounds of bootstrap.
+     * @return k rounds of data splits. The test data are out of bag (OOB) samples.
      */
-    public Bootstrap(int n, int k) {
+    static Split[] of(int n, int k) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -60,7 +52,7 @@ public class Bootstrap implements Serializable {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 
-        splits = new Split[k];
+        Split[] splits = new Split[k];
 
         for (int j = 0; j < k; j++) {
             boolean[] hit = new boolean[n];
@@ -85,6 +77,8 @@ public class Bootstrap implements Serializable {
 
             splits[j] = new Split(train, test);
         }
+
+        return splits;
     }
 
     /**
@@ -95,9 +89,8 @@ public class Bootstrap implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        Bootstrap cv = new Bootstrap(x.length, k);
-        return ClassificationValidation.of(cv.splits, x, y, trainer);
+    static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        return ClassificationValidation.of(of(x.length, k), x, y, trainer);
     }
 
     /**
@@ -108,9 +101,8 @@ public class Bootstrap implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        Bootstrap cv = new Bootstrap(data.size(), k);
-        return ClassificationValidation.of(cv.splits, formula, data, trainer);
+    static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        return ClassificationValidation.of(of(data.size(), k), formula, data, trainer);
     }
 
     /**
@@ -121,9 +113,8 @@ public class Bootstrap implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
-        Bootstrap cv = new Bootstrap(x.length, k);
-        return RegressionValidation.of(cv.splits, x, y, trainer);
+    static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+        return RegressionValidation.of(of(x.length, k), x, y, trainer);
     }
 
     /**
@@ -134,8 +125,7 @@ public class Bootstrap implements Serializable {
      * @param trainer the lambda to train a model.
      * @return the validation results.
      */
-    public static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        Bootstrap cv = new Bootstrap(data.size(), k);
-        return RegressionValidation.of(cv.splits, formula, data, trainer);
+    static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        return RegressionValidation.of(of(data.size(), k), formula, data, trainer);
     }
 }

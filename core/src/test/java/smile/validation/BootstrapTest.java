@@ -60,19 +60,19 @@ public class BootstrapTest {
         System.out.println("Complete");
         int n = 57;
         int k = 100;
-        Bootstrap instance = new Bootstrap(n, k);
+        Split[] splits = Bootstrap.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = instance.splits[i].train;
+            int[] train = splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 hit[train[j]] = true;
             }
 
-            int[] test = instance.splits[i].test;
+            int[] test = splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -92,16 +92,16 @@ public class BootstrapTest {
         System.out.println("Coverage");
         int n = 57;
         int k = 100;
-        Bootstrap instance = new Bootstrap(n, k);
+        Split[] splits = Bootstrap.of(n, k);
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = instance.splits[i].train;
+            int[] train = splits[i].train;
             for (int j = 0; j < train.length; j++) {
                 trainhit[train[j]]++;
             }
 
-            int[] test = instance.splits[i].test;
+            int[] test = splits[i].test;
             for (int j = 0; j < test.length; j++) {
                 testhit[test[j]]++;
             }
