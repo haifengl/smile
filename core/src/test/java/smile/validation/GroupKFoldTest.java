@@ -19,7 +19,6 @@ package smile.validation;
 
 import org.junit.Test;
 import smile.math.MathEx;
-
 import java.util.Arrays;
 
 import static org.junit.Assert.assertFalse;
@@ -36,11 +35,11 @@ public class GroupKFoldTest {
         int k = 3;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
 
-        GroupKFold split = new GroupKFold(n, k, groups);
+        Split[] splits = CrossValidation.group(groups, k);
 
         for (int i = 0; i < k; i++) {
-            int[] trainGroups = MathEx.unique(Arrays.stream(split.train[i]).map(x -> groups[x]).toArray());
-            int[] testGroups = MathEx.unique(Arrays.stream(split.test[i]).map(x -> groups[x]).toArray());
+            int[] trainGroups = MathEx.unique(Arrays.stream(splits[i].train).map(x -> groups[x]).toArray());
+            int[] testGroups = MathEx.unique(Arrays.stream(splits[i].test).map(x -> groups[x]).toArray());
 
             boolean anyTrainGroupInTestFold = Arrays.stream(trainGroups)
                     .anyMatch(trGroup -> Arrays.stream(testGroups).anyMatch(teGroup -> trGroup == teGroup));
@@ -50,42 +49,20 @@ public class GroupKFoldTest {
     }
 
     @Test(expected = IllegalArgumentException.class)
-    public void testInvalidNParameter() {
-        int n = -1;
-        int k = 3;
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        GroupKFold split = new GroupKFold(n, k, groups);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
     public void testInvalidKParameter() {
-        int n = 10;
-        int k = -1;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        GroupKFold split = new GroupKFold(n, k, groups);
+        CrossValidation.group(groups, -1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidGroupsParameter() {
-        int n = 10;
-        int k = 3;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 4};
-        GroupKFold split = new GroupKFold(n, k, groups);
-    }
-
-    @Test(expected = IllegalArgumentException.class)
-    public void testInvalidGroupsNParameters() {
-        int n = 9;
-        int k = 3;
-        int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        GroupKFold split = new GroupKFold(n, k, groups);
+        CrossValidation.group(groups, 3);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidGroupsKParameters() {
-        int n = 10;
-        int k = 4;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        GroupKFold split = new GroupKFold(n, k, groups);
+        CrossValidation.group(groups, 4);
     }
 }
