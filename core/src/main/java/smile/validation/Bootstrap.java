@@ -17,6 +17,7 @@
 
 package smile.validation;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
@@ -25,10 +26,11 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
 import smile.regression.DataFrameRegression;
+import smile.util.IntSet;
 
 /**
  * The bootstrap is a general tool for assessing statistical accuracy. The basic
- * idea is to randomly draw datasets with replacement from the training data,
+ * idea is to randomly draw samples with replacement from the training data,
  * each samples the same size as the original training set. This is done many
  * times (say k = 100), producing k bootstrap datasets. Then we refit the model
  * to each of the bootstrap datasets and examine the behavior of the fits over
@@ -76,6 +78,83 @@ public interface Bootstrap {
             }
 
             splits[j] = new Split(train, test);
+        }
+
+        return splits;
+    }
+
+
+    /**
+     * Stratified sampling.
+     *
+     * @param stratum strata labels.
+     * @param k the number of rounds of bootstrap.
+     * @return k rounds of data splits. The test data are out of bag (OOB) samples.
+     */
+    static Split[] of(int[] stratum, int k) {
+        if (k < 0) {
+            throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
+        }
+
+        int[] unique = MathEx.unique(stratum);
+        int m = unique.length;
+
+        Arrays.sort(unique);
+        IntSet encoder = new IntSet(unique);
+
+        int n = stratum.length;
+        int[] y = stratum;
+        if (unique[0] != 0 || unique[m-1] != m-1) {
+            y = new int[n];
+            for (int i = 0; i < n; i++) {
+                y[i] = encoder.indexOf(stratum[i]);
+            }
+        }
+
+        // # of samples in each strata
+        int[] ni = new int[m];
+        for (int i : y) ni[i]++;
+
+        // samples in each strata
+        int[][] strata = new int[m][];
+        for (int i = 0; i < m; i++) {
+            strata[i] = new int[ni[i]];
+        }
+
+        int[] pos = new int[m];
+        for (int i = 0; i < n; i++) {
+            int j = y[i];
+            strata[j][pos[j]++] = i;
+        }
+
+        Split[] splits = new Split[k];
+        for (int round = 0; round < k; round++) {
+            boolean[] hit = new boolean[n];
+            int hits = 0;
+
+            int l = 0;
+            int[] train = new int[n];
+            for (int i = 0; i < m; i++) {
+                int[] yi = strata[i];
+                int size = ni[i];
+                for (int j = 0; j < size; j++) {
+                    int sample = yi[MathEx.randomInt(size)];
+                    train[l++] = sample;
+                    if (!hit[sample]) {
+                        hits++;
+                        hit[sample] = true;
+                    }
+                }
+            }
+
+            int[] test = new int[n - hits];
+            for (int i = 0, p = 0; i < n; i++) {
+                if (!hit[i]) {
+                    test[p++] = i;
+                }
+            }
+
+            splits[round] = new Split(train, test);
         }
 
         return splits;
