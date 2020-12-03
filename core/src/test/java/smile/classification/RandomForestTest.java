@@ -204,9 +204,33 @@ public class RandomForestTest {
         }
     }
 
+
+    @Test
+    public void testTrim() {
+        System.out.println("trim");
+
+        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        assertEquals(200, model.size());
+
+        int[] prediction = model.predict(Segment.test);
+        int error = Error.of(Segment.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(34, error);
+
+        model.trim(100);
+        assertEquals(100, model.size());
+
+        prediction = model.predict(Segment.test);
+        error = Error.of(Segment.testy, prediction);
+
+        System.out.println("Error after trim = " + error);
+        assertEquals(32, error);
+    }
+
     @Test
     public void testPrune() {
-        System.out.println("USPS");
+        System.out.println("prune");
 
         // Overfitting with very large maxNodes and small nodeSize
         RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 2000, 1, 1.0, null, Arrays.stream(seeds));
