@@ -102,28 +102,28 @@ public interface CrossValidation {
 
     /**
      * Cross validation with stratified folds. The folds are made by
-     * preserving the percentage of samples for each class.
+     * preserving the percentage of samples for each group.
      *
-     * @param stratum the subpopulation labels of the samples.
+     * @param category the strata labels.
      * @param k the number of folds.
      */
-    static Bag[] of(int[] stratum, int k) {
+    static Bag[] of(int[] category, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
-        int[] unique = MathEx.unique(stratum);
+        int[] unique = MathEx.unique(category);
         int m = unique.length;
 
         Arrays.sort(unique);
         IntSet encoder = new IntSet(unique);
 
-        int n = stratum.length;
-        int[] y = stratum;
+        int n = category.length;
+        int[] y = category;
         if (unique[0] != 0 || unique[m-1] != m-1) {
             y = new int[n];
             for (int i = 0; i < n; i++) {
-                y[i] = encoder.indexOf(stratum[i]);
+                y[i] = encoder.indexOf(category[i]);
             }
         }
 
@@ -166,12 +166,12 @@ public interface CrossValidation {
                 int end = chunk[j] * (i + 1);
                 if (i == k - 1) end = size;
 
-                int[] yj = strata[j];
+                int[] stratum = strata[j];
                 for (int l = 0; l < size; l++) {
                     if (l >= start && l < end) {
-                        test[q++] = yj[l];
+                        test[q++] = stratum[l];
                     } else {
-                        train[p++] = yj[l];
+                        train[p++] = stratum[l];
                     }
                 }
             }
