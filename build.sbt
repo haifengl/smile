@@ -54,7 +54,7 @@ lazy val skipPublishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, spark, shell)
+  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -78,12 +78,10 @@ lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(
 
 lazy val demo = project.in(file("demo")).settings(skipPublishSettings: _*).dependsOn(core, io, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(skipPublishSettings: _*).dependsOn(core, scala)
-
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
 lazy val spark = project.in(file("spark")).settings(skipPublishSettings: _*).dependsOn(core, data, io % "test")
 
-lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(benchmark, demo, scala)
+lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(demo, scala)
