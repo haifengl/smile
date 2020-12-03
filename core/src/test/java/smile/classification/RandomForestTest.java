@@ -204,12 +204,12 @@ public class RandomForestTest {
         }
     }
 
-
     @Test
     public void testTrim() {
         System.out.println("trim");
 
         RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        System.out.println(model.metrics());
         assertEquals(200, model.size());
 
         int[] prediction = model.predict(Segment.test);
@@ -218,10 +218,15 @@ public class RandomForestTest {
         System.out.println("Error = " + error);
         assertEquals(34, error);
 
-        model.trim(100);
-        assertEquals(100, model.size());
+        RandomForest trimmed = model.trim(100);
+        assertEquals(200, model.size());
+        assertEquals(100, trimmed.size());
 
-        prediction = model.predict(Segment.test);
+        double weight1 = Arrays.stream(model.models()).mapToDouble(m -> m.weight).min().getAsDouble();
+        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.weight).min().getAsDouble();
+        assertTrue(weight2 > weight1);
+
+        prediction = trimmed.predict(Segment.test);
         error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error after trim = " + error);

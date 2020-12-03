@@ -19,9 +19,7 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.stream.LongStream;
-
 import smile.base.cart.CART;
 import smile.base.cart.SplitRule;
 import smile.data.DataFrame;
@@ -118,11 +116,11 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     private int k = 2;
 
     /**
-     * Out-of-bag estimation of error rate, which is quite accurate given that
-     * enough trees have been grown (otherwise the OOB estimate can
+     * The overall out-of-bag metrics, which are quite accurate given that
+     * enough trees have been grown (otherwise the OOB error estimate can
      * bias upward).
      */
-    private double error;
+    private ClassificationMetrics metrics;
 
     /**
      * Variable importance. Every time a split of a node is made on variable
@@ -145,11 +143,11 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @param formula a symbolic description of the model to be fitted.
      * @param k the number of classes.
      * @param models forest of decision trees.
-     * @param error the out-of-bag estimation of error rate.
-     * @param importance variable importance
+     * @param metrics the overall out-of-bag metric estimation.
+     * @param importance the feature importance.
      */
-    public RandomForest(Formula formula, int k, Model[] models, double error, double[] importance) {
-        this(formula, k, models, error, importance, IntSet.of(k));
+    public RandomForest(Formula formula, int k, Model[] models, ClassificationMetrics metrics, double[] importance) {
+        this(formula, k, models, metrics, importance, IntSet.of(k));
     }
 
     /**
@@ -157,16 +155,16 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param k the number of classes.
-     * @param models forest of decision trees.
-     * @param error the out-of-bag estimation of error rate.
-     * @param importance variable importance
-     * @param labels class labels
+     * @param models the base models.
+     * @param metrics the overall out-of-bag metric estimation.
+     * @param importance the feature importance.
+     * @param labels the class labels.
      */
-    public RandomForest(Formula formula, int k, Model[] models, double error, double[] importance, IntSet labels) {
+    public RandomForest(Formula formula, int k, Model[] models, ClassificationMetrics metrics, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = k;
         this.models = models;
-        this.error = error;
+        this.metrics = metrics;
         this.importance = importance;
         this.labels = labels;
     }
@@ -369,8 +367,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             DecisionTree tree = new DecisionTree(x, codec.y, y.field(), k, rule, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
             double fitTime = (System.nanoTime() - start) / 1E6;
 
-            start = System.nanoTime();
             // estimate OOB metrics
+            start = System.nanoTime();
             int noob = 0;
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
@@ -384,7 +382,9 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             for (int i = 0, j = 0; i < n; i++) {
                 if (samples[i] == 0) {
                     truth[j] = codec.y[i];
-                    oob[j] = tree.predict(x.get(i), posteriori[j]);
+                    int p = tree.predict(x.get(i), posteriori[j]);
+                    oob[j] = p;
+                    prediction[i][p]++;
                     j++;
                 }
             }
@@ -423,21 +423,23 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             return new Model(tree, metrics);
         }).toArray(Model[]::new);
 
-        int err = 0;
-        int m = 0;
-        for (int i = 0; i < n; i++) {
-            int pred = MathEx.whichMax(prediction[i]);
-            if (prediction[i][pred] > 0) {
-                m++;
-                if (pred != codec.y[i]) {
-                    err++;
-                }
-            }
+        double fitTime = 0.0, scoreTime = 0.0;
+        for (Model model : models) {
+            fitTime += model.metrics.fitTime;
+            scoreTime += model.metrics.scoreTime;
         }
 
-        double error = m > 0 ? (double) err / m : 0.0;
+        int[] vote = new int[n];
+        for (int i = 0; i < n; i++) {
+            vote[i] = MathEx.whichMax(prediction[i]);
+        }
 
-        return new RandomForest(formula, k, models, error, importance(models), codec.labels);
+        ClassificationMetrics metrics = new ClassificationMetrics(fitTime, scoreTime, n,
+                Error.of(codec.y, vote),
+                Accuracy.of(codec.y, vote)
+        );
+
+        return new RandomForest(formula, k, models, metrics, importance(models), codec.labels);
     }
 
     /** Calculate the importance of the whole forest. */
@@ -464,14 +466,14 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     }
 
     /**
-     * Returns the out-of-bag estimation of error rate. The OOB estimate is
+     * Returns the overall out-of-bag metric estimations. The OOB estimate is
      * quite accurate given that enough trees have been grown. Otherwise the
-     * OOB estimate can bias upward.
+     * OOB error estimate can bias upward.
      * 
-     * @return the out-of-bag estimation of error rate
+     * @return the out-of-bag metrics estimations.
      */
-    public double error() {
-        return error;
+    public ClassificationMetrics metrics() {
+        return metrics;
     }
     
     /**
@@ -498,17 +500,15 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     }
 
     /**
-     * Returns the decision trees.
+     * Returns the base models.
      */
-    public DecisionTree[] trees() {
-        return Arrays.stream(models).map(model -> model.tree).toArray(DecisionTree[]::new);
+    public Model[] models() {
+        return models;
     }
 
-    /**
-     * Returns the validation metrics on out-of-bag samples for each decision trees.
-     */
-    public ClassificationMetrics[] metrics() {
-        return Arrays.stream(models).map(model -> model.metrics).toArray(ClassificationMetrics[]::new);
+    @Override
+    public DecisionTree[] trees() {
+        return Arrays.stream(models).map(model -> model.tree).toArray(DecisionTree[]::new);
     }
 
     /**
@@ -519,7 +519,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * 
      * @param ntrees the new (smaller) size of tree model set.
      */
-    public void trim(int ntrees) {
+    public RandomForest trim(int ntrees) {
         if (ntrees > models.length) {
             throw new IllegalArgumentException("The new model size is larger than the current size.");
         }
@@ -529,7 +529,10 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         }
 
         Arrays.sort(models, Comparator.comparingDouble(model -> -model.weight));
-        models = Arrays.copyOf(models, ntrees);
+
+        // The OOB metrics are still the old one
+        // as we don't access to the training data here.
+        return new RandomForest(formula, k, Arrays.copyOf(models, ntrees), metrics, importance(models), labels);
     }
     
     @Override
@@ -617,7 +620,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
                 .map(model -> new Model(model.tree.prune(test, formula, labels), model.metrics))
                 .toArray(Model[]::new);
 
-        // The tree weight and OOB error are still the old one as we don't access to the training data here.
-        return new RandomForest(formula, k, forest, error, importance(forest), labels);
+        // The tree weight and OOB metrics are still the old one
+        // as we don't access to the training data here.
+        return new RandomForest(formula, k, forest, metrics, importance(forest), labels);
     }
 }

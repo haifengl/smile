@@ -17,9 +17,10 @@
 
 package smile.regression;
 
+import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Properties;
-import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import smile.base.cart.CART;
 import smile.base.cart.Loss;
@@ -31,6 +32,8 @@ import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.feature.TreeSHAP;
 import smile.math.MathEx;
+import smile.validation.RegressionMetrics;
+import smile.validation.metric.*;
 
 /**
  * Random forest for regression. Random forest is an ensemble method that
@@ -75,6 +78,22 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     private static final long serialVersionUID = 2L;
 
     /**
+     * The base model.
+     */
+    public static class Model implements Serializable {
+        /** The decision tree. */
+        public final RegressionTree tree;
+        /** The performance metrics on out-of-bag samples. */
+        public final RegressionMetrics metrics;
+
+        /** Constructor. */
+        Model(RegressionTree tree, RegressionMetrics metrics) {
+            this.tree = tree;
+            this.metrics = metrics;
+        }
+    }
+
+    /**
      * The model formula.
      */
     private Formula formula;
@@ -82,14 +101,14 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     /**
      * Forest of regression trees.
      */
-    private RegressionTree[] trees;
+    private Model[] models;
 
     /**
-     * Out-of-bag estimation of RMSE, which is quite accurate given that
-     * enough trees have been grown (otherwise the OOB estimate can
+     * The overall out-of-bag metrics, which are quite accurate given that
+     * enough trees have been grown (otherwise the OOB error estimate can
      * bias upward).
      */
-    private double error;
+    private RegressionMetrics metrics;
 
     /**
      * Variable importance. Every time a split of a node is made on variable
@@ -103,14 +122,14 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     /**
      * Constructor.
      * @param formula a symbolic description of the model to be fitted.
-     * @param trees forest of regression trees.
-     * @param error out-of-bag estimation of RMSE
-     * @param importance variable importance
+     * @param models the base models.
+     * @param metrics the overall out-of-bag metric estimations.
+     * @param importance the feature importance.
      */
-    public RandomForest(Formula formula, RegressionTree[] trees, double error, double[] importance) {
+    public RandomForest(Formula formula, Model[] models, RegressionMetrics metrics, double[] importance) {
         this.formula = formula;
-        this.trees = trees;
-        this.error = error;
+        this.models = models;
+        this.metrics = metrics;
         this.importance = importance;
     }
 
@@ -210,7 +229,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
         }
 
         // train trees with parallel stream
-        RegressionTree[] trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
+        Model[] models = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
             // set RNG seed for the tree
             if (seed > 1) MathEx.setSeed(seed);
 
@@ -229,61 +248,107 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
                 }
             }
 
+            long start = System.nanoTime();
             RegressionTree tree = new RegressionTree(x, Loss.ls(y), field, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
+            double fitTime = (System.nanoTime() - start) / 1E6;
 
-            IntStream.range(0, n).filter(i -> samples[i] == 0).forEach(i -> {
-                double pred = tree.predict(x.get(i));
-                prediction[i] += pred;
-                oob[i]++;
-            });
+            // estimate OOB metrics
+            start = System.nanoTime();
+            int noob = 0;
+            for (int i = 0; i < n; i++) {
+                if (samples[i] == 0) {
+                    noob++;
+                }
+            }
 
-            return tree;
-        }).toArray(RegressionTree[]::new);
+            double[] truth = new double[noob];
+            double[] predict = new double[noob];
+            for (int i = 0, j = 0; i < n; i++) {
+                if (samples[i] == 0) {
+                    truth[j] = y[i];
+                    double yi = tree.predict(x.get(i));
+                    predict[j] = yi;
+                    oob[i]++;
+                    prediction[i] += yi;
+                    j++;
+                }
+            }
+            double scoreTime = (System.nanoTime() - start) / 1E6;
 
-        int m = 0;
-        double error = 0.0;
+            RegressionMetrics metrics = new RegressionMetrics(
+                    fitTime, scoreTime, noob,
+                    RSS.of(truth, predict),
+                    MSE.of(truth, predict),
+                    RMSE.of(truth, predict),
+                    MAD.of(truth, predict),
+                    R2.of(truth, predict)
+            );
+
+            return new Model(tree, metrics);
+        }).toArray(Model[]::new);
+
+        double fitTime = 0.0, scoreTime = 0.0;
+        for (Model model : models) {
+            fitTime += model.metrics.fitTime;
+            scoreTime += model.metrics.scoreTime;
+        }
+
         for (int i = 0; i < n; i++) {
             if (oob[i] > 0) {
-                m++;
-                double pred = prediction[i] / oob[i];
-                error += MathEx.sqr(pred - y[i]);
+                prediction[i] /= oob[i];
             }
         }
 
-        if (m > 0) {
-            error = Math.sqrt(error / m);
-        }
+        RegressionMetrics metrics = new RegressionMetrics(
+                fitTime, scoreTime, n,
+                RSS.of(y, prediction),
+                MSE.of(y, prediction),
+                RMSE.of(y, prediction),
+                MAD.of(y, prediction),
+                R2.of(y, prediction)
+        );
 
-        double[] importance = calculateImportance(trees);
-        return new RandomForest(formula, trees, error, importance);
+        double[] importance = calculateImportance(models);
+        return new RandomForest(formula, models, metrics, importance);
     }
 
     /**
-     * Merges together two random forests and returns a new forest consisting of trees from both input forests.
+     * Merges two random forests.
      */
     public RandomForest merge(RandomForest other) {
         if (!formula.equals(other.formula)) {
-            throw new IllegalArgumentException("RandomForest have different sizes of feature vectors");
+            throw new IllegalArgumentException("RandomForest have different model formula");
         }
 
-        RegressionTree[] forest = new RegressionTree[trees.length + other.trees.length];
-        System.arraycopy(trees, 0, forest, 0, trees.length);
-        System.arraycopy(other.trees, 0, forest, trees.length, other.trees.length);
+        Model[] forest = new Model[models.length + other.models.length];
+        System.arraycopy(models, 0, forest, 0, models.length);
+        System.arraycopy(other.models, 0, forest, models.length, other.models.length);
 
-        double mergedError = (this.error * other.error) / 2; // rough estimation
+        // rough estimation
+        RegressionMetrics mergedMetrics = new RegressionMetrics(
+                metrics.fitTime * other.metrics.fitTime,
+                metrics.scoreTime * other.metrics.scoreTime,
+                metrics.size,
+                (metrics.rss * other.metrics.rss) / 2,
+                (metrics.mse * other.metrics.mse) / 2,
+                (metrics.rmse * other.metrics.rmse) / 2,
+                (metrics.mad * other.metrics.mad) / 2,
+                (metrics.r2 * other.metrics.r2) / 2
+        );
+
         double[] mergedImportance = importance.clone();
         for (int i = 0; i < importance.length; i++) {
             mergedImportance[i] += other.importance[i];
         }
 
-        return new RandomForest(formula, forest, mergedError, mergedImportance);
+        return new RandomForest(formula, forest, mergedMetrics, mergedImportance);
     }
 
     /** Returns the sum of importance of all trees. */
-    private static double[] calculateImportance(RegressionTree[] trees) {
-        double[] importance = new double[trees[0].importance().length];
-        for (RegressionTree tree : trees) {
-            double[] imp = tree.importance();
+    private static double[] calculateImportance(Model[] models) {
+        double[] importance = new double[models[0].tree.importance().length];
+        for (Model model : models) {
+            double[] imp = model.tree.importance();
             for (int i = 0; i < imp.length; i++) {
                 importance[i] += imp[i];
             }
@@ -298,18 +363,18 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
     @Override
     public StructType schema() {
-        return trees[0].schema();
+        return models[0].tree.schema();
     }
 
     /**
-     * Returns the out-of-bag estimation of RMSE. The OOB estimate is
+     * Returns the overall out-of-bag metric estimations. The OOB estimate is
      * quite accurate given that enough trees have been grown. Otherwise the
-     * OOB estimate can bias upward.
+     * OOB error estimate can bias upward.
      * 
-     * @return the out-of-bag estimation of RMSE
+     * @return the overall out-of-bag metric estimations.
      */
-    public double error() {
-        return error;
+    public RegressionMetrics metrics() {
+        return metrics;
     }
         
     /**
@@ -332,12 +397,19 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @return the number of trees in the model 
      */
     public int size() {
-        return trees.length;
+        return models.length;
+    }
+
+    /**
+     * Returns the base models.
+     */
+    public Model[] models() {
+        return models;
     }
 
     @Override
     public RegressionTree[] trees() {
-        return trees;
+        return Arrays.stream(models).map(model -> model.tree).toArray(RegressionTree[]::new);
     }
 
     /**
@@ -348,29 +420,28 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * 
      * @param ntrees the new (smaller) size of tree model set.
      */
-    public void trim(int ntrees) {
-        if (ntrees > trees.length) {
+    public RandomForest trim(int ntrees) {
+        if (ntrees > models.length) {
             throw new IllegalArgumentException("The new model size is larger than the current size.");
         }
         
         if (ntrees <= 0) {
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
-        
-        RegressionTree[] model = new RegressionTree[ntrees];
-        System.arraycopy(trees, 0, model, 0, ntrees);
-        trees = model;
+
+        Arrays.sort(models, Comparator.comparingDouble(model -> model.metrics.rmse));
+        return new RandomForest(formula, Arrays.copyOf(models, ntrees), metrics, importance);
     }
     
     @Override
     public double predict(Tuple x) {
         Tuple xt = formula.x(x);
         double y = 0;
-        for (RegressionTree tree : trees) {
-            y += tree.predict(xt);
+        for (Model model : models) {
+            y += model.tree.predict(xt);
         }
         
-        return y / trees.length;
+        return y / models.length;
     }
 
     /**
@@ -383,14 +454,14 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
         DataFrame x = formula.x(data);
 
         int n = x.nrows();
-        int ntrees = trees.length;
+        int ntrees = models.length;
         double[][] prediction = new double[ntrees][n];
 
         for (int j = 0; j < n; j++) {
             Tuple xj = x.get(j);
             double base = 0;
             for (int i = 0; i < ntrees; i++) {
-                base = base + trees[i].predict(xj);
+                base = base + models[i].tree.predict(xj);
                 prediction[i][j] = base / (i+1);
             }
         }
