@@ -56,20 +56,20 @@ public class CrossValidationTest {
         System.out.println("Complete");
         int n = 57;
         int k = 5;
-        Split[] splits = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 assertFalse(hit[train[j]]);
                 hit[train[j]] = true;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -86,10 +86,10 @@ public class CrossValidationTest {
         System.out.println("Orthogonal");
         int n = 57;
         int k = 5;
-        Split[] splits = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -112,20 +112,20 @@ public class CrossValidationTest {
             stratum[i] = MathEx.randomInt(3);
         }
 
-        Split[] splits = CrossValidation.of(stratum, k);
+        Bag[] bags = CrossValidation.of(stratum, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 assertFalse(hit[train[j]]);
                 hit[train[j]] = true;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -148,10 +148,10 @@ public class CrossValidationTest {
             stratum[i] = MathEx.randomInt(3);
         }
 
-        Split[] splits = CrossValidation.of(stratum, k);
+        Bag[] bags = CrossValidation.of(stratum, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;

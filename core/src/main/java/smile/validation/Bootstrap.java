@@ -40,12 +40,11 @@ import smile.util.IntSet;
  */
 public interface Bootstrap {
     /**
-     * Creates k rounds of bootstrap sampling.
+     * Bootstrap sampling.
      * @param n the number of samples.
      * @param k the number of rounds of bootstrap.
-     * @return k rounds of data splits. The test data are out of bag (OOB) samples.
      */
-    static Split[] of(int n, int k) {
+    static Bag[] of(int n, int k) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -54,7 +53,7 @@ public interface Bootstrap {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 
-        Split[] splits = new Split[k];
+        Bag[] bags = new Bag[k];
 
         for (int j = 0; j < k; j++) {
             boolean[] hit = new boolean[n];
@@ -77,21 +76,20 @@ public interface Bootstrap {
                 }
             }
 
-            splits[j] = new Split(train, test);
+            bags[j] = new Bag(train, test);
         }
 
-        return splits;
+        return bags;
     }
 
 
     /**
-     * Stratified sampling.
+     * Stratified bootstrap sampling.
      *
      * @param stratum strata labels.
      * @param k the number of rounds of bootstrap.
-     * @return k rounds of data splits. The test data are out of bag (OOB) samples.
      */
-    static Split[] of(int[] stratum, int k) {
+    static Bag[] of(int[] stratum, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
@@ -127,7 +125,7 @@ public interface Bootstrap {
             strata[j][pos[j]++] = i;
         }
 
-        Split[] splits = new Split[k];
+        Bag[] bags = new Bag[k];
         for (int round = 0; round < k; round++) {
             boolean[] hit = new boolean[n];
             int hits = 0;
@@ -154,10 +152,10 @@ public interface Bootstrap {
                 }
             }
 
-            splits[round] = new Split(train, test);
+            bags[round] = new Bag(train, test);
         }
 
-        return splits;
+        return bags;
     }
 
     /**

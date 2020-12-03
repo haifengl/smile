@@ -34,14 +34,14 @@ public class GroupKFoldTest {
         int k = 3;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
 
-        Split[] splits = CrossValidation.nonoverlap(groups, k);
+        Bag[] bags = CrossValidation.nonoverlap(groups, k);
 
         for (int i = 0; i < k; i++) {
-            int[] trainGroups = MathEx.unique(Arrays.stream(splits[i].train).map(x -> groups[x]).toArray());
-            int[] testGroups = MathEx.unique(Arrays.stream(splits[i].test).map(x -> groups[x]).toArray());
+            int[] train = MathEx.unique(Arrays.stream(bags[i].samples).map(x -> groups[x]).toArray());
+            int[] test = MathEx.unique(Arrays.stream(bags[i].oob).map(x -> groups[x]).toArray());
 
-            boolean anyTrainGroupInTestFold = Arrays.stream(trainGroups)
-                    .anyMatch(trGroup -> Arrays.stream(testGroups).anyMatch(teGroup -> trGroup == teGroup));
+            boolean anyTrainGroupInTestFold = Arrays.stream(train)
+                    .anyMatch(trainGroup -> Arrays.stream(test).anyMatch(testGroup -> trainGroup == testGroup));
 
             assertFalse(anyTrainGroupInTestFold);
         }

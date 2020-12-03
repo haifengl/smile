@@ -60,19 +60,19 @@ public class BootstrapTest {
         System.out.println("Complete");
         int n = 57;
         int k = 100;
-        Split[] splits = Bootstrap.of(n, k);
+        Bag[] bags = Bootstrap.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 hit[train[j]] = true;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -89,16 +89,16 @@ public class BootstrapTest {
         System.out.println("Coverage");
         int n = 57;
         int k = 100;
-        Split[] splits = Bootstrap.of(n, k);
+        Bag[] bags = Bootstrap.of(n, k);
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 trainhit[train[j]]++;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 testhit[test[j]]++;
             }
@@ -125,19 +125,19 @@ public class BootstrapTest {
             stratum[i] = MathEx.randomInt(3);
         }
 
-        Split[] splits = Bootstrap.of(stratum, k);
+        Bag[] bags = Bootstrap.of(stratum, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 hit[train[j]] = true;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -160,16 +160,16 @@ public class BootstrapTest {
             stratum[i] = MathEx.randomInt(3);
         }
 
-        Split[] splits = Bootstrap.of(stratum, k);
+        Bag[] bags = Bootstrap.of(stratum, k);
         int[] trainhit = new int[n];
         int[] testhit = new int[n];
         for (int i = 0; i < k; i++) {
-            int[] train = splits[i].train;
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 trainhit[train[j]]++;
             }
 
-            int[] test = splits[i].test;
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 testhit[test[j]]++;
             }
