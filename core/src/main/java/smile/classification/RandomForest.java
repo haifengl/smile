@@ -534,7 +534,44 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         // as we don't access to the training data here.
         return new RandomForest(formula, k, Arrays.copyOf(models, ntrees), metrics, importance(models), labels);
     }
-    
+
+    /**
+     * Merges two random forests.
+     */
+    public RandomForest merge(RandomForest other) {
+        if (!formula.equals(other.formula)) {
+            throw new IllegalArgumentException("RandomForest have different model formula");
+        }
+
+        Model[] forest = new Model[models.length + other.models.length];
+        System.arraycopy(models, 0, forest, 0, models.length);
+        System.arraycopy(other.models, 0, forest, models.length, other.models.length);
+
+        // rough estimation
+        ClassificationMetrics mergedMetrics = new ClassificationMetrics(
+                metrics.fitTime * other.metrics.fitTime,
+                metrics.scoreTime * other.metrics.scoreTime,
+                metrics.size,
+                (metrics.error * other.metrics.error) / 2,
+                (metrics.accuracy * other.metrics.accuracy) / 2,
+                (metrics.sensitivity * other.metrics.sensitivity) / 2,
+                (metrics.specificity * other.metrics.specificity) / 2,
+                (metrics.precision * other.metrics.precision) / 2,
+                (metrics.f1 * other.metrics.f1) / 2,
+                (metrics.mcc * other.metrics.mcc) / 2,
+                (metrics.auc * other.metrics.auc) / 2,
+                (metrics.logloss * other.metrics.logloss) / 2,
+                (metrics.crossentropy * other.metrics.crossentropy) / 2
+        );
+
+        double[] mergedImportance = importance.clone();
+        for (int i = 0; i < importance.length; i++) {
+            mergedImportance[i] += other.importance[i];
+        }
+
+        return new RandomForest(formula, k, forest, mergedMetrics, mergedImportance, labels);
+    }
+
     @Override
     public int predict(Tuple x) {
         Tuple xt = formula.x(x);

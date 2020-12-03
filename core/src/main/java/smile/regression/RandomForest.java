@@ -312,38 +312,6 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
         return new RandomForest(formula, models, metrics, importance);
     }
 
-    /**
-     * Merges two random forests.
-     */
-    public RandomForest merge(RandomForest other) {
-        if (!formula.equals(other.formula)) {
-            throw new IllegalArgumentException("RandomForest have different model formula");
-        }
-
-        Model[] forest = new Model[models.length + other.models.length];
-        System.arraycopy(models, 0, forest, 0, models.length);
-        System.arraycopy(other.models, 0, forest, models.length, other.models.length);
-
-        // rough estimation
-        RegressionMetrics mergedMetrics = new RegressionMetrics(
-                metrics.fitTime * other.metrics.fitTime,
-                metrics.scoreTime * other.metrics.scoreTime,
-                metrics.size,
-                (metrics.rss * other.metrics.rss) / 2,
-                (metrics.mse * other.metrics.mse) / 2,
-                (metrics.rmse * other.metrics.rmse) / 2,
-                (metrics.mad * other.metrics.mad) / 2,
-                (metrics.r2 * other.metrics.r2) / 2
-        );
-
-        double[] mergedImportance = importance.clone();
-        for (int i = 0; i < importance.length; i++) {
-            mergedImportance[i] += other.importance[i];
-        }
-
-        return new RandomForest(formula, forest, mergedMetrics, mergedImportance);
-    }
-
     /** Returns the sum of importance of all trees. */
     private static double[] calculateImportance(Model[] models) {
         double[] importance = new double[models[0].tree.importance().length];
@@ -432,7 +400,39 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
         Arrays.sort(models, Comparator.comparingDouble(model -> model.metrics.rmse));
         return new RandomForest(formula, Arrays.copyOf(models, ntrees), metrics, importance);
     }
-    
+
+    /**
+     * Merges two random forests.
+     */
+    public RandomForest merge(RandomForest other) {
+        if (!formula.equals(other.formula)) {
+            throw new IllegalArgumentException("RandomForest have different model formula");
+        }
+
+        Model[] forest = new Model[models.length + other.models.length];
+        System.arraycopy(models, 0, forest, 0, models.length);
+        System.arraycopy(other.models, 0, forest, models.length, other.models.length);
+
+        // rough estimation
+        RegressionMetrics mergedMetrics = new RegressionMetrics(
+                metrics.fitTime * other.metrics.fitTime,
+                metrics.scoreTime * other.metrics.scoreTime,
+                metrics.size,
+                (metrics.rss * other.metrics.rss) / 2,
+                (metrics.mse * other.metrics.mse) / 2,
+                (metrics.rmse * other.metrics.rmse) / 2,
+                (metrics.mad * other.metrics.mad) / 2,
+                (metrics.r2 * other.metrics.r2) / 2
+        );
+
+        double[] mergedImportance = importance.clone();
+        for (int i = 0; i < importance.length; i++) {
+            mergedImportance[i] += other.importance[i];
+        }
+
+        return new RandomForest(formula, forest, mergedMetrics, mergedImportance);
+    }
+
     @Override
     public double predict(Tuple x) {
         Tuple xt = formula.x(x);

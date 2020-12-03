@@ -234,6 +234,25 @@ public class RandomForestTest {
     }
 
     @Test
+    public void testMerge() throws Exception {
+        System.out.println("merge");
+
+        RandomForest forest1 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        RandomForest forest2 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        RandomForest forest = forest1.merge(forest2);
+
+        int error1 = Error.of(Segment.testy, forest1.predict(Segment.test));
+        int error2 = Error.of(Segment.testy, forest2.predict(Segment.test));
+        int error  = Error.of(Segment.testy, forest.predict(Segment.test));
+        System.out.format("Forest 1 Error = %d%n", error1);
+        System.out.format("Forest 2 Error = %d%n", error2);
+        System.out.format("Merged   Error = %d%n", error);
+        assertEquals(34, error1);
+        assertEquals(34, error2);
+        assertEquals(34, error);
+    }
+
+    @Test
     public void testPrune() {
         System.out.println("prune");
 
