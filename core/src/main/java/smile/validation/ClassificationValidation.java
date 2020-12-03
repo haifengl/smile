@@ -143,14 +143,14 @@ public class ClassificationValidation<M> implements Serializable {
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <T, M extends Classifier<T>> ClassificationValidations<M> of(Split[] splits, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        List<ClassificationValidation<M>> rounds = new ArrayList<>(splits.length);
+    public static <T, M extends Classifier<T>> ClassificationValidations<M> of(Bag[] bags, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
-        for (Split split : splits) {
-            T[] trainx = MathEx.slice(x, split.train);
-            int[] trainy = MathEx.slice(y, split.train);
-            T[] testx = MathEx.slice(x, split.test);
-            int[] testy = MathEx.slice(y, split.test);
+        for (Bag bag : bags) {
+            T[] trainx = MathEx.slice(x, bag.samples);
+            int[] trainy = MathEx.slice(y, bag.samples);
+            T[] testx = MathEx.slice(x, bag.oob);
+            int[] testy = MathEx.slice(y, bag.oob);
 
             rounds.add(of(trainx, trainy, testx, testy, trainer));
         }
@@ -198,11 +198,11 @@ public class ClassificationValidation<M> implements Serializable {
      * Trains and validates a model on multiple train/validation split.
      */
     @SuppressWarnings("unchecked")
-    public static <M extends DataFrameClassifier> ClassificationValidations<M> of(Split[] splits, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        List<ClassificationValidation<M>> rounds = new ArrayList<>(splits.length);
+    public static <M extends DataFrameClassifier> ClassificationValidations<M> of(Bag[] bags, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
-        for (Split split : splits) {
-            rounds.add(of(formula, data.of(split.train), data.of(split.test), trainer));
+        for (Bag bag : bags) {
+            rounds.add(of(formula, data.of(bag.samples), data.of(bag.oob), trainer));
         }
 
         return new ClassificationValidations<>(rounds);

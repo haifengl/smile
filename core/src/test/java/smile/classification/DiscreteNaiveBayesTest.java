@@ -21,7 +21,7 @@ import java.util.Arrays;
 import smile.data.Movie;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
-import smile.validation.Split;
+import smile.validation.Bag;
 import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -61,13 +61,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -89,16 +89,16 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Multinomial---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.MULTINOMIAL, 2, Movie.feature.length);
 
-            for (int i : split.train) {
+            for (int i : bag.samples) {
                 bayes.update(Movie.x[i], Movie.y[i]);
             }
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -115,13 +115,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -138,16 +138,16 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online PolyaUrn---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.POLYAURN, 2, Movie.feature.length);
 
-            for (int i : split.train) {
+            for (int i : bag.samples) {
                 bayes.update(Movie.x[i], Movie.y[i]);
             }
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -164,13 +164,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -187,16 +187,16 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online Bernoulli---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.BERNOULLI, 2, Movie.feature.length);
 
-            for (int i : split.train) {
+            for (int i : bag.samples) {
                 bayes.update(Movie.x[i], Movie.y[i]);
             }
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -213,13 +213,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -236,16 +236,16 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online CNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.CNB, 2, Movie.feature.length);
 
-            for (int i : split.train) {
+            for (int i : bag.samples) {
                 bayes.update(Movie.x[i], Movie.y[i]);
             }
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -262,13 +262,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -285,16 +285,16 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Online WCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.WCNB, 2, Movie.feature.length);
 
-            for (int i : split.train) {
+            for (int i : bag.samples) {
                 bayes.update(Movie.x[i], Movie.y[i]);
             }
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }
@@ -311,13 +311,13 @@ public class DiscreteNaiveBayesTest {
         System.out.println("---Batch TWCNB---");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        Split[] splits = CrossValidation.of(Movie.x.length, 10);
+        Bag[] bags = CrossValidation.of(Movie.x.length, 10);
         int[] prediction = new int[Movie.x.length];
-        for (Split split : splits) {
+        for (Bag bag : bags) {
             DiscreteNaiveBayes bayes = new DiscreteNaiveBayes(DiscreteNaiveBayes.Model.TWCNB, 2, Movie.feature.length);
-            bayes.update(MathEx.slice(Movie.x, split.train), MathEx.slice(Movie.y, split.train));
+            bayes.update(MathEx.slice(Movie.x, bag.samples), MathEx.slice(Movie.y, bag.samples));
 
-            for (int i : split.test) {
+            for (int i : bag.oob) {
                 prediction[i] = bayes.predict(Movie.x[i]);
             }
         }

@@ -51,7 +51,7 @@ public interface CrossValidation {
      * @param k the number of rounds of cross validation.
      * @return k-fold data splits.
      */
-    static Split[] of(int n, int k) {
+    static Bag[] of(int n, int k) {
         return of(n, k, true);
     }
 
@@ -62,7 +62,7 @@ public interface CrossValidation {
      * @param shuffle whether to shuffle samples before splitting.
      * @return k-fold data splits.
      */
-    static Split[] of(int n, int k, boolean shuffle) {
+    static Bag[] of(int n, int k, boolean shuffle) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -71,7 +71,7 @@ public interface CrossValidation {
             throw new IllegalArgumentException("Invalid number of CV rounds: " + k);
         }
 
-        Split[] splits = new Split[k];
+        Bag[] bags = new Bag[k];
 
         int[] index = IntStream.range(0, n).toArray();
         if (shuffle){
@@ -94,10 +94,10 @@ public interface CrossValidation {
                 }
             }
 
-            splits[i] = new Split(train, test);
+            bags[i] = new Bag(train, test);
         }
 
-        return splits;
+        return bags;
     }
 
     /**
@@ -107,7 +107,7 @@ public interface CrossValidation {
      * @param stratum the subpopulation labels of the samples.
      * @param k the number of folds.
      */
-    static Split[] of(int[] stratum, int k) {
+    static Bag[] of(int[] stratum, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
@@ -153,7 +153,7 @@ public interface CrossValidation {
             chunk[i] = Math.max(1, ni[i] / k);
         }
 
-        Split[] splits = new Split[k];
+        Bag[] bags = new Bag[k];
         for (int i = 0; i < k; i++) {
             int p = 0;
             int q = 0;
@@ -181,10 +181,10 @@ public interface CrossValidation {
             // Samples are in order of strata. It is better to shuffle.
             MathEx.permutate(train);
             MathEx.permutate(test);
-            splits[i] = new Split(train, test);
+            bags[i] = new Bag(train, test);
         }
 
-        return splits;
+        return bags;
     }
 
     /**
@@ -203,7 +203,7 @@ public interface CrossValidation {
      * @param group the group labels of the samples.
      * @param k the number of folds.
      */
-    static Split[] nonoverlap(int[] group, int k) {
+    static Bag[] nonoverlap(int[] group, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
@@ -235,8 +235,8 @@ public interface CrossValidation {
         int[] index = QuickSort.sort(ni);
 
         // distribute test samples into k folds one group at a time,
-        // from the largest to the smallest group,
-        // always putting test samples into the fold with the fewest samples
+        // from the largest to the smallest group.
+        // always put test samples into the fold with the fewest samples.
         int[] foldSize = new int[k];
         int[] group2Fold = new int[m];
 
@@ -246,11 +246,11 @@ public interface CrossValidation {
             group2Fold[index[i]] = smallestFold;
         }
 
-        Split[] splits = new Split[k];
+        Bag[] bags = new Bag[k];
         for (int i = 0; i < k; i++) {
             int[] train = new int[n - foldSize[i]];
             int[] test = new int[foldSize[i]];
-            splits[i] = new Split(train, test);
+            bags[i] = new Bag(train, test);
 
             for (int j = 0, trainIndex = 0, testIndex = 0; j < n; j++) {
                 if (group2Fold[y[j]] == i) {
@@ -261,7 +261,7 @@ public interface CrossValidation {
             }
         }
 
-        return splits;
+        return bags;
     }
 
     /**

@@ -20,29 +20,29 @@ package smile.validation;
 import java.io.Serializable;
 
 /**
- * A (random) split of training and test data.
+ * A bag of random selected samples.
  *
  * @author Haifeng Li
  */
-public class Split implements Serializable {
+public class Bag implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The index of training instances.
+     * The random samples.
      */
-    public final int[] train;
+    public final int[] samples;
     /**
      * The index of testing instances.
      */
-    public final int[] test;
+    public final int[] oob;
 
     /**
      * Constructor.
-     * @param train the index of training instances.
-     * @param test the index of test instances.
+     * @param samples the random samples.
+     * @param oob the out of bag samples.
      */
-    public Split(int[] train, int[] test) {
-        this.train = train;
-        this.test = test;
+    public Bag(int[] samples, int[] oob) {
+        this.samples = samples;
+        this.oob = oob;
     }
 }

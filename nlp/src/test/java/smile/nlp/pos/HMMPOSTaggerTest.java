@@ -30,7 +30,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
-import smile.validation.Split;
+import smile.validation.Bag;
 import static org.junit.Assert.*;
 
 /**
@@ -147,15 +147,15 @@ public class HMMPOSTaggerTest {
         int n = x.length;
         int k = 10;
 
-        Split[] splits = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         int error = 0;
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, splits[i].train);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, splits[i].train);
-            String[][] testx = MathEx.slice(x, splits[i].test);
-            PennTreebankPOS[][] testy = MathEx.slice(y, splits[i].test);
+            String[][] trainx = MathEx.slice(x, bags[i].samples);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples);
+            String[][] testx = MathEx.slice(x, bags[i].oob);
+            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
@@ -185,15 +185,15 @@ public class HMMPOSTaggerTest {
         int n = x.length;
         int k = 10;
 
-        Split[] splits = CrossValidation.of(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         int error = 0;
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, splits[i].train);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, splits[i].train);
-            String[][] testx = MathEx.slice(x, splits[i].test);
-            PennTreebankPOS[][] testy = MathEx.slice(y, splits[i].test);
+            String[][] trainx = MathEx.slice(x, bags[i].samples);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples);
+            String[][] testx = MathEx.slice(x, bags[i].oob);
+            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
