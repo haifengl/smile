@@ -86,26 +86,26 @@ public interface Bootstrap {
     /**
      * Stratified bootstrap sampling.
      *
-     * @param stratum strata labels.
+     * @param category the strata labels.
      * @param k the number of rounds of bootstrap.
      */
-    static Bag[] of(int[] stratum, int k) {
+    static Bag[] of(int[] category, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of bootstrap: " + k);
         }
 
-        int[] unique = MathEx.unique(stratum);
+        int[] unique = MathEx.unique(category);
         int m = unique.length;
 
         Arrays.sort(unique);
         IntSet encoder = new IntSet(unique);
 
-        int n = stratum.length;
-        int[] y = stratum;
+        int n = category.length;
+        int[] y = category;
         if (unique[0] != 0 || unique[m-1] != m-1) {
             y = new int[n];
             for (int i = 0; i < n; i++) {
-                y[i] = encoder.indexOf(stratum[i]);
+                y[i] = encoder.indexOf(category[i]);
             }
         }
 
@@ -133,10 +133,10 @@ public interface Bootstrap {
             int l = 0;
             int[] train = new int[n];
             for (int i = 0; i < m; i++) {
-                int[] yi = strata[i];
+                int[] stratum = strata[i];
                 int size = ni[i];
                 for (int j = 0; j < size; j++) {
-                    int sample = yi[MathEx.randomInt(size)];
+                    int sample = stratum[MathEx.randomInt(size)];
                     train[l++] = sample;
                     if (!hit[sample]) {
                         hits++;

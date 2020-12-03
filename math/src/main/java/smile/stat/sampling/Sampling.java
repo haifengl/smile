@@ -20,6 +20,7 @@ package smile.stat.sampling;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import smile.math.MathEx;
+import smile.util.IntSet;
 
 /**
  * Random sampling.
@@ -55,56 +56,67 @@ public interface Sampling {
      * into separate strata. Each stratum is then sampled as an independent
      * sub-population, out of which individual elements can be randomly selected.
      *
-     * @param y strata labels in [0, k).
+     * @param category the strata labels.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    static int[] strateified(int[] y, double subsample) {
-        int k = MathEx.max(y);
-        int n = y.length;
+    static int[] strateified(int[] category, double subsample) {
+        int[] unique = MathEx.unique(category);
+        int m = unique.length;
+
+        Arrays.sort(unique);
+        IntSet encoder = new IntSet(unique);
+
+        int n = category.length;
+        int[] y = category;
+        if (unique[0] != 0 || unique[m-1] != m-1) {
+            y = new int[n];
+            for (int i = 0; i < n; i++) {
+                y[i] = encoder.indexOf(category[i]);
+            }
+        }
 
         // # of samples in each strata
-        int[] count = new int[k];
-        for (int i = 0; i < n; i++) {
-            count[y[i]]++;
+        int[] ni = new int[m];
+        for (int i : y) ni[i]++;
+
+        int[][] strata = new int[m][];
+        for (int i = 0; i < m; i++) {
+            strata[i] = new int[ni[i]];
         }
-        // samples in each strata
-        int[][] yi = new int[k][];
-        for (int i = 0; i < k; i++) {
-            yi[i] = new int[count[i]];
-        }
-        int[] idx = new int[k];
+
+        int[] pos = new int[m];
         for (int i = 0; i < n; i++) {
-            int j = y[i];
-            yi[j][idx[j]++] = i;
+            int j =  y[i];
+            strata[j][pos[j]++] = i;
         }
 
         if (subsample == 1.0) {
             // draw with replacement.
             int[] samples = new int[n];
             int l = 0;
-            for (int i = 0; i < k; i++) {
-                int ni = count[i];
-                int[] yj = yi[i];
-                for (int j = 0; j < ni; j++) {
-                    samples[l++] = yj[MathEx.randomInt(ni)];
+            for (int i = 0; i < m; i++) {
+                int[] stratum = strata[i];
+                int size = ni[i];
+                for (int j = 0; j < size; j++) {
+                    samples[l++] = stratum[MathEx.randomInt(size)];
                 }
             }
             return samples;
         } else {
             // draw without replacement.
             int size = 0;
-            for (int i = 0; i < k; i++) {
-                size += (int) Math.round(subsample * count[i]);
+            for (int i = 0; i < m; i++) {
+                size += (int) Math.round(subsample * ni[i]);
             }
 
             int[] samples = new int[size];
             int l = 0;
-            for (int i = 0; i < k; i++) {
-                int ni = (int) Math.round(subsample * count[i]);
-                int[] yj = yi[i];
-                int[] permutation = MathEx.permutate(count[i]);
-                for (int j = 0; j < ni; j++) {
-                    samples[l++] = yj[permutation[j]];
+            for (int i = 0; i < m; i++) {
+                int sub = (int) Math.round(subsample * ni[i]);
+                int[] stratum = strata[i];
+                int[] permutation = MathEx.permutate(ni[i]);
+                for (int j = 0; j < sub; j++) {
+                    samples[l++] = stratum[permutation[j]];
                 }
             }
             return samples;
