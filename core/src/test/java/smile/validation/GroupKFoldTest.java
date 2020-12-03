@@ -31,11 +31,10 @@ public class GroupKFoldTest {
 
     @Test
     public void testNoGroupsInSameFold() {
-        int n = 10;
         int k = 3;
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
 
-        Split[] splits = CrossValidation.group(groups, k);
+        Split[] splits = CrossValidation.nonoverlap(groups, k);
 
         for (int i = 0; i < k; i++) {
             int[] trainGroups = MathEx.unique(Arrays.stream(splits[i].train).map(x -> groups[x]).toArray());
@@ -51,12 +50,12 @@ public class GroupKFoldTest {
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidKParameter() {
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        CrossValidation.group(groups, -1);
+        CrossValidation.nonoverlap(groups, -1);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testInvalidGroupsKParameters() {
         int[] groups = new int[] {1, 2, 2, 0, 0, 0, 2, 1, 1, 2};
-        CrossValidation.group(groups, 4);
+        CrossValidation.nonoverlap(groups, 4);
     }
 }
