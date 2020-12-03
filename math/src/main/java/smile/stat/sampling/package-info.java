@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 /**
- * Sampling is concerned with the selection of a subset of individuals
+ * Sampling is the selection of a subset of individuals
  * from within a statistical population to estimate characteristics of
  * the whole population.
  *

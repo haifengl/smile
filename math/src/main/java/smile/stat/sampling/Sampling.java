@@ -22,60 +22,43 @@ import java.util.stream.Collectors;
 import smile.math.MathEx;
 
 /**
- * Bagging (Bootstrap aggregating) is a way to improve the classification by
- * combining classifications of randomly generated training sets.
+ * Random sampling.
  *
  * @author Haifeng Li
  */
-public class Bagging {
-
+public interface Sampling {
     /**
-     * The samples.
-     */
-    public final int[] samples;
-
-    /**
-     * Constructor.
-     * @param samples the samples.
-     */
-    public Bagging(int[] samples) {
-        this.samples = samples;
-    }
-
-    @Override
-    public String toString() {
-        return Arrays.stream(samples).mapToObj(String::valueOf).collect(Collectors.joining(", ", "Bagging(", ")"));
-    }
-
-    /**
-     * Random sampling.
+     * Random sampling. All samples have an equal probability of being selected.
      *
      * @param n the size of samples.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    public static Bagging random(int n, double subsample) {
+    static int[] random(int n, double subsample) {
         if (subsample == 1.0) {
             // draw with replacement.
             int[] samples = new int[n];
             for (int i = 0; i < n; i++) {
                 samples[i] = MathEx.randomInt(n);
             }
-            return new Bagging(samples);
+            return samples;
         } else {
             // draw without replacement.
             int size = (int) Math.round(subsample * n);
             int[] samples = MathEx.permutate(n);
-            return new Bagging(Arrays.copyOf(samples, size));
+            return Arrays.copyOf(samples, size);
         }
     }
 
     /**
-     * Stratified sampling.
+     * Stratified sampling. When the population embraces a number of
+     * distinct categories, the frame can be organized by these categories
+     * into separate strata. Each stratum is then sampled as an independent
+     * sub-population, out of which individual elements can be randomly selected.
      *
      * @param y strata labels in [0, k).
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
      */
-    public static Bagging strateify(int[] y, double subsample) {
+    static int[] strateified(int[] y, double subsample) {
         int k = MathEx.max(y);
         int n = y.length;
 
@@ -106,7 +89,7 @@ public class Bagging {
                     samples[l++] = yj[MathEx.randomInt(ni)];
                 }
             }
-            return new Bagging(samples);
+            return samples;
         } else {
             // draw without replacement.
             int size = 0;
@@ -124,7 +107,7 @@ public class Bagging {
                     samples[l++] = yj[permutation[j]];
                 }
             }
-            return new Bagging(samples);
+            return samples;
         }
     }
 }
