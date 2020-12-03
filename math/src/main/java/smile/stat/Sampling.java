@@ -15,15 +15,16 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  ******************************************************************************/
 
-package smile.stat.sampling;
+package smile.stat;
 
 import java.util.Arrays;
-import java.util.stream.Collectors;
 import smile.math.MathEx;
 import smile.util.IntSet;
 
 /**
- * Random sampling.
+ * Random sampling Sampling is the selection of a subset of individuals
+ * from within a statistical population to estimate characteristics of
+ * the whole population.
  *
  * @author Haifeng Li
  */
