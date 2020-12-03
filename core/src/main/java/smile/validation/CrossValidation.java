@@ -101,6 +101,93 @@ public interface CrossValidation {
     }
 
     /**
+     * Cross validation with stratified folds. The folds are made by
+     * preserving the percentage of samples for each class.
+     *
+     * @param stratum the subpopulation labels of the samples.
+     * @param k the number of folds.
+     */
+    static Split[] of(int[] stratum, int k) {
+        if (k < 0) {
+            throw new IllegalArgumentException("Invalid number of folds: " + k);
+        }
+
+        int[] unique = MathEx.unique(stratum);
+        int m = unique.length;
+
+        Arrays.sort(unique);
+        IntSet encoder = new IntSet(unique);
+
+        int n = stratum.length;
+        int[] y = stratum;
+        if (unique[0] != 0 || unique[m-1] != m-1) {
+            y = new int[n];
+            for (int i = 0; i < n; i++) {
+                y[i] = encoder.indexOf(stratum[i]);
+            }
+        }
+
+        // # of samples in each strata
+        int[] ni = new int[m];
+        for (int i : y) ni[i]++;
+
+        int min = MathEx.min(ni);
+        if (min < k) {
+            org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CrossValidation.class);
+            logger.warn("The least populated class has only {} members, which is less than k={}.", min, k);
+        }
+
+        int[][] strata = new int[m][];
+        for (int i = 0; i < m; i++) {
+            strata[i] = new int[ni[i]];
+        }
+
+        int[] pos = new int[m];
+        for (int i = 0; i < n; i++) {
+            int j =  y[i];
+            strata[j][pos[j]++] = i;
+        }
+
+        int[] chunk = new int[m];
+        for (int i = 0; i < m; i++) {
+            chunk[i] = Math.max(1, ni[i] / k);
+        }
+
+        Split[] splits = new Split[k];
+        for (int i = 0; i < k; i++) {
+            int p = 0;
+            int q = 0;
+            int[] train = new int[n];
+            int[] test = new int[n];
+
+            for (int j = 0; j < m; j++) {
+                int size = ni[j];
+                int start = chunk[j] * i;
+                int end = chunk[j] * (i + 1);
+                if (i == k - 1) end = size;
+
+                int[] yj = strata[j];
+                for (int l = 0; l < size; l++) {
+                    if (l >= start && l < end) {
+                        test[q++] = yj[l];
+                    } else {
+                        train[p++] = yj[l];
+                    }
+                }
+            }
+
+            train = Arrays.copyOf(train, p);
+            test = Arrays.copyOf(test, q);
+            // Samples are in order of strata. It is better to shuffle.
+            MathEx.permutate(train);
+            MathEx.permutate(test);
+            splits[i] = new Split(train, test);
+        }
+
+        return splits;
+    }
+
+    /**
      * Cross validation with non-overlapping groups.
      * The same group will not appear in two different folds (the number
      * of distinct groups has to be at least equal to the number of folds).
@@ -113,19 +200,18 @@ public interface CrossValidation {
      * doesn't learn user-specific features that don't generalize to unseen
      * users, this approach could be used.
      *
-     * @param group the group labels for the samples in [0, g), where g
-     *              is the number of groups.
+     * @param group the group labels of the samples.
      * @param k the number of folds.
      */
-    static Split[] group(int[] group, int k) {
+    static Split[] nonoverlap(int[] group, int k) {
         if (k < 0) {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
         int[] unique = MathEx.unique(group);
-        int g = unique.length;
+        int m = unique.length;
 
-        if (k > g) {
+        if (k > m) {
             throw new IllegalArgumentException("k-fold must be not greater than the than number of groups");
         }
 
@@ -133,18 +219,18 @@ public interface CrossValidation {
         IntSet encoder = new IntSet(unique);
 
         int n = group.length;
-        if (unique[0] != 0 || unique[g-1] != g-1) {
-            int[] y = new int[n];
+        int[] y = group;
+        if (unique[0] != 0 || unique[m-1] != m-1) {
+            y = new int[n];
             for (int i = 0; i < n; i++) {
                 y[i] = encoder.indexOf(group[i]);
             }
-            group = y;
         }
 
         // sort the groups by number of samples so that we can distribute
         // test samples from largest groups first
-        int[] ni = new int[g];
-        for (int i : group) ni[i]++;
+        int[] ni = new int[m];
+        for (int i : y) ni[i]++;
 
         int[] index = QuickSort.sort(ni);
 
@@ -152,9 +238,9 @@ public interface CrossValidation {
         // from the largest to the smallest group,
         // always putting test samples into the fold with the fewest samples
         int[] foldSize = new int[k];
-        int[] group2Fold = new int[g];
+        int[] group2Fold = new int[m];
 
-        for (int i = g - 1; i >= 0; i--) {
+        for (int i = m - 1; i >= 0; i--) {
             int smallestFold = MathEx.whichMin(foldSize);
             foldSize[smallestFold] += ni[i];
             group2Fold[index[i]] = smallestFold;
@@ -167,7 +253,7 @@ public interface CrossValidation {
             splits[i] = new Split(train, test);
 
             for (int j = 0, trainIndex = 0, testIndex = 0; j < n; j++) {
-                if (group2Fold[group[j]] == i) {
+                if (group2Fold[y[j]] == i) {
                     test[testIndex++] = j;
                 } else {
                     train[trainIndex++] = j;
