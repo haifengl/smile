@@ -17,6 +17,7 @@
 
 package smile.validation.metric;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -25,7 +26,8 @@ import java.util.Set;
  *
  * @author owlmsj
  */
-public class ConfusionMatrix {
+public class ConfusionMatrix implements Serializable {
+    private static final long serialVersionUID = 2L;
 
     /** Confusion matrix. */
     public final int[][] matrix;
