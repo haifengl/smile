@@ -33,6 +33,9 @@ import smile.feature.TreeSHAP;
 import smile.math.MathEx;
 import smile.util.IntSet;
 import smile.util.Strings;
+import smile.validation.ClassificationMetrics;
+import smile.validation.metric.*;
+import smile.validation.metric.Error;
 
 /**
  * Random forest for classification. Random forest is an ensemble classifier
@@ -79,16 +82,21 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
     /**
-     * Decision tree wrapper with a weight. Currently, the weight is the accuracy of
-     * tree on the OOB samples, which can be used when aggregating
-     * tree votes.
+     * The base model.
      */
-    static class Tree implements Serializable {
-        DecisionTree tree;
-        double weight;
-        Tree(DecisionTree tree, double weight) {
+    public static class Model implements Serializable {
+        /** The decision tree. */
+        public final DecisionTree tree;
+        /** The performance metrics on out-of-bag samples. */
+        public final ClassificationMetrics metrics;
+        /** The weight of tree, which can be used when aggregating tree votes. */
+        public final double weight;
+
+        /** Constructor. */
+        Model(DecisionTree tree, ClassificationMetrics metrics) {
             this.tree = tree;
-            this.weight = weight;
+            this.metrics = metrics;
+            this.weight = metrics.accuracy;
         }
     }
 
@@ -102,7 +110,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * tree on the OOB samples, which can be used a weight when aggregating
      * tree votes.
      */
-    private List<Tree> trees;
+    private List<Model> models;
 
     /**
      * The number of classes.
@@ -136,12 +144,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param k the number of classes.
-     * @param trees forest of decision trees.
+     * @param models forest of decision trees.
      * @param error the out-of-bag estimation of error rate.
      * @param importance variable importance
      */
-    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance) {
-        this(formula, k, trees, error, importance, IntSet.of(k));
+    public RandomForest(Formula formula, int k, List<Model> models, double error, double[] importance) {
+        this(formula, k, models, error, importance, IntSet.of(k));
     }
 
     /**
@@ -149,15 +157,15 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param k the number of classes.
-     * @param trees forest of decision trees.
+     * @param models forest of decision trees.
      * @param error the out-of-bag estimation of error rate.
      * @param importance variable importance
      * @param labels class labels
      */
-    public RandomForest(Formula formula, int k, List<Tree> trees, double error, double[] importance, IntSet labels) {
+    public RandomForest(Formula formula, int k, List<Model> models, double error, double[] importance, IntSet labels) {
         this.formula = formula;
         this.k = k;
-        this.trees = trees;
+        this.models = models;
         this.error = error;
         this.importance = importance;
         this.labels = labels;
@@ -322,7 +330,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             yi[j][idx[j]++] = i;
         }
 
-        List<Tree> trees = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
+        List<Model> models = Arrays.stream(seedArray).parallel().mapToObj(seed -> {
             // set RNG seed for the tree
             if (seed > 1) MathEx.setSeed(seed);
 
@@ -357,29 +365,62 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
                 }
             }
 
+            long start = System.nanoTime();
             DecisionTree tree = new DecisionTree(x, codec.y, y.field(), k, rule, maxDepth, maxNodes, nodeSize, mtryFinal, samples, order);
+            double fitTime = (System.nanoTime() - start) / 1E6;
 
-            // estimate OOB error
-            int oob = 0;
-            int correct = 0;
+            start = System.nanoTime();
+            // estimate OOB metrics
+            int noob = 0;
             for (int i = 0; i < n; i++) {
                 if (samples[i] == 0) {
-                    oob++;
-                    int p = tree.predict(x.get(i));
-                    if (p == codec.y[i]) correct++;
-                    prediction[i][p]++;
+                    noob++;
                 }
             }
 
-            double accuracy = 1.0;
-            if (oob != 0) {
-                accuracy = (double) correct / oob;
-                logger.info("Random forest tree OOB size: {}, accuracy: {}", oob, String.format("%.2f%%", 100 * accuracy));
+            int[] truth = new int[noob];
+            int[] oob = new int[noob];
+            double[][] posteriori = new double[noob][k];
+            for (int i = 0, j = 0; i < n; i++) {
+                if (samples[i] == 0) {
+                    truth[j] = codec.y[i];
+                    oob[j] = tree.predict(x.get(i), posteriori[j]);
+                    j++;
+                }
+            }
+            double scoreTime = (System.nanoTime() - start) / 1E6;
+
+            // When data is very small, OOB samples may miss some classes.
+            int oobk = MathEx.unique(truth).length;
+            ClassificationMetrics metrics;
+            if (oobk == 2) {
+                double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
+                metrics = new ClassificationMetrics(fitTime, scoreTime, noob,
+                            Error.of(truth, oob),
+                            Accuracy.of(truth, oob),
+                            Sensitivity.of(truth, oob),
+                            Specificity.of(truth, oob),
+                            Precision.of(truth, oob),
+                            FScore.F1.score(truth, oob),
+                            MatthewsCorrelation.of(truth, oob),
+                            AUC.of(truth, probability),
+                            LogLoss.of(truth, probability)
+                    );
+            } else {
+                metrics = new ClassificationMetrics(fitTime, scoreTime, noob,
+                            Error.of(truth, oob),
+                            Accuracy.of(truth, oob),
+                            CrossEntropy.of(truth, posteriori)
+                );
+            }
+
+            if (noob != 0) {
+                logger.info("Random forest tree OOB metrics: {}", metrics);
             } else {
                 logger.error("Random forest has a tree trained without OOB samples.");
             }
 
-            return new Tree(tree, accuracy);
+            return new Model(tree, metrics);
         }).collect(Collectors.toList());
 
         int err = 0;
@@ -396,15 +437,15 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
         double error = m > 0 ? (double) err / m : 0.0;
 
-        return new RandomForest(formula, k, trees, error, importance(trees), codec.labels);
+        return new RandomForest(formula, k, models, error, importance(models), codec.labels);
     }
 
     /** Calculate the importance of the whole forest. */
-    private static double[] importance(List<Tree> trees) {
-        int p = trees.get(0).tree.importance().length;
+    private static double[] importance(List<Model> models) {
+        int p = models.get(0).tree.importance().length;
         double[] importance = new double[p];
-        for (Tree tree : trees) {
-            double[] imp = tree.tree.importance();
+        for (Model model : models) {
+            double[] imp = model.tree.importance();
             for (int i = 0; i < p; i++) {
                 importance[i] += imp[i];
             }
@@ -419,7 +460,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
     @Override
     public StructType schema() {
-        return trees.get(0).tree.schema();
+        return models.get(0).tree.schema();
     }
 
     /**
@@ -453,14 +494,21 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @return the number of trees in the model 
      */
     public int size() {
-        return trees.size();
+        return models.size();
     }
 
     /**
      * Returns the decision trees.
      */
     public DecisionTree[] trees() {
-        return trees.stream().map(t -> t.tree).toArray(DecisionTree[]::new);
+        return models.stream().map(model -> model.tree).toArray(DecisionTree[]::new);
+    }
+
+    /**
+     * Returns the validation metrics on out-of-bag samples for each decision trees.
+     */
+    public ClassificationMetrics[] metrics() {
+        return models.stream().map(model -> model.metrics).toArray(ClassificationMetrics[]::new);
     }
 
     /**
@@ -472,7 +520,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @param ntrees the new (smaller) size of tree model set.
      */
     public void trim(int ntrees) {
-        if (ntrees > trees.size()) {
+        if (ntrees > models.size()) {
             throw new IllegalArgumentException("The new model size is larger than the current size.");
         }
         
@@ -480,12 +528,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             throw new IllegalArgumentException("Invalid new model size: " + ntrees);
         }
 
-        List<Tree> model = new ArrayList<>(ntrees);
+        List<Model> forest = new ArrayList<>(ntrees);
         for (int i = 0; i < ntrees; i++) {
-            model.add(trees.get(i));
+            forest.add(models.get(i));
         }
-        
-        trees = model;
+
+        models = forest;
     }
     
     @Override
@@ -493,8 +541,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         Tuple xt = formula.x(x);
         int[] y = new int[k];
         
-        for (Tree tree : trees) {
-            y[tree.tree.predict(xt)]++;
+        for (Model model : models) {
+            y[model.tree.predict(xt)]++;
         }
         
         return labels.valueOf(MathEx.whichMax(y));
@@ -510,10 +558,10 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
         double[] prob = new double[k];
         Arrays.fill(posteriori, 0.0);
-        for (Tree tree : trees) {
-            tree.tree.predict(xt, prob);
+        for (Model model : models) {
+            model.tree.predict(xt, prob);
             for (int i = 0; i < k; i++) {
-                posteriori[i] += tree.weight * prob[i];
+                posteriori[i] += model.weight * prob[i];
             }
         }
 
@@ -529,8 +577,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
 
         Tuple xt = formula.x(x);
         Arrays.fill(posteriori, 0.0);
-        for (Tree tree : trees) {
-            posteriori[tree.tree.predict(xt)]++;
+        for (Model model : models) {
+            posteriori[model.tree.predict(xt)]++;
         }
 
         MathEx.unitize1(posteriori);
@@ -547,7 +595,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         DataFrame x = formula.x(data);
 
         int n = x.size();
-        int ntrees = trees.size();
+        int ntrees = models.size();
         int[] p = new int[k];
         int[][] prediction = new int[ntrees][n];
 
@@ -555,7 +603,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
             Tuple xj = x.get(j);
             Arrays.fill(p, 0);
             for (int i = 0; i < ntrees; i++) {
-                p[trees.get(i).tree.predict(xj)]++;
+                p[models.get(i).tree.predict(xj)]++;
                 prediction[i][j] = MathEx.whichMax(p);
             }
         }
@@ -569,8 +617,8 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @return a new pruned random forest.
      */
     public RandomForest prune(DataFrame test) {
-        List<Tree> forest = trees.stream().parallel()
-                .map(tree -> new Tree(tree.tree.prune(test, formula, labels), tree.weight))
+        List<Model> forest = models.stream().parallel()
+                .map(model -> new Model(model.tree.prune(test, formula, labels), model.metrics))
                 .collect(Collectors.toList());
 
         // The tree weight and OOB error are still the old one as we don't access to the training data here.
