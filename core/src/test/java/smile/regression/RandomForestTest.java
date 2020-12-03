@@ -27,6 +27,7 @@ import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -156,8 +157,32 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testRandomForestMerging() throws Exception {
-        System.out.println("Random forest merging");
+    public void testTrim() {
+        System.out.println("trim");
+
+        RandomForest model = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        System.out.println(model.metrics());
+        assertEquals(50, model.size());
+
+        double rmse = RMSE.of(Abalone.testy, model.predict(Abalone.test));
+        System.out.format("RMSE = %.4f%n", rmse);
+        assertEquals(2.0858, rmse, 1E-4);
+
+        RandomForest trimmed = model.trim(40);
+        assertEquals(50, model.size());
+        assertEquals(40, trimmed.size());
+
+        double rmse1 = Arrays.stream(model.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
+        double rmse2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
+        assertTrue(rmse1 > rmse2);
+
+        rmse = RMSE.of(Abalone.testy, trimmed.predict(Abalone.test));
+        assertEquals(2.0897, rmse, 1E-4);
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+        System.out.println("merge");
 
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
