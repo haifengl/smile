@@ -38,6 +38,9 @@ public interface ByteVector extends BaseVector<Byte, Integer, IntStream> {
     byte[] array();
 
     @Override
+    ByteVector get(int... index);
+
+    @Override
     default short getShort(int i) {
         return getByte(i);
     }

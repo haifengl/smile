@@ -32,6 +32,8 @@ import smile.data.type.StructField;
  * @author Haifeng Li
  */
 public interface StringVector extends Vector<String> {
+    @Override
+    StringVector get(int... index);
 
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and

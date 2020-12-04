@@ -37,6 +37,9 @@ public interface CharVector extends BaseVector<Character, Integer, IntStream> {
     @Override
     char[] array();
 
+    @Override
+    CharVector get(int... index);
+
     /**
      * Returns the value at position i.
      */
