@@ -1,7 +1,8 @@
-import smile.io.*;
-import smile.data.formula.Formula;
-import smile.validation.*;
 import smile.classification.RandomForest;
+import smile.data.formula.Formula;
+import smile.io.*;
+import smile.validation.*;
+import smile.validation.metric.*;
 
 var hp = new Hyperparameters()
     .add("smile.random.forest.trees", 100) // a fixed value

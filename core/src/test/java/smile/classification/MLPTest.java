@@ -31,9 +31,9 @@ import smile.feature.Standardizer;
 import smile.feature.WinsorScaler;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
+import smile.validation.ClassificationValidations;
 import smile.validation.CrossValidation;
-import smile.validation.Error;
-import smile.validation.Validation;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 
@@ -73,7 +73,7 @@ public class MLPTest {
         int k = MathEx.max(PenDigits.y) + 1;
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
             MLP model = new MLP(p,
                     Layer.sigmoid(50),
                     Layer.mle(k, OutputFunction.SIGMOID)
@@ -92,9 +92,8 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.of(PenDigits.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(100, error);
+        System.out.println(result);
+        assertEquals(0.9867, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -107,7 +106,7 @@ public class MLPTest {
         int p = x[0].length;
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
+        ClassificationValidations<MLP> result = CrossValidation.classification(10, x, BreastCancer.y, (xi, yi) -> {
             MLP model = new MLP(p,
                     Layer.sigmoid(60),
                     Layer.mle(1, OutputFunction.SIGMOID)
@@ -126,9 +125,8 @@ public class MLPTest {
             return model;
         });
 
-        int error = Error.of(BreastCancer.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(11, error);
+        System.out.println(result);
+        assertEquals(0.9773, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -159,7 +157,7 @@ public class MLPTest {
                 model.update(x[i], Segment.y[i]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -193,7 +191,7 @@ public class MLPTest {
                 model.update(x[permutation[i]], Segment.y[permutation[i]]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(Segment.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -230,7 +228,7 @@ public class MLPTest {
                 model.update(x[i], USPS.y[i]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(USPS.testy, prediction);
             System.out.println("Test Error = " + error);
         }
@@ -283,7 +281,7 @@ public class MLPTest {
                 model.update(x[permutation[i]], USPS.y[permutation[i]]);
             }
 
-            int[] prediction = Validation.test(model, testx);
+            int[] prediction = model.predict(testx);
             error = Error.of(USPS.testy, prediction);
             System.out.println("Test Error = " + error);
         }

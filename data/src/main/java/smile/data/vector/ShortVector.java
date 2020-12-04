@@ -38,6 +38,9 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
     short[] array();
 
     @Override
+    ShortVector get(int... index);
+
+    @Override
     default byte getByte(int i) {
         throw new UnsupportedOperationException("cast short to byte");
     }

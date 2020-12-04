@@ -20,7 +20,7 @@ permalink: "{{ page.filePathStem }}.html"
         algorithm that classifies everything as positive will have 99% accuracy. However,
         it is useless.</p>
 
-    <p>For classification, Smile has the following measures:</p>
+    <p>For classification, Smile has the following evaluation metrics:</p>
 
     <ul>
         <li>The <b>accuracy</b> is the proportion of true results (both true positives and
@@ -56,7 +56,7 @@ permalink: "{{ page.filePathStem }}.html"
     FPR = FP / N = FP / (FP + TN)
     </code></pre>
             Fall-out is actually Type I error and closely related to specificity (1 - specificity).</li>
-        <li><p>The <b>F-score</b> (or <b>F-measure</b>) considers both the precision and the recall of the test
+        <li><p>The <b>F-score</b> (or <b>F-score</b>) considers both the precision and the recall of the test
             to compute the score. The traditional or balanced F-score (F1 score) is the harmonic mean of
             precision and recall, where an F1 score reaches its best value at 1 and worst at 0.</p>
 
@@ -66,7 +66,7 @@ permalink: "{{ page.filePathStem }}.html"
     </ul>
 
     <p>In Smile, the class label 1 is regarded as positive while 0 as negative. Note that
-        not all measures can be applied to multi-class data. If one applies such a measure
+        not all metrics can be applied to multi-class data. If one applies such a metric
         (e.g. specificity and sensitivity) on multi-class data regardlessly, the results may
         not make sense and all others are regarded as negative. Note that in these situations,
         only label 1 is regarded as positive and any other values are treated as negative class.</p>
@@ -108,7 +108,7 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
 
     <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
-        For any test, there is usually a trade-off between the measures. This trade-off
+        For any test, there is usually a trade-off between the metrics. This trade-off
         can be represented graphically using an ROC curve. When using normalized units, the area under
         the ROC curve is equal to the probability that a classifier will rank a
         randomly chosen positive instance higher than a randomly chosen negative
@@ -200,7 +200,7 @@ permalink: "{{ page.filePathStem }}.html"
     jshell>     FDR.of(testy, pred)
     $176 ==> 0.16447859963710107
 
-    jshell> FMeasure.of(testy, pred)
+    jshell> FScore.of(testy, pred)
     $177 ==> 0.808301925757654
 
     // Calculate posteriori probability for AUC computation.
@@ -217,7 +217,7 @@ permalink: "{{ page.filePathStem }}.html"
         </div>
     </div>
 
-    <p>For regression, Smile has the following measures:</p>
+    <p>For regression, Smile has the following evaluation metrics:</p>
 
     <ul>
         <li>MSE (mean squared error) and RMSE (root mean squared error).</li>
@@ -269,8 +269,7 @@ permalink: "{{ page.filePathStem }}.html"
     </div>
 
     <p>The above Scala methods takes a code block to train the model and apply it on the test data.
-        These methods return the trained model
-        and print out various measures.</p>
+        These methods return the trained model and print out various metrics.</p>
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
@@ -430,9 +429,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object cv {
-        def classification[T](x: Array[T], y: Array[Int], k: Int, measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T](x: Array[T], y: Array[Int], k: Int, metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
 
-        def regression[T](x: Array[T], y: Array[Double], k: Int, measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def regression[T](x: Array[T], y: Array[Double], k: Int, metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
             </div>
@@ -451,7 +450,7 @@ permalink: "{{ page.filePathStem }}.html"
         </div>
     </div>
 
-    <p>When no measures are provided, the methods use accuracy or RMSE by default
+    <p>When no metrics are provided, the methods use accuracy or R2 by default
         for classification or regression, respectively.</p>
 
     <ul class="nav nav-tabs">
@@ -530,9 +529,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object loocv {
-        def classification[T](x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T](x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
 
-        def regression[T](x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def regression[T](x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
             </div>
@@ -616,9 +615,9 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object bootstrap {
-        def classification[T](k: Int, x: Array[T], y: Array[Int], measures: ClassificationMeasure*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T](k: Int, x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
 
-        def regression[T](k: Int, x: Array[T], y: Array[Double], measures: RegressionMeasure*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def regression[T](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
     }
     </code></pre>
             </div>

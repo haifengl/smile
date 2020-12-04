@@ -41,12 +41,7 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
-    private double scale;
-    private double offset;
-
+public class SparseHyperbolicTangentKernel extends HyperbolicTangent implements MercerKernel<SparseArray> {
     /**
      * Constructor with scale 1.0 and offset 0.0.
      */
@@ -56,20 +51,51 @@ public class SparseHyperbolicTangentKernel implements MercerKernel<SparseArray> 
 
     /**
      * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public SparseHyperbolicTangentKernel(double scale, double offset) {
-        this.scale = scale;
-        this.offset = offset;
+        this(scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
     }
 
-    @Override
-    public String toString() {
-        return String.format("Sparse Hyperbolic Tangent Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    /**
+     * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public SparseHyperbolicTangentKernel(double scale, double offset, double[] lo, double[] hi) {
+        super(scale, offset, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        double dot = MathEx.dot(x, y);
-        return Math.tanh(scale * dot + offset);
+        return k(MathEx.dot(x, y));
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
+    public SparseHyperbolicTangentKernel of(double[] params) {
+        return new SparseHyperbolicTangentKernel(params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

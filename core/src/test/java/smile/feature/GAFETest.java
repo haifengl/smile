@@ -31,9 +31,9 @@ import smile.data.Segment;
 import smile.data.USPS;
 import smile.gap.BitString;
 import smile.regression.RegressionTree;
-import smile.validation.Accuracy;
 import smile.math.MathEx;
-import smile.validation.RMSE;
+import smile.validation.metric.Accuracy;
+import smile.validation.metric.RMSE;
 
 /**
  *

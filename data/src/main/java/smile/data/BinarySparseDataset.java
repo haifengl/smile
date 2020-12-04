@@ -18,7 +18,6 @@
 package smile.data;
 
 import java.io.IOException;
-import java.text.ParseException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;

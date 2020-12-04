@@ -21,7 +21,7 @@ import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Laplacian Kernel on sparse data.
+ * Laplacian kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -30,33 +30,52 @@ import smile.util.SparseArray;
 
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
+public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
     /**
-     * The width of the kernel.
+     * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    private double gamma;
+    public SparseLaplacianKernel(double sigma) {
+        this(sigma, 1E-05, 1E5);
+    }
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public SparseLaplacianKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
-        }
-
-        this.gamma = 1.0 / sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Laplacian kernel (\u02E0 = %.4f)", 1.0/gamma);
+    public SparseLaplacianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * MathEx.distance(x, y));
+        return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
+    public SparseLaplacianKernel of(double[] params) {
+        return new SparseLaplacianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

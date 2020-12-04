@@ -17,7 +17,6 @@
 
 package smile.nlp.pos;
 
-import smile.validation.CrossValidation;
 import java.io.InputStreamReader;
 import java.io.BufferedReader;
 import java.io.FileInputStream;
@@ -30,6 +29,8 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.math.MathEx;
+import smile.validation.CrossValidation;
+import smile.validation.Bag;
 import static org.junit.Assert.*;
 
 /**
@@ -146,15 +147,15 @@ public class HMMPOSTaggerTest {
         int n = x.length;
         int k = 10;
 
-        CrossValidation cv = new CrossValidation(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         int error = 0;
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, cv.train[i]);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.train[i]);
-            String[][] testx = MathEx.slice(x, cv.test[i]);
-            PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
+            String[][] trainx = MathEx.slice(x, bags[i].samples);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples);
+            String[][] testx = MathEx.slice(x, bags[i].oob);
+            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 
@@ -184,15 +185,15 @@ public class HMMPOSTaggerTest {
         int n = x.length;
         int k = 10;
 
-        CrossValidation cv = new CrossValidation(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         int error = 0;
         int total = 0;
         
         for (int i = 0; i < k; i++) {
-            String[][] trainx = MathEx.slice(x, cv.train[i]);
-            PennTreebankPOS[][] trainy = MathEx.slice(y, cv.train[i]);
-            String[][] testx = MathEx.slice(x, cv.test[i]);
-            PennTreebankPOS[][] testy = MathEx.slice(y, cv.test[i]);
+            String[][] trainx = MathEx.slice(x, bags[i].samples);
+            PennTreebankPOS[][] trainy = MathEx.slice(y, bags[i].samples);
+            String[][] testx = MathEx.slice(x, bags[i].oob);
+            PennTreebankPOS[][] testy = MathEx.slice(y, bags[i].oob);
 
             HMMPOSTagger tagger = HMMPOSTagger.fit(trainx, trainy);
 

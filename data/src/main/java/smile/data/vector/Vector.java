@@ -34,6 +34,9 @@ import smile.data.type.StructField;
  * @author Haifeng Li
  */
 public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
+    @Override
+    Vector<T> get(int... index);
+
     /** Returns the array of elements. */
     T[] toArray();
 
