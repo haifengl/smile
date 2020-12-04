@@ -26,22 +26,58 @@ import smile.util.SparseArray;
  *
  * @author Haifeng Li
  */
-public class SparseLinearKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
+public class SparseLinearKernel implements MercerKernel<SparseArray>, DotProductKernel {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
      */
     public SparseLinearKernel() {
+
     }
 
     @Override
     public String toString() {
-        return "Sparse Linear Kernel";
+        return "LinearKernel()";
+    }
+
+    @Override
+    public double k(double dot) {
+        return dot;
+    }
+
+    @Override
+    public double[] kg(double dot) {
+        return new double[] { dot };
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {        
         return MathEx.dot(x, y);
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return new double[] { k(x, y) };
+    }
+
+    @Override
+    public SparseLinearKernel of(double[] params) {
+        return new SparseLinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
     }
 }

@@ -58,7 +58,8 @@ private[ml] object SmileClassifierParams {
       params
         .filter { case ParamPair(p, _) => p.name != "trainer" }
         .map { case ParamPair(p, v) => p.name -> parse(p.jsonEncode(v)) }
-        .toList)
+        .toList
+    )
 
     DefaultParamsWriter.saveMetadata(instance, path, sc, extraMetadata, Some(jsonParams))
   }
@@ -93,40 +94,29 @@ class SmileClassifier(override val uid: String)
       instr.logParams(this, labelCol, featuresCol, predictionCol)
 
       val spark = dataset.sparkSession
+      val sc = spark.sparkContext
 
       val df = dataset.select($(labelCol), $(featuresCol))
 
-      val handlePersistence = dataset.storageLevel == StorageLevel.NONE && (df.storageLevel == StorageLevel.NONE)
-      if (handlePersistence) {
-        df.persist(StorageLevel.MEMORY_AND_DISK)
-      }
+      val persist = dataset.storageLevel == StorageLevel.NONE && (df.storageLevel == StorageLevel.NONE)
+      if (persist) df.persist(StorageLevel.MEMORY_AND_DISK)
 
       val x = df.select(getFeaturesCol).collect().map(row => row.getAs[Vector](0).toArray)
       val y = df.select(getLabelCol).collect().map(row => row.getDouble(0).toInt)
 
-      val sc = spark.sparkContext
-
       val trainersRDD = sc.parallelize(Seq(getTrainer))
-
-      val model = trainersRDD
-        .map(trainer => {
-          trainer.apply(x, y)
-        })
-        .collect()(0)
-
+      val model = trainersRDD.map(_.apply(x, y)).collect()(0)
       val numClasses = getNumClasses(df)
 
-      if (handlePersistence) {
-        df.unpersist()
-      }
+      if (persist) df.unpersist()
 
       new SmileClassificationModel(numClasses, model)
     }
 
   override def copy(extra: ParamMap): SmileClassifier = {
-    val copied = new SmileClassifier(uid)
-    copyValues(copied, extra)
-    copied.setTrainer(copied.getTrainer)
+    val copy = new SmileClassifier(uid)
+    copyValues(copy, extra)
+    copy.setTrainer(getTrainer)
   }
 
   override def write: MLWriter = new SmileClassifier.SmileClassifierWriter(this)
@@ -176,20 +166,17 @@ class SmileClassificationModel(override val uid: String,
     this(Identifiable.randomUID("SmileClassificationModel"), numClasses, model)
 
   override protected def predictRaw(features: Vector): Vector = {
-
-    /**
-      * The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
-      * a Vector with "confidence scores" for every classes of the classification problem.
-      * Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
-      */
-    val tmp = Array.fill(numClasses)(0.0)
-    tmp(model.predict(features.toArray)) = 1.0
-    Vectors.dense(tmp)
+    // The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
+    // a Vector with "confidence scores" for every classes of the classification problem.
+    // Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
+    val posteriori = Array.fill(numClasses)(0.0)
+    posteriori(model.predict(features.toArray)) = 1.0
+    Vectors.dense(posteriori)
   }
 
   override def copy(extra: ParamMap): SmileClassificationModel = {
-    val copied = new SmileClassificationModel(uid, numClasses, model)
-    copyValues(copied, extra).setParent(parent)
+    val copy = new SmileClassificationModel(uid, numClasses, model)
+    copyValues(copy, extra).setParent(parent)
   }
 
   override def write: MLWriter = new SmileClassificationModel.SmileClassificationModelWriter(this)
@@ -211,9 +198,9 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
         objectOut.writeObject(instance.model)
         objectOut.close()
       } catch {
-        case ex: Exception =>
-          ex.printStackTrace()
+        case ex: Exception => ex.printStackTrace()
       }
+
       SmileClassifierParams.saveImpl(instance, path, sc, Some(extraJson))
     }
   }
@@ -228,7 +215,7 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
       val fs = FileSystem.get(sc.hadoopConfiguration)
       implicit val format: DefaultFormats = DefaultFormats
       val numClasses = (metadata.metadata \ "numClasses").extract[Int]
-      val res = try {
+      val impl = try {
         val fileIn = fs.open(new Path(path, "model"))
         val objectIn = new ObjectInputStream(fileIn)
         val obj = objectIn.readObject
@@ -239,12 +226,15 @@ object SmileClassificationModel extends MLReadable[SmileClassificationModel] {
           ex.printStackTrace()
           return null
       }
-      val tmp = new SmileClassificationModel(
+
+      val model = new SmileClassificationModel(
         metadata.uid,
         numClasses,
-        res.asInstanceOf[smile.classification.Classifier[Array[Double]]])
-      metadata.getAndSetParams(tmp)
-      tmp
+        impl.asInstanceOf[smile.classification.Classifier[Array[Double]]]
+      )
+
+      metadata.getAndSetParams(model)
+      model
     }
   }
 }

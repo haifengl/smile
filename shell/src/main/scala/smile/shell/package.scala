@@ -39,11 +39,6 @@ package object shell {
        |===============================================================================
      """.stripMargin
 
-  /** Built in benchmarks */
-  def benchmark(tests: String*) = {
-    smile.benchmark.Benchmark.main(tests.toArray)
-  }
-
   /** Show demo window */
   def demo = {
     javax.swing.SwingUtilities.invokeLater(new Runnable {

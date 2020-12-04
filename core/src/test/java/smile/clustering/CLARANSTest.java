@@ -19,8 +19,7 @@ package smile.clustering;
 
 import smile.data.USPS;
 import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
-import smile.validation.*;
+import smile.validation.metric.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

@@ -40,39 +40,61 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class HyperbolicTangentKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
-
-    private double scale;
-    private double offset;
-
+public class HyperbolicTangentKernel extends HyperbolicTangent implements MercerKernel<double[]> {
     /**
-     * Constructor.
+     * Constructor with scale 1.0 and offset 0.0.
      */
     public HyperbolicTangentKernel() {
-        this(1, 0);
+        this(1.0, 0.0);
     }
 
     /**
      * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public HyperbolicTangentKernel(double scale, double offset) {
-        this.scale = scale;
-        this.offset = offset;
+        this(scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
     }
 
-    @Override
-    public String toString() {
-        return String.format("Hyperbolic Tangent Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    /**
+     * Constructor.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public HyperbolicTangentKernel(double scale, double offset, double[] lo, double[] hi) {
+        super(scale, offset, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
+        return k(MathEx.dot(x, y));
+    }
 
-        double dot = MathEx.dot(x, y);
-        return Math.tanh(scale * dot + offset);
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
+    public HyperbolicTangentKernel of(double[] params) {
+        return new HyperbolicTangentKernel(params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

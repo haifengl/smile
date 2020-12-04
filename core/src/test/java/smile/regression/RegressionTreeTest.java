@@ -27,7 +27,9 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
-import smile.validation.RMSE;
+import smile.validation.RegressionMetrics;
+import smile.validation.RegressionValidations;
+import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -71,11 +73,10 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
-        double rmse = RMSE.of(Longley.y, prediction);
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
 
-        System.out.println("LOOCV MSE = " + rmse);
-        assertEquals(3.0848729264302333, rmse, 1E-4);
+        System.out.println(metrics);
+        assertEquals(3.0848729264302333, metrics.rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -96,22 +97,22 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        double[] prediction = CrossValidation.regression(10, formula, data, (f, x) -> RegressionTree.fit(f, x));
-        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
-        System.out.format("10-CV RMSE = %.4f%n", rmse);
-        assertEquals(expected, rmse, 1E-4);
+        RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, (f, x) -> RegressionTree.fit(f, x));
+
+        System.out.println(result);
+        assertEquals(expected, result.avg.rmse, 1E-4);
     }
 
     @Test
     public void testAll() {
-        test("CPU", CPU.formula, CPU.data, 84.5224);
+        test("CPU", CPU.formula, CPU.data, 74.3149);
         test("2dplanes", Planes.formula, Planes.data, 1.1164);
-        test("abalone", Abalone.formula, Abalone.train, 2.5888);
+        test("abalone", Abalone.formula, Abalone.train, 2.5834);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0003);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.1093);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8634);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 59979.0575);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9136);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.8138);
+        test("cal_housing", CalHousing.formula, CalHousing.data, 59944.8076);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.9117);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1936);
     }
 

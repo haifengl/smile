@@ -52,12 +52,17 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
+public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable {
 
     /**
      * Kernel function.
      */
     double k(T x, T y);
+
+    /**
+     * Computes the kernel and its gradient over hyperparameters.
+     */
+    double[] kg(T x, T y);
 
     /**
      * Kernel function.
@@ -73,77 +78,48 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
     }
 
     /**
-     * The sum kernel takes two kernels and combines them via k1(x, y) + k2(x, y)
-     * @param k1 the kernel to combine.
-     * @param k2 the kernel to combine.
-     * @return the sum kernel.
-     */
-    static <T> MercerKernel sum(MercerKernel<T> k1, MercerKernel<T> k2) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return k1.k(x, y) + k2.k(x, y);
-            }
-        };
-    }
-
-    /**
-     * The product kernel takes two kernels and combines them via k1(x, y) * k2(x, y)
-     * . The Product kernel takes two kernels
-     *  and
-     *  and combines them via
-     * . The Exponentiation kernel takes one base kernel and a scalar parameter  and combines them via
-     * @param k1 the kernel to combine.
-     * @param k2 the kernel to combine.
-     * @return the product kernel.
-     */
-    static <T> MercerKernel product(MercerKernel<T> k1, MercerKernel<T> k2) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return k1.k(x, y) + k2.k(x, y);
-            }
-        };
-    }
-
-    /**
-     * The pow kernel takes one base kernel and a scalar parameter
-     * and combines them via k(x, y) ^ p.
+     * Computes the kernel and gradient matrices.
      *
-     * @param k the base kernel.
-     * @param p the exponent.
-     * @return the power kernel.
+     * @param x samples.
+     * @return the kernel and gradient matrices.
      */
-    static <T> MercerKernel pow(MercerKernel<T> k, double p) {
-        return new MercerKernel<T>() {
-            @Override
-            public double k(T x, T y) {
-                return Math.pow(k.k(x, y), p);
+    default Matrix[] KG(T[] x) {
+        int n = x.length;
+        int m = lo().length;
+        Matrix[] K = new Matrix[m + 1];
+        for (int i = 0; i <= m; i++) {
+            K[i] = new Matrix(n, n);
+            K[i].uplo(UPLO.LOWER);
+        }
+
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T xj = x[j];
+            for (int i = 0; i < n; i++) {
+                double[] kg = kg(x[i], xj);
+                for (int l = 0; l <= m; l++) {
+                    K[l].set(i, j, kg[l]);
+                }
             }
-        };
+        });
+
+        return K;
     }
 
     /**
-     * Returns the kernel matrix.
+     * Computes the kernel matrix.
      *
      * @param x samples.
      * @return the kernel matrix.
      */
     default Matrix K(T[] x) {
         int n = x.length;
-        int N = n * (n - 1) / 2;
         Matrix K = new Matrix(n, n);
-        IntStream.range(0, N).parallel().forEach(k -> {
-            int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
-            int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
-            K.set(i, j, k(x[i], x[j]));
-        });
-
-        for (int i = 0; i < n; i++) {
-            for (int j = i + 1; j < n; j++) {
-                K.set(i, j, K.get(j, i));
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T xj = x[j];
+            for (int i = 0; i < n; i++) {
+                K.set(i, j, k(x[i], xj));
             }
-        }
+        });
 
         K.uplo(UPLO.LOWER);
         return K;
@@ -160,13 +136,25 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T,T>, Serializable {
         int m = x.length;
         int n = y.length;
         Matrix K = new Matrix(m, n);
-        IntStream.range(0, m).parallel().forEach(i -> {
-            T xi = x[i];
-            for (int j = 0; j < n; j++) {
-                K.set(i, j, k(xi, y[j]));
+        IntStream.range(0, n).parallel().forEach(j -> {
+            T yj = y[j];
+            for (int i = 0; i < m; i++) {
+                K.set(i, j, k(x[i], yj));
             }
         });
 
         return K;
     }
+
+    /** Returns the same kind kernel with the new hyperparameters. */
+    MercerKernel<T> of(double[] params);
+
+    /** Returns the hyperparameters for tuning. */
+    double[] hyperparameters();
+
+    /** Returns the lower bound of hyperparameters. */
+    double[] lo();
+
+    /** Returns the upper bound of hyperparameters. */
+    double[] hi();
 }

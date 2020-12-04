@@ -17,8 +17,10 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
- * The Laplacian Kernel on binary sparse data.
+ * Laplacian kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -29,57 +31,54 @@ package smile.math.kernel;
  *
  * @author Haifeng Li
  */
-public class BinarySparseLaplacianKernel implements MercerKernel<int[]> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The width of the kernel.
-     */
-    private double gamma;
+public class BinarySparseLaplacianKernel extends Laplacian implements MercerKernel<int[]> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
      */
     public BinarySparseLaplacianKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
-        }
-
-        this.gamma = 1.0 / sigma;
+        this(sigma, 1E-05, 1E5);
     }
 
-    @Override
-    public String toString() {
-        return String.format("Sparse Binary Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public BinarySparseLaplacianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
+        return k(MathEx.distance(x, y));
+    }
 
-        double d = 0.0;
-        int p1 = 0, p2 = 0;
-        while (p1 < x.length && p2 < y.length) {
-            int i1 = x[p1];
-            int i2 = y[p2];
-            if (i1 == i2) {
-                p1++;
-                p2++;
-            } else if (i1 > i2) {
-                d++;
-                p2++;
-            } else {
-                d++;
-                p1++;
-            }
-        }
+    @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
+    }
 
-        d += x.length - p1;
-        d += y.length - p2;
+    @Override
+    public BinarySparseLaplacianKernel of(double[] params) {
+        return new BinarySparseLaplacianKernel(params[0], lo, hi);
+    }
 
-        return Math.exp(-gamma * Math.sqrt(d));
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

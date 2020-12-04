@@ -23,10 +23,8 @@ import smile.data.*;
 import smile.math.distance.EuclideanDistance;
 import smile.math.MathEx;
 import smile.math.rbf.GaussianRadialBasis;
-import smile.validation.CrossValidation;
-import smile.validation.Error;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
+import smile.validation.*;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -66,15 +64,17 @@ public class RBFNetworkTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("RBF Network Error = " + error);
-        assertEquals(5, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
 
-        prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10), true));
-        error = Error.of(Iris.y, prediction);
-        System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(4, error);
+        System.out.println("RBF Network: " + metrics);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
+
+        metrics = LOOCV.classification(Iris.x, Iris.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10), true));
+
+        System.out.println("Normalized RBF Network: " + metrics);
+        assertEquals(0.9733, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -82,16 +82,17 @@ public class RBFNetworkTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<RBFNetwork<double[]>> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
 
-        System.out.println("RBF Network Error = " + error);
-        assertEquals(628, error);
+        System.out.println("RBF Network: " + result);
+        assertEquals(0.9162, result.avg.accuracy, 1E-4);
 
-        prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
-        error = Error.of(PenDigits.y, prediction);
-        System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(607, error);
+        result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
+
+        System.out.println("Normalized RBF Network: " + result);
+        assertEquals(0.9190, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -99,16 +100,17 @@ public class RBFNetworkTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<RBFNetwork<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
 
-        System.out.println("RBF Network Error = " + error);
-        assertEquals(32, error);
+        System.out.println("RBF Network: " + result);
+        assertEquals(0.9438, result.avg.accuracy, 1E-4);
 
-        prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
-        error = Error.of(BreastCancer.y, prediction);
-        System.out.println("Normalized RBF Network Error = " + error);
-        assertEquals(38, error);
+        result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
+
+        System.out.println("Normalized RBF Network: " + result);
+        assertEquals(0.9333, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -123,13 +125,13 @@ public class RBFNetworkTest {
         MathEx.standardize(testx);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30));
-        int[] prediction = Validation.test(model, testx);
+        int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.println("RBF Network Error = " + error);
         assertEquals(123, error);
 
         model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30), true);
-        prediction = Validation.test(model, testx);
+        prediction = model.predict(testx);
         error = Error.of(Segment.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(110, error);
@@ -146,13 +148,13 @@ public class RBFNetworkTest {
         RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
 
         RBFNetwork<double[]> model = RBFNetwork.fit(USPS.x, USPS.y, neurons);
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.println("RBF Network Error = " + error);
         assertEquals(142, error);
 
         model = RBFNetwork.fit(USPS.x, USPS.y, neurons, true);
-        prediction = Validation.test(model, USPS.testx);
+        prediction = model.predict(USPS.testx);
         error = Error.of(USPS.testy, prediction);
         System.out.println("Normalized RBF Network Error = " + error);
         assertEquals(143, error);

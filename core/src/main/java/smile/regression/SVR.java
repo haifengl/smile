@@ -117,7 +117,7 @@ public class SVR {
 
             @Override
             public double predict(SparseArray x) {
-                return model.f(x) > 0 ? +1 : -1;
+                return model.f(x);
             }
         };
     }

@@ -59,7 +59,7 @@ public class XMeans extends CentroidClustering<double[], double[]> {
     }
 
     @Override
-    public double distance(double[] x, double[] y) {
+    protected double distance(double[] x, double[] y) {
         return MathEx.squaredDistance(x, y);
     }
 

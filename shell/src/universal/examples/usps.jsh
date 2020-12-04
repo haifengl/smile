@@ -16,6 +16,7 @@ import smile.math.distance.*;
 import smile.math.kernel.*;
 import smile.math.rbf.*;
 import smile.validation.*;
+import smile.validation.metric.*;
 import org.apache.commons.csv.CSVFormat;
 
 var format = CSVFormat.DEFAULT.withDelimiter(' ');
