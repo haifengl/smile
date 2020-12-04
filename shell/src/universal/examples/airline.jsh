@@ -9,6 +9,7 @@ import smile.io.*;
 import smile.base.cart.SplitRule;
 import smile.classification.*;
 import smile.validation.*;
+import smile.validation.metric.*;
 import org.apache.commons.csv.CSVFormat;
 
 var airport = new NominalScale("ABE", "ABI", "ABQ", "ABY", "ACK", "ACT",

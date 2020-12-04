@@ -44,12 +44,14 @@ tasks.build {
 
 // Configure existing Dokka task to output HTML
 tasks {
-    dokkaHtml {
-        outputDirectory.set("../doc/api/kotlin")
-        configuration {
-            includes = listOf("packages.md")
-            externalDocumentationLink {
-                url = URL("http://haifengl.github.io/api/java/")
+    dokkaHtml.configure {
+        outputDirectory.set(buildDir.resolve("../doc/api/kotli"))
+        dokkaSourceSets {
+            configureEach {
+                includes.from("packages.md")
+                externalDocumentationLink {
+                    url.set(URL("http://haifengl.github.io/api/java/"))
+                }
             }
         }
     }

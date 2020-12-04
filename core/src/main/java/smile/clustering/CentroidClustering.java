@@ -78,7 +78,7 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
     }
 
     /** The distance function. */
-    public abstract double distance(T x, U y);
+    protected abstract double distance(T x, U y);
 
     /**
      * Classifies a new observation.

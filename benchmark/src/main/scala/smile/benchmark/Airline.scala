@@ -117,10 +117,12 @@ object Airline {
       case _ => 100
     }
     println(s"Training Random Forest of $ntrees trees...")
-    val forest = test2soft(formula, train, test) { (formula, data) =>
+    val forestTest = validate.classification(formula, train, test) { (formula, data) =>
       randomForest(formula, data, ntrees, subsample = 0.632, classWeight = classWeight)
     }
 
+    println(forestTest)
+    val forest = forestTest.model
     val depth = forest.trees.map(_.root.depth.toDouble)
     println("Tree Depth:")
     summary(depth)
@@ -129,14 +131,16 @@ object Airline {
 
     // Gradient Tree Boost
     println("Training Gradient Tree Boost of 300 trees...")
-    test2soft(formula, train, test) { (formula, data) =>
+    val gbmTest = validate.classification(formula, train, test) { (formula, data) =>
       gbm(formula, train, 300, shrinkage = 0.1, subsample = 0.632)
     }
+    println(gbmTest)
 
     // AdaBoost
     println("Training AdaBoost of 300 trees...")
-    test2soft(formula, train, test) { (formula, data) =>
+    val adaTest = validate.classification(formula, train, test) { (formula, data) =>
       adaboost(formula, train, 300)
     }
+    println(adaTest)
   }
 }

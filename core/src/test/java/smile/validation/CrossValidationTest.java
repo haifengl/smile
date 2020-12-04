@@ -22,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -54,20 +56,20 @@ public class CrossValidationTest {
         System.out.println("Complete");
         int n = 57;
         int k = 5;
-        CrossValidation instance = new CrossValidation(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
                 hit[j] = false;
             }
 
-            int[] train = instance.train[i];
+            int[] train = bags[i].samples;
             for (int j = 0; j < train.length; j++) {
                 assertFalse(hit[train[j]]);
                 hit[train[j]] = true;
             }
 
-            int[] test = instance.test[i];
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -84,10 +86,10 @@ public class CrossValidationTest {
         System.out.println("Orthogonal");
         int n = 57;
         int k = 5;
-        CrossValidation instance = new CrossValidation(n, k);
+        Bag[] bags = CrossValidation.of(n, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
-            int[] test = instance.test[i];
+            int[] test = bags[i].oob;
             for (int j = 0; j < test.length; j++) {
                 assertFalse(hit[test[j]]);
                 hit[test[j]] = true;
@@ -99,4 +101,65 @@ public class CrossValidationTest {
         }
     }
 
+    @Test
+    public void testStratifiedComplete() {
+        System.out.println("Stratified complete");
+        int n = 57;
+        int k = 5;
+
+        int[] stratum = new int[n];
+        for (int i = 0; i < n; i++) {
+            stratum[i] = MathEx.randomInt(3);
+        }
+
+        Bag[] bags = CrossValidation.of(stratum, k);
+        boolean[] hit = new boolean[n];
+        for (int i = 0; i < k; i++) {
+            for (int j = 0; j < n; j++) {
+                hit[j] = false;
+            }
+
+            int[] train = bags[i].samples;
+            for (int j = 0; j < train.length; j++) {
+                assertFalse(hit[train[j]]);
+                hit[train[j]] = true;
+            }
+
+            int[] test = bags[i].oob;
+            for (int j = 0; j < test.length; j++) {
+                assertFalse(hit[test[j]]);
+                hit[test[j]] = true;
+            }
+
+            for (int j = 0; j < n; j++) {
+                assertTrue(hit[j]);
+            }
+        }
+    }
+
+    @Test
+    public void testStratifiedOrthogonal() {
+        System.out.println("Stratified orthogonal");
+        int n = 57;
+        int k = 5;
+
+        int[] stratum = new int[n];
+        for (int i = 0; i < n; i++) {
+            stratum[i] = MathEx.randomInt(3);
+        }
+
+        Bag[] bags = CrossValidation.of(stratum, k);
+        boolean[] hit = new boolean[n];
+        for (int i = 0; i < k; i++) {
+            int[] test = bags[i].oob;
+            for (int j = 0; j < test.length; j++) {
+                assertFalse(hit[test[j]]);
+                hit[test[j]] = true;
+            }
+        }
+
+        for (int j = 0; j < n; j++) {
+            assertTrue(hit[j]);
+        }
+    }
 }

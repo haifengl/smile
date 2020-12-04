@@ -38,6 +38,9 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
     float[] array();
 
     @Override
+    FloatVector get(int... index);
+
+    @Override
     default byte getByte(int i) {
         throw new UnsupportedOperationException("cast float to byte");
     }

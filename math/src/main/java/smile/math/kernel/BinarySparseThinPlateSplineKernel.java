@@ -17,8 +17,10 @@
 
 package smile.math.kernel;
 
+import smile.math.MathEx;
+
 /**
- * The Thin Plate Spline Kernel on binary sparse data.
+ * The Thin Plate Spline kernel on binary sparse data.
  * <p>
  * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
@@ -29,54 +31,52 @@ package smile.math.kernel;
  * 
  * @author Haifeng Li
  */
-public class BinarySparseThinPlateSplineKernel implements MercerKernel<int[]> {
-    private static final long serialVersionUID = 1L;
-
+public class BinarySparseThinPlateSplineKernel extends ThinPlateSpline implements MercerKernel<int[]> {
     /**
-     * The width of the kernel.
+     * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    private double sigma;
+    public BinarySparseThinPlateSplineKernel(double sigma) {
+        this(sigma, 1E-05, 1E5);
+    }
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Thin Plate Spline kernel.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public BinarySparseThinPlateSplineKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
-        }
-
-        this.sigma = sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Linear Thin Plate Spline Kernel (\u02E0 = %.4f)", sigma);
+    public BinarySparseThinPlateSplineKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(int[] x, int[] y) {
-        double d = 0.0;
+        return k(MathEx.distance(x, y));
+    }
 
-        int p1 = 0, p2 = 0;
-        while (p1 < x.length && p2 < y.length) {
-            int i1 = x[p1];
-            int i2 = y[p2];
-            if (i1 == i2) {
-                p1++;
-                p2++;
-            } else if (i1 > i2) {
-                d++;
-                p2++;
-            } else {
-                d++;
-                p1++;
-            }
-        }
+    @Override
+    public double[] kg(int[] x, int[] y) {
+        return kg(MathEx.distance(x, y));
+    }
 
-        d += x.length - p1;
-        d += y.length - p2;
+    @Override
+    public BinarySparseThinPlateSplineKernel of(double[] params) {
+        return new BinarySparseThinPlateSplineKernel(params[0], lo, hi);
+    }
 
-        return d/(sigma*sigma) * Math.log(Math.sqrt(d)/sigma);
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

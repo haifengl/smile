@@ -12,7 +12,7 @@ target in Compile in doc := baseDirectory.value / "../doc/api/scala"
 
 libraryDependencies ++= Seq(
   "org.scala-lang.modules" %% "scala-xml" % "1.3.0",
-  "com.thoughtworks.xstream" % "xstream" % "1.4.13",
+  "com.thoughtworks.xstream" % "xstream" % "1.4.14",
   "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
   "org.specs2" %% "specs2-core" % "4.10.5" % Test
 )

@@ -18,12 +18,7 @@
 package smile.clustering;
 
 import smile.data.GaussianMixture;
-import smile.math.MathEx;
-import smile.math.distance.EuclideanDistance;
-import smile.neighbor.KDTree;
-import smile.neighbor.LinearSearch;
-import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.validation.*;
+import smile.validation.metric.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

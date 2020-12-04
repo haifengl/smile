@@ -25,7 +25,7 @@ import org.junit.Test;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
-import smile.validation.Error;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 
@@ -58,10 +58,10 @@ public class LDATest {
     public void testIris() {
         System.out.println("Iris");
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(22, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> LDA.fit(x, y));
+
+        System.out.println(metrics);
+        assertEquals(0.8533, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -69,11 +69,11 @@ public class LDATest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<LDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> LDA.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(884, error);
+        System.out.println(result);
+        assertEquals(0.8820, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -81,11 +81,11 @@ public class LDATest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> LDA.fit(x, y));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<LDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> LDA.fit(x, y));
 
-        System.out.println("Error = " + error);
-        assertEquals(42, error);
+        System.out.println(result);
+        assertEquals(0.9272, result.avg.accuracy, 1E-4);
     }
 
     @Test(expected = Test.None.class)
@@ -94,7 +94,7 @@ public class LDATest {
 
         LDA model = LDA.fit(USPS.x, USPS.y);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);

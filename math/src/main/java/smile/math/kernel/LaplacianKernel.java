@@ -20,7 +20,7 @@ package smile.math.kernel;
 import smile.math.MathEx;
 
 /**
- * The Laplacian Kernel.
+ * Laplacian kernel, also referred as exponential kernel.
  * <p>
  * <pre>
  *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
@@ -29,37 +29,52 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class LaplacianKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
-
+public class LaplacianKernel extends Laplacian implements MercerKernel<double[]> {
     /**
-     * The width of the kernel.
+     * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    private double gamma;
+    public LaplacianKernel(double sigma) {
+        this(sigma, 1E-05, 1E5);
+    }
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public LaplacianKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
-        }
-
-        this.gamma = 1.0 / sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Laplacian Kernel (\u02E0 = %.4f)", 1.0/gamma);
+    public LaplacianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
+        return k(MathEx.distance(x, y));
+    }
 
-        return Math.exp(-gamma * MathEx.distance(x, y));
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
+    public LaplacianKernel of(double[] params) {
+        return new LaplacianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

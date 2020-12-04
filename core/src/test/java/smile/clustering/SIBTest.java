@@ -29,7 +29,7 @@ import smile.data.Instance;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.util.SparseArray;
-import smile.validation.*;
+import smile.validation.metric.*;
 
 /**
  *

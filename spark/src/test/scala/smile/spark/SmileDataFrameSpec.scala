@@ -27,6 +27,7 @@ import smile.util.Paths
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   implicit var spark: SparkSession = _
+  val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate
@@ -34,16 +35,11 @@ class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   "Smile DataFrame" should {
     "conversions should be idempotent but lose smile measures" in {
-
-      val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
-
-      new StructType(smileMushrooms.schema().fields().map(field => new StructField(field.name,field.`type`)):_*) mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms)).schema()
+      val schema = new StructType(smileMushrooms.schema().fields().map(field => new StructField(field.name,field.`type`)):_*)
+      schema mustEqual SparkDataFrame(SmileDataFrame(smileMushrooms)).schema()
     }
 
     "using object or implicit is equal" in {
-
-      val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
-
       val objectSparkMushrooms = SmileDataFrame(smileMushrooms)
       val implicitSparkMushrooms = smileMushrooms.toSpark(spark)
 

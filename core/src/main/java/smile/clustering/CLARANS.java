@@ -73,7 +73,7 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
     }
 
     @Override
-    public double distance(T x, T y) {
+    protected double distance(T x, T y) {
         return distance.d(x, y);
     }
 

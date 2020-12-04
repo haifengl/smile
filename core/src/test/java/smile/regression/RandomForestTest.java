@@ -22,13 +22,12 @@ import org.junit.*;
 import smile.data.*;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.LOOCV;
-import smile.validation.RMSE;
-import smile.validation.Validation;
+import smile.validation.*;
+import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  *
@@ -116,11 +115,11 @@ public class RandomForestTest {
             System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
-        double[] prediction = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
-        double rmse = RMSE.of(Longley.y, prediction);
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+                (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 10, 3, 1.0, Arrays.stream(seeds)));
 
-        System.out.println("LOOCV RMSE = " + rmse);
-        assertEquals(2.710121445970332, rmse, 1E-4);
+        System.out.println(metrics);
+        assertEquals(2.710121445970332, metrics.rmse, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -130,10 +129,11 @@ public class RandomForestTest {
         System.out.println(name);
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        double[] prediction = CrossValidation.regression(3, formula, data, (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds)));
-        double rmse = RMSE.of(formula.y(data).toDoubleArray(), prediction);
-        System.out.format("10-CV RMSE = %.4f%n", rmse);
-        assertEquals(expected, rmse, 1E-4);
+        RegressionValidations<RandomForest> result = CrossValidation.regression(3, formula, data,
+                (f, x) -> RandomForest.fit(f, x, 100, 3, 20, 100, 5, 1.0, Arrays.stream(seeds)));
+
+        System.out.println(result);
+        assertEquals(expected, result.avg.rmse, 1E-4);
 
         RandomForest model = RandomForest.fit(formula, data);
         double[] importance = model.importance();
@@ -145,27 +145,51 @@ public class RandomForestTest {
 
     @Test
     public void testAll() {
-        test("CPU", CPU.formula, CPU.data, 75.0190);
+        test("CPU", CPU.formula, CPU.data, 69.3312);
         test("2dplanes", Planes.formula, Planes.data, 1.3574);
-        test("abalone", Abalone.formula, Abalone.train, 2.1932);
+        test("abalone", Abalone.formula, Abalone.train, 2.1888);
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
-        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5632);
-        test("cal_housing", CalHousing.formula, CalHousing.data, 58552.3225);
-        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3149);
+        test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5620);
+        test("cal_housing", CalHousing.formula, CalHousing.data, 58550.8159);
+        test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3147);
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
     @Test
-    public void testRandomForestMerging() throws Exception {
-        System.out.println("Random forest merging");
+    public void testTrim() {
+        System.out.println("trim");
+
+        RandomForest model = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
+        System.out.println(model.metrics());
+        assertEquals(50, model.size());
+
+        double rmse = RMSE.of(Abalone.testy, model.predict(Abalone.test));
+        System.out.format("RMSE = %.4f%n", rmse);
+        assertEquals(2.0858, rmse, 1E-4);
+
+        RandomForest trimmed = model.trim(40);
+        assertEquals(50, model.size());
+        assertEquals(40, trimmed.size());
+
+        double rmse1 = Arrays.stream(model.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
+        double rmse2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.metrics.rmse).max().getAsDouble();
+        assertTrue(rmse1 > rmse2);
+
+        rmse = RMSE.of(Abalone.testy, trimmed.predict(Abalone.test));
+        assertEquals(2.0897, rmse, 1E-4);
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+        System.out.println("merge");
 
         RandomForest forest1 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds));
         RandomForest forest2 = RandomForest.fit(Abalone.formula, Abalone.train, 50, 3, 20, 100, 5, 1.0, Arrays.stream(seeds).skip(50));
         RandomForest forest = forest1.merge(forest2);
-        double rmse1 = RMSE.of(Abalone.testy, Validation.test(forest1, Abalone.test));
-        double rmse2 = RMSE.of(Abalone.testy, Validation.test(forest2, Abalone.test));
-        double rmse  = RMSE.of(Abalone.testy, Validation.test(forest,  Abalone.test));
+        double rmse1 = RMSE.of(Abalone.testy, forest1.predict(Abalone.test));
+        double rmse2 = RMSE.of(Abalone.testy, forest2.predict(Abalone.test));
+        double rmse  = RMSE.of(Abalone.testy, forest.predict(Abalone.test));
         System.out.format("Forest 1 RMSE = %.4f%n", rmse1);
         System.out.format("Forest 2 RMSE = %.4f%n", rmse2);
         System.out.format("Merged   RMSE = %.4f%n", rmse);
