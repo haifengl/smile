@@ -287,7 +287,7 @@ fun maxent(x: Array<IntArray>, y: IntArray, p: Int, lambda: Double = 0.1, tol: D
  * @param epsilon A small constant for RMSProp numerical stability.
  */
 fun mlp(x: Array<DoubleArray>, y: IntArray, builders: Array<LayerBuilder>, epochs: Int = 10,
-       learningRate: TimeFunction = TimeFunction.linear(0.01, 10000, 0.001),
+       learningRate: TimeFunction = TimeFunction.linear(0.01, 10000.0, 0.001),
        momentum: TimeFunction = TimeFunction.constant(0.0),
        weightDecay: Double = 0.0, rho: Double = 0.0, epsilon: Double = 1E-7): MLP {
     val net = MLP(x[0].size, *builders)

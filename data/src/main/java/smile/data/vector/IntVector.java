@@ -38,6 +38,9 @@ public interface IntVector extends BaseVector<Integer, Integer, IntStream> {
     int[] array();
 
     @Override
+    IntVector get(int... index);
+
+    @Override
     default byte getByte(int i) {
         throw new UnsupportedOperationException("cast int to byte");
     }

@@ -31,15 +31,9 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparsePolynomialKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
-    private int degree;
-    private double scale;
-    private double offset;
-
+public class SparsePolynomialKernel extends Polynomial implements MercerKernel<SparseArray> {
     /**
-     * Constructor with scale 1 and bias 0.
+     * Constructor with scale 1 and offset 0.
      */
     public SparsePolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);
@@ -47,29 +41,53 @@ public class SparsePolynomialKernel implements MercerKernel<SparseArray> {
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public SparsePolynomialKernel(int degree, double scale, double offset) {
-        if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree.");
-        }
-
-        if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition.");
-        }
-        
-        this.degree = degree;
-        this.scale = scale;
-        this.offset = offset;
+        this(degree, scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
     }
 
-    @Override
-    public String toString() {
-        return String.format("Sparse Polynomial Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    /**
+     * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public SparsePolynomialKernel(int degree, double scale, double offset, double[] lo, double[] hi) {
+        super(degree, scale, offset, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        double dot = MathEx.dot(x, y);
-        return Math.pow(scale * dot + offset, degree);
+        return k(MathEx.dot(x, y));
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
+    public SparsePolynomialKernel of(double[] params) {
+        return new SparsePolynomialKernel(degree, params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

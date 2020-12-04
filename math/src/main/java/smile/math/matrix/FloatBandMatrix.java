@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import smile.math.MathEx;
@@ -376,7 +377,8 @@ public class FloatBandMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class LU {
+    public static class LU implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
          */
@@ -416,7 +418,7 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
             int m = lu.m;
@@ -426,7 +428,7 @@ public class FloatBandMatrix extends SMatrix {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            float d = 1.0f;
+            double d = 1.0;
             for (int j = 0; j < n; j++) {
                 d *= lu.AB[j * lu.ld + lu.kl/2 + lu.ku];
             }
@@ -437,7 +439,7 @@ public class FloatBandMatrix extends SMatrix {
                 }
             }
 
-            return d;
+            return (float) d;
         }
 
         /**
@@ -515,8 +517,8 @@ public class FloatBandMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */
@@ -535,15 +537,28 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
-            float d = 1.0f;
+            double d = 1.0;
             for (int i = 0; i < lu.n; i++) {
                 d *= lu.get(i, i);
             }
 
-            return d * d;
+            return (float) (d * d);
+        }
+
+        /**
+         * Returns the log of matrix determinant.
+         */
+        public float logdet() {
+            int n = lu.n;
+            double d = 0.0;
+            for (int i = 0; i < n; i++) {
+                d += Math.log(lu.get(i, i));
+            }
+
+            return (float) (2.0 * d);
         }
 
         /**

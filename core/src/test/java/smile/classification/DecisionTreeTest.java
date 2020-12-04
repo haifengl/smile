@@ -20,15 +20,13 @@ package smile.classification;
 import smile.base.cart.SplitRule;
 import smile.data.*;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.Error;
-import smile.validation.LOOCV;
+import smile.validation.*;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.validation.Validation;
 
 import static org.junit.Assert.*;
 
@@ -72,10 +70,10 @@ public class DecisionTreeTest {
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
-        int error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(7, error);
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 8, 10, 1));
+
+        System.out.println(metrics);
+        assertEquals(0.5, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -90,10 +88,10 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(9, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> DecisionTree.fit(f, x));
+
+        System.out.println(metrics);
+        assertEquals(0.94, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -101,11 +99,11 @@ public class DecisionTreeTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<DecisionTree> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
-        System.out.println("Error = " + error);
-        assertEquals(351, error);
+        System.out.println(result);
+        assertEquals(0.9532, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -113,11 +111,11 @@ public class DecisionTreeTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<DecisionTree> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+                (f, x) -> DecisionTree.fit(f, x, SplitRule.GINI, 20, 100, 5));
 
-        System.out.println("Error = " + error);
-        assertEquals(42, error);
+        System.out.println(result);
+        assertEquals(0.9275, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -132,11 +130,11 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, Segment.test);
+        int[] prediction = model.predict(Segment.test);
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
-        assertEquals(43, error);
+        assertEquals(43, error, 1E-4);
     }
 
     @Test
@@ -151,7 +149,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -171,7 +169,7 @@ public class DecisionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -187,14 +185,14 @@ public class DecisionTreeTest {
         }
 
         // The old model should not be modified.
-        prediction = Validation.test(model, USPS.test);
+        prediction = model.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(897, model.size());
         assertEquals(324, error);
 
-        prediction = Validation.test(lean, USPS.test);
+        prediction = lean.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);

@@ -17,12 +17,11 @@
 
 package smile.math.kernel;
 
-import java.util.Iterator;
 import smile.math.MathEx;
 import smile.util.SparseArray;
 
 /**
- * The Thin Plate Spline Kernel on sparse data.
+ * The Thin Plate Spline kernel on sparse data.
  * <p>
  * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
@@ -31,61 +30,53 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SparseThinPlateSplineKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
+public class SparseThinPlateSplineKernel extends ThinPlateSpline implements MercerKernel<SparseArray> {
     /**
-     * The width of the kernel.
+     * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    private double sigma;
+    public SparseThinPlateSplineKernel(double sigma) {
+        this(sigma, 1E-05, 1E5);
+    }
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Thin Plate Spline kernel.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public SparseThinPlateSplineKernel(double sigma) {
-        if (sigma <= 0) {
-            throw new IllegalArgumentException("sigma is not positive.");
-        }
-
-        this.sigma = sigma;
+    public SparseThinPlateSplineKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
-    @Override
-    public String toString() {
-        return String.format("Sparse Thin Plate Spline Kernel (\u02E0 = %.4f)", sigma);
-    }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        Iterator<SparseArray.Entry> it1 = x.iterator();
-        Iterator<SparseArray.Entry> it2 = y.iterator();
-        SparseArray.Entry e1 = it1.hasNext() ? it1.next() : null;
-        SparseArray.Entry e2 = it2.hasNext() ? it2.next() : null;
+        return k(MathEx.distance(x, y));
+    }
 
-        double s = 0.0;
-        while (e1 != null && e2 != null) {
-            if (e1.i == e2.i) {
-                s += MathEx.sqr(e1.x - e2.x);
-                e1 = it1.hasNext() ? it1.next() : null;
-                e2 = it2.hasNext() ? it2.next() : null;
-            } else if (e1.i > e2.i) {
-                s += MathEx.sqr(e2.x);
-                e2 = it2.hasNext() ? it2.next() : null;
-            } else {
-                s += MathEx.sqr(e1.x);
-                e1 = it1.hasNext() ? it1.next() : null;
-            }
-        }
-        
-        while (it1.hasNext()) {
-            s += MathEx.sqr(it1.next().x);
-        }
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
 
-        while (it2.hasNext()) {
-            s += MathEx.sqr(it2.next().x);
-        }
+    @Override
+    public SparseThinPlateSplineKernel of(double[] params) {
+        return new SparseThinPlateSplineKernel(params[0], lo, hi);
+    }
 
-        return s/(sigma*sigma) * Math.log(Math.sqrt(s)/sigma);
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

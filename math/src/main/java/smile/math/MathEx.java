@@ -23,6 +23,9 @@ import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 
+import smile.math.blas.UPLO;
+import smile.math.distance.Distance;
+import smile.math.matrix.Matrix;
 import smile.sort.QuickSelect;
 import smile.sort.QuickSort;
 import smile.sort.Sort;
@@ -2099,7 +2102,8 @@ public class MathEx {
     }
 
     /**
-     * The Euclidean distance.
+     * The Euclidean distance on binary sparse arrays,
+     * which are the indices of nonzero elements in ascending order.
      */
     public static double distance(int[] x, int[] y) {
         return sqrt(squaredDistance(x, y));
@@ -2127,113 +2131,32 @@ public class MathEx {
     }
 
     /**
-     * Pairwise distance between pairs of objects.
-     * @param x Rows of x correspond to observations, and columns correspond to variables.
-     * @return a full pairwise distance matrix.
-     */
-    public static double[][] pdist(double[][] x) {
-        int n = x.length;
-
-        double[][] dist = new double[n][n];
-        pdist(x, dist, false, false);
-
-        return dist;
-    }
-
-    /**
-     * Pairwise distance between pairs of objects.
-     * @param x Rows of x correspond to observations, and columns correspond to variables.
-     * @param squared If true, compute the squared Euclidean distance.
-     * @param half If true, only the lower half of dist will be referenced.
-     * @param dist The distance matrix.
-     */
-    public static void pdist(double[][] x, double[][] dist, boolean squared, boolean half) {
-        int n = x.length;
-
-        if (x[0].length <= 4 && !half) {
-            if (squared) {
-                IntStream.range(0, n).parallel().forEach(i -> {
-                    double[] xi = x[i];
-                    double[] di = dist[i];
-                    for (int j = 0; j < n; j++) {
-                        di[j] = squaredDistance(xi, x[j]);
-                    }
-                });
-            } else {
-                IntStream.range(0, n).parallel().forEach(i -> {
-                    double[] xi = x[i];
-                    double[] di = dist[i];
-                    for (int j = 0; j < n; j++) {
-                        di[j] = distance(xi, x[j]);
-                    }
-                });
-            }
-
-            return;
-        }
-
-        int N = n * (n - 1) / 2;
-        if (squared) {
-            IntStream.range(0, N).parallel().forEach(k -> {
-                int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
-                int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
-                dist[i][j] = squaredDistance(x[i], x[j]);
-            });
-        } else {
-            IntStream.range(0, N).parallel().forEach(k -> {
-                int j = n - 2 - (int) Math.floor(Math.sqrt(-8*k + 4*n*(n-1)-7)/2.0 - 0.5);
-                int i = k + j + 1 - n*(n-1)/2 + (n-j)*((n-j)-1)/2;
-                dist[i][j] = distance(x[i], x[j]);
-            });
-        }
-
-        if (!half) {
-            for (int i = 0; i < n; i++) {
-                for (int j = i + 1; j < n; j++) {
-                    dist[i][j] = dist[j][i];
-                }
-            }
-        }
-    }
-
-    /**
-     * The squared Euclidean distance.
+     * The squared Euclidean distance on binary sparse arrays,
+     * which are the indices of nonzero elements in ascending order.
      */
     public static double squaredDistance(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException("Input vector sizes are different.");
-        }
+        double d = 0.0;
 
-        switch (x.length) {
-            case 2: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                return d0 * d0 + d1 * d1;
-            }
-
-            case 3: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                int d2 = x[2] - y[2];
-                return d0 * d0 + d1 * d1 + d2 * d2;
-            }
-
-            case 4: {
-                int d0 = x[0] - y[0];
-                int d1 = x[1] - y[1];
-                int d2 = x[2] - y[2];
-                int d3 = x[3] - y[3];
-                return d0 * d0 + d1 * d1 + d2 * d2 + d3 * d3;
+        int p1 = 0, p2 = 0;
+        while (p1 < x.length && p2 < y.length) {
+            int i1 = x[p1];
+            int i2 = y[p2];
+            if (i1 == i2) {
+                p1++;
+                p2++;
+            } else if (i1 > i2) {
+                d++;
+                p2++;
+            } else {
+                d++;
+                p1++;
             }
         }
 
-        double sum = 0.0;
-        for (int i = 0; i < x.length; i++) {
-            int d = x[i] - y[i];
-            sum += d * d;
-        }
+        d += x.length - p1;
+        d += y.length - p2;
 
-        return sum;
+        return d;
     }
 
     /**
@@ -2318,7 +2241,7 @@ public class MathEx {
     }
 
     /**
-     * The Euclidean distance.
+     * The Euclidean distance on sparse arrays.
      */
     public static double squaredDistance(SparseArray x, SparseArray y) {
         Iterator<SparseArray.Entry> it1 = x.iterator();
@@ -2377,6 +2300,128 @@ public class MathEx {
         }
 
         return dist;
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple binary sparse vectors.
+     * @param x Each row is a binary sparse array, which are the indices of
+     *          nonzero elements in ascending order.
+     * @return a full pairwise distance matrix.
+     */
+    public static Matrix pdist(int[][] x) {
+        return pdist(x, false);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple binary sparse vectors.
+     * @param x Each row is a binary sparse array, which are the indices of
+     *          nonzero elements in ascending order.
+     * @param squared If true, compute the squared Euclidean distance.
+     * @return the pairwise distance matrix.
+     */
+    public static Matrix pdist(int[][] x, boolean squared) {
+        int n = x.length;
+        double[][] dist = new double[n][n];
+
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return a full pairwise distance matrix.
+     */
+    public static Matrix pdist(float[][] x) {
+        return pdist(x, false);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param squared If true, compute the squared Euclidean distance.
+     * @return the pairwise distance matrix.
+     */
+    public static Matrix pdist(float[][] x, boolean squared) {
+        int n = x.length;
+        double[][] dist = new double[n][n];
+
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return a full pairwise distance matrix.
+     */
+    public static Matrix pdist(double[][] x) {
+        return pdist(x, false);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param squared If true, compute the squared Euclidean distance.
+     * @return the pairwise distance matrix.
+     */
+    public static Matrix pdist(double[][] x, boolean squared) {
+        int n = x.length;
+        double[][] dist = new double[n][n];
+
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Each row is the sparse array of observations
+     * @return a full pairwise distance matrix.
+     */
+    public static Matrix pdist(SparseArray[] x) {
+        return pdist(x, false);
+    }
+
+    /**
+     * Returns the pairwise distance matrix of multiple vectors.
+     * @param x Each row is the sparse array of observations
+     * @param squared If true, compute the squared Euclidean distance.
+     * @return the pairwise distance matrix.
+     */
+    public static Matrix pdist(SparseArray[] x, boolean squared) {
+        int n = x.length;
+        double[][] dist = new double[n][n];
+
+        pdist(x, dist, squared ? MathEx::squaredDistance : MathEx::distance);
+        return new Matrix(dist);
+    }
+
+    /**
+     * Computes the pairwise distance matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @param d The output distance matrix. It may be only the lower half.
+     * @param distance The distance lambda.
+     */
+    public static <T> void pdist(T[] x, double[][] d, Distance<T> distance) {
+        int n = x.length;
+
+        if (d[0].length < n) {
+            IntStream.range(0, n).parallel().forEach(i -> {
+                T xi = x[i];
+                double[] di = d[i];
+                for (int j = 0; j < i; j++) {
+                    di[j] = distance.d(xi, x[j]);
+                }
+            });
+        } else {
+            IntStream.range(0, n).parallel().forEach(i -> {
+                T xi = x[i];
+                double[] di = d[i];
+                for (int j = 0; j < n; j++) {
+                    di[j] = distance.d(xi, x[j]);
+                }
+            });
+        }
     }
 
     /**
@@ -2648,19 +2693,27 @@ public class MathEx {
     }
 
     /**
-     * Returns the dot product between two vectors.
+     * Returns the dot product between two binary sparse arrays,
+     * which are the indices of nonzero elements in ascending order.
      */
     public static int dot(int[] x, int[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException("Arrays have different length.");
+        int sum = 0;
+
+        for (int p1 = 0, p2 = 0; p1 < x.length && p2 < y.length; ) {
+            int i1 = x[p1];
+            int i2 = y[p2];
+            if (i1 == i2) {
+                sum++;
+                p1++;
+                p2++;
+            } else if (i1 > i2) {
+                p2++;
+            } else {
+                p1++;
+            }
         }
 
-        int p = 0;
-        for (int i = 0; i < x.length; i++) {
-            p += x[i] * y[i];
-        }
-
-        return p;
+        return sum;
     }
 
     /**
@@ -2671,12 +2724,12 @@ public class MathEx {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        float p = 0.0F;
+        float sum = 0.0F;
         for (int i = 0; i < x.length; i++) {
-            p += x[i] * y[i];
+            sum += x[i] * y[i];
         }
 
-        return p;
+        return sum;
     }
 
     /**
@@ -2687,12 +2740,12 @@ public class MathEx {
             throw new IllegalArgumentException("Arrays have different length.");
         }
 
-        double p = 0.0;
+        double sum = 0.0;
         for (int i = 0; i < x.length; i++) {
-            p += x[i] * y[i];
+            sum += x[i] * y[i];
         }
 
-        return p;
+        return sum;
     }
 
     /**
@@ -2704,10 +2757,10 @@ public class MathEx {
         SparseArray.Entry e1 = it1.hasNext() ? it1.next() : null;
         SparseArray.Entry e2 = it2.hasNext() ? it2.next() : null;
 
-        double s = 0.0;
+        double sum = 0.0;
         while (e1 != null && e2 != null) {
             if (e1.i == e2.i) {
-                s += e1.x * e2.x;
+                sum += e1.x * e2.x;
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
             } else if (e1.i > e2.i) {
@@ -2717,7 +2770,87 @@ public class MathEx {
             }
         }
         
-        return s;
+        return sum;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of binary sparse vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(int[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            int[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of float vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(float[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            float[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of double vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(double[][] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            double[] xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
+    }
+
+    /**
+     * Returns the pairwise dot product matrix of multiple vectors.
+     * @param x Rows of x correspond to observations, and columns correspond to variables.
+     * @return The dot product matrix.
+     */
+    public static Matrix pdot(SparseArray[] x) {
+        int n = x.length;
+
+        Matrix matrix = new Matrix(n, n);
+        matrix.uplo(UPLO.LOWER);
+        IntStream.range(0, n).parallel().forEach(j -> {
+            SparseArray xj = x[j];
+            for (int i = 0; i < n; i++) {
+                matrix.set(i, j, dot(x[i], xj));
+            }
+        });
+
+        return matrix;
     }
 
     /**
