@@ -17,7 +17,6 @@
 
 package smile.classification;
 
-import java.util.Arrays;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
@@ -111,20 +110,13 @@ public class AdaBoostTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        AdaBoost model = AdaBoost.fit(BreastCancer.formula, BreastCancer.data, 200, 20, 4, 1);
-        System.out.println(Error.of(BreastCancer.y, model.predict(BreastCancer.data)));
 
         ClassificationValidations<AdaBoost> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
-                (f, x) -> AdaBoost.fit(f, x, 200, 20, 4, 1));
+                (f, x) -> AdaBoost.fit(f, x, 100, 20, 4, 1));
 
         System.out.println(result);
-        int[] truth = result.rounds.stream().flatMapToInt(round -> Arrays.stream(round.truth)).toArray();
-        int[] prediction = result.rounds.stream().flatMapToInt(round -> Arrays.stream(round.prediction)).toArray();
-        System.out.println(Error.of(truth, prediction));
-        System.out.println(Arrays.toString(truth));
-        System.out.println(Arrays.toString(prediction));
-        for (ClassificationValidation cv : result.rounds) System.out.println(cv);
-        assertEquals(19, result.avg.accuracy, 1E-4);
+        int error = result.rounds.stream().mapToInt(round -> round.metrics.error).sum();
+        assertEquals(15, error);
     }
 
     @Test
