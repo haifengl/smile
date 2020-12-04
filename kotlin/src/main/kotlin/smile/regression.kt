@@ -428,10 +428,13 @@ fun gbm(formula: Formula, data: DataFrame, loss: Loss = Loss.lad(), ntrees: Int 
  * @param x the training dataset.
  * @param y the response variable.
  * @param kernel the Mercer kernel.
- * @param lambda the shrinkage/regularization parameter.
+ * @param noise  the noise variance, which also works as a regularization parameter.
+ * @param normalize the option to normalize the response variable.
+ * @param tol       the stopping tolerance for HPO.
+ * @param maxIter   the maximum number of iterations for HPO. No HPO if maxIter <= 0.
  */
-fun <T> gpr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, lambda: Double): KernelMachine<T> {
-    return GaussianProcessRegression.fit(x, y, kernel, lambda)
+fun <T> gpr(x: Array<T>, y: DoubleArray, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true, tol: Double = 1E-5, maxIter: Int = 0): GaussianProcessRegression<T> {
+    return GaussianProcessRegression.fit(x, y, kernel, noise, normalize, tol, maxIter)
 }
 
 /** Gaussian Process for Regression. */
@@ -445,10 +448,11 @@ object gpr {
      *          acting as active set of regressors. In simple case, these can be chosen
      *          randomly from the training set or as the centers of k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param lambda the shrinkage/regularization parameter.
+     * @param noise  the noise variance, which also works as a regularization parameter.
+     * @param normalize the option to normalize the response variable.
      */
-    fun <T> approx(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, lambda: Double): KernelMachine<T> {
-        return GaussianProcessRegression.fit(x, y, t, kernel, lambda)
+    fun <T> approx(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true): GaussianProcessRegression<T> {
+        return GaussianProcessRegression.fit(x, y, t, kernel, noise, normalize)
     }
 
     /**
@@ -460,10 +464,11 @@ object gpr {
      *          acting as active set of regressors. In simple case, these can be chosen
      *          randomly from the training set or as the centers of k-means clustering.
      * @param kernel the Mercer kernel.
-     * @param lambda the shrinkage/regularization parameter.
+     * @param noise  the noise variance, which also works as a regularization parameter.
+     * @param normalize the option to normalize the response variable.
      */
-    fun <T> nystrom(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, lambda: Double): KernelMachine<T> {
-        return GaussianProcessRegression.nystrom(x, y, t, kernel, lambda)
+    fun <T> nystrom(x: Array<T>, y: DoubleArray, t: Array<T>, kernel: MercerKernel<T>, noise: Double, normalize: Boolean = true): GaussianProcessRegression<T> {
+        return GaussianProcessRegression.nystrom(x, y, t, kernel, noise, normalize)
     }
 }
 
