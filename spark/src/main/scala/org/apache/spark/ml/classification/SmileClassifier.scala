@@ -166,11 +166,15 @@ class SmileClassificationModel(override val uid: String,
     this(Identifiable.randomUID("SmileClassificationModel"), numClasses, model)
 
   override protected def predictRaw(features: Vector): Vector = {
-    // The Spark API for [[ClassificationModel]] is a predictRaw function that outputs
-    // a Vector with "confidence scores" for every classes of the classification problem.
-    // Here the confidence will be 1.0 for the predicted class by the smile classifier and 0.0 elsewhere.
+    // The Spark API predictRaw function outputs a Vector with
+    // "confidence scores" for each class.
     val posteriori = Array.fill(numClasses)(0.0)
-    posteriori(model.predict(features.toArray)) = 1.0
+    if (model.isInstanceOf[smile.classification.SoftClassifier[Array[Double]]]) {
+      model.asInstanceOf[smile.classification.SoftClassifier[Array[Double]]].predict(features.toArray, posteriori)
+    } else {
+      // The "hard" confidence for the predicted class.
+      posteriori(model.predict(features.toArray)) = 1.0
+    }
     Vectors.dense(posteriori)
   }
 
