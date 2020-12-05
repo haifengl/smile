@@ -145,22 +145,19 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     /**
-     * Cache the generated random number in Box-Muller algorithm.
+     * The Box-Muller algorithm generate a pair of random numbers.
+     * z1 is to cache the second one.
      */
-    private Double boxMuller;
+    private double z1 = Double.NaN;
 
     /**
      * Uses the Box-Muller algorithm to transform Random.random()'s into Gaussian deviates.
      */
     @Override
     public double rand() {
-        double out, x, y, r, z;
+        double z0, x, y, r, z;
 
-        if (boxMuller != null) {
-            out = boxMuller.doubleValue();
-            boxMuller = null;
-
-        } else {
+        if (Double.isNaN(z1)) {
             do {
                 x = MathEx.random(-1, 1);
                 y = MathEx.random(-1, 1);
@@ -168,11 +165,14 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
             } while (r >= 1.0);
 
             z = Math.sqrt(-2.0 * Math.log(r) / r);
-            boxMuller = new Double(x * z);
-            out = y * z;
+            z1 = x * z;
+            z0 = y * z;
+        } else {
+            z0 = z1;
+            z1 = Double.NaN;
         }
 
-        return mu + sigma * out;
+        return mu + sigma * z0;
     }
     
     /**
