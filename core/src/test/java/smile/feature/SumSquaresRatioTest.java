@@ -17,11 +17,11 @@
 
 package smile.feature;
 
-import smile.validation.Accuracy;
 import smile.classification.LDA;
 import smile.data.Iris;
 import smile.data.USPS;
 import smile.sort.QuickSort;
+import smile.validation.metric.Accuracy;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;

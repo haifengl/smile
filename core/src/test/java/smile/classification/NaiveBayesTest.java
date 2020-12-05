@@ -17,13 +17,14 @@
 
 package smile.classification;
 
+import java.util.stream.IntStream;
 import smile.data.Iris;
 import smile.data.WeatherNominal;
 import smile.stat.distribution.EmpiricalDistribution;
 import smile.util.IntSet;
-import smile.validation.Error;
+import smile.validation.ClassificationMetrics;
 import smile.validation.LOOCV;
-import java.util.stream.IntStream;
+import smile.validation.metric.Error;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -67,7 +68,7 @@ public class NaiveBayesTest {
         int p = Iris.x[0].length;
         int k = MathEx.max(Iris.y) + 1;
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> {
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
             Distribution[][] condprob = new Distribution[k][p];
@@ -83,9 +84,9 @@ public class NaiveBayesTest {
 
             return new NaiveBayes(priori, condprob);
         });
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(7, error);
+
+        System.out.println(metrics);
+        assertEquals(0.9533, metrics.accuracy, 1E-4);
 
         double[] priori = new double[k];
         Distribution[][] condprob = new Distribution[k][p];
@@ -110,7 +111,7 @@ public class NaiveBayesTest {
         int p = WeatherNominal.level[0].length;
         int k = MathEx.max(WeatherNominal.y) + 1;
 
-        int[] prediction = LOOCV.classification(WeatherNominal.level, WeatherNominal.y, (x, y) -> {
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.level, WeatherNominal.y, (x, y) -> {
             int n = x.length;
             double[] priori = new double[k];
             Distribution[][] condprob = new Distribution[k][p];
@@ -128,8 +129,8 @@ public class NaiveBayesTest {
 
             return new NaiveBayes(priori, condprob);
         });
-        int error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(3, error);
+
+        System.out.println(metrics);
+        assertEquals(0.7857, metrics.accuracy, 1E-4);
     }
 }

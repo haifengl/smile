@@ -22,12 +22,13 @@ import smile.base.cart.SplitRule;
 import smile.data.*;
 import smile.math.MathEx;
 import smile.validation.*;
+import smile.validation.metric.Accuracy;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.validation.Error;
 
 import static org.junit.Assert.*;
 
@@ -103,11 +104,11 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data, (f, x) -> RandomForest.fit(f, x, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds)));
-        int error = Error.of(WeatherNominal.y, prediction);
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
+                (f, x) -> RandomForest.fit(f, x, 20, 2, SplitRule.GINI, 8, 10, 1, 1.0, null, Arrays.stream(seeds)));
 
-        System.out.println("Error = " + error);
-        assertEquals(6, error);
+        System.out.println(metrics);
+        assertEquals(0.5714, metrics.accuracy, 1E-4);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -125,10 +126,10 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("Error = " + error);
-        assertEquals(8, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
+
+        System.out.println(metrics);
+        assertEquals(0.9533, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -136,11 +137,11 @@ public class RandomForestTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, PenDigits.formula, PenDigits.data, (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<RandomForest> result = CrossValidation.classification(10, PenDigits.formula, PenDigits.data,
+                (f, x) -> RandomForest.fit(f, x, 100, 4, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
-        System.out.println("Error = " + error);
-        assertEquals(195, error);
+        System.out.println(result);
+        assertEquals(0.9709, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -148,11 +149,11 @@ public class RandomForestTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results for cross validation.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data, (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<RandomForest> result = CrossValidation.classification(10, BreastCancer.formula, BreastCancer.data,
+                (f, x) -> RandomForest.fit(f, x, 100, 5, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
 
-        System.out.println("Error = " + error);
-        assertEquals(27, error);
+        System.out.println(result);
+        assertEquals(0.9550, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -166,7 +167,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, Segment.test);
+        int[] prediction = model.predict(Segment.test);
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -190,7 +191,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -204,8 +205,56 @@ public class RandomForestTest {
     }
 
     @Test
+    public void testTrim() {
+        System.out.println("trim");
+
+        RandomForest model = RandomForest.fit(Segment.formula, Segment.train, 200, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        System.out.println(model.metrics());
+        assertEquals(200, model.size());
+
+        int[] prediction = model.predict(Segment.test);
+        int error = Error.of(Segment.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(34, error);
+
+        RandomForest trimmed = model.trim(100);
+        assertEquals(200, model.size());
+        assertEquals(100, trimmed.size());
+
+        double weight1 = Arrays.stream(model.models()).mapToDouble(m -> m.weight).min().getAsDouble();
+        double weight2 = Arrays.stream(trimmed.models()).mapToDouble(m -> m.weight).min().getAsDouble();
+        assertTrue(weight2 > weight1);
+
+        prediction = trimmed.predict(Segment.test);
+        error = Error.of(Segment.testy, prediction);
+
+        System.out.println("Error after trim = " + error);
+        assertEquals(32, error);
+    }
+
+    @Test
+    public void testMerge() throws Exception {
+        System.out.println("merge");
+
+        RandomForest forest1 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        RandomForest forest2 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));
+        RandomForest forest = forest1.merge(forest2);
+
+        int error1 = Error.of(Segment.testy, forest1.predict(Segment.test));
+        int error2 = Error.of(Segment.testy, forest2.predict(Segment.test));
+        int error  = Error.of(Segment.testy, forest.predict(Segment.test));
+        System.out.format("Forest 1 Error = %d%n", error1);
+        System.out.format("Forest 2 Error = %d%n", error2);
+        System.out.format("Merged   Error = %d%n", error);
+        assertEquals(34, error1);
+        assertEquals(34, error2);
+        assertEquals(34, error);
+    }
+
+    @Test
     public void testPrune() {
-        System.out.println("USPS");
+        System.out.println("prune");
 
         // Overfitting with very large maxNodes and small nodeSize
         RandomForest model = RandomForest.fit(USPS.formula, USPS.train, 200, 16, SplitRule.GINI, 20, 2000, 1, 1.0, null, Arrays.stream(seeds));
@@ -215,7 +264,7 @@ public class RandomForestTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        int[] prediction = Validation.test(model, USPS.test);
+        int[] prediction = model.predict(USPS.test);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -229,13 +278,13 @@ public class RandomForestTest {
         }
 
         // The old model should not be modified.
-        prediction = Validation.test(model, USPS.test);
+        prediction = model.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of old model after pruning = " + error);
         assertEquals(118, error);
 
-        prediction = Validation.test(lean, USPS.test);
+        prediction = lean.predict(USPS.test);
         error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error of pruned model after pruning = " + error);

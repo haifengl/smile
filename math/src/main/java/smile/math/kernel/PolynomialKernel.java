@@ -30,15 +30,9 @@ import smile.math.MathEx;
  * 
  * @author Haifeng Li
  */
-public class PolynomialKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
-
-    private int degree;
-    private double scale;
-    private double offset;
-
+public class PolynomialKernel extends Polynomial implements MercerKernel<double[]> {
     /**
-     * Constructor with scale 1 and bias 0.
+     * Constructor with scale 1 and offset 0.
      */
     public PolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);
@@ -46,33 +40,53 @@ public class PolynomialKernel implements MercerKernel<double[]> {
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public PolynomialKernel(int degree, double scale, double offset) {
-        if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree.");
-        }
-
-        if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition.");
-        }
-        
-        this.degree = degree;
-        this.scale = scale;
-        this.offset = offset;
+        this(degree, scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
     }
 
-    @Override
-    public String toString() {
-        return String.format("Polynomial Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    /**
+     * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public PolynomialKernel(int degree, double scale, double offset, double[] lo, double[] hi) {
+        super(degree, scale, offset, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length) {
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        }
+        return k(MathEx.dot(x, y));
+    }
 
-        double dot = MathEx.dot(x, y);
-        return Math.pow(scale * dot + offset, degree);
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
+    public PolynomialKernel of(double[] params) {
+        return new PolynomialKernel(degree, params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }
