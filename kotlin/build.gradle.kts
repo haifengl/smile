@@ -45,7 +45,7 @@ tasks.build {
 // Configure existing Dokka task to output HTML
 tasks {
     dokkaHtml.configure {
-        outputDirectory.set(buildDir.resolve("../doc/api/kotli"))
+        outputDirectory.set(buildDir.resolve("../../doc/api/kotlin"))
         dokkaSourceSets {
             configureEach {
                 includes.from("packages.md")
