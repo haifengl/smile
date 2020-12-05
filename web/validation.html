@@ -250,20 +250,55 @@ permalink: "{{ page.filePathStem }}.html"
 
     <ul class="nav nav-tabs">
         <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
     </ul>
     <div class="tab-content">
         <div class="tab-pane active" id="scala_3">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    // Test a generic classifier. Only accuracy is calculated.
-    def test[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T]
+    object validate {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]]
+            (x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidation[M]
 
-    // Test a binary classifier. Report accuracy, sensitivity/recall, specificity, precision, and F-Score.
-    def test2[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => Classifier[T]): Classifier[T]
+        def classification[M &lt;: DataFrameClassifier]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidation[M]
 
-    // Test a binary soft classifier. In addition to test2, AUC is caulcated.
-    def test2soft[T](x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])(trainer: => (Array[T], Array[Int]) => SoftClassifier[T]): SoftClassifier[T]
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]]
+            (x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidation[M]
+
+        def regression[M &lt;: DataFrameRegression]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidation[M]
+    }
     </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class ClassificationValidation {
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidation&lt;M&gt;
+            of(T[] x, int[] y, T[] testx, int[] testy,
+               BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidation&lt;M&gt;
+            of(Formula formula, DataFrame train, DataFrame test,
+               BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+
+    public class RegressionValidation {
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidation&lt;M&gt;
+            of(T[] x, double[] y, T[] testx, double[] testy,
+               BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidation&lt;M&gt;
+            of(Formula formula, DataFrame train, DataFrame test,
+               BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+          </code></pre>
             </div>
         </div>
     </div>
@@ -392,7 +427,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     val rf = smile.classification.randomForest("class" ~, iris)
-    println(s"OOB error = ${rf.error}")
+    println(s"OOB metrics = ${rf.metrics}")
     </code></pre>
             </div>
         </div>
@@ -400,7 +435,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     var rf = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
-    System.out.format("OOB error = %.2f%%%n", rf.error());
+    System.out.println("OOB metrics = " + rf.metrics());
           </code></pre>
             </div>
         </div>
@@ -429,9 +464,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object cv {
-        def classification[T](x: Array[T], y: Array[Int], k: Int, metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
 
-        def regression[T](x: Array[T], y: Array[Double], k: Int, metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
     }
     </code></pre>
             </div>
@@ -440,10 +483,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class CrossValidation {
-        public static int[] classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
-        public static int[] classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
-        public static double[] regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
-        public static double[] regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidations&lt;M&gt;
+            regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidations&lt;M&gt;
+            regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
             </div>
@@ -529,9 +579,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object loocv {
-        def classification[T](x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationMetrics
 
-        def regression[T](x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def classification[M &lt;: DataFrameClassifier](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationMetrics
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionMetrics
+
+        def regression[M &lt;: DataFrameRegression](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionMetrics
     }
     </code></pre>
             </div>
@@ -540,10 +598,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class LOOCV {
-        public static int[] classification(T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
-        public static int[] classification(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
-        public static double[] regression(T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
-        public static double[] regression(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationMetrics
+            classification(T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationMetrics
+            classification(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionMetrics
+            regression(T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionMetrics
+            regression(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
             </div>
@@ -615,9 +680,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
     object bootstrap {
-        def classification[T](k: Int, x: Array[T], y: Array[Int], metrics: ClassificationMetric*)(trainer: => (Array[T], Array[Int]) => Classifier[T]): Array[Double]
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
 
-        def regression[T](k: Int, x: Array[T], y: Array[Double], metrics: RegressionMetric*)(trainer: => (Array[T], Array[Double]) => Regression[T]): Array[Double]
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
     }
     </code></pre>
             </div>
@@ -626,10 +699,17 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
     public class Bootstrap {
-        public static double[] classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], Classifier&lt;T&gt;&gt; trainer);
-        public static double[] classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameClassifier&gt; trainer);
-        public static double[] regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], Regression&lt;T&gt;&gt; trainer);
-        public static double[] regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, DataFrameRegression&gt; trainer);
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidations&lt;M&gt;
+            regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidations&lt;M&gt;
+            regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
     }
           </code></pre>
             </div>
