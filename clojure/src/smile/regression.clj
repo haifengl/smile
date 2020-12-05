@@ -556,8 +556,12 @@
   `x` is the training dataset.
   `y` is the response variable.
   `kernel` is the Mercer kernel.
-  `lambda` is the shrinkage/regularization parameter."
-  [x y kernel lambda] (GaussianProcessRegression/fit x y kernel lambda))
+  `noise` is the noise variance, which also works as a regularization parameter.
+  `normalize` is the option to normalize the response variable.
+  `tol` is the stopping tolerance for HPO.
+  `max-iter` is the maximum number of iterations for HPO. No HPO if maxIter <= 0."
+  ([x y kernel noise] (GaussianProcessRegression/fit x y kernel noise))
+  ([x y kernel noise normalize tol max-iter] (GaussianProcessRegression/fit x y kernel noise normalize tol max-iter)))
 
 (defn gpr-approx
   "Approximate Gaussian process with a subset of regressors.
@@ -567,8 +571,10 @@
   acting as active set of regressors. In simple case, these can be chosen
   randomly from the training set or as the centers of k-means clustering.
   `kernel` is the Mercer kernel.
-  `lambda` is the shrinkage/regularization parameter."
-  [x y t kernel lambda] (GaussianProcessRegression/fit x y t kernel lambda))
+  `noise` is the noise variance, which also works as a regularization parameter.
+  `normalize` is the option to normalize the response variable."
+  ([x y t kernel noise] (GaussianProcessRegression/fit x y t kernel noise))
+  ([x y t kernel noise normalize] (GaussianProcessRegression/fit x y t kernel noise normalize)))
 
 (defn gpr-nystrom
   "Approximate Gaussian process with Nystrom approximation of kernel matrix.
@@ -578,6 +584,8 @@
   acting as active set of regressors. In simple case, these can be chosen
   randomly from the training set or as the centers of k-means clustering.
   `kernel` is the Mercer kernel.
-  `lambda` is the shrinkage/regularization parameter."
-  [x y t kernel lambda] (GaussianProcessRegression/fit x y t kernel lambda))
+  `noise` is the noise variance, which also works as a regularization parameter.
+  `normalize` is the option to normalize the response variable."
+  ([x y t kernel noise] (GaussianProcessRegression/nystrom x y t kernel noise))
+  ([x y t kernel noise normalize] (GaussianProcessRegression/nystrom x y t kernel noise normalize)))
 
