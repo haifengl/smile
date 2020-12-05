@@ -6,7 +6,13 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "2.6.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
-  javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
+  javacOptions in (Compile, doc) ++= Seq(
+    "-source", "1.8",
+    "-Xdoclint:none",
+    "--allow-script-in-comments",
+    "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
+    "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
+    ),
   javaOptions in Test ++= Seq("-XX:+UseG1GC", "-XX:MaxRAMPercentage=75", "-XX:InitialRAMPercentage=25"),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
