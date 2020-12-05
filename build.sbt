@@ -15,6 +15,7 @@ lazy val commonSettings = Seq(
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
   testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
   parallelExecution in Test := false,
+  autoAPIMappings := true,
   crossPaths := false,
   autoScalaLibrary := false,
   publishTo := {
@@ -54,7 +55,12 @@ lazy val skipPublishSettings = commonSettings ++ Seq(
   publish / skip := true
 )
 
-lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
+lazy val root = project.in(file("."))
+  .settings(skipPublishSettings: _*)
+  .enablePlugins(JavaUnidocPlugin)
+  .settings(
+    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell)
+  )
   .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)

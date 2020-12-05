@@ -11,13 +11,10 @@ if [[ "$OSTYPE" == "darwin"* ]]; then
     export JAVA_HOME=`/usr/libexec/java_home -v 1.8`
 fi
 
-rm -rf doc/api
-export CLASSPATH=$CLASSPATH:$HOME/.ivy2/cache/org.swinglabs/swingx/jars/*:$HOME/.ivy2/cache/org.slf4j/slf4j-api/jars/*:$HOME/.ivy2/cache/org.bytedeco/javacpp/jars/*:$HOME/.ivy2/cache/org.bytedeco/arpack-ng/jars/*:$HOME/.ivy2/cache/org.bytedeco/openblas/jars/*:$HOME/.ivy2/cache/org.apache.commons/commons-csv/jars/*:$HOME/.ivy2/cache/org.apache.arrow/arrow-memory/jars/*:$HOME/.ivy2/cache/org.apache.arrow/arrow-vector/jars/*:$HOME/.ivy2/cache/org.apache.hadoop/hadoop-common/jars/*:$HOME/.ivy2/cache/org.apache.avro/avro/jars/*:$HOME/.ivy2/cache/org.apache.parquet/parquet-common/jars/*:$HOME/.ivy2/cache/org.apache.parquet/parquet-column/jars/*:$HOME/.ivy2/cache/org.apache.parquet/parquet-hadoop/jars/*:$HOME/.ivy2/cache/com.epam/parso/jars/*:$HOME/.ivy2/cache/com.fasterxml.jackson.core/jackson-core/bundles/*:$HOME/.ivy2/cache/com.fasterxml.jackson.core/jackson-annotations/bundles/*:$HOME/.ivy2/cache/com.fasterxml.jackson.core/jackson-databind/bundles/*
-
-javadoc -source "1.8" --allow-script-in-comments -bottom '<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>' -Xdoclint:none -doctitle "Smile &mdash; Statistical Machine Intelligence and Learning Engine" -d doc/api/java  -subpackages smile -sourcepath math/src/main/java:data/src/main/java:io/src/main/java:core/src/main/java:graph/src/main/java:interpolation/src/main/java:nlp/src/main/java:plot/src/main/java
-check_error "javadoc"
-
 sbt clean
+rm -rf doc/api/*
+sbt unidoc
+mv target/javaunidoc doc/api/java
 
 sbt universal:packageBin
 check_error "sbt universal:packageBin"
