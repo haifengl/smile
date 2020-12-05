@@ -20,6 +20,7 @@ package smile.math.matrix;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -548,6 +549,56 @@ public class FloatMatrix extends SMatrix {
         return array;
     }
 
+    /** Returns the i-th row. */
+    public double[] row(int i) {
+        double[] x = new double[n];
+
+        for (int j = 0; j < n; j++) {
+            x[j] = get(i, j);
+        }
+
+        return x;
+    }
+
+    /** Returns the j-th column. */
+    public double[] col(int j) {
+        double[] x = new double[m];
+
+        for (int i = 0; i < m; i++) {
+            x[i] = get(i, j);
+        }
+
+        return x;
+    }
+
+    /** Returns the matrix of selected rows. */
+    public FloatMatrix row(int... rows) {
+        FloatMatrix x = new FloatMatrix(rows.length, n);
+
+        for (int i = 0; i < rows.length; i++) {
+            int row = rows[i];
+            for (int j = 0; j < n; j++) {
+                x.set(i, j, get(row, j));
+            }
+        }
+
+        return x;
+    }
+
+    /** Returns the matrix of selected columns. */
+    public FloatMatrix col(int... cols) {
+        FloatMatrix x = new FloatMatrix(m, cols.length);
+
+        for (int j = 0; j < cols.length; j++) {
+            int col = cols[j];
+            for (int i = 0; i < m; i++) {
+                x.set(i, j, get(i, col));
+            }
+        }
+
+        return x;
+    }
+
     /**
      * Returns the submatrix which top left at (i, j) and bottom right at (k, l).
      * The content of the submatrix will be that of this matrix. Changes to this
@@ -769,6 +820,26 @@ public class FloatMatrix extends SMatrix {
             }
         }
         return this;
+    }
+
+    /** Element-wise addition A += B */
+    public FloatMatrix add(FloatMatrix B) {
+        return add(1.0f, B);
+    }
+
+    /** Element-wise subtraction A -= B */
+    public FloatMatrix sub(FloatMatrix B) {
+        return sub(1.0f, B);
+    }
+
+    /** Element-wise multiplication A *= B */
+    public FloatMatrix mul(FloatMatrix B) {
+        return mul(1.0f, B);
+    }
+
+    /** Element-wise division A /= B */
+    public FloatMatrix div(FloatMatrix B) {
+        return div(1.0f, B);
     }
 
     /** Element-wise addition A += alpha * B */
@@ -1610,7 +1681,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class SVD {
+    public static class SVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The number of rows of matrix.
          */
@@ -1891,7 +1963,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class EVD {
+    public static class EVD implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The real part of eigenvalues.
          * By default the eigenvalues and eigenvectors are not always in
@@ -2032,7 +2105,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class LU {
+    public static class LU implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The LU decomposition.
          */
@@ -2072,7 +2146,7 @@ public class FloatMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
             int m = lu.m;
@@ -2082,7 +2156,7 @@ public class FloatMatrix extends SMatrix {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
             }
 
-            float d = 1.0f;
+            double d = 1.0;
             for (int j = 0; j < n; j++) {
                 d *= lu.get(j, j);
             }
@@ -2093,7 +2167,7 @@ public class FloatMatrix extends SMatrix {
                 }
             }
 
-            return d;
+            return (float) d;
         }
 
         /**
@@ -2171,8 +2245,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class Cholesky {
-
+    public static class Cholesky implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The Cholesky decomposition.
          */
@@ -2191,15 +2265,28 @@ public class FloatMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix determinant
+         * Returns the matrix determinant.
          */
         public float det() {
-            float d = 1.0f;
+            double d = 1.0;
             for (int i = 0; i < lu.n; i++) {
                 d *= lu.get(i, i);
             }
 
-            return d * d;
+            return (float) (d * d);
+        }
+
+        /**
+         * Returns the log of matrix determinant.
+         */
+        public float logdet() {
+            int n = lu.n;
+            double d = 0.0;
+            for (int i = 0; i < n; i++) {
+                d += Math.log(lu.get(i, i));
+            }
+
+            return (float) (2.0 * d);
         }
 
         /**
@@ -2251,7 +2338,8 @@ public class FloatMatrix extends SMatrix {
      *
      * @author Haifeng Li
      */
-    public static class QR {
+    public static class QR implements Serializable {
+        private static final long serialVersionUID = 2L;
         /**
          * The QR decomposition.
          */

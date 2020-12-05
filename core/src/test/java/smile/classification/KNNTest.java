@@ -24,10 +24,8 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.*;
 import smile.math.MathEx;
-import smile.validation.CrossValidation;
-import smile.validation.Error;
-import smile.validation.LOOCV;
-import smile.validation.Validation;
+import smile.validation.*;
+import smile.validation.metric.Error;
 
 import static org.junit.Assert.*;
 
@@ -60,50 +58,42 @@ public class KNNTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        int[] prediction = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y));
-        int error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("1-NN Error = " + error);
-        assertEquals(7, error);
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y));
+        System.out.println("1-NN Error: " + metrics);
+        assertEquals(0.5, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 3));
-        error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("3-NN Error = " + error);
-        assertEquals(5, error);
+        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 3));
+        System.out.println("3-NN Error: " + metrics);
+        assertEquals(0.6429, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 5));
-        error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("5-NN Error = " + error);
-        assertEquals(4, error);
+        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y, 5));
+        System.out.println("5-NN Error: " + metrics);
+        assertEquals(0.7143, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y,7));
-        error = Error.of(WeatherNominal.y, prediction);
-        System.out.println("7-NN Error = " + error);
-        assertEquals(5, error);
+        metrics = LOOCV.classification(WeatherNominal.onehot, WeatherNominal.y, (x, y) -> KNN.fit(x, y,7));
+        System.out.println("7-NN Error: " + metrics);
+        assertEquals(0.6429, metrics.accuracy, 1E-4);
     }
 
     @Test
     public void testIris() {
         System.out.println("Iris");
 
-        int[] prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,1));
-        int error = Error.of(Iris.y, prediction);
-        System.out.println("1-NN Error = " + error);
-        assertEquals(6, error);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,1));
+        System.out.println("1-NN Error: " + metrics);
+        assertEquals(0.96, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,3));
-        error = Error.of(Iris.y, prediction);
-        System.out.println("3-NN Error = " + error);
-        assertEquals(6, error);
+        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,3));
+        System.out.println("3-NN Error: " + metrics);
+        assertEquals(0.96, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,5));
-        error = Error.of(Iris.y, prediction);
-        System.out.println("5-NN Error = " + error);
-        assertEquals(5, error);
+        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,5));
+        System.out.println("5-NN Error: " + metrics);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
 
-        prediction = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,7));
-        error = Error.of(Iris.y, prediction);
-        System.out.println("7-NN Error = " + error);
-        assertEquals(5, error);
+        metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> KNN.fit(x, y,7));
+        System.out.println("7-NN Error: " + metrics);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
     }
 
     @Test
@@ -111,11 +101,11 @@ public class KNNTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, PenDigits.x, PenDigits.y, (x, y) -> KNN.fit(x, y, 3));
-        int error = Error.of(PenDigits.y, prediction);
+        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> KNN.fit(x, y, 3));
 
-        System.out.println("Error = " + error);
-        assertEquals(40, error);
+        System.out.println(result);
+        assertEquals(0.9947, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -123,11 +113,11 @@ public class KNNTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        int[] prediction = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, (x, y) -> KNN.fit(x, y, 3));
-        int error = Error.of(BreastCancer.y, prediction);
+        ClassificationValidations<KNN<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> KNN.fit(x, y, 3));
 
-        System.out.println("Error = " + error);
-        assertEquals(44, error);
+        System.out.println(result);
+        assertEquals(0.9232, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -136,7 +126,7 @@ public class KNNTest {
 
         KNN<double[]> model = KNN.fit(Segment.x, Segment.y, 1);
 
-        int[] prediction = Validation.test(model, Segment.testx);
+        int[] prediction = model.predict(Segment.testx);
         int error = Error.of(Segment.testy, prediction);
 
         System.out.println("Error = " + error);
@@ -149,7 +139,7 @@ public class KNNTest {
 
         KNN<double[]> model = KNN.fit(USPS.x, USPS.y);
 
-        int[] prediction = Validation.test(model, USPS.testx);
+        int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
 
         System.out.println("Error = " + error);

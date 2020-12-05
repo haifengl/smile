@@ -115,8 +115,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Returns a new data frame with boolean indexing. */
     default DataFrame of(boolean... index) {
-        int[] idx = IntStream.range(0, index.length).filter(i -> index[i]).toArray();
-        return new IndexDataFrame(this, idx);
+        return of(IntStream.range(0, index.length).filter(i -> index[i]).toArray());
     }
 
     /**
@@ -1264,7 +1263,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             rows.add(Tuple.of(rs, schema));
         }
 
-        return of(rows);
+        return DataFrame.of(rows);
     }
 
     /**

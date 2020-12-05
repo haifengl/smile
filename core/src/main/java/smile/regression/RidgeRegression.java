@@ -142,10 +142,6 @@ public class RidgeRegression {
         int n = X.nrows();
         int p = X.ncols();
 
-        if (n <= p) {
-            throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));
-        }
-
         if (weights.length != n) {
             throw new IllegalArgumentException(String.format("Invalid weights vector size: %d != %d", weights.length, n));
         }

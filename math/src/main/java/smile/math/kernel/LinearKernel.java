@@ -25,22 +25,58 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class LinearKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
+public class LinearKernel implements MercerKernel<double[]>, DotProductKernel {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
      */
     public LinearKernel() {
+
     }
 
     @Override
     public String toString() {
-        return "Linear Kernel";
+        return "LinearKernel()";
+    }
+
+    @Override
+    public double k(double dot) {
+        return dot;
+    }
+
+    @Override
+    public double[] kg(double dot) {
+        return new double[] { dot };
     }
 
     @Override
     public double k(double[] x, double[] y) {
         return MathEx.dot(x, y);
+    }
+
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        return new double[] { k(x, y) };
+    }
+
+    @Override
+    public LinearKernel of(double[] params) {
+        return new LinearKernel();
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[0];
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[0];
     }
 }

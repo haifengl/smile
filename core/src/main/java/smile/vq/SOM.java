@@ -189,7 +189,8 @@ public class SOM implements VectorQuantizer {
         CentroidClustering.seed(samples, medoids, clusters, MathEx::squaredDistance);
 
         // Pair-wise distance matrix.
-        double[][] pdist = MathEx.pdist(medoids);
+        double[][] pdist = new double[k][k];
+        MathEx.pdist(medoids, pdist, MathEx::distance);
         MDS mds = MDS.of(pdist);
         double[][] coordinates = mds.coordinates;
 

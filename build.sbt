@@ -7,10 +7,11 @@ lazy val commonSettings = Seq(
   version := "2.6.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "15", "-target", "15", "--enable-preview", "-Xlint:preview", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq("-source", "15", "--enable-preview", "-Xdoclint:none"),
+  javaOptions in Test ++= Seq("-XX:+UseG1GC", "-XX:MaxRAMPercentage=75", "-XX:InitialRAMPercentage=25"),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
-  scalaVersion := "2.13.3",
+  scalaVersion := "2.13.4",
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
   testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
   parallelExecution in Test := false,
@@ -54,7 +55,7 @@ lazy val skipPublishSettings = commonSettings ++ Seq(
 )
 
 lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, benchmark, scala, spark, shell)
+  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -78,12 +79,10 @@ lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(
 
 lazy val demo = project.in(file("demo")).settings(skipPublishSettings: _*).dependsOn(core, io, interpolation, plot)
 
-lazy val benchmark = project.in(file("benchmark")).settings(skipPublishSettings: _*).dependsOn(core, scala)
-
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
 lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
 
 lazy val spark = project.in(file("spark")).settings(skipPublishSettings: _*).dependsOn(core, data, io % "test")
 
-lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(benchmark, demo, scala)
+lazy val shell = project.in(file("shell")).settings(skipPublishSettings: _*).dependsOn(demo, scala)

@@ -186,10 +186,8 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
         int n = data.size();
         int[] samples = new int[n];
         double[] w = new double[n];
-        boolean[] err = new boolean[n];
-        for (int i = 0; i < n; i++) {
-            w[i] = 1.0;
-        }
+        boolean[] wrong = new boolean[n];
+        Arrays.fill(w, 1.0);
         
         double guess = 1.0 / k; // accuracy of random guess.
         double b = Math.log(k - 1); // the bias to tree weight in case of multi-class.
@@ -210,22 +208,25 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
                 samples[s]++;
             }
 
-            logger.info("Training {} tree", Strings.ordinal(t+1));
             trees[t] = new DecisionTree(x, codec.y, y.field(), k, SplitRule.GINI, maxDepth, maxNodes, nodeSize, -1, samples, order);
             
             for (int i = 0; i < n; i++) {
-                err[i] = trees[t].predict(x.get(i)) != codec.y[i];
+                wrong[i] = trees[t].predict(x.get(i)) != codec.y[i];
             }
             
             double e = 0.0; // weighted error
             for (int i = 0; i < n; i++) {
-                if (err[i]) {
+                if (wrong[i]) {
                     e += w[i];
                 }
             }
-            
-            if (1 - e <= guess) {
-                logger.error(String.format("Skip the weak classifier %d makes %.2f%% weighted error", t, 100*e));
+
+            logger.info(String.format("Training %s tree, weighted error = %.2f%%", Strings.ordinal(t+1), 100*e));
+
+            if (1 - e > guess) {
+                failures = 0;
+            } else {
+                logger.error("Skip the weak classifier");
                 if (++failures > 3) {
                     trees = Arrays.copyOf(trees, t);
                     alpha = Arrays.copyOf(alpha, t);
@@ -235,13 +236,13 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
                     t--;
                     continue;
                 }
-            } else failures = 0;
+            }
             
             error[t] = e;
-            alpha[t] = Math.log((1-e)/ Math.max(1E-10,e)) + b;
+            alpha[t] = Math.log((1-e) / Math.max(1E-10, e)) + b;
             double a = Math.exp(alpha[t]);
             for (int i = 0; i < n; i++) {
-                if (err[i]) {
+                if (wrong[i]) {
                     w[i] *= a;
                 }
             }
@@ -339,10 +340,11 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      */
     @Override
     public int predict(Tuple x, double[] posteriori) {
+        Tuple xt = formula.x(x);
         Arrays.fill(posteriori, 0.0);
 
         for (int i = 0; i < trees.length; i++) {
-            posteriori[trees[i].predict(x)] += alpha[i];
+            posteriori[trees[i].predict(xt)] += alpha[i];
         }
 
         double sum = MathEx.sum(posteriori);
