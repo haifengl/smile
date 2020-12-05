@@ -16,6 +16,16 @@ rm -rf doc/api/*
 sbt unidoc
 mv target/javaunidoc doc/api/java
 
+cd kotlin
+gradle dokkaHtml
+
+cd ../clojure
+lein codox
+
+cd ../web
+npx @11ty/eleventy
+
+cd ..
 sbt universal:packageBin
 check_error "sbt universal:packageBin"
 
