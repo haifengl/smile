@@ -13,7 +13,6 @@ lazy val commonSettings = Seq(
     "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
     "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
     ),
-  javaOptions in Test ++= Seq("-XX:+UseG1GC", "-XX:MaxRAMPercentage=75", "-XX:InitialRAMPercentage=25"),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
