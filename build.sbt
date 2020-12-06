@@ -6,8 +6,13 @@ lazy val commonSettings = Seq(
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "2.6.0",
   javacOptions in (Compile, compile) ++= Seq("-source", "1.8", "-target", "1.8", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
-  javacOptions in (Compile, doc) ++= Seq("-Xdoclint:none"),
-  javaOptions in Test ++= Seq("-XX:+UseG1GC", "-XX:MaxRAMPercentage=75", "-XX:InitialRAMPercentage=25"),
+  javacOptions in (Compile, doc) ++= Seq(
+    "-source", "1.8",
+    "-Xdoclint:none",
+    "--allow-script-in-comments",
+    "-doctitle", """Smile &mdash; Statistical Machine Intelligence and Learning Engine""",
+    "-bottom", """<script src="{@docRoot}/../../js/google-analytics.js" type="text/javascript"></script>"""
+    ),
   libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
   libraryDependencies += "junit" % "junit" % "4.13.1" % "test",
   libraryDependencies += "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep"),
@@ -15,6 +20,7 @@ lazy val commonSettings = Seq(
   scalacOptions := Seq("-unchecked", "-deprecation", "-feature", "-encoding", "utf8", "-target:jvm-1.8"),
   testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a")),
   parallelExecution in Test := false,
+  autoAPIMappings := true,
   crossPaths := false,
   autoScalaLibrary := false,
   publishTo := {
@@ -54,7 +60,12 @@ lazy val skipPublishSettings = commonSettings ++ Seq(
   publish / skip := true
 )
 
-lazy val root = project.in(file(".")).settings(skipPublishSettings: _*)
+lazy val root = project.in(file("."))
+  .settings(skipPublishSettings: _*)
+  .enablePlugins(JavaUnidocPlugin)
+  .settings(
+    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell)
+  )
   .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
