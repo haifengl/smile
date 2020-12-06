@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 /**
- * OpenBLAS library wrapper.
+ * OpenBLAS library.
  *
  * @author Haifeng Li
  */
