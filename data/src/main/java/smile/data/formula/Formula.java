@@ -65,7 +65,7 @@ public class Formula implements Serializable {
     /** The right-hand side of formula. */
     private Term[] predictors;
     /** The formula-schema binding. */
-    private transient Binding binding;
+    private transient ThreadLocal<Binding> binding;
 
     /** The formula-schema binding. */
     private class Binding {
@@ -239,13 +239,13 @@ public class Formula implements Serializable {
      * @param inputSchema the schema to bind with
      */
     public StructType bind(StructType inputSchema) {
-        if (binding != null && binding.inputSchema == inputSchema) {
-            return binding.xschema;
+        if (binding != null && binding.get().inputSchema == inputSchema) {
+            return binding.get().xschema;
         }
 
         Formula formula = expand(inputSchema);
 
-        binding = new Binding();
+        Binding binding = new Binding();
         binding.inputSchema = inputSchema;
 
         List<Feature> features = Arrays.stream(formula.predictors)
@@ -274,6 +274,11 @@ public class Formula implements Serializable {
             }
         }
 
+        this.binding = new ThreadLocal<Binding>() {
+            protected synchronized Binding initialValue() {
+                return binding;
+            }
+        };
         return binding.xschema;
     }
 
@@ -283,6 +288,7 @@ public class Formula implements Serializable {
     public Tuple apply(Tuple t) {
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
@@ -327,6 +333,7 @@ public class Formula implements Serializable {
     public Tuple x(Tuple t) {
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
@@ -374,6 +381,7 @@ public class Formula implements Serializable {
     public DataFrame frame(DataFrame df) {
         bind(df.schema());
 
+        Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
                 .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
@@ -385,6 +393,7 @@ public class Formula implements Serializable {
      */
     public DataFrame x(DataFrame df) {
         bind(df.schema());
+        Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.x)
                 .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
@@ -434,6 +443,7 @@ public class Formula implements Serializable {
 
         bind(df.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
@@ -451,6 +461,7 @@ public class Formula implements Serializable {
 
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
@@ -468,6 +479,7 @@ public class Formula implements Serializable {
 
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
