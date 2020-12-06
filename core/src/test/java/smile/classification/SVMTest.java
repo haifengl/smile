@@ -161,7 +161,7 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(34, error);
+        assertEquals(33, error);
     }
 
     @Test(expected = Test.None.class)
