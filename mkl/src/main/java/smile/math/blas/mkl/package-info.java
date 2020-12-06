@@ -16,7 +16,7 @@
  ******************************************************************************/
 
 /**
- * Intel MKL library wrapper.
+ * Intel MKL library.
  *
  * @author Haifeng Li
  */
