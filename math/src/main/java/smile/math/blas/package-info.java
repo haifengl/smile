@@ -16,8 +16,8 @@
  ******************************************************************************/
 
 /**
- * OpenBLAS library.
+ * BLAS and LAPACK interfaces.
  *
  * @author Haifeng Li
  */
-package smile.math.blas.openblas;
+package smile.math.blas;

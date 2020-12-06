@@ -16,8 +16,9 @@
  ******************************************************************************/
 
 /**
- * OpenBLAS library.
+ * Model validation metrics. A validation metric provides a quantitative
+ * measure of agreement between a predictive model and physical observations.
  *
  * @author Haifeng Li
  */
-package smile.math.blas.openblas;
+package smile.validation.metric;
