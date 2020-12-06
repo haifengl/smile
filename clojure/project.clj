@@ -9,6 +9,8 @@
                  [com.github.haifengl/smile-core "2.6.0"]
                  [com.github.haifengl/smile-io "2.6.0"]]
   :plugins [[lein-codox "0.10.7"]]
+  :codox {:doc-files ["README.md"]
+          :output-path "../doc/api/clojure"}
   :jvm-opts ["-XX:MaxRAMPercentage=75.0"
              "-XX:+UseStringDeduplication"
              "-XX:+UseG1GC"]
