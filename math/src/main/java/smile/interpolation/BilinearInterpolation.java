@@ -56,9 +56,7 @@ public class BilinearInterpolation implements Interpolation2D {
         double t = (x1-x1terp.xx[i])/(x1terp.xx[i+1]-x1terp.xx[i]);
         double u = (x2-x2terp.xx[j])/(x2terp.xx[j+1]-x2terp.xx[j]);
 
-        double yy = (1.-t)*(1.-u)*y[i][j] + t*(1.-u)*y[i+1][j] + (1.-t)*u*y[i][j+1] + t*u*y[i+1][j+1];
-
-        return yy;
+        return (1.-t)*(1.-u)*y[i][j] + t*(1.-u)*y[i+1][j] + (1.-t)*u*y[i][j+1] + t*u*y[i+1][j+1];
     }
 
     @Override
