@@ -248,11 +248,9 @@ public class LaplaceInterpolation {
      * Compute squared root of L2 norms for a vector.
      */
     private static double snorm(double[] sx) {
-        int n = sx.length;
-
         double ans = 0.0;
-        for (int i = 0; i < n; i++) {
-            ans += sx[i] * sx[i];
+        for (double v : sx) {
+            ans += v * v;
         }
         return Math.sqrt(ans);
     }

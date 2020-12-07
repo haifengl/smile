@@ -61,9 +61,8 @@ public class CubicSplineInterpolation1D extends AbstractInterpolation {
 
         double a = (xx[khi] - x) / h;
         double b = (x - xx[klo]) / h;
-        double y = a * yy[klo] + b * yy[khi] + ((a * a * a - a) * y2[klo] + (b * b * b - b) * y2[khi]) * (h * h) / 6.0;
 
-        return y;
+        return a * yy[klo] + b * yy[khi] + ((a * a * a - a) * y2[klo] + (b * b * b - b) * y2[khi]) * (h * h) / 6.0;
     }
 
     /**
