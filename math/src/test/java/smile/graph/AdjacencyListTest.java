@@ -342,7 +342,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Arrays.equals(ts, graph.sortdfs()));
+        assertArrayEquals(ts, graph.sortdfs());
     }
 
     /**
@@ -540,7 +540,7 @@ public class AdjacencyListTest {
         graph.addEdge(9, 12);
         graph.addEdge(11, 12);
 
-        assertTrue(Arrays.equals(ts, graph.sortbfs()));
+        assertArrayEquals(ts, graph.sortbfs());
     }
 
     /**

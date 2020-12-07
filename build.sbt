@@ -66,7 +66,7 @@ lazy val root = project.in(file("."))
   .settings(
     unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell)
   )
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
+  .aggregate(core, data, io, math, mkl, interpolation, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -76,11 +76,9 @@ lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(
 
 lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
 
-lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsOn(math)
-
 lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
 
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, io % "test")
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, io % "test")
 
 //lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
 
