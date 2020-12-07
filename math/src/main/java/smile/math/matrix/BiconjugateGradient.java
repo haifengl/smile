@@ -194,8 +194,8 @@ public class BiconjugateGradient {
 
         if (itol <= 3) {
             double ans = 0.0;
-            for (int i = 0; i < n; i++) {
-                ans += x[i] * x[i];
+            for (double v : x) {
+                ans += v * v;
             }
             return Math.sqrt(ans);
         } else {
