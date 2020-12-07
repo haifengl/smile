@@ -17,6 +17,7 @@
 
 package smile.graph;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -32,20 +33,16 @@ import smile.util.PriorityQueue;
  *
  * @author Haifeng Li
  */
-public class AdjacencyList implements Graph {
-
-    /**
-     * The number of vertices.
-     */
-    private int n;
+public class AdjacencyList implements Graph, Serializable {
+    private static final long serialVersionUID = 2L;
     /**
      * Is the graph directed?
      */
-    private boolean digraph;
+    private final boolean digraph;
     /**
      * Adjacency list. Non-zero values are the weights of edges.
      */
-    private LinkedList<Edge>[] graph;
+    private final LinkedList<Edge>[] graph;
 
     /**
      * Constructor.
@@ -64,7 +61,6 @@ public class AdjacencyList implements Graph {
      */
     @SuppressWarnings("unchecked")
     public AdjacencyList(int n, boolean digraph) {
-        this.n = n;
         this.digraph = digraph;
         graph = new LinkedList[n];
         for (int i = 0; i < n; i++) {
@@ -74,7 +70,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public int getNumVertices() {
-        return n;
+        return graph.length;
     }
 
     @Override
@@ -141,6 +137,7 @@ public class AdjacencyList implements Graph {
     public Collection<Edge> getEdges() {
         Collection<Edge> set = new HashSet<>();
 
+        int n = graph.length;
         for (int i = 0; i < n; i++) {
             set.addAll(graph[i]);
         }
@@ -279,6 +276,7 @@ public class AdjacencyList implements Graph {
     @Override
     public int getIndegree(int vertex) {
         int degree = 0;
+        int n = graph.length;
 
         for (int i = 0; i < n; i++) {
             if (hasEdge(i, vertex)) {
@@ -324,6 +322,7 @@ public class AdjacencyList implements Graph {
         }
 
         int count = 0;
+        int n = graph.length;
 
         int[] pre = new int[n];
         int[] ts = new int[n];
@@ -363,6 +362,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public int[][] dfs() {
+        int n = graph.length;
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -394,6 +394,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public void dfs(Visitor visitor) {
+        int n = graph.length;
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -432,6 +433,7 @@ public class AdjacencyList implements Graph {
             throw new UnsupportedOperationException("Topological sort is only meaningful for digraph.");
         }
 
+        int n = graph.length;
         int[] in = new int[n];
         int[] ts = new int[n];
         for (int i = 0; i < n; i++) {
@@ -490,6 +492,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public int[][] bfs() {
+        int n = graph.length;
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -549,6 +552,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public void bfs(Visitor visitor) {
+        int n = graph.length;
         int[] cc = new int[n];
         Arrays.fill(cc, -1);
 
@@ -562,6 +566,7 @@ public class AdjacencyList implements Graph {
 
     @Override
     public double[] dijkstra(int s) {
+        int n = graph.length;
         double[] wt = new double[n];
         Arrays.fill(wt, Double.POSITIVE_INFINITY);
 
@@ -617,6 +622,7 @@ public class AdjacencyList implements Graph {
     @Override
     public SparseMatrix toMatrix() {
         int size = 0;
+        int n = graph.length;
         int[] colSize = new int[n];
         int[] colIndex = new int[n + 1];
         for (int i = 0; i < n; i++) {
