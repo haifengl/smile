@@ -137,9 +137,8 @@ public class AdjacencyList implements Graph, Serializable {
     public Collection<Edge> getEdges() {
         Collection<Edge> set = new HashSet<>();
 
-        int n = graph.length;
-        for (int i = 0; i < n; i++) {
-            set.addAll(graph[i]);
+        for (LinkedList<Edge> edges : graph) {
+            set.addAll(edges);
         }
 
         return set;
@@ -206,9 +205,8 @@ public class AdjacencyList implements Graph, Serializable {
 
     @Override
     public void removeEdges(Collection<Edge> edges) {
-        Iterator<Edge> iter = edges.iterator();
-        while (iter.hasNext()) {
-            removeEdge(iter.next());
+        for (Edge edge : edges) {
+            removeEdge(edge);
         }
     }
 
