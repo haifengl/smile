@@ -82,7 +82,7 @@ lazy val interpolation = project.in(file("interpolation")).settings(commonSettin
 
 lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, io % "test")
 
-//lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
+lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
 
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 
