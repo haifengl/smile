@@ -63,7 +63,7 @@ import smile.math.special.Beta;
  */
 public class TTest {
     /**
-     * A character string indicating what type of test was performed.
+     * The type of test.
      */
     public final String method;
 
@@ -73,19 +73,23 @@ public class TTest {
     public final double df;
 
     /**
-     * t-statistic
+     * t-statistic.
      */
     public final double t;
 
     /**
-     * p-value
+     * p-value.
      */
     public final double pvalue;
 
     /**
      * Constructor.
+     * @param method the type of test.
+     * @param t the t-statistic.
+     * @param df the degree of freedom.
+     * @param pvalue the p-value.
      */
-    private TTest(String method, double t, double df, double pvalue) {
+    public TTest(String method, double t, double df, double pvalue) {
         this.method = method;
         this.t = t;
         this.df = df;
@@ -135,16 +139,16 @@ public class TTest {
      * arrays are allowed to be drawn from populations with unequal variances.
      */
     public static TTest test(double[] x, double[] y, boolean equalVariance) {
+        int n1 = x.length;
+        int n2 = y.length;
+
+        double mu1 = MathEx.mean(x);
+        double var1 = MathEx.var(x);
+
+        double mu2 = MathEx.mean(y);
+        double var2 = MathEx.var(y);
+
         if (equalVariance) {
-            int n1 = x.length;
-            int n2 = y.length;
-
-            double mu1 = MathEx.mean(x);
-            double var1 = MathEx.var(x);
-
-            double mu2 = MathEx.mean(y);
-            double var2 = MathEx.var(y);
-
             int df = n1 + n2 - 2;
 
             double svar = ((n1 - 1) * var1 + (n2 - 1) * var2) / df;
@@ -154,15 +158,6 @@ public class TTest {
 
             return new TTest("Equal Variance Two Sample", t, df, p);
         } else {
-            int n1 = x.length;
-            int n2 = y.length;
-
-            double mu1 = MathEx.mean(x);
-            double var1 = MathEx.var(x);
-
-            double mu2 = MathEx.mean(y);
-            double var2 = MathEx.var(y);
-
             double df = MathEx.sqr(var1 / n1 + var2 / n2) / (MathEx.sqr(var1 / n1) / (n1 - 1) + MathEx.sqr(var2 / n2) / (n2 - 1));
 
             double t = (mu1 - mu2) / Math.sqrt(var1 / n1 + var2 / n2);
