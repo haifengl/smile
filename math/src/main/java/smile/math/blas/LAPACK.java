@@ -69,7 +69,7 @@ public interface LAPACK {
      * </code></pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
-     * system of equations A * X = B.
+     * system of equations {@code A * X = B}.
      *
      * @param layout The matrix layout.
      *
@@ -80,9 +80,9 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factors L and U from the factorization
-     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -90,12 +90,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -126,7 +126,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factors L and U from the factorization
-     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -139,9 +139,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -172,7 +172,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factors L and U from the factorization
-     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -185,9 +185,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -218,7 +218,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factors L and U from the factorization
-     *          A = P*L*U; the unit diagonal elements of L are not stored.
+     *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -231,9 +231,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -271,7 +271,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -281,9 +281,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -321,7 +321,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -331,9 +331,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -371,7 +371,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -381,9 +381,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -421,7 +421,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -431,9 +431,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -471,7 +471,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -479,9 +479,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -519,7 +519,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -527,9 +527,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -567,7 +567,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -575,9 +575,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -615,7 +615,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -623,9 +623,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -662,7 +662,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -672,9 +672,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -711,7 +711,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -721,9 +721,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -760,7 +760,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -770,9 +770,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -809,7 +809,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T.
+     *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
@@ -819,9 +819,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -858,7 +858,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -866,9 +866,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -905,7 +905,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -913,9 +913,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -952,7 +952,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -960,9 +960,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -999,7 +999,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, in the same storage format as A.
+     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -1007,9 +1007,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i of A is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i of A is not
      *               positive definite, so the factorization could not be
      *               completed, and the solution has not been computed.
      */
@@ -1043,18 +1043,18 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The matrix of dimension (LDA, N).
-     *          On entry, the matrix A in band storage, in rows KL+1 to
-     *          2*KL+KU+1; rows 1 to KL of the array need not be set.
+     *          On entry, the matrix A in band storage, in rows {@code KL+1} to
+     *          {@code 2*KL+KU+1}; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
      *          matrix AB as follows:
-     *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
-     *
+     *          {@code AB(KL+KU+1+i-j,j) = A(i,j)} for {@code max(1,j-KU)<=i<=min(N,j+KL)}
+     *          <p>
      *          On exit, details of the factorization: U is stored as an
-     *          upper triangular band matrix with KL+KU superdiagonals in
-     *          rows 1 to KL+KU+1, and the multipliers used during the
-     *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
+     *          upper triangular band matrix with {@code KL+KU} superdiagonals in
+     *          rows 1 to {@code KL+KU+1}, and the multipliers used during the
+     *          factorization are stored in rows {@code KL+KU+2} to {@code 2*KL+KU+1}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -1062,12 +1062,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -1101,18 +1101,18 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The matrix of dimension (LDA, N).
-     *          On entry, the matrix A in band storage, in rows KL+1 to
-     *          2*KL+KU+1; rows 1 to KL of the array need not be set.
+     *          On entry, the matrix A in band storage, in rows {@code KL+1} to
+     *          {@code 2*KL+KU+1}; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
      *          matrix AB as follows:
-     *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
-     *
+     *          {@code AB(KL+KU+1+i-j,j) = A(i,j)} for {@code max(1,j-KU)<=i<=min(N,j+KL)}
+     *          <p>
      *          On exit, details of the factorization: U is stored as an
-     *          upper triangular band matrix with KL+KU superdiagonals in
-     *          rows 1 to KL+KU+1, and the multipliers used during the
-     *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
+     *          upper triangular band matrix with {@code KL+KU} superdiagonals in
+     *          rows 1 to {@code KL+KU+1}, and the multipliers used during the
+     *          factorization are stored in rows {@code KL+KU+2} to {@code 2*KL+KU+1}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -1120,12 +1120,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -1159,18 +1159,18 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The matrix of dimension (LDA, N).
-     *          On entry, the matrix A in band storage, in rows KL+1 to
-     *          2*KL+KU+1; rows 1 to KL of the array need not be set.
+     *          On entry, the matrix A in band storage, in rows {@code KL+1} to
+     *          {@code 2*KL+KU+1}; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
      *          matrix AB as follows:
-     *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
-     *
+     *          {@code AB(KL+KU+1+i-j,j) = A(i,j)} for {@code max(1,j-KU)<=i<=min(N,j+KL)}
+     *          <p>
      *          On exit, details of the factorization: U is stored as an
-     *          upper triangular band matrix with KL+KU superdiagonals in
-     *          rows 1 to KL+KU+1, and the multipliers used during the
-     *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
+     *          upper triangular band matrix with {@code KL+KU} superdiagonals in
+     *          rows 1 to {@code KL+KU+1}, and the multipliers used during the
+     *          factorization are stored in rows {@code KL+KU+2} to {@code 2*KL+KU+1}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -1178,12 +1178,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -1217,18 +1217,18 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The matrix of dimension (LDA, N).
-     *          On entry, the matrix A in band storage, in rows KL+1 to
-     *          2*KL+KU+1; rows 1 to KL of the array need not be set.
+     *          On entry, the matrix A in band storage, in rows {@code KL+1} to
+     *          {@code 2*KL+KU+1}; rows 1 to KL of the array need not be set.
      *          The j-th column of A is stored in the j-th column of the
      *          matrix AB as follows:
-     *          AB(KL+KU+1+i-j,j) = A(i,j) for max(1,j-KU)<=i<=min(N,j+KL)
-     *
+     *          {@code AB(KL+KU+1+i-j,j) = A(i,j)} for {@code max(1,j-KU)<=i<=min(N,j+KL)}
+     *          <p>
      *          On exit, details of the factorization: U is stored as an
-     *          upper triangular band matrix with KL+KU superdiagonals in
-     *          rows 1 to KL+KU+1, and the multipliers used during the
-     *          factorization are stored in rows KL+KU+2 to 2*KL+KU+1.
+     *          upper triangular band matrix with {@code KL+KU} superdiagonals in
+     *          rows 1 to {@code KL+KU+1}, and the multipliers used during the
+     *          factorization are stored in rows {@code KL+KU+2} to {@code 2*KL+KU+1}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -1236,12 +1236,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, so the solution could not be computed.
      */
@@ -1271,12 +1271,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1307,12 +1307,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1343,12 +1343,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1379,12 +1379,12 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1407,13 +1407,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -1423,16 +1423,16 @@ public interface LAPACK {
      * @param rcond RCOND is used to determine the effective rank of A, which
      *              is defined as the order of the largest leading triangular
      *              submatrix R11 in the QR factorization with pivoting of A,
-     *              whose estimated condition number < 1/RCOND.
+     *              whose estimated condition number {@code < 1/RCOND}.
      *
      * @param rank The effective rank of A, i.e., the order of the submatrix
      *             R11.  This is the same as the order of the submatrix T11
      *             in the complete orthogonal factorization of A.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1455,13 +1455,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -1471,16 +1471,16 @@ public interface LAPACK {
      * @param rcond RCOND is used to determine the effective rank of A, which
      *              is defined as the order of the largest leading triangular
      *              submatrix R11 in the QR factorization with pivoting of A,
-     *              whose estimated condition number < 1/RCOND.
+     *              whose estimated condition number {@code < 1/RCOND}.
      *
      * @param rank The effective rank of A, i.e., the order of the submatrix
      *             R11.  This is the same as the order of the submatrix T11
      *             in the complete orthogonal factorization of A.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1503,13 +1503,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -1519,16 +1519,16 @@ public interface LAPACK {
      * @param rcond RCOND is used to determine the effective rank of A, which
      *              is defined as the order of the largest leading triangular
      *              submatrix R11 in the QR factorization with pivoting of A,
-     *              whose estimated condition number < 1/RCOND.
+     *              whose estimated condition number {@code < 1/RCOND}.
      *
      * @param rank The effective rank of A, i.e., the order of the submatrix
      *             R11.  This is the same as the order of the submatrix T11
      *             in the complete orthogonal factorization of A.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1551,13 +1551,13 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param jpvt On entry, if JPVT(i) != 0, the i-th column of A is permuted
      *             to the front of AP, otherwise column i is a free column.
@@ -1567,16 +1567,16 @@ public interface LAPACK {
      * @param rcond RCOND is used to determine the effective rank of A, which
      *              is defined as the order of the largest leading triangular
      *              submatrix R11 in the QR factorization with pivoting of A,
-     *              whose estimated condition number < 1/RCOND.
+     *              whose estimated condition number {@code < 1/RCOND}.
      *
      * @param rank The effective rank of A, i.e., the order of the submatrix
      *             R11.  This is the same as the order of the submatrix T11
      *             in the complete orthogonal factorization of A.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1603,28 +1603,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1651,28 +1651,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1699,28 +1699,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1747,28 +1747,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1796,28 +1796,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1845,28 +1845,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1894,28 +1894,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1943,28 +1943,28 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, A is overwritten by the factorization.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B The right hand side matrix of dimension (LDB, NRHS).
      *          On exit, if INFO = 0, B is overwritten by the solution
      *          vectors, stored columnwise.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,M,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,M,N)}.
      *
      * @param s The singular values of A in decreasing order.
-     *          The condition number of A in the 2-norm = S(1)/S(min(m,n)).
+     *          The condition number of A in the 2-norm = {@code S(1)/S(min(m,n))}.
      *
      * @param rcond RCOND is used to determine the effective rank of A.
-     *              Singular values S(i) <= RCOND*S(1) are treated as zero.
-     *              If RCOND < 0, machine precision is used instead.
+     *              Singular values {@code S(i) <= {@code RCOND*S(1)}} are treated as zero.
+     *              If {@code RCOND < 0}, machine precision is used instead.
      *
      * @param rank The effective rank of A, i.e., the number of singular values
-     *             which are greater than RCOND*S(1).
+     *             which are greater than {@code RCOND*S(1)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO =  i, the i-th diagonal element of the
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if INFO =  i, the i-th diagonal element of the
      *               triangular factor of A is zero, so that A does not have
      *               full rank; the least squares solution could not be
      *               computed.
@@ -1978,7 +1978,7 @@ public interface LAPACK {
      * </code></pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
-     *  P <= N <= M+P, and
+     *  {@code P <= N <= M+P}, and
      * <pre><code>
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
@@ -1997,19 +1997,19 @@ public interface LAPACK {
      *
      * @param n The number of columns of the matrix A and B.
      *
-     * @param p The number of rows of the matrix B. 0 <= P <= N <= M+P.
+     * @param p The number of rows of the matrix B. {@code 0 <= P <= N <= M+P}.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B On entry, the P-by-N matrix B.
      *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,P)}.
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -2027,16 +2027,16 @@ public interface LAPACK {
      *          On exit, X is the solution of the LSE problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with B in the
      *               generalized RQ factorization of the pair (B, A) is
-     *               singular, so that rank(B) < P; the least squares
+     *               singular, so that {@code rank(B) < P}; the least squares
      *               solution could not be computed.
      *         = 2:  the (N-P) by (N-P) part of the upper trapezoidal factor
      *               T associated with A in the generalized RQ factorization
      *               of the pair (B, A) is singular, so that
-     *               rank( A, B ) < N; the least squares solution could not
+     *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
     int gglse(Layout layout, int m, int n, int p, double[] A, int lda, double[] B, int ldb, double[] c, double[] d, double[] x);
@@ -2048,7 +2048,7 @@ public interface LAPACK {
      * </code></pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
-     *  P <= N <= M+P, and
+     *  {@code P <= N <= M+P}, and
      * <pre><code>
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
@@ -2067,19 +2067,19 @@ public interface LAPACK {
      *
      * @param n The number of columns of the matrix A and B.
      *
-     * @param p The number of rows of the matrix B. 0 <= P <= N <= M+P.
+     * @param p The number of rows of the matrix B. {@code 0 <= P <= N <= M+P}.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B On entry, the P-by-N matrix B.
      *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,P)}.
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -2097,16 +2097,16 @@ public interface LAPACK {
      *          On exit, X is the solution of the LSE problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with B in the
      *               generalized RQ factorization of the pair (B, A) is
-     *               singular, so that rank(B) < P; the least squares
+     *               singular, so that {@code rank(B) < P}; the least squares
      *               solution could not be computed.
      *         = 2:  the (N-P) by (N-P) part of the upper trapezoidal factor
      *               T associated with A in the generalized RQ factorization
      *               of the pair (B, A) is singular, so that
-     *               rank( A, B ) < N; the least squares solution could not
+     *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
     int gglse(Layout layout, int m, int n, int p, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer c, DoubleBuffer d, DoubleBuffer x);
@@ -2118,7 +2118,7 @@ public interface LAPACK {
      * </code></pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
-     *  P <= N <= M+P, and
+     *  {@code P <= N <= M+P}, and
      * <pre><code>
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
@@ -2137,19 +2137,19 @@ public interface LAPACK {
      *
      * @param n The number of columns of the matrix A and B.
      *
-     * @param p The number of rows of the matrix B. 0 <= P <= N <= M+P.
+     * @param p The number of rows of the matrix B. {@code 0 <= P <= N <= M+P}.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B On entry, the P-by-N matrix B.
      *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,P)}.
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -2167,16 +2167,16 @@ public interface LAPACK {
      *          On exit, X is the solution of the LSE problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with B in the
      *               generalized RQ factorization of the pair (B, A) is
-     *               singular, so that rank(B) < P; the least squares
+     *               singular, so that {@code rank(B) < P}; the least squares
      *               solution could not be computed.
      *         = 2:  the (N-P) by (N-P) part of the upper trapezoidal factor
      *               T associated with A in the generalized RQ factorization
      *               of the pair (B, A) is singular, so that
-     *               rank( A, B ) < N; the least squares solution could not
+     *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
     int gglse(Layout layout, int m, int n, int p, float[] A, int lda, float[] B, int ldb, float[] c, float[] d, float[] x);
@@ -2188,7 +2188,7 @@ public interface LAPACK {
      * </code></pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
-     *  P <= N <= M+P, and
+     *  {@code P <= N <= M+P}, and
      * <pre><code>
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
@@ -2207,19 +2207,19 @@ public interface LAPACK {
      *
      * @param n The number of columns of the matrix A and B.
      *
-     * @param p The number of rows of the matrix B. 0 <= P <= N <= M+P.
+     * @param p The number of rows of the matrix B. {@code 0 <= P <= N <= M+P}.
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param B On entry, the P-by-N matrix B.
      *          On exit, the upper triangle of the submatrix B(1:P,N-P+1:N)
      *          contains the P-by-P upper triangular matrix R.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,P).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,P)}.
      *
      * @param c Dimension (M).
      *          On entry, C contains the right hand side vector for the
@@ -2237,16 +2237,16 @@ public interface LAPACK {
      *          On exit, X is the solution of the LSE problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with B in the
      *               generalized RQ factorization of the pair (B, A) is
-     *               singular, so that rank(B) < P; the least squares
+     *               singular, so that {@code rank(B) < P}; the least squares
      *               solution could not be computed.
      *         = 2:  the (N-P) by (N-P) part of the upper trapezoidal factor
      *               T associated with A in the generalized RQ factorization
      *               of the pair (B, A) is singular, so that
-     *               rank( A, B ) < N; the least squares solution could not
+     *               {@code rank( A, B ) < N}; the least squares solution could not
      *               be computed.
      */
     int gglse(Layout layout, int m, int n, int p, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer c, FloatBuffer d, FloatBuffer x);
@@ -2258,7 +2258,7 @@ public interface LAPACK {
      *         x
      * </code></pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
-     * given N-vector. It is assumed that M <= N <= M+P, and
+     * given N-vector. It is assumed that {@code M <= N <= M+P}, and
      * <pre><code>
      *     rank(A) = M    and    rank( A B ) = N
      * </code></pre>
@@ -2286,9 +2286,9 @@ public interface LAPACK {
      *
      * @param n The number of rows of the matrix A and B.
      *
-     * @param m The number of columns of the matrix A. 0 <= M <= N.
+     * @param m The number of columns of the matrix A. {@code 0 <= M <= N}.
      *
-     * @param p The number of columns of the matrix B.  P >= N-M.
+     * @param p The number of columns of the matrix B.  {@code P >= N-M}.
      *
      * @param A The matrix of dimension (LDA, M).
      *          On exit, the upper triangular part of the matrix A contains
@@ -2297,12 +2297,12 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
-     *          On exit, if N <= P, the upper triangle of the subarray
+     *          On exit, if {@code N <= P}, the upper triangle of the subarray
      *          B(1:N,P-N+1:P) contains the N-by-N upper triangular matrix T;
-     *          if N > P, the elements on and above the (N-P)th subdiagonal
+     *          if {@code N > P}, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -2315,16 +2315,16 @@ public interface LAPACK {
      *          On exit, X and Y are the solutions of the GLM problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with A in the
      *               generalized QR factorization of the pair (A, B) is
-     *               singular, so that rank(A) < M; the least squares
+     *               singular, so that {@code rank(A) < M}; the least squares
      *               solution could not be computed.
      *         = 2:  the bottom (N-M) by (N-M) part of the upper trapezoidal
      *               factor T associated with B in the generalized QR
      *               factorization of the pair (A, B) is singular, so that
-     *               rank( A B ) < N; the least squares solution could not
+     *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
     int ggglm(Layout layout, int n, int m, int p, double[] A, int lda, double[] B, int ldb, double[] d, double[] x, double[] y);
@@ -2336,7 +2336,7 @@ public interface LAPACK {
      *         x
      * </code></pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
-     * given N-vector. It is assumed that M <= N <= M+P, and
+     * given N-vector. It is assumed that {@code M <= N <= M+P}, and
      * <pre><code>
      *     rank(A) = M    and    rank( A B ) = N
      * </code></pre>
@@ -2364,9 +2364,9 @@ public interface LAPACK {
      *
      * @param n The number of rows of the matrix A and B.
      *
-     * @param m The number of columns of the matrix A. 0 <= M <= N.
+     * @param m The number of columns of the matrix A. {@code 0 <= M <= N}.
      *
-     * @param p The number of columns of the matrix B.  P >= N-M.
+     * @param p The number of columns of the matrix B.  {@code P >= N-M}.
      *
      * @param A The matrix of dimension (LDA, M).
      *          On exit, the upper triangular part of the matrix A contains
@@ -2375,12 +2375,12 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
-     *          On exit, if N <= P, the upper triangle of the subarray
+     *          On exit, if {@code N <= P}, the upper triangle of the subarray
      *          B(1:N,P-N+1:P) contains the N-by-N upper triangular matrix T;
-     *          if N > P, the elements on and above the (N-P)th subdiagonal
+     *          if {@code N > P}, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -2393,16 +2393,16 @@ public interface LAPACK {
      *          On exit, X and Y are the solutions of the GLM problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with A in the
      *               generalized QR factorization of the pair (A, B) is
-     *               singular, so that rank(A) < M; the least squares
+     *               singular, so that {@code rank(A) < M}; the least squares
      *               solution could not be computed.
      *         = 2:  the bottom (N-M) by (N-M) part of the upper trapezoidal
      *               factor T associated with B in the generalized QR
      *               factorization of the pair (A, B) is singular, so that
-     *               rank( A B ) < N; the least squares solution could not
+     *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
     int ggglm(Layout layout, int n, int m, int p, DoubleBuffer A, int lda, DoubleBuffer B, int ldb, DoubleBuffer d, DoubleBuffer x, DoubleBuffer y);
@@ -2414,7 +2414,7 @@ public interface LAPACK {
      *         x
      * </code></pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
-     * given N-vector. It is assumed that M <= N <= M+P, and
+     * given N-vector. It is assumed that {@code M <= N <= M+P}, and
      * <pre><code>
      *     rank(A) = M    and    rank( A B ) = N
      * </code></pre>
@@ -2442,9 +2442,9 @@ public interface LAPACK {
      *
      * @param n The number of rows of the matrix A and B.
      *
-     * @param m The number of columns of the matrix A. 0 <= M <= N.
+     * @param m The number of columns of the matrix A. {@code 0 <= M <= N}.
      *
-     * @param p The number of columns of the matrix B.  P >= N-M.
+     * @param p The number of columns of the matrix B.  {@code P >= N-M}.
      *
      * @param A The matrix of dimension (LDA, M).
      *          On exit, the upper triangular part of the matrix A contains
@@ -2453,12 +2453,12 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
-     *          On exit, if N <= P, the upper triangle of the subarray
+     *          On exit, if {@code N <= P}, the upper triangle of the subarray
      *          B(1:N,P-N+1:P) contains the N-by-N upper triangular matrix T;
-     *          if N > P, the elements on and above the (N-P)th subdiagonal
+     *          if {@code N > P}, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -2471,16 +2471,16 @@ public interface LAPACK {
      *          On exit, X and Y are the solutions of the GLM problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with A in the
      *               generalized QR factorization of the pair (A, B) is
-     *               singular, so that rank(A) < M; the least squares
+     *               singular, so that {@code rank(A) < M}; the least squares
      *               solution could not be computed.
      *         = 2:  the bottom (N-M) by (N-M) part of the upper trapezoidal
      *               factor T associated with B in the generalized QR
      *               factorization of the pair (A, B) is singular, so that
-     *               rank( A B ) < N; the least squares solution could not
+     *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
     int ggglm(Layout layout, int n, int m, int p, float[] A, int lda, float[] B, int ldb, float[] d, float[] x, float[] y);
@@ -2492,7 +2492,7 @@ public interface LAPACK {
      *         x
      * </code></pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
-     * given N-vector. It is assumed that M <= N <= M+P, and
+     * given N-vector. It is assumed that {@code M <= N <= M+P}, and
      * <pre><code>
      *     rank(A) = M    and    rank( A B ) = N
      * </code></pre>
@@ -2520,9 +2520,9 @@ public interface LAPACK {
      *
      * @param n The number of rows of the matrix A and B.
      *
-     * @param m The number of columns of the matrix A. 0 <= M <= N.
+     * @param m The number of columns of the matrix A. {@code 0 <= M <= N}.
      *
-     * @param p The number of columns of the matrix B.  P >= N-M.
+     * @param p The number of columns of the matrix B.  {@code P >= N-M}.
      *
      * @param A The matrix of dimension (LDA, M).
      *          On exit, the upper triangular part of the matrix A contains
@@ -2531,12 +2531,12 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @param B On entry, the N-by-P matrix B.
-     *          On exit, if N <= P, the upper triangle of the subarray
+     *          On exit, if {@code N <= P}, the upper triangle of the subarray
      *          B(1:N,P-N+1:P) contains the N-by-N upper triangular matrix T;
-     *          if N > P, the elements on and above the (N-P)th subdiagonal
+     *          if {@code N > P}, the elements on and above the (N-P)th subdiagonal
      *          contain the N-by-P upper trapezoidal matrix T.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @param d Dimension (N).
      *          On entry, D is the left hand side of the GLM equation.
@@ -2549,16 +2549,16 @@ public interface LAPACK {
      *          On exit, X and Y are the solutions of the GLM problem.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      *         = 1:  the upper triangular factor R associated with A in the
      *               generalized QR factorization of the pair (A, B) is
-     *               singular, so that rank(A) < M; the least squares
+     *               singular, so that {@code rank(A) < M}; the least squares
      *               solution could not be computed.
      *         = 2:  the bottom (N-M) by (N-M) part of the upper trapezoidal
      *               factor T associated with B in the generalized QR
      *               factorization of the pair (A, B) is singular, so that
-     *               rank( A B ) < N; the least squares solution could not
+     *               {@code rank( A B ) < N}; the least squares solution could not
      *               be computed.
      */
     int ggglm(Layout layout, int n, int m, int p, FloatBuffer A, int lda, FloatBuffer B, int ldb, FloatBuffer d, FloatBuffer x, FloatBuffer y);
@@ -2601,9 +2601,9 @@ public interface LAPACK {
      * @param ldvr The leading dimension of the matrix Vr.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the QR algorithm failed to compute all the
      *               eigenvalues, and no eigenvectors have been computed;
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
@@ -2648,9 +2648,9 @@ public interface LAPACK {
      * @param ldvr The leading dimension of the matrix Vr.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the QR algorithm failed to compute all the
      *               eigenvalues, and no eigenvectors have been computed;
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
@@ -2695,9 +2695,9 @@ public interface LAPACK {
      * @param ldvr The leading dimension of the matrix Vr.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the QR algorithm failed to compute all the
      *               eigenvalues, and no eigenvectors have been computed;
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
@@ -2742,9 +2742,9 @@ public interface LAPACK {
      * @param ldvr The leading dimension of the matrix Vr.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the QR algorithm failed to compute all the
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the QR algorithm failed to compute all the
      *               eigenvalues, and no eigenvectors have been computed;
      *               elements i+1:N of WR and WI contain eigenvalues which
      *               have converged.
@@ -2773,9 +2773,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2803,9 +2803,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2833,9 +2833,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2863,9 +2863,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2894,9 +2894,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2925,9 +2925,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2956,9 +2956,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -2987,9 +2987,9 @@ public interface LAPACK {
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if INFO = i, the algorithm failed to converge; i
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if {@code INFO = i}, the algorithm failed to converge; i
      *               off-diagonal elements of an intermediate tridiagonal
      *               form did not converge to zero.
      */
@@ -3068,8 +3068,8 @@ public interface LAPACK {
      *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl, double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz);
@@ -3147,8 +3147,8 @@ public interface LAPACK {
      *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, DoubleBuffer A, int lda, double vl, double vu, int il, int iu, double abstol, IntBuffer m, DoubleBuffer w, DoubleBuffer Z, int ldz, IntBuffer isuppz);
@@ -3226,8 +3226,8 @@ public interface LAPACK {
      *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl, float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz);
@@ -3305,8 +3305,8 @@ public interface LAPACK {
      *               Implemented only for RANGE = 'A' or 'I' and IU - IL = N - 1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, FloatBuffer A, int lda, float vl, float vu, int il, int iu, float abstol, IntBuffer m, FloatBuffer w, FloatBuffer Z, int ldz, IntBuffer isuppz);
@@ -3337,7 +3337,7 @@ public interface LAPACK {
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3354,9 +3354,9 @@ public interface LAPACK {
      *               Dimension min(M,N)-1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if DBDSQR did not converge, INFO specifies how many
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
@@ -3388,7 +3388,7 @@ public interface LAPACK {
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3405,9 +3405,9 @@ public interface LAPACK {
      *               Dimension min(M,N)-1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if DBDSQR did not converge, INFO specifies how many
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
@@ -3439,7 +3439,7 @@ public interface LAPACK {
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3456,9 +3456,9 @@ public interface LAPACK {
      *               Dimension min(M,N)-1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if DBDSQR did not converge, INFO specifies how many
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
@@ -3490,7 +3490,7 @@ public interface LAPACK {
      *          If JOBU != 'O' and JOBVT != 'O', the contents of A
      *          are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3507,9 +3507,9 @@ public interface LAPACK {
      *               Dimension min(M,N)-1.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
-     *         > 0:  if DBDSQR did not converge, INFO specifies how many
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
+     *         {@code > 0}:  if DBDSQR did not converge, INFO specifies how many
      *               superdiagonals of an intermediate bidiagonal form B
      *               did not converge to zero.
      */
@@ -3538,7 +3538,7 @@ public interface LAPACK {
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3552,8 +3552,8 @@ public interface LAPACK {
      * @param ldvt The leading dimension of the matrix VT.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt);
@@ -3581,7 +3581,7 @@ public interface LAPACK {
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3595,8 +3595,8 @@ public interface LAPACK {
      * @param ldvt The leading dimension of the matrix VT.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s, DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt);
@@ -3624,7 +3624,7 @@ public interface LAPACK {
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3638,8 +3638,8 @@ public interface LAPACK {
      * @param ldvt The leading dimension of the matrix VT.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt);
@@ -3667,7 +3667,7 @@ public interface LAPACK {
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,M).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
      * @param s The singular values of A, sorted so that S(i) >= S(i+1).
      *          Dimension min(M,N).
@@ -3681,8 +3681,8 @@ public interface LAPACK {
      * @param ldvt The leading dimension of the matrix VT.
      *
      * @return INFO flag.
-     *         = 0:  successful exit.
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value.
+     *         {@code = 0}:  successful exit.
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
      *         > 0:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, FloatBuffer A, int lda, FloatBuffer s, FloatBuffer U, int ldu, FloatBuffer VT, int ldvt);
@@ -3703,13 +3703,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3732,13 +3732,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3761,13 +3761,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3790,13 +3790,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3820,13 +3820,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3850,13 +3850,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3880,13 +3880,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3910,13 +3910,13 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3943,13 +3943,13 @@ public interface LAPACK {
      *
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -3976,13 +3976,13 @@ public interface LAPACK {
      *
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -4009,13 +4009,13 @@ public interface LAPACK {
      *
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -4042,13 +4042,13 @@ public interface LAPACK {
      *
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, U(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, U(i,i) is exactly zero. The factorization
      *               has been completed, but the factor U is exactly
      *               singular, and division by zero will occur if it is used
      *               to solve a system of equations.
@@ -4067,13 +4067,13 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, D(i,i) is exactly zero. The factorization
      *               has been completed, but the block diagonal matrix D is
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
@@ -4092,13 +4092,13 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, D(i,i) is exactly zero. The factorization
      *               has been completed, but the block diagonal matrix D is
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
@@ -4117,13 +4117,13 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, D(i,i) is exactly zero. The factorization
      *               has been completed, but the block diagonal matrix D is
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
@@ -4142,13 +4142,13 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *
-     * @param ipiv The pivot indices; for 1 <= i <= min(M,N), row i of the
+     * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, D(i,i) is exactly zero. The factorization
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, D(i,i) is exactly zero. The factorization
      *               has been completed, but the block diagonal matrix D is
      *               exactly singular, and division by zero will occur if it
      *               is used to solve a system of equations.
@@ -4184,11 +4184,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int getrs(Layout layout, Transpose trans, int n, int nrhs, double[] A, int lda, int[] ipiv, double[] B, int ldb);
 
@@ -4221,11 +4221,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int getrs(Layout layout, Transpose trans, int n, int nrhs, DoubleBuffer A, int lda, IntBuffer ipiv, DoubleBuffer B, int ldb);
 
@@ -4258,11 +4258,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int getrs(Layout layout, Transpose trans, int n, int nrhs, float[] A, int lda, int[] ipiv, float[] B, int ldb);
 
@@ -4295,11 +4295,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int getrs(Layout layout, Transpose trans, int n, int nrhs, FloatBuffer A, int lda, IntBuffer ipiv, FloatBuffer B, int ldb);
 
@@ -4336,11 +4336,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, double[] AB, int ldab, int[] ipiv, double[] B, int ldb);
 
@@ -4377,11 +4377,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, DoubleBuffer AB, int ldab, IntBuffer ipiv, DoubleBuffer B, int ldb);
 
@@ -4418,11 +4418,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, float[] AB, int ldab, int[] ipiv, float[] B, int ldb);
 
@@ -4459,11 +4459,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int gbtrs(Layout layout, Transpose trans, int n, int kl, int ku, int nrhs, FloatBuffer AB, int ldab, IntBuffer ipiv, FloatBuffer B, int ldb);
 
@@ -4494,11 +4494,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int sptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, int[] ipiv, double[] B, int ldb);
 
@@ -4529,11 +4529,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int sptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, IntBuffer ipiv, DoubleBuffer B, int ldb);
 
@@ -4564,11 +4564,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int sptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, IntBuffer ipiv, FloatBuffer B, int ldb);
 
@@ -4599,11 +4599,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int sptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, int[] ipiv, float[] B, int ldb);
 
@@ -4625,9 +4625,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4651,9 +4651,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4677,9 +4677,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4703,9 +4703,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4729,9 +4729,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4755,9 +4755,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4781,9 +4781,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4807,9 +4807,9 @@ public interface LAPACK {
      * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4835,9 +4835,9 @@ public interface LAPACK {
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4863,9 +4863,9 @@ public interface LAPACK {
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4891,9 +4891,9 @@ public interface LAPACK {
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4919,9 +4919,9 @@ public interface LAPACK {
      * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4944,9 +4944,9 @@ public interface LAPACK {
      *          factorization A = U**T*U or A = L*L**T.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4968,9 +4968,9 @@ public interface LAPACK {
      *          factorization A = U**T*U or A = L*L**T.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -4992,9 +4992,9 @@ public interface LAPACK {
      *          factorization A = U**T*U or A = L*L**T.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -5016,9 +5016,9 @@ public interface LAPACK {
      *          factorization A = U**T*U or A = L*L**T.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0:  if INFO = i, the leading minor of order i is not
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         {@code > 0}:  if {@code INFO = i}, the leading minor of order i is not
      *               positive definite, and the factorization could not be
      *               completed.
      */
@@ -5051,11 +5051,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int potrs(Layout layout, UPLO uplo, int n, int nrhs, double[] A, int lda, double[] B, int ldb);
 
@@ -5086,11 +5086,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int potrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer A, int lda, DoubleBuffer B, int ldb);
 
@@ -5121,11 +5121,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int potrs(Layout layout, UPLO uplo, int n, int nrhs, float[] A, int lda, float[] B, int ldb);
 
@@ -5156,11 +5156,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int potrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer A, int lda, FloatBuffer B, int ldb);
 
@@ -5193,11 +5193,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, double[] AB, int ldab, double[] B, int ldb);
 
@@ -5230,11 +5230,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, DoubleBuffer AB, int ldab, DoubleBuffer B, int ldb);
 
@@ -5267,11 +5267,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, float[] AB, int ldab, float[] B, int ldb);
 
@@ -5304,11 +5304,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pbtrs(Layout layout, UPLO uplo, int n, int kd, int nrhs, FloatBuffer AB, int ldab, FloatBuffer B, int ldb);
 
@@ -5337,11 +5337,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pptrs(Layout layout, UPLO uplo, int n, int nrhs, double[] AP, double[] B, int ldb);
 
@@ -5370,11 +5370,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pptrs(Layout layout, UPLO uplo, int n, int nrhs, DoubleBuffer AP, DoubleBuffer B, int ldb);
 
@@ -5403,11 +5403,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pptrs(Layout layout, UPLO uplo, int n, int nrhs, float[] AP, float[] B, int ldb);
 
@@ -5436,11 +5436,11 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int pptrs(Layout layout, UPLO uplo, int n, int nrhs, FloatBuffer AP, FloatBuffer B, int ldb);
 
@@ -5460,13 +5460,13 @@ public interface LAPACK {
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int geqrf(Layout layout, int m, int n, double[] A, int lda, double[] tau);
 
@@ -5486,13 +5486,13 @@ public interface LAPACK {
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int geqrf(Layout layout, int m, int n, DoubleBuffer A, int lda, DoubleBuffer tau);
 
@@ -5512,13 +5512,13 @@ public interface LAPACK {
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int geqrf(Layout layout, int m, int n, float[] A, int lda, float[] tau);
 
@@ -5538,13 +5538,13 @@ public interface LAPACK {
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int geqrf(Layout layout, int m, int n, FloatBuffer A, int lda, FloatBuffer tau);
 
@@ -5584,8 +5584,8 @@ public interface LAPACK {
      *          GEQRF in the first k columns of its array argument A.
      *
      * @param lda The leading dimension of the matrix A.
-     *            If SIDE = 'L', LDA >= max(1,M);
-     *            if SIDE = 'R', LDA >= max(1,N).
+     *            If SIDE = 'L', {@code LDA >= max(1,M)};
+     *            if SIDE = 'R', {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
@@ -5595,8 +5595,8 @@ public interface LAPACK {
      * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc);
 
@@ -5636,8 +5636,8 @@ public interface LAPACK {
      *          GEQRF in the first k columns of its array argument A.
      *
      * @param lda The leading dimension of the matrix A.
-     *            If SIDE = 'L', LDA >= max(1,M);
-     *            if SIDE = 'R', LDA >= max(1,N).
+     *            If SIDE = 'L', {@code LDA >= max(1,M)};
+     *            if SIDE = 'R', {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
@@ -5647,8 +5647,8 @@ public interface LAPACK {
      * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau, DoubleBuffer C, int ldc);
 
@@ -5688,8 +5688,8 @@ public interface LAPACK {
      *          GEQRF in the first k columns of its array argument A.
      *
      * @param lda The leading dimension of the matrix A.
-     *            If SIDE = 'L', LDA >= max(1,M);
-     *            if SIDE = 'R', LDA >= max(1,N).
+     *            If SIDE = 'L', {@code LDA >= max(1,M)};
+     *            if SIDE = 'R', {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
@@ -5699,8 +5699,8 @@ public interface LAPACK {
      * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, float[] A, int lda, float[] tau, float[] C, int ldc);
 
@@ -5740,8 +5740,8 @@ public interface LAPACK {
      *          GEQRF in the first k columns of its array argument A.
      *
      * @param lda The leading dimension of the matrix A.
-     *            If SIDE = 'L', LDA >= max(1,M);
-     *            if SIDE = 'R', LDA >= max(1,N).
+     *            If SIDE = 'L', {@code LDA >= max(1,M)};
+     *            if SIDE = 'R', {@code LDA >= max(1,N)}.
      *
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
@@ -5751,8 +5751,8 @@ public interface LAPACK {
      * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
      */
     int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau, FloatBuffer C, int ldc);
 
@@ -5791,9 +5791,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5834,9 +5834,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5877,9 +5877,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5920,9 +5920,9 @@ public interface LAPACK {
      * @param ldb The leading dimension of the matrix B.
      *
      * @return INFO flag.
-     *         = 0:  successful exit
-     *         < 0:  if INFO = -i, the i-th argument had an illegal value
-     *         > 0: if INFO = i, the i-th diagonal element of A is zero,
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */

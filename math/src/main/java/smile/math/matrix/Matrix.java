@@ -30,6 +30,7 @@ import smile.math.blas.*;
 import smile.sort.QuickSort;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianDistribution;
+
 import static smile.math.blas.Diag.*;
 import static smile.math.blas.Layout.*;
 import static smile.math.blas.Side.*;
@@ -354,8 +355,8 @@ public class Matrix extends DMatrix {
      * Returns a Toeplitz matrix in which each descending diagonal
      * from left to right is constant.
      *
-     * @param kl A[i, j] = kl[i - j] for i >  j
-     * @param ku A[i, j] = ku[j - i] for i <= j
+     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
+     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
      */
     public static Matrix toeplitz(double[] kl, double[] ku) {
         if (kl.length != ku.length - 1) {
@@ -492,7 +493,7 @@ public class Matrix extends DMatrix {
     }
 
     /**
-     * Return if the matrix is symmetric (uplo != null && diag == null).
+     * Return if the matrix is symmetric ({@code uplo != null && diag == null}).
      */
     public boolean isSymmetric() {
         return uplo != null && diag == null;
@@ -658,7 +659,7 @@ public class Matrix extends DMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof Matrix)) {
+        if (!(o instanceof Matrix)) {
             return false;
         }
 
@@ -1109,7 +1110,7 @@ public class Matrix extends DMatrix {
             }
         }
 
-        return (double) f;
+        return f;
     }
 
     /**
@@ -1188,7 +1189,7 @@ public class Matrix extends DMatrix {
 
         for (int i = 0; i < m; i++) {
             double mu = x[i] / n;
-            x[i] = (double) Math.sqrt(x2[i] / n - mu * mu);
+            x[i] = Math.sqrt(x2[i] / n - mu * mu);
         }
 
         return x;
@@ -1240,7 +1241,7 @@ public class Matrix extends DMatrix {
                 sumsq += a * a;
             }
             mu /= m;
-            x[j] = (double) Math.sqrt(sumsq / m - mu * mu);
+            x[j] = Math.sqrt(sumsq / m - mu * mu);
         }
 
         return x;
@@ -1548,9 +1549,9 @@ public class Matrix extends DMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1566,9 +1567,9 @@ public class Matrix extends DMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1660,9 +1661,6 @@ public class Matrix extends DMatrix {
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
             }
 
-            double[] w = new double[2 * n];
-            System.arraycopy(wr, 0, w, 0, n);
-            System.arraycopy(wi, 0, w, n, n);
             return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
         }
     }
@@ -1783,8 +1781,8 @@ public class Matrix extends DMatrix {
             int r = 0;
             double tol = rcond();
 
-            for (int i = 0; i < s.length; i++) {
-                if (s[i] > tol) {
+            for (double si : s) {
+                if (si > tol) {
                     r++;
                 }
             }
