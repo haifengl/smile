@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.hash;
 
@@ -248,9 +248,9 @@ public class PerfectHash implements Serializable {
             }
         }
 
-        for (char i = (char)(freq.length - 1); i >= 0; i--) {
+        for (int i = freq.length - 1; i >= 0; i--) {
             if (freq[i] > 0) {
-                max = i;
+                max = (char) i;
                 break;
             }
         }

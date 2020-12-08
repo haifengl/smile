@@ -5,9 +5,9 @@ lazy val commonSettings = Seq(
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "2.6.0",
-  javacOptions in (Compile, compile) ++= Seq("-source", "15", "-target", "15", "--enable-preview", "-Xlint:preview", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
+  javacOptions in (Compile, compile) ++= Seq("-source", "14", "-target", "14", "--enable-preview", "-Xlint:preview", "-encoding", "UTF8", "-g:lines,vars,source", "-Xlint:unchecked"),
   javacOptions in (Compile, doc) ++= Seq(
-    "-source", "15",
+    "-source", "14",
     "--enable-preview",
     "-Xdoclint:none",
     "--allow-script-in-comments",
@@ -67,7 +67,7 @@ lazy val root = project.in(file("."))
   .settings(
     unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell)
   )
-  .aggregate(core, data, io, math, mkl, graph, interpolation, nlp, plot, json, demo, scala, spark, shell)
+  .aggregate(core, data, io, math, mkl, nlp, plot, json, demo, scala, spark, shell)
 
 lazy val math = project.in(file("math")).settings(commonSettings: _*)
 
@@ -77,23 +77,19 @@ lazy val data = project.in(file("data")).settings(commonSettings: _*).dependsOn(
 
 lazy val io = project.in(file("io")).settings(commonSettings: _*).dependsOn(data)
 
-lazy val graph = project.in(file("graph")).settings(commonSettings: _*).dependsOn(math)
+lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, io % "test")
 
-lazy val interpolation = project.in(file("interpolation")).settings(commonSettings: _*).dependsOn(math)
-
-lazy val core = project.in(file("core")).settings(commonSettings: _*).dependsOn(data, math, graph, io % "test")
-
-//lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
+lazy val deep = project.in(file("deep")).settings(skipPublishSettings: _*)
 
 lazy val nlp = project.in(file("nlp")).settings(commonSettings: _*).dependsOn(core)
 
 lazy val plot = project.in(file("plot")).settings(commonSettings: _*).dependsOn(core)
 
-lazy val demo = project.in(file("demo")).settings(skipPublishSettings: _*).dependsOn(core, io, interpolation, plot)
+lazy val demo = project.in(file("demo")).settings(skipPublishSettings: _*).dependsOn(core, io, plot)
 
 lazy val json = project.in(file("json")).settings(commonSettings: _*)
 
-lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, interpolation, nlp, plot, json)
+lazy val scala = project.in(file("scala")).settings(commonSettings: _*).dependsOn(core, io, nlp, plot, json)
 
 lazy val spark = project.in(file("spark")).settings(skipPublishSettings: _*).dependsOn(core, data, io % "test")
 

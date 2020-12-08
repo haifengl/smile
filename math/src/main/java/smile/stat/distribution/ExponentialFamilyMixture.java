@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -56,7 +56,7 @@ public class ExponentialFamilyMixture extends Mixture {
         super(components);
 
         for (Component component : components) {
-            if (component.distribution instanceof ExponentialFamily == false) {
+            if (!(component.distribution instanceof ExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of exponential family.");
             }
         }

@@ -95,12 +95,12 @@ computation:
     libraryDependencies ++= Seq(
       "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
       "org.bytedeco" % "openblas"  % "0.3.10-1.5.4" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier "android-arm64" classifier "ios-arm64",
-      "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le" classifier ""
+      "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "linux-arm64" classifier "linux-ppc64le"
     )
 ```
 In this example, we include all supported 64-bit platforms and filter out
 32-bit platforms. The user should include only the needed platforms to save
-spaces. NOTE: Do NOT miss `classifier ""` of arpack-ng.
+spaces.
 
 If you prefer other BLAS implementations, you can use any library found on
 the "java.library.path" or on the class path, by specifying it with the

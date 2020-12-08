@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.taxonomy;
 
@@ -79,15 +79,13 @@ public class Taxonomy {
     private List<String> getConcepts(Concept c) {
         List<String> keywords = new ArrayList<>();
 
-        while (c != null) {
-            if (c.synset != null) {
-                keywords.addAll(c.synset);
-            }
+        if (c.synset != null) {
+            keywords.addAll(c.synset);
+        }
 
-            if (c.children != null) {
-                for (Concept child : c.children) {
-                    keywords.addAll(getConcepts(child));
-                }
+        if (c.children != null) {
+            for (Concept child : c.children) {
+                keywords.addAll(getConcepts(child));
             }
         }
 

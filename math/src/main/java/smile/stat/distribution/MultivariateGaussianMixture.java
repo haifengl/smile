@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -49,7 +49,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         super(L, n, components);
 
         for (Component component : components) {
-            if (component.distribution instanceof MultivariateGaussianDistribution == false) {
+            if (!(component.distribution instanceof MultivariateGaussianDistribution)) {
                 throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
             }
         }
@@ -84,8 +84,7 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
         MultivariateGaussianDistribution gaussian;
         if (diagonal) {
             variance = new double[d];
-            for (int i = 0; i < n; i++) {
-                double[] x = data[i];
+            for (double[] x : data) {
                 for (int j = 0; j < d; j++) {
                     variance[j] += (x[j] - mu[j]) * (x[j] - mu[j]);
                 }
@@ -155,7 +154,6 @@ public class MultivariateGaussianMixture extends MultivariateExponentialFamilyMi
      * @param data the training data.
      * @param diagonal true if the components have diagonal covariance matrix.
      */
-    @SuppressWarnings("unchecked")
     public static MultivariateGaussianMixture fit(double[][] data, boolean diagonal) {
         if (data.length < 20)
             throw new IllegalArgumentException("Too few samples.");

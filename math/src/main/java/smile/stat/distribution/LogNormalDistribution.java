@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -40,9 +40,9 @@ public class LogNormalDistribution extends AbstractDistribution {
     public final double mu;
     /** The standard deviation of normal distribution. */
     public final double sigma;
-    private double mean;
-    private double var;
-    private double entropy;
+    private final double mean;
+    private final double var;
+    private final double entropy;
     private GaussianDistribution gaussian;
 
     /**
