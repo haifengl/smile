@@ -84,7 +84,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   }
 
   /** Clears the object buffer. */
-  def clear: Unit = buffer.clear
+  def clear(): Unit = buffer.clear
 
   private def serialize(buffer: ByteBuffer, string: Option[String]): Unit = {
     if (string.isDefined) {
@@ -188,7 +188,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
   private def serialize(buffer: ByteBuffer, json: JsBinary, ename: Option[String]): Unit = {
     buffer.put(TYPE_BINARY)
     serialize(buffer, ename)
-    buffer.putInt(json.value.size)
+    buffer.putInt(json.value.length)
     buffer.put(BINARY_SUBTYPE_GENERIC)
     buffer.put(json.value)
   }
@@ -394,7 +394,7 @@ class JsonSerializer(buffer: ByteBuffer = ByteBuffer.allocate(10 * 1024 * 1024))
 }
 
 object JsonSerializer {
-  val UTF8 = Charset.forName("UTF-8")
+  val UTF8: Charset = Charset.forName("UTF-8")
 
   /** End of document */
   val END_OF_DOCUMENT             : Byte = 0x00
@@ -442,8 +442,8 @@ object JsonSerializer {
   val FALSE                       : Byte = 0x00
 
   /** Encoding of "undefined" */
-  val undefined = Array(TYPE_UNDEFINED)
-  val `null` = Array(TYPE_NULL)
+  val undefined: Array[Byte] = Array(TYPE_UNDEFINED)
+  val `null`: Array[Byte] = Array(TYPE_NULL)
 
   /** Helper function convert ByteBuffer to Array[Byte]. */
   implicit def byteBuffer2ArrayByte(buffer: ByteBuffer): Array[Byte] = {

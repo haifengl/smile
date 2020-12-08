@@ -55,7 +55,7 @@ class JsonParser(input: ParserInput) {
   // http://tools.ietf.org/html/rfc4627#section-2.1
   private def `value`(): Unit = {
     val mark = input.cursor
-    def simpleValue(matched: Boolean, value: JsValue) = if (matched) jsValue = value else fail("JSON Value", mark)
+    def simpleValue(matched: Boolean, value: JsValue): Unit = if (matched) jsValue = value else fail("JSON Value", mark)
     (cursorChar: @switch) match {
       case 'f' => simpleValue(`false`(), JsFalse)
       case 'n' => simpleValue(`null`(), JsNull)
@@ -129,7 +129,7 @@ class JsonParser(input: ParserInput) {
 
   // http://tools.ietf.org/html/rfc4627#section-2.4
   // Leading zeros are not allowed.
-  private def `number`() = {
+  private def `number`(): Unit = {
     val start = input.cursor
     val startChar = cursorChar
     ch('-')
@@ -288,7 +288,7 @@ object ParserInput {
 
   abstract class DefaultParserInput extends ParserInput {
     protected var _cursor: Int = -1
-    def cursor = _cursor
+    def cursor: Int = _cursor
     def getLine(index: Int): Line = {
       val sb = new java.lang.StringBuilder
       @tailrec def rec(ix: Int, lineStartIx: Int, lineNr: Int): Line =
@@ -315,11 +315,11 @@ object ParserInput {
     private val byteBuffer = ByteBuffer.allocate(4)
     private val charBuffer = CharBuffer.allocate(2)
     private val decoder = UTF8.newDecoder()
-    def nextChar() = {
+    def nextChar(): Char = {
       _cursor += 1
       if (_cursor < bytes.length) (bytes(_cursor) & 0xFF).toChar else EOI
     }
-    def nextUtf8Char() = {
+    def nextUtf8Char(): Char = {
       @tailrec def decode(byte: Byte, remainingBytes: Int): Char = {
         byteBuffer.put(byte)
         if (remainingBytes > 0) {
@@ -352,9 +352,9 @@ object ParserInput {
         } else EOI
       }
     }
-    def length = bytes.length
-    def sliceString(start: Int, end: Int) = new String(bytes, start, end - start, UTF8)
-    def sliceCharArray(start: Int, end: Int) =
+    def length: Int = bytes.length
+    def sliceString(start: Int, end: Int): String = new String(bytes, start, end - start, UTF8)
+    def sliceCharArray(start: Int, end: Int): Array[Char] =
       UTF8.decode(ByteBuffer.wrap(java.util.Arrays.copyOfRange(bytes, start, end))).array()
   }
 
@@ -363,10 +363,10 @@ object ParserInput {
       _cursor += 1
       if (_cursor < string.length) string.charAt(_cursor) else EOI
     }
-    def nextUtf8Char() = nextChar()
-    def length = string.length
-    def sliceString(start: Int, end: Int) = string.substring(start, end)
-    def sliceCharArray(start: Int, end: Int) = {
+    def nextUtf8Char(): Char = nextChar()
+    def length: Int = string.length
+    def sliceString(start: Int, end: Int): String = string.substring(start, end)
+    def sliceCharArray(start: Int, end: Int): Array[Char] = {
       val chars = new Array[Char](end - start)
       string.getChars(start, end, chars, 0)
       chars
@@ -378,9 +378,9 @@ object ParserInput {
       _cursor += 1
       if (_cursor < chars.length) chars(_cursor) else EOI
     }
-    def nextUtf8Char() = nextChar()
-    def length = chars.length
-    def sliceString(start: Int, end: Int) = new String(chars, start, end - start)
-    def sliceCharArray(start: Int, end: Int) = java.util.Arrays.copyOfRange(chars, start, end)
+    def nextUtf8Char(): Char = nextChar()
+    def length: Int = chars.length
+    def sliceString(start: Int, end: Int): String = new String(chars, start, end - start)
+    def sliceCharArray(start: Int, end: Int): Array[Char] = java.util.Arrays.copyOfRange(chars, start, end)
   }
 }

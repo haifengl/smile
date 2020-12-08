@@ -18,6 +18,7 @@
 package smile.json
 
 import java.nio.ByteBuffer
+import java.util
 import java.util.{Arrays, Date}
 import scala.util.Try
 import scala.jdk.CollectionConverters._
@@ -32,7 +33,7 @@ import scala.jdk.CollectionConverters._
  * The implementation is adopt from ReactiveMongo.
  */
 case class ObjectId(id: Array[Byte]) {
-  require(id.size == ObjectId.size)
+  require(id.length == ObjectId.size)
 
   override def equals(that: Any): Boolean = {
     that.isInstanceOf[ObjectId] && Arrays.equals(id, that.asInstanceOf[ObjectId].id)
@@ -97,7 +98,7 @@ object ObjectId {
     import java.net._
     val validPlatform = Try {
       val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
-      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == true
+      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
       val isLinux = System.getProperty("os.name") == "Linux"
 
       !isLinux || correctVersion || noIpv6
@@ -105,8 +106,10 @@ object ObjectId {
 
     // Check java policies
     val permitted = {
-      val sec = System.getSecurityManager();
-      Try { sec.checkPermission(new NetPermission("getNetworkInformation")) }.toOption.map(_ => true).getOrElse(false);
+      val sec = System.getSecurityManager()
+      Try {
+        sec.checkPermission(new NetPermission("getNetworkInformation"))
+      }.toOption.isDefined
     }
 
     if (validPlatform && permitted) {
@@ -157,7 +160,7 @@ object ObjectId {
    * The returned BSONObjectID contains a timestamp set to the current time (in seconds),
    * with the `machine identifier`, `thread identifier` and `increment` properly set.
    */
-  def generate: ObjectId = fromTime(System.currentTimeMillis, false)
+  def generate: ObjectId = fromTime(System.currentTimeMillis, fillOnlyTimestamp = false)
 
   /**
    * Generates a new BSON ObjectID from the given timestamp in milliseconds.
