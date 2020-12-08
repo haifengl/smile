@@ -3,11 +3,6 @@ name := "smile-spark"
 // Spark doesn't support 2.13+
 scalaVersion := "2.12.12"
 
-// Parent project disables Scala as most libraries are in Java.
-// Enable it as this is a Scala project.
-crossPaths := true
-autoScalaLibrary := true
-
 libraryDependencies ++= {
   val sparkV = "2.4.7"
   Seq(
