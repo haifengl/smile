@@ -34,9 +34,9 @@ public enum Crossover {
     SINGLE_POINT {
         @Override
         public BitString[] apply(BitString father, BitString mother) {
-            int length = father.length;
             byte[] dad = father.bits();
             byte[] mom = mother.bits();
+            int length = dad.length;
             byte[] son = new byte[length];
             byte[] daughter = new byte[length];
 
@@ -66,9 +66,9 @@ public enum Crossover {
     TWO_POINT {
         @Override
         public BitString[] apply(BitString father, BitString mother) {
-            int length = father.length;
             byte[] dad = father.bits();
             byte[] mom = mother.bits();
+            int length = dad.length;
             byte[] son = new byte[length];
             byte[] daughter = new byte[length];
 
@@ -108,9 +108,9 @@ public enum Crossover {
     UNIFORM {
         @Override
         public BitString[] apply(BitString father, BitString mother) {
-            int length = father.length;
             byte[] dad = father.bits();
             byte[] mom = mother.bits();
+            int length = dad.length;
             byte[] son = new byte[length];
             byte[] daughter = new byte[length];
 

@@ -40,9 +40,9 @@ package smile.interpolation.variogram;
  * @author Haifeng Li
  */
 public class ExponentialVariogram implements Variogram {
-    private double a;
-    private double b;
-    private double c;
+    private final double a;
+    private final double b;
+    private final double c;
 
     /**
      * Constructor. No nugget effect.

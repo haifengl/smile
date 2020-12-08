@@ -90,8 +90,8 @@ public class CrossoverTest {
         BitString bs2 = new BitString(mother, null);
         BitString[] result = Crossover.TWO_POINT.apply(bs1, bs2);
 
-        assertEquals(length, result[0].length);
-        assertEquals(length, result[1].length);
+        assertEquals(length, result[0].length());
+        assertEquals(length, result[1].length());
 
         byte[] child1 = {1,0,0,0,1,0,1,0,1,0,0};
         byte[] child2 = {0,1,1,0,1,0,0,1,0,0,1};
@@ -115,8 +115,8 @@ public class CrossoverTest {
         BitString bs2 = new BitString(mother, null);
         BitString[] result = Crossover.UNIFORM.apply(bs1, bs2);
 
-        assertEquals(father.length, result[0].length);
-        assertEquals(mother.length, result[1].length);
+        assertEquals(father.length, result[0].length());
+        assertEquals(mother.length, result[1].length());
 
         byte[] child1 = {0,1,1,0,1,0,0,0,0,0,1};
         byte[] child2 = {1,0,0,0,1,0,1,1,1,0,0};

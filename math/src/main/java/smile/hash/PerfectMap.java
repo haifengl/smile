@@ -50,7 +50,7 @@ public class PerfectMap<T> {
         }
 
         /** Add a new key-value pair. */
-        public Builder add(String key, T value) {
+        public Builder<T> add(String key, T value) {
             map.put(key, value);
             return this;
         }
