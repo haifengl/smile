@@ -46,7 +46,7 @@ public interface BLAS {
         try {
             Class<?> clazz = Class.forName("smile.math.blas.mkl.MKL");
             logger.info("smile-mkl module is available.");
-            return (BLAS) clazz.newInstance();
+            return (BLAS) clazz.getDeclaredConstructor().newInstance();
         } catch (Exception e) {
             logger.debug("Failed to create MKL instance: ", e);
         }
@@ -56,37 +56,37 @@ public interface BLAS {
 
     /**
      * Sums the absolute values of the elements of a vector.
-     * When working backward (incx < 0), each routine starts at the end of the
+     * When working backward ({@code incx < 0}), each routine starts at the end of the
      * vector and moves backward.
      *
      * @param n Number of vector elements to be summed.
      *
-     * @param x Array of dimension (n-1) * abs(incx)+ 1.
+     * @param x Array of dimension {@code (n-1) * abs(incx)+ 1}.
      *          Vector that contains elements to be summed.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
      * @return Sum of the absolute values of the elements of the vector x.
-     *         If n <= 0, DASUM is set to 0.
+     *         If {@code n <= 0}, DASUM is set to 0.
      */
     double asum(int n, double[] x, int incx);
 
     /**
      * Sums the absolute values of the elements of a vector.
-     * When working backward (incx < 0), each routine starts at the end of the
+     * When working backward ({@code incx < 0}), each routine starts at the end of the
      * vector and moves backward.
      *
      * @param n Number of vector elements to be summed.
      *
-     * @param x Array of dimension (n-1) * abs(incx)+ 1.
+     * @param x Array of dimension {@code (n-1) * abs(incx)+ 1}.
      *          Vector that contains elements to be summed.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
      * @return Sum of the absolute values of the elements of the vector x.
-     *         If n <= 0, DASUM is set to 0.
+     *         If {@code n <= 0}, DASUM is set to 0.
      */
     float asum(int n, float[] x, int incx);
 
