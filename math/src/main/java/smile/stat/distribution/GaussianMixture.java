@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -48,7 +48,7 @@ public class GaussianMixture extends ExponentialFamilyMixture {
         super(L, n, components);
 
         for (Component component : components) {
-            if (component.distribution instanceof GaussianDistribution == false) {
+            if (!(component.distribution instanceof GaussianDistribution)) {
                 throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
             }
         }
@@ -81,7 +81,6 @@ public class GaussianMixture extends ExponentialFamilyMixture {
      * The number of components will be selected by BIC.
      * @param x the training data.
      */
-    @SuppressWarnings("unchecked")
     public static GaussianMixture fit(double[] x) {
         if (x.length < 20) {
             throw new IllegalArgumentException("Too few samples.");

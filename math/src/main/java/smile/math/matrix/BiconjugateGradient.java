@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -194,8 +194,8 @@ public class BiconjugateGradient {
 
         if (itol <= 3) {
             double ans = 0.0;
-            for (int i = 0; i < n; i++) {
-                ans += x[i] * x[i];
+            for (double v : x) {
+                ans += v * v;
             }
             return Math.sqrt(ans);
         } else {

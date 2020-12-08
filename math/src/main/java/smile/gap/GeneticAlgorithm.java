@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.gap;
 
@@ -119,10 +119,7 @@ import java.util.Arrays;
 public class GeneticAlgorithm <T extends Chromosome> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneticAlgorithm.class);
 
-    /**
-     * Population size.
-     */
-    private int size;
+
     /**
      * Population.
      */
@@ -173,7 +170,6 @@ public class GeneticAlgorithm <T extends Chromosome> {
             throw new IllegalArgumentException("Invalid elitism: " + elitism);
         }
 
-        this.size = seeds.length;
         this.population = seeds;
         this.selection = selection;
         this.elitism = elitism;
@@ -243,6 +239,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
             chromosome.fitness();
         });
 
+        int size = population.length;
         Arrays.sort(population);
         T best = population[size-1];
 

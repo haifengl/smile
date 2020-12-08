@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -50,7 +50,7 @@ public class FDistribution extends AbstractDistribution {
     public final int nu2;
 
     /** The constant part in the pdf function. */
-    private double fac;
+    private final double fac;
 
     /**
      * Constructor.
@@ -97,7 +97,7 @@ public class FDistribution extends AbstractDistribution {
 
     @Override
     public String toString() {
-        return String.format("F-distribution(%.4f, %.4f)", nu1, nu2);
+        return String.format("F-distribution(%d, %d)", nu1, nu2);
     }
 
     @Override

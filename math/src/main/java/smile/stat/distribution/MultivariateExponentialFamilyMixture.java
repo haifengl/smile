@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -52,7 +52,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
         super(components);
 
         for (Component component : components) {
-            if (component.distribution instanceof MultivariateExponentialFamily == false) {
+            if (!(component.distribution instanceof MultivariateExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of multivariate exponential family.");
             }
         }

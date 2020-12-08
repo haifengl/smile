@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -38,8 +38,8 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */
-    public final double p;
-    private double entropy;
+    public  final double p;
+    private final double entropy;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.

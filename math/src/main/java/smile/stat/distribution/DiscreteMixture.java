@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -72,9 +72,6 @@ public class DiscreteMixture extends DiscreteDistribution {
         double sum = 0.0;
         for (Component component : components) {
             sum += component.priori;
-            if (component.distribution instanceof DiscreteDistribution == false) {
-                throw new IllegalArgumentException("Component " + component + " is not a discrete distribution.");
-            }
         }
 
         if (Math.abs(sum - 1.0) > 1E-3) {

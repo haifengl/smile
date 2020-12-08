@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -70,12 +70,12 @@ public class WeibullDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */
-    public final double k;
+    public  final double k;
     /** The scale parameter. */
-    public final double lambda;
-    private double mean;
-    private double variance;
-    private double entropy;
+    public  final double lambda;
+    private final double mean;
+    private final double variance;
+    private final double entropy;
 
     /**
      * Constructor. The default scale parameter is 1.0.

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.sort;
 
@@ -28,7 +28,7 @@ public interface Sort {
     /**
      * Swap two positions.
      */
-    static void swap(int arr[], int i, int j) {
+    static void swap(int[] arr, int i, int j) {
         int a = arr[i];
         arr[i] = arr[j];
         arr[j] = a;
@@ -37,7 +37,7 @@ public interface Sort {
     /**
      * Swap two positions.
      */
-    static void swap(float arr[], int i, int j) {
+    static void swap(float[] arr, int i, int j) {
         float a = arr[i];
         arr[i] = arr[j];
         arr[j] = a;
@@ -46,7 +46,7 @@ public interface Sort {
     /**
      * Swap two positions.
      */
-    static void swap(double arr[], int i, int j) {
+    static void swap(double[] arr, int i, int j) {
         double a;
         a = arr[i];
         arr[i] = arr[j];
@@ -56,7 +56,7 @@ public interface Sort {
     /**
      * Swap two positions.
      */
-    static void swap(Object arr[], int i, int j) {
+    static void swap(Object[] arr, int i, int j) {
         Object a;
         a = arr[i];
         arr[i] = arr[j];
