@@ -30,12 +30,12 @@ import smile.math.special.Gamma;
  */
 public class ChiSqTest {
     /**
-     * A character string indicating what type of test was performed.
+     * The type of test.
      */
     public final String method;
 
     /**
-     * The degree of freedom of chisq-statistic.
+     * The degree of freedom of chi-square statistic.
      */
     public final double df;
 
@@ -50,35 +50,70 @@ public class ChiSqTest {
     public final double pvalue;
 
     /**
-     * Constructor.
+     * Cramér's V is a measure of association between two nominal variables,
+     * giving a value between 0 and 1 (inclusive). In the case of a 2 × 2
+     * contingency table, Cramér's V is equal to the Phi coefficient.
      */
-    private ChiSqTest(String method, double chisq, double df, double pvalue) {
+    public final double CramerV;
+
+    /**
+     * Constructor.
+     * @param method the type of test.
+     * @param chisq the chi-square statistic.
+     * @param df the degree of freedom.
+     * @param pvalue the p-value.
+     */
+    public ChiSqTest(String method, double chisq, double df, double pvalue) {
+        this(method, chisq, df, pvalue, Double.NaN);
+    }
+
+    /**
+     * Constructor.
+     * @param method the type of test.
+     * @param chisq the chi-square statistic.
+     * @param df the degree of freedom.
+     * @param pvalue the p-value.
+     * @param CramerV Cramer's V measure.
+     */
+    public ChiSqTest(String method, double chisq, double df, double pvalue, double CramerV) {
         this.method = method;
         this.chisq = chisq;
         this.df = df;
         this.pvalue = pvalue;
+        this.CramerV = CramerV;
     }
 
     @Override
     public String toString() {
-        return String.format("%s Chi-squared Test(t = %.4f, df = %.3f, p-value = %G)", method, chisq, df, pvalue);
+        if (Double.isNaN(CramerV)) {
+            return String.format("%s Chi-squared Test(t = %.4f, df = %.3f, p-value = %G)", method, chisq, df, pvalue);
+        } else {
+            return String.format("%s Chi-squared Test(t = %.4f, df = %.3f, p-value = %G, Cramer's V = %.2f)", method, chisq, df, pvalue, CramerV);
+        }
     }
 
     /**
-     * One-sample chisq test. Given the array bins containing the observed numbers of events,
-     * and an array prob containing the expected probabilities of events, and given
-     * one constraint, a small value of p-value indicates a significant
-     * difference between the distributions.
+     * One-sample Pearson's chi-square test.
+     * Given the array bins containing the observed numbers of events,
+     * and an array prob containing the expected probabilities of events,
+     * and given one constraint, a small value of p-value indicates
+     * a significant difference between the distributions.
+     * @param bins the observed number of events.
+     * @param prob the expected probabilities of events.
      */
     public static ChiSqTest test(int[] bins, double[] prob) {
         return test(bins, prob, 1);
     }
 
     /**
-     * One-sample chisq test. Given the array bins containing the observed numbers of events,
-     * and an array prob containing the expected probabilities of events, and given
-     * the number of constraints (normally one), a small value of p-value
-     * indicates a significant difference between the distributions.
+     * One-sample Pearson's chi-square test.
+     * Given the array bins containing the observed numbers of events,
+     * and an array prob containing the expected probabilities of events,
+     * and given the number of constraints (normally one), a small value
+     * of p-value indicates a significant difference between the distributions.
+     * @param bins the observed number of events.
+     * @param prob the expected probabilities of events.
+     * @param constraints the constraints on the degree of freedom.
      */
     public static ChiSqTest test(int[] bins, double[] prob, int constraints) {
         int nbins = bins.length;
@@ -110,19 +145,25 @@ public class ChiSqTest {
     }
 
     /**
-     * Two-sample chisq test. Given the arrays bins1 and bins2, containing two
-     * sets of binned data, and given one constraint, a small value of
-     * p-value indicates a significant difference between the distributions.
+     * Two-sample Pearson's chi-square test.
+     * Given the arrays bins1 and bins2, containing two sets of binned data,
+     * and given one constraint, a small value of p-value indicates
+     * a significant difference between the distributions.
+     * @param bins1 the observed number of events in first sample.
+     * @param bins2 the observed number of events in second sample.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2) {
         return test(bins1, bins2, 1);
     }
 
     /**
-     * Two-sample chisq test. Given the arrays bins1 and bins2, containing two
-     * sets of binned data, and given the number of constraints (normally one),
-     * a small value of p-value indicates a significant difference between
-     * the distributions.
+     * Two-sample Pearson's chi-square test.
+     * Given the arrays bins1 and bins2, containing two sets of binned data,
+     * and given the number of constraints (normally one), a small value of
+     * p-value indicates a significant difference between the distributions.
+     * @param bins1 the observed number of events in first sample.
+     * @param bins2 the observed number of events in second sample.
+     * @param constraints the constraints on the degree of freedom.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2, int constraints) {
         if (bins1.length != bins2.length) {
@@ -147,57 +188,59 @@ public class ChiSqTest {
     }
 
     /**
-     * Given a two-dimensional contingency table in the form of an array of
-     * integers, returns Chi-square test for independence. The rows of contingency table
-     * are labels by the values of one nominal variable, the columns are labels
-     * by the values of the other nominal variable, and whose entries are
-     * nonnegative integers giving the number of observed events for each
-     * combination of row and column. Continuity correction
-     * will be applied when computing the test statistic for 2x2 tables: one half
-     * is subtracted from all |O-E| differences. The correlation coefficient is
+     * Independence test on a two-dimensional contingency table.
+     * The rows of contingency table are the values of
+     * one nominal variable, the columns are the values of
+     * the other nominal variable. The entries are the number of
+     * observed events for each combination of row and column.
+     * <p>
+     * Continuity correction will be applied when computing the
+     * test statistic for 2x2 tables: one half is subtracted from
+     * all |O-E| differences. The correlation coefficient is
      * calculated as Cramer's V.
+     *
+     * @param table the contingency table.
      */
     public static ChiSqTest test(int[][] table) {
         final double TINY = 1.0e-16;
 
-        int ni = table.length;
-        int nj = table[0].length;
+        int nrows = table.length;
+        int ncols = table[0].length;
 
         boolean correct = false;
-        if (ni == 2 && nj == 2) {
+        if (nrows == 2 && ncols == 2) {
             correct = true;
         }
 
-        double sum = 0.0;
-
-        int nni = ni;
-        double[] sumi = new double[ni];
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                sumi[i] += table[i][j];
-                sum += table[i][j];
+        double n = 0.0; // total observations
+        int r = nrows; // without all zero rows
+        double[] ni = new double[nrows]; // observations per row
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++) {
+                ni[i] += table[i][j];
+                n += table[i][j];
             }
-            if (sumi[i] == 0.0) {
-                --nni;
+            if (ni[i] == 0.0) {
+                --r;
             }
         }
 
-        int nnj = nj;
-        double[] sumj = new double[nj];
-        for (int j = 0; j < nj; j++) {
+        int k = ncols; // without all zero columns
+        double[] nj = new double[ncols]; // observations per column
+        for (int j = 0; j < ncols; j++) {
             for (int[] row : table) {
-                sumj[j] += row[j];
+                nj[j] += row[j];
             }
-            if (sumj[j] == 0.0) {
-                --nnj;
+            if (nj[j] == 0.0) {
+                --k;
             }
         }
 
-        int df = nni * nnj - nni - nnj + 1;
+        int df = r * k - r - k + 1;
         double chisq = 0.0;
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                double expctd = sumj[j] * sumi[i] / sum;
+        for (int i = 0; i < nrows; i++) {
+            for (int j = 0; j < ncols; j++) {
+                double expctd = nj[j] * ni[i] / n;
                 double temp = table[i][j] - expctd;
                 if (correct) temp = Math.abs(temp) - 0.5;
                 chisq += temp * temp / (expctd + TINY);
@@ -205,9 +248,9 @@ public class ChiSqTest {
         }
 
         double prob = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
-        int minij = nni < nnj ? nni-1 : nnj-1;
-        double v = Math.sqrt(chisq/(sum*minij));
+        int min = Math.min(r, k) - 1;
+        double CramerV = Math.sqrt(chisq/(n*min));
 
-        return new ChiSqTest("Pearson's", chisq, df, prob);
+        return new ChiSqTest("Pearson's", chisq, df, prob, CramerV);
     }
 }
