@@ -24,12 +24,11 @@ import org.apache.spark.sql.catalyst.encoders.ExpressionEncoder
 import smile.data.`type`.{DataType, DataTypes, StructField, StructType}
 
 /**
-  * DataTypeOps is a collection of internal helper methods to convert back and forth
-  * between [[smile.data.`type`.DataType]] and [[org.apache.spark.sql.types.DataType]].
+  * A collection of convert methods between Smile DataType and SparkSQL DataType.
   */
 object DataTypeOps {
   /**
-    * Convert a Spark schema to a Smile schema
+    * Converts a Spark schema to a Smile schema.
     *
     * @param schema Spark schema
     * @return Smile schema
@@ -39,7 +38,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Spark field to a Smile field
+    * Converts a Spark field to a Smile field.
     *
     * @param field Spark field
     * @return Smile field
@@ -49,7 +48,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a [[org.apache.spark.sql.types.DataType]] to a Smile [[DataType]].
+    * Converts a SparkSQL DataType to a Smile DataType.
     * Deals with nested type or even user defined types.
     *
     * @param `type` Spark datatype
@@ -82,7 +81,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Smile schema to a Spark schema
+    * Converts a Smile schema to a Spark schema
     *
     * @param schema Smile schema
     * @return Spark schema
@@ -92,7 +91,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Smile field to a Spark field
+    * Converts a Smile field to a Spark field.
     *
     * @param field Smile field
     * @return Spark field
@@ -103,7 +102,7 @@ object DataTypeOps {
   }
 
   /**
-    * Convert a Smile [[DataType]] to a [[org.apache.spark.sql.types.DataType]].
+    * Convert a Smile DataType to a SparkSQL DataType.
     * Deals with nested type or even user defined types.
     *
     * @param `type` Smile datatype
