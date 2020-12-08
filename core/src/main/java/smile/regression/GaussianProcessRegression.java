@@ -326,7 +326,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the flag if normalize the response variable.
      * @param tol the stopping tolerance for HPO.
-     * @param maxIter the maximum number of iterations for HPO. No HPO if maxIter <= 0.
+     * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize, double tol, int maxIter) {
         if (x.length != y.length) {

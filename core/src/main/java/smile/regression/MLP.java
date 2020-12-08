@@ -75,7 +75,7 @@ import smile.base.mlp.*;
         t++;
     }
 
-    /** Updates the model with a mini-batch. RMSProp is applied if rho > 0. */
+    /** Updates the model with a mini-batch. RMSProp is applied if {@code rho > 0}. */
     @Override
     public void update(double[][] x, double[] y) {
         double[] target = this.target.get();

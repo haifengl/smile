@@ -29,30 +29,34 @@ import smile.math.matrix.Matrix;
 
 /**
  * The model fitting formula in a compact symbolic form.
- * An expression of the form y ~ model is interpreted as a specification that
- * the response y is modelled by a linear predictor specified symbolically by
- * model. Such a model consists of a series of terms separated by + operators.
- * The terms themselves consist of variable and factor names separated by
- * :: operators. Such a term is interpreted as the interaction of all the
- * variables and factors appearing in the term. The special term "." means
+ * An expression of the form {@code y ~ model} is interpreted as a
+ * specification that the response y is modelled by a linear predictor
+ * specified symbolically by model. Such a model consists of a series
+ * of terms separated by {@code +} operators. The terms themselves
+ * consist of variable and factor names separated by {@code ::} operators.
+ * Such a term is interpreted as the interaction of all the variables and
+ * factors appearing in the term. The special term {@code "."} means
  * all columns not otherwise in the formula in the context of a data frame.
  * <p>
- * In addition to + and ::, a number of other operators are useful in model
- * formulae. The && operator denotes factor crossing: a && b interpreted as
- * a+b+a::b. The ^ operator indicates crossing to the specified degree.
- * For example (a+b+c)^2 is identical to (a+b+c)*(a+b+c) which in turn
- * expands to a formula containing the main effects for a, b and c together
- * with their second-order interactions. The - operator removes the specified
- * terms, so that (a+b+c)^2 - a::b is identical to a + b + c + b::c + a::c.
+ * In addition to {@code +} and {@code ::}, a number of other operators
+ * are useful in model formulae. The {@code &&} operator denotes factor
+ * crossing: {@code a && b} interpreted as {@code a+b+a::b}. The {@code ^}
+ * operator indicates crossing to the specified degree. For example
+ * {@code (a+b+c)^2} is identical to {@code :(a+b+c)*(a+b+c)} which in turn
+ * expands to a formula containing the main effects for {@code a},
+ * {@code b} and {@code c} together with their second-order interactions.
+ * The {@code -} operator removes the specified terms, so that
+ * {@code (a+b+c)^2 - a::b} is identical to {@code a + b + c + b::c + a::c}.
  * It can also used to remove the intercept term: when fitting a linear model
- * y ~ x - 1 specifies a line through the origin. A model with no intercept
- * can be also specified as y ~ x + 0 or y ~ 0 + x.
+ * {@code y ~ x - 1} specifies a line through the origin. A model with
+ * no intercept can be also specified as {@code y ~ x + 0}.
  * <p>
  * While formulae usually involve just variable and factor names, they
- * can also involve arithmetic expressions. The formula log(y) ~ a + log(x)
- * is quite legal.
+ * can also involve arithmetic expressions. The formula
+ * {@code log(y) ~ a + log(x)}, for example, is legal.
  * <p>
- * Note that the operators ~, +, ::, ^ are only available in Scala API.
+ * Note that the operators {@code ~}, {@code +}, {@code ::}, {@code ^}
+ * are only available in Scala API.
  *
  * @author Haifeng Li
  */
