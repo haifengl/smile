@@ -70,12 +70,12 @@ public class WeibullDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */
-    public final double k;
+    public  final double k;
     /** The scale parameter. */
-    public final double lambda;
-    private double mean;
-    private double variance;
-    private double entropy;
+    public  final double lambda;
+    private final double mean;
+    private final double variance;
+    private final double entropy;
 
     /**
      * Constructor. The default scale parameter is 1.0.

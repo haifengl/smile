@@ -112,11 +112,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
 
     @Override
     public String toString() {
-        if (r == (int) r) {
-            return String.format("Negative Binomial(%d, %.4f)", r, p);
-        } else {
-            return String.format("Negative Binomial(%.4f, %.4f)", r, p);
-        }
+        return String.format("Negative Binomial(%f, %.4f)", r, p);
     }
 
     @Override

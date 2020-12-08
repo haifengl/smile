@@ -40,9 +40,9 @@ public class LogNormalDistribution extends AbstractDistribution {
     public final double mu;
     /** The standard deviation of normal distribution. */
     public final double sigma;
-    private double mean;
-    private double var;
-    private double entropy;
+    private final double mean;
+    private final double var;
+    private final double entropy;
     private GaussianDistribution gaussian;
 
     /**

@@ -78,8 +78,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
      * Estimates the distribution parameters by the moment method.
      */
     public static BetaDistribution fit(double[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] < 0 || data[i] > 1) {
+        for (double datum : data) {
+            if (datum < 0 || datum > 1) {
                 throw new IllegalArgumentException("Samples are not in range [0, 1].");
             }
         }
@@ -239,15 +239,15 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         public RejectionLogLogistic() {
             if (alpha > 1.0 && beta > 1.0) {
                 method = BB;
-                am = (alpha < beta) ? alpha : beta;
-                bm = (alpha > beta) ? alpha : beta;
+                am = Math.min(alpha, beta);
+                bm = Math.max(alpha, beta);
                 al = am + bm;
                 be = Math.sqrt((al - 2.0) / (2.0 * alpha * beta - al));
                 ga = am + 1.0 / be;
             } else {
                 method = BC;
-                am = (alpha > beta) ? alpha : beta;
-                bm = (alpha < beta) ? alpha : beta;
+                am = Math.max(alpha, beta);
+                bm = Math.min(alpha, beta);
                 al = am + bm;
                 alnam = al * Math.log(al / am) - 1.386294361;
                 be = 1.0 / bm;
@@ -316,8 +316,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 break;
                             } else {
                                 w = am * Math.exp(v);
-                                if ((al * (Math.log(al / (bm + w)) + v) - 1.386294361) <
-                                        Math.log(z)) {
+                                if ((al * (Math.log(al / (bm + w)) + v) - 1.386294361) < Math.log(z)) {
                                     continue;  /* goto 1 */
                                 }
 

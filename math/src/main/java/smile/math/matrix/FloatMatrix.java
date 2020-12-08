@@ -223,37 +223,9 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Returns an n-by-n identity matrix.
-     * @param n the number of rows/columns.
-     */
-    public static FloatMatrix eye(int n) {
-        FloatMatrix matrix = new FloatMatrix(n, n);
-
-        for (int i = 0; i < n; i++) {
-            matrix.set(i, i, 1.0f);
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns an m-by-n identity matrix.
+     * Returns a random matrix of standard normal distribution.
      * @param m the number of rows.
      * @param n the number of columns.
-     */
-    public static FloatMatrix eye(int m, int n) {
-        FloatMatrix matrix = new FloatMatrix(m, n);
-
-        int k = Math.min(m, n);
-        for (int i = 0; i < k; i++) {
-            matrix.set(i, i, 1.0f);
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns a random matrix of standard normal distribution.
      */
     public static FloatMatrix randn(int m, int n) {
         return rand(m, n, GaussianDistribution.getInstance());
@@ -262,6 +234,8 @@ public class FloatMatrix extends SMatrix {
     /**
      * Returns a random matrix.
      *
+     * @param m the number of rows.
+     * @param n the number of columns.
      * @param distribution the distribution of random number.
      */
     public static FloatMatrix rand(int m, int n, Distribution distribution) {
@@ -279,6 +253,8 @@ public class FloatMatrix extends SMatrix {
     /**
      * Returns a random matrix of uniform distribution.
      *
+     * @param m the number of rows.
+     * @param n the number of columns.
      * @param lo the lower bound of uniform distribution.
      * @param hi the upper bound of uniform distribution.
      */
@@ -295,8 +271,50 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Returns a square diagonal matrix with the elements of vector
-     * v on the main diagonal.
+     * Returns an identity matrix.
+     * @param n the number of rows/columns.
+     */
+    public static FloatMatrix eye(int n) {
+        return diag(n, 1.0f);
+    }
+
+    /**
+     * Returns an m-by-n identity matrix.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     */
+    public static FloatMatrix eye(int m, int n) {
+        return diag(m, n, 1.0f);
+    }
+
+    /**
+     * Returns a square diagonal matrix.
+     *
+     * @param n the number of rows/columns.
+     * @param diag the diagonal value.
+     */
+    public static FloatMatrix diag(int n, float diag) {
+        return diag(n, n, diag);
+    }
+
+    /**
+     * Returns an m-by-n diagonal matrix.
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param diag the diagonal value.
+     */
+    public static FloatMatrix diag(int m, int n, float diag) {
+        FloatMatrix D = new FloatMatrix(m, n);
+        int k = Math.min(m, n);
+        for (int i = 0; i < k; i++) {
+            D.set(i, i, diag);
+        }
+        return D;
+    }
+
+    /**
+     * Returns a square diagonal matrix.
      *
      * @param diag the diagonal elements.
      */

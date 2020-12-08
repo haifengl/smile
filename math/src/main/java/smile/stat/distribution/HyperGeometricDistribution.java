@@ -125,14 +125,15 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
     @Override
     public double cdf(double k) {
-        if (k < Math.max(0, m + n - N)) {
+        int L = Math.max(0, m + n - N);
+        if (k < L) {
             return 0.0;
         } else if (k >= Math.min(m, n)) {
             return 1.0;
         }
 
         double p = 0.0;
-        for (int i = Math.max(0, m + n - N); i <= k; i++) {
+        for (int i = L; i <= k; i++) {
             p += p(i);
         }
 
@@ -259,8 +260,8 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     class Patchwork extends RandomNumberGenerator {
-        private int L,  k1,  k2,  k4,  k5;
-        private double dl,  dr,  r1,  r2,  r4,  r5,  ll,  lr,  cPm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
+        private final int L,  k1,  k2,  k4,  k5;
+        private final double dl,  dr,  r1,  r2,  r4,  r5,  ll,  lr,  cPm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
 
         /**
          * Initialize random number generator.
@@ -270,8 +271,8 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
             double Mp, np, p, modef, U;                 // (X, Y) <-> (V, W)
 
-            Mp = (double) (m + 1);
-            np = (double) (n + 1);
+            Mp = m + 1;
+            np = n + 1;
             L = N - m - n;
 
             p = Mp / (N + 2.);
@@ -285,17 +286,16 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
             // k2 = ceil (modef - 1/2 - U),    k1 = 2*k2 - (mode - 1 + delta_ml)
             // k4 = floor(modef - 1/2 + U),    k5 = 2*k4 - (mode + 1 - delta_mr)
             int mode = (int) modef;
-            k2 = (int) Math.ceil(modef - 0.5 - U);
-            if (k2 >= mode) {
-                k2 = mode - 1;
-            }
+            int ceil = (int) Math.ceil(modef - 0.5 - U);
+            k2 = ceil >= mode ? mode - 1 : ceil;
+
             k4 = (int) (modef - 0.5 + U);
             k1 = k2 + k2 - mode + 1;                         // delta_ml = 0
             k5 = k4 + k4 - mode;                             // delta_mr = 1
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             r1 = (np / (double) k1 - 1.) * (Mp - k1) / (double) (L + k1);
@@ -455,7 +455,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
 
     class Inversion extends RandomNumberGenerator {
 
-        private int mode,  mp;  // Mode, mode+1
+        private int mode, mp;  // Mode, mode+1
         private int bound;      // Safety upper bound
         private double fm;      // Value at mode
 
@@ -509,19 +509,15 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
          */
         @Override
         protected int random() {
-
-            // Sampling
-            int I;                    // Loop counter
-            int L = N - m - n;        // Parameter
+            double L = N - m - n;        // Parameter
             double Mp, np;            // mm + 1, nn + 1
             double U;                 // uniform random
             double c, d;              // factors in iteration
             double divisor;           // divisor, eliminated by scaling
             double k1, k2;            // float version of loop counter
-            double L1 = L;            // float version of L
 
-            Mp = (double) (m + 1);
-            np = (double) (n + 1);
+            Mp = m + 1;
+            np = n + 1;
 
             // loop until accepted
             while (true) {
@@ -536,38 +532,39 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
                 // alternating down- and upward search from the mode
                 k1 = mp - 1;
                 k2 = mode + 1;
-                for (I = 1; I <= mode; I++, k1--, k2++) {
+                for (int i = 1; i <= mode; i++, k1--, k2++) {
                     // Downward search from k1 = hyp_mp - 1
                     divisor = (np - k1) * (Mp - k1);
                     // Instead of dividing c with divisor, we multiply U and d because
                     // multiplication is faster. This will give overflow if N > 800
                     U *= divisor;
                     d *= divisor;
-                    c *= k1 * (L1 + k1);
+                    c *= k1 * (L + k1);
                     if ((U -= c) <= 0.) {
-                        return (mp - I - 1); // = k1 - 1
+                        return (mp - i - 1); // = k1 - 1
                     }
                     // Upward search from k2 = hyp_mode + 1
-                    divisor = k2 * (L1 + k2);
+                    divisor = k2 * (L + k2);
                     // re-scale parameters to avoid time-consuming division
                     U *= divisor;
                     c *= divisor;
                     d *= (np - k2) * (Mp - k2);
                     if ((U -= d) <= 0.) {
-                        return (mode + I);  // = k2
-                    }         // Values of nn > 75 or N > 680 may give overflow if you leave out this..
+                        return (mode + i);  // = k2
+                    } // Values of nn > 75 or N > 680 may give overflow if leave out this.
 
                     // overflow protection
                     if (U > 1.E100) {U *= 1.E-100; c *= 1.E-100; d *= 1.E-100;}
                 }
 
-                // Upward search from k2 = 2*mode + 1 to bound
-                for (k2 = I = mp + mode; I <= bound; I++, k2++) {
-                    divisor = k2 * (L1 + k2);
+                // Upward search from k2 = 2*mode + 1 to bound\
+                k2 = mp + mode;
+                for (int i = mp + mode; i <= bound; i++, k2++) {
+                    divisor = k2 * (L + k2);
                     U *= divisor;
                     d *= (np - k2) * (Mp - k2);
                     if ((U -= d) <= 0.) {
-                        return (I);
+                        return i;
                     }
 
                     // more overflow protection

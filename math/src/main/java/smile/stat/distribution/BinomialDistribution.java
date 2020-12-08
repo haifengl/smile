@@ -233,8 +233,7 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     interface RandomNumberGenerator {
-
-        public int rand();
+        int rand();
     }
 
     class Patchwork implements RandomNumberGenerator {
@@ -259,8 +258,8 @@ public class BinomialDistribution extends DiscreteDistribution {
             k5 = k4 + k4 - mode;
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             nu = nu / q;
