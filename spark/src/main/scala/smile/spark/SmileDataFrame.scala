@@ -23,9 +23,7 @@ import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
 import scala.collection.JavaConverters._
 
-/**
-  * Converts Spark [[org.apache.spark.sql.DataFrame]] to Smile [[DataFrame]]
-  */
+/** Converts Spark DataFrame to Smile DataFrame. */
 object SmileDataFrame {
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {

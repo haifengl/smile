@@ -24,7 +24,7 @@ import org.apache.spark.ml.linalg.Vector
 import org.apache.spark.ml.param._
 import org.apache.spark.ml.util.Instrumentation._
 import org.apache.spark.ml.util.{Identifiable, _}
-import org.apache.spark.ml.{Predictor, PredictorParams, Estimator, Pipeline}
+import org.apache.spark.ml.{Predictor, PredictorParams}
 import org.apache.spark.sql.Dataset
 import org.apache.spark.storage.StorageLevel
 import org.json4s.JObject
@@ -68,11 +68,11 @@ private[ml] object SmileRegressionParams {
 }
 
 /**
-  * SmileRegression is an [[Estimator]] that takes a smile regression trainer and train it on a [[Dataset]].
-  * It makes it easy to add a smile regression trainer into a Spark MLLib [[Pipeline]].
+  * A Spark Estimator based on Smile's regression algorithms.
+  * It allows to add a Smile model into a Spark MLLib Pipeline.
   *
-  * @note SmileRegression will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
-  *       but train the regression on a Spark Executor.
+  * @note SmileRegression will collect the training Dataset
+  *       to the Spark Driver but train the model on a Spark Executor.
   */
 class SmileRegression(override val uid: String)
   extends Predictor[Vector, SmileRegression, SmileRegressionModel]

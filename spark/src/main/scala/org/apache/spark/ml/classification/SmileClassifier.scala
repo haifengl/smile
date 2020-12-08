@@ -20,7 +20,6 @@ package org.apache.spark.ml.classification
 import java.io.{ObjectInputStream, ObjectOutputStream}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
-import org.apache.spark.ml.Estimator
 import org.apache.spark.ml.classification.{ClassificationModel => SparkClassificationModel, Classifier => SparkClassifier}
 import org.apache.spark.ml.linalg.{Vector, Vectors}
 import org.apache.spark.ml.param._
@@ -31,6 +30,7 @@ import org.apache.spark.storage.StorageLevel
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, JObject}
+import smile.classification.SoftClassifier
 
 /**
   * Params for SmileClassifier
@@ -70,11 +70,11 @@ private[ml] object SmileClassifierParams {
 }
 
 /**
-  * SmileClassifier is an [[Estimator]] that takes a smile classification trainer and train it on a [[Dataset]].
-  * It makes it easy to add a smile classification trainer into a Spark MLLib [[Pipeline]].
+  * A Spark Estimator based on Smile's classification algorithms.
+  * It allows to add a Smile model into a Spark MLLib Pipeline.
   *
-  * @note SmileClassifier will collect the [[Dataset]] used as the input of [[train]] to the Spark Driver
-  *       but train the classifier on a Spark Executor.
+  * @note SmileClassifier will collect the training Dataset
+  *       to the Spark Driver but train the model on a Spark Executor.
   */
 class SmileClassifier(override val uid: String)
   extends SparkClassifier[Vector, SmileClassifier, SmileClassificationModel]
@@ -169,11 +169,12 @@ class SmileClassificationModel(override val uid: String,
     // The Spark API predictRaw function outputs a Vector with
     // "confidence scores" for each class.
     val posteriori = Array.fill(numClasses)(0.0)
-    if (model.isInstanceOf[smile.classification.SoftClassifier[Array[Double]]]) {
-      model.asInstanceOf[smile.classification.SoftClassifier[Array[Double]]].predict(features.toArray, posteriori)
-    } else {
-      // The "hard" confidence for the predicted class.
-      posteriori(model.predict(features.toArray)) = 1.0
+    model match {
+      case classifier: SoftClassifier[Array[Double]] =>
+        classifier.predict(features.toArray, posteriori)
+      case _ =>
+        // The "hard" confidence for the predicted class.
+        posteriori(model.predict(features.toArray)) = 1.0
     }
     Vectors.dense(posteriori)
   }
