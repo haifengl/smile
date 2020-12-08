@@ -43,9 +43,9 @@ import smile.math.MathEx;
  */
 public class PowerVariogram implements Variogram {
 
-    private double alpha;
-    private double beta;
-    private double nugget;
+    private final double alpha;
+    private final double beta;
+    private final double nugget;
 
     /**
      * Constructor. No nugget effect and &beta; = 1.5 and &alpha; will be estimated from x and y.

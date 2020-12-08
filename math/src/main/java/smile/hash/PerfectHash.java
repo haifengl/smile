@@ -248,9 +248,9 @@ public class PerfectHash implements Serializable {
             }
         }
 
-        for (char i = (char)(freq.length - 1); i >= 0; i--) {
+        for (int i = freq.length - 1; i >= 0; i--) {
             if (freq[i] > 0) {
-                max = i;
+                max = (char) i;
                 break;
             }
         }
