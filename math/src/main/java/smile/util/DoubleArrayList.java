@@ -32,7 +32,7 @@ import java.util.stream.DoubleStream;
 public final class DoubleArrayList implements Serializable {
     private static final long serialVersionUID = 1L;
     /** Format for toString. */
-    private static DecimalFormat format = new DecimalFormat("#.######");
+    private static final DecimalFormat format = new DecimalFormat("#.######");
 
     /**
      * The data of the list.
@@ -118,10 +118,9 @@ public final class DoubleArrayList implements Serializable {
     /**
      * Trims the capacity to be the list's current size.
      */
-    public void trimToSize() {
+    public void trim() {
         if (data.length > size()) {
-            double[] tmp = toArray();
-            data = tmp;
+            data = toArray();
         }
     }
 
@@ -197,10 +196,7 @@ public final class DoubleArrayList implements Serializable {
         if (index == 0) {
             // data at the front
             System.arraycopy(data, 1, data, 0, size - 1);
-        } else if (size - 1 == index) {
-            // no copy to make, decrementing pos "deletes" values at
-            // the end
-        } else {
+        } else if (size - 1 != index) {
             // data in the middle
             System.arraycopy(data, index + 1, data, index, size - (index + 1));
         }

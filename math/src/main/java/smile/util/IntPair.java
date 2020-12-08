@@ -40,7 +40,7 @@ public class IntPair {
 
     @Override
     public boolean equals(Object o) {
-        if (o != null && o instanceof IntPair) {
+        if (o instanceof IntPair) {
             IntPair p = (IntPair) o;
             return i == p.i && j == p.j;
         }

@@ -79,15 +79,13 @@ public class Taxonomy {
     private List<String> getConcepts(Concept c) {
         List<String> keywords = new ArrayList<>();
 
-        while (c != null) {
-            if (c.synset != null) {
-                keywords.addAll(c.synset);
-            }
+        if (c.synset != null) {
+            keywords.addAll(c.synset);
+        }
 
-            if (c.children != null) {
-                for (Concept child : c.children) {
-                    keywords.addAll(getConcepts(child));
-                }
+        if (c.children != null) {
+            for (Concept child : c.children) {
+                keywords.addAll(getConcepts(child));
             }
         }
 
