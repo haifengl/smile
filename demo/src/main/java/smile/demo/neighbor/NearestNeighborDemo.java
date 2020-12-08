@@ -68,7 +68,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
 
         Hashtable<Integer, JLabel> logNLabelTable = new Hashtable<>();
         for (int i = 3; i <= 7; i++) {
-            logNLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            logNLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         logNSlider = new JSlider(3, 7, logN);
@@ -78,9 +78,9 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         logNSlider.setPaintLabels(true);
 
         Hashtable<Integer, JLabel> dimensionLabelTable = new Hashtable<>();
-        dimensionLabelTable.put(new Integer(2), new JLabel(String.valueOf(2)));
+        dimensionLabelTable.put(2, new JLabel(String.valueOf(2)));
         for (int i = 20; i <= 120; i += 20) {
-            dimensionLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            dimensionLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         dimensionSlider = new JSlider(2, 128, dimension);

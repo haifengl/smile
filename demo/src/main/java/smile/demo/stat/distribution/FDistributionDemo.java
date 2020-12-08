@@ -61,7 +61,7 @@ public class FDistributionDemo extends JPanel implements ChangeListener {
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         labelTable.put(1, new JLabel(String.valueOf(1)));
         for (int i = 20; i <= 100; i += 20) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            labelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         d1Slider = new JSlider(1, 100, d1);

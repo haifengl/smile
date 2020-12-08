@@ -59,7 +59,7 @@ public class NegativeBinomialDistributionDemo extends JPanel implements ChangeLi
         Hashtable<Integer, JLabel> nLabelTable = new Hashtable<>();
         nLabelTable.put(1, new JLabel(String.valueOf(1)));
         for (int i = 10; i <= 50; i+=10) {
-            nLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            nLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         nSlider = new JSlider(1, 50, n);
@@ -72,7 +72,7 @@ public class NegativeBinomialDistributionDemo extends JPanel implements ChangeLi
 
         Hashtable<Integer, JLabel> probLabelTable = new Hashtable<>();
         for (int i = 1; i < 10; i+=2) {
-            probLabelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
+            probLabelTable.put(i, new JLabel(String.valueOf(i/10.0)));
         }
 
         probSlider = new JSlider(1, 9, (int) Math.round(prob * 10));

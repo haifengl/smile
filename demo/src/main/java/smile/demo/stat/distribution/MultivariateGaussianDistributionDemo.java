@@ -54,7 +54,7 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 30; i+=10) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10.0)));
         }
 
         sigma1Slider = new JSlider(0, 30, (int) (sigma[0]*10));

@@ -56,7 +56,7 @@ public class PoissonDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 10; i+=2) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            labelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         lambdaSlider = new JSlider(0, 10, (int) Math.round(lambda));
