@@ -17,12 +17,13 @@
 
 package smile.json
 
-import java.time.{LocalDate, LocalTime, LocalDateTime, ZoneOffset}
+import java.time.{LocalDate, LocalDateTime, LocalTime, ZoneOffset}
 import java.sql.Timestamp
 import java.util.{Date, UUID}
 import java.math.BigDecimal
 import scala.language.dynamics
 import scala.language.implicitConversions
+import scala.util.matching.Regex
 
 /**
  * JSON value.
@@ -132,7 +133,7 @@ sealed trait JsValue extends Dynamic {
 }
 
 object JsValueOrdering extends Ordering[JsValue] {
-  def compare(a: JsValue, b: JsValue) = {
+  def compare(a: JsValue, b: JsValue): Int = {
     try {
       a.asDouble.compare(b.asDouble)
     } catch {
@@ -158,8 +159,8 @@ case object JsUndefined extends JsValue {
 }
 
 case class JsBoolean(value: Boolean) extends JsValue with Ordered[JsBoolean] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Boolean => value == that
     case JsBoolean(that) => value == that
     case _ => false
@@ -180,13 +181,13 @@ case class JsBoolean(value: Boolean) extends JsValue with Ordered[JsBoolean] {
 }
 
 object JsBoolean {
-  def apply(b: Byte) = if (b != 0) JsTrue else JsFalse
-  def apply(b: Int)  = if (b != 0) JsTrue else JsFalse
+  def apply(b: Byte): JsBoolean = if (b != 0) JsTrue else JsFalse
+  def apply(b: Int): JsBoolean = if (b != 0) JsTrue else JsFalse
 }
 
 case class JsInt(value: Int) extends JsValue with Ordered[JsInt] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Int => value == that
     case that: Short => value == that
     case that: Long => value == that
@@ -207,13 +208,13 @@ case class JsInt(value: Int) extends JsValue with Ordered[JsInt] {
 }
 
 object JsInt {
-  val zero = JsInt(0)
-  val one = JsInt(1)
+  val zero: JsInt = JsInt(0)
+  val one: JsInt = JsInt(1)
 }
 
 case class JsLong(value: Long) extends JsValue with Ordered[JsLong] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Int => value == that
     case that: Short => value == that
     case that: Long => value == that
@@ -234,8 +235,8 @@ case class JsLong(value: Long) extends JsValue with Ordered[JsLong] {
 }
 
 object JsLong {
-  val zero = JsLong(0L)
-  val one = JsLong(1L)
+  val zero: JsLong = JsLong(0L)
+  val one: JsLong = JsLong(1L)
 }
 
 /** A counter is a 64 bit integer. The difference from JsLong
@@ -244,8 +245,8 @@ object JsLong {
   * big enough in practice.
   */
 case class JsCounter(value: Long) extends JsValue with Ordered[JsCounter] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Int => value == that
     case that: Short => value == that
     case that: Long => value == that
@@ -266,13 +267,13 @@ case class JsCounter(value: Long) extends JsValue with Ordered[JsCounter] {
 }
 
 object JsCounter {
-  val zero = JsCounter(0L)
-  val one = JsCounter(1L)
+  val zero: JsCounter = JsCounter(0L)
+  val one: JsCounter = JsCounter(1L)
 }
 
 case class JsDouble(value: Double) extends JsValue with Ordered[JsDouble] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Double => value == that
     case JsDouble(that) => value == that
     case _ => false
@@ -288,13 +289,13 @@ case class JsDouble(value: Double) extends JsValue with Ordered[JsDouble] {
 }
 
 object JsDouble {
-  val zero = JsDouble(0.0)
-  val one = JsDouble(1.0)
+  val zero: JsDouble = JsDouble(0.0)
+  val one: JsDouble = JsDouble(1.0)
 }
 
 case class JsDecimal(value: BigDecimal) extends JsValue with Ordered[JsDecimal] {
-  override def toString = value.toPlainString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toPlainString
+  override def equals(o: Any): Boolean = o match {
     case that: BigDecimal => value == that
     case JsDecimal(that) => value == that
     case _ => false
@@ -310,8 +311,8 @@ case class JsDecimal(value: BigDecimal) extends JsValue with Ordered[JsDecimal] 
 }
 
 object JsDecimal {
-  val zero = JsDecimal(BigDecimal.ZERO)
-  val one = JsDecimal(BigDecimal.ONE)
+  val zero: JsDecimal = JsDecimal(BigDecimal.ZERO)
+  val one: JsDecimal = JsDecimal(BigDecimal.ONE)
   /** Converts a string representation into a JsDecimal.
     * The string representation consists of an optional sign,
     * '+' ( '\u002B') or '-' ('\u002D'), followed by a sequence
@@ -322,8 +323,8 @@ object JsDecimal {
 }
 
 case class JsString(value: String) extends JsValue with Ordered[JsString] {
-  override def toString = value
-  override def equals(o: Any) = o match {
+  override def toString: String = value
+  override def equals(o: Any): Boolean = o match {
     case that: String => value == that
     case JsString(that) => value == that
     case _ => false
@@ -345,7 +346,7 @@ case class JsString(value: String) extends JsValue with Ordered[JsString] {
 }
 
 object JsString {
-  val empty = JsString("")
+  val empty: JsString = JsString("")
 }
 
 /** An immutable date without a time-zone in the ISO-8601 calendar system,
@@ -353,8 +354,8 @@ object JsString {
   */
 case class JsDate(value: LocalDate) extends JsValue with Ordered[JsDate] {
   /** The output will be in the ISO-8601 format uuuu-MM-dd. */
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: LocalDate => value == that
     case JsDate(that) => value == that
     case _ => false
@@ -400,8 +401,8 @@ case class JsTime(value: LocalTime) extends JsValue with Ordered[JsTime] {
     * The format used will be the shortest that outputs the full
     * value of the time where the omitted parts are implied to be zero.
     */
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: LocalTime => value == that
     case JsTime(that) => value == that
     case _ => false
@@ -444,8 +445,8 @@ case class JsDateTime(value: LocalDateTime) extends JsValue with Ordered[JsDateT
     * The format used will be the shortest that outputs the full
     * value of the time where the omitted parts are implied to be zero.
     */
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: LocalDateTime => value == that
     case JsDateTime(that) => value == that
     case _ => false
@@ -483,8 +484,8 @@ object JsDateTime {
   *    and s represents the scale of the given Timestamp, its fractional seconds precision.
   */
 case class JsTimestamp(value: Timestamp) extends JsValue with Ordered[JsTimestamp] {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: Timestamp => value == that
     case JsTimestamp(that) => value == that
     case _ => false
@@ -523,8 +524,8 @@ object JsTimestamp {
 }
 
 case class JsUUID(value: UUID) extends JsValue {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: UUID => value == that
     case JsUUID(that) => value == that
     case _ => false
@@ -532,7 +533,7 @@ case class JsUUID(value: UUID) extends JsValue {
 }
 
 object JsUUID {
-  val regex = """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".r
+  val regex: Regex = """[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}""".r
   val formatLength = 36
   def apply() = new JsUUID(UUID.randomUUID)
   def apply(mostSigBits: Long, leastSigBits: Long) = new JsUUID(new UUID(mostSigBits, leastSigBits))
@@ -541,8 +542,8 @@ object JsUUID {
 }
 
 case class JsObjectId(value: ObjectId) extends JsValue {
-  override def toString = value.toString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.toString
+  override def equals(o: Any): Boolean = o match {
     case that: ObjectId => value == that
     case JsObjectId(that) => value == that
     case _ => false
@@ -550,7 +551,7 @@ case class JsObjectId(value: ObjectId) extends JsValue {
 }
 
 object JsObjectId {
-  val regex = """ObjectId\([0-9a-fA-F]{24}\)""".r
+  val regex: Regex = """ObjectId\([0-9a-fA-F]{24}\)""".r
   val formatLength = 34
   def apply() = new JsObjectId(ObjectId.generate)
   def apply(id: String) = new JsObjectId(ObjectId(id))
@@ -558,8 +559,8 @@ object JsObjectId {
 }
 
 case class JsBinary(value: Array[Byte]) extends JsValue {
-  override def toString = value.map("%02X" format _).mkString
-  override def equals(o: Any) = o match {
+  override def toString: String = value.map("%02X" format _).mkString
+  override def equals(o: Any): Boolean = o match {
     case that: Array[Byte] => value.sameElements(that)
     case JsBinary(that) => value.sameElements(that)
     case _ => false
@@ -619,10 +620,10 @@ object JsObject {
 
 case class JsArray(elements: collection.mutable.ArrayBuffer[JsValue]) extends JsValue with Iterable[JsValue] {
   override def iterator: Iterator[JsValue] = elements.iterator
-  override def find(p: (JsValue) => Boolean): Option[JsValue] = elements.find(p)
-  override def exists(p: (JsValue) => Boolean): Boolean = elements.exists(p)
-  override def forall(p: (JsValue) => Boolean): Boolean = elements.forall(p)
-  override def foreach[U](p: (JsValue) => U): Unit = elements.foreach(p)
+  override def find(p: JsValue => Boolean): Option[JsValue] = elements.find(p)
+  override def exists(p: JsValue => Boolean): Boolean = elements.exists(p)
+  override def forall(p: JsValue => Boolean): Boolean = elements.forall(p)
+  override def foreach[U](p: JsValue => U): Unit = elements.foreach(p)
   override def knownSize: Int = elements.knownSize
   override def isEmpty: Boolean = elements.isEmpty
 
