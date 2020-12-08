@@ -26,7 +26,7 @@ package smile.util;
 public class MutableInt {
 
     /** The integer value. */
-    public int value = 1;
+    public int value;
 
     /**
      * Constructor. The initial value is 1 since we're counting.

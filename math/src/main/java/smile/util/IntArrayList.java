@@ -115,10 +115,9 @@ public final class IntArrayList implements Serializable {
     /**
      * Trims the capacity to be the list's current size.
      */
-    public void trimToSize() {
+    public void trim() {
         if (data.length > size) {
-            int[] tmp = toArray();
-            data = tmp;
+            data = toArray();
         }
     }
 
@@ -205,10 +204,7 @@ public final class IntArrayList implements Serializable {
         if (index == 0) {
             // data at the front
             System.arraycopy(data, 1, data, 0, size - 1);
-        } else if (index == size - 1) {
-            // no copy to make, decrementing pos "deletes" values at
-            // the end
-        } else {
+        } else if (index != size - 1) {
             // data in the middle
             System.arraycopy(data, index + 1, data, index, size - (index + 1));
         }

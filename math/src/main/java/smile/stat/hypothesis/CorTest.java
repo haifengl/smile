@@ -230,15 +230,14 @@ public class CorTest {
             d += MathEx.sqr(wksp1[j] - wksp2[j]);
         }
 
-        int en = n;
-        double  en3n = en * en * en - en;
+        double en3n = n * n * n - n;
         double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
         double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
         fac = (rs + 1.0) * (1.0 - rs);
 
         double probrs = 0.0;
-        double t = rs * Math.sqrt((en - 2.0) / fac);
-        int df = en - 2;
+        double t = rs * Math.sqrt((n - 2.0) / fac);
+        int df = n - 2;
         if (fac > 0.0) {
             probrs = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }
