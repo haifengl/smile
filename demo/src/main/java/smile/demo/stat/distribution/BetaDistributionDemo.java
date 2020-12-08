@@ -61,7 +61,7 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 100; i+=20) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i / 10)));
+            labelTable.put(i, new JLabel(String.valueOf(i / 10)));
         }
 
         alphaSlider = new JSlider(0, 100, (int) Math.round(alpha * 10));

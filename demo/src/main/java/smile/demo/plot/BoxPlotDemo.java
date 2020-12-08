@@ -43,7 +43,7 @@ public class BoxPlotDemo extends JPanel {
                 } while (r >= 1.0);
 
                 double z = Math.sqrt(-2.0 * Math.log(r) / r);
-                data[i][j] = new Double(x * z);
+                data[i][j] = x * z;
             }
         }
 

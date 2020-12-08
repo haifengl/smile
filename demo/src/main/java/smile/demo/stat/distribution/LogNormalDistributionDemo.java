@@ -58,7 +58,7 @@ public class LogNormalDistributionDemo extends JPanel implements ChangeListener 
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 20; i+=10) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10)));
         }
 
         sigmaSlider = new JSlider(0, 20, (int) Math.round(sigma * 10));

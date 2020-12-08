@@ -66,8 +66,8 @@ public class DoubleCellEditor extends DefaultCellEditor {
     public DoubleCellEditor(double min, double max) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
-        minimum = new Double(min);
-        maximum = new Double(max);
+        minimum = min;
+        maximum = max;
 
         // Set up the editor for the double cells.
         doubleFormat = NumberFormat.getNumberInstance();
@@ -125,7 +125,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
         if (o instanceof Double) {
             return o;
         } else if (o instanceof Number) {
-            return new Double(((Number) o).doubleValue());
+            return ((Number) o).doubleValue();
         } else {
             try {
                 return doubleFormat.parseObject(o.toString());

@@ -57,7 +57,7 @@ public class GaussianDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 50; i+=10) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10)));
         }
 
         sigmaSlider = new JSlider(0, 50, (int) Math.round(sigma * 10));

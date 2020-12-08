@@ -56,7 +56,7 @@ public class ShiftedGeometricDistributionDemo extends JPanel implements ChangeLi
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 1; i < 10; i+=2) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10.0)));
         }
 
         probSlider = new JSlider(1, 9, (int) Math.round(prob * 10));

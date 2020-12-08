@@ -58,7 +58,7 @@ public class ExponentialDistributionDemo extends JPanel implements ChangeListene
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 50; i+=10) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10)));
         }
 
         lambdaSlider = new JSlider(0, 50, (int) Math.round(lambda * 10));
