@@ -33,7 +33,6 @@ import javax.swing.event.ChangeListener;
 
 import smile.plot.swing.Histogram;
 import smile.plot.swing.Canvas;
-import smile.plot.swing.Line;
 import smile.plot.swing.LinePlot;
 import smile.plot.swing.QQPlot;
 import smile.stat.distribution.WeibullDistribution;

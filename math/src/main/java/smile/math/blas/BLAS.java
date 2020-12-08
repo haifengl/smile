@@ -105,29 +105,29 @@ public interface BLAS {
      * The result overwrites the initial values of vector y.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      * <p>
-     * When  n <= 0, or alpha = 0., this routine returns immediately
+     * When  {@code n <= 0}, or {@code alpha = 0.}, this routine returns immediately
      * with no change in its arguments.
      *
-     * @param n Number of elements in the vectors. If n <= 0, these routines
+     * @param n Number of elements in the vectors. If {@code n <= 0}, these routines
      *          return without any computation.
      *
-     * @param alpha If alpha = 0 this routine returns without any computation.
+     * @param alpha If {@code alpha = 0} this routine returns without any computation.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.  Contains the
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.  Contains the
      *          vector to be scaled before summation.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input and output array of dimension (n-1) * |incy| + 1.
+     * @param y Input and output array of dimension {@code (n-1) * |incy| + 1}.
      *          Before calling the routine, y contains the vector to be summed.
      *          After the routine ends, y contains the result of the summation.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      */
     void axpy(int n, double alpha, double[] x, int incx, double[] y, int incy);
 
@@ -136,29 +136,29 @@ public interface BLAS {
      * The result overwrites the initial values of vector y.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      * <p>
-     * When  n <= 0, or alpha = 0., this routine returns immediately
+     * When {@code n <= 0, or alpha = 0.}, this routine returns immediately
      * with no change in its arguments.
      *
-     * @param n Number of elements in the vectors. If n <= 0, these routines
+     * @param n Number of elements in the vectors. If {@code n <= 0}, these routines
      *          return without any computation.
      *
-     * @param alpha If alpha = 0 this routine returns without any computation.
+     * @param alpha If {@code alpha = 0} this routine returns without any computation.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.  Contains the
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1.}  Contains the
      *          vector to be scaled before summation.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input and output array of dimension (n-1) * |incy| + 1.
+     * @param y Input and output array of dimension {@code (n-1) * |incy| + 1}.
      *          Before calling the routine, y contains the vector to be summed.
      *          After the routine ends, y contains the result of the summation.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      */
     void axpy(int n, float alpha, float[] x, int incx, float[] y, int incy);
 
@@ -176,24 +176,24 @@ public interface BLAS {
      * Computes the dot product of two vectors.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Array x contains the first vector operand.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input array of dimension (n-1) * |incy| + 1.
+     * @param y Input array of dimension {@code (n-1) * |incy| + 1}.
      *          Array y contains the second vector operand.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      *
-     * @return dot product. If n <= 0, return 0.
+     * @return dot product. If {@code n <= 0}, return 0.
      */
     double dot(int n, double[] x, int incx, double[] y, int incy);
 
@@ -201,24 +201,24 @@ public interface BLAS {
      * Computes the dot product of two vectors.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Array x contains the first vector operand.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input array of dimension (n-1) * |incy| + 1.
+     * @param y Input array of dimension {@code (n-1) * |incy| + 1}.
      *          Array y contains the second vector operand.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      *
-     * @return dot product. If n <= 0, return 0.
+     * @return dot product. If {@code n <= 0}, return 0.
      */
     float dot(int n, float[] x, int incx, float[] y, int incy);
 
@@ -237,13 +237,13 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Array x contains the vector operand.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @return Euclidean norm. If n <= 0, return 0.
+     * @return Euclidean norm. If {@code n <= 0}, return 0.
      */
     double nrm2(int n, double[] x, int incx);
 
@@ -252,23 +252,23 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Array x contains the vector operand.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @return Euclidean norm. If n <= 0, return 0.
+     * @return Euclidean norm. If {@code n <= 0}, return 0.
      */
     float nrm2(int n, float[] x, int incx);
 
     /** Computes the Euclidean (L2) norm of a vector. */
-    default double nrm2(double[] x, double[] y) {
+    default double nrm2(double[] x) {
         return nrm2(x.length, x, 1);
     }
 
     /** Computes the Euclidean (L2) norm of a vector. */
-    default float nrm2(float[] x, float[] y) {
+    default float nrm2(float[] x) {
        return nrm2(x.length, x, 1);
     }
 
@@ -277,11 +277,11 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input and output array of dimension (n-1) * |incx| + 1.
+     * @param x Input and output array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be scaled.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      */
     void scal(int n, double alpha, double[] x, int incx);
 
@@ -290,11 +290,11 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input and output array of dimension (n-1) * |incx| + 1.
+     * @param x Input and output array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be scaled.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      */
     void scal(int n, float alpha, float[] x, int incx);
 
@@ -312,22 +312,22 @@ public interface BLAS {
      * Swaps two vectors.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input and output array of dimension (n-1) * |incx| + 1.
+     * @param x Input and output array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be swapped.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input and output array of dimension (n-1) * |incy| + 1.
+     * @param y Input and output array of dimension {@code (n-1) * |incy| + 1}.
      *          Vector to be swapped.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      */
     void swap(int n, double[] x, int incx, double[] y, int incy);
 
@@ -335,22 +335,22 @@ public interface BLAS {
      * Swaps two vectors.
      * incx and incy specify the increment between two consecutive
      * elements of respectively vector x and y. When working backward
-     * (incx < 0 or incy < 0), each  routine  starts  at the end of the
+     * ({@code incx < 0 or incy < 0}), each  routine  starts  at the end of the
      * vector and moves backward.
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input and output array of dimension (n-1) * |incx| + 1.
+     * @param x Input and output array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be swapped.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
-     * @param y Input and output array of dimension (n-1) * |incy| + 1.
+     * @param y Input and output array of dimension {@code (n-1) * |incy| + 1}.
      *          Vector to be swapped.
      *
      * @param incy Increment between elements of y.
-     *             If incy = 0, the results will be unpredictable.
+     *             If {@code incy = 0}, the results will be unpredictable.
      */
     void swap(int n, float[] x, int incx, float[] y, int incy);
 
@@ -370,14 +370,14 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be searched.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
      * @return The first index of the maximum absolute value of vector x.
-     *         If n <= 0, return 0.
+     *         If {@code n <= 0}, return 0.
      */
     long iamax(int n, double[] x, int incx);
 
@@ -387,14 +387,14 @@ public interface BLAS {
      *
      * @param n Number of elements in the vectors.
      *
-     * @param x Input array of dimension (n-1) * |incx| + 1.
+     * @param x Input array of dimension {@code (n-1) * |incx| + 1}.
      *          Vector to be searched.
      *
      * @param incx Increment between elements of x.
-     *             If incx = 0, the results will be unpredictable.
+     *             If {@code incx = 0}, the results will be unpredictable.
      *
      * @return The first index of the maximum absolute value of vector x.
-     *         If n <= 0, return 0.
+     *         If {@code n <= 0}, return 0.
      */
     long iamax(int n, float[] x, int incx);
 
@@ -435,18 +435,18 @@ public interface BLAS {
      * @param A the leading m by n part of the array A must contain
      *          the matrix of coefficients.
      * @param lda the leading dimension of A as declared in the caller.
-     *            LDA must be at least max(1, m). The leading dimension
+     *            LDA must be at least {@code max(1, m)}. The leading dimension
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *           when {@code trans = 'N' or 'n'} and
+     *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gemv(Layout layout, Transpose trans, int m, int n, double alpha, double[] A, int lda, double[] x, int incx, double beta, double[] y, int incy);
@@ -475,15 +475,15 @@ public interface BLAS {
      *            LDA must be at least max(1, m). The leading dimension
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *           when {@code trans = 'N' or 'n'} and
+     *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gemv(Layout layout, Transpose trans, int m, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
@@ -512,15 +512,15 @@ public interface BLAS {
      *            LDA must be at least max(1, m). The leading dimension
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1)*abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *           when {@code trans = 'N' or 'n'} and
+     *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gemv(Layout layout, Transpose trans, int m, int n, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy);
@@ -549,15 +549,15 @@ public interface BLAS {
      *            LDA must be at least max(1, m). The leading dimension
      *            parameter allows use of BLAS/LAPACK routines on a submatrix
      *            of a larger matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *           when {@code trans = 'N' or 'n'} and
+     *           at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gemv(Layout layout, Transpose trans, int m, int n, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy);
@@ -581,11 +581,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void symv(Layout layout, UPLO uplo, int n, double alpha, double[] A, int lda, double[] x, int incx, double beta, double[] y, int incy);
@@ -609,11 +609,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void symv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
@@ -637,11 +637,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void symv(Layout layout, UPLO uplo, int n, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy);
@@ -665,11 +665,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void symv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy);
@@ -692,11 +692,11 @@ public interface BLAS {
      * @param n the number of rows/columns of the symmetric matrix A.
      * @param alpha the scalar alpha.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void spmv(Layout layout, UPLO uplo, int n, double alpha, double[] A, double[] x, int incx, double beta, double[] y, int incy);
@@ -719,11 +719,11 @@ public interface BLAS {
      * @param n the number of rows/columns of the symmetric matrix A.
      * @param alpha the scalar alpha.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void spmv(Layout layout, UPLO uplo, int n, double alpha, DoubleBuffer A, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
@@ -746,11 +746,11 @@ public interface BLAS {
      * @param n the number of rows/columns of the symmetric matrix A.
      * @param alpha the scalar alpha.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void spmv(Layout layout, UPLO uplo, int n, float alpha, float[] A, float[] x, int incx, float beta, float[] y, int incy);
@@ -773,11 +773,11 @@ public interface BLAS {
      * @param n the number of rows/columns of the symmetric matrix A.
      * @param alpha the scalar alpha.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void spmv(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer A, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy);
@@ -801,9 +801,9 @@ public interface BLAS {
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, double[] A, int lda, double[] x, int incx);
@@ -827,9 +827,9 @@ public interface BLAS {
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, int lda, DoubleBuffer x, int incx);
@@ -853,9 +853,9 @@ public interface BLAS {
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, float[] A, int lda, float[] x, int incx);
@@ -879,9 +879,9 @@ public interface BLAS {
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void trmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, FloatBuffer A, int lda, FloatBuffer x, int incx);
@@ -904,7 +904,7 @@ public interface BLAS {
      * @param diag unit diagonal or not.
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, double[] A, double[] x, int incx);
@@ -927,7 +927,7 @@ public interface BLAS {
      * @param diag unit diagonal or not.
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, DoubleBuffer A, DoubleBuffer x, int incx);
@@ -950,7 +950,7 @@ public interface BLAS {
      * @param diag unit diagonal or not.
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, float[] A, float[] x, int incx);
@@ -973,7 +973,7 @@ public interface BLAS {
      * @param diag unit diagonal or not.
      * @param n the number of rows/columns of the triangular matrix A.
      * @param A the symmetric packed matrix.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      */
     void tpmv(Layout layout, UPLO uplo, Transpose trans, Diag diag, int n, FloatBuffer A, FloatBuffer x, int incx);
@@ -1000,15 +1000,15 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, double alpha, double[] A, int lda, double[] x, int incx, double beta, double[] y, int incy);
@@ -1035,15 +1035,15 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least (1 + (n - 1) * abs(incx))
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
@@ -1070,15 +1070,15 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least (1 + (n - 1) * abs(incx))
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy);
@@ -1105,15 +1105,15 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx))
-     *          when trans = 'N' or 'n' and
-     *          at least (1 + (m - 1)*abs(incx)) otherwise.
+     * @param x array of dimension at least (1 + (n - 1) * abs(incx))
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (m - 1) * abs(incx))} otherwise.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (m - 1)*abs(incy))
-     *           when trans = 'N' or 'n' and
-     *           at least (1 + (n - 1)*abs(incy)) otherwise.
+     * @param y  array of dimension at least {@code (1 + (m - 1) * abs(incy))}
+     *          when {@code trans = 'N' or 'n'} and
+     *          at least {@code (1 + (n - 1) * abs(incy))} otherwise.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void gbmv(Layout layout, Transpose trans, int m, int n, int kl, int ku, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy);
@@ -1138,11 +1138,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)),
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))},
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)),
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void sbmv(Layout layout, UPLO uplo, int n, int k, double alpha, double[] A, int lda, double[] x, int incx, double beta, double[] y, int incy);
@@ -1167,11 +1167,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)),
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))},
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)),
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))},
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void sbmv(Layout layout, UPLO uplo, int n, int k, double alpha, DoubleBuffer A, int lda, DoubleBuffer x, int incx, double beta, DoubleBuffer y, int incy);
@@ -1196,11 +1196,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void sbmv(Layout layout, UPLO uplo, int n, int k, float alpha, float[] A, int lda, float[] x, int incx, float beta, float[] y, int incy);
@@ -1225,11 +1225,11 @@ public interface BLAS {
      * @param alpha the scalar alpha.
      * @param A the symmetric band matrix.
      * @param lda the leading dimension of A as declared in the caller.
-     * @param x array of dimension at least (1 + (n - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (n - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param beta the scalar beta. When beta is supplied as zero
      *             then y need not be set on input.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      */
     void sbmv(Layout layout, UPLO uplo, int n, int k, float alpha, FloatBuffer A, int lda, FloatBuffer x, int incx, float beta, FloatBuffer y, int incy);
@@ -1244,9 +1244,9 @@ public interface BLAS {
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      * @param A the leading m by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1267,9 +1267,9 @@ public interface BLAS {
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      * @param A the leading m by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1290,9 +1290,9 @@ public interface BLAS {
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      * @param A the leading m by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1313,9 +1313,9 @@ public interface BLAS {
      * @param m the number of rows of the matrix A.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     * @param y  array of dimension at least (1 + (n - 1)*abs(incy)).
+     * @param y  array of dimension at least {@code (1 + (n - 1) * abs(incy))}.
      * @param incy the increment for the elements of y, which must not be zero.
      * @param A the leading m by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1337,7 +1337,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the leading n by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1359,7 +1359,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the leading n by n part of the array A must contain
      *          the matrix of coefficients.
@@ -1381,7 +1381,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      *          the matrix of coefficients.
      * @param A the leading n by n part of the array A must contain
@@ -1404,7 +1404,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      *          the matrix of coefficients.
      * @param A the leading n by n part of the array A must contain
@@ -1427,7 +1427,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
@@ -1443,7 +1443,7 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
      * @param A the symmetric packed matrix.
      */
@@ -1460,9 +1460,8 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     *          the matrix of coefficients.
      * @param A the symmetric packed matrix.
      */
     void spr(Layout layout, UPLO uplo, int n, float alpha, float[] x, int incx, float[] A);
@@ -1479,9 +1478,8 @@ public interface BLAS {
      *             to be referenced.
      * @param n the number of columns of the matrix A.
      * @param alpha the scalar alpha.
-     * @param x array of dimension at least (1 + (m - 1)*abs(incx)).
+     * @param x array of dimension at least {@code (1 + (m - 1) * abs(incx))}.
      * @param incx the increment for the elements of x, which must not be zero.
-     *          the matrix of coefficients.
      * @param A the symmetric packed matrix.
      */
     void spr(Layout layout, UPLO uplo, int n, float alpha, FloatBuffer x, int incx, FloatBuffer A);
@@ -1601,8 +1599,8 @@ public interface BLAS {
      * </code></pre>
      *
      * @param layout matrix layout.
-     * @param side  C := alpha*A*B + beta*C if side is left or
-     *              C := alpha*B*A + beta*C if side is right.
+     * @param side  {@code C := alpha*A*B + beta*C} if side is left or
+     *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param m the number of rows of the matrix C.
@@ -1630,8 +1628,8 @@ public interface BLAS {
      * </code></pre>
      *
      * @param layout matrix layout.
-     * @param side  C := alpha*A*B + beta*C if side is left or
-     *              C := alpha*B*A + beta*C if side is right.
+     * @param side  {@code C := alpha*A*B + beta*C} if side is left or
+     *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param m the number of rows of the matrix C.
@@ -1655,8 +1653,8 @@ public interface BLAS {
      * </code></pre>
      *
      * @param layout matrix layout.
-     * @param side  C := alpha*A*B + beta*C if side is left or
-     *              C := alpha*B*A + beta*C if side is right.
+     * @param side  {@code C := alpha*A*B + beta*C} if side is left or
+     *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param m the number of rows of the matrix C.
@@ -1680,8 +1678,8 @@ public interface BLAS {
      * </code></pre>
      *
      * @param layout matrix layout.
-     * @param side  C := alpha*A*B + beta*C if side is left or
-     *              C := alpha*B*A + beta*C if side is right.
+     * @param side  {@code C := alpha*A*B + beta*C} if side is left or
+     *              {@code C := alpha*B*A + beta*C} if side is right.
      * @param uplo the upper or lower triangular part of the matrix A is
      *             to be referenced.
      * @param m the number of rows of the matrix C.
