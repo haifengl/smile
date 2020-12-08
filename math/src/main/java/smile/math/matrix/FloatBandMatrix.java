@@ -139,8 +139,8 @@ public class FloatBandMatrix extends SMatrix {
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
-     * @param AB the band matrix. A[i, j] is stored in
-     *           AB[ku+i-j, j] for max(0, j-ku) <= i <= min(m-1, j+kl).
+     * @param AB the band matrix. A[i, j] is stored in {@code AB[ku+i-j, j]}
+     *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
      */
     public FloatBandMatrix(int m, int n, int kl, int ku, float[][] AB) {
         this(m, n, kl, ku);

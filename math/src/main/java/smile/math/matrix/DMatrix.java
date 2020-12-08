@@ -156,7 +156,6 @@ public abstract class DMatrix extends IMatrix<double[]> {
      *
      * @param path the input file path.
      * @return a dense or sparse matrix.
-     * @author Haifeng Li
      */
     public static DMatrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));

@@ -355,8 +355,8 @@ public class FloatMatrix extends SMatrix {
      * Returns a Toeplitz matrix in which each descending diagonal
      * from left to right is constant.
      *
-     * @param kl A[i, j] = kl[i - j] for i >  j
-     * @param ku A[i, j] = ku[j - i] for i <= j
+     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
+     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
      */
     public static FloatMatrix toeplitz(float[] kl, float[] ku) {
         if (kl.length != ku.length - 1) {
@@ -493,7 +493,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Return if the matrix is symmetric (uplo != null && diag == null).
+     * Return if the matrix is symmetric ({@code uplo != null && diag == null}).
      */
     public boolean isSymmetric() {
         return uplo != null && diag == null;
@@ -659,7 +659,7 @@ public class FloatMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FloatMatrix)) {
+        if (!(o instanceof FloatMatrix)) {
             return false;
         }
 
@@ -1549,9 +1549,9 @@ public class FloatMatrix extends SMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1567,9 +1567,9 @@ public class FloatMatrix extends SMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1660,10 +1660,7 @@ public class FloatMatrix extends SMatrix {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
             }
-
-            float[] w = new float[2 * n];
-            System.arraycopy(wr, 0, w, 0, n);
-            System.arraycopy(wi, 0, w, n, n);
+            
             return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
         }
     }
@@ -1784,8 +1781,8 @@ public class FloatMatrix extends SMatrix {
             int r = 0;
             float tol = rcond();
 
-            for (int i = 0; i < s.length; i++) {
-                if (s[i] > tol) {
+            for (float si : s) {
+                if (si > tol) {
                     r++;
                 }
             }
