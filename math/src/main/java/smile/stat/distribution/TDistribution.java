@@ -38,10 +38,10 @@ public class TDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;
 
     /** The degree of freedom. */
-    public final int nu;
-    private double entropy;
-    private double np;
-    private double fac;
+    public  final int nu;
+    private final double entropy;
+    private final double np;
+    private final double fac;
 
     /**
      * Constructor.
@@ -133,7 +133,7 @@ public class TDistribution extends AbstractDistribution {
     /**
      * Two-tailed cdf.
      */
-    public double cdf2tiled(double x) {
+    public double cdf2tailed(double x) {
         if (x < 0) {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
@@ -144,7 +144,7 @@ public class TDistribution extends AbstractDistribution {
     /**
      * Two-tailed quantile.
      */
-    public double quantile2tiled(double p) {
+    public double quantile2tailed(double p) {
         if (p < 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid p: " + p);
         }

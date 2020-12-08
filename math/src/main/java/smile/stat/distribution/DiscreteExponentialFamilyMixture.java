@@ -52,7 +52,7 @@ public class DiscreteExponentialFamilyMixture extends DiscreteMixture {
         super(components);
 
         for (Component component : components) {
-            if (component.distribution instanceof DiscreteExponentialFamily == false) {
+            if (!(component.distribution instanceof DiscreteExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of discrete exponential family.");
             }
         }

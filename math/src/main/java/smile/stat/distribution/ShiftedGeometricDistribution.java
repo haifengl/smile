@@ -38,8 +38,8 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */
-    public final double p;
-    private double entropy;
+    public  final double p;
+    private final double entropy;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.

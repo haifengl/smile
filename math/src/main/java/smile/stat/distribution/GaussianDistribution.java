@@ -82,10 +82,10 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     public final double mu;
     /** The standard deviation. */
     public final double sigma;
-    private double variance;
+    private final double variance;
 
-    private double entropy;
-    private double pdfConstant;
+    private final double entropy;
+    private final double pdfConstant;
 
     /**
      * Constructor

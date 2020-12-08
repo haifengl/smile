@@ -72,9 +72,6 @@ public class DiscreteMixture extends DiscreteDistribution {
         double sum = 0.0;
         for (Component component : components) {
             sum += component.priori;
-            if (component.distribution instanceof DiscreteDistribution == false) {
-                throw new IllegalArgumentException("Component " + component + " is not a discrete distribution.");
-            }
         }
 
         if (Math.abs(sum - 1.0) > 1E-3) {

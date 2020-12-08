@@ -48,7 +48,7 @@ public class GaussianMixture extends ExponentialFamilyMixture {
         super(L, n, components);
 
         for (Component component : components) {
-            if (component.distribution instanceof GaussianDistribution == false) {
+            if (!(component.distribution instanceof GaussianDistribution)) {
                 throw new IllegalArgumentException("Component " + component + " is not of Gaussian distribution.");
             }
         }
@@ -81,7 +81,6 @@ public class GaussianMixture extends ExponentialFamilyMixture {
      * The number of components will be selected by BIC.
      * @param x the training data.
      */
-    @SuppressWarnings("unchecked")
     public static GaussianMixture fit(double[] x) {
         if (x.length < 20) {
             throw new IllegalArgumentException("Too few samples.");

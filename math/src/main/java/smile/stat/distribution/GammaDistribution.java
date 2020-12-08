@@ -57,10 +57,10 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     public final double theta;
     /** The shape parameter. */
     public final double k;
-    private double logTheta;
-    private double thetaGammaK;
-    private double logGammaK;
-    private double entropy;
+    private final double logTheta;
+    private final double thetaGammaK;
+    private final double logGammaK;
+    private final double entropy;
 
     /**
      * Constructor.
@@ -89,8 +89,8 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
      * Estimates the distribution parameters by (approximate) MLE.
      */
     public static GammaDistribution fit(double[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] <= 0) {
+        for (double datum : data) {
+            if (datum <= 0) {
                 throw new IllegalArgumentException("Samples contain non-positive values.");
             }
         }

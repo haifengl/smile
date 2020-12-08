@@ -52,7 +52,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
     /** The average number of events per interval. */
     public final double lambda;
-    private double entropy;
+    private final double entropy;
     private RandomNumberGenerator rng;
 
     /**
@@ -72,8 +72,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
      * Estimates the distribution parameters by MLE.
      */
     public static PoissonDistribution fit(int[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] < 0) {
+        for (int datum : data) {
+            if (datum < 0) {
                 throw new IllegalArgumentException("Samples contain negative values.");
             }
         }
@@ -245,11 +245,11 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
         /**
          * value at x=0 or at mode
          */
-        private double f0Mode;
+        private final double f0Mode;
         /**
          * upper bound
          */
-        private int upperBound;
+        private final int upperBound;
 
         /**
          * Initialize the Poisson random number generator.
@@ -316,8 +316,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     }
 
     private class Patchwork implements RandomNumberGenerator {
-        private int k1,  k2,  k4,  k5;
-        private double dl,  dr,  r1,  r2,  r4,  r5,  ll,  rr,  l_my,  c_pm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
+        private final int k1,  k2,  k4,  k5;
+        private final double dl,  dr,  r1,  r2,  r4,  r5,  ll,  rr,  l_my,  c_pm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
 
         /**
          * Initialize the Poisson random number generator.
@@ -336,8 +336,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
             k5 = k4 + k4 - mode;
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             r1 = lambda / (double) k1;

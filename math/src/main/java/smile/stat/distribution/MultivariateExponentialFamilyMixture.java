@@ -52,7 +52,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
         super(components);
 
         for (Component component : components) {
-            if (component.distribution instanceof MultivariateExponentialFamily == false) {
+            if (!(component.distribution instanceof MultivariateExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of multivariate exponential family.");
             }
         }
