@@ -326,9 +326,10 @@ public interface Histogram {
         
         int k = (int) Math.ceil((max-min) / h);
         double[] breaks = new double[k + 1];
-        
-        breaks[0] = min - (h * k - (max - min)) / 2;
-        breaks[k] = max + (h * k - (max - min)) / 2;
+
+        double step = (h * k - (max - min)) / 2;
+        breaks[0] = min - step;
+        breaks[k] = max + step;
         for (int i = 1; i < k; i++) {
             breaks[i] = breaks[i - 1] + h;
         }

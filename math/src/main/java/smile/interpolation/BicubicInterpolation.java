@@ -55,17 +55,17 @@ public class BicubicInterpolation implements Interpolation2D {
         { 4,-4, 4,-4, 2, 2,-2,-2, 2,-2,-2, 2, 1, 1, 1, 1}
     };
 
-    private int m, n;
-    private double[][] yv;
-    private double[] x1;
-    private double[] x2;
-    private LinearInterpolation x1terp, x2terp;
+    private final int m, n;
+    private final double[][] yv;
+    private final double[] x1;
+    private final double[] x2;
+    private final LinearInterpolation x1terp;
+    private final LinearInterpolation x2terp;
 
-    private double[] y = new double[4];
-    private double[] y1 = new double[4];
-    private double[] y2 = new double[4];
-    private double[] y12 = new double[4];
-
+    private final double[] y = new double[4];
+    private final double[] y1 = new double[4];
+    private final double[] y2 = new double[4];
+    private final double[] y12 = new double[4];
 
     /**
      * Constructor. The value in x1 and x2 must be monotonically increasing.

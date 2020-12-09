@@ -1660,7 +1660,7 @@ public class FloatMatrix extends SMatrix {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
             }
-            
+
             return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
         }
     }

@@ -37,7 +37,7 @@ import smile.math.matrix.Matrix;
  * @author Haifeng Li
  */
 public class LevenbergMarquardt {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LevenbergMarquardt.class);
 
     /** The fitted parameters. */
     public final double[] parameters;
@@ -167,8 +167,8 @@ public class LevenbergMarquardt {
             Matrix V = svd.V;
             U.tv(r, g);
 
-            for (int k = 0; k < epstab.length; k++) {
-                double epsL = Math.max(epsLlast * epstab[k], 1e-7);
+            for (double eps : epstab) {
+                double epsL = Math.max(epsLlast * eps, 1e-7);
                 double se = Math.sqrt(s2 + epsL);
                 for (int j = 0; j < d; j++) {
                     gse[j] = g[j] / se;
@@ -329,8 +329,8 @@ public class LevenbergMarquardt {
             Matrix V = svd.V;
             U.tv(r, g);
 
-            for (int k = 0; k < epstab.length; k++) {
-                double epsL = Math.max(epsLlast * epstab[k], 1e-7);
+            for (double eps : epstab) {
+                double epsL = Math.max(epsLlast * eps, 1e-7);
                 double se = Math.sqrt(s2 + epsL);
                 for (int j = 0; j < d; j++) {
                     gse[j] = g[j] / se;

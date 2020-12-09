@@ -106,7 +106,7 @@ public interface Root {
                 p = Math.abs(p);
                 double min1 = 3.0 * xm * q - Math.abs(tol * q);
                 double min2 = Math.abs(e * q);
-                if (2.0 * p < (min1 < min2 ? min1 : min2)) {
+                if (2.0 * p < Math.min(min1, min2)) {
                     e = d;
                     d = p / q;
                 } else {

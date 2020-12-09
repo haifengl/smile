@@ -24,8 +24,8 @@ package smile.interpolation;
  */
 public abstract class AbstractInterpolation implements Interpolation {
 
+    private final int dj;
     private int jsav;
-    private int dj;
     private boolean cor;
     /**
      * The number of control points.

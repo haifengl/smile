@@ -39,7 +39,7 @@ public class CubicSplineInterpolation1D extends AbstractInterpolation {
     /**
      * Second derivatives of the interpolating function at the tabulated points.
      */
-    private double[] y2;
+    private final double[] y2;
 
     /**
      * Constructor.

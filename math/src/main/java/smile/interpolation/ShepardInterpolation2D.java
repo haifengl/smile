@@ -35,10 +35,10 @@ package smile.interpolation;
  */
 public class ShepardInterpolation2D implements Interpolation2D {
 
-    private double[] x1;
-    private double[] x2;
-    private double[] y;
-    private double p;
+    private final double[] x1;
+    private final double[] x2;
+    private final double[] y;
+    private final double p;
 
     /**
      * Constructor. By default p = 2.

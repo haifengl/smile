@@ -28,8 +28,8 @@ package smile.interpolation;
  */
 public class BilinearInterpolation implements Interpolation2D {
 
-    private double[][] y;
-    private LinearInterpolation x1terp, x2terp;
+    private final double[][] y;
+    private final LinearInterpolation x1terp, x2terp;
 
     /**
      * Constructor.
