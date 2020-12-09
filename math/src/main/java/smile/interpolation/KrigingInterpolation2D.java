@@ -31,11 +31,11 @@ import smile.math.matrix.Matrix;
  */
 public class KrigingInterpolation2D implements Interpolation2D {
 
-    private double[] x1;
-    private double[] x2;
-    private double[] yvi;
-    private double alpha;
-    private double beta;
+    private final double[] x1;
+    private final double[] x2;
+    private final double[] yvi;
+    private final double alpha;
+    private final double beta;
 
     /**
      * Constructor. The power variogram is employed for interpolation.
@@ -74,15 +74,15 @@ public class KrigingInterpolation2D implements Interpolation2D {
         this.x1 = x1;
         this.x2 = x2;
         this.beta = beta;
-        pow(x1, x2, y);
+        this.alpha = pow(x1, x2, y);
 
         int n = x1.length;
-        yvi = new double[n + 1];
+        double[] yv = new double[n + 1];
 
         Matrix v = new Matrix(n + 1, n + 1);
         v.uplo(UPLO.LOWER);
         for (int i = 0; i < n; i++) {
-            yvi[i] = y[i];
+            yv[i] = y[i];
 
             for (int j = i; j < n; j++) {
                 double d1 = x1[i] - x1[j];
@@ -97,11 +97,11 @@ public class KrigingInterpolation2D implements Interpolation2D {
             v.set(i, n, 1.0);
         }
 
-        yvi[n] = 0.0;
+        yv[n] = 0.0;
         v.set(n, n, 0.0);
 
         Matrix.SVD svd = v.svd(true, true);
-        yvi = svd.solve(yvi);
+        yvi = svd.solve(yv);
     }
 
     @Override
@@ -119,7 +119,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
         return y;
     }
 
-    private void pow(double[] x1, double[] x2, double[] y) {
+    private double pow(double[] x1, double[] x2, double[] y) {
         int n = x1.length;
 
         double num = 0.0, denom = 0.0;
@@ -135,7 +135,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
             }
         }
 
-        alpha = num / denom;
+        return num / denom;
     }
 
     private double variogram(double r) {

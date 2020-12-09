@@ -71,19 +71,19 @@ public class RBFInterpolation {
     /**
      * The control points.
      */
-    private double[][] x;
+    private final double[][] x;
     /**
      * The linear weights.
      */
-    private double[] w;
+    private final double[] w;
     /**
      * The radial basis function.
      */
-    private RadialBasisFunction rbf;
+    private final RadialBasisFunction rbf;
     /**
      * True to fit a normalized rbf interpolation.
      */
-    private boolean normalized;
+    private final boolean normalized;
 
     /**
      * Constructor. By default, it is a regular rbf interpolation without

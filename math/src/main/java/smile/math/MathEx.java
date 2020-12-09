@@ -123,17 +123,17 @@ public class MathEx {
      * Each thread will use different seed and unlikely generates
      * the correlated sequences with other threads.
      */
-    private static Random seedRNG = new Random();
+    private static final Random seedRNG = new Random();
 
     /**
      * Used seeds.
      */
-    private static HashSet<Long> seeds = new HashSet<>();
+    private static final HashSet<Long> seeds = new HashSet<>();
 
     /**
      * High quality random number generator.
      */
-    private static ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
+    private static final ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
         protected synchronized Random initialValue() {
             // For the first RNG, we use the default seed so that we can
             // get repeatable results for random algorithms.
@@ -159,22 +159,22 @@ public class MathEx {
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
     private static class FPU {
-        int RADIX = 2;
-        int DIGITS = 53;
+        int RADIX;
+        int DIGITS;
         int FLOAT_DIGITS = 24;
-        int ROUND_STYLE = 2;
-        int MACHEP = -52;
+        int ROUND_STYLE;
+        int MACHEP;
         int FLOAT_MACHEP = -23;
-        int NEGEP = -53;
+        int NEGEP;
         int FLOAT_NEGEP = -24;
         float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
-        double EPSILON = Math.pow(2.0, MACHEP);
+        double EPSILON;
 
         FPU() {
             double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
             int i, itemp;
 
-            ONE = (double) 1;
+            ONE = 1;
             TWO = ONE + ONE;
             ZERO = ONE - ONE;
 
@@ -193,7 +193,7 @@ public class MathEx {
                 itemp = (int) (temp - a);
             }
             RADIX = itemp;
-            beta = (double) RADIX;
+            beta = RADIX;
 
             DIGITS = 0;
             b = ONE;
@@ -484,7 +484,7 @@ public class MathEx {
      * The log of n choose k.
      */
     public static double lchoose(int n, int k) {
-        if (n < 0 || k < 0 || k > n) {
+        if (k < 0 || k > n) {
             throw new IllegalArgumentException(String.format("Invalid n = %d, k = %d", n, k));
         }
 
@@ -497,13 +497,11 @@ public class MathEx {
     public static void setSeed(long seed) {
         if (seeds.isEmpty()) {
             seedRNG.setSeed(seed);
-            random.get().setSeed(seed);
             seeds.clear();
-            seeds.add(seed);
-        } else {
-            random.get().setSeed(seed);
-            seeds.add(seed);
         }
+
+        random.get().setSeed(seed);
+        seeds.add(seed);
     }
 
     /**
@@ -1591,10 +1589,10 @@ public class MathEx {
         int[] x = new int[data[0].length];
         Arrays.fill(x, Integer.MAX_VALUE);
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] > data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] > datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1609,10 +1607,10 @@ public class MathEx {
         int[] x = new int[data[0].length];
         Arrays.fill(x, Integer.MIN_VALUE);
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] < data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] < datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1626,9 +1624,9 @@ public class MathEx {
     public static long[] colSums(int[][] data) {
         long[] x = new long[data[0].length];
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                x[j] += data[i][j];
+                x[j] += datum[j];
             }
         }
 
@@ -1642,10 +1640,10 @@ public class MathEx {
         double[] x = new double[data[0].length];
         Arrays.fill(x, Double.POSITIVE_INFINITY);
 
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] > data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] > datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1660,10 +1658,10 @@ public class MathEx {
         double[] x = new double[data[0].length];
         Arrays.fill(x, Double.NEGATIVE_INFINITY);
 
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] < data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] < datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -2941,10 +2939,10 @@ public class MathEx {
      */
     public static double[][] cov(double[][] data, double[] mu) {
         double[][] sigma = new double[data[0].length][data[0].length];
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < mu.length; j++) {
                 for (int k = 0; k <= j; k++) {
-                    sigma[j][k] += (data[i][j] - mu[j]) * (data[i][k] - mu[k]);
+                    sigma[j][k] += (datum[j] - mu[j]) * (datum[k] - mu[k]);
                 }
             }
         }
@@ -3209,8 +3207,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3250,8 +3247,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3291,8 +3287,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3460,8 +3455,8 @@ public class MathEx {
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                scale[j] += sqr(x[i][j]);
+            for (double[] xi : x) {
+                scale[j] += sqr(xi[j]);
             }
             scale[j] = sqrt(scale[j] / (n-1));
 
@@ -3499,8 +3494,8 @@ public class MathEx {
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                scale[j] += sqr(x[i][j]);
+            for (double[] xi : x) {
+                scale[j] += sqr(xi[j]);
             }
             scale[j] = sqrt(scale[j]);
         }

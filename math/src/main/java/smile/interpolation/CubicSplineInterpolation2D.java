@@ -27,10 +27,10 @@ package smile.interpolation;
  * @author Haifeng Li
  */
 public class CubicSplineInterpolation2D implements Interpolation2D {
-    private int m;
-    private double[] x1;
-    private double[] yv;
-    private CubicSplineInterpolation1D[] srp;
+    private final int m;
+    private final double[] x1;
+    private final double[] yv;
+    private final CubicSplineInterpolation1D[] srp;
 
     /**
      * Constructor.

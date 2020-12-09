@@ -79,9 +79,9 @@ import static smile.math.MathEx.norm;
  * @author Haifeng Li
  */
 public class BFGS {
-    private static org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
     /** A number close to zero, between machine epsilon and its square root. */
-    private static final double EPSILON = Double.valueOf(System.getProperty("smile.bfgs.epsilon", "1E-10"));
+    private static final double EPSILON = Double.parseDouble(System.getProperty("smile.bfgs.epsilon", "1E-10"));
     /** The convergence criterion on x values. */
     private static final double TOLX = 4 * EPSILON;
     /** The convergence criterion on function value. */
@@ -378,7 +378,7 @@ public class BFGS {
             }
 
             int cp = k;
-            int bound = iter > m ? m : iter;
+            int bound = Math.min(iter, m);
             for (int i = 0; i < bound; i++) {
                 a[cp] = rho[cp] * dot(s[cp], xi);
                 axpy(-a[cp], y[cp], xi);
@@ -491,7 +491,7 @@ public class BFGS {
         }
 
         if (slope >= 0) {
-            //throw new IllegalArgumentException("Line Search: the search direction is not a descent direction, which may be caused by roundoff problem.");
+            logger.warn("Line Search: the search direction is not a descent direction, which may be caused by roundoff problem.");
         }
 
         // Calculate minimum step.

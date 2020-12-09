@@ -50,23 +50,23 @@ public class BitString implements Chromosome {
     /**
      * Binary encoding of chromosome.
      */
-    private byte[] bits;
+    private final byte[] bits;
     /**
      * Mutation rate.
      */
-    private double mutationRate = 0.01;
+    private final double mutationRate;
     /**
      * Crossover strategy.
      */
-    private Crossover crossover = Crossover.TWO_POINT;
+    private final Crossover crossover;
     /**
      * Crossover rate.
      */
-    private double crossoverRate = 0.9;
+    private final double crossoverRate;
     /**
      * The fitness function.
      */
-    private Fitness<BitString> fitness;
+    private final Fitness<BitString> fitness;
     /**
      * The fitness score of chromosome.
      */
