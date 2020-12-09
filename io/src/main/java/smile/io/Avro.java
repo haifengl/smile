@@ -55,7 +55,7 @@ public class Avro {
     /**
      * Avro schema.
      */
-    private Schema schema;
+    private final Schema schema;
 
     /**
      * Constructor.
@@ -188,7 +188,7 @@ public class Avro {
         }
 
         if (union.size() > 2) {
-            String s = union.stream().map(t -> t.getType()).map(Object::toString).collect(Collectors.joining(", "));
+            String s = union.stream().map(Schema::getType).map(Object::toString).collect(Collectors.joining(", "));
             throw new UnsupportedOperationException(String.format("Unsupported type Union(%s)", s));
         }
 

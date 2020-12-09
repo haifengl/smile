@@ -50,7 +50,7 @@ public class CSV {
     /** The schema of data structure. */
     private StructType schema;
     /** The CSV file format. */
-    private CSVFormat format;
+    private final CSVFormat format;
     /** Charset of file. */
     private Charset charset = StandardCharsets.UTF_8;
 

@@ -79,7 +79,7 @@ class LocalInputFile implements InputFile {
             }
 
             @Override
-            public int available() throws IOException {
+            public int available() {
                 return 0;
             }
 

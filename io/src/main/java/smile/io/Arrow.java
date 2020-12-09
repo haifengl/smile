@@ -20,13 +20,14 @@ package smile.io;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.math.BigDecimal;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.*;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
@@ -79,7 +80,7 @@ public class Arrow {
      * 1 million rows x 100 columns of double will be about
      * 800 MB and also cover many use cases in machine learning.
      */
-    private int batch;
+    private final int batch;
 
     /** Constructor. */
     public Arrow() {
@@ -256,7 +257,7 @@ public class Arrow {
         }
 
         Schema schema = toArrowSchema(df.schema());
-        /**
+        /*
          * When a field is dictionary encoded, the values are represented
          * by an array of Int32 representing the index of the value in the
          * dictionary. The Dictionary is received as one or more
@@ -274,8 +275,8 @@ public class Arrow {
 
             writer.start();
             final int size = df.size();
-            for (int from = 0, entries = size; from < size; from += batch) {
-                int count = Math.min(batch, entries - from);
+            for (int from = 0; from < size; from += batch) {
+                int count = Math.min(batch, size - from);
                 // set the batch row count
                 root.setRowCount(count);
 
@@ -320,7 +321,7 @@ public class Arrow {
                             writeDateTimeField(df, vector, from, count);
                             break;
                         case Object: {
-                            Class clazz = ((ObjectType) type).getObjectClass();
+                            Class<?> clazz = ((ObjectType) type).getObjectClass();
                             if (clazz == Integer.class) {
                                 writeIntObjectField(df, vector, from, count);
                             } else if (clazz == Long.class) {
@@ -354,12 +355,10 @@ public class Arrow {
                         }
                         case Array: {
                             DataType etype = ((ArrayType) type).getComponentType();
-                            switch (etype.id()) {
-                                case Byte:
-                                    writeByteArrayField(df, vector, from, count);
-                                    break;
-                                default:
-                                    throw new UnsupportedOperationException("Unsupported type: " + type);
+                            if (etype.id() == DataType.ID.Byte) {
+                                writeByteArrayField(df, vector, from, count);
+                            } else {
+                                throw new UnsupportedOperationException("Unsupported type: " + type);
                             }
                             break;
                         }
@@ -978,7 +977,7 @@ public class Arrow {
     }
 
     /** Writes a string column. */
-    private void writeStringField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+    private void writeStringField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -990,7 +989,7 @@ public class Arrow {
                 vector.setNull(i);
             } else {
                 vector.setIndexDefined(i);
-                vector.setSafe(i, x.getBytes("UTF-8"));
+                vector.setSafe(i, x.getBytes(StandardCharsets.UTF_8));
             }
         }
 
@@ -998,7 +997,7 @@ public class Arrow {
     }
 
     /** Writes a decimal column. */
-    private void writeDecimalField(DataFrame df, FieldVector fieldVector, int from, int count) throws UnsupportedEncodingException {
+    private void writeDecimalField(DataFrame df, FieldVector fieldVector, int from, int count) {
         fieldVector.setInitialCapacity(count);
         fieldVector.allocateNew();
 
@@ -1147,7 +1146,7 @@ public class Arrow {
             case DateTime:
                 return new Field(field.name, FieldType.nullable(new ArrowType.Timestamp(TimeUnit.MILLISECOND, java.time.ZoneOffset.UTC.getId())), null);
             case Object: {
-                Class clazz = ((ObjectType) field.type).getObjectClass();
+                Class<?> clazz = ((ObjectType) field.type).getObjectClass();
                 if (clazz == Integer.class) {
                     return new Field(field.name, FieldType.nullable(new ArrowType.Int(32, true)), null);
                 } else if (clazz == Long.class) {
@@ -1174,31 +1173,31 @@ public class Arrow {
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(32, true), null), null))
                         );
                     case Long:
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(64, true), null), null))
                         );
                     case Double:
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(DOUBLE), null), null))
                         );
                     case Float:
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.FloatingPoint(SINGLE), null), null))
                         );
                     case Boolean:
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Bool(), null), null))
                         );
                     case Byte:
                         return new Field(field.name, FieldType.nullable(new ArrowType.Binary()), null);
@@ -1206,7 +1205,7 @@ public class Arrow {
                         return new Field(field.name,
                                 new FieldType(false, new ArrowType.List(), null),
                                 // children type
-                                Arrays.asList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
+                                Collections.singletonList(new Field(null, new FieldType(false, new ArrowType.Int(16, true), null), null))
                         );
                     case Char:
                         return new Field(field.name, FieldType.nullable(new ArrowType.Utf8()), null);
