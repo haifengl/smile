@@ -232,7 +232,7 @@ trait VegaLite {
   def iframe(id: String = java.util.UUID.randomUUID.toString): String = {
     val src = xml.Utility.escape(embed)
     s"""
-       |  <iframe id="$id" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="${src}"></iframe>
+       |  <iframe id="$id" sandbox="allow-scripts allow-same-origin" style="border: none; width: 100%" srcdoc="$src"></iframe>
        |  <script>
        |    (function() {
        |      function resizeIFrame(el, k) {
@@ -256,21 +256,21 @@ object VegaLite {
   /** Returns a single view specification with inline data. */
   def apply(rows: JsObject*): View = {
     new View {
-      override val spec = of(JsArray(rows: _*))
+      override val spec: JsObject = of(JsArray(rows: _*))
     }
   }
 
   /** Returns a single view specification with inline data. */
   def apply(json: JsArray): View = {
     new View {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
     }
   }
 
   /** Returns a single view specification with inline data. */
   def apply(df: DataFrame): View = {
     new View {
-      override val spec = of(df)
+      override val spec: JsObject = of(df)
     }
   }
 
@@ -284,7 +284,7 @@ object VegaLite {
     */
   def apply(url: String, format: JsValue = JsUndefined): View = {
     new View {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
     }
   }
 
@@ -293,21 +293,21 @@ object VegaLite {
     */
   def view(init: JsObject = JsObject()): View = {
     new View {
-      override val spec = init
+      override val spec: JsObject = init
     }
   }
 
   /** Returns a facet specification with inline data. */
   def facet(rows: JsObject*): Facet = {
     new Facet {
-      override val spec = of(JsArray(rows: _*))
+      override val spec: JsObject = of(JsArray(rows: _*))
     }
   }
 
   /** Returns a facet specification with inline data. */
   def facet(json: JsArray): Facet = {
     new Facet {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
     }
   }
 
@@ -326,14 +326,14 @@ object VegaLite {
     */
   def facet(url: String, format: JsValue = JsUndefined): Facet = {
     new Facet {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
     }
   }
 
   /** Returns a layered view specification.  */
   def layer(layers: View*): Layer = {
     new Layer {
-      override val spec = of()
+      override val spec: JsObject = of()
       layer(layers: _*)
     }
   }
@@ -341,7 +341,7 @@ object VegaLite {
   /** Returns a layered view specification.  */
   def layer(json: JsArray, layers: View*): Layer = {
     new Layer {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       layer(layers: _*)
     }
   }
@@ -354,7 +354,7 @@ object VegaLite {
   /** Returns a layered view specification.  */
   def layer(url: String, format: JsValue, layers: View*): Layer = {
     new Layer {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       layer(layers: _*)
     }
   }
@@ -362,7 +362,7 @@ object VegaLite {
   /** Horizontal concatenation. Put multiple views into a column.  */
   def hconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of()
+      override val spec: JsObject = of()
       spec.hconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -370,7 +370,7 @@ object VegaLite {
   /** Horizontal concatenation. Put multiple views into a column.  */
   def hconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       spec.hconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -383,7 +383,7 @@ object VegaLite {
   /** Horizontal concatenation. Put multiple views into a column.  */
   def hconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       spec.hconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -391,7 +391,7 @@ object VegaLite {
   /** Vertical concatenation. Put multiple views into a row.  */
   def vconcat(views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of()
+      override val spec: JsObject = of()
       spec.vconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -399,7 +399,7 @@ object VegaLite {
   /** Vertical concatenation. Put multiple views into a row.  */
   def vconcat(json: JsArray, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       spec.vconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -412,7 +412,7 @@ object VegaLite {
   /** Vertical concatenation. Put multiple views into a row.  */
   def vconcat(url: String, format: JsValue, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       spec.vconcat = JsArray(views.map(_.spec): _*)
     }
   }
@@ -422,7 +422,7 @@ object VegaLite {
     */
   def concat(columns: Int, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of()
+      override val spec: JsObject = of()
       spec.columns = columns
       spec.concat = JsArray(views.map(_.spec): _*)
     }
@@ -433,7 +433,7 @@ object VegaLite {
     */
   def concat(json: JsArray, columns: Int, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       spec.columns = columns
       spec.concat = JsArray(views.map(_.spec): _*)
     }
@@ -451,7 +451,7 @@ object VegaLite {
     */
   def concat(url: String, format: JsValue, columns: Int, views: VegaLite*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       spec.columns = columns
       spec.concat = JsArray(views.map(_.spec): _*)
     }
@@ -465,7 +465,7 @@ object VegaLite {
     */
   def repeat(json: JsArray, view: VegaLite, fields: String*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
       spec.spec = view.spec
     }
@@ -489,7 +489,7 @@ object VegaLite {
     */
   def repeat(url: String, format: JsValue, view: VegaLite, fields: String*): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       spec.repeat = JsObject("layer" -> JsArray(fields.map(JsString(_)): _*))
       spec.spec = view.spec
     }
@@ -504,7 +504,7 @@ object VegaLite {
     */
   def repeat(json: JsArray, view: VegaLite, row: Seq[String], column: Seq[String]): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(json)
+      override val spec: JsObject = of(json)
       spec.repeat = JsObject(
         "row" -> JsArray(row.map(JsString(_)): _*),
         "column" -> JsArray(column.map(JsString(_)): _*)
@@ -533,7 +533,7 @@ object VegaLite {
     */
   def repeat(url: String, format: JsValue, view: VegaLite, row: Seq[String], column: Seq[String]): ViewLayoutComposition = {
     new ViewLayoutComposition {
-      override val spec = of(url, format)
+      override val spec: JsObject = of(url, format)
       spec.repeat = JsObject(
         "row" -> JsArray(row.map(JsString(_)): _*),
         "column" -> JsArray(column.map(JsString(_)): _*)
@@ -560,7 +560,7 @@ object VegaLite {
                      |    }
                      |  }
                      |}"""
-    if (!color.isEmpty)
+    if (color.nonEmpty)
       spec.encoding.color = JsObject(
         "field" -> color,
         "type" -> "nominal"

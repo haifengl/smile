@@ -28,55 +28,55 @@ import smile.stat.hypothesis.{ChiSqTest, CorTest, FTest, KSTest, TTest}
   * @author Haifeng Li
   */
 package object math {
-  implicit def pimpDouble(x: Double) = new PimpedDouble(x)
-  implicit def pimpIntArray(data: Array[Int]) = new PimpedArray[Int](data)
-  implicit def pimpDoubleArray(data: Array[Double]) = new PimpedDoubleArray(data)
-  implicit def pimpArray2D(data: Array[Array[Double]]) = new PimpedArray2D(data)
-  implicit def pimpMatrix(matrix: Matrix) = new PimpedMatrix(matrix)
+  implicit def pimpDouble(x: Double): PimpedDouble = PimpedDouble(x)
+  implicit def pimpIntArray(data: Array[Int]): PimpedArray[Int] = new PimpedArray[Int](data)
+  implicit def pimpDoubleArray(data: Array[Double]): PimpedDoubleArray = new PimpedDoubleArray(data)
+  implicit def pimpArray2D(data: Array[Array[Double]]): PimpedArray2D = new PimpedArray2D(data)
+  implicit def pimpMatrix(matrix: Matrix): PimpedMatrix = new PimpedMatrix(matrix)
 
-  implicit def array2VectorExpression(x: Array[Double]) = VectorLift(x)
-  implicit def vectorExpression2Array(exp: VectorExpression) = exp.toArray
+  implicit def array2VectorExpression(x: Array[Double]): VectorLift = VectorLift(x)
+  implicit def vectorExpression2Array(exp: VectorExpression): Array[Double] = exp.toArray
 
-  implicit def matrix2MatrixExpression(x: Matrix) = MatrixLift(x)
-  implicit def matrixExpression2Array(exp: MatrixExpression) = exp.toMatrix
+  implicit def matrix2MatrixExpression(x: Matrix): MatrixLift = MatrixLift(x)
+  implicit def matrixExpression2Array(exp: MatrixExpression): Matrix = exp.toMatrix
 
-  def abs(x: VectorExpression) = AbsVector(x)
-  def acos(x: VectorExpression) = AcosVector(x)
-  def asin(x: VectorExpression) = AsinVector(x)
-  def atan(x: VectorExpression) = AtanVector(x)
-  def cbrt(x: VectorExpression) = CbrtVector(x)
-  def ceil(x: VectorExpression) = CeilVector(x)
-  def exp(x: VectorExpression) = ExpVector(x)
-  def expm1(x: VectorExpression) = Expm1Vector(x)
-  def floor(x: VectorExpression) = FloorVector(x)
-  def log(x: VectorExpression) = LogVector(x)
-  def log2(x: VectorExpression) = Log2Vector(x)
-  def log10(x: VectorExpression) = Log10Vector(x)
-  def log1p(x: VectorExpression) = Log1pVector(x)
-  def round(x: VectorExpression) = RoundVector(x)
-  def sin(x: VectorExpression) = SinVector(x)
-  def sqrt(x: VectorExpression) = SqrtVector(x)
-  def tan(x: VectorExpression) = TanVector(x)
-  def tanh(x: VectorExpression) = TanhVector(x)
+  def abs(x: VectorExpression): AbsVector = AbsVector(x)
+  def acos(x: VectorExpression): AcosVector = AcosVector(x)
+  def asin(x: VectorExpression): AsinVector = AsinVector(x)
+  def atan(x: VectorExpression): AtanVector = AtanVector(x)
+  def cbrt(x: VectorExpression): CbrtVector = CbrtVector(x)
+  def ceil(x: VectorExpression): CeilVector = CeilVector(x)
+  def exp(x: VectorExpression): ExpVector = ExpVector(x)
+  def expm1(x: VectorExpression): Expm1Vector = Expm1Vector(x)
+  def floor(x: VectorExpression): FloorVector = FloorVector(x)
+  def log(x: VectorExpression): LogVector = LogVector(x)
+  def log2(x: VectorExpression): Log2Vector = Log2Vector(x)
+  def log10(x: VectorExpression): Log10Vector = Log10Vector(x)
+  def log1p(x: VectorExpression): Log1pVector = Log1pVector(x)
+  def round(x: VectorExpression): RoundVector = RoundVector(x)
+  def sin(x: VectorExpression): SinVector = SinVector(x)
+  def sqrt(x: VectorExpression): SqrtVector = SqrtVector(x)
+  def tan(x: VectorExpression): TanVector = TanVector(x)
+  def tanh(x: VectorExpression): TanhVector = TanhVector(x)
 
-  def abs(x: MatrixExpression) = AbsMatrix(x)
-  def acos(x: MatrixExpression) = AcosMatrix(x)
-  def asin(x: MatrixExpression) = AsinMatrix(x)
-  def atan(x: MatrixExpression) = AtanMatrix(x)
-  def cbrt(x: MatrixExpression) = CbrtMatrix(x)
-  def ceil(x: MatrixExpression) = CeilMatrix(x)
-  def exp(x: MatrixExpression) = ExpMatrix(x)
-  def expm1(x: MatrixExpression) = Expm1Matrix(x)
-  def floor(x: MatrixExpression) = FloorMatrix(x)
-  def log(x: MatrixExpression) = LogMatrix(x)
-  def log2(x: MatrixExpression) = Log2Matrix(x)
-  def log10(x: MatrixExpression) = Log10Matrix(x)
-  def log1p(x: MatrixExpression) = Log1pMatrix(x)
-  def round(x: MatrixExpression) = RoundMatrix(x)
-  def sin(x: MatrixExpression) = SinMatrix(x)
-  def sqrt(x: MatrixExpression) = SqrtMatrix(x)
-  def tan(x: MatrixExpression) = TanMatrix(x)
-  def tanh(x: MatrixExpression) = TanhMatrix(x)
+  def abs(x: MatrixExpression): AbsMatrix = AbsMatrix(x)
+  def acos(x: MatrixExpression): AcosMatrix = AcosMatrix(x)
+  def asin(x: MatrixExpression): AsinMatrix = AsinMatrix(x)
+  def atan(x: MatrixExpression): AtanMatrix = AtanMatrix(x)
+  def cbrt(x: MatrixExpression): CbrtMatrix = CbrtMatrix(x)
+  def ceil(x: MatrixExpression): CeilMatrix = CeilMatrix(x)
+  def exp(x: MatrixExpression): ExpMatrix = ExpMatrix(x)
+  def expm1(x: MatrixExpression): Expm1Matrix = Expm1Matrix(x)
+  def floor(x: MatrixExpression): FloorMatrix = FloorMatrix(x)
+  def log(x: MatrixExpression): LogMatrix = LogMatrix(x)
+  def log2(x: MatrixExpression): Log2Matrix = Log2Matrix(x)
+  def log10(x: MatrixExpression): Log10Matrix = Log10Matrix(x)
+  def log1p(x: MatrixExpression): Log1pMatrix = Log1pMatrix(x)
+  def round(x: MatrixExpression): RoundMatrix = RoundMatrix(x)
+  def sin(x: MatrixExpression): SinMatrix = SinMatrix(x)
+  def sqrt(x: MatrixExpression): SqrtMatrix = SqrtMatrix(x)
+  def tan(x: MatrixExpression): TanMatrix = TanMatrix(x)
+  def tanh(x: MatrixExpression): TanhMatrix = TanhMatrix(x)
 
   /** The beta function, also called the Euler integral of the first kind.
     *
@@ -221,52 +221,52 @@ package object math {
   /** Returns an m-by-n matrix of all ones. */
   def ones(m: Int, n: Int) = new Matrix(m, n)
   /** Returns an n-by-n identity matrix. */
-  def eye(n: Int) = Matrix.eye(n)
+  def eye(n: Int): Matrix = Matrix.eye(n)
   /** Returns an m-by-n identity matrix. */
-  def eye(m: Int, n: Int) = Matrix.eye(m, n)
+  def eye(m: Int, n: Int): Matrix = Matrix.eye(m, n)
   /** Returns an m-by-n matrix of normally distributed random numbers. */
-  def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0) = Matrix.rand(m, n, new GaussianDistribution(mu, sigma))
+  def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0): Matrix = Matrix.rand(m, n, new GaussianDistribution(mu, sigma))
   /** Returns the trace of matrix. */
-  def trace(A: Matrix) = A.trace()
+  def trace(A: Matrix): Double = A.trace()
   /** Returns the diagonal elements of matrix. */
-  def diag(A: Matrix) = A.diag()
+  def diag(A: Matrix): Array[Double] = A.diag()
 
   /** LU decomposition. */
-  def lu(A: Array[Array[Double]]) = new Matrix(A).lu(true)
+  def lu(A: Array[Array[Double]]): Matrix.LU = new Matrix(A).lu(true)
   /** LU decomposition. */
-  def lu(A: Matrix) = A.lu(false)
+  def lu(A: Matrix): Matrix.LU = A.lu(false)
   /** LU decomposition. */
-  def lu(A: MatrixExpression) = A.toMatrix.lu(true)
+  def lu(A: MatrixExpression): Matrix.LU = A.toMatrix.lu(true)
 
   /** QR decomposition. */
-  def qr(A: Array[Array[Double]]) = new Matrix(A).qr(true)
+  def qr(A: Array[Array[Double]]): Matrix.QR = new Matrix(A).qr(true)
   /** QR decomposition. */
-  def qr(A: Matrix) = A.qr(false)
+  def qr(A: Matrix): Matrix.QR = A.qr(false)
   /** QR decomposition. */
-  def qr(A: MatrixExpression) = A.toMatrix.qr(true)
+  def qr(A: MatrixExpression): Matrix.QR = A.toMatrix.qr(true)
 
   /** Cholesky decomposition. */
-  def cholesky(A: Array[Array[Double]]) =  new Matrix(A).cholesky(true)
+  def cholesky(A: Array[Array[Double]]): Matrix.Cholesky =  new Matrix(A).cholesky(true)
   /** Cholesky decomposition. */
-  def cholesky(A: Matrix) = A.cholesky(false)
+  def cholesky(A: Matrix): Matrix.Cholesky = A.cholesky(false)
   /** Cholesky decomposition. */
-  def cholesky(A: MatrixExpression) = A.toMatrix.cholesky(true)
+  def cholesky(A: MatrixExpression): Matrix.Cholesky = A.toMatrix.cholesky(true)
 
   /** Returns eigen values. */
-  def eig(A: Array[Array[Double]]) = new Matrix(A).eigen(false, false, true)
+  def eig(A: Array[Array[Double]]): Matrix.EVD = new Matrix(A).eigen(false, false, true)
   /** Returns eigen values. */
-  def eig(A: Matrix) = A.eigen(false, false, false)
+  def eig(A: Matrix): Matrix.EVD = A.eigen(false, false, false)
   /** Returns eigen values. */
-  def eig(A: MatrixExpression) = A.toMatrix.eigen(false, false, true)
+  def eig(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, false, true)
 
   /** Eigen decomposition. */
-  def eigen(A: Array[Array[Double]]) = new Matrix(A).eigen(false, true, true)
+  def eigen(A: Array[Array[Double]]): Matrix.EVD = new Matrix(A).eigen(false, true, true)
   /** Eigen decomposition. */
-  def eigen(A: Matrix) = A.eigen(false, true, false)
+  def eigen(A: Matrix): Matrix.EVD = A.eigen(false, true, false)
   /** Eigen decomposition. */
-  def eigen(A: MatrixExpression) = A.toMatrix.eigen(false, true, true)
+  def eigen(A: MatrixExpression): Matrix.EVD = A.toMatrix.eigen(false, true, true)
   /** Returns k largest eigenvectors. */
-  def eigen(A: DMatrix, k: Int) = A match {
+  def eigen(A: DMatrix, k: Int): Matrix.EVD = A match {
     case a: Matrix =>
       if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
       else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
@@ -278,7 +278,7 @@ package object math {
   }
 
   /** Returns k largest eigenvectors. */
-  def eigen(A: SMatrix, k: Int) = A match {
+  def eigen(A: SMatrix, k: Int): FloatMatrix.EVD = A match {
     case a: FloatMatrix =>
       if (a.isSymmetric) ARPACK.syev(a, ARPACK.SymmOption.LA, k)
       else ARPACK.eigen(A, ARPACK.AsymmOption.LM, k)
@@ -290,26 +290,26 @@ package object math {
   }
 
   /** SVD decomposition. */
-  def svd(A: Array[Array[Double]]) = new Matrix(A).svd(true, true)
+  def svd(A: Array[Array[Double]]): Matrix.SVD = new Matrix(A).svd(true, true)
   /** SVD decomposition. */
-  def svd(A: Matrix) = A.svd(true, false)
+  def svd(A: Matrix): Matrix.SVD = A.svd(true, false)
   /** SVD decomposition. */
-  def svd(A: MatrixExpression) = A.toMatrix.svd(true, true)
+  def svd(A: MatrixExpression): Matrix.SVD = A.toMatrix.svd(true, true)
   /** Returns k largest singular vectors. */
-  def svd(A: DMatrix, k: Int) = ARPACK.svd(A, k)
+  def svd(A: DMatrix, k: Int): Matrix.SVD = ARPACK.svd(A, k)
   /** Returns k largest singular vectors. */
-  def svd(A: SMatrix, k: Int) = ARPACK.svd(A, k)
+  def svd(A: SMatrix, k: Int): FloatMatrix.SVD = ARPACK.svd(A, k)
 
   /** Returns the determinant of matrix. */
-  def det(A: Matrix) = lu(A).det()
+  def det(A: Matrix): Double = lu(A).det()
   /** Returns the determinant of matrix. */
-  def det(A: MatrixExpression) = lu(A).det()
+  def det(A: MatrixExpression): Double = lu(A).det()
   /** Returns the rank of matrix. */
-  def rank(A: Matrix) = svd(A).rank()
+  def rank(A: Matrix): Int = svd(A).rank()
   /** Returns the rank of matrix. */
-  def rank(A: MatrixExpression) = svd(A).rank()
+  def rank(A: MatrixExpression): Int = svd(A).rank()
   /** Returns the inverse of matrix. */
-  def inv(A: Matrix) = A.inverse()
+  def inv(A: Matrix): Matrix = A.inverse()
   /** Returns the inverse of matrix. */
-  def inv(A: MatrixExpression) = A.toMatrix.inverse()
+  def inv(A: MatrixExpression): Matrix = A.toMatrix.inverse()
 }

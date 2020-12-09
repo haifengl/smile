@@ -871,7 +871,7 @@ package object classification {
     * training instances is small compared to the dimension of input space,
     * the ML covariance estimation can be ill-posed. One approach to resolve
     * the ill-posed estimation is to regularize the covariance estimation.
-    * One of these regularization methods is {@link rda regularized discriminant analysis}.
+    * One of these regularization methods is [[rda]].
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.

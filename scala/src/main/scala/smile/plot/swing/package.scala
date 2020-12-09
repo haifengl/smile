@@ -18,12 +18,6 @@
 package smile.plot
 
 import java.awt.Color
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.util.Base64
-import javax.imageio.ImageIO
-import javax.swing.JComponent
-import javax.swing.SwingUtilities
 import smile.data.DataFrame
 import smile.clustering.HierarchicalClustering
 import smile.math.matrix.SparseMatrix
@@ -158,7 +152,7 @@ package object swing {
     * @return the plot panel.
     */
   def splom(data: DataFrame, mark: Char, category: String): PlotGrid = {
-    PlotGrid.splom(data, mark, category);
+    PlotGrid.splom(data, mark, category)
   }
 
   /**

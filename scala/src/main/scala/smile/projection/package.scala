@@ -213,7 +213,7 @@ package object projection {
     */
   def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(w, r)
-    data.foreach(model.update(_))
+    data.foreach(model.update)
     model
   }
 
@@ -225,7 +225,7 @@ package object projection {
     */
   def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(data(0).length, k, r)
-    data.foreach(model.update(_))
+    data.foreach(model.update)
     model
   }
 

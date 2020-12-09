@@ -28,29 +28,29 @@ sealed trait VectorExpression {
   def length: Int
   def apply(i: Int): Double
   def toArray: Array[Double]
-  override def toString = runtime.ScalaRunTime.stringOf(toArray)
+  override def toString: String = runtime.ScalaRunTime.stringOf(toArray)
 
-  def + (b: VectorExpression) = {
-    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} + ${b.length}")
+  def + (b: VectorExpression): VectorAddVector = {
+    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: $length + ${b.length}")
     VectorAddVector(this, b)
   }
-  def - (b: VectorExpression) = {
-    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} - ${b.length}")
+  def - (b: VectorExpression): VectorSubVector = {
+    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: $length - ${b.length}")
     VectorSubVector(this, b)
   }
-  def * (b: VectorExpression) = {
-    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} * ${b.length}")
+  def * (b: VectorExpression): VectorMulVector = {
+    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: $length * ${b.length}")
     VectorMulVector(this, b)
   }
-  def / (b: VectorExpression) = {
-    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: ${length} / ${b.length}")
+  def / (b: VectorExpression): VectorDivVector = {
+    if (length != b.length) throw new IllegalArgumentException(s"Vector sizes don't match: $length / ${b.length}")
     VectorDivVector(this, b)
   }
 
-  def + (b: Double) = VectorAddValue(this, b)
-  def - (b: Double) = VectorSubValue(this, b)
-  def * (b: Double) = VectorMulValue(this, b)
-  def / (b: Double) = VectorDivValue(this, b)
+  def + (b: Double): VectorAddValue = VectorAddValue(this, b)
+  def - (b: Double): VectorSubValue = VectorSubValue(this, b)
+  def * (b: Double): VectorMulValue = VectorMulValue(this, b)
+  def / (b: Double): VectorDivValue = VectorDivValue(this, b)
 }
 
 case class VectorLift(x: Array[Double]) extends VectorExpression {
@@ -364,42 +364,42 @@ sealed trait MatrixExpression {
   def ncols: Int
   def apply(i: Int, j: Int): Double
   def toMatrix: Matrix
-  override def toString = runtime.ScalaRunTime.stringOf(toMatrix)
+  override def toString: String = runtime.ScalaRunTime.stringOf(toMatrix)
 
-  def + (b: MatrixExpression) = {
-    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: ${nrows} x ${ncols} + ${b.nrows} x ${b.ncols}")
+  def + (b: MatrixExpression): MatrixAddMatrix = {
+    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: $nrows x $ncols + ${b.nrows} x ${b.ncols}")
     MatrixAddMatrix(this, b)
   }
-  def - (b: MatrixExpression) = {
-    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: ${nrows} x ${ncols} - ${b.nrows} x ${b.ncols}")
+  def - (b: MatrixExpression): MatrixSubMatrix = {
+    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: $nrows x $ncols - ${b.nrows} x ${b.ncols}")
     MatrixSubMatrix(this, b)
   }
   /** Element-wise multiplication */
-  def * (b: MatrixExpression) = {
-    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: ${nrows} x ${ncols} * ${b.nrows} x ${b.ncols}")
+  def * (b: MatrixExpression): MatrixMulMatrix = {
+    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: $nrows x $ncols * ${b.nrows} x ${b.ncols}")
     MatrixMulMatrix(this, b)
   }
-  def / (b: MatrixExpression) = {
-    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: ${nrows} x ${ncols} / ${b.nrows} x ${b.ncols}")
+  def / (b: MatrixExpression): MatrixDivMatrix = {
+    if (nrows != b.nrows || ncols != b.ncols) throw new IllegalArgumentException(s"Matrix sizes don't match: $nrows x $ncols / ${b.nrows} x ${b.ncols}")
     MatrixDivMatrix(this, b)
   }
 
   /** Matrix transpose */
-  def t = MatrixTranspose(this)
+  def t: MatrixTranspose = MatrixTranspose(this)
 
   /** A * x */
-  def * (b: VectorExpression) = Ax(this, b)
+  def * (b: VectorExpression): Ax = Ax(this, b)
 
   /** Matrix multiplication A * B */
   def %*% (b: MatrixExpression): MatrixExpression = {
-    if (ncols != b.nrows) throw new IllegalArgumentException(s"Matrix sizes don't match for matrix multiplication: ${nrows} x ${ncols} %*% ${b.nrows} x ${b.ncols}")
+    if (ncols != b.nrows) throw new IllegalArgumentException(s"Matrix sizes don't match for matrix multiplication: $nrows x $ncols %*% ${b.nrows} x ${b.ncols}")
     MatrixMultiplicationExpression(this, b)
   }
 
-  def + (b: Double) = MatrixAddValue(this, b)
-  def - (b: Double) = MatrixSubValue(this, b)
-  def * (b: Double) = MatrixMulValue(this, b)
-  def / (b: Double) = MatrixDivValue(this, b)
+  def + (b: Double): MatrixAddValue = MatrixAddValue(this, b)
+  def - (b: Double): MatrixSubValue = MatrixSubValue(this, b)
+  def * (b: Double): MatrixMulValue = MatrixMulValue(this, b)
+  def / (b: Double): MatrixDivValue = MatrixDivValue(this, b)
 }
 
 case class Ax(A: MatrixExpression, x: VectorExpression) extends VectorExpression {
@@ -437,14 +437,14 @@ case class MatrixMultiplicationExpression(A: MatrixExpression, B: MatrixExpressi
     }
   }
 
-  override def %*% (C: MatrixExpression) = MatrixMultiplicationChain(Seq(A, B, C))
+  override def %*% (C: MatrixExpression): MatrixMultiplicationChain = MatrixMultiplicationChain(Seq(A, B, C))
 }
 
 case class MatrixMultiplicationChain(A: Seq[MatrixExpression]) extends MatrixExpression {
   override def nrows: Int = A.head.nrows
   override def ncols: Int = A.last.ncols
   override def apply(i: Int, j: Int): Double = toMatrix(i, j)
-  override def %*% (B: MatrixExpression) = MatrixMultiplicationChain(A :+ B)
+  override def %*% (B: MatrixExpression): MatrixMultiplicationChain = MatrixMultiplicationChain(A :+ B)
 
   override lazy val toMatrix: Matrix = {
     val dims = (A.head.nrows +: A.map(_.ncols)).toArray
@@ -616,14 +616,14 @@ case class MatrixDivMatrix(A: MatrixExpression, B: MatrixExpression) extends Mat
  * @param dims Matrix A[i] has dimension dims[i-1] x dims[i] for i = 1..n
  */
 class MatrixOrderOptimization(dims: Array[Int]) extends LazyLogging {
-  val n = dims.length - 1
+  val n: Int = dims.length - 1
 
   // m[i,j] = Minimum number of scalar multiplications (i.e., cost)
   // needed to compute the matrix A[i]A[i+1]...A[j] = A[i..j]
   // The cost is zero when multiplying one matrix
-  val m = Array.ofDim[Int](n, n)
+  val m: Array[Array[Int]] = Array.ofDim[Int](n, n)
   // Index of the subsequence split that achieved minimal cost
-  val s = Array.ofDim[Int](n, n)
+  val s: Array[Array[Int]] = Array.ofDim[Int](n, n)
 
   for (l <- 1 until n) {
     for (i <- 0 until (n - l)) {
@@ -644,19 +644,19 @@ class MatrixOrderOptimization(dims: Array[Int]) extends LazyLogging {
   override def toString: String = {
     val sb = new StringBuilder
     val intermediate = new Array[Boolean](n)
-    toString(sb, 0, n - 1, intermediate)
+    buildString(sb, 0, n - 1, intermediate)
     sb.toString
   }
 
-  private def toString(sb: StringBuilder, i: Int, j: Int, intermediate: Array[Boolean]): Unit = {
+  private def buildString(sb: StringBuilder, i: Int, j: Int, intermediate: Array[Boolean]): Unit = {
     if (i != j) {
       sb.append('(')
-      toString(sb, i, s(i)(j), intermediate)
+      buildString(sb, i, s(i)(j), intermediate)
       if (!intermediate(i)) sb.append(dims(i)).append('x').append(dims(i+1))
 
       sb.append(" * ")
 
-      toString(sb, s(i)(j) + 1, j, intermediate)
+      buildString(sb, s(i)(j) + 1, j, intermediate)
       if (!intermediate(j)) sb.append(dims(j)).append('x').append(dims(j+1))
       sb.append(')')
 
@@ -964,25 +964,25 @@ private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit
 }
 
 private[math] case class PimpedDouble(a: Double) {
-  def + (b: Array[Double]) = ValueAddVector(a, b)
-  def - (b: Array[Double]) = ValueSubVector(a, b)
-  def * (b: Array[Double]) = ValueMulVector(a, b)
-  def / (b: Array[Double]) = ValueDivVector(a, b)
+  def + (b: Array[Double]): ValueAddVector = ValueAddVector(a, b)
+  def - (b: Array[Double]): ValueSubVector = ValueSubVector(a, b)
+  def * (b: Array[Double]): ValueMulVector = ValueMulVector(a, b)
+  def / (b: Array[Double]): ValueDivVector = ValueDivVector(a, b)
 
-  def + (b: VectorExpression) = ValueAddVector(a, b)
-  def - (b: VectorExpression) = ValueSubVector(a, b)
-  def * (b: VectorExpression) = ValueMulVector(a, b)
-  def / (b: VectorExpression) = ValueDivVector(a, b)
+  def + (b: VectorExpression): ValueAddVector = ValueAddVector(a, b)
+  def - (b: VectorExpression): ValueSubVector = ValueSubVector(a, b)
+  def * (b: VectorExpression): ValueMulVector = ValueMulVector(a, b)
+  def / (b: VectorExpression): ValueDivVector = ValueDivVector(a, b)
 
-  def + (b: Matrix) = ValueAddMatrix(a, b)
-  def - (b: Matrix) = ValueSubMatrix(a, b)
-  def * (b: Matrix) = ValueMulMatrix(a, b)
-  def / (b: Matrix) = ValueDivMatrix(a, b)
+  def + (b: Matrix): ValueAddMatrix = ValueAddMatrix(a, b)
+  def - (b: Matrix): ValueSubMatrix = ValueSubMatrix(a, b)
+  def * (b: Matrix): ValueMulMatrix = ValueMulMatrix(a, b)
+  def / (b: Matrix): ValueDivMatrix = ValueDivMatrix(a, b)
 
-  def + (b: MatrixExpression) = ValueAddMatrix(a, b)
-  def - (b: MatrixExpression) = ValueSubMatrix(a, b)
-  def * (b: MatrixExpression) = ValueMulMatrix(a, b)
-  def / (b: MatrixExpression) = ValueDivMatrix(a, b)
+  def + (b: MatrixExpression): ValueAddMatrix = ValueAddMatrix(a, b)
+  def - (b: MatrixExpression): ValueSubMatrix = ValueSubMatrix(a, b)
+  def * (b: MatrixExpression): ValueMulMatrix = ValueMulMatrix(a, b)
+  def / (b: MatrixExpression): ValueDivMatrix = ValueDivMatrix(a, b)
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
@@ -995,19 +995,19 @@ private[math] class PimpedDoubleArray(override val a: Array[Double]) extends Pim
   def ^= (b: Double): Array[Double] = a.mapInPlace(math.pow(_, b))
 
   def += (b: VectorExpression): Array[Double] = {
-    for (i <- 0 until a.length) a(i) += b(i)
+    for (i <- a.indices) a(i) += b(i)
     a
   }
   def -= (b: VectorExpression): Array[Double] = {
-    for (i <- 0 until a.length) a(i) -= b(i)
+    for (i <- a.indices) a(i) -= b(i)
     a
   }
   def *= (b: VectorExpression): Array[Double] = {
-    for (i <- 0 until a.length) a(i) *= b(i)
+    for (i <- a.indices) a(i) *= b(i)
     a
   }
   def /= (b: VectorExpression): Array[Double] = {
-    for (i <- 0 until a.length) a(i) /= b(i)
+    for (i <- a.indices) a(i) /= b(i)
     a
   }
 }

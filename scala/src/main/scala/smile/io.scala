@@ -38,7 +38,7 @@ object write {
   def apply[T <: Serializable](x: T, file: Path): Unit = {
     val oos = new ObjectOutputStream(new FileOutputStream(file.toFile))
     oos.writeObject(x)
-    oos.close
+    oos.close()
   }
 
   /** Serializes an object/model to a file by XStream. */
@@ -50,7 +50,7 @@ object write {
     val xml = xstream.toXML(x)
     new PrintWriter(file.toFile) {
       write(xml)
-      close
+      close()
     }
   }
 
@@ -69,7 +69,7 @@ object write {
   def apply[T](data: Array[T], file: Path): Unit = {
     val writer = new PrintWriter(file.toFile)
     data.foreach(writer.println(_))
-    writer.close
+    writer.close()
   }
 
   /** Writes a data frame to an Apache Arrow file. */
@@ -124,7 +124,7 @@ object write {
       writer.println(row.mkString(del))
     }
 
-    writer.close
+    writer.close()
   }
 }
 
@@ -137,7 +137,7 @@ object read {
   def apply(file: Path): AnyRef = {
     val ois = new ObjectInputStream(new FileInputStream(file.toFile))
     val o = ois.readObject
-    ois.close
+    ois.close()
     o
   }
 
@@ -146,9 +146,13 @@ object read {
 
   /** Reads an object/model that was serialized by XStream. */
   def xstream(file: Path): AnyRef = {
-    val xml = Source.fromFile(file.toFile).mkString
-    val xstream = new XStream
-    xstream.fromXML(xml)
+    val source = Source.fromFile(file.toFile)
+    try {
+      val xstream = new XStream
+      xstream.fromXML(source.mkString)
+    } finally {
+      source.close()
+    }
   }
 
   /** Reads a JDBC query result to a data frame. */
@@ -249,23 +253,29 @@ object read {
     val vertices = new ArrayBuffer[Array[Double]]
     val edges = new ArrayBuffer[Array[Int]]
 
-    Source.fromFile(file.toFile).getLines() foreach { line =>
-      val tokens = line.split("\\s+")
+    val source = Source.fromFile(file.toFile)
+    try {
+      source.getLines() foreach { line =>
+        val tokens = line.split("\\s+")
 
-      if (tokens.size > 1) {
-        tokens(0) match {
-          case "v" =>
-            require(tokens.size == 4 || tokens.size == 5, s"Invalid vertex element: $line")
-            vertices += Array(tokens(1).toDouble, tokens(2).toDouble, tokens(3).toDouble)
-          case "f" =>
-            require(tokens.size >= 3, s"Invalid face element: $line")
-            val face = tokens.drop(1).map(_.toInt - 1)
-            for (i <- 1 until face.size) edges += Array(face(i-1), face(i))
-            edges += Array(face(0), face.last)
-          case _ => // ignore all other elements
+        if (tokens.size > 1) {
+          tokens(0) match {
+            case "v" =>
+              require(tokens.size == 4 || tokens.size == 5, s"Invalid vertex element: $line")
+              vertices += Array(tokens(1).toDouble, tokens(2).toDouble, tokens(3).toDouble)
+            case "f" =>
+              require(tokens.size >= 3, s"Invalid face element: $line")
+              val face = tokens.drop(1).map(_.toInt - 1)
+              for (i <- 1 until face.length) edges += Array(face(i - 1), face(i))
+              edges += Array(face(0), face.last)
+            case _ => // ignore all other elements
+          }
         }
       }
+
+      (vertices.toArray, edges.toArray)
+    } finally {
+      source.close()
     }
-    (vertices.toArray, edges.toArray)
   }
 }
