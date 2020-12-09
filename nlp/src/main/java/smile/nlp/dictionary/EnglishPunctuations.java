@@ -29,11 +29,11 @@ public class EnglishPunctuations implements Punctuations {
     /**
      * The singleton instance.
      */
-    private static EnglishPunctuations singleton = new EnglishPunctuations();
+    private static final EnglishPunctuations singleton = new EnglishPunctuations();
     /**
      * A set of punctuation marks.
      */
-    private HashSet<String> dict = new HashSet<>(50);
+    private final HashSet<String> dict = new HashSet<>(50);
 
     /**
      * Constructor.

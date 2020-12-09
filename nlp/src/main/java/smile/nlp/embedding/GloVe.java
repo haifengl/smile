@@ -60,7 +60,7 @@ public class GloVe {
                 words.add(tokens[0]);
                 float[] vector = new float[tokens.length-1];
                 for (int i = 0; i < vector.length; i++) {
-                    vector[i] = Float.valueOf(tokens[i+1]);
+                    vector[i] = Float.parseFloat(tokens[i+1]);
                 }
                 vectors.add(vector);
             });

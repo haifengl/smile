@@ -83,7 +83,7 @@ public class PennTreebankTokenizer implements Tokenizer {
     /**
      * The singleton instance.
      */
-    private static PennTreebankTokenizer singleton = new PennTreebankTokenizer();
+    private static final PennTreebankTokenizer singleton = new PennTreebankTokenizer();
 
     /**
      * Constructor.

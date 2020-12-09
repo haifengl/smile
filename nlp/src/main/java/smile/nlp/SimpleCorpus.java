@@ -51,36 +51,36 @@ public class SimpleCorpus implements Corpus {
     /**
      * The set of documents.
      */
-    private List<SimpleText> docs = new ArrayList<>();
+    private final List<SimpleText> docs = new ArrayList<>();
     /**
      * Frequency of single tokens.
      */
-    private HashMap<String, MutableInt> freq = new HashMap<>();
+    private final HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * Frequency of bigrams.
      */
-    private HashMap<Bigram, MutableInt> freq2 = new HashMap<>();
+    private final HashMap<Bigram, MutableInt> freq2 = new HashMap<>();
     /**
      * Inverted file storing a mapping from terms to the documents containing it.
      */
-    private HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
+    private final HashMap<String, List<SimpleText>> invertedFile = new HashMap<>();
     /**
      * Sentence splitter.
      */
-    private SentenceSplitter splitter;
+    private final SentenceSplitter splitter;
     /**
      * Tokenizer.
      */
-    private Tokenizer tokenizer;
+    private final Tokenizer tokenizer;
     /**
      * The set of stop words.
      */
-    private StopWords stopWords;
+    private final StopWords stopWords;
 
     /**
      * The set of punctuations marks.
      */
-    private Punctuations punctuations;
+    private final Punctuations punctuations;
     
     /**
      * Constructor.
@@ -162,11 +162,7 @@ public class SimpleCorpus implements Corpus {
         docs.add(doc);
 
         for (String term : doc.unique()) {
-            List<SimpleText> hit = invertedFile.get(term);
-            if (hit == null) {
-                hit = new ArrayList<>();
-                invertedFile.put(term, hit);
-            }
+            List<SimpleText> hit = invertedFile.computeIfAbsent(term, k -> new ArrayList<>());
             hit.add(doc);
         }
 
@@ -243,7 +239,7 @@ public class SimpleCorpus implements Corpus {
                 rank.add(new Relevance(doc, ranker.rank(this, doc, term, tf, n)));
             }
 
-            Collections.sort(rank, Collections.reverseOrder());
+            rank.sort(Collections.reverseOrder());
             return rank.iterator();
         } else {
             return Collections.emptyIterator();
@@ -254,9 +250,9 @@ public class SimpleCorpus implements Corpus {
     public Iterator<Relevance> search(RelevanceRanker ranker, String[] terms) {
         Set<SimpleText> hits = new HashSet<>();
 
-        for (int i = 0; i < terms.length; i++) {
-            if (invertedFile.containsKey(terms[i])) {
-                hits.addAll(invertedFile.get(terms[i]));
+        for (String term : terms) {
+            if (invertedFile.containsKey(term)) {
+                hits.addAll(invertedFile.get(term));
             }
         }
 
@@ -268,15 +264,15 @@ public class SimpleCorpus implements Corpus {
         ArrayList<Relevance> rank = new ArrayList<>(n);
         for (SimpleText doc : hits) {
             double r = 0.0;
-            for (int i = 0; i < terms.length; i++) {
-                int tf = doc.tf(terms[i]);
-                r += ranker.rank(this, doc, terms[i], tf, n);
+            for (String term : terms) {
+                int tf = doc.tf(term);
+                r += ranker.rank(this, doc, term, tf, n);
             }
 
             rank.add(new Relevance(doc, r));
         }
 
-        Collections.sort(rank, Collections.reverseOrder());
+        rank.sort(Collections.reverseOrder());
         return rank.iterator();
     }
 }

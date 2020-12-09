@@ -17,6 +17,8 @@
 
 package smile.nlp;
 
+import java.util.Objects;
+
 /**
  * Bigrams or digrams are groups of two words, and are very commonly used
  * as the basis for simple statistical analysis of text. They are a special
@@ -70,14 +72,10 @@ public class Bigram {
         }
 
         final Bigram other = (Bigram) obj;
-        if ((this.w1 == null) ? (other.w1 != null) : !this.w1.equals(other.w1)) {
+        if (!Objects.equals(this.w1, other.w1)) {
             return false;
         }
 
-        if ((this.w2 == null) ? (other.w2 != null) : !this.w2.equals(other.w2)) {
-            return false;
-        }
-
-        return true;
+        return Objects.equals(this.w2, other.w2);
     }
 }

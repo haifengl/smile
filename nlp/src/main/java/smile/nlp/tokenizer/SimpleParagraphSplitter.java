@@ -45,16 +45,16 @@ public class SimpleParagraphSplitter implements ParagraphSplitter {
     /**
      * Remove whitespaces in an blank line. Note to turn multiline mode.
      */
-    private static Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
+    private static final Pattern REGEX_BLANK_LINE = Pattern.compile("(?m)^\\s+$");
     /**
      * Pattern to split paragraphs. Note that \u2029 is paragraph-separator character
      */
-    private static Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|'\u2029+");
+    private static final Pattern REGEX_PARAGRAPH = Pattern.compile("(\\n|(\\n\\r)|(\\r\\n)){2,}+|'\u2029+");
 
     /**
      * The singleton instance for standard unweighted Euclidean distance.
      */
-    private static SimpleParagraphSplitter singleton = new SimpleParagraphSplitter();
+    private static final SimpleParagraphSplitter singleton = new SimpleParagraphSplitter();
 
     /**
      * Constructor.

@@ -50,7 +50,7 @@ public enum EnglishStopWords implements StopWords {
     /**
      * A set of stop words.
      */
-    private HashSet<String> dict;
+    private final HashSet<String> dict;
 
     /**
      * Constructor.
@@ -59,7 +59,7 @@ public enum EnglishStopWords implements StopWords {
         dict = new HashSet<>();
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
-            String line = null;
+            String line;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
                 if (!line.isEmpty()) {

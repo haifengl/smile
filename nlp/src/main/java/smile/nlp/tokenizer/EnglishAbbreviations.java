@@ -39,7 +39,7 @@ interface EnglishAbbreviations {
 
     static Set<String> dictionary() {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt")))) {
-            return input.lines().map(line -> line.trim()).filter(line -> !line.isEmpty()).collect(Collectors.toSet());
+            return input.lines().map(String::trim).filter(line -> !line.isEmpty()).collect(Collectors.toSet());
         } catch (IOException ex) {
             ex.printStackTrace();
         }

@@ -37,7 +37,7 @@ public enum EnglishDictionary implements Dictionary {
     /**
      * A list of abbreviations.
      */
-    private HashSet<String> dict;
+    private final HashSet<String> dict;
 
     /**
      * Constructor.
@@ -49,7 +49,7 @@ public enum EnglishDictionary implements Dictionary {
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
         
-            String line = null;
+            String line;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
                 // Remove blank line or single capital characters from dictionary.

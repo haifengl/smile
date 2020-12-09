@@ -78,7 +78,7 @@ public class SimpleSentenceSplitter implements SentenceSplitter {
     /**
      * The singleton instance.
      */
-    private static SimpleSentenceSplitter singleton = new SimpleSentenceSplitter();
+    private static final SimpleSentenceSplitter singleton = new SimpleSentenceSplitter();
 
     /**
      * Constructor.
