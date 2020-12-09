@@ -128,7 +128,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A.{@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -136,7 +136,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -174,7 +174,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -182,7 +182,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -220,7 +220,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          {@code A = P*L*U}; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -228,7 +228,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -273,12 +273,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -323,12 +323,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -373,12 +373,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -423,12 +423,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -664,12 +664,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -713,12 +713,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -762,12 +762,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -811,12 +811,12 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky factorization
      *          {@code A = U**T*U} or A = {@code L*L**T}.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -1266,7 +1266,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -1302,7 +1302,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -1338,7 +1338,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -1374,7 +1374,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -2294,7 +2294,7 @@ public interface LAPACK {
      *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if {@code N <= P}, the upper triangle of the subarray
@@ -2372,7 +2372,7 @@ public interface LAPACK {
      *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if {@code N <= P}, the upper triangle of the subarray
@@ -2450,7 +2450,7 @@ public interface LAPACK {
      *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if {@code N <= P}, the upper triangle of the subarray
@@ -2528,7 +2528,7 @@ public interface LAPACK {
      *          On exit, the upper triangular part of the matrix A contains
      *          the M-by-M upper triangular matrix R.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-P matrix B.
      *          On exit, if {@code N <= P}, the upper triangle of the subarray
@@ -2580,7 +2580,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param wr Dimension N. WR and WI contain the real and imaginary parts,
      *           respectively, of the computed eigenvalues. Complex
@@ -2627,7 +2627,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param wr Dimension N. WR and WI contain the real and imaginary parts,
      *           respectively, of the computed eigenvalues. Complex
@@ -2674,7 +2674,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param wr Dimension N. WR and WI contain the real and imaginary parts,
      *           respectively, of the computed eigenvalues. Complex
@@ -2721,7 +2721,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param wr Dimension N. WR and WI contain the real and imaginary parts,
      *           respectively, of the computed eigenvalues. Complex
@@ -2768,7 +2768,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2798,7 +2798,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2828,7 +2828,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2858,7 +2858,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2889,7 +2889,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2920,7 +2920,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2951,7 +2951,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -2982,7 +2982,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param w Dimension N. If INFO = 0, the eigenvalues in ascending order.
      *
@@ -3028,7 +3028,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param vl The lower bound of the interval to be searched for eigenvalues.
      *           Not referenced if RANGE = 'A' or 'I'.
@@ -3070,7 +3070,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  Internal error
+     *         {@code > 0}:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, double[] A, int lda, double vl, double vu, int il, int iu, double abstol, int[] m, double[] w, double[] Z, int ldz, int[] isuppz);
 
@@ -3107,7 +3107,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param vl The lower bound of the interval to be searched for eigenvalues.
      *           Not referenced if RANGE = 'A' or 'I'.
@@ -3149,7 +3149,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  Internal error
+     *         {@code > 0}:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, DoubleBuffer A, int lda, double vl, double vu, int il, int iu, double abstol, IntBuffer m, DoubleBuffer w, DoubleBuffer Z, int ldz, IntBuffer isuppz);
 
@@ -3186,7 +3186,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param vl The lower bound of the interval to be searched for eigenvalues.
      *           Not referenced if RANGE = 'A' or 'I'.
@@ -3228,7 +3228,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  Internal error
+     *         {@code > 0}:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, float[] A, int lda, float vl, float vu, int il, int iu, float abstol, int[] m, float[] w, float[] Z, int ldz, int[] isuppz);
 
@@ -3265,7 +3265,7 @@ public interface LAPACK {
      *          On entry, the N-by-N matrix A.
      *          On exit, A has been overwritten.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param vl The lower bound of the interval to be searched for eigenvalues.
      *           Not referenced if RANGE = 'A' or 'I'.
@@ -3307,7 +3307,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  Internal error
+     *         {@code > 0}:  Internal error
      */
     int syevr(Layout layout, EVDJob jobz, EigenRange range, UPLO uplo, int n, FloatBuffer A, int lda, float vl, float vu, int il, int iu, float abstol, IntBuffer m, FloatBuffer w, FloatBuffer Z, int ldz, IntBuffer isuppz);
 
@@ -3339,7 +3339,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3390,7 +3390,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3492,7 +3492,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3532,7 +3532,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
-     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V**T (the right
      *         singular vectors, stored rowwise) otherwise.
      *
@@ -3540,7 +3540,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3554,7 +3554,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  DBDSDC did not converge, updating process failed.
+     *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, double[] A, int lda, double[] s, double[] U, int ldu, double[] VT, int ldvt);
 
@@ -3575,7 +3575,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
-     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V**T (the right
      *         singular vectors, stored rowwise) otherwise.
      *
@@ -3583,7 +3583,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3597,7 +3597,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  DBDSDC did not converge, updating process failed.
+     *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, DoubleBuffer A, int lda, DoubleBuffer s, DoubleBuffer U, int ldu, DoubleBuffer VT, int ldvt);
 
@@ -3618,7 +3618,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
-     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V**T (the right
      *         singular vectors, stored rowwise) otherwise.
      *
@@ -3626,7 +3626,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3640,7 +3640,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  DBDSDC did not converge, updating process failed.
+     *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, float[] A, int lda, float[] s, float[] U, int ldu, float[] VT, int ldvt);
 
@@ -3661,7 +3661,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
-     *          of U (the left singular vectors, stored columnwise) if M >= N;
+     *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
      *          A is overwritten with the first M rows of V**T (the right
      *         singular vectors, stored rowwise) otherwise.
      *
@@ -3669,7 +3669,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3683,7 +3683,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit.
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value.
-     *         > 0:  DBDSDC did not converge, updating process failed.
+     *         {@code > 0}:  DBDSDC did not converge, updating process failed.
      */
     int gesdd(Layout layout, SVDJob jobz, int m, int n, FloatBuffer A, int lda, FloatBuffer s, FloatBuffer U, int ldu, FloatBuffer VT, int ldvt);
 
@@ -3701,7 +3701,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3730,7 +3730,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3759,7 +3759,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3788,7 +3788,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3818,7 +3818,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3848,7 +3848,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3878,7 +3878,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3908,7 +3908,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3941,7 +3941,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -3974,7 +3974,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -4007,7 +4007,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -4040,7 +4040,7 @@ public interface LAPACK {
      *          On exit, the factors L and U from the factorization
      *          A = P*L*U; the unit diagonal elements of L are not stored.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices; for {@code 1 <= i <= min(M,N)}, row i of the
      *             matrix was interchanged with row IPIV(i). Dimension min(M,N).
@@ -4176,7 +4176,7 @@ public interface LAPACK {
      *
      * @param A The LU factorization computed by GETRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4213,7 +4213,7 @@ public interface LAPACK {
      *
      * @param A The LU factorization computed by GETRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4250,7 +4250,7 @@ public interface LAPACK {
      *
      * @param A The LU factorization computed by GETRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4287,7 +4287,7 @@ public interface LAPACK {
      *
      * @param A The LU factorization computed by GETRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4328,7 +4328,7 @@ public interface LAPACK {
      *
      * @param AB The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4369,7 +4369,7 @@ public interface LAPACK {
      *
      * @param AB The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4410,7 +4410,7 @@ public interface LAPACK {
      *
      * @param AB The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4451,7 +4451,7 @@ public interface LAPACK {
      *
      * @param AB The LU factorization computed by GBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -4622,7 +4622,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4648,7 +4648,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4674,7 +4674,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4700,7 +4700,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4726,7 +4726,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4752,7 +4752,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4778,7 +4778,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4804,7 +4804,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4832,7 +4832,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4860,7 +4860,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4888,7 +4888,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -4916,7 +4916,7 @@ public interface LAPACK {
      *          On exit, the factor U or L from the Cholesky
      *          factorization A = U**T*U or A = L*L**T.
      *
-     * @param ldab The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5046,7 +5046,7 @@ public interface LAPACK {
      * @param A The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by POTRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5081,7 +5081,7 @@ public interface LAPACK {
      * @param A The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by POTRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5116,7 +5116,7 @@ public interface LAPACK {
      * @param A The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by POTRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5151,7 +5151,7 @@ public interface LAPACK {
      * @param A The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by POTRF.
      *
-     * @param lda The leading dimension of the matrix A. LDA >= max(1,N).
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5188,7 +5188,7 @@ public interface LAPACK {
      * @param AB The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by PBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5225,7 +5225,7 @@ public interface LAPACK {
      * @param AB The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by PBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5262,7 +5262,7 @@ public interface LAPACK {
      * @param AB The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by PBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5299,7 +5299,7 @@ public interface LAPACK {
      * @param AB The triangular factor U or L from the Cholesky factorization
      *          A = U**T*U or A = L*L**T, as computed by PBTRF.
      *
-     * @param ldab The leading dimension of the matrix AB. LDA >= max(1,N).
+     * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5793,7 +5793,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
-     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
+     *         {@code > 0}: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5836,7 +5836,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
-     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
+     *         {@code > 0}: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5879,7 +5879,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
-     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
+     *         {@code > 0}: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
@@ -5922,7 +5922,7 @@ public interface LAPACK {
      * @return INFO flag.
      *         {@code = 0}:  successful exit
      *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
-     *         > 0: if {@code INFO = i}, the i-th diagonal element of A is zero,
+     *         {@code > 0}: if {@code INFO = i}, the i-th diagonal element of A is zero,
      *              indicating that the matrix is singular and the solutions
      *              X have not been computed.
      */
