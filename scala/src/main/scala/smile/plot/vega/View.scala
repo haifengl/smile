@@ -50,6 +50,7 @@ trait View extends VegaLite {
     * and config.view.continuousHeight, respectively.
     */
   def width(width: String): View = {
+    assert(width == "container", "Invalid width: " + width)
     spec.width = "container"
     this
   }
@@ -69,6 +70,7 @@ trait View extends VegaLite {
     * and config.view.continuousHeight, respectively.
     */
   def height(height: String): View = {
+    assert(height == "container", "Invalid height: " + height)
     spec.height = "container"
     this
   }
@@ -616,10 +618,10 @@ object View {
       case Right(params) => json.bin = params
     }
 
-    if (!timeUnit.isEmpty) json.timeUnit = timeUnit
-    if (!aggregate.isEmpty) json.aggregate = aggregate
+    if (timeUnit.nonEmpty) json.timeUnit = timeUnit
+    if (aggregate.nonEmpty) json.aggregate = aggregate
     if (title == null) json.title = JsNull
-    else if (!title.isEmpty) json.title = title
+    else if (title.nonEmpty) json.title = title
 
     json
   }

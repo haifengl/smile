@@ -32,7 +32,7 @@ trait Scalar extends Tensor {
   /** Returns the derivative. */
   def d(dx: Var): Scalar
   /** Returns the gradient vector. */
-  def d(dx: Var*): Vector = Vars(dx.map(d(_)): _*).simplify
+  def d(dx: Var*): Vector = Vars(dx.map(d): _*).simplify
   /** Returns the gradient vector. */
   def d(dx: VectorVar): Vector
 
@@ -546,7 +546,7 @@ case class IntDiv(x: IntScalar, y: IntScalar) extends IntScalar {
     case (a, IntMul(b, c)) if a / c != IntDiv(a, c) => (a / c) / b
     case (IntMul(a, b), c) if a / c != IntDiv(a, c) => (a / c) * b
     case (IntMul(a, b), c) if b / c != IntDiv(b, c) => a * (b / c)
-    case (a, b) if (a == b) => IntVal(1)
+    case (a, b) if a == b => IntVal(1)
     case _ => this
   }
 }

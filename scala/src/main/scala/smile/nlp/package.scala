@@ -22,6 +22,7 @@ import scala.jdk.CollectionConverters._
 import smile.math.MathEx
 import smile.nlp.dictionary.StopWords
 import smile.nlp.pos.{HMMPOSTagger, PennTreebankPOS}
+import smile.nlp.stemmer.{LancasterStemmer, PorterStemmer}
 import smile.util.time
 
 /** Natural language processing.
@@ -29,7 +30,7 @@ import smile.util.time
   * @author Haifeng Li
   */
 package object nlp {
-  implicit def pimpString(string: String) = new PimpedString(string)
+  implicit def pimpString(string: String): PimpedString = new PimpedString(string)
 
   /** Porter's stemming algorithm. The stemmer is based on the idea that the
     * suffixes in the English language are mostly made up of a combination of
@@ -44,7 +45,7 @@ package object nlp {
     * step fires and control passes to the next step or there are no more rules
     * in that step whence control moves to the next step.
     */
-  val porter = new stemmer.PorterStemmer {
+  val porter: PorterStemmer = new stemmer.PorterStemmer {
     def apply(word: String): String = stem(word)
   }
 
@@ -54,7 +55,7 @@ package object nlp {
     * utilizes a single table of rules, each of which may specify
     * the removal or replacement of an ending.
     */
-  val lancaster = new stemmer.LancasterStemmer {
+  val lancaster: LancasterStemmer = new stemmer.LancasterStemmer {
     def apply(word: String): String = stem(word)
   }
 
@@ -64,9 +65,7 @@ package object nlp {
     */
   def corpus(text: scala.collection.Seq[String]): SimpleCorpus = {
     val corpus = new SimpleCorpus
-    text.foreach { case text =>
-      corpus.add(new Text(text))
-    }
+    text.foreach(text => corpus.add(new Text(text)))
     corpus
   }
 
@@ -161,7 +160,7 @@ package object nlp {
     */
   def df(terms: Array[String], corpus: Array[Map[String, Int]]): Array[Int] = {
     terms.map { term =>
-      corpus.filter(_.contains(term)).size
+      corpus.count(_.contains(term))
     }
   }
 
@@ -183,10 +182,10 @@ package object nlp {
     * @return a matrix of which each row is the TF-IDF feature vector.
     */
   def tfidf(corpus: Array[Array[Double]]): Array[Array[Double]] = {
-    val n = corpus.size
+    val n = corpus.length
     val df = new Array[Int](corpus(0).length)
     corpus.foreach { bag =>
-      for (i <- 0 until df.length) {
+      for (i <- df.indices) {
         if (bag(i) > 0) df(i) = df(i) + 1
       }
       df
@@ -210,7 +209,7 @@ package object nlp {
     val maxtf = bag.max
     val features = new Array[Double](bag.length)
 
-    for (i <- 0 until features.length) {
+    for (i <- features.indices) {
       features(i) = tfidf(bag(i), maxtf, n, df(i))
     }
 
@@ -310,7 +309,7 @@ package nlp {
         case "google" => EnglishStopWords.GOOGLE
         case "mysql" => EnglishStopWords.MYSQL
         case _ => new StopWords {
-          val dict = filter.split(",").toSet
+          val dict: Set[String] = filter.split(",").toSet
 
           override def contains(word: String): Boolean = dict.contains(word)
 
@@ -337,7 +336,7 @@ package nlp {
       val words = text.normalize.sentences.flatMap(_.words(filter))
 
       val tokens = stemmer.map { stemmer =>
-        words.map(stemmer.stem(_))
+        words.map(stemmer.stem)
       }.getOrElse(words)
 
       val map = tokens.map(_.toLowerCase).groupBy(identity)
@@ -354,7 +353,7 @@ package nlp {
       val words = text.normalize.sentences.flatMap(_.words(filter))
 
       val tokens = stemmer.map { stemmer =>
-        words.map(stemmer.stem(_))
+        words.map(stemmer.stem)
       }.getOrElse(words)
 
       tokens.map(_.toLowerCase).toSet

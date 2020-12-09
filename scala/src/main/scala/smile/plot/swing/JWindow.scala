@@ -25,7 +25,7 @@ trait JWindow {
   val frame: JFrame
 
   /** Closes the window programmatically. */
-  def close: Unit = {
+  def close(): Unit = {
     frame.dispatchEvent(new WindowEvent(frame, WindowEvent.WINDOW_CLOSING))
   }
 }

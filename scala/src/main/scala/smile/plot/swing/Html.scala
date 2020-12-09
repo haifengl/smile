@@ -37,13 +37,13 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 
   /** Returns the HTML img tag of the swing component encoded by BASE64. */
   def of(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
     val headless = new Headless(canvas, width, height)
-    headless.pack
+    headless.pack()
     headless.setVisible(true)
     SwingUtilities.invokeAndWait(() => {})
 
@@ -55,6 +55,6 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 }

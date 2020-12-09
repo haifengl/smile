@@ -58,18 +58,18 @@ case class FormulaBuilder(y: Option[Term], x: ListBuffer[Term]) {
 
 /** Formula DSL entrance. */
 private[formula] case class PimpedFormulaBuilder(a: Term) {
-  def ~ (b: String) = FormulaBuilder(Option(a), ListBuffer($(b)))
-  def ~ (b: Term) = FormulaBuilder(Option(a), ListBuffer(b))
-  def ~ () = FormulaBuilder(Option(a), ListBuffer())
-  def unary_~ = FormulaBuilder(Option.empty, ListBuffer(a))
+  def ~ (b: String): FormulaBuilder = FormulaBuilder(Option(a), ListBuffer($(b)))
+  def ~ (b: Term): FormulaBuilder = FormulaBuilder(Option(a), ListBuffer(b))
+  def ~ (): FormulaBuilder = FormulaBuilder(Option(a), ListBuffer())
+  def unary_~ : FormulaBuilder = FormulaBuilder(Option.empty, ListBuffer(a))
 }
 
 /** smile.nlp has pimpString function and PimpedString class.
   * Use a different name to avoid clash.
   */
 private[formula] case class PimpedFormulaString(a: String) {
-  def :: (b: String) = FactorInteractionBuilder(ListBuffer(a, b))
-  def && (b: String) = FactorCrossingBuilder(ListBuffer(a, b))
+  def :: (b: String): FactorInteractionBuilder = FactorInteractionBuilder(ListBuffer(a, b))
+  def && (b: String): FactorCrossingBuilder = FactorCrossingBuilder(ListBuffer(a, b))
 }
 
 private[formula] case class FactorInteractionBuilder(x: ListBuffer[String]) {
@@ -94,24 +94,24 @@ private[formula] case class FactorCrossingBuilder(x: ListBuffer[String]) {
 }
 
 private[formula] case class PimpedHyperTerm(a: Term) {
-  def unary_~ = FormulaBuilder(Option.empty, ListBuffer(a))
+  def unary_~ : FormulaBuilder = FormulaBuilder(Option.empty, ListBuffer(a))
 }
 
 private[formula] case class PimpedTerm(a: Term) {
-  def unary_~ = FormulaBuilder(Option.empty, ListBuffer(a))
+  def unary_~ : FormulaBuilder = FormulaBuilder(Option.empty, ListBuffer(a))
 
-  def + (b: Term) = add(a, b)
-  def - (b: Term) = sub(a, b)
-  def * (b: Term) = mul(a, b)
-  def / (b: Term) = div(a, b)
+  def + (b: Term): Term = add(a, b)
+  def - (b: Term): Term = sub(a, b)
+  def * (b: Term): Term = mul(a, b)
+  def / (b: Term): Term = div(a, b)
 
-  def + (b: Int) = add(a, `val`(b))
-  def - (b: Int) = sub(a, `val`(b))
-  def * (b: Int) = mul(a, `val`(b))
-  def / (b: Int) = div(a, `val`(b))
+  def + (b: Int): Term = add(a, `val`(b))
+  def - (b: Int): Term = sub(a, `val`(b))
+  def * (b: Int): Term = mul(a, `val`(b))
+  def / (b: Int): Term = div(a, `val`(b))
 
-  def + (b: Double) = add(a, `val`(b))
-  def - (b: Double) = sub(a, `val`(b))
-  def * (b: Double) = mul(a, `val`(b))
-  def / (b: Double) = div(a, `val`(b))
+  def + (b: Double): Term = add(a, `val`(b))
+  def - (b: Double): Term = sub(a, `val`(b))
+  def * (b: Double): Term = mul(a, `val`(b))
+  def / (b: Double): Term = div(a, `val`(b))
 }

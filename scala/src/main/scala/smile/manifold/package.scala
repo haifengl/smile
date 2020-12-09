@@ -17,7 +17,6 @@
 
 package smile
 
-import smile.math.distance.Distance
 import smile.util.time
 
 /** Manifold learning finds a low-dimensional basis for describing
