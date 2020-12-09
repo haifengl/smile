@@ -16,6 +16,34 @@ packageDescription :=
     |the project website for programming guides and more information.
     |""".stripMargin
 
+// Filter data files in universal
+mappings in Universal := {
+  // universalMappings: Seq[(File,String)]
+  val universalMappings = (mappings in Universal).value
+
+  // removing means filtering
+  universalMappings filter {
+    case (file, name) => !name.startsWith("data/airline") &&
+                         !name.startsWith("data/arrow") &&
+                         !name.startsWith("data/avro") &&
+                         !name.startsWith("data/csv") &&
+                         !name.startsWith("data/json") &&
+                         !name.startsWith("data/matrix") &&
+                         !name.startsWith("data/microarray") &&
+                         !name.startsWith("data/msrp") &&
+                         !name.startsWith("data/neighbor") &&
+                         !name.startsWith("data/nlp") &&
+                         !name.startsWith("data/npr") &&
+                         !name.startsWith("data/parquet") &&
+                         !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sqlite") &&
+                         !name.startsWith("data/text") &&
+                         !name.startsWith("data/transaction") &&
+                         !name.startsWith("data/weka/regression") &&
+                         !name.startsWith("data/wireframe")
+  }
+}
+
 // dealing with long classpaths
 scriptClasspath := Seq("*")
 
