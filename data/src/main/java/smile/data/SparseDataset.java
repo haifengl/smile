@@ -180,7 +180,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
 
     /** Strips the response variable and returns a SparseDataset. */
     static SparseDataset of(Dataset<Instance<SparseArray>> data) {
-        return of(data.stream().map(i -> i.x()).collect(Collectors.toList()));
+        return of(data.stream().map(Instance::x).collect(Collectors.toList()));
     }
 
     /**
@@ -188,8 +188,6 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Coordinate file stores a list of (row, column, value) tuples.
      *
      * @param path the input file path.
-     *
-     * @throws java.io.IOException
      */
     static SparseDataset from(Path path) throws IOException, ParseException {
         return from(path, 0);

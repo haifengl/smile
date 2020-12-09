@@ -30,9 +30,9 @@ public class TimeType implements DataType {
     static TimeType instance = new TimeType();
 
     /** Date format pattern. */
-    private String pattern;
+    private final String pattern;
     /** Date formatter. */
-    private DateTimeFormatter formatter;
+    private final DateTimeFormatter formatter;
 
     /**
      * Constructor with the ISO date formatter that formats

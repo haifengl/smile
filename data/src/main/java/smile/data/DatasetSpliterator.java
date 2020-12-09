@@ -27,7 +27,7 @@ import java.util.Spliterator;
  */
 class DatasetSpliterator<T> implements Spliterator<T> {
     /** The underlying Dataset. */
-    private Dataset<T> data;
+    private final Dataset<T> data;
     /** These may be employed by Spliterator clients to control, specialize or simplify computation. */
     private int characteristics = IMMUTABLE | SIZED | SUBSIZED;
     /** Current index, advanced on split or traversal */

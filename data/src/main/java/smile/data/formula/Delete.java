@@ -58,6 +58,6 @@ class Delete implements Term {
 
     @Override
     public List<Term> expand() {
-        return x.expand().stream().map(term -> new Delete(term)).collect(Collectors.toList());
+        return x.expand().stream().map(Delete::new).collect(Collectors.toList());
     }
 }

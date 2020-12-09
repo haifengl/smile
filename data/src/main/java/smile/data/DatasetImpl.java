@@ -32,7 +32,7 @@ class DatasetImpl<T> implements Dataset<T> {
     /**
      * The data objects.
      */
-    private ArrayList<T> data;
+    private final ArrayList<T> data;
 
     /**
      * Constructor

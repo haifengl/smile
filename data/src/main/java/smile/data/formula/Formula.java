@@ -65,14 +65,14 @@ public class Formula implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
 
     /** The left-hand side of formula. */
-    private Term response;
+    private final Term response;
     /** The right-hand side of formula. */
-    private Term[] predictors;
+    private final Term[] predictors;
     /** The formula-schema binding. */
     private transient ThreadLocal<Binding> binding;
 
     /** The formula-schema binding. */
-    private class Binding {
+    private static class Binding {
         /** The input schema. */
         StructType inputSchema;
         /** The output schema with response variable and predictors. */
@@ -235,7 +235,7 @@ public class Formula implements Serializable {
                 .collect(Collectors.toSet());
 
         expanded.removeIf(term -> deletes.contains(term.toString()));
-        return new Formula(response, expanded.toArray(new Term[expanded.size()]));
+        return new Formula(response, expanded.toArray(new Term[0]));
     }
 
     /**
@@ -257,20 +257,20 @@ public class Formula implements Serializable {
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
                 .collect(Collectors.toList());
 
-        binding.x = features.toArray(new Feature[features.size()]);
+        binding.x = features.toArray(new Feature[0]);
         binding.xschema = DataTypes.struct(
                 features.stream()
-                     .map(term -> term.field())
+                     .map(Feature::field)
                      .toArray(StructField[]::new)
         );
 
         if (response != null) {
             try {
                 features.addAll(0, response.bind(inputSchema));
-                binding.yx = features.toArray(new Feature[features.size()]);
+                binding.yx = features.toArray(new Feature[0]);
                 binding.yxschema = DataTypes.struct(
                         features.stream()
-                             .map(term -> term.field())
+                             .map(Feature::field)
                              .toArray(StructField[]::new)
                 );
             } catch (NullPointerException ex) {

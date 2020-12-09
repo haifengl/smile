@@ -35,14 +35,16 @@ import smile.data.type.StructType;
 public interface Terms {
     /** Returns a variable. */
     static Term $(String x) {
-        if (x.equals("."))
-            return new Dot();
-        else if (x.equals("0"))
-            return new Intercept(false);
-        else if (x.equals("1"))
-            return new Intercept(true);
-        else
-            return new Variable(x);
+        switch (x) {
+            case ".":
+                return new Dot();
+            case "0":
+                return new Intercept(false);
+            case "1":
+                return new Intercept(true);
+            default:
+                return new Variable(x);
+        }
     }
 
     /**
@@ -431,7 +433,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.BooleanType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.BooleanType, null);
 
                     @Override
                     public StructField field() {
@@ -465,7 +467,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.CharType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.CharType, null);
 
                     @Override
                     public StructField field() {
@@ -499,7 +501,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.ByteType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.ByteType, null);
 
                     @Override
                     public StructField field() {
@@ -558,7 +560,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.ShortType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.ShortType, null);
 
                     @Override
                     public StructField field() {
@@ -612,7 +614,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.IntegerType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.IntegerType, null);
 
                     @Override
                     public StructField field() {
@@ -661,7 +663,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.LongType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.LongType, null);
 
                     @Override
                     public StructField field() {
@@ -705,7 +707,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.FloatType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.FloatType, null);
 
                     @Override
                     public StructField field() {
@@ -744,7 +746,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataTypes.DoubleType, null);
+                    private final StructField field = new StructField(String.valueOf(x), DataTypes.DoubleType, null);
 
                     @Override
                     public StructField field() {
@@ -778,7 +780,7 @@ public interface Terms {
             @Override
             public List<Feature> bind(StructType schema) {
                 Feature feature = new Feature() {
-                    private StructField field = new StructField(String.valueOf(x), DataType.of(x.getClass()), null);
+                    private final StructField field = new StructField(String.valueOf(x), DataType.of(x.getClass()), null);
 
                     @Override
                     public StructField field() {
@@ -821,7 +823,7 @@ public interface Terms {
 
                 for (Feature feature : x.bind(schema)) {
                     features.add(new Feature() {
-                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.IntegerType, null);
+                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.IntegerType, null);
 
                         @Override
                         public StructField field() {
@@ -885,7 +887,7 @@ public interface Terms {
 
                 for (Feature feature : x.bind(schema)) {
                     features.add(new Feature() {
-                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.LongType, null);
+                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.LongType, null);
 
                         @Override
                         public StructField field() {
@@ -944,7 +946,7 @@ public interface Terms {
 
                 for (Feature feature : x.bind(schema)) {
                     features.add(new Feature() {
-                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.DoubleType, null);
+                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.DoubleType, null);
 
                         @Override
                         public StructField field() {
@@ -975,7 +977,7 @@ public interface Terms {
      * @param clazz the class of return object.
      * @param f the lambda to apply on the variable.
      */
-    static <T, R> Term of(final String name, final String x, final Class<R> clazz, java.util.function.Function f) {
+    static <T, R> Term of(final String name, final String x, final Class<R> clazz, java.util.function.Function<T, R> f) {
         return of(name, $(x), clazz, f);
     }
 
@@ -987,7 +989,7 @@ public interface Terms {
      * @param f the lambda to apply on the term.
      */
     @SuppressWarnings("unchecked")
-    static <T, R> Term of(final String name, final Term x, final Class<R> clazz, java.util.function.Function f) {
+    static <T, R> Term of(final String name, final Term x, final Class<R> clazz, java.util.function.Function<T, R> f) {
         return new AbstractFunction(name, x) {
             @Override
             public List<Feature> bind(StructType schema) {
@@ -995,7 +997,7 @@ public interface Terms {
 
                 for (Feature feature : x.bind(schema)) {
                     features.add(new Feature() {
-                        private StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.object(clazz), null);
+                        private final StructField field = new StructField(String.format("%s(%s)", name, feature), DataTypes.object(clazz), null);
 
                         @Override
                         public StructField field() {
@@ -1051,7 +1053,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
                                 DataTypes.IntegerType,
                                 null);
 
@@ -1117,7 +1119,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
                                 DataTypes.LongType,
                                 null);
 
@@ -1183,7 +1185,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
                                 DataTypes.DoubleType,
                                 null);
 
@@ -1251,7 +1253,7 @@ public interface Terms {
                     StructField yfield = b.field();
 
                     features.add(new Feature() {
-                        StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
+                        final StructField field = new StructField(String.format("%s(%s, %s)", name, xfield.name, yfield.name),
                                 DataTypes.object(clazz),
                                 null);
 

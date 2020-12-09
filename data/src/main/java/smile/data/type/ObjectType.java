@@ -45,15 +45,15 @@ public class ObjectType implements DataType {
     static ObjectType DoubleObjectType = new ObjectType(Double.class);
 
     /** Object Class. */
-    private Class clazz;
+    private final Class<?> clazz;
     /** toString lambda. */
-    private Function<Object, String> format;
+    private final Function<Object, String> format;
 
     /**
      * Constructor.
      * @param clazz the class of objects.
      */
-    ObjectType(Class clazz) {
+    ObjectType(Class<?> clazz) {
         this.clazz = clazz;
         if (clazz == Float.class) {
             format = o -> DataTypes.FloatType.toString(o);
@@ -64,7 +64,7 @@ public class ObjectType implements DataType {
         } else if (clazz == Long.class) {
             format = o -> DataTypes.IntegerType.toString(o);
         } else {
-            format = o -> o.toString();
+            format = Object::toString;
         }
     }
 
@@ -73,7 +73,7 @@ public class ObjectType implements DataType {
      * This is different from Object.getClass(), which returns
      * ObjectType.class.
      */
-    public Class getObjectClass() {
+    public Class<?> getObjectClass() {
         return clazz;
     }
 

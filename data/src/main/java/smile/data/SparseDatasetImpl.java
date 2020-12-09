@@ -40,7 +40,7 @@ class SparseDatasetImpl implements SparseDataset {
     /**
      * The data objects.
      */
-    private SparseArray[] data;
+    private final SparseArray[] data;
     /**
      * The number of nonzero entries.
      */
@@ -48,28 +48,30 @@ class SparseDatasetImpl implements SparseDataset {
     /**
      * The number of columns.
      */
-    private int ncols;
+    private final int ncols;
     /**
      * The number of nonzero entries in each column.
      */
     private int[] colSize;
     /**
      * Constructor.
-     * @data Each row is a data item which are the indices of nonzero elements.
-     *       Every row will be sorted into ascending order.
+     * @param data Each row is a data item which are the indices
+     *             of nonzero elements. Every row will be sorted
+     *             into ascending order.
      */
     public SparseDatasetImpl(Collection<SparseArray> data) {
-        this(data, 1 + data.stream().flatMap(a -> a.stream()).mapToInt(e -> e.i).max().orElse(0));
+        this(data, 1 + data.stream().flatMap(SparseArray::stream).mapToInt(e -> e.i).max().orElse(0));
     }
 
     /**
      * Constructor.
-     * @data Each row is a data item which are the indices of nonzero elements.
-     *       Every row will be sorted into ascending order.
-     * @ncols The number of columns.
+     * @param data Each row is a data item which are the indices
+     *             of nonzero elements. Every row will be sorted
+     *             into ascending order.
+     * @param ncols The number of columns.
      */
     public SparseDatasetImpl(Collection<SparseArray> data, int ncols) {
-        this.data = data.toArray(new SparseArray[data.size()]);
+        this.data = data.toArray(new SparseArray[0]);
         this.ncols = ncols;
         colSize = new int[ncols];
 
@@ -83,7 +85,7 @@ class SparseDatasetImpl implements SparseDataset {
                 }
 
                 if (e.i == i) {
-                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", e, x));
+                    logger.warn(String.format("Ignore duplicated indices: %d in [%s]", e.i, x));
                 } else {
                     if (ncols <= e.i) {
                         ncols = e.i + 1;

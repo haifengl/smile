@@ -153,7 +153,7 @@ public interface Tuple extends Serializable {
 
     /** Returns true if the tuple has null/missing values. */
     default boolean hasNull() {
-        return IntStream.range(0, length()).anyMatch(i -> isNullAt(i));
+        return IntStream.range(0, length()).anyMatch(this::isNullAt);
     }
 
     /**

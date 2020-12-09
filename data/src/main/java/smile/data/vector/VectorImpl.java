@@ -40,16 +40,16 @@ import smile.data.type.StructField;
  */
 class VectorImpl<T> implements Vector<T> {
     /** The name of vector. */
-    private String name;
+    private final String name;
     /** The data type of vector. */
-    private DataType type;
+    private final DataType type;
     /** Optional measure. */
-    private Measure measure;
+    private final Measure measure;
     /** The vector data. */
-    private T[] vector;
+    private final T[] vector;
 
     /** Constructor. */
-    public VectorImpl(String name, Class clazz, T[] vector) {
+    public VectorImpl(String name, Class<?> clazz, T[] vector) {
         this.name = name;
         this.type = DataTypes.object(clazz);
         this.measure = null;
@@ -171,7 +171,7 @@ class VectorImpl<T> implements Vector<T> {
         if (type.id() == DataType.ID.DateTime) {
             dates = stream().map(d -> ((LocalDateTime) d).toLocalDate()).toArray(LocalDate[]::new);
         } else if (type.id() == DataType.ID.Object) {
-            Class clazz = ((ObjectType) type).getObjectClass();
+            Class<?> clazz = ((ObjectType) type).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalDate()).toArray(LocalDate[]::new);
@@ -193,7 +193,7 @@ class VectorImpl<T> implements Vector<T> {
         if (type.id() == DataType.ID.DateTime) {
             dates = stream().map(d -> ((LocalDateTime) d).toLocalTime()).toArray(LocalTime[]::new);
         } else if (type.id() == DataType.ID.Object) {
-            Class clazz = ((ObjectType) type).getObjectClass();
+            Class<?> clazz = ((ObjectType) type).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalTime()).toArray(LocalTime[]::new);
@@ -213,7 +213,7 @@ class VectorImpl<T> implements Vector<T> {
     public Vector<LocalDateTime> toDateTime() {
         LocalDateTime[] dates = null;
         if (type.id() == DataType.ID.Object) {
-            Class clazz = ((ObjectType) type).getObjectClass();
+            Class<?> clazz = ((ObjectType) type).getObjectClass();
 
             if (clazz == Date.class) {
                 dates = stream().map(d -> ((Date) d).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime()).toArray(LocalDateTime[]::new);
@@ -222,7 +222,7 @@ class VectorImpl<T> implements Vector<T> {
             }
         }
 
-        if (dates != null) {
+        if (dates == null) {
             throw new UnsupportedOperationException("Unsupported data type for toDateTime(): " + type);
         }
 

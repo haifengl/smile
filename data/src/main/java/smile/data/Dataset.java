@@ -101,25 +101,25 @@ public interface Dataset<T> {
     static <T> Collector<T, List<T>, Dataset<T>> toDataset() {
         return Collector.of(
                 // supplier
-                () -> new ArrayList<T>(),
+                ArrayList::new,
                 // accumulator
-                (container, t) -> container.add(t),
+                List::add,
                 // combiner
                 (c1, c2) -> { c1.addAll(c2); return c1; },
                 // finisher
-                (container) -> Dataset.of(container)
+                Dataset::of
         );
     }
 
     /**
      * Returns a stream collector that accumulates elements into a Matrix.
      */
-    static <T> Collector<double[], List<double[]>, Matrix> toMatrix() {
+    static Collector<double[], List<double[]>, Matrix> toMatrix() {
         return Collector.of(
                 // supplier
-                () -> new ArrayList<double[]>(),
+                ArrayList::new,
                 // accumulator
-                (container, t) -> container.add(t),
+                List::add,
                 // combiner
                 (c1, c2) -> { c1.addAll(c2); return c1; },
                 // finisher

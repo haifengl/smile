@@ -43,7 +43,7 @@ import smile.data.type.StructType;
  */
 public class FactorInteraction implements Term {
     /** The factors of interaction. */
-    private List<String> factors;
+    private final List<String> factors;
 
     /**
      * Constructor.
@@ -65,7 +65,7 @@ public class FactorInteraction implements Term {
 
     @Override
     public String toString() {
-        return factors.stream().collect(Collectors.joining(":"));
+        return String.join(":", factors);
     }
 
     @Override
@@ -76,7 +76,7 @@ public class FactorInteraction implements Term {
     @Override
     public List<Feature> bind(StructType schema) {
         List<StructField> fields = factors.stream()
-                .map(factor -> schema.field(factor))
+                .map(schema::field)
                 .collect(Collectors.toList());
 
         for (StructField field : fields) {
@@ -96,8 +96,8 @@ public class FactorInteraction implements Term {
         NominalScale measure = new NominalScale(levels);
 
         Feature feature = new Feature() {
-            StructField field = new StructField(
-                    factors.stream().collect(Collectors.joining(":")),
+            final StructField field = new StructField(
+                    String.join(":", factors),
                     DataTypes.IntegerType,
                     measure
             );
@@ -114,13 +114,13 @@ public class FactorInteraction implements Term {
 
             @Override
             public int applyAsInt(Tuple o) {
-                String level = factors.stream().map(factor -> o.getString(factor)).collect(Collectors.joining(":"));
+                String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
                 return measure.valueOf(level).intValue();
             }
 
             @Override
             public Object apply(Tuple o) {
-                String level = factors.stream().map(factor -> o.getString(factor)).collect(Collectors.joining(":"));
+                String level = factors.stream().map(o::getString).collect(Collectors.joining(":"));
                 return measure.valueOf(level);
             }
         };
