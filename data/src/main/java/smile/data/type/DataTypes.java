@@ -111,7 +111,7 @@ public class DataTypes {
     }
 
     /** Creates an object data type of a given class. */
-    public static DataType object(Class clazz) {
+    public static DataType object(Class<?> clazz) {
         if (clazz == Integer.class) return IntegerObjectType;
         if (clazz == Long.class) return LongObjectType;
         if (clazz == Float.class) return FloatObjectType;

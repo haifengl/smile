@@ -63,11 +63,11 @@ public class Add extends Operator {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(String.format("%s + %s", xfield.name, yfield.name),
+                final StructField field = new StructField(String.format("%s + %s", xfield.name, yfield.name),
                         DataType.prompt(xfield.type, yfield.type),
                         null);
 
-                java.util.function.Function<Tuple, Object> lambda =
+                final java.util.function.Function<Tuple, Object> lambda =
                         field.type.isInt()    ? (Tuple o) -> a.applyAsInt(o)    + b.applyAsInt(o) :
                         field.type.isLong()   ? (Tuple o) -> a.applyAsLong(o)   + b.applyAsLong(o) :
                         field.type.isFloat()  ? (Tuple o) -> a.applyAsFloat(o)  + b.applyAsFloat(o) :

@@ -81,7 +81,7 @@ public interface BooleanVector extends BaseVector<Boolean, Integer, IntStream> {
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
-        return stream().limit(n).mapToObj(i -> String.valueOf(i)).collect(Collectors.joining(", ", "[", suffix));
+        return stream().limit(n).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", suffix));
     }
 
     /** Creates a named boolean vector.

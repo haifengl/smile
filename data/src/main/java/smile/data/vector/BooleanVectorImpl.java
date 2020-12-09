@@ -27,9 +27,9 @@ import smile.data.type.StructField;
  */
 class BooleanVectorImpl implements BooleanVector {
     /** The name of vector. */
-    private String name;
+    private final String name;
     /** The vector data. */
-    private boolean[] vector;
+    private final boolean[] vector;
 
     /** Constructor. */
     public BooleanVectorImpl(String name, boolean[] vector) {

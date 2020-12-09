@@ -26,13 +26,10 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import smile.data.measure.CategoricalMeasure;
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.*;
 import smile.data.vector.*;
 import smile.data.vector.Vector;
-import smile.math.matrix.Matrix;
 
 /**
  * A simple implementation of DataFrame that store columnar data in single machine's memory.
@@ -44,9 +41,9 @@ class DataFrameImpl implements DataFrame, Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DataFrameImpl.class);
 
     /** DataFrame schema. */
-    private StructType schema;
+    private final StructType schema;
     /** The column vectors. */
-    private List<BaseVector> columns;
+    private final List<BaseVector> columns;
     /** The number of rows. */
     private final int size;
 
@@ -62,7 +59,7 @@ class DataFrameImpl implements DataFrame, Serializable {
         this.columns = new ArrayList<>(columns);
 
         StructField[] fields = columns.stream()
-                .map(column -> column.field())
+                .map(BaseVector::field)
                 .toArray(StructField[]::new);
         this.schema = DataTypes.struct(fields);
 
@@ -88,7 +85,6 @@ class DataFrameImpl implements DataFrame, Serializable {
      * @param clazz The class type of elements.
      * @param <T> The type of elements.
      */
-    @SuppressWarnings("unchecked")
     public <T> DataFrameImpl(List<T> data, Class<T> clazz) {
         this.size = data.size();
         this.columns = new ArrayList<>();
@@ -159,17 +155,17 @@ class DataFrameImpl implements DataFrame, Serializable {
                         Object[] levels = type.getEnumConstants();
                         if (levels.length < Byte.MAX_VALUE + 1) {
                             byte[] values = new byte[size];
-                            for (T datum : data) values[i++] = (byte) ((Enum) read.invoke(datum)).ordinal();
+                            for (T datum : data) values[i++] = (byte) ((Enum<?>) read.invoke(datum)).ordinal();
                             ByteVector vector = ByteVector.of(field, values);
                             columns.add(vector);
                         } else if (levels.length < Short.MAX_VALUE + 1) {
                             short[] values = new short[size];
-                            for (T datum : data) values[i++] = (short) ((Enum) read.invoke(datum)).ordinal();
+                            for (T datum : data) values[i++] = (short) ((Enum<?>) read.invoke(datum)).ordinal();
                             ShortVector vector = ShortVector.of(field, values);
                             columns.add(vector);
                         } else {
                             int[] values = new int[size];
-                            for (T datum : data) values[i++] = ((Enum) read.invoke(datum)).ordinal();
+                            for (T datum : data) values[i++] = ((Enum<?>) read.invoke(datum)).ordinal();
                             IntVector vector = IntVector.of(field, values);
                             columns.add(vector);
                         }
@@ -321,7 +317,7 @@ class DataFrameImpl implements DataFrame, Serializable {
                 default: {
                     Object[] values = new Object[size];
                     for (Tuple datum : data) values[i++] = datum.get(j);
-                    Vector vector = Vector.of(field, values);
+                    Vector<?> vector = Vector.of(field, values);
                     columns.add(vector);
                 }
             }
@@ -436,8 +432,8 @@ class DataFrameImpl implements DataFrame, Serializable {
     @Override
     public DataFrame select(int... cols) {
         List<BaseVector> sub = new ArrayList<>();
-        for (int i = 0; i < cols.length; i++) {
-            sub.add(columns.get(cols[i]));
+        for (int col : cols) {
+            sub.add(columns.get(col));
         }
 
         return new DataFrameImpl(sub);
@@ -447,8 +443,8 @@ class DataFrameImpl implements DataFrame, Serializable {
     public DataFrame drop(int... cols) {
         List<BaseVector> sub = new ArrayList<>(columns);
         List<BaseVector> drops = new ArrayList<>();
-        for (int i = 0; i < cols.length; i++) {
-            drops.add(columns.get(cols[i]));
+        for (int col : cols) {
+            drops.add(columns.get(col));
         }
         sub.removeAll(drops);
 
@@ -587,7 +583,7 @@ class DataFrameImpl implements DataFrame, Serializable {
 
     class DataFrameRow implements Tuple {
         /** Row index. */
-        private int i;
+        private final int i;
 
         DataFrameRow(int i) {
             this.i = i;

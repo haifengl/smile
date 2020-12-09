@@ -35,7 +35,7 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     /**
      * The data objects.
      */
-    private int[][] data;
+    private final int[][] data;
     /**
      * The number of nonzero entries.
      */
@@ -43,16 +43,17 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     /**
      * The number of columns.
      */
-    private int ncols;
+    private final int ncols;
     /**
      * The number of nonzero entries in each column.
      */
-    private int[] colSize;
+    private final int[] colSize;
 
     /**
      * Constructor.
-     * @data Each row is a data item which are the indices of nonzero elements.
-     *       Every row will be sorted into ascending order.
+     * @param data Each row is a data item which are the indices
+     *             of nonzero elements. Every row will be sorted
+     *             into ascending order.
      */
     public BinarySparseDatasetImpl(Collection<int[]> data) {
         this.data = data.toArray(new int[data.size()][]);

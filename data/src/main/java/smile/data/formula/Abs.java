@@ -51,7 +51,7 @@ public class Abs extends AbstractFunction {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(String.format("abs(%s)", xfield.name), xfield.type, xfield.measure);
+                final StructField field = new StructField(String.format("abs(%s)", xfield.name), xfield.type, xfield.measure);
 
                 @Override
                 public StructField field() {

@@ -30,11 +30,11 @@ import smile.data.type.StructField;
  */
 class IntVectorImpl implements IntVector {
     /** The name of vector. */
-    private String name;
+    private final String name;
     /** Optional measure. */
-    private Measure measure;
+    private final Measure measure;
     /** The vector data. */
-    private int[] vector;
+    private final int[] vector;
 
     /** Constructor. */
     public IntVectorImpl(String name, int[] vector) {

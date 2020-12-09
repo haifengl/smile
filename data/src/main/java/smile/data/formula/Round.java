@@ -52,7 +52,7 @@ class Round extends AbstractFunction {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(String.format("round(%s)", xfield.name), xfield.type, xfield.measure);
+                final StructField field = new StructField(String.format("round(%s)", xfield.name), xfield.type, xfield.measure);
 
                 @Override
                 public StructField field() {

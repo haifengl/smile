@@ -43,7 +43,7 @@ public class ArrayType implements DataType {
     static ArrayType DoubleArrayType = new ArrayType(DataTypes.DoubleType);
 
     /** Element data type. */
-    private DataType type;
+    private final DataType type;
 
     /**
      * Constructor.
