@@ -1,12 +1,19 @@
 name := "smile"
 
 lazy val commonSettings = Seq(
+  // skip packageDoc task on stage
+  mappings in (Compile, packageDoc) := Seq(),
+  // skip javadoc and scaladoc for publishLocal
+  publishArtifact in (Compile, packageDoc) := false,
+
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
   version := "2.6.0",
+
   parallelExecution in Test := false,
   autoAPIMappings := true,
+
   publishTo := {
     val nexus = "https://oss.sonatype.org/"
     if (isSnapshot.value)
