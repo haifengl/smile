@@ -81,8 +81,8 @@ public interface HadoopInput {
             case "s3n":
             case "hdfs":
                 Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf);
-                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration());
+                FileSystem fs = FileSystem.get(conf); // initialize file system
+                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), conf);
 
             default: // http, ftp, ...
                 throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);
