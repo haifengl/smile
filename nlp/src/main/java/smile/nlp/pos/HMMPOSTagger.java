@@ -260,15 +260,15 @@ public class HMMPOSTagger implements POSTagger, Serializable {
         int suffixIndex = 0;
         Map<String, Integer> symbol = new HashMap<>();
         Map<String, Integer> suffix = new HashMap<>();
-        for (int i = 0; i < sentences.length; i++) {
-            for (int j = 0; j < sentences[i].length; j++) {
-                Integer sym = symbol.get(sentences[i][j]);
+        for (String[] sentence : sentences) {
+            for (String word : sentence) {
+                Integer sym = symbol.get(word);
                 if (sym == null) {
-                    symbol.put(sentences[i][j], index++);
+                    symbol.put(word, index++);
                 }
-                
-                if (sentences[i][j].length() > 2) {
-                    String s = sentences[i][j].substring(sentences[i][j].length() - 2);
+
+                if (word.length() > 2) {
+                    String s = word.substring(word.length() - 2);
                     sym = suffix.get(s);
                     if (sym == null) {
                         suffix.put(s, suffixIndex++);
@@ -332,15 +332,15 @@ public class HMMPOSTagger implements POSTagger, Serializable {
             try {
                 FileInputStream stream = new FileInputStream(file);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(stream));
-                String line = null;
+                String line;
                 List<String> sent = new ArrayList<>();
                 List<PennTreebankPOS> label = new ArrayList<>();
                 while ((line = reader.readLine()) != null) {
                     line = line.trim();
                     if (line.isEmpty()) {
                         if (!sent.isEmpty()) {
-                            sentences.add(sent.toArray(new String[sent.size()]));
-                            labels.add(label.toArray(new PennTreebankPOS[label.size()]));
+                            sentences.add(sent.toArray(new String[0]));
+                            labels.add(label.toArray(new PennTreebankPOS[0]));
                             sent.clear();
                             label.clear();
                         }
@@ -362,8 +362,8 @@ public class HMMPOSTagger implements POSTagger, Serializable {
                 }
                 
                 if (!sent.isEmpty()) {
-                    sentences.add(sent.toArray(new String[sent.size()]));
-                    labels.add(label.toArray(new PennTreebankPOS[label.size()]));
+                    sentences.add(sent.toArray(new String[0]));
+                    labels.add(label.toArray(new PennTreebankPOS[0]));
                     sent.clear();
                     label.clear();
                 }

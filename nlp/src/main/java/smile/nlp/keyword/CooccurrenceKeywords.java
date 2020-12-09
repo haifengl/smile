@@ -87,9 +87,7 @@ public interface CooccurrenceKeywords {
         int maxNGramSize = 4;
         ArrayList<NGram> terms = new ArrayList<>();
         for (NGram[] ngrams : NGram.of(sentences, maxNGramSize, 4)) {
-            for (NGram ngram : ngrams) {
-                terms.add(ngram);
-            }
+            Collections.addAll(terms, ngrams);
         }
         Collections.sort(terms);
         
@@ -230,6 +228,6 @@ public interface CooccurrenceKeywords {
             }
         }
 
-        return keywords.toArray(new NGram[keywords.size()]);
+        return keywords.toArray(new NGram[0]);
     }
 }

@@ -45,7 +45,7 @@ public class SimpleNormalizer implements Normalizer {
     /**
      * The singleton instance.
      */
-    private static SimpleNormalizer singleton = new SimpleNormalizer();
+    private static final SimpleNormalizer singleton = new SimpleNormalizer();
 
     /**
      * Constructor.

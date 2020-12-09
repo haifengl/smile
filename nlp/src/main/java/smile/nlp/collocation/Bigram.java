@@ -69,7 +69,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Chi-square distribution with 1 degree of freedom.
      */
-    private static ChiSquareDistribution chisq = new ChiSquareDistribution(1);
+    private static final ChiSquareDistribution chisq = new ChiSquareDistribution(1);
 
     /**
      * Finds top k bigram collocations in the given corpus.
@@ -139,7 +139,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
             }
         }
 
-        Bigram[] collocations = bigrams.toArray(new Bigram[bigrams.size()]);
+        Bigram[] collocations = bigrams.toArray(new Bigram[0]);
         Arrays.sort(collocations, Collections.reverseOrder());
 
         return collocations;
