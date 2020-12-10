@@ -22,9 +22,9 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
-import smile.mds.MDS;
-import smile.sort.QuickSort;
 import smile.math.TimeFunction;
+import smile.manifold.MDS;
+import smile.sort.QuickSort;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce

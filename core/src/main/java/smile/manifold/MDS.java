@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.mds;
+package smile.manifold;
 
 import java.util.Properties;
 import smile.math.MathEx;
