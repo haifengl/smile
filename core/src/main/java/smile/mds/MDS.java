@@ -98,8 +98,8 @@ public class MDS {
      * distance, not squared.
      */
     public static MDS of(double[][] proximity, Properties prop) {
-        int k = Integer.valueOf(prop.getProperty("smile.mds.k", "2"));
-        boolean positive = Boolean.valueOf(prop.getProperty("smile.mds.positive.semidefinite", "false"));
+        int k = Integer.parseInt(prop.getProperty("smile.mds.k", "2"));
+        boolean positive = Boolean.parseBoolean(prop.getProperty("smile.mds.positive.semidefinite", "false"));
         return of(proximity, k, positive);
     }
 

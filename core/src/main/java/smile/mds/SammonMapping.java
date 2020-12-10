@@ -107,11 +107,11 @@ public class SammonMapping {
      * distance, not squared.
      */
     public static SammonMapping of(double[][] proximity, Properties prop) {
-        int k = Integer.valueOf(prop.getProperty("smile.sammon.k", "2"));
-        double lambda = Double.valueOf(prop.getProperty("smile.sammon.lambda", "0.2"));
-        double tol = Double.valueOf(prop.getProperty("smile.sammon.tolerance", "1E-4"));
-        double stepTol = Double.valueOf(prop.getProperty("smile.sammon.step.tolerance", "1E-3"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.sammon.max.iterations", "100"));
+        int k = Integer.parseInt(prop.getProperty("smile.sammon.k", "2"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.sammon.lambda", "0.2"));
+        double tol = Double.parseDouble(prop.getProperty("smile.sammon.tolerance", "1E-4"));
+        double stepTol = Double.parseDouble(prop.getProperty("smile.sammon.step.tolerance", "1E-3"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.sammon.max.iterations", "100"));
         return of(proximity, k, lambda, tol, stepTol, maxIter);
     }
 
@@ -133,10 +133,11 @@ public class SammonMapping {
 
     /**
      * Fits Sammon's mapping.
-     * @param proximity the nonnegative proximity matrix of dissimilarities. The
-     * diagonal should be zero and all other elements should be positive and symmetric.
+     * @param proximity the non-negative proximity matrix of dissimilarities.
+     *                  The diagonal should be zero and all other elements
+     *                  should be positive and symmetric.
      * @param init the initial projected coordinates, of which the column
-     * size is the projection dimension. It will be modified.
+     *             size is the projection dimension. It will be modified.
      * @param lambda initial value of the step size constant in diagonal Newton method.
      * @param tol the tolerance for stopping iterations.
      * @param stepTol the tolerance on step size.
@@ -159,13 +160,7 @@ public class SammonMapping {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
         
-        int m = proximity.length;
-        int n = proximity[0].length;
-
-        if (m != n) {
-            throw new IllegalArgumentException("The proximity matrix is not square.");
-        }
-
+        int n = proximity.length;
         double[][] coordinates = init;
         
         double c = 0.0;

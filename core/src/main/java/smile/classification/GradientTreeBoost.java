@@ -115,11 +115,11 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
     /**
      * The number of classes.
      */
-    private int k = 2;
+    private final int k;
     /**
      * Forest of regression trees for binary classification.
      */
@@ -134,7 +134,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * parent node. Adding up the decreases for each individual variable over
      * all trees in the forest gives a simple variable importance.
      */
-    private double[] importance;
+    private final double[] importance;
     /**
      * The intercept for binary classification.
      */
@@ -142,11 +142,11 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
     /**
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
-    private double shrinkage = 0.05;
+    private final double shrinkage;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor of binary class.
@@ -224,12 +224,12 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param data    the data frame of the explanatory and response variables.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.gbt.trees", "500"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.gbt.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.gbt.max.nodes", "6"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.gbt.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.gbt.shrinkage", "0.05"));
-        double subsample = Double.valueOf(prop.getProperty("smile.gbt.sample.rate", "0.7"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.gbt.trees", "500"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.gbt.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.gbt.max.nodes", "6"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.gbt.node.size", "5"));
+        double shrinkage = Double.parseDouble(prop.getProperty("smile.gbt.shrinkage", "0.05"));
+        double subsample = Double.parseDouble(prop.getProperty("smile.gbt.sample.rate", "0.7"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
     }
 

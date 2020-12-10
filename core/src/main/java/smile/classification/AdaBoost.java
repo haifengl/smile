@@ -69,11 +69,11 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * Forest of decision trees.
      */
@@ -94,11 +94,11 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * variable importance that is often very consistent with the permutation
      * importance measure.
      */
-    private double[] importance;
+    private final double[] importance;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -152,10 +152,10 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param data the data frame of the explanatory and response variables.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.adaboost.trees", "500"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.adaboost.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.adaboost.max.nodes", "6"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.adaboost.node.size", "1"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.adaboost.trees", "500"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.adaboost.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.adaboost.max.nodes", "6"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.adaboost.node.size", "1"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
     }
 

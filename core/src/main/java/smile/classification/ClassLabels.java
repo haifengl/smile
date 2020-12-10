@@ -19,11 +19,9 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
-import smile.data.type.StructField;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -95,7 +93,7 @@ public class ClassLabels implements Serializable {
         if (labels[0] == 0 && labels[k-1] == k-1) {
             return new ClassLabels(k, y, encoder);
         } else {
-            return new ClassLabels(k, Arrays.stream(y).map(yi -> encoder.indexOf(yi)).toArray(), encoder);
+            return new ClassLabels(k, Arrays.stream(y).map(encoder::indexOf).toArray(), encoder);
         }
     }
 
