@@ -37,7 +37,7 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.io.Read;
-import smile.mds.SammonMapping;
+import smile.manifold.SammonMapping;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.TextPlot;
 
