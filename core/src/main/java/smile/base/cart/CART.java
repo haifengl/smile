@@ -266,13 +266,13 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             return false;
         }
 
-        int[] trueSamples = IntStream.range(split.lo, split.hi).map(i -> index[i]).filter(i -> split.predicate().test(i)).toArray();
+        int[] trueSamples = Arrays.stream(index, split.lo, split.hi).filter(i -> split.predicate().test(i)).toArray();
 
         // cache the results of predicate.test()
         boolean[] trues = new boolean[samples.length];
         for (int i : trueSamples) trues[i] = true;
 
-        int[] falseSamples = IntStream.range(split.lo, split.hi).map(i -> index[i]).filter(i -> !trues[i]).toArray();
+        int[] falseSamples = Arrays.stream(index, split.lo, split.hi).filter(i -> !trues[i]).toArray();
         int mid = split.lo + trueSamples.length;
 
         LeafNode trueChild = newNode(trueSamples);
@@ -314,8 +314,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             falseSplit.ifPresent(s -> split(s, null));
         } else {
             // best first split
-            trueSplit.ifPresent(s -> queue.add(s));
-            falseSplit.ifPresent(s -> queue.add(s));
+            trueSplit.ifPresent(queue::add);
+            falseSplit.ifPresent(queue::add);
         }
 
         return true;
@@ -591,7 +591,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * The path of unique features we have split
      * on so far during SHAP recursive traverse.
      */
-    private class Path {
+    private static class Path {
         /** The length of path. */
         int length;
         /** The unique feature index. */
@@ -631,10 +631,10 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
             int l = length;
             Path m = new Path(
                     // Arrays.copyOf will truncate or pad with zeros.
-                    Arrays.copyOf(d, l+1),
-                    Arrays.copyOf(z, l+1),
-                    Arrays.copyOf(o, l+1),
-                    Arrays.copyOf(w, l+1)
+                    Arrays.copyOf(d, l + 1),
+                    Arrays.copyOf(z, l + 1),
+                    Arrays.copyOf(o, l + 1),
+                    Arrays.copyOf(w, l + 1)
             );
 
             m.d[l] = pi;

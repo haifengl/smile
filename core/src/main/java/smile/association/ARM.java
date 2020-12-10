@@ -54,19 +54,19 @@ public class ARM implements Iterable<AssociationRule> {
     /**
      * The number transactions in the database.
      */
-    private int size;
+    private final int size;
     /**
      * The confidence threshold for association rules.
      */
-    private double confidence;
+    private final double confidence;
     /**
      * Compressed set enumeration tree.
      */
-    private TotalSupportTree ttree;
+    private final TotalSupportTree ttree;
     /**
      * The buffer to collect mining results.
      */
-    private Queue<AssociationRule> buffer = new LinkedList<>();
+    private final Queue<AssociationRule> buffer = new LinkedList<>();
 
     /**
      * Constructor.
@@ -86,9 +86,10 @@ public class ARM implements Iterable<AssociationRule> {
             @Override
             public boolean hasNext() {
                 if (buffer.isEmpty()) {
-                    for (; i < ttree.root.children.length; i++) {
-                        Node child = ttree.root.children[i];
-                        if (ttree.root.children[i] != null) {
+                    TotalSupportTree.Node root = ttree.root();
+                    for (; i < root.children.length; i++) {
+                        Node child = root.children[i];
+                        if (root.children[i] != null) {
                             int[] itemset = {child.id};
                             generate(itemset, i, child);
 
@@ -152,19 +153,19 @@ public class ARM implements Iterable<AssociationRule> {
         int[][] combinations = getPowerSet(itemset);
 
         // Loop through combinations
-        for (int i = 0; i < combinations.length; i++) {
+        for (int[] combination : combinations) {
             // Find complement of combination in given itemSet
-            int[] complement = getComplement(combinations[i], itemset);
+            int[] complement = getComplement(combination, itemset);
             // If complement is not empty generate rule
             if (complement != null) {
-                double antecedentSupport = ttree.getSupport(combinations[i]);
+                double antecedentSupport = ttree.getSupport(combination);
                 double arc = support / antecedentSupport;
                 if (arc >= confidence) {
                     double supp = (double) support / size;
                     double consequentSupport = ttree.getSupport(complement);
                     double lift = support / (antecedentSupport * consequentSupport / size);
                     double leverage = supp - (antecedentSupport / size) * (consequentSupport / size);
-                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc, lift, leverage);
+                    AssociationRule ar = new AssociationRule(combination, complement, supp, arc, lift, leverage);
                     buffer.offer(ar);
                 }
             }
@@ -185,11 +186,10 @@ public class ARM implements Iterable<AssociationRule> {
         // Otherwsise define combination array and determine complement
         int[] complement = new int[size];
         int index = 0;
-        for (int i = 0; i < fullset.length; i++) {
-            int item = fullset[i];
+        for (int item : fullset) {
             boolean member = false;
-            for (int j = 0; j < subset.length; j++) {
-                if (item == subset[j]) {
+            for (int i : subset) {
+                if (item == i) {
                     member = true;
                     break;
                 }

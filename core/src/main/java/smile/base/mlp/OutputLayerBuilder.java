@@ -25,9 +25,9 @@ package smile.base.mlp;
 public class OutputLayerBuilder extends LayerBuilder {
 
     /** The output function. */
-    private OutputFunction f;
+    private final OutputFunction f;
     /** The cost function. */
-    private Cost cost;
+    private final Cost cost;
 
     /**
      * Constructor.

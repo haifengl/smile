@@ -26,7 +26,7 @@ public class HiddenLayer extends Layer {
     private static final long serialVersionUID = 2L;
 
     /** The activation function. */
-    private ActivationFunction f;
+    private final ActivationFunction f;
 
     /**
      * Constructor.

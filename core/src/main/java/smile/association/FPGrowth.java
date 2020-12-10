@@ -62,15 +62,15 @@ public class FPGrowth implements Iterable<ItemSet> {
     /**
      * The required minimum support of item sets.
      */
-    private int minSupport;
+    private final int minSupport;
     /**
      * FP-tree.
      */
-    private FPTree T0;
+    private final FPTree T0;
     /**
      * The buffer to collect mining results.
      */
-    private Queue<ItemSet> buffer = new LinkedList<>();
+    private final Queue<ItemSet> buffer = new LinkedList<>();
 
     /**
      * Constructor.
@@ -93,8 +93,8 @@ public class FPGrowth implements Iterable<ItemSet> {
     @Override
     public Iterator<ItemSet> iterator() {
         return new Iterator<ItemSet>() {
-            int[] prefixItemset = new int[T0.maxItemSetSize];
-            int[] localItemSupport = new int[T0.numItems];
+            final int[] prefixItemset = new int[T0.maxItemSetSize];
+            final int[] localItemSupport = new int[T0.numItems];
             int i = T0.headerTable.length;
 
             @Override
@@ -257,7 +257,7 @@ public class FPGrowth implements Iterable<ItemSet> {
     /**
      * Generates a local FP tree
      * @param node the conditional patterns given this node to construct the local FP-tree.
-     * @rerurn the local FP-tree.
+     * @return the local FP-tree.
      */
     private FPTree getLocalFPTree(FPTree.Node node, int[] localItemSupport, int[] prefixItemset) {
         FPTree tree = new FPTree(minSupport, localItemSupport);
@@ -290,8 +290,7 @@ public class FPGrowth implements Iterable<ItemSet> {
      */
     static int[] insert(int[] itemset, int item) {
         if (itemset == null) {
-            int[] newItemset = {item};
-            return newItemset;
+            return new int[]{item};
             
         } else {
             int n = itemset.length + 1;
