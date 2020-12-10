@@ -18,8 +18,6 @@
 package smile.mds;
 
 import java.util.Properties;
-
-import smile.data.vector.DoubleVector;
 import smile.math.BFGS;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
@@ -87,9 +85,9 @@ public class IsotonicMDS {
      * distance, not squared.
      */
     public static IsotonicMDS of(double[][] proximity, Properties prop) {
-        int k = Integer.valueOf(prop.getProperty("smile.isotonic.mds.k", "2"));
-        double tol = Double.valueOf(prop.getProperty("smile.isotonic.mds.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.isotonic.mds.max.iterations", "200"));
+        int k = Integer.parseInt(prop.getProperty("smile.isotonic.mds.k", "2"));
+        double tol = Double.parseDouble(prop.getProperty("smile.isotonic.mds.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.isotonic.mds.max.iterations", "200"));
         return of(proximity, k, tol, maxIter);
     }
 
@@ -192,8 +190,6 @@ public class IsotonicMDS {
         int nr;
         /** # cols of fitted configuration */
         int nc;
-        /** Size of configuration array */
-        int dimx;
         /** dissimilarities */
         double[] d;
         /** fitted distances (in rank of d order) */
@@ -266,8 +262,7 @@ public class IsotonicMDS {
                 sstar += tmp * tmp;
                 tstar += y[i] * y[i];
             }
-            double ssq = Math.sqrt(sstar / tstar);
-            return ssq;
+            return Math.sqrt(sstar / tstar);
         }
 
         @Override
@@ -306,7 +301,7 @@ public class IsotonicMDS {
             }
             double ssq = Math.sqrt(sstar / tstar);
 
-            int k = 0;
+            int k;
             for (int u = 0; u < nr; u++) {
                 for (int i = 0; i < nc; i++) {
                     tmp = 0.0;
@@ -316,7 +311,7 @@ public class IsotonicMDS {
                         }
                         if (s > u) {
                             k = nr * u - u * (u + 1) / 2 + s - u;
-                        } else if (s < u) {
+                        } else {
                             k = nr * s - s * (s + 1) / 2 + u - s;
                         }
                         k = ord2[k - 1];
