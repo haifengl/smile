@@ -262,7 +262,7 @@ public class UMAP implements Serializable {
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>
      */
-    private static DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+    private static final DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
         @Override
         public double f(double[] x) {
@@ -336,7 +336,7 @@ public class UMAP implements Serializable {
         // The distance to nearest neighbor
         double[] rho = new double[n];
 
-        double avg = IntStream.range(0, n).mapToObj(i -> nng.getEdges(i))
+        double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
                 .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
                 .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
@@ -604,12 +604,6 @@ public class UMAP implements Serializable {
      * Clamps a value to range [-4.0, 4.0].
      */
     private static double clamp(double val) {
-        if (val > 4.0) {
-            return 4.0;
-        } else if (val < -4.0) {
-            return -4.0;
-        } else {
-            return val;
-        }
+        return Math.min(4.0, Math.max(val, -4.0));
     }
 }

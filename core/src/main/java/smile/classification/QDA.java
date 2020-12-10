@@ -163,7 +163,7 @@ public class QDA implements SoftClassifier<double[]> {
      */
     public static QDA fit(double[][] x, int[] y, Properties prop) {
         double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.qda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.qda.tolerance", "1E-4"));
+        double tol = Double.parseDouble(prop.getProperty("smile.qda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 

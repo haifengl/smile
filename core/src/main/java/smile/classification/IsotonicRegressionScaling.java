@@ -59,9 +59,9 @@ public class IsotonicRegressionScaling implements Serializable {
     }
 
     /** The step-wise buckets of function values in ascending order. */
-    private double[] buckets;
+    private final double[] buckets;
     /** The probability of instances falling into the corresponding buckets. */
-    private double[] prob;
+    private final double[] prob;
 
     /**
      * Constructor.

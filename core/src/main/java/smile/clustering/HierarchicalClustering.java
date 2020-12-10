@@ -62,13 +62,13 @@ public class HierarchicalClustering implements Serializable {
      * observation j was merged at this stage. If j &ge; n then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      */
-    private int[][] merge;
+    private final int[][] merge;
     /**
      * A set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method
      * for the particular agglomeration.
      */
-    private double[] height;
+    private final double[] height;
 
     /**
      * Constructor.

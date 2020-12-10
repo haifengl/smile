@@ -18,7 +18,6 @@
 package smile.manifold;
 
 import smile.graph.AdjacencyList;
-import smile.graph.Graph;
 import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.LinearSearch;

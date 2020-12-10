@@ -46,9 +46,9 @@ public class PlattScaling implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
 
     /** The scaling parameter. */
-    private double alpha;
+    private final double alpha;
     /** The scaling parameter. */
-    private double beta;
+    private final double beta;
 
     /**
      * Constructor. P(y = 1 | x) = 1 / (1 + exp(alpha * f(x) + beta))

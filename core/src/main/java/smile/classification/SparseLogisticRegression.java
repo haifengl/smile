@@ -91,7 +91,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
         /**
          * The linear weights.
          */
-        private double[] w;
+        private final double[] w;
 
         /**
          * Constructor.
@@ -164,7 +164,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
         /**
          * The linear weights.
          */
-        private double[][] w;
+        private final double[][] w;
 
         /**
          * Constructor.
@@ -255,9 +255,9 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * @param y training labels.
      */
     public static Binomial binomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -322,10 +322,9 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * @param y training labels.
      */
     public static Multinomial multinomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.logit.standard.error", "true"));
-        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -397,9 +396,9 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * @param y training labels.
      */
     public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logistic.max.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 
@@ -464,7 +463,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             this.lambda = lambda;
             this.p = x.ncols();
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][p+1];
         }
@@ -582,7 +581,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             this.lambda = lambda;
             this.p = x.ncols();
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][(k-1)*(p+1)];
             posterioris = new double[partitions][k];

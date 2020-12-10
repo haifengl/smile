@@ -96,9 +96,9 @@ public class RDA extends QDA {
      * @param y training labels.
      */
     public static RDA fit(double[][] x, int[] y, Properties prop) {
-        double alpha = Double.valueOf(prop.getProperty("smile.rda.alpha", "0.9"));
+        double alpha = Double.parseDouble(prop.getProperty("smile.rda.alpha", "0.9"));
         double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.rda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.rda.tolerance", "1E-4"));
+        double tol = Double.parseDouble(prop.getProperty("smile.rda.tolerance", "1E-4"));
         return fit(x, y, alpha, priori, tol);
     }
 

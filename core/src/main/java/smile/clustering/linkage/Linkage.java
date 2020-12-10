@@ -52,14 +52,12 @@ public abstract class Linkage {
         this.proximity = new float[size * (size+1) / 2];
 
         // row wise
-        /*
-        for (int i = 0, k = 0; i < size; i++) {
-            double[] pi = proximity[i];
-            for (int j = 0; j <= i; j++, k++) {
-                this.proximity[k] = (float) pi[j];
-            }
-        }
-        */
+        //for (int i = 0, k = 0; i < size; i++) {
+        //    double[] pi = proximity[i];
+        //    for (int j = 0; j <= i; j++, k++) {
+        //        this.proximity[k] = (float) pi[j];
+        //    }
+        //}
 
         // column wise
         for (int j = 0, k = 0; j < size; j++) {
