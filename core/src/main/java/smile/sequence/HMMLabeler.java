@@ -59,7 +59,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
 
         HMM model = HMM.fit(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 labels);
 
@@ -75,7 +75,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
     public void update(T[][] observations, int iterations) {
         model.update(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 iterations);
     }
@@ -89,7 +89,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * Translates an observation sequence to internal representation.
      */
     private int[] translate(T[] o) {
-        return Arrays.stream(o).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray();
+        return Arrays.stream(o).mapToInt(ordinal).toArray();
     }
 
     /**

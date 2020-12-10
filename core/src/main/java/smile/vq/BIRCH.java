@@ -86,9 +86,9 @@ public class BIRCH implements VectorQuantizer {
         /** The number of observations. */
         private int n;
         /** The sum of observations. */
-        private double[] sum = new double[d];
+        private final double[] sum = new double[d];
         /** The square sum of observations. */
-        private double[] ss = new double[d];
+        private final double[] ss = new double[d];
 
         /**
          * Constructor.
@@ -264,7 +264,7 @@ public class BIRCH implements VectorQuantizer {
         /**
          * The children nodes.
          */
-        private Node[] children;
+        private final Node[] children;
         /**
          * The number of children.
          */
@@ -360,7 +360,7 @@ public class BIRCH implements VectorQuantizer {
      * The leaf node of CF tree.
      */
     private class Leaf extends Node {
-        private ClusteringFeature[] clusters;
+        private final ClusteringFeature[] clusters;
         private int k;
 
         /**

@@ -61,11 +61,11 @@ public class GHA implements LinearProjection, Serializable {
     /**
      * The dimension of feature space.
      */
-    private int p;
+    private final int p;
     /**
      * The dimension of input space.
      */
-    private int n;
+    private final int n;
     /**
      * The learning rate;
      */
@@ -73,15 +73,15 @@ public class GHA implements LinearProjection, Serializable {
     /**
      * Projection matrix.
      */
-    private Matrix projection;
+    private final Matrix projection;
     /**
      * Workspace for W * x.
      */
-    private double[] y;
+    private final double[] y;
     /**
      * Workspace for W' * y.
      */
-    private double[] wy;
+    private final double[] wy;
 
     /**
      * Constructor.

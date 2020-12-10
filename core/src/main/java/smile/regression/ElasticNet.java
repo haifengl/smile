@@ -17,7 +17,6 @@
 
 package smile.regression;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -55,10 +54,10 @@ public class ElasticNet {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda1"));
-        double lambda2 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda2"));
-        double tol = Double.valueOf(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+        double lambda1 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda1"));
+        double lambda2 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda2"));
+        double tol = Double.parseDouble(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 

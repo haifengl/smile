@@ -81,12 +81,12 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
-    private transient double[] y;
+    private final transient double[] y;
 
     /**
      * The loss function.
      */
-    private transient Loss loss;
+    private final transient Loss loss;
 
     @Override
     protected double impurity(LeafNode node) {
@@ -128,7 +128,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         RegressionNode node = (RegressionNode) leaf;
         BaseVector xj = x.column(j);
 
-        double sum = IntStream.range(lo, hi).map(i -> index[i]).mapToDouble(i -> y[i] * samples[i]).sum();
+        double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
 
         Split split = null;
@@ -260,7 +260,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         } else {
             // best-first split
             PriorityQueue<Split> queue = new PriorityQueue<>(2 * maxNodes, Split.comparator.reversed());
-            split.ifPresent(s -> queue.add(s));
+            split.ifPresent(queue::add);
 
             for (int leaves = 1; leaves < this.maxNodes && !queue.isEmpty(); ) {
                 if (split(queue.poll(), queue)) leaves++;
@@ -294,9 +294,9 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.cart.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.cart.node.size", "5"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.cart.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.cart.max.nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.cart.node.size", "5"));
         return fit(formula, data, maxDepth, maxNodes, nodeSize);
     }
 

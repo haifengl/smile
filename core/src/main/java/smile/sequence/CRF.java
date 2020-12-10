@@ -67,15 +67,15 @@ public class CRF implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
     /** The schema of (x, s_j). */
-    private StructType schema;
+    private final StructType schema;
     /**
      * The potential functions for each class.
      */
-    private RegressionTree[][] potentials;
+    private final RegressionTree[][] potentials;
     /**
      * The learning rate.
      */
-    private double shrinkage;
+    private final double shrinkage;
 
     /**
      * Constructor.
@@ -238,11 +238,11 @@ public class CRF implements Serializable {
      * @param labels the training sequence labels.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.crf.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.crf.max.nodes", "100"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.crf.node.size", "5"));
+        double shrinkage = Double.parseDouble(prop.getProperty("smile.crf.shrinkage", "1.0"));
         return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
     }
 

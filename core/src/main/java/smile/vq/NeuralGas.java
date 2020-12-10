@@ -19,6 +19,7 @@ package smile.vq;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.graph.AdjacencyMatrix;
@@ -90,35 +91,35 @@ public class NeuralGas implements VectorQuantizer {
     /**
      * The neurons.
      */
-    private Neuron[] neurons;
+    private final Neuron[] neurons;
     /**
      * The network of neurons.
      */
-    private AdjacencyMatrix graph;
+    private final AdjacencyMatrix graph;
     /**
      * The learning rate function.
      */
-    private TimeFunction alpha;
+    private final TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private TimeFunction theta;
+    private final TimeFunction theta;
     /**
      * The lifetime of connections.
      */
-    private TimeFunction lifetime;
+    private final TimeFunction lifetime;
     /**
      * The distance between a new observation to neurons.
      */
-    private double[] dist;
+    private final double[] dist;
     /**
      * The current iteration.
      */
     private int t = 0;
-    /*
+    /**
      * The threshold to update neuron if alpha * theta > eps.
      */
-    private double eps = 1E-7;
+    private final double eps = 1E-7;
 
     /**
      * Constructor.
@@ -155,7 +156,7 @@ public class NeuralGas implements VectorQuantizer {
      * Returns the neurons.
      */
     public double[][] neurons() {
-        Arrays.sort(neurons, (x, y) -> Integer.compare(x.i, y.i));
+        Arrays.sort(neurons, Comparator.comparingInt(x -> x.i));
         return Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
     }
 

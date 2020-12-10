@@ -70,11 +70,11 @@ public class PCA implements LinearProjection, Serializable {
     /**
      * The dimension of input space.
      */
-    private int n;
+    private final int n;
     /**
      * The sample mean.
      */
-    private double[] mu;
+    private final double[] mu;
     /**
      * The projected sample mean.
      */
@@ -82,19 +82,19 @@ public class PCA implements LinearProjection, Serializable {
     /**
      * The matrix of variable loadings, whose columns contain the eigenvectors.
      */
-    private Matrix eigvectors;
+    private final Matrix eigvectors;
     /**
      * Eigenvalues of principal components.
      */
-    private double[] eigvalues;
+    private final double[] eigvalues;
     /**
      * The proportion of variance contained in each principal component.
      */
-    private double[] proportion;
+    private final double[] proportion;
     /**
      * The cumulative proportion of variance contained in principal components.
      */
-    private double[] cumulativeProportion;
+    private final double[] cumulativeProportion;
     /**
      * Projection matrix.
      */

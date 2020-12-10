@@ -94,7 +94,7 @@ public class RidgeRegression {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.ridge.lambda", "1"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.ridge.lambda", "1"));
         return fit(formula, data, lambda);
     }
 

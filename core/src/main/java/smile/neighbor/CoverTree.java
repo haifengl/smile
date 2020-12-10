@@ -62,11 +62,11 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     /**
      * The dataset to build the cover tree.
      */
-    private E[] data;
+    private final E[] data;
     /**
      * The distance/metric function for nearest neighbor search.
      */
-    private Metric<E> distance;
+    private final Metric<E> distance;
     /**
      * The root node.
      */
@@ -77,13 +77,13 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      * paper it's suggested the separation invariant is relaxed in batch
      * construction.
      */
-    private double base = 1.3;
+    private final double base;
     /**
      * If we have base 2 then this can be viewed as 1/ln(2), which can be
      * used later on to do invLogBase*ln(d) instead of ln(d)/ln(2), to get log2(d),
      * in getScale method.
      */
-    private double invLogBase = 1.0 / Math.log(base);
+    private final double invLogBase ;
 
     /**
      * Node in the cover tree.
@@ -274,8 +274,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      */
     private Node batchInsert(int p, int maxScale, int topScale, ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> consumedSet) {
         if (pointSet.isEmpty()) {
-            Node leaf = newLeaf(p);
-            return leaf;
+            return newLeaf(p);
         } else {
             double maxDist = max(pointSet); // O(|pointSet|) the max dist in pointSet to point "p".
             int nextScale = Math.min(maxScale - 1, getScale(maxDist));
@@ -330,21 +329,19 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
                         // putting the unused points from newPointSet back into
                         // pointSet and far
                         double fmax = getCoverRadius(maxScale);
-                        for (int i = 0; i < newPointSet.size(); i++) { // O(|newPointSet|)
-                            set = newPointSet.get(i);
-                            set.dist.remove(set.dist.size() - 1);
-                            if (set.dist.get(set.dist.size() - 1) <= fmax) {
-                                pointSet.add(set);
+                        for (DistanceSet ds : newPointSet) { // O(|newPointSet|)
+                            ds.dist.remove(ds.dist.size() - 1);
+                            if (ds.dist.get(ds.dist.size() - 1) <= fmax) {
+                                pointSet.add(ds);
                             } else {
-                                far.add(set);
+                                far.add(ds);
                             }
                         }
 
                         // putting the points consumed while recursing for newPoint into consumedSet
-                        for (int i = 0; i < newConsumedSet.size(); i++) { // O(|newPointSet|)
-                            set = newConsumedSet.get(i);
-                            set.dist.remove(set.dist.size() - 1);
-                            consumedSet.add(set);
+                        for (DistanceSet ds : newConsumedSet) { // O(|newPointSet|)
+                            ds.dist.remove(ds.dist.size() - 1);
+                            consumedSet.add(ds);
                         }
 
                         newPointSet.clear();
@@ -389,8 +386,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
      * @param idx the index of the instance this leaf node represents.
      */
     private Node newLeaf(int idx) {
-        Node leaf = new Node(idx, 0.0, 0.0, null, 100);
-        return leaf;
+        return new Node(idx, 0.0, 0.0, null, 100);
     }
 
     /**
@@ -427,12 +423,11 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     private void split(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> farSet, int maxScale) {
         double fmax = getCoverRadius(maxScale);
         ArrayList<DistanceSet> newSet = new ArrayList<>();
-        for (int i = 0; i < pointSet.size(); i++) {
-            DistanceSet n = pointSet.get(i);
-            if (n.dist.get(n.dist.size() - 1) <= fmax) {
-                newSet.add(n);
+        for (DistanceSet ds : pointSet) {
+            if (ds.dist.get(ds.dist.size() - 1) <= fmax) {
+                newSet.add(ds);
             } else {
-                farSet.add(n);
+                farSet.add(ds);
             }
         }
 
@@ -455,14 +450,13 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
     private void distSplit(ArrayList<DistanceSet> pointSet, ArrayList<DistanceSet> newPointSet, E newPoint, int maxScale) {
         double fmax = getCoverRadius(maxScale);
         ArrayList<DistanceSet> newSet = new ArrayList<>();
-        for (int i = 0; i < pointSet.size(); i++) {
-            DistanceSet n = pointSet.get(i);
-            double newDist = distance.d(newPoint, n.getObject());
+        for (DistanceSet ds : pointSet) {
+            double newDist = distance.d(newPoint, ds.getObject());
             if (newDist <= fmax) {
-                pointSet.get(i).dist.add(newDist);
-                newPointSet.add(n);
+                ds.dist.add(newDist);
+                newPointSet.add(ds);
             } else {
-                newSet.add(n);
+                newSet.add(ds);
             }
         }
 
@@ -515,9 +509,8 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         while (!currentCoverSet.isEmpty()) {
             ArrayList<DistanceNode> nextCoverSet = new ArrayList<>();
-            for (int i = 0; i < currentCoverSet.size(); i++) {
-                DistanceNode par = currentCoverSet.get(i);
-                Node parent = currentCoverSet.get(i).node;
+            for (DistanceNode par : currentCoverSet) {
+                Node parent = par.node;
                 for (int c = 0; c < parent.children.size(); c++) {
                     Node child = parent.children.get(c);
                     if (c == 0) {
@@ -547,8 +540,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         ArrayList<Neighbor<E, E>> list = new ArrayList<>();
         double upperBound = heap.peek();
-        for (int i = 0; i < zeroSet.size(); i++) {
-            DistanceNode ds = zeroSet.get(i);
+        for (DistanceNode ds : zeroSet) {
             if (ds.dist <= upperBound) {
                 if (ds.node.getObject() != q) {
                     e = ds.node.getObject();
@@ -587,9 +579,8 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
 
         while (!currentCoverSet.isEmpty()) {
             ArrayList<DistanceNode> nextCoverSet = new ArrayList<>();
-            for (int i = 0; i < currentCoverSet.size(); i++) {
-                DistanceNode par = currentCoverSet.get(i);
-                Node parent = currentCoverSet.get(i).node;
+            for (DistanceNode par : currentCoverSet) {
+                Node parent = par.node;
                 for (int c = 0; c < parent.children.size(); c++) {
                     Node child = parent.children.get(c);
                     if (c == 0) {
@@ -610,8 +601,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
             currentCoverSet = nextCoverSet;
         }
 
-        for (int i = 0; i < zeroSet.size(); i++) {
-            DistanceNode ds = zeroSet.get(i);
+        for (DistanceNode ds : zeroSet) {
             if (ds.node.getObject() != q) {
                 neighbors.add(new Neighbor<>(ds.node.getObject(), ds.node.getObject(), ds.node.idx, ds.dist));
             }

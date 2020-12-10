@@ -123,15 +123,14 @@ public class ClassificationValidation<M> implements Serializable {
         M model = trainer.apply(x, y);
         double fitTime = (System.nanoTime() - start) / 1E6;
 
+        start = System.nanoTime();
         if (model instanceof SoftClassifier) {
-            start = System.nanoTime();
             double[][] posteriori = new double[testx.length][k];
             int[] prediction = ((SoftClassifier<T>) model).predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
             return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
         } else {
-            start = System.nanoTime();
             int[] prediction = model.predict(testx);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
@@ -142,7 +141,6 @@ public class ClassificationValidation<M> implements Serializable {
     /**
      * Trains and validates a model on multiple train/validation split.
      */
-    @SuppressWarnings("unchecked")
     public static <T, M extends Classifier<T>> ClassificationValidations<M> of(Bag[] bags, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 
@@ -171,10 +169,10 @@ public class ClassificationValidation<M> implements Serializable {
         M model = trainer.apply(formula, train);
         double fitTime = (System.nanoTime() - start) / 1E6;
 
+        start = System.nanoTime();
         int n = test.nrows();
+        int[] prediction = new int[n];
         if (model instanceof SoftClassifier) {
-            start = System.nanoTime();
-            int[] prediction = new int[n];
             double[][] posteriori = new double[n][k];
             for (int i = 0; i < n; i++) {
                 prediction[i] = ((SoftClassifier<Tuple>) model).predict(test.get(i), posteriori[i]);
@@ -183,8 +181,6 @@ public class ClassificationValidation<M> implements Serializable {
 
             return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
         } else {
-            start = System.nanoTime();
-            int[] prediction = new int[n];
             for (int i = 0; i < n; i++) {
                 prediction[i] = model.predict(test.get(i));
             }
@@ -197,7 +193,6 @@ public class ClassificationValidation<M> implements Serializable {
     /**
      * Trains and validates a model on multiple train/validation split.
      */
-    @SuppressWarnings("unchecked")
     public static <M extends DataFrameClassifier> ClassificationValidations<M> of(Bag[] bags, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
 

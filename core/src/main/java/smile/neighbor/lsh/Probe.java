@@ -27,7 +27,7 @@ public class Probe implements Comparable<Probe> {
     /**
      * The valid range of buckets.
      */
-    private int[] range;
+    private final int[] range;
     /**
      * The bucket for probing.
      */
@@ -59,10 +59,7 @@ public class Probe implements Comparable<Probe> {
     }
 
     public boolean isShiftable() {
-        if (bucket[last] != 1 || last + 1 >= bucket.length || range[last + 1] <= 1) {
-            return false;
-        }
-        return true;
+        return bucket[last] == 1 && last + 1 < bucket.length && range[last + 1] > 1;
     }
 
     /**
@@ -78,10 +75,7 @@ public class Probe implements Comparable<Probe> {
     }
 
     public boolean isExpandable() {
-        if (last + 1 >= bucket.length || range[last + 1] <= 1) {
-            return false;
-        }
-        return true;
+        return last + 1 < bucket.length && range[last + 1] > 1;
     }
 
     /**
@@ -96,10 +90,7 @@ public class Probe implements Comparable<Probe> {
     }
 
     public boolean isExtendable() {
-        if (bucket[last] + 1 >= range[last]) {
-            return false;
-        }
-        return true;
+        return bucket[last] + 1 < range[last];
     }
 
     /**

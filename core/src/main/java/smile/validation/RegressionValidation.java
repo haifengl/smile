@@ -86,7 +86,6 @@ public class RegressionValidation<M> implements Serializable {
     /**
      * Trains and validates a model on multiple train/validation split.
      */
-    @SuppressWarnings("unchecked")
     public static <T, M extends Regression<T>> RegressionValidations<M> of(Bag[] bags, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
 
@@ -134,7 +133,6 @@ public class RegressionValidation<M> implements Serializable {
     /**
      * Trains and validates a model on multiple train/validation split.
      */
-    @SuppressWarnings("unchecked")
     public static <M extends DataFrameRegression> RegressionValidations<M> of(Bag[] bags, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
 

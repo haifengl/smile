@@ -17,7 +17,6 @@
 
 package smile.validation;
 
-import java.io.Serializable;
 import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
@@ -94,16 +93,14 @@ public interface LOOCV {
             M model = trainer.apply(trainx, trainy);
             fitTime += System.nanoTime() - start;
 
+            start = System.nanoTime();
             if (model instanceof SoftClassifier) {
                 soft = true;
-                start = System.nanoTime();
                 prediction[i] = ((SoftClassifier<T>) model).predict(x[i], posteriori[i]);
-                scoreTime += System.nanoTime() - start;
             } else {
-                start = System.nanoTime();
                 prediction[i] = model.predict(x[i]);
-                scoreTime += System.nanoTime() - start;
             }
+            scoreTime += System.nanoTime() - start;
         }
 
         int error = Error.of(y, prediction);
@@ -178,16 +175,14 @@ public interface LOOCV {
             DataFrameClassifier model = trainer.apply(formula, data.of(train[i]));
             fitTime += System.nanoTime() - start;
 
+            start = System.nanoTime();
             if (model instanceof SoftClassifier) {
                 soft = true;
-                start = System.nanoTime();
                 prediction[i] = ((SoftClassifier<Tuple>) model).predict(data.get(i), posteriori[i]);
-                scoreTime += System.nanoTime() - start;
             } else {
-                start = System.nanoTime();
                 prediction[i] = model.predict(data.get(i));
-                scoreTime += System.nanoTime() - start;
             }
+            scoreTime += System.nanoTime() - start;
         }
 
         int error = Error.of(y, prediction);
