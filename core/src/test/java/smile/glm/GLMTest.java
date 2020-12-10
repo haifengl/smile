@@ -52,7 +52,7 @@ public class GLMTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testDefault() throws Exception {
         System.out.println("default");
 

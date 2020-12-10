@@ -53,10 +53,7 @@ public class XMeansTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class XMeans.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 

@@ -53,7 +53,7 @@ public class RidgeRegressionTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
         LinearModel model = RidgeRegression.fit(Longley.formula, Longley.data, 0.1);

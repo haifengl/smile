@@ -66,7 +66,7 @@ public class FLDTest {
     public void testIris() {
         System.out.println("Iris");
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> FLD.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, FLD::fit);
 
         System.out.println(metrics);
         assertEquals(0.98, metrics.accuracy, 1E-4);
@@ -78,7 +78,7 @@ public class FLDTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         ClassificationValidations<FLD> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
-                (x, y) -> FLD.fit(x, y));
+                FLD::fit);
 
         System.out.println(result);
         assertEquals(0.8771, result.avg.accuracy, 1E-4);
@@ -89,19 +89,17 @@ public class FLDTest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<FLD> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
-                (x, y) -> FLD.fit(x, y));
+        ClassificationValidations<FLD> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, FLD::fit);
 
         System.out.println(result);
         assertEquals(0.9655, result.avg.accuracy, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 
-        ClassificationValidation<FLD> result = ClassificationValidation.of(USPS.x, USPS.y, USPS.testx, USPS.testy,
-                (x, y) -> FLD.fit(x, y));
+        ClassificationValidation<FLD> result = ClassificationValidation.of(USPS.x, USPS.y, USPS.testx, USPS.testy, FLD::fit);
 
         System.out.println(result);
         assertEquals(262, result.metrics.error);
@@ -113,24 +111,23 @@ public class FLDTest {
         assertEquals(262, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testColon() throws IOException {
         System.out.println("Colon");
 
         BufferedReader reader = Paths.getTestDataReader("microarray/colon.txt");
-        int[] y = Arrays.stream(reader.readLine().split(" ")).mapToInt(s -> Integer.valueOf(s) > 0 ? 1 : 0).toArray();
+        int[] y = Arrays.stream(reader.readLine().split(" ")).mapToInt(s -> Integer.parseInt(s) > 0 ? 1 : 0).toArray();
 
         double[][] x = new double[62][2000];
         for (int i = 0; i < 2000; i++) {
             String[] tokens = reader.readLine().split(" ");
             for (int j = 0; j < 62; j++) {
-                x[j][i] = Double.valueOf(tokens[j]);
+                x[j][i] = Double.parseDouble(tokens[j]);
             }
         }
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<FLD> result = CrossValidation.classification(5, x, y,
-                (xi, yi) -> FLD.fit(xi, yi));
+        ClassificationValidations<FLD> result = CrossValidation.classification(5, x, y, FLD::fit);
 
         System.out.println(result);
         assertEquals(0.8524, result.avg.accuracy, 1E-4);

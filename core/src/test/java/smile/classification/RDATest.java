@@ -94,7 +94,7 @@ public class RDATest {
         assertEquals(0.9461, result.avg.accuracy, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 

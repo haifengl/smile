@@ -92,7 +92,7 @@ public class RandomForestTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testWeather() throws Exception {
         System.out.println("Weather");
 
@@ -234,7 +234,7 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testMerge() throws Exception {
+    public void testMerge() {
         System.out.println("merge");
 
         RandomForest forest1 = RandomForest.fit(Segment.formula, Segment.train, 100, 16, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds));

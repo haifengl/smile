@@ -51,10 +51,7 @@ public class LaplacianEigenmapTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class LaplacianEigenmap.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("Laplacian Eigenmap");
 

@@ -19,8 +19,6 @@ package smile.data;
 
 import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
-import smile.io.Arff;
-import smile.util.Paths;
 
 /**
  *

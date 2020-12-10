@@ -53,7 +53,7 @@ public class SpectralClusteringTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -78,7 +78,7 @@ public class SpectralClusteringTest {
         System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPSNystrom() throws Exception {
         System.out.println("USPS Nystrom approximation");
         MathEx.setSeed(19650218); // to get repeatable results.

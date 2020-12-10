@@ -17,7 +17,6 @@
 
 package smile.association;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,16 +104,16 @@ public class FPGrowthTest {
         assertEquals(15, FPGrowth.apply(tree).count());
     }
 
-    @Test(expected = Test.None.class)
-    public void testPima() throws IOException {
+    @Test
+    public void testPima() {
         System.out.println("pima");
 
         FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
         assertEquals(1803, FPGrowth.apply(tree).count());
     }
     
-    @Test(expected = Test.None.class)
-    public void testKosarak() throws IOException {
+    @Test
+    public void testKosarak() {
         System.out.println("kosarak");
 
         FPTree tree = FPTree.of(1500, () -> ItemSetTestData.read("transaction/kosarak.dat"));

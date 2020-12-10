@@ -83,7 +83,7 @@ public class LinearSearchTest {
         assertEquals(d.d(data[0], data[1]), n1[0].distance, 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testSwissRoll() {
         System.out.println("----- Swiss Roll -----");
 
@@ -95,30 +95,30 @@ public class LinearSearchTest {
         LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            naive.nearest(testx[i]);
+        for (double[] xi : testx) {
+            naive.nearest(xi);
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            naive.knn(testx[i], 10);
+        for (double[] xi : testx) {
+            naive.knn(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < testx.length; i++) {
-            naive.range(testx[i], 8.0, n);
+        for (double[] xi : testx) {
+            naive.range(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("Range: %.2fs%n", time);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() {
         System.out.println("----- USPS -----");
 
@@ -128,23 +128,23 @@ public class LinearSearchTest {
         LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
         long start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            naive.nearest(testx[i]);
+        for (double[] xi : testx) {
+            naive.nearest(xi);
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            naive.knn(testx[i], 10);
+        for (double[] xi : testx) {
+            naive.knn(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < testx.length; i++) {
-            naive.range(testx[i], 8.0, n);
+        for (double[] xi : testx) {
+            naive.range(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

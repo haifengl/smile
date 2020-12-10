@@ -55,7 +55,7 @@ public class SOMTest {
     }
 
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testKMeans() {
         System.out.println("K-Means as a benchmark");
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -85,7 +85,7 @@ public class SOMTest {
         assertEquals(6.6368, error, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -97,7 +97,7 @@ public class SOMTest {
         double[][][] lattice = SOM.lattice(20, 20, x);
         SOM model = new SOM(lattice,
                 TimeFunction.constant(0.1),
-                Neighborhood.Gaussian(1, x.length * epochs / 4));
+                Neighborhood.Gaussian(1, x.length * epochs / 4.0));
 
         for (int i = 1; i <= epochs; i++) {
             for (int j : MathEx.permutate(x.length)) {

@@ -29,7 +29,6 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,7 +57,7 @@ public class RBFNetworkTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 

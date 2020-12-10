@@ -58,8 +58,7 @@ public class LogisticRegressionTest {
     public void testIris() {
         System.out.println("Iris");
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, LogisticRegression::fit);
 
         System.out.println(metrics);
         assertEquals(0.9667, metrics.accuracy, 1E-4);
@@ -69,8 +68,7 @@ public class LogisticRegressionTest {
     public void testWeather() {
         System.out.println("Weather");
 
-        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.dummy, WeatherNominal.y, LogisticRegression::fit);
 
         System.out.println(metrics);
         assertEquals(0.7143, metrics.accuracy, 1E-4);
@@ -81,8 +79,7 @@ public class LogisticRegressionTest {
         System.out.println("Pen Digits");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y, LogisticRegression::fit);
 
         System.out.println(result);
         assertEquals(0.9548, result.avg.accuracy, 1E-4);
@@ -94,7 +91,7 @@ public class LogisticRegressionTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
         ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
-                (x, y) -> LogisticRegression.fit(x, y));
+                LogisticRegression::fit);
 
         System.out.println(result);
         assertEquals(0.9509, result.avg.accuracy, 1E-4);
@@ -129,7 +126,7 @@ public class LogisticRegressionTest {
         assertEquals(39, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 

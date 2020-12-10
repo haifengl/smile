@@ -18,10 +18,6 @@
 package smile.feature;
 
 import java.io.IOException;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -61,7 +57,7 @@ public class BagTest {
         Bag bag = new Bag(features);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testFeature() throws IOException {
         System.out.println("feature");
         String[][] text = smile.util.Paths.getTestDataLines("text/movie.txt")

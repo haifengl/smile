@@ -29,7 +29,6 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -59,7 +58,7 @@ public class RegressionTreeTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -97,7 +96,7 @@ public class RegressionTreeTest {
             System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
         }
 
-        RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, (f, x) -> RegressionTree.fit(f, x));
+        RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, RegressionTree::fit);
 
         System.out.println(result);
         assertEquals(expected, result.avg.rmse, 1E-4);

@@ -57,7 +57,7 @@ public class OLSTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -114,7 +114,7 @@ public class OLSTest {
         LinearModel model = OLS.fit(CPU.formula, CPU.data);
         System.out.println(model);
 
-        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data, (f, x) -> OLS.fit(f, x));
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data, OLS::fit);
 
         System.out.println(result);
         assertEquals(51.0009, result.avg.rmse, 1E-4);

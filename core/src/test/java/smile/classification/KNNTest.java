@@ -133,7 +133,7 @@ public class KNNTest {
         assertEquals(39, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 

@@ -32,7 +32,6 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class KPCATest {
 
     double[] latent = {
@@ -65,7 +64,7 @@ public class KPCATest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() {
         System.out.println("KPCA");
 
