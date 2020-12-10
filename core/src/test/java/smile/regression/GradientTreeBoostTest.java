@@ -59,7 +59,7 @@ public class GradientTreeBoostTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -78,7 +78,7 @@ public class GradientTreeBoostTest {
             System.out.format("RMSE with %3d trees: %.4f%n", i+1, RMSE.of(Longley.y, test[i]));
         }
 
-        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (f, x) -> GradientTreeBoost.fit(f, x));
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, GradientTreeBoost::fit);
 
         System.out.println(metrics);
         assertEquals(3.5453, metrics.rmse, 1E-4);

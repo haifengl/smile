@@ -28,8 +28,6 @@ import smile.projection.PCA;
 import smile.util.Paths;
 import org.apache.commons.csv.CSVFormat;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 
 /**
@@ -57,7 +55,7 @@ public class TSNETest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("tSNE");
 

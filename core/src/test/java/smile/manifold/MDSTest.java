@@ -54,7 +54,7 @@ public class MDSTest {
     public void test() {
         System.out.println("MDS");
 
-        double[] eigs = {19538377.0895, 11856555.3340};
+        double[] eig = {19538377.0895, 11856555.3340};
         double[][] points = {
             { 2290.274680,  1798.80293},
             { -825.382790,   546.81148},
@@ -80,7 +80,7 @@ public class MDSTest {
         };
 
         MDS mds = MDS.of(Eurodist.x);
-        assertArrayEquals(eigs, mds.scores, 1E-4);
+        assertArrayEquals(eig, mds.scores, 1E-4);
 
         double sign0 = Math.signum(points[0][0] * mds.coordinates[0][0]);
         double sign1 = Math.signum(points[0][1] * mds.coordinates[0][1]);

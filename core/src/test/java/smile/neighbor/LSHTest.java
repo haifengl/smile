@@ -17,7 +17,6 @@
 
 package smile.neighbor;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -42,7 +41,7 @@ public class LSHTest {
     LSH<double[]> lsh;
     LinearSearch<double[]> naive = new LinearSearch<>(x, new EuclideanDistance());
 
-    public LSHTest() throws IOException {
+    public LSHTest() {
         MathEx.setSeed(19650218); // to get repeatable results.
         lsh = new LSH<>(x, x, 4.0, 1017881);
     }
@@ -70,12 +69,12 @@ public class LSHTest {
         int recall = 0;
         double error = 0.0;
         int hit = 0;
-        for (int i = 0; i < testx.length; i++) {
-            Neighbor neighbor = lsh.nearest(testx[i]);
+        for (double[] xi : testx) {
+            Neighbor neighbor = lsh.nearest(xi);
             if (neighbor != null) {
                 hit++;
 
-                Neighbor truth = naive.nearest(testx[i]);
+                Neighbor truth = naive.nearest(xi);
                 if (neighbor.index == truth.index) {
                     recall++;
                 } else {
@@ -144,28 +143,28 @@ public class LSHTest {
         System.out.format("q3     of recall is %d%n", MathEx.q3(recall));
     }
 
-    @Test(expected = Test.None.class)
-    public void testSpeed() throws Exception {
+    @Test
+    public void testSpeed() {
         System.out.println("Speed");
 
         long start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            lsh.nearest(testx[i]);
+        for (double[] xi : testx) {
+            lsh.nearest(xi);
         }
         double time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
-        for (int i = 0; i < testx.length; i++) {
-            lsh.knn(testx[i], 10);
+        for (double[] xi : testx) {
+            lsh.knn(xi, 10);
         }
         time = (System.currentTimeMillis() - start) / 1000.0;
         System.out.format("10-NN: %.2fs%n", time);
 
         start = System.currentTimeMillis();
         List<Neighbor<double[], double[]>> n = new ArrayList<>();
-        for (int i = 0; i < testx.length; i++) {
-            lsh.range(testx[i], 8.0, n);
+        for (double[] xi : testx) {
+            lsh.range(xi, 8.0, n);
             n.clear();
         }
         time = (System.currentTimeMillis() - start) / 1000.0;

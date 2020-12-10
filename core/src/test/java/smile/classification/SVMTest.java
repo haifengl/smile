@@ -61,7 +61,7 @@ public class SVMTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testSVMGuide1() throws IOException {
         System.out.println("svmguide1");
 
@@ -101,7 +101,7 @@ public class SVMTest {
         assertEquals(130, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testAdult() throws IOException {
         System.out.println("adult");
 
@@ -164,7 +164,7 @@ public class SVMTest {
         assertEquals(33, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
 

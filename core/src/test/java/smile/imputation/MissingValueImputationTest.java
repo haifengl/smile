@@ -22,8 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.Movement;
-import smile.data.Segment;
 import smile.data.SyntheticControl;
 import smile.math.MathEx;
 import static org.junit.Assert.*;

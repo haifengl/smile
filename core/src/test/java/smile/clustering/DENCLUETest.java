@@ -52,7 +52,7 @@ public class DENCLUETest {
     public void tearDown() {
     }
     
-    @Test(expected = Test.None.class)
+    @Test
     public void testGaussianMixture() throws Exception {
         System.out.println("Gaussian Mixture");
 

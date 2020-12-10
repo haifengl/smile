@@ -30,7 +30,6 @@ import smile.math.kernel.GaussianKernel;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.validation.*;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,7 +57,7 @@ public class GaussianProcessRegressionTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 
@@ -95,8 +94,8 @@ public class GaussianProcessRegressionTest {
         smile.data.Serialize.read(temp);
     }
 
-    @Test(expected = Test.None.class)
-    public void testHPO() throws Exception {
+    @Test
+    public void testHPO() {
         System.out.println("HPO longley");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -166,8 +165,8 @@ public class GaussianProcessRegressionTest {
         assertEquals(50.1312, nystromResult.avg.rmse, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
-    public void test2DPlanes() throws Exception {
+    @Test
+    public void test2DPlanes() {
         System.out.println("2dplanes");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -222,8 +221,8 @@ public class GaussianProcessRegressionTest {
         assertEquals(2.1083, nystromResult.avg.rmse, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
-    public void testAilerons() throws Exception {
+    @Test
+    public void testAilerons() {
         System.out.println("ailerons");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -282,8 +281,8 @@ public class GaussianProcessRegressionTest {
         assertEquals(2.2695, nystromResult.avg.rmse, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
-    public void testBank32nh() throws Exception {
+    @Test
+    public void testBank32nh() {
         System.out.println("bank32nh");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -339,8 +338,8 @@ public class GaussianProcessRegressionTest {
         assertEquals(0.3131, nystromResult.avg.rmse, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
-    public void testPuma8nh() throws Exception {
+    @Test
+    public void testPuma8nh() {
         System.out.println("puma8nh");
 
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -395,8 +394,8 @@ public class GaussianProcessRegressionTest {
         assertEquals(4.4097, nystromResult.avg.rmse, 1E-4);
     }
 
-    @Test(expected = Test.None.class)
-    public void testKin8nm() throws Exception {
+    @Test
+    public void testKin8nm() {
         System.out.println("kin8nm");
 
         MathEx.setSeed(19650218); // to get repeatable results.

@@ -57,11 +57,11 @@ public class QDATest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testIris() throws Exception {
         System.out.println("Iris");
 
-        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> QDA.fit(x, y));
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, QDA::fit);
 
         System.out.println(metrics);
         assertEquals(0.9733, metrics.accuracy, 1E-4);
@@ -76,8 +76,7 @@ public class QDATest {
         System.out.println("Breast Cancer");
 
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<QDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
-                (x, y) -> QDA.fit(x, y));
+        ClassificationValidations<QDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y, QDA::fit);
 
         System.out.println(result);
         assertEquals(0.9589, result.avg.accuracy, 1E-4);
