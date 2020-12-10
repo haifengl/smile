@@ -95,9 +95,9 @@ public class LASSO {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.lasso.lambda", "1"));
-        double tol = Double.valueOf(prop.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.lasso.max.iterations", "1000"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.lasso.max.iterations", "1000"));
         return fit(formula, data, lambda, tol, maxIter);
     }
 
@@ -185,7 +185,6 @@ public class LASSO {
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
-        double pobj = 0.0; // primal objective function value
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
 
@@ -249,7 +248,8 @@ public class LASSO {
                 }
             }
 
-            pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
+            // primal objective function value
+            double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
             dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
                 logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
@@ -362,13 +362,10 @@ public class LASSO {
      * @return sum(log(-f))
      */
     private static double sumlogneg(double[][] f) {
-        int m = f.length;
-        int n = f[0].length;
-
         double sum = 0.0;
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sum += Math.log(-f[i][j]);
+        for (double[] row : f) {
+            for (double x : row) {
+                sum += Math.log(-x);
             }
         }
 
@@ -399,7 +396,7 @@ public class LASSO {
             ax = new double[n];
             atax = new double[p];
 
-            if ((A.ncols() < 10000) && (A instanceof Matrix)) {
+            if (A.ncols() < 10000) {
                 AtA = A.ata();
             }
         }

@@ -46,31 +46,31 @@ public class ARMA implements Serializable {
     /**
      * The time series.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The mean of time series.
      */
-    private double mean;
+    private final double mean;
     /**
      * The order of AR.
      */
-    private int p;
+    private final int p;
     /**
      * The order of MA.
      */
-    private int q;
+    private final int q;
     /**
      * The intercept.
      */
-    private double b;
+    private final double b;
     /**
      * The linear weights of AR.
      */
-    private double[] ar;
+    private final double[] ar;
     /**
      * The linear weights of MA.
      */
-    private double[] ma;
+    private final double[] ma;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -78,11 +78,11 @@ public class ARMA implements Serializable {
     /**
      * The fitted values.
      */
-    private double[] fittedValues;
+    private final double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    private double[] residuals;
+    private final double[] residuals;
     /**
      * Residual sum of squares.
      */
@@ -90,11 +90,11 @@ public class ARMA implements Serializable {
     /**
      * Estimated variance.
      */
-    private double variance;
+    private final double variance;
     /**
      * The degree-of-freedom of residual variance.
      */
-    private int df;
+    private final int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -110,13 +110,13 @@ public class ARMA implements Serializable {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    private double RSquared;
+    private final double RSquared;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    private double adjustedRSquared;
+    private final double adjustedRSquared;
 
     /**
      * Constructor.

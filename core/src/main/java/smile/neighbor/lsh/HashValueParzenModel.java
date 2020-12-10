@@ -29,11 +29,11 @@ public class HashValueParzenModel {
     /**
      * Gaussian kernel for Parzen window estimation.
      */
-    private GaussianDistribution gaussian;
+    private final GaussianDistribution gaussian;
     /**
      * Query object's neighbor hash values model.
      */
-    private NeighborHashValueModel[] neighborHashValueModels;
+    private final NeighborHashValueModel[] neighborHashValueModels;
     /**
      * Estimated conditional mean.
      */
@@ -51,8 +51,8 @@ public class HashValueParzenModel {
         gaussian = new GaussianDistribution(0, sigma);
 
         int n = 0;
-        for (int i = 0; i < samples.length; i++) {
-            if (samples[i].neighbors.size() > 1) {
+        for (MultiProbeSample sample : samples) {
+            if (sample.neighbors.size() > 1) {
                 n++;
             }
         }
@@ -93,10 +93,10 @@ public class HashValueParzenModel {
      */
     public void estimate(int m, double h) {
         double mm = 0.0, vv = 0.0, ss = 0.0;
-        for (int i = 0; i < neighborHashValueModels.length; i++) {
-            double k = gaussian.p(neighborHashValueModels[i].H[m] - h);
-            mm += k * neighborHashValueModels[i].mean[m];
-            vv += k * neighborHashValueModels[i].var[m];
+        for (NeighborHashValueModel model : neighborHashValueModels) {
+            double k = gaussian.p(model.H[m] - h);
+            mm += k * model.mean[m];
+            vv += k * model.var[m];
             ss += k;
         }
 
@@ -110,8 +110,8 @@ public class HashValueParzenModel {
 
         if (sd < 1E-5) {
             sd = 0.0;
-            for (int i = 0; i < neighborHashValueModels.length; i++) {
-                sd += neighborHashValueModels[i].var[m];
+            for (NeighborHashValueModel model : neighborHashValueModels) {
+                sd += model.var[m];
             }
             sd = Math.sqrt(sd / neighborHashValueModels.length);
         }

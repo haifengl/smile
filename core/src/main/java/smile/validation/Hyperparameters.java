@@ -69,7 +69,7 @@ import smile.math.MathEx;
  */
 public class Hyperparameters {
     /** The set of parameters. */
-    private HashMap<String, Object> parameters = new HashMap<>();
+    private final HashMap<String, Object> parameters = new HashMap<>();
 
     static class Pair {
         String name;
@@ -121,7 +121,7 @@ public class Hyperparameters {
 
         DoubleRange(double start, double end, double step) {
             if (start >= end) {
-                throw new IllegalArgumentException(String.format("start = %d, end = %d", start, end));
+                throw new IllegalArgumentException(String.format("start = %f, end = %f", start, end));
             }
             this.start = start;
             this.end = end;
@@ -327,8 +327,7 @@ public class Hyperparameters {
             ArrayList<ArrayList<Pair>> newCombinations = new ArrayList<>();
             for(ArrayList<Pair> first: combinations) {
                 for(Pair second: nextList) {
-                    ArrayList<Pair> newList = new ArrayList<>();
-                    newList.addAll(first);
+                    ArrayList<Pair> newList = new ArrayList<>(first);
                     newList.add(second);
                     newCombinations.add(newList);
                 }

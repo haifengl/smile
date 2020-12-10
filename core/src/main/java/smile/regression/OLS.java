@@ -21,7 +21,6 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 
@@ -100,8 +99,8 @@ public class OLS {
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         String method = prop.getProperty("smile.ols.method", "qr");
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
-        boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
+        boolean stderr = Boolean.parseBoolean(prop.getProperty("smile.ols.standard.error", "true"));
+        boolean recursive = Boolean.parseBoolean(prop.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, recursive);
     }
     
@@ -129,9 +128,9 @@ public class OLS {
         }
 
         // weights and intercept
-        double[] w = null;
+        double[] w;
         Matrix.QR qr = null;
-        Matrix.SVD svd = null;
+        Matrix.SVD svd;
 
         if (method.equalsIgnoreCase("svd")) {
             svd = X.svd();

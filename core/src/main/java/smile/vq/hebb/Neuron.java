@@ -97,8 +97,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /** Sets the age of edge. */
     public void setEdgeAge(Neuron neighbor, int age) {
-        for (Iterator<Edge> iter = edges.iterator(); iter.hasNext();) {
-            Edge edge = iter.next();
+        for (Edge edge : edges) {
             if (edge.neighbor == neighbor) {
                 edge.age = age;
                 return;

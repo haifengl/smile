@@ -113,7 +113,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
     /**
      * The Cholesky decomposition of kernel matrix.
      */
-    private Matrix.Cholesky cholesky;
+    private final Matrix.Cholesky cholesky;
 
     /** The joint prediction of multiple data points. */
     public class JointPrediction {
@@ -300,10 +300,10 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
-        double tol = Double.valueOf(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
+        double tol = Double.parseDouble(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
         return fit(x, y, kernel, noise, normalize, tol, maxIter);
     }
 
@@ -365,7 +365,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
             l[m] = 1E-10;
             u[m] = 1E5;
 
-            double L = -BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
+            BFGS.minimize(objective, 5, params, l, u, tol, maxIter);
             kernel = kernel.of(params);
             noise = params[params.length - 1];
         }
@@ -391,8 +391,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
         return fit(x, y, t, kernel, noise, normalize);
     }
 
@@ -465,8 +465,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param prop Training algorithm hyper-parameters and properties.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.valueOf(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.valueOf(prop.getProperty("smile.gaussian.process.normalize"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
         return nystrom(x, y, t, kernel, noise, normalize);
     }
 

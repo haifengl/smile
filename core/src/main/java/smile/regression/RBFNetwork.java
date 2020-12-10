@@ -78,15 +78,15 @@ public class RBFNetwork<T> implements Regression<T> {
     /**
      * The linear weights.
      */
-    private double[] w;
+    private final double[] w;
     /**
      * The radial basis functions.
      */
-    private RBF<T>[] rbf;
+    private final RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
-    private boolean normalized;
+    private final boolean normalized;
 
     /**
      * Constructor.

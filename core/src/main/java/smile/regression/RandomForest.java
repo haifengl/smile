@@ -96,19 +96,19 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
 
     /**
      * Forest of regression trees.
      */
-    private Model[] models;
+    private final Model[] models;
 
     /**
      * The overall out-of-bag metrics, which are quite accurate given that
      * enough trees have been grown (otherwise the OOB error estimate can
      * bias upward).
      */
-    private RegressionMetrics metrics;
+    private final RegressionMetrics metrics;
 
     /**
      * Variable importance. Every time a split of a node is made on variable
@@ -117,7 +117,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * all trees in the forest gives a fast variable importance that is often
      * very consistent with the permutation importance measure.
      */
-    private double[] importance;
+    private final double[] importance;
 
     /**
      * Constructor.
@@ -150,12 +150,12 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param data the data frame of the explanatory and response variables.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.valueOf(prop.getProperty("smile.random.forest.mtry", "0"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.random.forest.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.random.forest.node.size", "5"));
-        double subsample = Double.valueOf(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.random.forest.trees", "500"));
+        int mtry = Integer.parseInt(prop.getProperty("smile.random.forest.mtry", "0"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.random.forest.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.random.forest.node.size", "5"));
+        double subsample = Double.parseDouble(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
     }
 

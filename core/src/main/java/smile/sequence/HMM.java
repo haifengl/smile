@@ -46,15 +46,15 @@ public class HMM implements Serializable {
     /**
      * Initial state probabilities.
      */
-    private double[] pi;
+    private final double[] pi;
     /**
      * State transition probabilities.
      */
-    private Matrix a;
+    private final Matrix a;
     /**
      * Symbol emission probabilities.
      */
-    private Matrix b;
+    private final Matrix b;
 
     /**
      * Constructor.
@@ -177,8 +177,8 @@ public class HMM implements Serializable {
         double[] table = alpha[t];
 
         double sum = 0.0;
-        for (int i = 0; i < table.length; i++) {
-            sum += table[i];
+        for (double x : table) {
+            sum += x;
         }
 
         scaling[t] = sum;
@@ -198,7 +198,7 @@ public class HMM implements Serializable {
     private void forward(int[] o, double[][] alpha, double[] scaling) {
         int N = a.nrows();
         for (int k = 0; k < N; k++) {
-            alpha[0][k] = pi[k] * b.get(k, o[0]);;
+            alpha[0][k] = pi[k] * b.get(k, o[0]);
         }
         scale(scaling, alpha, 0);
 
@@ -367,7 +367,7 @@ public class HMM implements Serializable {
 
         return fit(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 labels);
     }
@@ -382,7 +382,7 @@ public class HMM implements Serializable {
     public <T> void update(T[][] observations, int iterations, ToIntFunction<T> ordinal) {
         update(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 iterations);
     }
@@ -409,13 +409,13 @@ public class HMM implements Serializable {
         int M = b.ncols();
 
         // gamma[n] = gamma array associated to observation sequence n
-        double gamma[][][] = new double[sequences.length][][];
+        double[][][] gamma = new double[sequences.length][][];
 
         // a[i][j] = aijNum[i][j] / aijDen[i]
         // aijDen[i] = expected number of transitions from state i
         // aijNum[i][j] = expected number of transitions from state i to j
-        double aijNum[][] = new double[N][N];
-        double aijDen[] = new double[N];
+        double[][] aijNum = new double[N][N];
+        double[] aijDen = new double[N];
 
         for (int k = 0; k < sequences.length; k++) {
             if (sequences[k].length <= 2) {
@@ -429,8 +429,8 @@ public class HMM implements Serializable {
             forward(o, alpha, scaling);
             backward(o, beta, scaling);
 
-            double xi[][][] = estimateXi(o, alpha, beta);
-            double g[][] = gamma[k] = estimateGamma(xi);
+            double[][][] xi = estimateXi(o, alpha, beta);
+            double[][] g = gamma[k] = estimateGamma(xi);
 
             int n = o.length - 1;
             for (int i = 0; i < N; i++) {
@@ -501,7 +501,7 @@ public class HMM implements Serializable {
 
         int N = a.nrows();
         int n = o.length - 1;
-        double xi[][][] = new double[n][N][N];
+        double[][][] xi = new double[n][N][N];
 
         for (int t = 0; t < n; t++) {
             for (int i = 0; i < N; i++) {

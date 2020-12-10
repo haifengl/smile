@@ -35,11 +35,11 @@ public class PosterioriModel implements Serializable {
     /**
      * The hash function to model.
      */
-    private MultiProbeHash hash;
+    private final MultiProbeHash hash;
     /**
      * The posteriori probabilities lookup table.
      */
-    private PrH[][][] lookup;
+    private final PrH[][][] lookup;
 
     /**
      * Constructor.
@@ -71,15 +71,13 @@ public class PosterioriModel implements Serializable {
 
                 // This is the original method. However, a lots of h values
                 // will have very small probability and are essentially not useful.
-                    /*
-                    lookup[m][n] = new PrH[size];
-                    for (int h = 0; h < size; ++h) {
-                        int u = h + minh;
-                        lookup[m][n][h] = new PrH();
-                        lookup[m][n][h].u = u;
-                        lookup[m][n][h].pr = gaussian.cdf(u + 1) - gaussian.cdf(u);
-                    }
-                     */
+                //    lookup[m][n] = new PrH[size];
+                //    for (int h = 0; h < size; ++h) {
+                //        int u = h + minh;
+                //        lookup[m][n][h] = new PrH();
+                //        lookup[m][n][h].u = u;
+                //        lookup[m][n][h].pr = gaussian.cdf(u + 1) - gaussian.cdf(u);
+                //    }
 
                 // Here we only generate those h values with reasonably large probability
                 ArrayList<PrH> probs = new ArrayList<>();
@@ -100,7 +98,7 @@ public class PosterioriModel implements Serializable {
                     probs.add(prh);
                 }
 
-                lookup[m][n] = probs.toArray(new PrH[probs.size()]);
+                lookup[m][n] = probs.toArray(new PrH[0]);
                 Arrays.sort(lookup[m][n]);
             }
         }
