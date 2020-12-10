@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public abstract class Split {
-    public static Comparator<Split> comparator = (x, y) -> Double.compare(x.score, y.score);
+    public static Comparator<Split> comparator = Comparator.comparingDouble(x -> x.score);
 
     /** The node associated with this split. */
     final LeafNode leaf;

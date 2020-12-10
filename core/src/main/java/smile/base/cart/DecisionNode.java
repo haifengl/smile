@@ -22,7 +22,6 @@ import smile.data.type.StructType;
 import smile.math.MathEx;
 
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,10 +35,10 @@ public class DecisionNode extends LeafNode {
     private static final long serialVersionUID = 2L;
 
     /** The predicted output. */
-    private int output;
+    private final int output;
 
     /** The number of node samples in each class. */
-    private int[] count;
+    private final int[] count;
 
     /**
      * Constructor.

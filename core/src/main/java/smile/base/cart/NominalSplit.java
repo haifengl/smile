@@ -18,8 +18,6 @@
 package smile.base.cart;
 
 import java.util.function.IntPredicate;
-import smile.data.DataFrame;
-import smile.data.vector.BaseVector;
 
 /**
  * The data about of a potential split for a leaf node.

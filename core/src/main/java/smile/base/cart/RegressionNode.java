@@ -32,17 +32,17 @@ public class RegressionNode extends LeafNode {
     private static final long serialVersionUID = 2L;
 
     /** The mean of response variable. */
-    private double mean;
+    private final double mean;
 
     /**
      * The predicted output. In standard regression tree,
      * this is same as the mean. However, in gradient tree
      * boosting, this may be different.
      */
-    private double output;
+    private final double output;
 
     /** The residual sum of squares. */
-    private double rss;
+    private final double rss;
 
     /**
      * Constructor.

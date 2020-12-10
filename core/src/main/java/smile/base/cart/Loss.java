@@ -144,7 +144,7 @@ public interface Loss {
     static Loss ls(double[] y) {
         return new Loss() {
             /** The residual/response variable. */
-            double[] residual = y;
+            final double[] residual = y;
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -384,11 +384,11 @@ public interface Loss {
 
         return new Loss() {
             /** The class labels of +1 and -1. */
-            int[] y = Arrays.stream(labels).map(yi -> 2 * yi - 1).toArray();
+            final int[] y = Arrays.stream(labels).map(yi -> 2 * yi - 1).toArray();
             /** The response variable. */
-            double[] response = new double[n];
+            final double[] response = new double[n];
             /** The residuals. */
-            double[] residual = new double[n];
+            final double[] residual = new double[n];
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {
@@ -443,11 +443,11 @@ public interface Loss {
 
         return new Loss() {
             /** The class labels of binary case. */
-            int[] y = Arrays.stream(labels).map(yi -> yi == c ? 1 : 0).toArray();
+            final int[] y = Arrays.stream(labels).map(yi -> yi == c ? 1 : 0).toArray();
             /** The response variable. */
-            double[] response = new double[n];
+            final double[] response = new double[n];
             /** The residuals. */
-            double[] residual = new double[n];
+            final double[] residual = new double[n];
 
             @Override
             public double output(int[] nodeSamples, int[] sampleCount) {

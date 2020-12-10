@@ -32,7 +32,7 @@ import smile.math.kernel.MercerKernel;
  * learning some fixed set of parameters corresponding to the features of
  * their inputs, they instead store (a subset of) their training set (or
  * a new representation) and learn for it a corresponding weight. Prediction
- * for unlabeled inputs is treated by the application of a similiarity function.
+ * for unlabeled inputs is treated by the application of a similarity function.
  *
  * @author Haifeng Li
  */
