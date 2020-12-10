@@ -56,11 +56,11 @@ public class RBF<T> implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /** The center of neuron. */
-    private T center;
+    private final T center;
     /** Radial basis function. */
-    private RadialBasisFunction rbf;
+    private final RadialBasisFunction rbf;
     /** Metric distance. */
-    private Metric<T> distance;
+    private final Metric<T> distance;
 
     /**
      * Constructor.
@@ -105,12 +105,12 @@ public class RBF<T> implements Serializable {
     }
 
     /**
-     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
-     * distance between the chosen centers, the standard deviation (i.e. width)
-     * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
-     * k is number of centers. This choice would be close to the optimal
-     * solution if the data were uniformly distributed in the input space,
-     * leading to a uniform distribution of centroids.
+     * Estimates the width of Gaussian RBF based on the maximum
+     * distance between the chosen centers. The width is estimated
+     * as d<sub>max</sub> / sqrt(2*k), where k is number of centers.
+     * This choice would be close to the optimal solution if the data
+     * were uniformly distributed in the input space, leading to a
+     * uniform distribution of centroids.
      */
     private static <T> double estimateWidth(T[] centers, Metric<T> distance) {
         int k = centers.length;
@@ -129,41 +129,35 @@ public class RBF<T> implements Serializable {
     }
 
     /**
-     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
-     * distance between the chosen centers, the standard deviation (i.e. width)
-     * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
-     * k is number of centers. This choice would be close to the optimal
-     * solution if the data were uniformly distributed in the input space,
-     * leading to a uniform distribution of centroids.
+     * Estimates the width of Gaussian RBF based on the average distance to
+     * nearest neighbors.
+     * @param p the number of nearest neighbors of centers to estimate
+     *          the width of Gaussian RBF functions.
      */
     private static <T> double[] estimateWidth(T[] centers, Metric<T> distance, int p) {
         int k = centers.length;
+        double[] d = new double[k];
         double[] r = new double[k];
-        GaussianRadialBasis[] basis = new GaussianRadialBasis[k];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < k; j++) {
-                r[j] = distance.d(centers[i], centers[j]);
+                d[j] = distance.d(centers[i], centers[j]);
             }
 
-            Arrays.sort(r);
+            Arrays.sort(d);
             double r0 = 0.0;
             for (int j = 1; j <= p; j++) {
-                r0 += r[j];
+                r0 += d[j];
             }
-            r0 /= p;
-            basis[i] = new GaussianRadialBasis(r0);
+
+            r[i] = r0 / p;
         }
 
         return r;
     }
 
     /**
-     * Estimates the width of RBF. Let d<sub>max</sub> be the maximum
-     * distance between the chosen centers, the standard deviation (i.e. width)
-     * of Gaussian radial basis function is d<sub>max</sub> / sqrt(2*k), where
-     * k is number of centers. This choice would be close to the optimal
-     * solution if the data were uniformly distributed in the input space,
-     * leading to a uniform distribution of centroids.
+     * Estimates the width of Gaussian RBF as the width of each
+     * cluster multiplied with a given scaling parameter r.
      */
     private static <T> double[] estimateWidth(T[] x, int[] y, T[] centers, int[] clusterSize, Metric<T> distance, double r) {
         int k = centers.length;
@@ -235,8 +229,8 @@ public class RBF<T> implements Serializable {
      * p is 2.
      * @param x the training dataset.
      * @param k the number of RBF neurons to learn.
-     * @param p the number of nearest neighbors of centers to estimate the width
-     * of Gaussian RBF functions.
+     * @param p the number of nearest neighbors of centers to estimate
+     *          the width of Gaussian RBF functions.
      * @return Gaussian RBF functions with parameter learned from data.
      */
     public static RBF<double[]>[] fit(double[][] x, int k, int p) {
@@ -255,7 +249,7 @@ public class RBF<T> implements Serializable {
 
     /**
      * Learns Gaussian RBF function and centers from data. The centers are
-     * chosen as the centroids of K-Means. The standard deviation (i.e. width)
+     * chosen as the centroids of K-Means. The width
      * of Gaussian radial basis function is estimated as the width of each
      * cluster multiplied with a given scaling parameter r.
      * @param x the training dataset.
@@ -293,7 +287,7 @@ public class RBF<T> implements Serializable {
      * @return a Gaussian RBF function with parameter learned from data.
      */
     public static <T> RBF<T>[] fit(T[] x, Metric<T> distance, int k) {
-        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
+        CLARANS<T> clarans = CLARANS.fit(x, distance, k);
         T[] centers = clarans.centroids;
 
         GaussianRadialBasis basis = new GaussianRadialBasis(estimateWidth(centers, distance));
@@ -318,7 +312,7 @@ public class RBF<T> implements Serializable {
             throw new IllegalArgumentException("Invalid number of nearest neighbors: " + p);
         }
 
-        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
+        CLARANS<T> clarans = CLARANS.fit(x, distance, k);
         T[] centers = clarans.centroids;
 
         double[] width = estimateWidth(centers, distance, p);
@@ -343,7 +337,7 @@ public class RBF<T> implements Serializable {
             throw new IllegalArgumentException("Invalid scaling parameter: " + r);
         }
 
-        CLARANS<T> clarans = CLARANS.fit(x, distance::d, k);
+        CLARANS<T> clarans = CLARANS.fit(x, distance, k);
         T[] centers = clarans.centroids;
 
         double[] width = estimateWidth(x, clarans.y, centers, clarans.size, distance, r);
