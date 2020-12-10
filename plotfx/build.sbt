@@ -1,2 +1,0 @@
-name := "smile-plotfx"
-
