@@ -17,9 +17,11 @@
 
 package smile.data;
 
-import org.apache.commons.csv.CSVFormat;
+import java.util.Arrays;
 import smile.io.CSV;
+import smile.math.MathEx;
 import smile.util.Paths;
+import org.apache.commons.csv.CSVFormat;
 
 /**
  *
@@ -28,13 +30,16 @@ import smile.util.Paths;
 public class SwissRoll {
 
     public static double[][] data;
+    /** Pair wise distance of first 47 samples. */
+    public static double[][] dist;
 
     static {
         try {
             CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
             data = csv.read(Paths.getTestData("manifold/swissroll.txt")).toArray(false, CategoricalEncoder.DUMMY);
+            dist = MathEx.pdist(Arrays.copyOf(data, 47)).toArray();
         } catch (Exception ex) {
-            System.err.println("Failed to load 'index.noun': " + ex);
+            System.err.println("Failed to load 'swissroll': " + ex);
             System.exit(-1);
         }
     }
