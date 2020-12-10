@@ -80,7 +80,11 @@ public class IsotonicMDSTest {
         IsotonicMDS mds = IsotonicMDS.of(Eurodist.x);
         assertEquals(0.05846, mds.stress, 1E-5);
 
+        double sign0 = Math.signum(points[0][0] * mds.coordinates[0][0]);
+        double sign1 = Math.signum(points[0][1] * mds.coordinates[0][1]);
         for (int i = 0; i < points.length; i++) {
+            points[i][0] *= sign0;
+            points[i][1] *= sign1;
             assertArrayEquals(points[i], mds.coordinates[i], 1E-4);
         }
     }
