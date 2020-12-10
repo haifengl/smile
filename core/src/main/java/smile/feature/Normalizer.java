@@ -54,7 +54,7 @@ public class Normalizer implements FeatureTransform {
     }
 
     /** The type of norm .*/
-    private Norm norm;
+    private final Norm norm;
 
     /** Default constructor with L2 norm. */
     public Normalizer() {

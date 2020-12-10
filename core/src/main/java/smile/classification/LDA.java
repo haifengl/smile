@@ -169,7 +169,7 @@ public class LDA implements SoftClassifier<double[]> {
      */
     public static LDA fit(double[][] x, int[] y, Properties prop) {
         double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.lda.tolerance", "1E-4"));
+        double tol = Double.parseDouble(prop.getProperty("smile.lda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 

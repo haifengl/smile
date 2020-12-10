@@ -40,8 +40,8 @@ import smile.neighbor.RNNSearch;
  * conditional entropy H(C | X) is small. MEC also generalizes the criterion
  * by replacing Shannon's entropy with Havrda-Charvat's structural
  * &alpha;-entropy. Interestingly, the minimum entropy criterion based
- * on structural &alpha;-entropy is equal to the probability error of the
- * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
+ * on structural &alpha;-entropy is equal to the probability error of the
+ * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
  * Parzen density estimation, a nonparametric approach.
  * <p>
  * MEC is an iterative algorithm starting with an initial partition given by
@@ -70,7 +70,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * The neighborhood search data structure.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
      * Constructor.
@@ -115,7 +115,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             KMeans kmeans = KMeans.fit((double[][]) data, k);
             y = kmeans.y;
         } else {
-            CLARANS<T> clarans = CLARANS.fit(data, distance::d, k);
+            CLARANS<T> clarans = CLARANS.fit(data, distance, k);
             y = clarans.y;
         }
 
@@ -149,7 +149,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         // Neighbors of each observation.
         ArrayList<int[]> neighbors = new ArrayList<>();
 
-        logger.info(String.format("Estimating the probabilities ..."));
+        logger.info("Estimating the probabilities ...");
         IntStream stream = IntStream.range(0, n);
         if (!(nns instanceof LinearSearch)) {
             stream = stream.parallel();

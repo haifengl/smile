@@ -39,10 +39,10 @@ public interface MissingValueImputation {
             int n = 0;
             double sum = 0.0;
 
-            for (int i = 0; i < data.length; i++) {
-                if (!Double.isNaN(data[i][j])) {
+            for (double[] x : data) {
+                if (!Double.isNaN(x[j])) {
                     n++;
-                    sum += data[i][j];
+                    sum += x[j];
                 }
             }
 

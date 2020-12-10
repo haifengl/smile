@@ -102,7 +102,7 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Data structure for neighborhood search.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
      * Constructor.

@@ -106,13 +106,11 @@ public class LLE implements Serializable {
 
         // Use largest connected component of nearest neighbor graph.
         int[][] N = new int[data.length][k];
-        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> {
-            N[v1][j] = v2;
-        });
+        AdjacencyList graph = NearestNeighborGraph.of(data, k, false, (v1, v2, weight, j) -> N[v1][j] = v2);
         NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
         int[] index = nng.index;
-        int n = index.length;
+        int n = data.length;
         graph = nng.graph;
 
         // The reverse index maps the original data to the largest connected component
@@ -188,8 +186,6 @@ public class LLE implements Serializable {
         // Sometimes, ARPACK doesn't compute the smallest eigenvalue (i.e. 0).
         // Maybe due to numeric stability.
         int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
-        //System.out.println(Arrays.toString(eigen.wr));
-        //System.out.println(V.toString(10, V.nrows()-1));
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             int c = V.ncols() - j - offset;

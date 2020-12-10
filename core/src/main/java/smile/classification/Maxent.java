@@ -106,7 +106,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
         /**
          * The linear weights.
          */
-        private double[] w;
+        private final double[] w;
 
         /**
          * Constructor.
@@ -139,7 +139,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
         @Override
         public int predict(int[] x, double[] posteriori) {
-            if (posteriori != null && posteriori.length != k) {
+            if (posteriori.length != k) {
                 throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
             }
 
@@ -169,7 +169,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
         /**
          * The linear weights.
          */
-        private double[][] w;
+        private final double[][] w;
 
         /**
          * Constructor.
@@ -202,7 +202,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
         @Override
         public int predict(int[] x, double[] posteriori) {
-            if (posteriori != null && posteriori.length != k) {
+            if (posteriori.length != k) {
                 throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
             }
 
@@ -258,9 +258,9 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * @param y training labels in [0, k), where k is the number of classes.
      */
     public static Maxent fit(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.maxent.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
         return fit(p, x, y, lambda, tol, maxIter);
     }
 
@@ -306,9 +306,9 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * @param y training labels in [0, k), where k is the number of classes.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.maxent.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
         return binomial(p, x, y, lambda, tol, maxIter);
     }
 
@@ -381,9 +381,9 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * @param y training labels in [0, k), where k is the number of classes.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.maxent.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
         return multinomial(p, x, y, lambda, tol, maxIter);
     }
 
@@ -486,7 +486,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
             this.p = p;
             this.lambda = lambda;
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][p+1];
         }
@@ -604,7 +604,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
             this.p = p;
             this.lambda = lambda;
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][(k-1)*(p+1)];
             posterioris = new double[partitions][k];

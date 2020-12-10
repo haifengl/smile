@@ -23,7 +23,6 @@ import java.util.stream.IntStream;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
-import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
@@ -134,7 +133,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * The linear weights.
          */
-        private double[] w;
+        private final double[] w;
 
         /**
          * Constructor.
@@ -215,7 +214,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
         /**
          * The linear weights.
          */
-        private double[][] w;
+        private final double[][] w;
 
         /**
          * Constructor.
@@ -337,9 +336,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param y training labels.
      */
     public static Binomial binomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -427,10 +426,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param y training labels.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logit.lambda", "0.1"));
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.logit.standard.error", "true"));
-        double tol = Double.valueOf(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logit.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -525,9 +523,9 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * @param y training labels.
      */
     public static LogisticRegression fit(double[][] x, int[] y, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.valueOf(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.logistic.max.iterations", "500"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(prop.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.logistic.max.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 
@@ -592,7 +590,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             this.lambda = lambda;
             this.p = x[0].length;
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][p+1];
         }
@@ -710,7 +708,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
             this.lambda = lambda;
             this.p = x[0].length;
 
-            partitionSize = Integer.valueOf(System.getProperty("smile.data.partition.size", "1000"));
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
             gradients = new double[partitions][(k-1)*(p+1)];
             posterioris = new double[partitions][k];

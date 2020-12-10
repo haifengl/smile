@@ -110,7 +110,8 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
      */
     static <T> double assign(int[] y, T[] data, T[] centroids, ToDoubleBiFunction<T, T> distance) {
         int k = centroids.length;
-        double wcss = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
+
+        return IntStream.range(0, data.length).parallel().mapToDouble(i -> {
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j++) {
                 double dist = distance.applyAsDouble(data[i], centroids[j]);
@@ -121,8 +122,6 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
             }
             return nearest;
         }).sum();
-
-        return wcss;
     }
 
     /**

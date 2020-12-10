@@ -19,8 +19,6 @@ package smile.clustering.linkage;
 
 import smile.math.distance.Distance;
 
-import java.util.Comparator;
-
 /**
  * Complete linkage. This is the opposite of single linkage. Distance between
  * groups is now defined as the distance between the most distant pair of

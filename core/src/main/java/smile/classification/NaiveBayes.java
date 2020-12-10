@@ -56,23 +56,23 @@ public class NaiveBayes implements SoftClassifier<double[]> {
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * The number of independent variables.
      */
-    private int p;
+    private final int p;
     /**
      * The priori probability of each class.
      */
-    private double[] priori;
+    private final double[] priori;
     /**
      * The conditional distribution for general purpose naive Bayes classifier.
      */
-    private Distribution[][] prob;
+    private final Distribution[][] prob;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor of general naive Bayes classifier.

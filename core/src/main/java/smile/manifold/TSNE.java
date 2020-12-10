@@ -71,19 +71,36 @@ public class TSNE implements Serializable {
      */
     public final double[][] coordinates;
 
-    private double eta             = 500;
-    private double momentum        = 0.5;
-    private double finalMomentum   = 0.8;
-    private int momentumSwitchIter = 250;
-    private double minGain         = .01;
-    private int    totalIter       =   1; // total iterations
+    /**
+     * The learning rate.
+     */
+    private final double eta;
+    /**
+     * The number of iterations so far.
+     */
+    private int totalIter = 1;
+    /**
+     * The momentum factor.
+     */
+    private double momentum              = 0.5;
+    /**
+     * The momentum in later stage.
+     */
+    private final double finalMomentum   = 0.8;
+    /**
+     * The number of iterations at which switch the momentum to
+     * finalMomentum.
+     */
+    private final int momentumSwitchIter = 250;
+    /**
+     * The floor of gain.
+     */
+    private final double minGain         = .01;
 
-    private double[][] gains; // adjust learning rate for each point
-
-    private double[][] D;
-    private double[][] P;
-    private double[][] Q;
-    private double     Qsum;
+    private final double[][] gains; // adjust learning rate for each point
+    private final double[][] P;
+    private final double[][] Q;
+    private double Qsum;
 
     /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
@@ -108,6 +125,7 @@ public class TSNE implements Serializable {
         this.eta = eta;
         int n = X.length;
 
+        double[][] D;
         if (X.length == X[0].length) {
             D = X;
         } else {

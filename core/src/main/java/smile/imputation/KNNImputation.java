@@ -38,7 +38,7 @@ public class KNNImputation implements MissingValueImputation {
     /**
      * The number of neighbors used for imputation.
      */
-    private int k;
+    private final int k;
 
     /**
      * Constructor.
@@ -77,11 +77,10 @@ public class KNNImputation implements MissingValueImputation {
 
         double[] dist = new double[data.length];
 
-        for (int i = 0; i < data.length; i++) {
-            double[] x = data[i];
+        for (double[] x : data) {
             int missing = 0;
-            for (int j = 0; j < x.length; j++) {
-                if (Double.isNaN(x[j])) {
+            for (double v : x) {
+                if (Double.isNaN(v)) {
                     missing++;
                 }
             }
@@ -101,7 +100,7 @@ public class KNNImputation implements MissingValueImputation {
                     }
                 }
 
-                if (n > (x.length-missing) / 2) {
+                if (n > (x.length - missing) / 2) {
                     dist[j] = x.length * dist[j] / n;
                 } else {
                     dist[j] = Double.MAX_VALUE;
@@ -113,7 +112,7 @@ public class KNNImputation implements MissingValueImputation {
 
             QuickSort.sort(dist, dat);
 
-            for (int j = 0; j < data[i].length; j++) {
+            for (int j = 0; j < x.length; j++) {
                 if (Double.isNaN(x[j])) {
                     x[j] = 0;
                     int n = 0;
