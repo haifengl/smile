@@ -49,12 +49,12 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
     };
 
     private static final String[] datasource = {
-        "projection/BritishTowns.txt",
-        "projection/eurodist.txt",
-        "projection/morsecode.txt",
-        "projection/colorstimuli.txt",
-        "projection/bank05d.txt",
-        "projection/bank25d.txt"
+        "mds/BritishTowns.txt",
+        "mds/eurodist.txt",
+        "mds/morsecode.txt",
+        "mds/colorstimuli.txt",
+        "mds/bank05d.txt",
+        "mds/bank25d.txt"
     };
 
     static DataFrame[] dataset = new DataFrame[datasetName.length];

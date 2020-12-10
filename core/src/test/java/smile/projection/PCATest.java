@@ -23,6 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
+import smile.data.USArrests;
 import smile.math.MathEx;
 
 /**
@@ -30,60 +31,6 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class PCATest {
-
-    double[][] USArrests = {
-        // Murder Assault UrbanPop Rape
-        {13.2, 236, 58, 21.2}, // Alabama
-        {10.0, 263, 48, 44.5}, // Alaska
-        {8.1, 294, 80, 31.0}, // Arizona
-        {8.8, 190, 50, 19.5}, // Arkansas
-        {9.0, 276, 91, 40.6}, // California
-        {7.9, 204, 78, 38.7}, // Colorado
-        {3.3, 110, 77, 11.1}, // Connecticut
-        {5.9, 238, 72, 15.8}, // Delaware
-        {15.4, 335, 80, 31.9}, // Florida
-        {17.4, 211, 60, 25.8}, // Georgia
-        {5.3, 46, 83, 20.2}, // Hawaii
-        {2.6, 120, 54, 14.2}, // Idaho
-        {10.4, 249, 83, 24.0}, // Illinois
-        {7.2, 113, 65, 21.0}, // Indiana
-        {2.2, 56, 57, 11.3}, // Iowa
-        {6.0, 115, 66, 18.0}, // Kansas
-        {9.7, 109, 52, 16.3}, // Kentucky
-        {15.4, 249, 66, 22.2}, // Louisiana
-        {2.1, 83, 51, 7.8}, // Maine
-        {11.3, 300, 67, 27.8}, // Maryland
-        {4.4, 149, 85, 16.3}, // Massachusetts
-        {12.1, 255, 74, 35.1}, // Michigan
-        {2.7, 72, 66, 14.9}, // Michigan
-        {16.1, 259, 44, 17.1}, // Mississippi
-        {9.0, 178, 70, 28.2}, // Missouri
-        {6.0, 109, 53, 16.4}, // Montana
-        {4.3, 102, 62, 16.5}, // Nebraska
-        {12.2, 252, 81, 46.0}, // Nevada
-        {2.1, 57, 56, 9.5}, // New Hampshire
-        {7.4, 159, 89, 18.8}, // New Jersey
-        {11.4, 285, 70, 32.1}, // New Mexico
-        {11.1, 254, 86, 26.1}, // New York
-        {13.0, 337, 45, 16.1}, // North Carolina
-        {0.8, 45, 44, 7.3}, // North Dakota
-        {7.3, 120, 75, 21.4}, // Ohio
-        {6.6, 151, 68, 20.0}, // Oklahoma
-        {4.9, 159, 67, 29.3}, // Oregon
-        {6.3, 106, 72, 14.9}, // Pennsylvania
-        {3.4, 174, 87, 8.3}, // Rhode Island
-        {14.4, 279, 48, 22.5}, // South Carolina
-        {3.8, 86, 45, 12.8}, // South Dakota
-        {13.2, 188, 59, 26.9}, // Tennessee
-        {12.7, 201, 80, 25.5}, // Texas
-        {3.2, 120, 80, 22.9}, // Utah
-        {2.2, 48, 32, 11.2}, // Vermont
-        {8.5, 156, 63, 20.7}, // Virginia
-        {4.0, 145, 73, 26.2}, // Washington
-        {5.7, 81, 39, 9.3}, // West Virginia
-        {2.6, 53, 66, 10.8}, // Wisconsin
-        {6.8, 161, 60, 15.6} // Wyoming
-    };
 
     public PCATest() {
     }
@@ -167,7 +114,7 @@ public class PCATest {
             {118.176327855097, 5.50757920474225, 2.71132076743689, -0.204972398473778},
             {10.4345393883043, -5.92445292066816, 3.79444682032120, 0.517867427500318}
         };
-        PCA pca = PCA.fit(USArrests);
+        PCA pca = PCA.fit(USArrests.x);
         pca.setProjection(4);
         assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
         assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
@@ -178,7 +125,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.project(USArrests);
+        double[][] p = pca.project(USArrests.x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);
@@ -250,7 +197,7 @@ public class PCATest {
             {-0.629426663525205, -0.321012967465219, 0.240659233693745, 0.166651800709434}
         };
 
-        PCA pca = PCA.cor(USArrests);
+        PCA pca = PCA.cor(USArrests.x);
         pca.setProjection(4);
         System.out.println(java.util.Arrays.toString(pca.getVarianceProportion()));
         assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
@@ -262,7 +209,7 @@ public class PCATest {
             }
         }
 
-        double[][] p = pca.project(USArrests);
+        double[][] p = pca.project(USArrests.x);
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(Math.abs(points[i][j]), Math.abs(p[i][j]), 1E-5);

@@ -17,29 +17,26 @@
 
 package smile.data;
 
-import java.util.Arrays;
-import smile.io.CSV;
-import smile.math.MathEx;
-import smile.util.Paths;
 import org.apache.commons.csv.CSVFormat;
+import smile.io.Read;
+import smile.util.Paths;
 
 /**
  *
  * @author Haifeng
  */
-public class SwissRoll {
+public class Eurodist {
 
-    public static double[][] data;
-    /** Pair wise distance of first 47 samples. */
-    public static double[][] dist;
+    public static DataFrame data;
+    public static double[][] x;
 
     static {
         try {
-            CSV csv = new CSV(CSVFormat.DEFAULT.withDelimiter('\t'));
-            data = csv.read(Paths.getTestData("manifold/swissroll.txt")).toArray(false, CategoricalEncoder.DUMMY);
-            dist = MathEx.pdist(Arrays.copyOf(data, 47)).toArray();
+            CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+            data = Read.csv(Paths.getTestData("mds/eurodist.txt"), format);
+            x = data.drop(0).toArray();
         } catch (Exception ex) {
-            System.err.println("Failed to load 'swissroll': " + ex);
+            System.err.println("Failed to load 'USArrests': " + ex);
             System.exit(-1);
         }
     }

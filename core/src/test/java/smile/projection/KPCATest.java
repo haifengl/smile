@@ -24,12 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import smile.data.CPU;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.io.Arff;
-import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.util.Paths;
 
 import static org.junit.Assert.*;
 

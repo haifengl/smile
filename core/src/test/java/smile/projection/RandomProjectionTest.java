@@ -23,7 +23,6 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
 /**
@@ -76,8 +75,6 @@ public class RandomProjectionTest {
         RandomProjection instance = RandomProjection.sparse(128, 40);
 
         Matrix p = instance.getProjection();
-        Matrix t = p.aat();
-
         System.out.println(p.toString(true));
     }
 }
