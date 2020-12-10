@@ -67,14 +67,14 @@ public class GAFETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(100, 20, 256,
-                GAFE.fitness(USPS.x, USPS.y, USPS.testx, USPS.testy, new Accuracy(), (x, y) -> LDA.fit(x, y)));
+        BitString[] result = selection.apply(50, 10, 256,
+                GAFE.fitness(USPS.x, USPS.y, USPS.testx, USPS.testy, new Accuracy(), LDA::fit));
             
         for (BitString bits : result) {
             System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
         }
 
-        assertEquals(0.8874, result[result.length-1].fitness(), 1E-4);
+        assertEquals(0.8789, result[result.length-1].fitness(), 1E-4);
     }
 
     @Test
@@ -84,8 +84,8 @@ public class GAFETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(100, 20, Segment.train.ncols()-1,
-                GAFE.fitness("class", Segment.train, Segment.test, new Accuracy(), (formula, data) -> DecisionTree.fit(formula, data)));
+        BitString[] result = selection.apply(50, 10, Segment.train.ncols()-1,
+                GAFE.fitness("class", Segment.train, Segment.test, new Accuracy(), DecisionTree::fit));
 
         for (BitString bits : result) {
             System.out.format("%.2f%% %s%n", 100*bits.fitness(), bits);
@@ -101,8 +101,8 @@ public class GAFETest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GAFE selection = new GAFE();
-        BitString[] result = selection.apply(100, 20, Abalone.train.ncols()-1,
-                GAFE.fitness("rings", Abalone.train, Abalone.test, new RMSE(), (formula, data) -> RegressionTree.fit(formula, data)));
+        BitString[] result = selection.apply(50, 10, Abalone.train.ncols()-1,
+                GAFE.fitness("rings", Abalone.train, Abalone.test, new RMSE(), RegressionTree::fit));
 
         for (BitString bits : result) {
             System.out.format("%.4f %s%n", -bits.fitness(), bits);
