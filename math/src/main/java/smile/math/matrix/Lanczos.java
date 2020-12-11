@@ -574,8 +574,8 @@ public class Lanczos {
      * corner have been reduced too. The later eigenvalues are liberated with very little work. The
      * average number of iterations per eigenvalue is typically 1.3 - 1.6. The operation count per
      * iteration is O(n), with a fairly large effective coefficient, say, ~20n. The total operation count
-     * for the diagonalization is then ~20n * (1.3 - 1.6)n = ~30n^2. If the eigenvectors are required,
-     * there is an additional, much larger, workload of about 3n^3 operations.
+     * for the diagonalization is then ~20n * (1.3 - 1.6)n = ~30n<sup>2</sup>. If the eigenvectors are required,
+     * there is an additional, much larger, workload of about O(3n<sup>3</sup>) operations.
      *
      * @param V on input, it contains the identity matrix. On output, the kth column
      * of V returns the normalized eigenvector corresponding to d[k].

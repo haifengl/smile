@@ -30,7 +30,7 @@ public class Hash implements Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
-     * The range of universal hashing random integers [0, 2^29).
+     * The range of universal hashing random integers [0, 2<sup>29</sup>).
      */
     final int MAX_HASH_RND = 536870912;
     /**

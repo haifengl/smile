@@ -59,7 +59,7 @@ public class HierarchicalClustering implements Serializable {
     /**
      * An n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      */
     private final int[][] merge;
@@ -126,7 +126,7 @@ public class HierarchicalClustering implements Serializable {
     /**
      * Returns an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      */
     public int[][] getTree() {

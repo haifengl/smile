@@ -26,7 +26,7 @@ import smile.math.MathEx;
  * <p>
  * where &beta; is fixed and &alpha; is fitted by unweighted least squares
  * over all pairs of data points. The value of &beta; should be in the range
- * <code>1 &le; &beta; &lt; 2</code>. A good general choice is 1.5, but for
+ * {@code 1 <=} &beta; {@code < 2}. A good general choice is 1.5, but for
  * functions with a strong linear trend, we may experiment with values as
  * large as 1.99.
  * <p>

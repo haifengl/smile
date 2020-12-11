@@ -212,7 +212,7 @@ public class Gamma {
 
     /**
      * Regularized Incomplete Gamma Function P(a,x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(a-1)</sup> dt</i>.
-     * Continued Fraction representation of the function - valid for x &ge; a + 1
+     * Continued Fraction representation of the function - valid for {@code x >= a + 1}.
      * This method follows the general procedure used in Numerical Recipes.
      */
     private static double regularizedIncompleteGammaFraction(double a, double x) {

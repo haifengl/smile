@@ -46,7 +46,7 @@ import smile.validation.metric.Error;
  * <li> If the number of cases in the training set is N, randomly sample N cases
  * with replacement from the original data. This sample will
  * be the training set for growing the tree. 
- * <li> If there are M input variables, a number m &lt;&lt; M is specified such
+ * <li> If there are M input variables, a number {@code m << M} is specified such
  * that at each node, m variables are selected at random out of the M and
  * the best split on these m is used to split the node. The value of m is
  * held constant during the forest growing. 
@@ -212,7 +212,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *                 will not split, nodeSize = 5 generally gives good
      *                 results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. &lt; 1.0 means sampling without
+     *                  with replacement. {@code < 1.0} means sampling without
      *                  replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry,
@@ -235,7 +235,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *                 will not split, nodeSize = 5 generally gives good
      *                 results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. &lt; 1.0 means sampling without
+     *                  with replacement. {@code < 1.0} means sampling without
      *                  replacement.
      * @param classWeight Priors of the classes. The weight of each class
      *                    is roughly the ratio of samples in each class.
@@ -265,7 +265,7 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      *                 will not split, nodeSize = 5 generally gives good
      *                 results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling
-     *                  with replacement. &lt; 1.0 means sampling without
+     *                  with replacement. {@code < 1.0} means sampling without
      *                  replacement.
      * @param rule Decision tree split rule.
      * @param classWeight Priors of the classes. The weight of each class

@@ -427,13 +427,13 @@ public class BFGS {
      * The algorithm is designed to find a step which satisfies
      * the sufficient decrease condition
      * <pre>{@code
-     *       f(x+stp*s) &lt;= f(X) + ftol*stp*(gradf(x)'s),
+     *       f(x+stp*s) <= f(X) + ftol*stp*(gradf(x)'s),
      * }</pre>
      * and the curvature condition
      * <p>
-     * <pre>
-     *       abs(gradf(x+stp*s)'s)) &lt;= gtol*abs(gradf(x)'s).
-     * </pre>
+     * <pre>{@code
+     *       abs(gradf(x+stp*s)'s)) <= gtol*abs(gradf(x)'s).
+     * }</pre>
      * If <code>ftol</code> is less than <code>gtol</code> and if, for example,
      * the function is bounded below, then there is always a step which
      * satisfies both conditions. If no step can be found which satisfies both
@@ -451,8 +451,8 @@ public class BFGS {
      *
      * @param p the search direction.
      *
-     * @param x on output, it contains {@code xold + &gamma;*p}, where
-     *          {@code &gamma; > 0} is the step length.
+     * @param x on output, it contains <code>xold + &gamma;*p</code>, where
+     *          &gamma;{@code > 0} is the step length.
      *
      * @param stpmax specify upper bound for the step in the line search so that
      *          we do not try to evaluate the function in regions where it is

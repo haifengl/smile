@@ -169,7 +169,7 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     /**
      * Constructor.
      * @param A a dense matrix to converted into sparse matrix format.
-     * @param tol the tolerance to regard a value as zero if |x| &lt; tol.
+     * @param tol the tolerance to regard a value as zero if {@code |x| < tol}.
      */
     public SparseMatrix(double[][] A, double tol) {
         m = A.length;

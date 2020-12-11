@@ -169,8 +169,8 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     }
 
     /**
-     * Uses inversion by chop-down search from the mode when the mean &lt; 20
-     * and the patchwork-rejection method when the mean &gt; 20.
+     * Uses inversion by chop-down search from the mode when the {@code mean < 20}
+     * and the patchwork-rejection method when the {@code mean >= 20}.
      */
     @Override
     public double rand() {
@@ -318,7 +318,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         }
 
         /**
-         * This method is valid only for mode &ge; 10 and 0 &le; nn &le; mm <&le; N/2.
+         * This method is valid only for {@code mode >= 10} and {@code 0 <= nn <= mm <= N/2}.
          * <p>
          * This method is fast when called repeatedly with the same parameters, but
          * slow when the parameters change due to a high setup time. The computation
@@ -493,7 +493,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
          * Hypergeometric distribution by inversion method, using down-up
          * search starting at the mode using the chop-down technique.
          * <p>
-         * Assumes 0 &le; n &le; m &le; N/2.
+         * Assumes {@code 0 <= n <= m <= N/2}.
          * Overflow protection is needed when N > 680 or n > 75.
          * <p>
          * This method is faster than the rejection method when the variance is low.

@@ -44,7 +44,7 @@ public class Dendrogram extends Plot {
      * Constructor.
      * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      * @param height a set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method
@@ -58,7 +58,7 @@ public class Dendrogram extends Plot {
      * Constructor.
      * @param merge an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      * @param height a set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method

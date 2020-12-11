@@ -75,7 +75,7 @@ public class BM25 implements RelevanceRanker {
      * the document term frequency scaling. A k1 value of 0 corresponds to a
      * binary model (no term frequency), and a large value corresponds to using
      * raw term frequency.
-     * @param b b is another tuning parameter (0 &le; b &le; 1) which determines
+     * @param b b is another tuning parameter ({@code 0 <= b <= 1}) which determines
      * the scaling by document length: b = 1 corresponds to fully scaling the
      * term weight by the document length, while b = 0 corresponds to no length
      * normalization.

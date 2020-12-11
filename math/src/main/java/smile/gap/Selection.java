@@ -129,7 +129,7 @@ public interface Selection {
      * from the population at random. Then choose the best individual from
      * tournament with probability p, choose the second best individual with
      * probability p*(1-p), choose the third best individual with
-     * probability p*((1-p)^2), and so on... Tournament Selection has become
+     * probability p*((1-p)<sup>2</sup>), and so on... Tournament Selection has become
      * the primary selection technique used for the Genetic Algorithm.
      * First, it's not sensitive to the particulars of the fitness function.
      * Second, it's very simple, requires no preprocessing, and works well

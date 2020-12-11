@@ -170,7 +170,7 @@ public class CorTest {
      * The raw scores are converted to ranks and the differences between
      * the ranks of each observation on the two variables are calculated.
      * <p>
-     *  The p-value is calculated by approximation, which is good for n &gt; 10.
+     *  The p-value is calculated by approximation, which is good for {@code n > 10}.
      */
     public static CorTest spearman(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -215,7 +215,7 @@ public class CorTest {
      * Coefficient is used to measure the degree of correspondence
      * between sets of rankings where the measures are not equidistant.
      * It is used with non-parametric data. The p-value is calculated by
-     * approximation, which is good for n &gt; 10.
+     * approximation, which is good for {@code n > 10}.
      */
     public static CorTest kendall(double[] x, double[] y) {
         if (x.length != y.length) {

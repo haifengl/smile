@@ -115,7 +115,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * Constructor.
      * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param labels class labels
@@ -139,7 +139,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          * Constructor.
          * @param w the weights.
          * @param L the log-likelihood of learned model.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
          * @param labels class labels
@@ -220,7 +220,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
          * Constructor.
          * @param w the weights.
          * @param L the log-likelihood of learned model.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
          * @param labels class labels
@@ -347,7 +347,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      * 
      * @param x training samples.
      * @param y training labels.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
@@ -437,7 +437,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      *
      * @param x training samples.
      * @param y training labels.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
@@ -534,7 +534,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
      *
      * @param x training samples.
      * @param y training labels.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.

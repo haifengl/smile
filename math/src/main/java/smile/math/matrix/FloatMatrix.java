@@ -1673,11 +1673,11 @@ public class FloatMatrix extends SMatrix {
     /**
      * Singular Value Decomposition.
      * <p>
-     * For an m-by-n matrix A with m &ge; n, the singular value decomposition is
+     * For an m-by-n matrix A with {@code m >= n}, the singular value decomposition is
      * an m-by-n orthogonal matrix U, an n-by-n diagonal matrix &Sigma;, and
      * an n-by-n orthogonal matrix V so that A = U*&Sigma;*V'.
      * <p>
-     * For m &lt; n, only the first m columns of V are computed and &Sigma; is m-by-m.
+     * For {@code m < n}, only the first m columns of V are computed and &Sigma; is m-by-m.
      * <p>
      * The singular values, &sigma;<sub>k</sub> = &Sigma;<sub>kk</sub>, are ordered
      * so that &sigma;<sub>0</sub> &ge; &sigma;<sub>1</sub> &ge; ... &ge; &sigma;<sub>n-1</sub>.
@@ -1943,12 +1943,12 @@ public class FloatMatrix extends SMatrix {
      * is defined by x A = &lambda; x.
      * <p>
      * Let A be a real n-by-n matrix with strictly positive entries a<sub>ij</sub>
-     * &gt; 0. Then the following statements hold.
+     * {@code > 0}. Then the following statements hold.
      * <ol>
      * <li> There is a positive real number r, called the Perron-Frobenius
      * eigenvalue, such that r is an eigenvalue of A and any other eigenvalue &lambda;
      * (possibly complex) is strictly smaller than r in absolute value,
-     * |&lambda;| &lt; r.
+     * |&lambda;| {@code < r}.
      * <li> The Perron-Frobenius eigenvalue is simple: r is a simple root of the
      *      characteristic polynomial of A. Consequently, both the right and the left
      *      eigenspace associated to r is one-dimensional.
@@ -2111,10 +2111,10 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * The LU decomposition. For an m-by-n matrix A with m &ge; n, the LU
+     * The LU decomposition. For an m-by-n matrix A with {@code m >= n}, the LU
      * decomposition is an m-by-n unit lower triangular matrix L, an n-by-n
      * upper triangular matrix U, and a permutation vector piv of length m
-     * so that A(piv,:) = L*U. If m &lt; n, then L is m-by-m and U is m-by-n.
+     * so that A(piv,:) = L*U. If {@code m < n}, then L is m-by-m and U is m-by-n.
      * <p>
      * The LU decomposition with pivoting always exists, even if the matrix is
      * singular. The primary use of the LU decomposition is in the solution of
@@ -2346,7 +2346,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * The QR decomposition. For an m-by-n matrix A with m &ge; n,
+     * The QR decomposition. For an m-by-n matrix A with {@code m >= n},
      * the QR decomposition is an m-by-n orthogonal matrix Q and
      * an n-by-n upper triangular matrix R such that A = Q*R.
      * <p>

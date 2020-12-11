@@ -45,7 +45,7 @@ import smile.validation.metric.*;
  * <li> If the number of cases in the training set is N, randomly sample N cases 
  * with replacement from the original data. This sample will
  * be the training set for growing the tree. 
- * <li> If there are M input variables, a number m &lt;&lt; M is specified such
+ * <li> If there are M input variables, a number {@code m << M} is specified such
  * that at each node, m variables are selected at random out of the M and
  * the best split on these m is used to split the node. The value of m is
  * held constant during the forest growing. 
@@ -173,7 +173,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. &lt; 1.0 means sampling without replacement.
+     *                  replacement. {@code < 1.0} means sampling without replacement.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
@@ -193,7 +193,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
-     *                  replacement. &lt; 1.0 means sampling without replacement.
+     *                  replacement. {@code < 1.0} means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {

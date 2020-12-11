@@ -41,7 +41,7 @@ import smile.sort.HeapSelect;
  * <p>
  * KD-trees are not suitable for efficiently finding the nearest neighbor
  * in high dimensional spaces. As a general rule, if the dimensionality is D,
- * then number of points in the dataset, N, should be N &gt;&gt; 2<sup>D</sup>.
+ * then number of points in the dataset, N, should be {@code N >>} 2<sup>D</sup>.
  * Otherwise, when kd-trees are used with high-dimensional dataset, most of the
  * points in the tree will be evaluated and the efficiency is no better than
  * exhaustive search, and approximate nearest-neighbor methods should be used

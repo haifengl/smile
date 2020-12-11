@@ -24,7 +24,7 @@ import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
 
 /**
- * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
+ * For an m-by-n matrix A with {@code m >= n}, the QR decomposition is an m-by-n
  * orthogonal matrix Q and an n-by-n upper triangular matrix R such that
  * A = Q*R.
  * <p>
