@@ -22,10 +22,10 @@ import smile.math.MathEx;
 /**
  * Laplacian kernel, also referred as exponential kernel.
  * <p>
- *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
+ *     k(u, v) = exp(-||u-v|| / &sigma;)
  * <p>
- * where {@code &sigma; > 0} is the scale parameter of the kernel.
- * The kernel works sparse binary array as int[], which are the indices
+ * where &sigma;{@code > 0} is the scale parameter of the kernel.
+ * The kernel works sparse binary array as {@code int[]}, which are the indices
  * of nonzero elements.
  *
  * @author Haifeng Li

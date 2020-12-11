@@ -50,7 +50,7 @@ import smile.math.rbf.RadialBasisFunction;
  * a variational problem. The advantage of the thin plate splines is that
  * their conditioning is invariant under scaling. Gaussians, multi-quadrics
  * and inverse multi-quadrics are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0.
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}.
  * Decreasing r<sub><small>0</small></sub> tends to
  * flatten the basis function. For a given function, the quality of
  * approximation may strongly depend on this parameter. In particular,

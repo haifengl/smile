@@ -99,7 +99,7 @@ public class CoverTree<E> implements NearestNeighborSearch<E, E>, KNNSearch<E, E
         /** The children of the node. */
         ArrayList<Node> children;
         /**
-         * The min i that makes base^i &lt;= maxDist.
+         * The min i that makes base<sup>i</sup> {@code <= maxDist}.
          * Essentially, it is an upper bound on the distance to any child.
          */
         int scale;

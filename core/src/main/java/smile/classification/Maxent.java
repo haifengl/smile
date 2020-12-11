@@ -88,7 +88,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * Constructor.
      * @param p the dimension of input data.
      * @param L the log-likelihood of learned model.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param labels class labels
@@ -112,7 +112,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * Constructor.
          * @param w the weights.
          * @param L the log-likelihood of learned model.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
          * @param labels class labels
@@ -175,7 +175,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * Constructor.
          * @param w the weights.
          * @param L the log-likelihood of learned model.
-         * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
          * @param labels class labels
@@ -271,7 +271,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
@@ -319,7 +319,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
@@ -394,7 +394,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      * weights which often has superior generalization performance, especially
      * when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.

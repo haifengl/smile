@@ -21,7 +21,7 @@ import java.util.Comparator;
 
 /**
  * Quicksort is a well-known sorting algorithm that, on average, makes O(n log n)
- * comparisons to sort n items. For large n (say &gt; 1000), Quicksort is faster,
+ * comparisons to sort n items. For large n (say {@code > 1000}), Quicksort is faster,
  * on most machines, by a factor of 1.5 or 2 than other O(n log n) algorithms.
  * However, in the worst case, it makes O(n<sup>2</sup>) comparisons. Quicksort
  * requires a bit of extra memory.
@@ -33,9 +33,9 @@ import java.util.Comparator;
  * The only requirement is that the operator obey the three defining properties
  * of a total order:
  * <ul>
- * <li> if a &le; b and b &le; a then a = b (antisymmetry)
- * <li> if a &le; b and b &le; c then a &le; c (transitivity)
- * <li> a &le; b or b &le; a (totalness or trichotomy)
+ * <li> if {@code a <= b} and {@code b <= a} then a = b (antisymmetry)
+ * <li> if {@code a <= b} and {@code b <= c} then {@code a <= c} (transitivity)
+ * <li> {@code a <= b} or {@code b <= a} (totalness or trichotomy)
  * </ul>
  * <p>
  * Quicksort, however, is not a stable sort in efficient implementations.

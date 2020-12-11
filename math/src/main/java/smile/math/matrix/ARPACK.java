@@ -31,7 +31,7 @@ import static org.bytedeco.arpackng.global.arpack.*;
  * corresponding eigenvectors of a general n by n matrix A.
  * It is most appropriate for large sparse or structured
  * matrices A where structured means that a matrix-vector
- * product requires order n rather than the usual order n^2
+ * product requires order n rather than the usual order O(n<sup>2</sup>)
  * floating point operations. This software is based upon an
  * algorithmic variant of the Arnoldi process called the
  * Implicitly Restarted Arnoldi Method (IRAM). When the matrix
@@ -107,7 +107,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      */
     static Matrix.EVD syev(DMatrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
@@ -118,7 +118,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
@@ -205,7 +205,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      */
     static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev) {
         return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
@@ -216,7 +216,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
@@ -303,7 +303,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      */
     static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev) {
         return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
@@ -314,7 +314,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */
@@ -405,7 +405,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      */
     static FloatMatrix.EVD eigen(SMatrix A, AsymmOption which, int nev) {
         return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
@@ -416,7 +416,7 @@ public interface ARPACK {
      *
      * @param A the matrix to decompose.
      * @param which which eigenvalues to compute.
-     * @param nev the number of eigenvalues of OP to be computed. 0 &lt; k &lt; n.
+     * @param nev the number of eigenvalues of OP to be computed. {@code 0 < nev < n}.
      * @param ncv the number of Arnoldi vectors.
      * @param tol the stopping criterion.
      */

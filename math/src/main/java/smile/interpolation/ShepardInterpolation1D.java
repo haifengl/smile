@@ -20,12 +20,12 @@ package smile.interpolation;
 /**
  * Shepard interpolation is a special case of normalized radial basis function
  * interpolation if the function &phi;(r) goes to infinity as r &rarr; 0, and is
- * finite for r &gt; 0. In this case, the weights w<sub>i</sub> are just equal to
+ * finite for {@code r > 0}. In this case, the weights w<sub>i</sub> are just equal to
  * the respective function values y<sub>i</sub>. So we need not solve linear
  * equations and thus it works for very large N.
  * <p>
  * An example of such &phi; is <code>&phi;(r) = r<sup>-p</sup></code> with
- * (typically) <code>1 &lt; p &le; 3</code>.
+ * (typically) {@code 1 < p <= 3}.
  * <p>
  * Shepard interpolation is rarely as accurate as the well-tuned application of
  * other radial basis functions. However, it is simple, fast, and often jut the

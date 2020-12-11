@@ -271,14 +271,15 @@ public interface Read {
 
     /**
      * Reads a libsvm sparse dataset. The format of libsvm file is:
-     * <p>
-     * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
-     * <p>
-     * where &lt;label&gt; is the target value of the training data.
+     * <pre>
+     * {@code
+     * <label> <index1>:<value1> <index2>:<value2> ...
+     * }</pre>
+     * where {@code label} is the target value of the training data.
      * For classification, it should be an integer which identifies a class
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
-     * &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+     * {@code index} is an integer starting from 1, and {@code value}
      * is a real number. The indices must be in an ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
@@ -291,14 +292,15 @@ public interface Read {
 
     /**
      * Reads a libsvm sparse dataset. The format of libsvm file is:
-     * <p>
-     * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
-     * <p>
-     * where &lt;label&gt; is the target value of the training data.
+     * <pre>
+     * {@code
+     * <label> <index1>:<value1> <index2>:<value2> ...
+     * }</pre>
+     * where {@code label} is the target value of the training data.
      * For classification, it should be an integer which identifies a class
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
-     * &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+     * {@code index} is an integer starting from 1, and {@code value}
      * is a real number. The indices must be in an ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
@@ -311,14 +313,15 @@ public interface Read {
 
     /**
      * Reads a libsvm sparse dataset. The format of libsvm file is:
-     * <p>
-     * &lt;label&gt; &lt;index1&gt;:&lt;value1&gt; &lt;index2&gt;:&lt;value2&gt; ...
-     * <p>
-     * where &lt;label&gt; is the target value of the training data.
+     * <pre>
+     * {@code
+     * <label> <index1>:<value1> <index2>:<value2> ...
+     * }</pre>
+     * where {@code label} is the target value of the training data.
      * For classification, it should be an integer which identifies a class
      * (multi-class classification is supported). For regression, it's any real
      * number. For one-class SVM, it's not used so can be any number.
-     * &lt;index&gt; is an integer starting from 1, and &lt;value&gt;
+     * {@code index} is an integer starting from 1, and {@code value}
      * is a real number. The indices must be in an ascending order. The labels in
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.

@@ -29,7 +29,7 @@ import smile.math.special.Gamma;
  * occurrences in this interval is &lambda;, then the probability that there
  * are exactly n occurrences (n = 0, 1, 2, ...) is equal to
  * f(n; &lambda;) = &lambda;<sup>n</sup> e<sup>-&lambda;</sup> / n!.
- * For sufficiently large values of &lambda;, (say {@code &lambda; > 1000}), the normal
+ * For sufficiently large values of &lambda;, (say &lambda;{@code > 1000}), the normal
  * distribution with mean &lambda; and variance &lambda;, is an excellent
  * approximation to the Poisson distribution. If &lambda; is greater than about
  * 10, then the normal distribution is a good approximation if an appropriate
@@ -192,10 +192,10 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     /**
      * This function generates a random variate with the poisson distribution.
      * <p>
-     * Uses down/up search from the mode by chop-down technique for &lambda; &lt; 20,
-     * and patchwork rejection method for &lambda; &ge; 20.
+     * Uses down/up search from the mode by chop-down technique for &lambda; {@code < 20},
+     * and patchwork rejection method for &lambda; {@code >= 20}.
      * <p>
-     * For &lambda; &lt; 1.E-6 numerical inaccuracy is avoided by direct calculation.
+     * For &lambda; {@code < 1E-6} numerical inaccuracy is avoided by direct calculation.
      */
     @Override
     public double rand() {

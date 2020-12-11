@@ -53,7 +53,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
      * @param x2 the 2nd dimension of data points.
      * @param y the function values.
      * @param beta the parameter of power variogram. The value of &beta;
-     *             should be in the range <code>1 &le; &beta; &lt; 2</code>.
+     *             should be in the range {@code 1 <=} &beta; {@code < 2}.
      *             A good general choice is 1.5, but for functions with
      *             a strong linear trend, we may experiment with values as
      *             large as 1.99.

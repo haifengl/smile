@@ -25,7 +25,7 @@ import static smile.math.special.Gamma.lgamma;
  * <p>
  *     B(x, y) = <i>&#8747;<sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
  * <p>
- * for <code>x, y &gt; 0</code> and the integration is over [0, 1].
+ * for {@code x, y > 0} and the integration is over [0, 1].
  * The beta function is symmetric, i.e. <code>B(x, y) = B(y, x)</code>.
  *
  * @author Haifeng Li

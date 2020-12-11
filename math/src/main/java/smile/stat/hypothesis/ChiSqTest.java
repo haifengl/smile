@@ -23,7 +23,7 @@ import smile.math.special.Gamma;
  * Pearson's chi-square test, also known as the chi-square goodness-of-fit test
  * or chi-square test for independence. Note that the chi-square distribution
  * is only approximately valid for large sample size. If a significant fraction
- * of bins have small numbers of counts (say, &lt; 10), then the statistic is
+ * of bins have small numbers of counts (say, {@code < 10}), then the statistic is
  * not well approximated by a chi-square probability function.
  *
  * @author Haifeng Li

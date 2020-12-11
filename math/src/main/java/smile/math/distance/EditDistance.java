@@ -29,7 +29,7 @@ import smile.util.IntArray2D;
  * distance (Damerau-Levenshtein distance) allows the transposition of two
  * characters as an operation.
  * <p>
- * Given two strings x and y of length m and n (suppose n &ge; m), this
+ * Given two strings x and y of length m and n (suppose {@code n >= m}), this
  * implementation takes O(ne) time and O(mn) space by an extended Ukkonen's
  * algorithm in case of unit cost, where e is the edit distance between x and y.
  * Thus this algorithm is output sensitive. The smaller the distance, the faster

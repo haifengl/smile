@@ -23,10 +23,10 @@ import org.netlib.util.intW;
 import smile.math.matrix.Matrix;
 
 /**
- * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n
+ * For an m-by-n matrix A with {@code m >= n}, the LU decomposition is an m-by-n
  * unit lower triangular matrix L, an n-by-n upper triangular matrix U,
  * and a permutation vector piv of length m so that A(piv,:) = L*U.
- * If m &lt; n, then L is m-by-m and U is m-by-n.
+ * If {@code m < n}, then L is m-by-m and U is m-by-n.
  * <p>
  * The LU decomposition with pivoting always exists, even if the matrix is
  * singular. The primary use of the LU decomposition is in the solution of

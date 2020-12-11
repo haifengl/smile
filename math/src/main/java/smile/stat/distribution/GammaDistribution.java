@@ -29,7 +29,7 @@ import smile.math.special.Gamma;
  * model for waiting times; for instance, the waiting time until death in life testing.
  * The probability density function is
  * f(x; k,&theta;) = x<sup>k-1</sup>e<sup>-x/&theta;</sup> / (&theta;<sup>k</sup>&Gamma;(k))
- * for x &gt; 0 and k, &theta; &gt; 0.
+ * for {@code x > 0} and k, &theta; {@code > 0}.
  * <ul>
  * <li> If X &sim; &Gamma;(k=1, &theta;=1/&lambda;), then X has an exponential
  * distribution with rate parameter &lambda;.

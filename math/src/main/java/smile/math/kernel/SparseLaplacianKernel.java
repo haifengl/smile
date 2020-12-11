@@ -23,9 +23,9 @@ import smile.util.SparseArray;
 /**
  * Laplacian kernel, also referred as exponential kernel.
  * <p>
- *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
+ *     k(u, v) = exp(-||u-v|| / &sigma;)
  * <p>
- * where {@code &sigma; > 0} is the scale parameter of the kernel.
+ * where &sigma;{@code > 0} is the scale parameter of the kernel.
 
  * @author Haifeng Li
  */

@@ -169,7 +169,7 @@ public final class IntArrayList implements Serializable {
      *
      * @param index index of the value to replace
      * @param val value to be stored at the specified position 
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public IntArrayList set(int index, int val) {
         if (index < 0 || index >= size) {
@@ -192,7 +192,7 @@ public final class IntArrayList implements Serializable {
      *
      * @param index index of the element to remove.
      * @return the value previously stored at specified index
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public int remove(int index) {
         if (index < 0 || index >= size) {

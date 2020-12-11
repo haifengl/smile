@@ -97,7 +97,7 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
      * Invertion of cdf by bisection numeric root finding of
      * <code>cdf(x) = p</code> for discrete distribution.
      * @return an integer <code>n</code> such that
-     *         <code>P(&lt;n) &le; p &le; P(&lt;n+1)</code>.
+     *         {@code P(<n) <= p <= P(<n+1)}.
      */
     protected double quantile(double p, int xmin, int xmax) {
         while (xmax - xmin > 1) {

@@ -22,11 +22,11 @@ package smile.math.distance;
  * <code>x<sub>1</sub>x<sub>2</sub>...x<sub>n</sub></code> and
  * <code>y<sub>1</sub>y<sub>2</sub>...y<sub>n</sub></code>
  * of equal length n over the q-ary alphabet <code>{0, 1, ..., q-1}</code>
- * of size <code>q &ge; 2</code>, defined as
+ * of size {@code q >= 2}, defined as
  * <p>
  *     sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
  * <p>
- * If <code>q = 2</code> or <code>q = 3</code> the Lee distance coincides with the Hamming distance.
+ * If {@code q = 2} or {@code q = 3} the Lee distance coincides with the Hamming distance.
  *
  * @author Haifeng Li
  */

@@ -37,9 +37,9 @@ public abstract class AbstractDistribution implements Distribution {
      * called the acceptance-rejection method or "accept-reject algorithm".
      * It generates sampling values from an arbitrary probability distribution
      * function f(x) by using an instrumental distribution g(x), under the
-     * only restriction that <code>f(x) &lt; M g(x)</code> where
-     * <code>M &gt; 1</code> is an appropriate bound on
-     * <code>f(x) / g(x)</code>.
+     * only restriction that {@code f(x) < M g(x)} where
+     * {@code M > 1} is an appropriate bound on
+     * {@code f(x) / g(x)}.
      * <p>
      * Rejection sampling is usually used in cases where the form of
      * <code>f(x)</code> makes sampling difficult. Instead of sampling

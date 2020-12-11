@@ -32,7 +32,7 @@ import java.util.List;
 public interface RNNSearch<K, V> {
     /**
      * Search the neighbors in the given radius of query object, i.e.
-     * d(q, v) &le; radius.
+     * {@code d(q, v) <= radius}.
      *
      * @param q the query key.
      * @param radius the radius of search range from target.

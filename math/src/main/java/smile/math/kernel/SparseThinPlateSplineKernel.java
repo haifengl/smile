@@ -25,7 +25,7 @@ import smile.util.SparseArray;
  * <p>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
  * <p>
- * where {@code &sigma; > 0} is the scale parameter of the kernel.
+ * where &sigma;{@code > 0} is the scale parameter of the kernel.
  * 
  * @author Haifeng Li
  */

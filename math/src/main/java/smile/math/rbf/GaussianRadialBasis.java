@@ -18,7 +18,7 @@
 package smile.math.rbf;
 
 /**
- * Gaussian RBF. &phi;(r) = e<sup>-0.5 * r^2 / r<sub>0</sub>^2</sup>
+ * Gaussian RBF. &phi;(r) = exp(-0.5 * r<sup>2</sup> / r<sub>0</sub><sup>2</sup>)
  * where r<sub>0</sub> is a scale factor. The interpolation accuracy using
  * Gaussian basis functions can be very sensitive to r<sub>0</sub>, and they
  * are often avoided for this reason. However, for smooth functions and with

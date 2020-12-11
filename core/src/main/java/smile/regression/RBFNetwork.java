@@ -47,7 +47,7 @@ import smile.math.rbf.RadialBasisFunction;
  * called thin plate splines. The advantage of the thin plate splines is that
  * their conditioning is invariant under scalings. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
  * parameter. In particular, increasing r<sub><small>0</small></sub> has the

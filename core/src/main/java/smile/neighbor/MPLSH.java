@@ -231,7 +231,7 @@ public class MPLSH <E> extends LSH<E> {
 
     /**
      * Search the neighbors in the given radius of query object, i.e.
-     * d(x, v) &le; radius.
+     * {@code d(q, v) <= radius}.
      *
      * @param q the query object.
      * @param radius the radius of search range.
