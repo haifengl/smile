@@ -20,9 +20,8 @@ package smile.interpolation.variogram;
 /**
  * Exponential variogram.
  * <p>
- * <pre>
  *     v(r) = c + b * (1 - e<sup>-3r/a</sup>)
- * </pre>
+ * <p>
  * where a is the range parameter and b is sill paramter. The distance of two
  * pairs increase, the variogram of those two pairs also increase. Eventually,
  * the increase of the distance can not cause the variogram increase. The

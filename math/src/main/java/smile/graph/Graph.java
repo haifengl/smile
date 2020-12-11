@@ -70,13 +70,13 @@ public interface Graph {
     int getNumVertices();
 
     /**
-     * Returns <tt>true</tt> if and only if this graph contains an edge going
+     * Returns true if and only if this graph contains an edge going
      * from the source vertex to the target vertex. In undirected graphs the
      * same result is obtained when source and target are inverted.
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
-     * @return <tt>true</tt> if this graph contains the specified edge.
+     * @return true if this graph contains the specified edge.
      */
     boolean hasEdge(int source, int target);
 
@@ -180,8 +180,8 @@ public interface Graph {
     void removeEdge(int source, int target);
 
     /**
-     * Removes the specified edge from the graph.* Returns <tt>true</tt> if the
-     * graph contained the specified edge.
+     * Removes the specified edge from the graph.
+     * Returns true if the graph contained the specified edge.
      *
      * @param edge edge to be removed from this graph, if present.
      */

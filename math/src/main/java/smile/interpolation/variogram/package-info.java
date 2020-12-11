@@ -21,18 +21,17 @@
  * spatial dependence of a spatial random field or stochastic process
  * <code>Z(x)</code>. It is defined as the expected squared increment
  * of the values between locations x and y:
- * <pre>
+ * <p>
  *     2&gamma;(x,y)=E(|Z(x)-Z(y)|<sup>2</sup>)
- * </pre>
+ * <p>
  * where <code>&gamma;(x,y)</code> itself is called the semivariogram.
  * In case of a stationary process the variogram and semivariogram can
  * be represented as a function
  * <code>&gamma;<sub>s</sub>(h) = &gamma;(0, 0 + h)</code> of the difference
  * <code>h = y - x</code> between locations only, by the following relation:
  * <p>
- * <pre>
  *     &gamma;(x,y) = &gamma;<sub>s</sub>(y - x).
- * </pre>
+ * <p>
  * In Kriging interpolation or Gaussian process regression, we employ this kind
  * of variogram as an estimation of the mean square variation of the
  * interpolation/fitting function. For interpolation, even very crude

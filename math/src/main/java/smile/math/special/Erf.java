@@ -25,9 +25,8 @@ import static java.lang.Math.*;
  * statistics, materials science, and partial differential equations.
  * It is defined as:
  * <p>
- * <pre>
- *     erf(x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t<sup>2</sup></sup>dt</i>
- * </pre>
+ *     erf(x) = <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t^2</sup>dt</i>
+ * <p>
  * The complementary error function, denoted erfc, is defined as
  * <code>erfc(x) = 1 - erf(x)</code>. The error function and complementary
  * error function are special cases of the incomplete gamma function.

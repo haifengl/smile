@@ -27,9 +27,8 @@ import smile.math.rbf.RadialBasisFunction;
  * are irregularly distributed in space. In its basic form, radial basis
  * function interpolation is in the form
  * <p>
- * <pre>
  *     y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
- * </pre>
+ * <p>
  * where the approximating function y(x) is represented as a sum of N radial
  * basis functions &phi;, each associated with a different center c<sub>i</sub>,
  * and weighted by an appropriate coefficient w<sub>i</sub>. For distance,

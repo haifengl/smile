@@ -32,9 +32,8 @@ import static smile.math.MathEx.lfactorial;
  * distribution. The probability of getting exactly k successes in n trials
  * is given by the probability mass function:
  * <p>
- * <pre>
  *     Pr(K = k) = <sub>n</sub>C<sub>k</sub> p<sup>k</sup> (1-p)<sup>n-k</sup>
- * </pre>
+ * <p>
  * where <code><sub>n</sub>C<sub>k</sub></code> is n choose k.
  * <p>
  * It is frequently used to model number of successes in a sample of size

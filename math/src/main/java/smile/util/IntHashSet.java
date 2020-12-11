@@ -20,8 +20,8 @@ package smile.util;
 import java.util.Arrays;
 
 /**
- * HashSet<int> for primitive types.
- * Integer.MIN_VALUE (0x80000000) is not allowed as key.
+ * {@code HashSet<int>} for primitive types.
+ * {@code Integer.MIN_VALUE (0x80000000)} is not allowed as key.
  */
 public class IntHashSet {
     private static final int FREE_KEY = Integer.MIN_VALUE;

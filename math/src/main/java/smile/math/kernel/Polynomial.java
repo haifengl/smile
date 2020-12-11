@@ -20,9 +20,8 @@ package smile.math.kernel;
 /**
  * The polynomial kernel.
  * <p>
- * <pre>
  *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
- * </pre>
+ * <p>
  * where &gamma; is the scale of the used inner product, &lambda; the offset of
  * the used inner product, and <i>d</i> the order of the polynomial kernel.
  *

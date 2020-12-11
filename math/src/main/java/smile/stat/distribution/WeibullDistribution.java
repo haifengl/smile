@@ -27,18 +27,15 @@ import smile.math.special.Gamma;
  * the shape parameter. The distribution has two parameters: <code>k &gt; 0</code>
  * is the shape parameter and <code>&lambda; &gt; 0</code> is the scale parameter
  * of the distribution. The probability density function is
- * <p>
- * <pre>
- *     f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)<sup>k</sup></sup>
- * </pre>
- * for <code>x &ge; 0</code>.
+ * f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)^k</sup>
+ * for {@code x >= 0}.
  * <p>
  * The Weibull distribution is often used in the field of life data analysis
  * due to its flexibility - it can mimic the behavior of other statistical
  * distributions such as the normal and the exponential. If the failure rate
- * decreases over time, then <code>k &lt; 1</code>. If the failure rate is
- * constant over time, then <code>k = 1</code>. If the failure rate increases
- * over time, then <code>k &gt; 1</code>.
+ * decreases over time, then {@code k < 1}. If the failure rate is
+ * constant over time, then {@code k = 1}. If the failure rate increases
+ * over time, then {@code k > 1}.
  * <p>
  * An understanding of the failure rate may provide insight as to what is
  * causing the failures:

@@ -31,15 +31,6 @@ import static smile.math.MathEx.lfactorial;
  * Suppose you are to draw "n" balls without replacement from an urn containing
  * "N" balls in total, "m" of which are white. The hypergeometric distribution
  * describes the distribution of the number of white balls drawn from the urn.
- * A random variable X follows the hypergeometric distribution with parameters
- * N, m and n if the probability is given by
- * <p>
- * <pre>
- *              <sub>m</sub>C<sub>k</sub> <sub>(N-m)</sub>C<sub>(n-k)</sub>
- * P(X = k) = ----------------
- *                   <sub>N</sub>C<sub>n</sub>
- * </pre>
- * where <sub>n</sub>C<sub>k</sub> is n choose k.
  * 
  * @author Haifeng Li
  */

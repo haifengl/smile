@@ -23,16 +23,7 @@ import smile.math.special.Gamma;
 /**
  * F-distribution arises in the testing of whether two observed samples have
  * the same variance. A random variate of the F-distribution arises as the
- * ratio of two chi-squared variates:
- * <p>
- * <pre>
- * U<sub>1</sub> / d<sub>1</sub>
- * -------
- * U<sub>2</sub> / d<sub>2</sub>
- * </pre>
- * where <code>U<sub>1</sub></code> and <code>U<sub>2</sub></code> have
- * chi-square distributions with d1 and d2 degrees of
- * freedom respectively, and U1 and U2 are independent.
+ * ratio of two chi-squared variates.
  *
  * @author Haifeng Li
  */

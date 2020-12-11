@@ -25,7 +25,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
- * The term of <code>a + b</code> expression.
+ * The term of {@code a + b} expression.
  *
  * @author Haifeng Li
  */

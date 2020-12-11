@@ -25,10 +25,7 @@ import smile.math.MathEx;
  * <code>{0, 1, 2, 3, &hellip;}</code>.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
- * <p>
- * <pre>
  *     Pr(X = k) = (1 - p)<sup>k</sup> p
- * </pre>.
  *
  * @see GeometricDistribution
  *

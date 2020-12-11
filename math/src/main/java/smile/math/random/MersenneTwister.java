@@ -32,7 +32,7 @@ package smile.math.random;
  * far larger seed value.
  *
  * <h2>References</h2>
- * <uol>
+ * <ol>
  * <li> Makato Matsumoto and Takuji Nishimura,
  * <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/mt.pdf">"Mersenne Twister: A 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator"</a>,
  * <i>ACM Transactions on Modeling and Computer Simulation, </i> Vol. 8, No. 1,

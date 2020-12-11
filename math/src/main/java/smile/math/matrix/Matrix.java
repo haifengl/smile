@@ -1326,9 +1326,9 @@ public class Matrix extends DMatrix {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void mv(Transpose trans, double alpha, DoubleBuffer x, double beta, DoubleBuffer y) {
         if (uplo != null) {
@@ -1372,9 +1372,9 @@ public class Matrix extends DMatrix {
 
     /**
      * Matrix-matrix multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      */
     public void mm(Transpose transA, Transpose transB, double alpha, Matrix B, double beta, Matrix C) {
         if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
@@ -1923,19 +1923,17 @@ public class Matrix extends DMatrix {
      * Eigenvalue decomposition. Eigen decomposition is the factorization
      * of a matrix into a canonical form, whereby the matrix is represented in terms
      * of its eigenvalues and eigenvectors:
-     * <p>
-     * <pre><code>
+     * <pre>{@code
      *     A = V*D*V<sup>-1</sup>
-     * </code></pre>
+     * }</pre>
      * If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is
      * diagonal and the eigenvector matrix V is orthogonal.
      * <p>
      * Given a linear transformation A, a non-zero vector x is defined to be an
      * eigenvector of the transformation if it satisfies the eigenvalue equation
-     * <p>
-     * <pre><code>
+     * <pre>{@code
      *     A x = &lambda; x
-     * </code></pre>
+     * }</pre>
      * for some scalar &lambda;. In this situation, the scalar &lambda; is called
      * an eigenvalue of A corresponding to the eigenvector x.
      * <p>

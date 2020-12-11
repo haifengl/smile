@@ -117,9 +117,9 @@ public class RidgeRegression {
      * Fits a generalized ridge regression model that minimizes a
      * weighted least squares criterion augmented with a
      * generalized ridge penalty:
-     * <pre><code>
+     * <pre>{@code
      *     (Y - X'*beta)' * W * (Y - X'*beta) + (beta - beta0)' * lambda * (beta - beta0)
-     * </code></pre>
+     * }</pre>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.

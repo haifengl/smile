@@ -526,13 +526,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -563,13 +563,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -600,13 +600,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -637,13 +637,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -674,13 +674,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -702,13 +702,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -730,13 +730,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -758,13 +758,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -786,13 +786,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -813,13 +813,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -840,13 +840,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -867,13 +867,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -894,13 +894,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -920,13 +920,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -946,13 +946,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -972,13 +972,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -998,13 +998,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1021,13 +1021,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1044,13 +1044,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1067,13 +1067,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a triangular packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     x := A*x
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     x := A'*x
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1090,13 +1090,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1125,13 +1125,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1160,13 +1160,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1195,13 +1195,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1230,13 +1230,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1259,13 +1259,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1288,13 +1288,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1317,13 +1317,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-vector operation using a symmetric band matrix.
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A*x + beta*y
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     y := alpha*A'*x + beta*y
-     * </code></pre>
+     * }</pre>
      * where alpha and beta are scalars, x and y are vectors and A is an m by
      * n matrix.
      *
@@ -1346,9 +1346,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*y'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param m the number of rows of the matrix A.
@@ -1369,9 +1369,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*y'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param m the number of rows of the matrix A.
@@ -1392,9 +1392,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*y'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param m the number of rows of the matrix A.
@@ -1415,9 +1415,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*y'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param m the number of rows of the matrix A.
@@ -1438,9 +1438,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1460,9 +1460,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1482,9 +1482,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1505,9 +1505,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1528,9 +1528,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1544,9 +1544,9 @@ public interface BLAS {
     void spr(Layout layout, UPLO uplo, int n, double alpha, double[] x, int incx, double[] A);
     /**
      * Performs the rank-1 update operation to symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1561,9 +1561,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1579,9 +1579,9 @@ public interface BLAS {
 
     /**
      * Performs the rank-1 update operation to symmetric packed matrix.
-     * <pre><code>
+     * <pre>{@code
      *     A := A + alpha*x*x'
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param uplo the upper or lower triangular part of the matrix A is
@@ -1596,9 +1596,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param transA normal, transpose, or conjugate transpose
@@ -1622,9 +1622,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param transA normal, transpose, or conjugate transpose
@@ -1648,9 +1648,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param transA normal, transpose, or conjugate transpose
@@ -1674,9 +1674,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param transA normal, transpose, or conjugate transpose
@@ -1700,13 +1700,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation where the matrix A is symmetric.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*B*A + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
@@ -1729,13 +1729,13 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation where the matrix A is symmetric.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*B*A + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
@@ -1758,9 +1758,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation where one input matrix is symmetric.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or
@@ -1783,9 +1783,9 @@ public interface BLAS {
 
     /**
      * Performs the matrix-matrix operation where one input matrix is symmetric.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      *
      * @param layout matrix layout.
      * @param side  {@code C := alpha*A*B + beta*C} if side is left or

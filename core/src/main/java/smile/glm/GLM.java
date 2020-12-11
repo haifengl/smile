@@ -45,9 +45,9 @@ import smile.validation.ModelSelection;
  * to be generated from a particular distribution in an exponential family.
  * The mean, <code>&mu;</code>, of the distribution depends on the
  * independent variables, <code>X</code>, through:
- * <pre>
+ * <p>
  *     E(Y) = &mu; = g<sup>-1</sup>(X&beta;)
- * </pre>
+ * <p>
  * where <code>E(Y)</code> is the expected value of <code>Y</code>;
  * <code>X&beta;</code> is the linear combination of linear predictors
  * and unknown parameters &beta;; g is the link function that is a monotonic,
@@ -56,9 +56,8 @@ import smile.validation.ModelSelection;
  * <p>
  * In this framework, the variance is typically a function, <code>V</code>,
  * of the mean:
- * <pre>
+ * <p>
  *     Var(Y) = V(&mu;) = V(g<sup>-1</sup>(X&beta;))
- * </pre>
  * <p>
  * It is convenient if <code>V</code> follows from an exponential family
  * of distributions, but it may simply be that the variance is a function
