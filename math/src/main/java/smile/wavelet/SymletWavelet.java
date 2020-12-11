@@ -112,7 +112,7 @@ public class SymletWavelet extends Wavelet {
               n == 14 ? c14 :
               n == 16 ? c16 :
               n == 18 ? c18 :
-              n == 20 ? c20 : null
+              n == 20 ? c20 : c8
             );
 
         if ( n < 8 || n > 20 || n % 2 != 0) {

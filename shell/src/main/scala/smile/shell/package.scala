@@ -40,11 +40,9 @@ package object shell {
      """.stripMargin
 
   /** Show demo window */
-  def demo = {
-    javax.swing.SwingUtilities.invokeLater(new Runnable {
-      override def run(): Unit = {
-        smile.demo.SmileDemo.createAndShowGUI(false)
-      }
+  def demo(): Unit = {
+    javax.swing.SwingUtilities.invokeLater(() => {
+      smile.demo.SmileDemo.createAndShowGUI(false)
     })
   }
 }

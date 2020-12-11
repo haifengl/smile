@@ -222,12 +222,12 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
 
         private static final int BB = 0;
         private static final int BC = 1;
-        private int method;
-        private double am;
-        private double bm;
-        private double al;
+        private final int method;
+        private final double am;
+        private final double bm;
+        private final double al;
         private double alnam;
-        private double be;
+        private final double be;
         private double ga;
         private double si;
         private double rk1;

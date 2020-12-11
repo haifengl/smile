@@ -199,7 +199,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         return rng.rand();
     }
 
-    abstract class RandomNumberGenerator {
+    abstract static class RandomNumberGenerator {
         protected int N, m, n;
         protected int fak;
         protected int addd;
@@ -250,7 +250,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         protected abstract int random();
     }
 
-    class Patchwork extends RandomNumberGenerator {
+    static class Patchwork extends RandomNumberGenerator {
         private final int L,  k1,  k2,  k4,  k5;
         private final double dl,  dr,  r1,  r2,  r4,  r5,  ll,  lr,  cPm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
 
@@ -444,11 +444,12 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
         }
     }
 
-    class Inversion extends RandomNumberGenerator {
+    static class Inversion extends RandomNumberGenerator {
 
-        private int mode, mp;  // Mode, mode+1
+        private int mode;
+        private final int mp;  // Mode, mode+1
         private int bound;      // Safety upper bound
-        private double fm;      // Value at mode
+        private final double fm;      // Value at mode
 
         /**
          * Initialize random number generator.

@@ -30,9 +30,9 @@ public class CorrelationDistance implements Distance<double[]> {
     private static final long serialVersionUID = 1L;
 
     /** A character string indicating what type of correlation is employed. */
-    private String method;
+    private final String method;
     /** Correlation lambda. */
-    private ToDoubleBiFunction<double[], double[]> cor;
+    private final ToDoubleBiFunction<double[], double[]> cor;
 
     /**
      * Constructor of Pearson correlation distance.

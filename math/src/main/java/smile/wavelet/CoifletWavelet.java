@@ -95,7 +95,7 @@ public class CoifletWavelet extends Wavelet {
               n == 12 ? c12 :
               n == 18 ? c18 :
               n == 24 ? c24 :
-              n == 30 ? c30 : null
+              n == 30 ? c30 : c6
             );
 
         if ( n < 6 || n > 30 || n % 6 != 0) {

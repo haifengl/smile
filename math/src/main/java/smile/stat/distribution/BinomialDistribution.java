@@ -237,9 +237,9 @@ public class BinomialDistribution extends DiscreteDistribution {
 
     class Patchwork implements RandomNumberGenerator {
 
-        private int mode;
-        private int k1, k2, k4, k5;
-        private double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
+        private final int mode;
+        private final int k1, k2, k4, k5;
+        private final double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
 
         public Patchwork(double p) {
             double nu = (n + 1) * p;
@@ -399,8 +399,8 @@ public class BinomialDistribution extends DiscreteDistribution {
 
         private int mode;                                  // mode
         private int bound;                                 // upper bound
-        private double modeValue;                          // value at mode
-        private double r1;
+        private final double modeValue;                    // value at mode
+        private final double r1;
 
         public ModeSearch(double p) {
             double nu = (n + 1) * p;

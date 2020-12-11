@@ -31,7 +31,11 @@ public class IntHeapSelect {
     /**
      * The heap size.
      */
-    private int k;
+    private final int k;
+    /**
+     * The heap array.
+     */
+    private final int[] heap;
     /**
      * The number of objects that have been added into heap.
      */
@@ -40,10 +44,6 @@ public class IntHeapSelect {
      * True if the heap is fully sorted.
      */
     private boolean sorted;
-    /**
-     * The heap array.
-     */
-    private int[] heap;
 
     /**
      * Constructor.

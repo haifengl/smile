@@ -159,7 +159,7 @@ public class Gamma {
         double igf = 0.0;
 
         if (x != 0.0) {
-            if (x == 1.0 / 0.0) {
+            if (Double.isNaN(x)) {
                 igf = 1.0;
             } else {
                 if (x < s + 1.0) {
@@ -235,7 +235,7 @@ public class Gamma {
 
         while (check) {
             ++i;
-            ii = (double) i;
+            ii = i;
             numer = -ii * (ii - a);
             denom += 2.0D;
             first = numer * first + denom;
@@ -265,7 +265,7 @@ public class Gamma {
      * The digamma function is defined as the logarithmic derivative of the gamma function.
      */
     public static double digamma(double x) {
-        final double C7[][] = {
+        final double[][] C7 = {
             {
                 1.3524999667726346383e4, 4.5285601699547289655e4,
                 4.5135168469736662555e4, 1.8529011818582610168e4,
@@ -280,7 +280,7 @@ public class Gamma {
             }
         };
 
-        final double C4[][] = {
+        final double[][] C4 = {
             {
                 -2.728175751315296783e-15, -6.481571237661965099e-1,
                 -4.486165439180193579, -7.016772277667586642,

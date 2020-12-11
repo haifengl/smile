@@ -44,7 +44,7 @@ import java.util.Map;
  */
 public class PerfectHash implements Serializable {
     /** The keyword set. */
-    private String[] keywords;
+    private final String[] keywords;
     /** Hash table. */
     private int[] table;
     /** The k parameters to calculate the hash. */

@@ -319,8 +319,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
                     }
                 }
 
-                FloatSparseMatrix matrix = new FloatSparseMatrix(nrows, ncols, x, rowIndex, colIndex);
-                return matrix;
+                return new FloatSparseMatrix(nrows, ncols, x, rowIndex, colIndex);
 
             }
 
@@ -340,15 +339,15 @@ public abstract class SMatrix extends IMatrix<float[]> {
             /**
              * The larger dimension of A.
              */
-            private int m = Math.max(A.nrows(), A.ncols());
+            private final int m = Math.max(A.nrows(), A.ncols());
             /**
              * The smaller dimension of A.
              */
-            private int n = Math.min(A.nrows(), A.ncols());
+            private final int n = Math.min(A.nrows(), A.ncols());
             /**
              * Workspace for A * x
              */
-            private float[] Ax = new float[m + n];
+            private final float[] Ax = new float[m + n];
 
             @Override
             public int nrows() {

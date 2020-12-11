@@ -33,8 +33,8 @@ import smile.math.matrix.Matrix;
 public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
-    private Matrix sigma;
-    private Matrix sigmaInv;
+    private final Matrix sigma;
+    private final Matrix sigmaInv;
 
     /**
      * Constructor with given covariance matrix.

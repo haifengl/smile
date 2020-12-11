@@ -38,7 +38,7 @@ package smile.math.rbf;
 public class ThinPlateRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;
 
-    private double r0;
+    private final double r0;
 
     /**
      * Constructor.

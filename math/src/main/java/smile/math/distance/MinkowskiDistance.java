@@ -35,7 +35,7 @@ public class MinkowskiDistance implements Metric<double[]> {
     /**
      * The order of Minkowski distance.
      */
-    private int p;
+    private final int p;
 
     /**
      * The weights used in weighted distance.
@@ -47,7 +47,7 @@ public class MinkowskiDistance implements Metric<double[]> {
      */
     public MinkowskiDistance(int p) {
         if (p <= 0) {
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = %d", p));
         }
 
         this.p = p;
@@ -60,12 +60,12 @@ public class MinkowskiDistance implements Metric<double[]> {
      */
     public MinkowskiDistance(int p, double[] weight) {
         if (p <= 0) {
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = %d", p));
         }
 
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        for (double w : weight) {
+            if (w < 0) {
+                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
             }
         }
 

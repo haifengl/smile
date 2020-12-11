@@ -18,7 +18,6 @@
 package smile.json
 
 import java.nio.ByteBuffer
-import java.util
 import java.util.{Arrays, Date}
 import scala.util.Try
 import scala.jdk.CollectionConverters._
@@ -106,7 +105,7 @@ object ObjectId {
 
     // Check java policies
     val permitted = {
-      val sec = System.getSecurityManager()
+      val sec = System.getSecurityManager
       Try {
         sec.checkPermission(new NetPermission("getNetworkInformation"))
       }.toOption.isDefined

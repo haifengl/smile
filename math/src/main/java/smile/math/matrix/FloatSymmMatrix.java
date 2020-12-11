@@ -121,7 +121,7 @@ public class FloatSymmMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FloatSymmMatrix)) {
+        if (!(o instanceof FloatSymmMatrix)) {
             return false;
         }
 

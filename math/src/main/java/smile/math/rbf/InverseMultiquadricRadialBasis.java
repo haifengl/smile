@@ -41,7 +41,7 @@ package smile.math.rbf;
 public class InverseMultiquadricRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;
 
-    private double r02;
+    private final double r02;
 
     public InverseMultiquadricRadialBasis() {
         this(1.0);

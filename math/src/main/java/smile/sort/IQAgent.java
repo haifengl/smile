@@ -36,10 +36,12 @@ import java.util.Arrays;
  */
 public class IQAgent {
 
-    private int nbuf;
-    private int nq,  nt,  nd;
-    private double[] pval;
-    private double[] dbuf;
+    private final int nbuf;
+    private final int nq;
+    private int nt;
+    private int nd;
+    private final double[] pval;
+    private final double[] dbuf;
     private double[] qile;
     private double q0,  qm;
 
