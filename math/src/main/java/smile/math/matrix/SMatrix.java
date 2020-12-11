@@ -96,9 +96,9 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * op(A) * x + beta * y
-     * </code></pre>
+     * }</pre>
      * where op is the transpose operation.
      */
     public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
@@ -117,9 +117,9 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void mv(float alpha, float[] x, float beta, float[] y) {
         mv(NO_TRANSPOSE, alpha, x, beta, y);
@@ -139,9 +139,9 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A' * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void tv(float alpha, float[] x, float beta, float[] y) {
         mv(TRANSPOSE, alpha, x, beta, y);

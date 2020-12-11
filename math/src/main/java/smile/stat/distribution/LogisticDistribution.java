@@ -23,21 +23,6 @@ package smile.stat.distribution;
  * in logistic regression and feedforward neural networks. It resembles
  * the normal distribution in shape but has heavier tails (higher kurtosis).
  * <p>
- * The cumulative distribution function of the logistic distribution is given by:
- * <p>
- * <pre>
- *                   1
- * F(x; &mu;,s) = -------------
- *              1 + e<sup>-(x-&mu;)/s</sup>
- * </pre>
- * The probability density function of the logistic distribution is given by:
- * <p>
- * <pre>
- *                  e<sup>-(x-&mu;)/s</sup>
- * f(x; &mu;,s) = -----------------
- *              s(1 + e<sup>-(x-&mu;)/s</sup>)<sup>2</sup>
- * </pre>
- * <p>
  * The logistic distribution and the S-shaped pattern that results from it
  * have been extensively used in many different areas such as:
  * <ul>

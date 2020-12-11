@@ -26,7 +26,6 @@ import smile.math.MathEx;
  * <p>
  * The Jensen-Shannon divergence is a symmetrized and smoothed version of the
  * Kullback-Leibler divergence . It is defined by
- * <p>
  * <pre>
  *     J(P||Q) = (D(P||M) + D(Q||M)) / 2
  * </pre>

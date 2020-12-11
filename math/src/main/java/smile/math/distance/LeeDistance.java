@@ -24,9 +24,8 @@ package smile.math.distance;
  * of equal length n over the q-ary alphabet <code>{0, 1, ..., q-1}</code>
  * of size <code>q &ge; 2</code>, defined as
  * <p>
- * <pre>
  *     sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
- * </pre>
+ * <p>
  * If <code>q = 2</code> or <code>q = 3</code> the Lee distance coincides with the Hamming distance.
  *
  * @author Haifeng Li

@@ -63,63 +63,42 @@ public class SimpleCorpusTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of size method, of class SimpleCorpus.
-     */
     @Test
     public void testSize() {
         System.out.println("size");
         assertEquals(58064, corpus.size());
     }
 
-    /**
-     * Test of getNumDocuments method, of class SimpleCorpus.
-     */
     @Test
     public void testGetNumDocuments() {
         System.out.println("getNumDocuments");
         assertEquals(5000, corpus.getNumDocuments());
     }
 
-    /**
-     * Test of getNumTerms method, of class SimpleCorpus.
-     */
     @Test
     public void testGetNumTerms() {
         System.out.println("getNumTerms");
         assertEquals(15077, corpus.getNumTerms());
     }
 
-    /**
-     * Test of getNumBigrams method, of class SimpleCorpus.
-     */
     @Test
     public void testGetNumBigrams() {
         System.out.println("getNumBigrams");
         assertEquals(18303, corpus.getNumBigrams());
     }
 
-    /**
-     * Test of getAverageDocumentSize method, of class SimpleCorpus.
-     */
     @Test
     public void testGetAverageDocumentSize() {
         System.out.println("getAverageDocumentSize");
         assertEquals(11, corpus.getAverageDocumentSize());
     }
 
-    /**
-     * Test of getTermFrequency method, of class SimpleCorpus.
-     */
     @Test
     public void testGetTermFrequency() {
         System.out.println("getTermFrequency");
         assertEquals(27, corpus.getTermFrequency("romantic"));
     }
 
-    /**
-     * Test of getBigramFrequency method, of class SimpleCorpus.
-     */
     @Test
     public void testGetBigramFrequency() {
         System.out.println("getBigramFrequency");
@@ -127,9 +106,6 @@ public class SimpleCorpusTest {
         assertEquals(9, corpus.getBigramFrequency(bigram));
     }
 
-    /**
-     * Test of search method, of class SimpleCorpus.
-     */
     @Test
     public void testSearchRomantic() {
         System.out.println("search 'romantic'");
@@ -143,9 +119,6 @@ public class SimpleCorpusTest {
         assertEquals(27, n);
     }
 
-    /**
-     * Test of search method, of class SimpleCorpus, without hits.
-     */
     @Test
     public void testSearchNoResult() {
         System.out.println("search 'romantic'");
@@ -153,10 +126,6 @@ public class SimpleCorpusTest {
         assertEquals(Collections.emptyIterator(),hits);
     }
 
-
-    /**
-     * Test of search method, of class SimpleCorpus.
-     */
     @Test
     public void testSearchRomanticComedy() {
         System.out.println("search 'romantic comedy'");
@@ -171,9 +140,6 @@ public class SimpleCorpusTest {
         assertEquals(78, n);
     }
 
-    /**
-     * Test of search method, of class SimpleCorpus.
-     */
     @Test
     public void testSearchNoHits() {
         System.out.println("search 'no hits'");

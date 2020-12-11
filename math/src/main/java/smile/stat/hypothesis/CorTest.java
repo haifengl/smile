@@ -32,48 +32,7 @@ import smile.sort.QuickSort;
  * is calculated as a value of -1. A values of zero shows no correlation at all.
  * <p>
  * Three common types of correlation are Pearson, Spearman (for ranked data)
- * and Kendall (for uneven or multiple rankings), and can be selected using
- * the table below.
- * <table border="1" style="border-collapse: collapse" id="table3">
- *   <tr>
- *     <td colspan="2">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">
- *     Parametric variables follow normal distribution and linear
- *     relationship between x and y)</td>
- *   </tr>
- *   <tr>
- *     <td>
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">Pearson correlation</td>
- *   </tr>
- *   <tr>
- *     <td>
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
- * <table summary="" border="1" style="border-collapse: collapse" width="100%" cellspacing="0" id="table4">
- *   <tr>
- *     <td colspan="2">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">Equidistant
- *     positions on variables measured?</td>
- *   </tr>
- *   <tr>
- *     <td>
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">
- *     Spearman correlation</td>
- *   </tr>
- *   <tr>
- *     <td>
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">Kendall correlation</td>
- *   </tr>
- * </table>
- *     </td>
- *   </tr>
- * </table>
+ * and Kendall (for uneven or multiple rankings).
  * <p>
  * To deal with measures of association between nominal variables, we can use Chi-square
  * test for independence. For any pair of nominal variables, the data can be

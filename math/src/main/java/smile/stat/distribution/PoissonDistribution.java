@@ -28,18 +28,13 @@ import smile.math.special.Gamma;
  * intervals such as distance, area or volume. If the expected number of
  * occurrences in this interval is &lambda;, then the probability that there
  * are exactly n occurrences (n = 0, 1, 2, ...) is equal to
- * <p>
- * <pre>
- *             &lambda;<sup>n</sup> e<sup>-&lambda;</sup>
- * f(n; &lambda;) = ---------
- *               n!
- * </pre>
- * For sufficiently large values of &lambda;, (say &lambda; &gt; 1000), the normal
+ * f(n; &lambda;) = &lambda;<sup>n</sup> e<sup>-&lambda;</sup> / n!.
+ * For sufficiently large values of &lambda;, (say {@code &lambda; > 1000}), the normal
  * distribution with mean &lambda; and variance &lambda;, is an excellent
  * approximation to the Poisson distribution. If &lambda; is greater than about
  * 10, then the normal distribution is a good approximation if an appropriate
- * continuity correction is performed, i.e., P(X &le; x), where (lower-case) x
- * is a non-negative integer, is replaced by P(X &le; x + 0.5).
+ * continuity correction is performed, i.e., {@code P(X <= x)}, where (lower-case) x
+ * is a non-negative integer, is replaced by {@code P(X <= x + 0.5)}.
  * <p>
  * When a variable is Poisson distributed, its square root is approximately
  * normally distributed with expected value of about &lambda;<sup>1/2</sup>

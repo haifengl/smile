@@ -63,16 +63,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations {@code A * X = B}.
@@ -109,16 +109,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -155,16 +155,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -201,16 +201,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -247,19 +247,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -297,19 +297,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -347,19 +347,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -397,19 +397,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -447,19 +447,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -495,19 +495,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -543,19 +543,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -591,19 +591,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric matrix and X and B are N-by-NRHS matrices.
      *
      * The diagonal pivoting method is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U * D * U**T,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * D * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
      * 1-by-1 and 2-by-2 diagonal blocks. The factored form of A is then
@@ -639,19 +639,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -688,19 +688,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -737,19 +737,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -786,19 +786,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -835,19 +835,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -882,19 +882,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -929,19 +929,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -976,19 +976,19 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and X and B are N-by-NRHS matrices.
      *
      * The Cholesky decomposition is used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = U**T* U,  if UPLO = 'U'
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A = L * L**T,  if UPLO = 'L'
-     * </code></pre>
+     * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
      * equations A * X = B.
@@ -1023,16 +1023,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -1081,16 +1081,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -1139,16 +1139,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -1197,16 +1197,16 @@ public interface LAPACK {
 
     /**
      * Solves a real system of linear equations.
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices.
      *
      * The LU decomposition with partial pivoting and row interchanges is
      * used to factor A as
-     * <pre><code>
+     * <pre>{@code
      *     A = P * L * U
-     * </code></pre>
+     * }</pre>
      * where P is a permutation matrix, L is unit lower triangular, and U is
      * upper triangular. The factored form of A is then used to solve the
      * system of equations A * X = B.
@@ -1979,23 +1979,23 @@ public interface LAPACK {
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || c - A*x ||_2   subject to   B*x = d
-     * </code></pre>
+     * }</pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
      *  {@code P <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
-     * </code></pre>
+     * }</pre>
      *
      * These conditions ensure that the LSE problem has a unique solution,
      * which is obtained using a generalized RQ factorization of the
      * matrices (B, A) given by
-     * <pre><code>
+     * <pre>{@code
      *     B = (0 R)*Q,   A = Z*T*Q
-     * </code></pre>
+     * }</pre>
      *
      * @param layout The matrix layout.
      *
@@ -2049,23 +2049,23 @@ public interface LAPACK {
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || c - A*x ||_2   subject to   B*x = d
-     * </code></pre>
+     * }</pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
      *  {@code P <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
-     * </code></pre>
+     * }</pre>
      *
      * These conditions ensure that the LSE problem has a unique solution,
      * which is obtained using a generalized RQ factorization of the
      * matrices (B, A) given by
-     * <pre><code>
+     * <pre>{@code
      *     B = (0 R)*Q,   A = Z*T*Q
-     * </code></pre>
+     * }</pre>
      *
      * @param layout The matrix layout.
      *
@@ -2119,23 +2119,23 @@ public interface LAPACK {
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || c - A*x ||_2   subject to   B*x = d
-     * </code></pre>
+     * }</pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
      *  {@code P <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
-     * </code></pre>
+     * }</pre>
      *
      * These conditions ensure that the LSE problem has a unique solution,
      * which is obtained using a generalized RQ factorization of the
      * matrices (B, A) given by
-     * <pre><code>
+     * <pre>{@code
      *     B = (0 R)*Q,   A = Z*T*Q
-     * </code></pre>
+     * }</pre>
      *
      * @param layout The matrix layout.
      *
@@ -2189,23 +2189,23 @@ public interface LAPACK {
 
     /**
      * Solves a linear equality-constrained least squares (LSE) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || c - A*x ||_2   subject to   B*x = d
-     * </code></pre>
+     * }</pre>
      *  where A is an M-by-N matrix, B is a P-by-N matrix, c is a given
      *  M-vector, and d is a given P-vector. It is assumed that
      *  {@code P <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(B) = P and  rank( (A) ) = N
      *                          ( (B) )
-     * </code></pre>
+     * }</pre>
      *
      * These conditions ensure that the LSE problem has a unique solution,
      * which is obtained using a generalized RQ factorization of the
      * matrices (B, A) given by
-     * <pre><code>
+     * <pre>{@code
      *     B = (0 R)*Q,   A = Z*T*Q
-     * </code></pre>
+     * }</pre>
      *
      * @param layout The matrix layout.
      *
@@ -2259,33 +2259,33 @@ public interface LAPACK {
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || y ||_2   subject to   d = A*x + B*y
      *         x
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
      * given N-vector. It is assumed that {@code M <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(A) = M    and    rank( A B ) = N
-     * </code></pre>
+     * }</pre>
      *
      * Under these assumptions, the constrained equation is always
      * consistent, and there is a unique solution x and a minimal 2-norm
      * solution y, which is obtained using a generalized QR factorization
      * of the matrices (A, B) given by
-     * <pre><code>
+     * <pre>{@code
      *     A = Q*(R),   B = Q*T*Z
      *           (0)
-     * </code></pre>
+     * }</pre>
      *
      * In particular, if matrix B is square nonsingular, then the problem
      * GLM is equivalent to the following weighted linear least squares
      * problem
      *
-     * <pre><code>
+     * <pre>{@code
      *     minimize || inv(B)*(d-A*x) ||_2
      *         x
-     * </code></pre>
+     * }</pre>
      * where inv(B) denotes the inverse of B.
      *
      * @param layout The matrix layout.
@@ -2337,33 +2337,33 @@ public interface LAPACK {
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || y ||_2   subject to   d = A*x + B*y
      *         x
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
      * given N-vector. It is assumed that {@code M <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(A) = M    and    rank( A B ) = N
-     * </code></pre>
+     * }</pre>
      *
      * Under these assumptions, the constrained equation is always
      * consistent, and there is a unique solution x and a minimal 2-norm
      * solution y, which is obtained using a generalized QR factorization
      * of the matrices (A, B) given by
-     * <pre><code>
+     * <pre>{@code
      *     A = Q*(R),   B = Q*T*Z
      *           (0)
-     * </code></pre>
+     * }</pre>
      *
      * In particular, if matrix B is square nonsingular, then the problem
      * GLM is equivalent to the following weighted linear least squares
      * problem
      *
-     * <pre><code>
+     * <pre>{@code
      *     minimize || inv(B)*(d-A*x) ||_2
      *         x
-     * </code></pre>
+     * }</pre>
      * where inv(B) denotes the inverse of B.
      *
      * @param layout The matrix layout.
@@ -2415,33 +2415,33 @@ public interface LAPACK {
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || y ||_2   subject to   d = A*x + B*y
      *         x
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
      * given N-vector. It is assumed that {@code M <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(A) = M    and    rank( A B ) = N
-     * </code></pre>
+     * }</pre>
      *
      * Under these assumptions, the constrained equation is always
      * consistent, and there is a unique solution x and a minimal 2-norm
      * solution y, which is obtained using a generalized QR factorization
      * of the matrices (A, B) given by
-     * <pre><code>
+     * <pre>{@code
      *     A = Q*(R),   B = Q*T*Z
      *           (0)
-     * </code></pre>
+     * }</pre>
      *
      * In particular, if matrix B is square nonsingular, then the problem
      * GLM is equivalent to the following weighted linear least squares
      * problem
      *
-     * <pre><code>
+     * <pre>{@code
      *     minimize || inv(B)*(d-A*x) ||_2
      *         x
-     * </code></pre>
+     * }</pre>
      * where inv(B) denotes the inverse of B.
      *
      * @param layout The matrix layout.
@@ -2493,33 +2493,33 @@ public interface LAPACK {
 
     /**
      * Solves a general Gauss-Markov linear model (GLM) problem.
-     * <pre><code>
+     * <pre>{@code
      *     minimize || y ||_2   subject to   d = A*x + B*y
      *         x
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-M matrix, B is an N-by-P matrix, and d is a
      * given N-vector. It is assumed that {@code M <= N <= M+P}, and
-     * <pre><code>
+     * <pre>{@code
      *     rank(A) = M    and    rank( A B ) = N
-     * </code></pre>
+     * }</pre>
      *
      * Under these assumptions, the constrained equation is always
      * consistent, and there is a unique solution x and a minimal 2-norm
      * solution y, which is obtained using a generalized QR factorization
      * of the matrices (A, B) given by
-     * <pre><code>
+     * <pre>{@code
      *     A = Q*(R),   B = Q*T*Z
      *           (0)
-     * </code></pre>
+     * }</pre>
      *
      * In particular, if matrix B is square nonsingular, then the problem
      * GLM is equivalent to the following weighted linear least squares
      * problem
      *
-     * <pre><code>
+     * <pre>{@code
      *     minimize || inv(B)*(d-A*x) ||_2
      *         x
-     * </code></pre>
+     * }</pre>
      * where inv(B) denotes the inverse of B.
      *
      * @param layout The matrix layout.
@@ -4163,13 +4163,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GETRF.
      *
@@ -4200,13 +4200,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GETRF.
      *
@@ -4237,13 +4237,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GETRF.
      *
@@ -4274,13 +4274,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GETRF.
      *
@@ -4311,13 +4311,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GBTRF.
      *
@@ -4352,13 +4352,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GBTRF.
      *
@@ -4393,13 +4393,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GBTRF.
      *
@@ -4434,13 +4434,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N band matrix and X and B are N-by-NRHS matrices
      * using the LU factorization computed by GBTRF.
      *
@@ -4475,13 +4475,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
      * using the Bunch-Kaufman factorization computed by SPTRF.
      *
@@ -4510,13 +4510,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
      * using the Bunch-Kaufman factorization computed by SPTRF.
      *
@@ -4545,13 +4545,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
      * using the Bunch-Kaufman factorization computed by SPTRF.
      *
@@ -4580,13 +4580,13 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N packed matrix and X and B are N-by-NRHS matrices
      * using the Bunch-Kaufman factorization computed by SPTRF.
      *
@@ -5032,9 +5032,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5067,9 +5067,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5102,9 +5102,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5137,9 +5137,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5172,9 +5172,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5209,9 +5209,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5246,9 +5246,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5283,9 +5283,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by POTRF.
@@ -5320,9 +5320,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by PPTRF.
@@ -5353,9 +5353,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by PPTRF.
@@ -5386,9 +5386,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by PPTRF.
@@ -5419,9 +5419,9 @@ public interface LAPACK {
 
     /**
      * Solves a system of linear equations
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
      * A = U**T*U or A = L*L**T computed by PPTRF.
@@ -5556,16 +5556,16 @@ public interface LAPACK {
 
     /**
      * Overwrites the general real M-by-N matrix C with
-     * <pre><code>
+     * <pre>{@code
      *                  SIDE = 'L'     SIDE = 'R'
      *  TRANS = 'N':      Q * C          C * Q
      *  TRANS = 'T':      Q**T * C       C * Q**T
-     * </code></pre>
+     * }</pre>
      * where Q is a real orthogonal matrix defined as the product of k
      * elementary reflectors
-     * <pre><code>
+     * <pre>{@code
      *        Q = H(1) H(2) . . . H(k)
-     * </code></pre>
+     * }</pre>
      * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
      * if SIDE = 'R'.
      *
@@ -5608,16 +5608,16 @@ public interface LAPACK {
 
     /**
      * Overwrites the general real M-by-N matrix C with
-     * <pre><code>
+     * <pre>{@code
      *                  SIDE = 'L'     SIDE = 'R'
      *  TRANS = 'N':      Q * C          C * Q
      *  TRANS = 'T':      Q**T * C       C * Q**T
-     * </code></pre>
+     * }</pre>
      * where Q is a real orthogonal matrix defined as the product of k
      * elementary reflectors
-     * <pre><code>
+     * <pre>{@code
      *        Q = H(1) H(2) . . . H(k)
-     * </code></pre>
+     * }</pre>
      * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
      * if SIDE = 'R'.
      *
@@ -5660,16 +5660,16 @@ public interface LAPACK {
 
     /**
      * Overwrites the general real M-by-N matrix C with
-     * <pre><code>
+     * <pre>{@code
      *                  SIDE = 'L'     SIDE = 'R'
      *  TRANS = 'N':      Q * C          C * Q
      *  TRANS = 'T':      Q**T * C       C * Q**T
-     * </code></pre>
+     * }</pre>
      * where Q is a real orthogonal matrix defined as the product of k
      * elementary reflectors
-     * <pre><code>
+     * <pre>{@code
      *        Q = H(1) H(2) . . . H(k)
-     * </code></pre>
+     * }</pre>
      * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
      * if SIDE = 'R'.
      *
@@ -5712,16 +5712,16 @@ public interface LAPACK {
 
     /**
      * Overwrites the general real M-by-N matrix C with
-     * <pre><code>
+     * <pre>{@code
      *                  SIDE = 'L'     SIDE = 'R'
      *  TRANS = 'N':      Q * C          C * Q
      *  TRANS = 'T':      Q**T * C       C * Q**T
-     * </code></pre>
+     * }</pre>
      * where Q is a real orthogonal matrix defined as the product of k
      * elementary reflectors
-     * <pre><code>
+     * <pre>{@code
      *        Q = H(1) H(2) . . . H(k)
-     * </code></pre>
+     * }</pre>
      * as returned by GEQRF. Q is of order M if SIDE = 'L' and of order N
      * if SIDE = 'R'.
      *
@@ -5764,13 +5764,13 @@ public interface LAPACK {
 
     /**
      * Solves a triangular system of the form
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is a triangular matrix of order N, and B is an N-by-NRHS
      * matrix. A check is made to verify that A is nonsingular.
      *
@@ -5807,13 +5807,13 @@ public interface LAPACK {
 
     /**
      * Solves a triangular system of the form
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is a triangular matrix of order N, and B is an N-by-NRHS
      * matrix. A check is made to verify that A is nonsingular.
      *
@@ -5850,13 +5850,13 @@ public interface LAPACK {
 
     /**
      * Solves a triangular system of the form
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is a triangular matrix of order N, and B is an N-by-NRHS
      * matrix. A check is made to verify that A is nonsingular.
      *
@@ -5893,13 +5893,13 @@ public interface LAPACK {
 
     /**
      * Solves a triangular system of the form
-     * <pre><code>
+     * <pre>{@code
      *     A * X = B
-     * </code></pre>
+     * }</pre>
      * or
-     * <pre><code>
+     * <pre>{@code
      *     A**T * X = B
-     * </code></pre>
+     * }</pre>
      * where A is a triangular matrix of order N, and B is an N-by-NRHS
      * matrix. A check is made to verify that A is nonsingular.
      *

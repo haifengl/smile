@@ -35,13 +35,13 @@
  * Generically-tuned ATLAS and OpenBLAS are available with most distributions
  * and must be enabled explicitly using the package-manager. For example,
  * <p>
- * <pre><code>
+ * <pre>{@code
  *     sudo apt-get install libatlas3-base libopenblas-base
  *     sudo update-alternatives --config libblas.so
  *     sudo update-alternatives --config libblas.so.3
  *     sudo update-alternatives --config liblapack.so
  *     sudo update-alternatives --config liblapack.so.3
- * </code></pre>
+ * }</pre>
  * <p>
  * However, these are only generic pre-tuned builds.
  * <p>
@@ -60,25 +60,25 @@
  *
  * A specific implementation may be forced like so:
  * <p>
- * <pre><code>
+ * <pre>{@code
  *     -Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.NativeRefBLAS
  *     -Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.NativeRefLAPACK
  *     -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.NativeRefARPACK
- * </code></pre>
+ * }</pre>
  * <p>
  * A specific (non-standard) JNI binary may be forced like so:
  * <p>
- * <pre><code>
+ * <pre>{@code
  *     -Dcom.github.fommil.netlib.NativeSystemBLAS.natives=netlib-native_system-myos-myarch.so
- * </code></pre>
+ * }</pre>
  * <p>
  * To turn off natives altogether, add these to the JVM flags:
  * <p>
- * <pre><code>
+ * <pre>{@code
  *     -Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.F2jBLAS
  *     -Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.F2jLAPACK
  *     -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK
- * </code></pre>
+ * }</pre>
  *
  * @author Haifeng Li
  */

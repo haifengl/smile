@@ -22,9 +22,8 @@ import smile.math.MathEx;
 /**
  * Power variogram.
  * <p>
- * <pre>
  *     v(r) = c + &alpha; r<sup>&beta;</sup>
- * </pre>
+ * <p>
  * where &beta; is fixed and &alpha; is fitted by unweighted least squares
  * over all pairs of data points. The value of &beta; should be in the range
  * <code>1 &le; &beta; &lt; 2</code>. A good general choice is 1.5, but for

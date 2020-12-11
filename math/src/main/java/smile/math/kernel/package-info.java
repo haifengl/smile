@@ -21,7 +21,7 @@
  * the kernel trick, the idea of implicitly mapping data to a high-dimensional
  * feature space where some linear algorithm is applied that works exclusively
  * with inner products. Assume we have some mapping &#934; from an input
- * space X to a feature space H, then a kernel <code>k(u, v) = &lt;&#934;(u), &#934;(v)&gt;</code>
+ * space X to a feature space H, then a kernel {@code k(u, v) = <&#934;(u), &#934;(v)>}
  * may be used to define the inner product in feature space H.
  * <p>
  * Positive definiteness in the context of kernel functions also implies that

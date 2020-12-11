@@ -38,7 +38,7 @@ import java.util.Map;
  * Komlós and Szemerédi (1984) chooses a large prime <code>p</code>
  * (larger than the size of the universe from which <code>S</code> is drawn),
  * and a parameter <code>k</code>, and maps each element <code>x</code> of
- * <code>S</code> to the index <code>g(x) = (kx mod p) mod n</code>.
+ * <code>S</code> to the index {@code g(x) = (kx mod p) mod n}.
  *
  * @author Haifeng Li
  */
