@@ -76,7 +76,7 @@ lazy val java8Settings = javaSettings ++ Seq(
     "-target", "1.8"
   ),
   javacOptions in (Compile, doc) ++= Seq(
-    "-source", "1.8",
+    "-source", "15",
   )
 )
 
