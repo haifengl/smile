@@ -51,12 +51,18 @@ public class DecisionNode extends LeafNode {
         this.count = count;
     }
 
-    /** Returns the predicted value. */
+    /**
+     * Returns the predicted value.
+     * @return the predicted value.
+     */
     public int output() {
         return output;
     }
 
-    /** Returns the number of node samples in each class. */
+    /**
+     * Returns the number of node samples in each class.
+     * @return the number of node samples in each class.
+     */
     public int[] count() {
         return count;
     }
@@ -157,12 +163,21 @@ public class DecisionNode extends LeafNode {
         return false;
     }
 
-    /** Returns the class probability. */
+    /**
+     * Returns the class probability.
+     * @param prob the output variable of postieriori probabilities.
+     * @return the postieriori probabilities.
+     */
     public double[] posteriori(double[] prob) {
         return posteriori(count, prob);
     }
 
-    /** Returns the class probability. */
+    /**
+     * Returns the class probability.
+     * @param count the input variable of the number of samples per class.
+     * @param prob the output variable of postieriori probabilities.
+     * @return the postieriori probabilities.
+     */
     public static double[] posteriori(int[] count, double[] prob) {
         int k = count.length;
         double n = MathEx.sum(count) + k;
@@ -172,7 +187,12 @@ public class DecisionNode extends LeafNode {
         return prob;
     }
 
-    /** Returns the deviance of node. */
+    /**
+     * Returns the deviance of node.
+     * @param count the input variable of the number of samples per class.
+     * @param prob the output variable of postieriori probabilities.
+     * @return the deviance of node.
+     */
     public static double deviance(int[] count, double[] prob) {
         int k = count.length;
         double d = 0.0;

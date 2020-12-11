@@ -65,6 +65,8 @@ public interface SHAP<T> {
 
     /**
      * Returns the average of absolute SHAP values over a data set.
+     * @param data the data set.
+     * @return the average of absolute SHAP values over a data set.
      */
     default double[] shap(Stream<T> data) {
         return smile.math.MathEx.colMeans(

@@ -49,8 +49,8 @@ public enum Diag {
     }
 
     /**
-     * Returns the value for BLAS.
-     * @return the value for BLAS.
+     * Returns the int value for BLAS.
+     * @return the int value for BLAS.
      */
     public int blas() { return blas; }
 
