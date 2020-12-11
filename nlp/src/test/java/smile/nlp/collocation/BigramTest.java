@@ -69,8 +69,8 @@ public class BigramTest {
         Bigram[] result = Bigram.of(corpus, k, 5);
 
         assertEquals(10, result.length);
-        for (int i = 0; i < result.length; i++) {
-            System.out.println(result[i]);
+        for (Bigram bigram : result) {
+            System.out.println(bigram);
         }
 
         assertEquals(46, result[0].count);
@@ -87,8 +87,8 @@ public class BigramTest {
         Bigram[] result = Bigram.of(corpus, p, 5);
 
         assertEquals(63, result.length);
-        for (int i = 0; i < result.length; i++) {
-            System.out.println(result[i]);
+        for (Bigram bigram : result) {
+            System.out.println(bigram);
         }
 
         assertEquals(46, result[0].count);

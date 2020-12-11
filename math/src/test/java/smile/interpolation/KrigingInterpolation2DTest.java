@@ -30,7 +30,7 @@ import static org.junit.Assert.*;
  */
 public class KrigingInterpolation2DTest {
 
-    private double[][] data = {
+    private final double[][] data = {
             {7.5,   25.725225,   -82.013512},
             {6.0,   25.725225,   -82.00901},
             {4.875,   25.725225,   -82.0},

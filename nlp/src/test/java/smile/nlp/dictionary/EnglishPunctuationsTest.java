@@ -55,29 +55,29 @@ public class EnglishPunctuationsTest {
     @Test
     public void testContains() {
         System.out.println("contains");
-        assertEquals(true, EnglishPunctuations.getInstance().contains("["));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("]"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("("));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(")"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("{"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("}"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("<"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(">"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(":"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(","));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(";"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("-"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("--"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("---"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("!"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("?"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("."));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("..."));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("`"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("'"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("\""));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("/"));
-        assertEquals(false, EnglishPunctuations.getInstance().contains(""));
-        assertEquals(false, EnglishPunctuations.getInstance().contains("word"));
+        assertTrue(EnglishPunctuations.getInstance().contains("["));
+        assertTrue(EnglishPunctuations.getInstance().contains("]"));
+        assertTrue(EnglishPunctuations.getInstance().contains("("));
+        assertTrue(EnglishPunctuations.getInstance().contains(")"));
+        assertTrue(EnglishPunctuations.getInstance().contains("{"));
+        assertTrue(EnglishPunctuations.getInstance().contains("}"));
+        assertTrue(EnglishPunctuations.getInstance().contains("<"));
+        assertTrue(EnglishPunctuations.getInstance().contains(">"));
+        assertTrue(EnglishPunctuations.getInstance().contains(":"));
+        assertTrue(EnglishPunctuations.getInstance().contains(","));
+        assertTrue(EnglishPunctuations.getInstance().contains(";"));
+        assertTrue(EnglishPunctuations.getInstance().contains("-"));
+        assertTrue(EnglishPunctuations.getInstance().contains("--"));
+        assertTrue(EnglishPunctuations.getInstance().contains("---"));
+        assertTrue(EnglishPunctuations.getInstance().contains("!"));
+        assertTrue(EnglishPunctuations.getInstance().contains("?"));
+        assertTrue(EnglishPunctuations.getInstance().contains("."));
+        assertTrue(EnglishPunctuations.getInstance().contains("..."));
+        assertTrue(EnglishPunctuations.getInstance().contains("`"));
+        assertTrue(EnglishPunctuations.getInstance().contains("'"));
+        assertTrue(EnglishPunctuations.getInstance().contains("\""));
+        assertTrue(EnglishPunctuations.getInstance().contains("/"));
+        assertFalse(EnglishPunctuations.getInstance().contains(""));
+        assertFalse(EnglishPunctuations.getInstance().contains("word"));
     }
 }

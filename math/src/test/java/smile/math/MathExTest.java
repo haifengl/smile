@@ -53,10 +53,10 @@ public class MathExTest {
     @Test
     public void testIsZero() {
         System.out.println("isZero");
-        assertEquals(true, MathEx.isZero(0.0));
-        assertEquals(true, MathEx.isZero(Double.MIN_VALUE));
-        assertEquals(true, MathEx.isZero(Double.MIN_NORMAL));
-        assertEquals(false, MathEx.isZero(MathEx.EPSILON));
+        assertTrue(MathEx.isZero(0.0));
+        assertTrue(MathEx.isZero(Double.MIN_VALUE));
+        assertTrue(MathEx.isZero(Double.MIN_NORMAL));
+        assertFalse(MathEx.isZero(MathEx.EPSILON));
     }
 
     /**
@@ -65,22 +65,22 @@ public class MathExTest {
     @Test
     public void testIsPower2() {
         System.out.println("isPower2");
-        assertEquals(false, MathEx.isPower2(-1));
-        assertEquals(false, MathEx.isPower2(0));
-        assertEquals(true, MathEx.isPower2(1));
-        assertEquals(true, MathEx.isPower2(2));
-        assertEquals(false, MathEx.isPower2(3));
-        assertEquals(true, MathEx.isPower2(4));
-        assertEquals(true, MathEx.isPower2(8));
-        assertEquals(true, MathEx.isPower2(16));
-        assertEquals(true, MathEx.isPower2(32));
-        assertEquals(true, MathEx.isPower2(64));
-        assertEquals(true, MathEx.isPower2(128));
-        assertEquals(true, MathEx.isPower2(256));
-        assertEquals(true, MathEx.isPower2(512));
-        assertEquals(true, MathEx.isPower2(1024));
-        assertEquals(true, MathEx.isPower2(65536));
-        assertEquals(true, MathEx.isPower2(131072));
+        assertFalse(MathEx.isPower2(-1));
+        assertFalse(MathEx.isPower2(0));
+        assertTrue(MathEx.isPower2(1));
+        assertTrue(MathEx.isPower2(2));
+        assertFalse(MathEx.isPower2(3));
+        assertTrue(MathEx.isPower2(4));
+        assertTrue(MathEx.isPower2(8));
+        assertTrue(MathEx.isPower2(16));
+        assertTrue(MathEx.isPower2(32));
+        assertTrue(MathEx.isPower2(64));
+        assertTrue(MathEx.isPower2(128));
+        assertTrue(MathEx.isPower2(256));
+        assertTrue(MathEx.isPower2(512));
+        assertTrue(MathEx.isPower2(1024));
+        assertTrue(MathEx.isPower2(65536));
+        assertTrue(MathEx.isPower2(131072));
     }
 
     /**
@@ -726,9 +726,9 @@ public class MathExTest {
         double[][] B = MathEx.clone(A);
 
         assertTrue(MathEx.equals(A, B));
-        assertTrue(A != B);
+        assertNotSame(A, B);
         for (int i = 0; i < A.length; i++) {
-            assertTrue(A[i] != B[i]);
+            assertNotSame(A[i], B[i]);
         }
     }
 

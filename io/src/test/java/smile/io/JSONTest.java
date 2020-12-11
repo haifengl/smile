@@ -54,10 +54,7 @@ public class JSONTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of read method, of class JSON.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testBooks() throws Exception {
         System.out.println("books");
         JSON json = new JSON();
@@ -88,16 +85,13 @@ public class JSONTest {
         assertEquals("Rick Riordan", df.get(0, 2));
         assertEquals(12.5, df.getDouble(0, 3), 1E-7);
 
-        assertEquals(null, df.get(6, 0));
+        assertNull(df.get(6, 0));
         assertEquals(475, df.get(6, 1));
         assertEquals("Michael McCandless", df.get(6, 2));
         assertEquals(30.5, df.getDouble(6, 3), 1E-7);
     }
 
-    /**
-     * Test of read method, of class JSON.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testBooksMultiLine() throws Exception {
         System.out.println("books multi-line");
         JSON json = new JSON().mode(JSON.Mode.MULTI_LINE);
@@ -128,7 +122,7 @@ public class JSONTest {
         assertEquals("Rick Riordan", df.get(0, 2));
         assertEquals(12.5, df.getDouble(0, 3), 1E-7);
 
-        assertEquals(null, df.get(6, 0));
+        assertNull(df.get(6, 0));
         assertEquals(475, df.get(6, 1));
         assertEquals("Michael McCandless", df.get(6, 2));
         assertEquals(30.5, df.getDouble(6, 3), 1E-7);

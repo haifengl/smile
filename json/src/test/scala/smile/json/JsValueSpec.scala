@@ -20,7 +20,7 @@ package smile.json
 import org.specs2.mutable._
 
 class JsValueSpec extends Specification {
-  val jsonSource = scala.io.Source.fromInputStream(getClass.getResourceAsStream("/store.json")).mkString
+  private val jsonSource = scala.io.Source.fromInputStream(getClass.getResourceAsStream("/store.json")).mkString
 
   "The JsValue" should {
     "JsObject apply" in {

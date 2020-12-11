@@ -49,10 +49,7 @@ public class LibsvmTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of parse method, of class LibsvmParser.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
@@ -87,10 +84,7 @@ public class LibsvmTest {
         assertEquals(17, test.get(n-1).label());
     }
 
-    /**
-     * Test of parse method, of class LibsvmParser.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseGlass() throws Exception {
         System.out.println("glass");
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));

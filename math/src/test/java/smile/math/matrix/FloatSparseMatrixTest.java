@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -112,7 +113,7 @@ public class FloatSparseMatrixTest {
     public void testAxpy() {
         System.out.println("axpy");
         float[] d = new float[sparse.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         sparse.mv(NO_TRANSPOSE, 1.0f, b, 1.0f, d);
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
@@ -123,7 +124,7 @@ public class FloatSparseMatrixTest {
     public void testAxpy2() {
         System.out.println("axpy b = 2");
         float[] d = new float[sparse.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         sparse.mv(NO_TRANSPOSE, 1.0f, b, 2.0f, d);
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
@@ -144,7 +145,7 @@ public class FloatSparseMatrixTest {
     public void testAtxpy() {
         System.out.println("atxpy");
         float[] d = new float[sparse.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         sparse.mv(TRANSPOSE, 1.0f, b, 1.0f, d);
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
@@ -155,7 +156,7 @@ public class FloatSparseMatrixTest {
     public void testAtxpy2() {
         System.out.println("atxpy b = 2");
         float[] d = new float[sparse.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         sparse.mv(TRANSPOSE, 1.0f, b, 2.0f, d);
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
@@ -293,7 +294,7 @@ public class FloatSparseMatrixTest {
         System.out.printf("stream: %.3f (%.2f)\n", (t1 - t0), sum);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testText() throws Exception {
         System.out.println("text");
         FloatSparseMatrix data = FloatSparseMatrix.text(smile.util.Paths.getTestData("matrix/08blocks.txt"));
@@ -306,7 +307,7 @@ public class FloatSparseMatrixTest {
         assertEquals(95.0, data.get(299, 299), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testHarwell() throws Exception {
         System.out.println("HB exchange format");
         FloatSparseMatrix data = FloatSparseMatrix.harwell(smile.util.Paths.getTestData("matrix/5by5_rua.hb"));
@@ -319,7 +320,7 @@ public class FloatSparseMatrixTest {
         assertEquals(55.0, data.get(4, 4), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testMatrixMarket08blocks() throws Exception {
         System.out.println("market 08blocks");
         FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/08blocks.mtx"));
@@ -332,7 +333,7 @@ public class FloatSparseMatrixTest {
         assertEquals(95.0, data.get(299, 299), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testMatrixMarketGr900() throws Exception {
         System.out.println("market gr900");
         FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/gr_900_900_crg.mm"));
@@ -351,7 +352,7 @@ public class FloatSparseMatrixTest {
         assertEquals(-1.0, data.get(1, 30), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testMatrixMarketCrk() throws Exception {
         System.out.println("market crk");
         FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crk.mm"));
@@ -373,7 +374,7 @@ public class FloatSparseMatrixTest {
     /**
      * Test of market method, of class Matrix.
      */
-    @Test(expected = Test.None.class)
+    @Test
     public void testMatrixMarketCrs() throws Exception {
         System.out.println("market crs");
         FloatSparseMatrix data = (FloatSparseMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_05_05_crs.mm"));
@@ -392,11 +393,11 @@ public class FloatSparseMatrixTest {
         assertEquals(23.0, data.get(2, 1), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testMatrixMarketDense() throws Exception {
         System.out.println("market dense");
         FloatMatrix data = (FloatMatrix) SMatrix.market(smile.util.Paths.getTestData("matrix/m_10_01.mm"));
-        assertEquals(false, data.isSymmetric());
+        assertFalse(data.isSymmetric());
         assertEquals(10, data.nrows());
         assertEquals(1, data.ncols());
         assertEquals(0.193523, data.get(0, 0), 1E-7);

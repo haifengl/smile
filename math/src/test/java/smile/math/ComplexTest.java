@@ -62,14 +62,14 @@ public class ComplexTest {
         assertEquals(a.re, 5.0, 1E-15);
         assertEquals(a.im, 6.0, 1E-15);
         assertEquals(a.abs(), 7.810249675906654, 1E-15);
-        assertTrue(a.add(b).equals(Complex.of(2.0, 10.0)));
-        assertTrue(a.sub(b).equals(Complex.of(8.0, 2.0)));
-        assertTrue(a.mul(b).equals(Complex.of(-39.0, 2.0)));
-        assertTrue(a.div(b).equals(Complex.of(0.36, -1.52)));
+        assertEquals(a.add(b), Complex.of(2.0, 10.0));
+        assertEquals(a.sub(b), Complex.of(8.0, 2.0));
+        assertEquals(a.mul(b), Complex.of(-39.0, 2.0));
+        assertEquals(a.div(b), Complex.of(0.36, -1.52));
         System.out.println("a / b = " + a.div(b));
-        assertTrue(a.div(b).mul(b).equals(Complex.of(5.0, 6.0)));
-        assertTrue(a.conjugate().equals(Complex.of(5.0, -6.0)));
-        assertTrue(a.tan().equals(Complex.of(-6.685231390243073E-6, 1.00001031089812)));
+        assertEquals(a.div(b).mul(b), Complex.of(5.0, 6.0));
+        assertEquals(a.conjugate(), Complex.of(5.0, -6.0));
+        assertEquals(a.tan(), Complex.of(-6.685231390243073E-6, 1.00001031089812));
     }
 
     /**

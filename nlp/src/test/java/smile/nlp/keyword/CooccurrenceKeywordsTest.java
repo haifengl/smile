@@ -19,10 +19,6 @@ package smile.nlp.keyword;
 
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.stream.Collectors;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -71,19 +67,19 @@ public class CooccurrenceKeywordsTest {
 
         assertEquals("store", result[0].words[0]);
         assertEquals(18, result[0].count);
-        assertEquals("digital computer", Arrays.stream(result[1].words).collect(Collectors.joining(" ")));
+        assertEquals("digital computer", String.join(" ", result[1].words));
         assertEquals(34, result[1].count);
         assertEquals("machine", result[2].words[0]);
         assertEquals(198, result[2].count);
-        assertEquals("storage capacity", Arrays.stream(result[3].words).collect(Collectors.joining(" ")));
+        assertEquals("storage capacity", String.join(" ", result[3].words));
         assertEquals(11, result[3].count);
         assertEquals("instruction", result[4].words[0]);
         assertEquals(14, result[4].count);
         assertEquals("think", result[5].words[0]);
         assertEquals(46, result[5].count);
-        assertEquals("imitation game", Arrays.stream(result[6].words).collect(Collectors.joining(" ")));
+        assertEquals("imitation game", String.join(" ", result[6].words));
         assertEquals(15, result[6].count);
-        assertEquals("discrete-state machine", Arrays.stream(result[7].words).collect(Collectors.joining(" ")));
+        assertEquals("discrete-state machine", String.join(" ", result[7].words));
         assertEquals(17, result[7].count);
         assertEquals("teach", result[8].words[0]);
         assertEquals(11, result[8].count);

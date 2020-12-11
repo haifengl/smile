@@ -17,7 +17,6 @@
 
 package smile.sort;
 
-import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -64,16 +63,16 @@ public class HeapSortTest {
 
         int[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Arrays.equals(data, data1));
+        assertArrayEquals(data, data1);
         int[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Arrays.equals(data, data2));
+        assertArrayEquals(data, data2);
         int[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Arrays.equals(data, data3));
+        assertArrayEquals(data, data3);
         int[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Arrays.equals(data, data4));
+        assertArrayEquals(data, data4);
     }
 
     /**
@@ -130,16 +129,16 @@ public class HeapSortTest {
 
         Integer[] data1 = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
         HeapSort.sort(data1);
-        assertTrue(Arrays.equals(data, data1));
+        assertArrayEquals(data, data1);
         Integer[] data2 = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
         HeapSort.sort(data2);
-        assertTrue(Arrays.equals(data, data2));
+        assertArrayEquals(data, data2);
         Integer[] data3 = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9};
         HeapSort.sort(data3);
-        assertTrue(Arrays.equals(data, data3));
+        assertArrayEquals(data, data3);
         Integer[] data4 = {4, 1, 2, 3, 0, 5, 6, 7, 8, 9};
         HeapSort.sort(data4);
-        assertTrue(Arrays.equals(data, data4));
+        assertArrayEquals(data, data4);
     }
 
     /**

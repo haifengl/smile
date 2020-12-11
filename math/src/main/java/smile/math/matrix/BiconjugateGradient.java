@@ -28,6 +28,11 @@ import smile.math.MathEx;
 public class BiconjugateGradient {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BiconjugateGradient.class);
 
+    /** Private constructor to prevent instance creation. */
+    private BiconjugateGradient() {
+
+    }
+
     /**
      * Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.

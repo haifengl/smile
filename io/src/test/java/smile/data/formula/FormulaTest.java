@@ -22,22 +22,15 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-
 import smile.data.DataFrame;
-import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
 import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.io.Read;
-import smile.math.matrix.Matrix;
 import smile.util.Paths;
 
 import static smile.data.formula.Terms.*;
-
 import static org.junit.Assert.*;
 
 /**
