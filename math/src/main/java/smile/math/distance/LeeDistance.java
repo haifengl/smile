@@ -33,7 +33,7 @@ package smile.math.distance;
 public class LeeDistance implements Metric<int[]> {
     private static final long serialVersionUID = 1L;
 
-    private int q;
+    private final int q;
 
     /**
      * Constructor with a given size q of alphabet.

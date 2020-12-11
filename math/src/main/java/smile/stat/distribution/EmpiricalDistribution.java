@@ -42,14 +42,14 @@ public class EmpiricalDistribution extends DiscreteDistribution {
     /**
      * The possible values of random variable.
      */
-    private IntSet x;
+    private final IntSet x;
     /**
      * CDF at each x.
      */
-    private double[] cdf;
+    private final double[] cdf;
     private double mean;
-    private double variance;
-    private double sd;
+    private final double variance;
+    private final double sd;
     private double entropy;
     // Walker's alias method to generate random samples.
     private int[] a;

@@ -43,7 +43,10 @@ public class UniversalGenerator implements RandomNumberGenerator {
      * <CODE>BIG_PRIME = 899999963</CODE>
      */
     static final int BIG_PRIME = 899999963;
-    private double c, cd, cm, u[];
+    private double c;
+    private double cd;
+    private double cm;
+    private double[] u;
     private int i97, j97;
 
     /**

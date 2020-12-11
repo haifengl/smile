@@ -30,14 +30,14 @@ import java.util.Map;
  */
 public class PerfectMap<T> {
     /** Perfect hash of keywords. */
-    private PerfectHash hash;
+    private final PerfectHash hash;
     /** The value set. */
-    private List<T> values;
+    private final List<T> values;
 
     /** Builder of perfect map. */
     public static class Builder<T> {
         /** Key-value map. */
-        private Map<String, T> map = new HashMap<>();
+        private final Map<String, T> map = new HashMap<>();
 
         /** Constructor. */
         public Builder() {

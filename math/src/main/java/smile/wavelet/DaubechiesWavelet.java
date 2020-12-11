@@ -164,7 +164,7 @@ public class DaubechiesWavelet extends Wavelet {
               n == 14 ? c14 :
               n == 16 ? c16 :
               n == 18 ? c18 :
-              n == 20 ? c20 : null
+              n == 20 ? c20 : c4
             );
 
         if ( n < 4 || n > 20 || n % 2 != 0) {

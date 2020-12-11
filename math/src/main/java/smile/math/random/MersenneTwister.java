@@ -48,7 +48,7 @@ public class MersenneTwister implements RandomNumberGenerator {
     private final static int LOWER_MASK = 0x7fffffff;
     private final static int N = 624;
     private final static int M = 397;
-    private final static int MAGIC[] = {0x0, 0x9908b0df};
+    private final static int[] MAGIC = {0x0, 0x9908b0df};
     private final static int MAGIC_FACTOR1 = 1812433253;
     //private final static int MAGIC_FACTOR2 = 1664525;
     //private final static int MAGIC_FACTOR3 = 1566083941;
@@ -58,7 +58,7 @@ public class MersenneTwister implements RandomNumberGenerator {
     // The seed used in the paper.
     //private final static int DEFAULT_SEED = 5489;
     // Internal state
-    private transient int[] mt = new int[N];
+    private final transient int[] mt = new int[N];
     private transient int mti;
 
     /**

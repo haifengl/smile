@@ -49,14 +49,14 @@ package smile.math.distance;
 public class DynamicTimeWarping<T> implements Distance<T[]> {
     private static final long serialVersionUID = 1L;
 
-    private Distance<T> distance;
-    private double width = 1;
+    private final Distance<T> distance;
+    private final double width;
 
     /**
      * Constructor. Dynamic time warping without path constraints.
      */
     public DynamicTimeWarping(Distance<T> distance) {
-        this.distance = distance;
+        this(distance, 1.0);
     }
 
     /**

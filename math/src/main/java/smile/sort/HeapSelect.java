@@ -31,7 +31,11 @@ public class HeapSelect<T extends Comparable<? super T>> {
     /**
      * The heap size.
      */
-    private int k;
+    private final int k;
+    /**
+     * The heap array.
+     */
+    private final T[] heap;
     /**
      * The number of objects that have been added into heap.
      */
@@ -40,10 +44,6 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * True if the heap is fully sorted.
      */
     private boolean sorted;
-    /**
-     * The heap array.
-     */
-    private T[] heap;
 
     /**
      * Constructor.
@@ -51,7 +51,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * @param k the size of heap.
      */
     @SuppressWarnings("unchecked")
-    public HeapSelect(Class clazz, int k) {
+    public HeapSelect(Class<?> clazz, int k) {
         this((T[]) java.lang.reflect.Array.newInstance(clazz, k));
     }
 

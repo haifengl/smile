@@ -136,12 +136,12 @@ public class EditDistance implements Metric<String> {
     public String toString() {
         if (damerau) {
             if (weight != null)
-                return String.format("Damerau-Levenshtein Distance(radius = %d, weight = %s)", r, weight.toString());
+                return String.format("Damerau-Levenshtein Distance(radius = %f, weight = %s)", r, weight.toString());
             else
                 return "Damerau-Levenshtein Distance";
         } else {
             if (weight != null)
-                return String.format("Levenshtein Distance(radius = %d, weight = %s)", r, weight.toString());
+                return String.format("Levenshtein Distance(radius = %f, weight = %s)", r, weight.toString());
             else
                 return  "Levenshtein Distance";
         }
@@ -190,7 +190,7 @@ public class EditDistance implements Metric<String> {
             y = swap;
         }
 
-        int radius = (int) Math.round(r * Math.max(x.length, y.length));
+        int radius = (int) Math.round(r * x.length);
 
         double[][] d = new double[2][y.length + 1];
 
@@ -246,7 +246,7 @@ public class EditDistance implements Metric<String> {
             y = swap;
         }
 
-        int radius = (int) Math.round(r * Math.max(x.length(), y.length()));
+        int radius = (int) Math.round(r * x.length());
 
         double[][] d = new double[2][y.length() + 1];
 

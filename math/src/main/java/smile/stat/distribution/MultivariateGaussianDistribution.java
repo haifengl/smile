@@ -46,7 +46,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     private Matrix sigmaL;
     private double sigmaDet;
     private double pdfConstant;
-    private int length;
+    private final int length;
 
     /**
      * Constructor. The distribution will have a diagonal covariance matrix of

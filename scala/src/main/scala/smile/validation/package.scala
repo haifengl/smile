@@ -21,7 +21,7 @@ import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
-import smile.util.{toJavaBiFunction, toJavaFunction}
+import smile.util.toJavaBiFunction
 import smile.validation.metric._
 
 /** Model validation.

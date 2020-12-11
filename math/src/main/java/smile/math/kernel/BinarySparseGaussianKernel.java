@@ -18,10 +18,6 @@
 package smile.math.kernel;
 
 import smile.math.MathEx;
-import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
-
-import java.util.stream.IntStream;
 
 /**
  * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.

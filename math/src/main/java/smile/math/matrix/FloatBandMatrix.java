@@ -231,7 +231,7 @@ public class FloatBandMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FloatBandMatrix)) {
+        if (!(o instanceof FloatBandMatrix)) {
             return false;
         }
 

@@ -66,7 +66,7 @@ public class BestLocalizedWavelet extends Wavelet {
     public BestLocalizedWavelet(int n) {
         super(n == 14 ? c14 :
               n == 18 ? c18 :
-              n == 20 ? c20 : null
+              n == 20 ? c20 : c14
             );
 
         if ( n != 14 && n != 18 && n != 20) {

@@ -49,9 +49,9 @@ case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:Stru
   override def getDouble(i: Int): Double = row.getDouble(i)
   override def getDecimal(i: Int): java.math.BigDecimal = row.getDecimal(i)
   override def getString(i: Int): String = row.getString(i)
-  override def getDate(i: Int): java.time.LocalDate = row.getDate(i).toLocalDate()
-  override def getDateTime(i: Int): java.time.LocalDateTime = row.getTimestamp(i).toLocalDateTime()
-  override def getTime(i: Int): java.time.LocalTime = row.getTimestamp(i).toLocalDateTime().toLocalTime()
+  override def getDate(i: Int): java.time.LocalDate = row.getDate(i).toLocalDate
+  override def getDateTime(i: Int): java.time.LocalDateTime = row.getTimestamp(i).toLocalDateTime
+  override def getTime(i: Int): java.time.LocalTime = row.getTimestamp(i).toLocalDateTime.toLocalTime
   override def getStruct(i: Int): SparkRowTuple = {
     val tuple = row.getStruct(i)
     SparkRowTuple(tuple, DataTypeOps.toSmileSchema(tuple.schema))

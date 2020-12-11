@@ -17,7 +17,6 @@
 
 package smile.spark
 
-import java.util.stream.Collectors
 import org.apache.spark.ml.DataTypeOps
 import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
@@ -29,11 +28,7 @@ object SmileDataFrame {
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
     val schema = DataTypeOps.toSparkSchema(df.schema)
     spark.createDataFrame(
-      df.stream()
-        .collect(Collectors.toList())
-        .asScala
-        .map(tuple => SparkRow(tuple, schema).asInstanceOf[Row])
-        .asJava,
+      df.toList.asScala.map(tuple => SparkRow(tuple, schema).asInstanceOf[Row]).asJava,
       schema)
   }
 }

@@ -19,7 +19,6 @@ package smile
 
 import scala.language.implicitConversions
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.distance.{EuclideanDistance, Distance}
 
 /** Utility functions.
   *

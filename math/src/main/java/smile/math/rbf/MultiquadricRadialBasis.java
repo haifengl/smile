@@ -35,7 +35,7 @@ package smile.math.rbf;
 public class MultiquadricRadialBasis implements RadialBasisFunction {
     private static final long serialVersionUID = 1L;
 
-    private double r02;
+    private final double r02;
 
     /**
      * Constructor.

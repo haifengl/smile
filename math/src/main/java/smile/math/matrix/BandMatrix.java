@@ -229,7 +229,7 @@ public class BandMatrix extends DMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof BandMatrix)) {
+        if (!(o instanceof BandMatrix)) {
             return false;
         }
 

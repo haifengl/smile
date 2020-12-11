@@ -47,9 +47,9 @@ public class SparseManhattanDistance implements Metric<SparseArray> {
      * @param weight the weight vector.
      */
     public SparseManhattanDistance(double[] weight) {
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        for (double w : weight) {
+            if (w < 0) {
+                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
             }
         }
 

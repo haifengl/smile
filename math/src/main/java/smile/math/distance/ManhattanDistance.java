@@ -50,9 +50,9 @@ public class ManhattanDistance implements Metric<double[]> {
      * @param weight the weight vector.
      */
     public ManhattanDistance(double[] weight) {
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        for (double w : weight) {
+            if (w < 0) {
+                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
             }
         }
 

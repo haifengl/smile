@@ -47,7 +47,7 @@ public class GaussianRadialBasis implements RadialBasisFunction {
     /**
      * The scale factor.
      */
-    private double r0;
+    private final double r0;
 
     /**
      * Constructor. The default bandwidth is 1.0.

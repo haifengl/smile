@@ -51,7 +51,7 @@ public class MersenneTwister64 implements RandomNumberGenerator {
 
     private static final long[] mag01 = {0L, MATRIX_A};
 
-    private long[] mt = new long[NN];
+    private final long[] mt = new long[NN];
 
     private int mti = NN + 1;
 
@@ -75,7 +75,7 @@ public class MersenneTwister64 implements RandomNumberGenerator {
     /**
      * Constructor.
      *
-     * @param seed
+     * @param seed the seed of random numbers.
      */
     public MersenneTwister64(long seed) {
         setSeed(seed);

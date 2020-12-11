@@ -121,7 +121,7 @@ public class SymmMatrix extends DMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof SymmMatrix)) {
+        if (!(o instanceof SymmMatrix)) {
             return false;
         }
 
