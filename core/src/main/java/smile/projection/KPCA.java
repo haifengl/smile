@@ -54,7 +54,7 @@ import smile.math.matrix.Matrix;
  * @see smile.manifold.IsoMap
  * @see smile.manifold.LLE
  * @see smile.manifold.LaplacianEigenmap
- * @see smile.mds.SammonMapping
+ * @see smile.manifold.SammonMapping
  *
  * @author Haifeng Li
  */

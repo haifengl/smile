@@ -22,7 +22,6 @@ package smile.validation.metric;
  * statistical measures of the performance of a binary classification test.
  * Sensitivity is the proportion of actual positives which are correctly
  * identified as such.
- * <p>
  * <pre>
  *     TPR = TP / P = TP / (TP + FN)
  * </pre>

@@ -111,8 +111,7 @@ public abstract class PartitionClustering implements Serializable {
      * of k-means. Although the initial selection in the algorithm takes extra time,
      * the k-means part itself converges very fast after this seeding and thus
      * the algorithm actually lowers the computation time too.
-     * 
-     * <h2>References</h2>
+     *
      * <ol>
      * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.</li>
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>

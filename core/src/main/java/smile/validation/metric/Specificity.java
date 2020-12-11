@@ -21,7 +21,6 @@ package smile.validation.metric;
  * Specificity (SPC) or True Negative Rate is a statistical measures of the
  * performance of a binary classification test. Specificity measures the
  * proportion of negatives which are correctly identified.
- * <p>
  * <pre>
  *     SPC = TN / N = TN / (FP + TN) = 1 - FPR
  * </pre>

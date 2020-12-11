@@ -24,7 +24,7 @@ import smile.association.TotalSupportTree.Node;
 
 /**
  * Association Rule Mining.
- * Let <code></code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
+ * Let <code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
  * be a set of n binary attributes called items. Let
  * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
  * be a set of transactions called the database. Each transaction in
@@ -114,6 +114,8 @@ public class ARM implements Iterable<AssociationRule> {
     /**
      * Mines the association rules.
      * @param confidence the confidence threshold for association rules.
+     * @param tree the FP-tree.
+     * @return the stream of association rules.
      */
     public static Stream<AssociationRule> apply(double confidence, FPTree tree) {
         TotalSupportTree ttree = new TotalSupportTree(tree);

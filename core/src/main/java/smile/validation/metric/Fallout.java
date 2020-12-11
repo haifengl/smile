@@ -19,7 +19,6 @@ package smile.validation.metric;
 
 /**
  * Fall-out, false alarm rate, or false positive rate (FPR)
- * <p>
  * <pre>
  *     FPR = FP / N = FP / (FP + TN)
  * </pre>

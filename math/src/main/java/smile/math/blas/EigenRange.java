@@ -41,6 +41,9 @@ public enum EigenRange {
         this.lapack = lapack;
     }
 
-    /** Returns the byte value for LAPACK. */
+    /**
+     * Returns the byte value for LAPACK.
+     * @return the byte value for LAPACK.
+     */
     public byte lapack() { return lapack; }
 }

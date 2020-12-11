@@ -19,9 +19,8 @@
  * Variogram functions. In spatial statistics the theoretical variogram
  * <code>2&gamma;(x,y)</code> is a function describing the degree of
  * spatial dependence of a spatial random field or stochastic process
- * <code>Z(x) * <p>. It is defined as the expected squared increment
+ * <code>Z(x)</code>. It is defined as the expected squared increment
  * of the values between locations x and y:
- * <p>
  * <pre>
  *     2&gamma;(x,y)=E(|Z(x)-Z(y)|<sup>2</sup>)
  * </pre>

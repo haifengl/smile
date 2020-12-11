@@ -119,7 +119,7 @@ public class Gamma {
 
     /**
      * Regularized Incomplete Gamma Function
-     * P(s,x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     * P(s,x) = <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
      */
     public static double regularizedIncompleteGamma(double s, double x) {
         if (s < 0.0) {
@@ -145,7 +145,7 @@ public class Gamma {
 
     /**
      * Regularized Upper/Complementary Incomplete Gamma Function
-     * Q(s,x) = 1 - P(s,x) = 1 - <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     * Q(s,x) = 1 - P(s,x) = 1 - <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
      */
     public static double regularizedUpperIncompleteGamma(double s, double x) {
         if (s < 0.0) {

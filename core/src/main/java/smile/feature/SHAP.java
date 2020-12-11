@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * In game theory, the Shapley value is the average expected marginal
  * contribution of one player after all possible combinations have
  * been considered.
- * <p>
+ *
  * <h2>References</h2>
  * <ol>
  * <li>Lundberg, Scott M., and Su-In Lee. A unified approach to interpreting model predictions. NIPS, 2017.</li>
