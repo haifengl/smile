@@ -33,10 +33,8 @@ import smile.data.type.DataTypes;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.math.matrix.Matrix;
-import smile.util.Paths;
 
 import static smile.data.formula.Terms.*;
-
 import static org.junit.Assert.*;
 
 /**
@@ -309,9 +307,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.abs(10000.), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.abs(230000.), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -341,9 +339,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.exp(1), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.exp(23), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -373,9 +371,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.log(10000), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.log(230000), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -405,9 +403,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.log10(10000), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.log10(230000), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -437,9 +435,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.sqrt(10000), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.sqrt(230000), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -453,9 +451,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.ceil(10000), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.ceil(230000), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -469,9 +467,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.floor(10000), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.floor(230000), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -485,9 +483,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.round(10000.), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.round(230000.), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
 
         Matrix matrix = formula.matrix(df);
         System.out.println(matrix);
@@ -514,9 +512,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(1, output.ncols());
         assertEquals(Math.signum(10000.), output.get(0,0));
-        assertEquals(null, output.get(1,0));
+        assertNull(output.get(1, 0));
         assertEquals(Math.signum(230000.), output.get(2,0));
-        assertEquals(null, output.get(3,0));
+        assertNull(output.get(3, 0));
     }
 
     @Test
@@ -546,9 +544,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
         assertEquals(10038., output.get(0,5));
-        assertEquals(null, output.get(1,5));
+        assertNull(output.get(1, 5));
         assertEquals(230048., output.get(2,5));
-        assertEquals(null, output.get(3,5));
+        assertNull(output.get(3, 5));
     }
 
     @Test
@@ -578,9 +576,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
         assertEquals(10000.-38, output.get(0,5));
-        assertEquals(null, output.get(1,5));
+        assertNull(output.get(1, 5));
         assertEquals(230000.-48, output.get(2,5));
-        assertEquals(null, output.get(3,5));
+        assertNull(output.get(3, 5));
     }
 
     @Test
@@ -610,9 +608,9 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
         assertEquals(10000.*38, output.get(0,5));
-        assertEquals(null, output.get(1,5));
+        assertNull(output.get(1, 5));
         assertEquals(230000.*48, output.get(2,5));
-        assertEquals(null, output.get(3,5));
+        assertNull(output.get(3, 5));
     }
 
     @Test
@@ -642,8 +640,8 @@ public class FormulaTest {
         assertEquals(df.size(), output.size());
         assertEquals(6, output.ncols());
         assertEquals(10000./38, output.get(0,5));
-        assertEquals(null, output.get(1,5));
+        assertNull(output.get(1, 5));
         assertEquals(230000./48, output.get(2,5));
-        assertEquals(null, output.get(3,5));
+        assertNull(output.get(3, 5));
     }
 }

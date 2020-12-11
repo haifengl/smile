@@ -23,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,7 +139,7 @@ public class DataFrameTest {
     public void testNames() {
         System.out.println("names");
         String[] names = {"age", "birthday", "gender", "name", "salary"};
-        assertTrue(Arrays.equals(names, df.names()));
+        assertArrayEquals(names, df.names());
     }
 
     /**
@@ -150,7 +149,7 @@ public class DataFrameTest {
     public void testTypes() {
         System.out.println("names");
         DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.object(Double.class)};
-        assertTrue(Arrays.equals(types, df.types()));
+        assertArrayEquals(types, df.types());
     }
 
     /**
@@ -168,14 +167,14 @@ public class DataFrameTest {
         assertEquals(10000., two.get(0).get(4));
         assertEquals(13, two.get(3).getInt(0));
         assertEquals("Amy", two.get(3).getString(3));
-        assertEquals(null, two.get(3).get(4));
+        assertNull(two.get(3).get(4));
 
         assertEquals(38, two.getInt(4, 0));
         assertEquals("Alex", two.getString(4, 3));
         assertEquals(10000., two.get(4, 4));
         assertEquals(13, two.getInt(7, 0));
         assertEquals("Amy", two.getString(7, 3));
-        assertEquals(null, two.get(7, 4));
+        assertNull(two.get(7, 4));
     }
 
     /**
@@ -195,7 +194,7 @@ public class DataFrameTest {
         assertEquals("MS", two.get(0, 5));
         assertEquals(13, two.getInt(3, 0));
         assertEquals("Amy", two.getString(3, 3));
-        assertEquals(null, two.get(3, 4));
+        assertNull(two.get(3, 4));
         assertEquals("Middle School", two.get(3, 5));
     }
 
@@ -212,14 +211,14 @@ public class DataFrameTest {
         assertEquals(10000., df.get(0).get(4));
         assertEquals(13, df.get(3).getInt(0));
         assertEquals("Amy", df.get(3).getString(3));
-        assertEquals(null, df.get(3).get(4));
+        assertNull(df.get(3).get(4));
 
         assertEquals(38, df.get(0,0));
         assertEquals("Alex", df.get(0,3));
         assertEquals(10000., df.get(0,4));
         assertEquals(13, df.get(3,0));
         assertEquals("Amy", df.get(3,3));
-        assertEquals(null, df.get(3,4));
+        assertNull(df.get(3, 4));
     }
 
     /**

@@ -49,7 +49,7 @@ public class GeneticAlgorithmTest {
     public void tearDown() {
     }
 
-    class Knapnack implements Fitness<BitString> {
+    static class Knapnack implements Fitness<BitString> {
 
         int limit = 9; // weight limit
         int[] weight = {2, 3, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};

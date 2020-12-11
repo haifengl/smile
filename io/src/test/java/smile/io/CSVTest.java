@@ -55,10 +55,7 @@ public class CSVTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testUsps() throws Exception {
         System.out.println("usps");
         CSVFormat format = CSVFormat.newFormat(' ');
@@ -90,10 +87,7 @@ public class CSVTest {
         assertEquals(1.0000, usps.getDouble(7290, 7), 1E-7);
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testGdp() throws Exception {
         System.out.println("gdp");
 
@@ -126,10 +120,7 @@ public class CSVTest {
         assertEquals(8.1, gdp.getDouble(67, 3), 1E-7);
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testDiabetes() throws Exception {
         System.out.println("diabetes");
 
@@ -160,10 +151,7 @@ public class CSVTest {
         assertEquals(-0.0730303027164164, diabetes.getDouble(441, 3), 1E-10);
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testProstate() throws Exception {
         System.out.println("prostate");
 
@@ -201,10 +189,7 @@ public class CSVTest {
         assertEquals(1.55814462, prostate.getDouble(66, 3), 1E-7);
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testAbalone() throws Exception {
         System.out.println("abalone");
 
@@ -235,10 +220,7 @@ public class CSVTest {
         assertEquals(10, abalone.getInt(3132, 8));
     }
 
-    /**
-     * Test of read method, of class CSV.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testUserdata() throws Exception {
         System.out.println("userdata");
 

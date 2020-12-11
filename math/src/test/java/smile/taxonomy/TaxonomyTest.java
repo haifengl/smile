@@ -32,11 +32,11 @@ import static org.junit.Assert.*;
  */
 public class TaxonomyTest {
 
-    Taxonomy instance = null;
+    Taxonomy taxonomy = new Taxonomy();
     Concept a, b, c, d, e, f, ad;
 
     public TaxonomyTest() {
-        instance = new Taxonomy();
+
     }
 
     @BeforeClass
@@ -63,7 +63,7 @@ public class TaxonomyTest {
         // Creating Taxonomy
         String[] concepts = {"A", "B", "C", "D", "E", "F"};
 
-        Concept root = instance.getRoot();
+        Concept root = taxonomy.getRoot();
         ad = root.addChild("");
         e = root.addChild("E");
         d = ad.addChild("D");
@@ -85,8 +85,8 @@ public class TaxonomyTest {
         System.out.println();
 
         System.out.println();
-        for (int i = 0; i < concepts.length; i++) {
-            System.out.println(instance.getConcept(concepts[i]));
+        for (String concept : concepts) {
+            System.out.println(taxonomy.getConcept(concept));
         }
         System.out.println();
     }
@@ -95,27 +95,21 @@ public class TaxonomyTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of lowestCommonAncestor method, of class Taxonomy.
-     */
     @Test
     public void testLowestCommonAncestor() {
         System.out.println("lowestCommonAncestor");
-        Concept result = instance.lowestCommonAncestor("A", "B");
+        Concept result = taxonomy.lowestCommonAncestor("A", "B");
         assertEquals(a, result);
 
-        result = instance.lowestCommonAncestor("E", "B");
-        assertEquals(instance.getRoot(), result);
+        result = taxonomy.lowestCommonAncestor("E", "B");
+        assertEquals(taxonomy.getRoot(), result);
     }
 
-    /**
-     * Test of getPathToRoot method, of class Taxonomy.
-     */
     @Test
     public void testGetPathToRoot() {
         System.out.println("getPathToRoot");
         LinkedList<Concept> expResult = new LinkedList<>();
-        expResult.addFirst(instance.getRoot());
+        expResult.addFirst(taxonomy.getRoot());
         expResult.addFirst(ad);
         expResult.addFirst(a);
         expResult.addFirst(c);
@@ -124,14 +118,11 @@ public class TaxonomyTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of getPathFromRoot method, of class Taxonomy.
-     */
     @Test
     public void testGetPathFromRoot() {
         System.out.println("getPathToRoot");
         LinkedList<Concept> expResult = new LinkedList<>();
-        expResult.add(instance.getRoot());
+        expResult.add(taxonomy.getRoot());
         expResult.add(ad);
         expResult.add(a);
         expResult.add(c);
@@ -140,13 +131,10 @@ public class TaxonomyTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of distance method, of class TaxonomicDistance.
-     */
     @Test
     public void testDistance() {
         System.out.println("distance");
-        TaxonomicDistance td = new TaxonomicDistance(instance);
+        TaxonomicDistance td = new TaxonomicDistance(taxonomy);
         assertEquals(2.0, td.d("A", "F"), 1E-9);
         assertEquals(5.0, td.d("E", "F"), 1E-9);
     }

@@ -53,10 +53,7 @@ public class SASTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testAirline() throws Exception {
         System.out.println("airline");
 
@@ -69,8 +66,8 @@ public class SASTest {
         assertEquals(6, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(1948, df.getDouble(0, 0), 1E-6);
@@ -78,10 +75,7 @@ public class SASTest {
         assertEquals(0.243, df.getDouble(0, 2), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testFlorida() throws Exception {
         System.out.println("florida");
 
@@ -94,8 +88,8 @@ public class SASTest {
         assertEquals(6, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(0, df.getDouble(0, 0), 1E-6);
@@ -103,10 +97,7 @@ public class SASTest {
         assertEquals(34062, df.getDouble(0, 2), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testGlod() throws Exception {
         System.out.println("gold");
 
@@ -119,8 +110,8 @@ public class SASTest {
         assertEquals(1, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(-0.731528, df.getDouble(0, 0), 1E-6);
@@ -128,10 +119,7 @@ public class SASTest {
         assertEquals(-0.462609, df.getDouble(2, 0), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testGolf() throws Exception {
         System.out.println("golf");
 
@@ -144,18 +132,15 @@ public class SASTest {
         assertEquals(2, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(-5, df.getDouble(0, 0), 1E-6);
         assertEquals(2, df.getDouble(0, 1), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testJobs() throws Exception {
         System.out.println("jobs");
 
@@ -168,18 +153,15 @@ public class SASTest {
         assertEquals(2, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(5.63, df.getDouble(0, 0), 1E-6);
         assertEquals(104.629997, df.getDouble(0, 1), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testMeat() throws Exception {
         System.out.println("meta");
 
@@ -192,8 +174,8 @@ public class SASTest {
         assertEquals(5, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(121.300003, df.getDouble(0, 0), 1E-6);
@@ -201,10 +183,7 @@ public class SASTest {
         assertEquals(25.68, df.getDouble(0, 2), 1E-6);
     }
 
-    /**
-     * Test of read method, of class SAS.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testTax() throws Exception {
         System.out.println("tax");
 
@@ -217,8 +196,8 @@ public class SASTest {
         assertEquals(4, df.ncols());
 
         StructField[] fields = df.schema().fields();
-        for (int i = 0; i < fields.length; i++) {
-            assertEquals(DataTypes.DoubleType, fields[i].type);
+        for (StructField field : fields) {
+            assertEquals(DataTypes.DoubleType, field.type);
         }
 
         assertEquals(9.215, df.getDouble(0, 0), 1E-6);

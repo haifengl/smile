@@ -52,7 +52,7 @@ public class BinarySparseDatasetTest {
     }
 
     @Test
-    public void testParse() throws Exception {
+    public void testParse() {
         System.out.println("from");
         try {
             BinarySparseDataset data = BinarySparseDataset.from(smile.util.Paths.getTestData("transaction/kosarak.dat"));
@@ -75,7 +75,7 @@ public class BinarySparseDatasetTest {
             assertEquals(0, sm.get(0, 4), 1E-16);
             assertEquals(1, sm.get(990001, 1056), 1E-16);
         } catch (Exception ex) {
-            assertTrue(String.format("Unexpected exception: %s", ex), false);
+            ex.printStackTrace();
         }
     }
 }

@@ -15,7 +15,7 @@
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package smile.math.blas.mkl;
+package smile.math.matrix;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -25,7 +25,9 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-import smile.math.matrix.Matrix;
+
+import java.util.Arrays;
+
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
@@ -126,7 +128,7 @@ public class MatrixTest {
         Matrix t = matrix.transpose();
         assertEquals(Layout.COL_MAJOR, matrix.layout());
         assertEquals(Layout.ROW_MAJOR, t.layout());
-        assertEquals(false, t.isSubmatrix());
+        assertFalse(t.isSubmatrix());
         assertEquals(3, t.nrows());
         assertEquals(3, t.ncols());
 
@@ -141,15 +143,15 @@ public class MatrixTest {
     @Test
     public void testSubmatrix() {
         Matrix sub = matrix.submatrix(0, 1, 2, 2);
-        assertEquals(false, matrix.isSubmatrix());
-        assertEquals(true, sub.isSubmatrix());
+        assertFalse(matrix.isSubmatrix());
+        assertTrue(sub.isSubmatrix());
         assertEquals(3, sub.nrows());
         assertEquals(2, sub.ncols());
         assertEquals(0.4, sub.get(0,0), 1E-7f);
         assertEquals(0.8, sub.get(2,1), 1E-7f);
 
         Matrix sub2 = sub.submatrix(0, 0, 1, 1);
-        assertEquals(true, sub2.isSubmatrix());
+        assertTrue(sub2.isSubmatrix());
         assertEquals(2, sub2.nrows());
         assertEquals(2, sub2.ncols());
         assertEquals(0.4, sub.get(0,0), 1E-7f);
@@ -190,7 +192,7 @@ public class MatrixTest {
     public void testAxpy() {
         System.out.println("axpy");
         double[] d = new double[matrix.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         matrix.mv(NO_TRANSPOSE, 1.0, b, 1.0, d);
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
@@ -201,7 +203,7 @@ public class MatrixTest {
     public void testAxpy2() {
         System.out.println("axpy b = 2");
         double[] d = new double[matrix.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         matrix.mv(NO_TRANSPOSE, 1.0, b, 2.0, d);
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
@@ -222,7 +224,7 @@ public class MatrixTest {
     public void testAtxpy() {
         System.out.println("atxpy");
         double[] d = new double[matrix.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         matrix.mv(TRANSPOSE, 1.0, b, 1.0, d);
         assertEquals(1.65, d[0], 1E-7f);
         assertEquals(1.60, d[1], 1E-7f);
@@ -233,7 +235,7 @@ public class MatrixTest {
     public void testAtxpy2() {
         System.out.println("atxpy b = 2");
         double[] d = new double[matrix.nrows()];
-        for (int i = 0; i < d.length; i++) d[i] = 1.0f;
+        Arrays.fill(d, 1.0f);
         matrix.mv(TRANSPOSE, 1.0, b, 2.0, d);
         assertEquals(2.65, d[0], 1E-7f);
         assertEquals(2.60, d[1], 1E-7f);
@@ -507,9 +509,9 @@ public class MatrixTest {
         for (int i = 0; i < eigenValues.length; i++) {
             assertEquals(eigenValues[i], eig.wr[i], 1E-7f);
         }
-        assertEquals(null, eig.wi);
-        assertEquals(null, eig.Vl);
-        assertEquals(null, eig.Vr);
+        assertNull(eig.wi);
+        assertNull(eig.Vl);
+        assertNull(eig.Vr);
     }
 
     @Test
@@ -548,8 +550,8 @@ public class MatrixTest {
             assertEquals(0.0, eig.wi[i], 1E-7f);
         }
 
-        assertEquals(null, eig.Vl);
-        assertEquals(null, eig.Vr);
+        assertNull(eig.Vl);
+        assertNull(eig.Vr);
     }
 
     @Test

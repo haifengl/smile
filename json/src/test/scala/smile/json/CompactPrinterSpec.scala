@@ -73,7 +73,7 @@ class CompactPrinterSpec extends Specification {
         mustEqual """[null,1.23,{"key":true}]"""
       )
     "properly print a JSON padding (JSONP) if requested" in {
-      CompactPrinter(JsTrue, Some("customCallback")) mustEqual("customCallback(true)")
+      CompactPrinter(JsTrue, Some("customCallback")) mustEqual "customCallback(true)"
     }
   }
 }

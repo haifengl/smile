@@ -22,13 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import smile.data.type.DataType;
-import smile.data.type.DataTypes;
 import static org.junit.Assert.*;
 
 /**
@@ -56,55 +49,37 @@ public class DataTypeTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testInt() throws ClassNotFoundException {
         System.out.println("int");
         assertEquals(DataTypes.IntegerType, DataType.of("int"));
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testLong() throws ClassNotFoundException {
         System.out.println("long");
         assertEquals(DataTypes.LongType, DataType.of("long"));
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testDouble() throws ClassNotFoundException {
         System.out.println("double");
         assertEquals(DataTypes.DoubleType, DataType.of("double"));
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testArray() throws ClassNotFoundException {
         System.out.println("array");
         assertEquals(DataTypes.array(DataTypes.IntegerType), DataType.of("Array[int]"));
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testObject() throws ClassNotFoundException {
         System.out.println("object");
         assertEquals(DataTypes.object(Integer.class), DataType.of("Object[java.lang.Integer]"));
     }
 
-    /**
-     * Test of of method, of class DataType.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testStruct() throws ClassNotFoundException {
         System.out.println("struct");
         StructType type = DataTypes.struct(

@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 
 /**
  *
@@ -65,8 +67,7 @@ public class PowerIterationTest {
     public void testEigen() {
         System.out.println("Eigen");
         double[] v = new double[3];
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
+        Arrays.fill(v, 1.0);
 
         double eigenvalue = PowerIteration.eigen(new Matrix(A), v);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
@@ -81,9 +82,7 @@ public class PowerIterationTest {
                 A[i][j] = -A[i][j];
         }
 
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
-
+        Arrays.fill(v, 1.0);
         eigenvalue = PowerIteration.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 

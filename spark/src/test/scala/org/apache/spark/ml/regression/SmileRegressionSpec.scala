@@ -56,7 +56,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
       val temp = Files.createTempFile("smile-test-", ".tmp")
       val path = temp.normalize().toString
       model.write.overwrite().save(path)
-      temp.toFile().deleteOnExit()
+      temp.toFile.deleteOnExit()
 
       val loaded = SmileRegressionModel.load(path)
       eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))

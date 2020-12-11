@@ -23,7 +23,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -140,7 +139,7 @@ public class IndexDataFrameTest {
     public void testNames() {
         System.out.println("names");
         String[] names = {"age", "birthday", "gender", "name", "salary"};
-        assertTrue(Arrays.equals(names, df.names()));
+        assertArrayEquals(names, df.names());
     }
 
     /**
@@ -150,7 +149,7 @@ public class IndexDataFrameTest {
     public void testTypes() {
         System.out.println("names");
         DataType[] types = {DataTypes.IntegerType, DataTypes.DateType, DataTypes.ByteType, DataTypes.StringType, DataTypes.object(Double.class)};
-        assertTrue(Arrays.equals(types, df.types()));
+        assertArrayEquals(types, df.types());
     }
 
     /**
@@ -167,10 +166,10 @@ public class IndexDataFrameTest {
         assertEquals(230000., df.get(0, 4));
         assertEquals(23, df.getInt(1, 0));
         assertEquals("Bob", df.getString(1, 3));
-        assertEquals(null, df.get(1, 4));
+        assertNull(df.get(1, 4));
         assertEquals(13, df.getInt(2, 0));
         assertEquals("Amy", df.getString(2, 3));
-        assertEquals(null, df.get(2, 4));
+        assertNull(df.get(2, 4));
         assertEquals(48, df.getInt(3, 0));
         assertEquals("Jane", df.getString(3, 3));
         assertEquals(230000., df.get(3, 4));

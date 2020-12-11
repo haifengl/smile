@@ -64,8 +64,7 @@ public class IQAgentTest {
         MathEx.permutate(data);
         
         IQAgent instance = new IQAgent();
-        for (int i = 0; i < data.length; i++)
-            instance.add(data[i]);
+        for (double datum : data) instance.add(datum);
 
         for (int i = 1; i <= 100; i++) {
             System.out.println(i + "%\t" + instance.quantile(i/100.0) + "\t" + Math.abs(1-instance.quantile(i/100.0)/(i*1000)));
