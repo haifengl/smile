@@ -25,7 +25,7 @@ import smile.math.special.Gamma;
  * in reliability engineering. It is a versatile distribution that can take on
  * the characteristics of other types of distributions, based on the value of
  * the shape parameter. The distribution has two parameters: {@code k > 0}
- * is the shape parameter and &lambda;{@code > 0} is the scale parameter
+ * is the shape parameter and &lambda; {@code > 0} is the scale parameter
  * of the distribution. The probability density function is
  * f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)^k</sup>
  * for {@code x >= 0}.

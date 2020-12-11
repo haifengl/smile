@@ -23,9 +23,9 @@ import smile.util.SparseArray;
 /**
  * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
  * <p>
- *     k(u, v) = exp(-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>))
+ *     k(u, v) = exp(-||u-v||<sup>2</sup> / 2&sigma;<sup>2</sup>)
  * <p>
- * where &sigma;{@code > 0} is the scale parameter of the kernel.
+ * where &sigma; {@code > 0} is the scale parameter of the kernel.
  * <p>
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being over used.

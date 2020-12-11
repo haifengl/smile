@@ -110,6 +110,7 @@ public class DecisionNode extends LeafNode {
 
     /**
      * Returns the impurity of node.
+     * @param rule the node split rule.
      * @return  the impurity of node
      */
     public double impurity(SplitRule rule) {
@@ -118,6 +119,7 @@ public class DecisionNode extends LeafNode {
 
     /**
      * Returns the impurity of samples.
+     * @param rule the node split rule.
      * @param size the number of samples.
      * @param count the number of samples in each class.
      * @return  the impurity of node

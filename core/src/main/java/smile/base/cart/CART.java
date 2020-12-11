@@ -401,8 +401,8 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      * @param node the node to split.
      * @param column the column to split on.
      * @param impurity the impurity of node.
-     * @param lo the lower bound of data index in the node.
-     * @param hi the upper bound of data index in the node.
+     * @param lo the lower bound of sample index in the node.
+     * @param hi the upper bound of sample index in the node.
      * @return the best split.
      */
     protected abstract Optional<Split> findBestSplit(LeafNode node, int column, double impurity, int lo, int hi);
