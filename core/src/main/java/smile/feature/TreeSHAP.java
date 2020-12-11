@@ -32,11 +32,15 @@ import smile.data.formula.Formula;
 public interface TreeSHAP extends SHAP<Tuple> {
 
     /**
-     * Returns the classification/regression trees.
+     * Returns the decision trees.
+     * @return the decision trees.
      */
     CART[] trees();
 
-    /** Returns the formula associated with the model. */
+    /**
+     * Returns the formula associated with the model.
+     * @return the model formula.
+     */
     Formula formula();
 
     @Override
@@ -66,6 +70,8 @@ public interface TreeSHAP extends SHAP<Tuple> {
 
     /**
      * Returns the average of absolute SHAP values over a data frame.
+     * @param data the data.
+     * @return the average of absolute SHAP values.
      */
     default double[] shap(DataFrame data) {
         // Binds the formula to the data frame's schema in case that

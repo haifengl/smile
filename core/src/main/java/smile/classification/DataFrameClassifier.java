@@ -54,9 +54,15 @@ public interface DataFrameClassifier {
         return y;
     }
 
-    /** Returns the formula associated with the model. */
+    /**
+     * Returns the formula associated with the model.
+     * @return the formula associated with the model.
+     */
     Formula formula();
 
-    /** Returns the design matrix schema. */
+    /**
+     * Returns the design matrix schema.
+     * @return the design matrix schema.
+     */
     StructType schema();
 }

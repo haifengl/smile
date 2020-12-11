@@ -42,16 +42,19 @@ public interface Loss {
     /**
      * Returns the intercept of model.
      * @param y the response variable.
+     * @return the intercept of model.
      */
     double intercept(double[] y);
 
     /**
      * Returns the response variable for next iteration.
+     * @return the response variable for next iteration.
      */
     double[] response();
 
     /**
      * Returns the residual vector.
+     * @return the residual vector.
      */
     double[] residual();
 
@@ -87,8 +90,9 @@ public interface Loss {
     }
 
     /**
-     * Least squares regression. Least-squares is highly efficient for
+     * Least squares regression loss. Least-squares is highly efficient for
      * normally distributed errors but is prone to long tails and outliers.
+     * @return the least square regression loss.
      */
     static Loss ls() {
         return new Loss() {
@@ -138,8 +142,9 @@ public interface Loss {
     }
 
     /**
-     * Least squares regression. Least-squares is highly efficient for
+     * Least squares regression loss. Least-squares is highly efficient for
      * normally distributed errors but is prone to long tails and outliers.
+     * @return the least square regression loss.
      */
     static Loss ls(double[] y) {
         return new Loss() {
@@ -181,13 +186,14 @@ public interface Loss {
     }
 
     /**
-     * Quantile regression. The gradient tree boosting based
+     * Quantile regression loss. The gradient tree boosting based
      * on this loss function is highly robust. The trees use only order
      * information on the input variables and the pseudo-response has only
      * two values {-1, +1}. The line searches (terminal node values) use
      * only specified quantile ratio.
      *
      * @param p the percentile.
+     * @return the quantile regression loss.
      */
     static Loss quantile(double p) {
         if (p <= 0.0 || p >= 1.0) {
@@ -242,11 +248,12 @@ public interface Loss {
     }
 
     /**
-     * Least absolute deviation regression. The gradient tree boosting based
+     * Least absolute deviation regression loss. The gradient tree boosting based
      * on this loss function is highly robust. The trees use only order
      * information on the input variables and the pseudo-response has only
      * two values {-1, +1}. The line searches (terminal node values) use
      * only medians. This is a special case of quantile regression of q = 0.5.
+     * @return the least absolute deviation regression loss.
      */
     static Loss lad() {
         return new Loss() {
@@ -301,6 +308,7 @@ public interface Loss {
      * long-tailed error distributions and outliers while maintaining high
      * efficiency for normally distributed errors.
      * @param p of residuals
+     * @return the Huber loss.
      */
     static Loss huber(double p) {
         if (p <= 0.0 || p >= 1.0) {
@@ -378,6 +386,7 @@ public interface Loss {
     /**
      * Logistic regression loss for binary classification.
      * @param labels the class labels.
+     * @return the logistic regression loss for binary classification.
      */
     static Loss logistic(int[] labels) {
         int n = labels.length;
@@ -437,6 +446,7 @@ public interface Loss {
      * @param k the number of classes.
      * @param labels the class labels.
      * @param p the posteriori probabilities.
+     * @return the logistic regression loss for multi-class classification.
      */
     static Loss logistic(int c, int k, int[] labels, double[][] p) {
         int n = labels.length;
@@ -491,7 +501,10 @@ public interface Loss {
         };
     }
 
-    /** Parses the loss. */
+    /**
+     * Parses the loss.
+     * @param s the string specification of loss.
+     */
     static Loss valueOf(String s) {
         switch (s) {
             case "LeastSquares": return ls();
