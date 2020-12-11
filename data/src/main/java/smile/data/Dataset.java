@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collector;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.math.matrix.Matrix;
 
@@ -69,6 +70,14 @@ public interface Dataset<T> {
      * @return a (possibly parallel) Stream with this collection as its source.
      */
     Stream<T> stream();
+
+    /**
+     * Returns the <code>List</code> of data items.
+     * @return the <code>List</code> of data items.
+     */
+    default List<T> toList() {
+        return stream().collect(Collectors.toList());
+    }
 
     /**
      * Returns the string representation of the row.
