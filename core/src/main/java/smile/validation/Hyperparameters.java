@@ -38,7 +38,6 @@ import smile.math.MathEx;
  * while learning rate and mini-batch size are algorithm hyperparameters.
  * <p>
  * The below example shows how to tune the hyperparameters of random forest.
- * <p>
  * <pre>
  * {@code
  *    import smile.io.*;

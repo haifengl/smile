@@ -26,7 +26,6 @@ import smile.math.matrix.Matrix;
  * Probabilistic principal component analysis. Probabilistic PCA is
  * a simplified factor analysis that employs a latent variable model
  * with linear relationship:
- * <p>
  * <pre>
  *     y &sim; W * x + &mu; + &epsilon;
  * </pre>

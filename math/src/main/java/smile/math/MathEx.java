@@ -3992,12 +3992,9 @@ public class MathEx {
 
     /**
      * Solve the tridiagonal linear set which is of diagonal dominance
-     * <p>
      * <pre>
      *     |b<sub>i</sub>| &gt; |a<sub>i</sub>| + |c<sub>i</sub>|.
-     * </pre>
-     * <p>
-     * <pre>
+     *
      *     | b0 c0  0  0  0 ...                        |
      *     | a1 b1 c1  0  0 ...                        |
      *     |  0 a2 b2 c2  0 ...                        |

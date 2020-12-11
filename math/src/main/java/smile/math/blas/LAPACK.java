@@ -34,13 +34,19 @@ public interface LAPACK {
     /** The default LAPACK engine. */
     LAPACK engine = getInstance();
 
-    /** Creates an instance. */
+    /**
+     * Creates an instance.
+     * @return a LAPACK instance.
+     */
     static LAPACK getInstance() {
         LAPACK mkl = MKL();
         return mkl != null ? mkl : new smile.math.blas.openblas.OpenBLAS();
     }
 
-    /** Creates an MKL instance. */
+    /**
+     * Creates an MKL instance.
+     * @return a LAPACK instance of MKL.
+     */
     static LAPACK MKL() {
         org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LAPACK.class);
 

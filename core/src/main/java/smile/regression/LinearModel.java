@@ -362,7 +362,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
     /**
      * Recursive least squares. RLS updates an ordinary least squares with
      * samples that arrive sequentially.
-     *
+     * <p>
      * In some adaptive configurations it can be useful not to give equal
      * importance to all the historical data but to assign higher weights
      * to the most recent data (and then to forget the oldest one). This
@@ -370,11 +370,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * or when we want to approximate a nonlinear dependence by using a
      * linear model which is local in time. Both these situations are common
      * in adaptive control problems.
-     *
-     * <h2>References</h2>
-     * <ol>
-     * <li> https://www.otexts.org/1582 </li>
-     * </ol>
      *
      * @param x training instance.
      * @param y response variable.

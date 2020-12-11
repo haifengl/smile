@@ -37,6 +37,11 @@ import static smile.math.blas.Side.*;
 import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.*;
 
+/**
+ * Dense matrix of single precision values.
+ *
+ * @author Haifeng Li
+ */
 public class FloatMatrix extends SMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);

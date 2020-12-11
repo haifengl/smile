@@ -34,40 +34,40 @@ import smile.sort.QuickSort;
  * Three common types of correlation are Pearson, Spearman (for ranked data)
  * and Kendall (for uneven or multiple rankings), and can be selected using
  * the table below.
- * <table summary="" border="1" style="border-collapse: collapse" cellspacing="0" id="table3">
+ * <table border="1" style="border-collapse: collapse" id="table3">
  *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
+ *     <td colspan="2">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">
  *     Parametric variables follow normal distribution and linear
  *     relationship between x and y)</td>
  *   </tr>
  *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
+ *     <td>
  *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
  *     <td>
  *     <p style="margin-left: 2px; margin-right: 2px">Pearson correlation</td>
  *   </tr>
  *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
+ *     <td>
  *     <p style="margin-top: 0; margin-bottom: 0">N</td>
  *     <td width="*" align="left">
  * <table summary="" border="1" style="border-collapse: collapse" width="100%" cellspacing="0" id="table4">
  *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
+ *     <td colspan="2">
  *     <p align="left" style="margin-top: 0; margin-bottom: 0">Equidistant
  *     positions on variables measured?</td>
  *   </tr>
  *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
+ *     <td>
  *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
  *     <td>
  *     <p style="margin-left: 2px; margin-right: 2px">
  *     Spearman correlation</td>
  *   </tr>
  *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
+ *     <td>
  *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
+ *     <td>
  *     <p style="margin-left: 2px; margin-right: 2px">Kendall correlation</td>
  *   </tr>
  * </table>
