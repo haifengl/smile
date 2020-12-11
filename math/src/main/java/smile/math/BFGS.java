@@ -452,7 +452,7 @@ public class BFGS {
      * @param p the search direction.
      *
      * @param x on output, it contains <code>xold + &gamma;*p</code>, where
-     *          &gamma;{@code > 0} is the step length.
+     *          &gamma; {@code > 0} is the step length.
      *
      * @param stpmax specify upper bound for the step in the line search so that
      *          we do not try to evaluate the function in regions where it is

@@ -144,6 +144,7 @@ public interface Loss {
     /**
      * Least squares regression loss. Least-squares is highly efficient for
      * normally distributed errors but is prone to long tails and outliers.
+     * @param y the response variable.
      * @return the least square regression loss.
      */
     static Loss ls(double[] y) {
@@ -504,6 +505,7 @@ public interface Loss {
     /**
      * Parses the loss.
      * @param s the string specification of loss.
+     * @return the loss function.
      */
     static Loss valueOf(String s) {
         switch (s) {

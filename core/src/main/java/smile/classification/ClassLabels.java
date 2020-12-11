@@ -45,7 +45,12 @@ public class ClassLabels implements Serializable {
     /** The estimated priori probabilities. */
     public final double[] priori;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param k The number of classes.
+     * @param y The sample class id in [0, k).
+     * @param labels The class labels.
+     */
     public ClassLabels(int k, int[] y, IntSet labels) {
         this.k = k;
         this.y = y;
@@ -59,7 +64,10 @@ public class ClassLabels implements Serializable {
         }
     }
 
-    /** Returns the nominal scale for the class labels. */
+    /**
+     * Returns the nominal scale for the class labels.
+     * @return the nominal scale for the class labels.
+     */
     public NominalScale scale() {
         String[] values = new String[labels.size()];
         for (int i = 0; i < labels.size(); i++) {
@@ -68,7 +76,11 @@ public class ClassLabels implements Serializable {
         return new NominalScale(values);
     }
 
-    /** Maps the class labels to index. */
+    /**
+     * Maps the class labels to index.
+     * @param y the sample labels.
+     * @return the indices of labels.
+     */
     public int[] indexOf(int[] y) {
         int[] x = new int[y.length];
         for (int i = 0; i < y.length; i++) {
@@ -79,6 +91,8 @@ public class ClassLabels implements Serializable {
 
     /**
      * Learns the class label mapping from samples.
+     * @param y the sample labels.
+     * @return the class label mapping.
      */
     public static ClassLabels fit(int[] y) {
         int[] labels = MathEx.unique(y);
@@ -99,6 +113,8 @@ public class ClassLabels implements Serializable {
 
     /**
      * Learns the class label mapping from samples.
+     * @param response the sample labels.
+     * @return the class label mapping.
      */
     public static ClassLabels fit(BaseVector response) {
         int[] y = response.toIntArray();

@@ -140,6 +140,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -150,6 +151,8 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.adaboost.trees", "500"));
@@ -169,6 +172,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, setting nodeSize = 5 generally gives good results.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize) {
         if (ntrees < 1) {
@@ -293,6 +297,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
 
     /**
      * Returns the decision trees.
+     * @return the decision trees.
      */
     public DecisionTree[] trees() {
         return trees;
@@ -357,7 +362,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
     
     /**
      * Test the model on a validation dataset.
-     * 
+     * @param data the validation data.
      * @return the predictions with first 1, 2, ..., decision trees.
      */
     public int[][] test(DataFrame data) {

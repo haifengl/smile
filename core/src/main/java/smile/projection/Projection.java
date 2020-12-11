@@ -29,11 +29,15 @@ package smile.projection;
 public interface Projection<T> {
     /**
      * Project a data point to the feature space.
+     * @param x the data point.
+     * @return the projection in the feature space.
      */
     double[] project(T x);
 
     /**
      * Project a set of data to the feature space.
+     * @param x the data set.
+     * @return the projection in the feature space.
      */
     double[][] project(T[] x);
 }

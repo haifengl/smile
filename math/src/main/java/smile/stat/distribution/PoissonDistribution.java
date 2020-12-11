@@ -29,7 +29,7 @@ import smile.math.special.Gamma;
  * occurrences in this interval is &lambda;, then the probability that there
  * are exactly n occurrences (n = 0, 1, 2, ...) is equal to
  * f(n; &lambda;) = &lambda;<sup>n</sup> e<sup>-&lambda;</sup> / n!.
- * For sufficiently large values of &lambda;, (say &lambda;{@code > 1000}), the normal
+ * For sufficiently large values of &lambda;, (say &lambda; {@code > 1000}), the normal
  * distribution with mean &lambda; and variance &lambda;, is an excellent
  * approximation to the Poisson distribution. If &lambda; is greater than about
  * 10, then the normal distribution is a good approximation if an appropriate

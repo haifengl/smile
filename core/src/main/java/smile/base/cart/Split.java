@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
  * @author Haifeng Li
  */
 public abstract class Split {
+    /** The comparator on the split score. */
     public static Comparator<Split> comparator = Comparator.comparingDouble(x -> x.score);
 
     /** The node associated with this split. */
@@ -84,7 +85,16 @@ public abstract class Split {
     /** The depth of node in the tree. */
     int depth = 1;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param leaf the node to split.
+     * @param feature the index of feature column.
+     * @param score the split score.
+     * @param lo the lower bound of sample index in the node.
+     * @param hi the upper bound of sample index in the node.
+     * @param trueCount the number of samples in true branch child.
+     * @param falseCount the number of samples false branch child.
+     */
     public Split(LeafNode leaf, int feature, double score, int lo, int hi, int trueCount, int falseCount) {
         this.leaf = leaf;
         this.feature = feature;
@@ -103,7 +113,10 @@ public abstract class Split {
      */
     public abstract InternalNode toNode(Node trueChild, Node falseChild);
 
-    /** Returns the lambda that tests on the split feature. */
+    /**
+     * Returns the lambda that tests on the split feature.
+     * @return the lambda that tests on the split feature.
+     */
     public abstract IntPredicate predicate();
 
     @Override

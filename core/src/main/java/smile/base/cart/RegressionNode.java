@@ -59,17 +59,26 @@ public class RegressionNode extends LeafNode {
         this.rss = rss;
     }
 
-    /** Returns the predicted value. */
+    /**
+     * Returns the predicted value.
+     * @return the predicted value.
+     */
     public double output() {
         return output;
     }
 
-    /** Returns the mean of response variable. */
+    /**
+     * Returns the mean of response variable.
+     * @return the mean of response variable.
+     */
     public double mean() {
         return mean;
     }
 
-    /** Returns the residual sum of squares. */
+    /**
+     * Returns the residual sum of squares.
+     * @return the residual sum of squares.
+     */
     public double impurity() {
         return rss;
     }

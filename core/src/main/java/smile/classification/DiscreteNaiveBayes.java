@@ -281,6 +281,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param priori the priori probability of each class.
      * @param p the dimensionality of input space.
      * @param sigma the prior count of add-k smoothing of evidence.
+     * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, double[] priori, int p, double sigma, IntSet labels) {
         if (p <= 0) {
@@ -325,6 +326,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;
