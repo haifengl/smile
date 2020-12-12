@@ -82,6 +82,7 @@ public class IsotonicRegressionScaling implements Serializable {
      *
      * @param scores The predicted scores.
      * @param y      The training labels.
+     * @return the model.
      */
     public static IsotonicRegressionScaling fit(double[] scores, int[] y) {
         double[] sortedScores = Arrays.copyOf(scores, scores.length);

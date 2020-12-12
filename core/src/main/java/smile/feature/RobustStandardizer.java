@@ -44,6 +44,7 @@ public class RobustStandardizer extends Standardizer {
     /**
      * Learns transformation parameters from a dataset.
      * @param data The training data.
+     * @return the model.
      */
     public static RobustStandardizer fit(DataFrame data) {
         if (data.isEmpty()) {
@@ -71,6 +72,7 @@ public class RobustStandardizer extends Standardizer {
     /**
      * Learns transformation parameters from a dataset.
      * @param data The training data.
+     * @return the model.
      */
     public static RobustStandardizer fit(double[][] data) {
         return fit(DataFrame.of(data));

@@ -60,6 +60,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
      * Fits k-modes clustering.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @return the model.
      */
     public static KModes fit(int[][] data, int k) {
         return fit(data, k, 100);
@@ -70,6 +71,7 @@ public class KModes extends CentroidClustering<int[], int[]> {
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static KModes fit(int[][] data, int k, int maxIter) {
         if (k < 2) {

@@ -92,6 +92,8 @@ public class ICA implements Serializable {
      *             number of samples of mixed signals and the number of rows
      *             corresponding with the number of independent source signals.
      * @param p the number of independent components.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static ICA fit(double[][] data, int p, Properties prop) {
         DifferentiableFunction f;

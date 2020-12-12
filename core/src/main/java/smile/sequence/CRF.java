@@ -227,6 +227,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels) {
         return fit(sequences, labels, new Properties());
@@ -236,6 +237,8 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.crf.trees", "100"));
@@ -256,6 +259,7 @@ public class CRF implements Serializable {
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
         int k = MathEx.max(labels) + 1;

@@ -133,6 +133,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     /**
      * Constructor.
      *
+     * @param labels the class label encoder.
      * @param p the number of variables in input layer.
      * @param builders the builders of layers from bottom to top.
      */

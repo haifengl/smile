@@ -227,7 +227,7 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param k the number of classes.
      * @param p the dimensionality of input space.
      * @param sigma the prior count of add-k smoothing of evidence.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, int k, int p, double sigma, IntSet labels) {
         if (k < 2) {

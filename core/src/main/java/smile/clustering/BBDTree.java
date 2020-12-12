@@ -106,7 +106,8 @@ public class BBDTree {
     private final int[] index;
 
     /**
-     * Constructs a tree out of the given n data data living in R^d.
+     * Constructs a tree out of the given n data points living in R^d.
+     * @param data the data points.
      */
     public BBDTree(double[][] data) {
         int n = data.length;
@@ -262,6 +263,7 @@ public class BBDTree {
      * @param sum the workspace storing the sum of data in each cluster.
      * @param size the number of samples in each cluster.
      * @param y the class labels.
+     * @return the within cluster sum of the squared distance.
      */
     public double clustering(double[][] centroids, double[][] sum, int[] size, int[] y) {
         int k = centroids.length;

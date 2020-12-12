@@ -271,6 +271,7 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model) {
         return fit(formula, data, model, new Properties());
@@ -281,6 +282,8 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Properties prop) {
         double tol = Double.parseDouble(prop.getProperty("smile.glm.tolerance", "1E-5"));
@@ -295,6 +298,7 @@ public class GLM implements Serializable {
      * @param data the data frame of the explanatory and response variables.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, double tol, int maxIter) {
         if (tol <= 0.0) {

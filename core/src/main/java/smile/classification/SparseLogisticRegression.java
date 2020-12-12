@@ -76,7 +76,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public SparseLogisticRegression(int p, double L, double lambda, IntSet labels) {
         this.k = labels.size();
@@ -100,7 +100,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
          * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
-         * @param labels class labels
+         * @param labels the class label encoder.
          */
         public Binomial(double[] w, double L, double lambda, IntSet labels) {
             super(w.length - 1, L, lambda, labels);
@@ -111,6 +111,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
          * Returns an array of size (p+1) containing the linear weights
          * of binary logistic regression, where p is the dimension of
          * feature vectors. The last element is the weight of bias.
+         * @return the linear weights.
          */
         public double[] coefficients() {
             return w;
@@ -173,7 +174,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
          * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
-         * @param labels class labels
+         * @param labels the class label encoder.
          */
         public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
             super(w[0].length - 1, L, lambda, labels);
@@ -185,6 +186,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
          * of multi-class logistic regression, where k is the number of classes
          * and p is the dimension of feature vectors. The last element of each
          * row is the weight of bias.
+         * @return the linear weights.
          */
         public double[][] coefficients() {
             return w;
@@ -244,6 +246,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static Binomial binomial(SparseDataset x, int[] y) {
         return binomial(x, y, new Properties());
@@ -253,6 +256,8 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static Binomial binomial(SparseDataset x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
@@ -271,6 +276,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static Binomial binomial(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
         if (x.size() != y.length) {
@@ -311,6 +317,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static Multinomial multinomial(SparseDataset x, int[] y) {
         return multinomial(x, y, new Properties());
@@ -320,6 +327,8 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static Multinomial multinomial(SparseDataset x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
@@ -338,6 +347,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static Multinomial multinomial(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
         if (x.size() != y.length) {
@@ -385,6 +395,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset x, int[] y) {
         return fit(x, y, new Properties());
@@ -394,6 +405,8 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
@@ -412,6 +425,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static SparseLogisticRegression fit(SparseDataset x, int[] y, double lambda, double tol, int maxIter) {
         ClassLabels codec = ClassLabels.fit(y);
@@ -725,6 +739,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
 
     /**
      * Returns the learning rate of stochastic gradient descent.
+     * @return the learning rate of stochastic gradient descent.
      */
     public double getLearningRate() {
         return eta;
@@ -732,6 +747,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
 
     /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
     public double loglikelihood() {
         return L;
@@ -739,6 +755,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
 
     /**
      * Returns the AIC score.
+     * @return  the AIC score.
      */
     public double AIC() {
         return ModelSelection.AIC(L, (k-1)*(p+1));

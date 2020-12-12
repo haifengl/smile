@@ -167,6 +167,8 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.gbt.trees", "500"));

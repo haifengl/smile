@@ -121,6 +121,7 @@ public abstract class PartitionClustering implements Serializable {
      * @param data data objects array of size n.
      * @param medoids an array of size k to store cluster medoids on output.
      * @param y an array of size n to store cluster labels on output.
+     * @param distance the distance function.
      * @return an array of size n to store the distance of each observation to nearest medoid.
      */
     public static <T> double[] seed(T[] data, T[] medoids, int[] y, ToDoubleBiFunction<T, T> distance) {
@@ -166,6 +167,9 @@ public abstract class PartitionClustering implements Serializable {
      * Runs a clustering algorithm multiple times and return the best one
      * (e.g. smallest distortion).
      * @param runs the number of runs.
+     * @param clustering the clustering algorithm.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T extends PartitionClustering & Comparable<? super T>> T run(int runs, Supplier<T> clustering) {
         if (runs <= 0) {

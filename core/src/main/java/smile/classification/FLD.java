@@ -107,7 +107,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param mean the mean vector of all samples.
      * @param mu the mean vectors of each class - mean.
      * @param scaling the projection matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public FLD(double[] mean, double[][] mu, Matrix scaling, IntSet labels) {
         this.k = mu.length;

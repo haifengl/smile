@@ -91,7 +91,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public Maxent(int p, double L, double lambda, IntSet labels) {
         this.k = labels.size();
@@ -115,7 +115,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
-         * @param labels class labels
+         * @param labels the class label encoder.
          */
         public Binomial(double[] w, double L, double lambda, IntSet labels) {
             super(w.length - 1, L, lambda, labels);
@@ -126,6 +126,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * Returns an array of size (p+1) containing the linear weights
          * of binary logistic regression, where p is the dimension of
          * feature vectors. The last element is the weight of bias.
+         * @return the linear weights.
          */
         public double[] coefficients() {
             return w;
@@ -178,7 +179,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
          *               weights which often has superior generalization performance,
          *               especially when the dimensionality is high.
-         * @param labels class labels
+         * @param labels the class label encoder.
          */
         public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
             super(w[0].length - 1, L, lambda, labels);
@@ -190,6 +191,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
          * of multi-class logistic regression, where k is the number of classes
          * and p is the dimension of feature vectors. The last element of each
          * row is the weight of bias.
+         * @return the linear weights.
          */
         public double[][] coefficients() {
             return w;
@@ -244,6 +246,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y) {
         return fit(p, x, y, new Properties());
@@ -256,6 +259,8 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
@@ -276,6 +281,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static Maxent fit(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
         ClassLabels codec = ClassLabels.fit(y);
@@ -292,6 +298,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y) {
         return binomial(p, x, y, new Properties());
@@ -304,6 +311,8 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
@@ -324,6 +333,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static Binomial binomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
@@ -367,6 +377,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y) {
         return multinomial(p, x, y, new Properties());
@@ -379,6 +390,8 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, Properties prop) {
         double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
@@ -399,6 +412,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
      * when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static Multinomial multinomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
@@ -755,6 +769,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
     /**
      * Returns the learning rate of stochastic gradient descent.
+     * @return the learning rate of stochastic gradient descent.
      */
     public double getLearningRate() {
         return eta;
@@ -762,6 +777,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
     /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
     public double loglikelihood() {
         return L;
@@ -769,6 +785,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
     /**
      * Returns the AIC score.
+     * @return the AIC score.
      */
     public double AIC() {
         return ModelSelection.AIC(L, (k-1)*(p+1));

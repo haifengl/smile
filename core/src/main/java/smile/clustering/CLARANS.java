@@ -85,6 +85,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param data     the observations.
      * @param k        the number of clusters.
      * @param distance the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k) {
         return fit(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
@@ -98,6 +100,8 @@ public class CLARANS<T> extends CentroidClustering<T, T> {
      * @param maxNeighbor the maximum number of neighbors examined during
      *                    the random search of local minima.
      * @param distance    the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k, int maxNeighbor) {
         if (maxNeighbor <= 0) {

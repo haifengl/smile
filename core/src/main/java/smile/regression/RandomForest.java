@@ -148,6 +148,8 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.random.forest.trees", "500"));
