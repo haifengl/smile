@@ -348,7 +348,7 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public int columnIndex(String name) {
+    public int indexOf(String name) {
         return schema.fieldIndex(name);
     }
 
