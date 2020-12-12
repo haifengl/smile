@@ -27,11 +27,13 @@ package smile.data;
 public interface Instance <T> {
     /**
      * Returns the instance.
+     * @return the instance.
      */
     T x();
 
     /**
      * Returns the response variable of instance.
+     * @return the response variable.
      */
     default double y() {
         throw new UnsupportedOperationException("The instance doesn't have response variable.");
@@ -39,6 +41,7 @@ public interface Instance <T> {
 
     /**
      * Returns the class label of instance.
+     * @return the class label.
      */
     default int label() {
         throw new UnsupportedOperationException("The instance doesn't have class label.");
@@ -47,6 +50,7 @@ public interface Instance <T> {
     /**
      * Return the (optional) name associated with instance.
      * Note that this is not the class label.
+     * @return the name of instance.
      */
     default String name() {
         return null;
@@ -54,6 +58,7 @@ public interface Instance <T> {
 
     /**
      * Return the (optional) weight associated with instance.
+     * @return the weight of instance.
      */
     default double weight() {
         return 1.0;
