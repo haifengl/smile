@@ -158,7 +158,7 @@ public class TTest {
 
             return new TTest("Equal Variance Two Sample", t, df, p);
         } else {
-            double df = MathEx.sqr(var1 / n1 + var2 / n2) / (MathEx.sqr(var1 / n1) / (n1 - 1) + MathEx.sqr(var2 / n2) / (n2 - 1));
+            double df = MathEx.pow2(var1 / n1 + var2 / n2) / (MathEx.pow2(var1 / n1) / (n1 - 1) + MathEx.pow2(var2 / n2) / (n2 - 1));
 
             double t = (mu1 - mu2) / Math.sqrt(var1 / n1 + var2 / n2);
             double p = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));

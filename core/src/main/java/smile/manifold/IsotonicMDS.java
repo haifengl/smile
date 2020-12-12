@@ -219,7 +219,7 @@ public class IsotonicMDS {
                 for (int j = i + 1; j < nr; j++) {
                     double tmp = 0.0;
                     for (int c = 0; c < nc; c++) {
-                        tmp += MathEx.sqr(x[i * nc + c] - x[j * nc + c]);
+                        tmp += MathEx.pow2(x[i * nc + c] - x[j * nc + c]);
                     }
                     d[index++] = Math.sqrt(tmp);
                 }

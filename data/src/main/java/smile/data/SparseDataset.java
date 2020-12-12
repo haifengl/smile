@@ -100,7 +100,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             double sum = 0.0;
 
             for (SparseArray.Entry e : x) {
-                sum += MathEx.sqr(e.x);
+                sum += MathEx.pow2(e.x);
             }
 
             sum = Math.sqrt(sum);

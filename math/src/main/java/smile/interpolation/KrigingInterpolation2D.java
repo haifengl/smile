@@ -130,7 +130,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
                 double d = d1 * d1 + d2 * d2;
 
                 double rb = Math.pow(d, beta/2);
-                num += rb * 0.5 * MathEx.sqr(y[i] - y[j]);
+                num += rb * 0.5 * MathEx.pow2(y[i] - y[j]);
                 denom += rb * rb;
             }
         }

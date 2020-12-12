@@ -181,7 +181,7 @@ public class SammonMapping {
                 double dij = proximity[i][j];
                 if (dij == 0.0) dij = 1.0E-10;
                 double rij = MathEx.distance(coordinates[i], coordinates[j]);
-                stress += MathEx.sqr(dij - rij) / dij;
+                stress += MathEx.pow2(dij - rij) / dij;
             }
         }
         stress /= c;
@@ -239,7 +239,7 @@ public class SammonMapping {
                     double dij = proximity[i][j];
                     if (dij == 0.0) dij = 1.0E-10;
                     double rij = MathEx.distance(xu[i], xu[j]);
-                    stress += MathEx.sqr(dij - rij) / dij;
+                    stress += MathEx.pow2(dij - rij) / dij;
                 }
             }
             stress /= c;

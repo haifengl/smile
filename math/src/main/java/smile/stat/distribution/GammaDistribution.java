@@ -107,7 +107,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         mu /= data.length;
         s = Math.log(mu) - s / data.length;
 
-        double shape = (3 - s + Math.sqrt((MathEx.sqr(s - 3) + 24 * s))) / (12 * s);
+        double shape = (3 - s + Math.sqrt((MathEx.pow2(s - 3) + 24 * s))) / (12 * s);
         double scale = mu / shape;
         return new GammaDistribution(shape, scale);
     }

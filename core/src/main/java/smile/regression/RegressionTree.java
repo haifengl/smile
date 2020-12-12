@@ -117,7 +117,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
         double rss = 0.0;
         for (int i : nodeSamples) {
             n += samples[i];
-            rss += samples[i] * MathEx.sqr(y[i] - mean);
+            rss += samples[i] * MathEx.pow2(y[i] - mean);
         }
 
         return new RegressionNode(n, out, mean, rss);

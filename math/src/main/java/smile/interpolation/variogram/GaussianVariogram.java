@@ -77,7 +77,7 @@ public class GaussianVariogram implements Variogram {
 
     @Override
     public double f(double r) {
-        return c + b * (1 - Math.exp(-3.0* MathEx.sqr(r/a)));
+        return c + b * (1 - Math.exp(-3.0* MathEx.pow2(r/a)));
     }
 
     @Override

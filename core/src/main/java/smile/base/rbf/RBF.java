@@ -164,7 +164,7 @@ public class RBF<T> implements Serializable {
         double[] sigma = new double[k];
 
         for (int i = 0; i < x.length; i++) {
-            sigma[y[i]] += MathEx.sqr(distance.d(x[i], centers[y[i]]));
+            sigma[y[i]] += MathEx.pow2(distance.d(x[i], centers[y[i]]));
         }
 
         for (int i = 0; i < k; i++) {

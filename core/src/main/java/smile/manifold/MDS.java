@@ -140,7 +140,7 @@ public class MDS {
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
-                double x = -0.5 * MathEx.sqr(proximity[i][j]);
+                double x = -0.5 * MathEx.pow2(proximity[i][j]);
                 A.set(i, j, x);
                 A.set(j, i, x);
             }
@@ -183,7 +183,7 @@ public class MDS {
             for (int i = 0; i < n; i++) {
                 B.set(i, i, 0.0);
                 for (int j = 0; j < i; j++) {
-                    double x = -0.5 * MathEx.sqr(proximity[i][j] + c);
+                    double x = -0.5 * MathEx.pow2(proximity[i][j] + c);
                     B.set(i, j, x);
                     B.set(j, i, x);
                 }
