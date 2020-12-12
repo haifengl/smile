@@ -59,9 +59,6 @@ public class MathExTest {
         assertFalse(MathEx.isZero(MathEx.EPSILON));
     }
 
-    /**
-     * Test of isPower2 method, of class Math.
-     */
     @Test
     public void testIsPower2() {
         System.out.println("isPower2");
@@ -83,9 +80,6 @@ public class MathExTest {
         assertTrue(MathEx.isPower2(131072));
     }
 
-    /**
-     * Test of log2 method, of class Math.
-     */
     @Test
     public void testLog2() {
         System.out.println("log2");
@@ -95,21 +89,15 @@ public class MathExTest {
         assertEquals(2, MathEx.log2(4), 1E-6);
     }
 
-    /**
-     * Test of sqr method, of class Math.
-     */
     @Test
-    public void testSqr() {
-        System.out.println("sqr");
-        assertEquals(0, MathEx.sqr(0), 1E-10);
-        assertEquals(1, MathEx.sqr(1), 1E-10);
-        assertEquals(4, MathEx.sqr(2), 1E-10);
-        assertEquals(9, MathEx.sqr(3), 1E-10);
+    public void testPow2() {
+        System.out.println("pow2");
+        assertEquals(0, MathEx.pow2(0), 1E-10);
+        assertEquals(1, MathEx.pow2(1), 1E-10);
+        assertEquals(4, MathEx.pow2(2), 1E-10);
+        assertEquals(9, MathEx.pow2(3), 1E-10);
     }
 
-    /**
-     * Test of factorial method, of class Math.
-     */
     @Test
     public void testFactorial() {
         System.out.println("factorial");
@@ -120,9 +108,6 @@ public class MathExTest {
         assertEquals(24.0, MathEx.factorial(4), 1E-7);
     }
 
-    /**
-     * Test of logFactorial method, of class Math.
-     */
     @Test
     public void testLogFactorial() {
         System.out.println("logFactorial");
@@ -133,9 +118,6 @@ public class MathExTest {
         assertEquals(Math.log(24.0), MathEx.lfactorial(4), 1E-7);
     }
 
-    /**
-     * Test of choose method, of class Math.
-     */
     @Test
     public void testChoose() {
         System.out.println("choose");
@@ -146,9 +128,6 @@ public class MathExTest {
         assertEquals(210.0, MathEx.choose(10, 4), 1E-7);
     }
 
-    /**
-     * Test of logChoose method, of class Math.
-     */
     @Test
     public void testLogChoose() {
         System.out.println("logChoose");
@@ -159,9 +138,6 @@ public class MathExTest {
         assertEquals(5.347108, MathEx.lchoose(10, 4), 1E-6);
     }
 
-    /**
-     * Test of random method, of class Math.
-     */
     @Test
     public void testRandom() {
         System.out.println("random");
@@ -175,9 +151,6 @@ public class MathExTest {
         assertTrue(MathEx.KullbackLeiblerDivergence(prob, p) < 0.05);
     }
 
-    /**
-     * Test of random method, of class Math.
-     */
     @Test
     public void testRandom2() {
         System.out.println("random");
@@ -196,9 +169,6 @@ public class MathExTest {
         assertTrue(MathEx.KullbackLeiblerDivergence(prob, p) < 0.05);
     }
 
-    /**
-     * Test of min method, of class Math.
-     */
     @Test
     public void testMin_3args() {
         System.out.println("min");
@@ -210,9 +180,6 @@ public class MathExTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of max method, of class Math.
-     */
     @Test
     public void testMax_3args() {
         System.out.println("max");
@@ -224,9 +191,6 @@ public class MathExTest {
         assertEquals(expResult, result);
     }
 
-    /**
-     * Test of min method, of class Math.
-     */
     @Test
     public void testMin_doubleArr() {
         System.out.println("min");
@@ -234,9 +198,6 @@ public class MathExTest {
         assertEquals(-2.196822, MathEx.min(x), 1E-7);
     }
 
-    /**
-     * Test of max method, of class Math.
-     */
     @Test
     public void testMax_doubleArr() {
         System.out.println("max");
@@ -244,9 +205,6 @@ public class MathExTest {
         assertEquals(1.0567679, MathEx.max(x), 1E-7);
     }
 
-    /**
-     * Test of min method, of class Math.
-     */
     @Test
     public void testMin_doubleArrArr() {
         System.out.println("min");
@@ -258,9 +216,6 @@ public class MathExTest {
         assertEquals(-0.89044952, MathEx.min(A), 1E-7);
     }
 
-    /**
-     * Test of max method, of class Math.
-     */
     @Test
     public void testMax_doubleArrArr() {
         System.out.println("max");
@@ -272,9 +227,6 @@ public class MathExTest {
         assertEquals(0.7220180, MathEx.max(A), 1E-7);
     }
 
-    /**
-     * Test of transpose method, of class Math.
-     */
     @Test
     public void testTranspose() {
         System.out.println("transpose");
@@ -291,9 +243,6 @@ public class MathExTest {
         assertTrue(MathEx.equals(MathEx.transpose(A), B, 1E-7));
     }
 
-    /**
-     * Test of rowMin method, of class Math.
-     */
     @Test
     public void testRowMin() {
         System.out.println("rowMin");
@@ -310,9 +259,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of rowMax method, of class Math.
-     */
     @Test
     public void testRowMax() {
         System.out.println("rowMax");
@@ -329,9 +275,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of rowSum method, of class Math.
-     */
     @Test
     public void testRowSums() {
         System.out.println("rowSums");
@@ -348,9 +291,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of rowMean method, of class Math.
-     */
     @Test
     public void testRowMeans() {
         System.out.println("rowMeans");
@@ -367,9 +307,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of colMin method, of class Math.
-     */
     @Test
     public void testColMin() {
         System.out.println("colMin");
@@ -386,9 +323,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of colMax method, of class Math.
-     */
     @Test
     public void testColMax() {
         System.out.println("colMax");
@@ -405,9 +339,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of colSum method, of class Math.
-     */
     @Test
     public void testColSums() {
         System.out.println("colSums");
@@ -424,9 +355,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of colMean method, of class Math.
-     */
     @Test
     public void testColMeans() {
         System.out.println("colMeans");
@@ -443,9 +371,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of sum method, of class Math.
-     */
     @Test
     public void testSum_doubleArr() {
         System.out.println("sum");
@@ -463,9 +388,6 @@ public class MathExTest {
         assertEquals(5, MathEx.mean(data), 1E-6);
     }
 
-    /**
-     * Test of var method, of class Math.
-     */
     @Test
     public void testVar_doubleArr() {
         System.out.println("var");
@@ -473,9 +395,6 @@ public class MathExTest {
         assertEquals(7.5, MathEx.var(data), 1E-6);
     }
 
-    /**
-     * Test of sd method, of class Math.
-     */
     @Test
     public void testSd() {
         System.out.println("sd");
@@ -483,9 +402,6 @@ public class MathExTest {
         assertEquals(2.73861, MathEx.sd(data), 1E-5);
     }
 
-    /**
-     * Test of colSd method, of class Math.
-     */
     @Test
     public void testColSd() {
         System.out.println("colSd");
@@ -502,9 +418,6 @@ public class MathExTest {
         assertEquals(2.73861, MathEx.colSds(data)[2], 1E-5);
     }
 
-    /**
-     * Test of mad method, of class Math.
-     */
     @Test
     public void testMad() {
         System.out.println("mad");
@@ -549,9 +462,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of distance method, of class Math.
-     */
     @Test
     public void testDistance_doubleArr_doubleArr() {
         System.out.println("distance");
@@ -560,9 +470,6 @@ public class MathExTest {
         assertEquals(2.422302, MathEx.distance(x, y), 1E-6);
     }
 
-    /**
-     * Test of squaredDistance method, of class Math.
-     */
     @Test
     public void testSquaredDistance_doubleArr_doubleArr() {
         System.out.println("squaredDistance");
@@ -571,9 +478,6 @@ public class MathExTest {
         assertEquals(5.867547, MathEx.squaredDistance(x, y), 1E-6);
     }
 
-    /**
-     * Test of dot method, of class Math.
-     */
     @Test
     public void testDot_doubleArr_doubleArr() {
         System.out.println("dot");
@@ -582,9 +486,6 @@ public class MathExTest {
         assertEquals(3.350726, MathEx.dot(x, y), 1E-6);
     }
 
-    /**
-     * Test of cov method, of class Math.
-     */
     @Test
     public void testCov_doubleArr_doubleArr() {
         System.out.println("cov");
@@ -593,9 +494,6 @@ public class MathExTest {
         assertEquals(0.5894983, MathEx.cov(x, y), 1E-7);
     }
 
-    /**
-     * Test of cor method, of class Math.
-     */
     @Test
     public void testCor_doubleArr_doubleArr() {
         System.out.println("cor");
@@ -604,9 +502,6 @@ public class MathExTest {
         assertEquals(0.4686847, MathEx.cor(x, y), 1E-7);
     }
 
-    /**
-     * Test of spearman method, of class Math.
-     */
     @Test
     public void testSpearman_doubleArr_doubleArr() {
         System.out.println("spearman");
@@ -615,9 +510,6 @@ public class MathExTest {
         assertEquals(0.3, MathEx.spearman(x, y), 1E-7);
     }
 
-    /**
-     * Test of kendall method, of class Math.
-     */
     @Test
     public void testKendall_doubleArr_doubleArr() {
         System.out.println("kendall");
@@ -626,9 +518,6 @@ public class MathExTest {
         assertEquals(0.2, MathEx.kendall(x, y), 1E-7);
     }
 
-    /**
-     * Test of norm1 method, of class Math.
-     */
     @Test
     public void testNorm1_doubleArr() {
         System.out.println("norm1");
@@ -636,9 +525,6 @@ public class MathExTest {
         assertEquals(4.638106, MathEx.norm1(x), 1E-6);
     }
 
-    /**
-     * Test of norm2 method, of class Math.
-     */
     @Test
     public void testNorm2_doubleArr() {
         System.out.println("norm2");
@@ -646,9 +532,6 @@ public class MathExTest {
         assertEquals(2.647086, MathEx.norm2(x), 1E-6);
     }
 
-    /**
-     * Test of normInf method, of class Math.
-     */
     @Test
     public void testNormInf_doubleArr() {
         System.out.println("normInf");
@@ -656,9 +539,6 @@ public class MathExTest {
         assertEquals(2.196822, MathEx.normInf(x), 1E-6);
     }
 
-    /**
-     * Test of norm method, of class Math.
-     */
     @Test
     public void testNorm_doubleArr() {
         System.out.println("norm");
@@ -666,9 +546,6 @@ public class MathExTest {
         assertEquals(2.647086, MathEx.norm(x), 1E-6);
     }
 
-    /**
-     * Test of standardize method, of class StatUtils.
-     */
     @Test
     public void testStandardize() {
         System.out.println("standardize");
@@ -678,9 +555,6 @@ public class MathExTest {
         assertEquals(1, MathEx.sd(data), 1E-7);
     }
 
-    /**
-     * Test of unitize method, of class Math.
-     */
     @Test
     public void testUnitize() {
         System.out.println("unitize");
@@ -689,9 +563,6 @@ public class MathExTest {
         assertEquals(1, MathEx.norm(data), 1E-7);
     }
 
-    /**
-     * Test of unitize1 method, of class Math.
-     */
     @Test
     public void testUnitize1() {
         System.out.println("unitize1");
@@ -700,9 +571,6 @@ public class MathExTest {
         assertEquals(1, MathEx.norm1(data), 1E-7);
     }
 
-    /**
-     * Test of unitize2 method, of class Math.
-     */
     @Test
     public void testUnitize2() {
         System.out.println("unitize2");
@@ -711,9 +579,6 @@ public class MathExTest {
         assertEquals(1, MathEx.norm2(data), 1E-7);
     }
 
-    /**
-     * Test of clone method, of class Math.
-     */
     @Test
     public void testClone() {
         System.out.println("clone");
@@ -732,9 +597,6 @@ public class MathExTest {
         }
     }
 
-    /**
-     * Test of plusEquals method, of class Math.
-     */
     @Test
     public void testAdd_doubleArr_doubleArr() {
         System.out.println("add");
@@ -745,9 +607,6 @@ public class MathExTest {
         assertTrue(MathEx.equals(x, z));
     }
 
-    /**
-     * Test of minusEquals method, of class Math.
-     */
     @Test
     public void testMinus_doubleArr_doubleArr() {
         System.out.println("sub");

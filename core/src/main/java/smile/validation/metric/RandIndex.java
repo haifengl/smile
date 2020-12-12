@@ -59,20 +59,20 @@ public class RandIndex implements ClusteringMetric {
         double randT = 0.0;
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
-                randT += MathEx.sqr(count[i][j]);
+                randT += MathEx.pow2(count[i][j]);
             }
         }
         randT -= n;
 
         double randP = 0.0;
         for (int i = 0; i < n1; i++) {
-            randP += MathEx.sqr(a[i]);
+            randP += MathEx.pow2(a[i]);
         }
         randP -= n;
 
         double randQ = 0.0;
         for (int j = 0; j < n2; j++) {
-            randQ += MathEx.sqr(b[j]);
+            randQ += MathEx.pow2(b[j]);
         }
         randQ -= n;
 

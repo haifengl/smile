@@ -192,7 +192,7 @@ public class CorTest {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += MathEx.sqr(wksp1[j] - wksp2[j]);
+            d += MathEx.pow2(wksp1[j] - wksp2[j]);
         }
 
         double en3n = n * n * n - n;

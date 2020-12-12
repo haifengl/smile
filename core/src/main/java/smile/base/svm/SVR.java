@@ -282,7 +282,7 @@ public class SVR<T> {
 
             double gj = -v.g[0];
             if (v.alpha[0] > 0.0 && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;
@@ -293,7 +293,7 @@ public class SVR<T> {
 
             gj = v.g[1];
             if (v.alpha[1] < C && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;

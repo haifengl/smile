@@ -43,7 +43,7 @@ public class MSE implements RegressionMetric {
         int n = truth.length;
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            rss += MathEx.sqr(truth[i] - prediction[i]);
+            rss += MathEx.pow2(truth[i] - prediction[i]);
         }
 
         return rss / n;

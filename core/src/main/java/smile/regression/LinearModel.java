@@ -172,8 +172,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         double ybar = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residuals[i]);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         error = Math.sqrt(RSS / (n - p));

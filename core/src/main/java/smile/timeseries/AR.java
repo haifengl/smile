@@ -177,8 +177,8 @@ public class AR implements Serializable {
 
             double residual = y[i] - yi;
             residuals[i] = residual;
-            RSS += MathEx.sqr(residual);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residual);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         df = x.length - p;

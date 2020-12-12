@@ -337,13 +337,17 @@ public class MathEx {
 
     /**
      * Returns x * x.
+     * @param x a real number.
+     * @return the square of x.
      */
-    public static double sqr(double x) {
+    public static double pow2(double x) {
         return x * x;
     }
 
     /**
      * Returns true if x is a power of 2.
+     * @param x a real number.
+     * @return true if .
      */
     public static boolean isPower2(int x) {
         return x > 0 && (x & (x - 1)) == 0;
@@ -2250,14 +2254,14 @@ public class MathEx {
         double sum = 0.0;
         while (e1 != null && e2 != null) {
             if (e1.i == e2.i) {
-                sum += sqr(e1.x - e2.x);
+                sum += pow2(e1.x - e2.x);
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
             } else if (e1.i > e2.i) {
-                sum += sqr(e2.x);
+                sum += pow2(e2.x);
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
-                sum += sqr(e1.x);
+                sum += pow2(e1.x);
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
@@ -3456,7 +3460,7 @@ public class MathEx {
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (double[] xi : x) {
-                scale[j] += sqr(xi[j]);
+                scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j] / (n-1));
 
@@ -3495,7 +3499,7 @@ public class MathEx {
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
             for (double[] xi : x) {
-                scale[j] += sqr(xi[j]);
+                scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j]);
         }

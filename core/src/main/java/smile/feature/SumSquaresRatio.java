@@ -91,8 +91,8 @@ public class SumSquaresRatio implements FeatureRanking {
         for (int i = 0; i < n; i++) {
             int yi = y[i];
             for (int j = 0; j < p; j++) {
-                bss[j] += MathEx.sqr(condmu[yi][j] - mu[j]);
-                wss[j] += MathEx.sqr(x[i][j] - condmu[yi][j]);
+                bss[j] += MathEx.pow2(condmu[yi][j] - mu[j]);
+                wss[j] += MathEx.pow2(x[i][j] - condmu[yi][j]);
             }
         }
 

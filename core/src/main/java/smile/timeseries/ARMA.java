@@ -148,8 +148,8 @@ public class ARMA implements Serializable {
         RSS = 0.0;
 
         for (int i = 0; i < n; i++) {
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(fittedValues[i] - ybar);
+            RSS += MathEx.pow2(residuals[i]);
+            TSS += MathEx.pow2(fittedValues[i] - ybar);
         }
 
         df = n;

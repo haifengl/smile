@@ -108,9 +108,9 @@ public class KrigingInterpolation1D implements Interpolation {
         double num = 0.0, denom = 0.0;
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
-                double rb = MathEx.sqr(x[i] - x[j]);
+                double rb = MathEx.pow2(x[i] - x[j]);
                 rb = Math.pow(rb, 0.5 * beta);
-                num += rb * 0.5 * MathEx.sqr(y[i] - y[j]);
+                num += rb * 0.5 * MathEx.pow2(y[i] - y[j]);
                 denom += rb * rb;
             }
         }

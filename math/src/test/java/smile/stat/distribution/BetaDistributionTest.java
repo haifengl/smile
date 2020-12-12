@@ -51,9 +51,6 @@ public class BetaDistributionTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of constructor, of class BetaDistribution.
-     */
     @Test
     public void testBetaDistribution() {
         System.out.println("BetaDistribution");
@@ -61,13 +58,10 @@ public class BetaDistributionTest {
         BetaDistribution instance = new BetaDistribution(3, 2.1);
         double[] data = instance.rand(1000);
         BetaDistribution est = BetaDistribution.fit(data);
-        assertEquals(3.31, est.getAlpha(), 1E-2);
-        assertEquals(2.31, est.getBeta(), 1E-2);
+        assertEquals(3.31, est.alpha(), 1E-2);
+        assertEquals(2.31, est.beta(), 1E-2);
     }
 
-    /**
-     * Test of length method, of class Beta.
-     */
     @Test
     public void testLength() {
         System.out.println("length");
@@ -76,9 +70,6 @@ public class BetaDistributionTest {
         assertEquals(2, instance.length());
     }
 
-    /**
-     * Test of mean method, of class Beta.
-     */
     @Test
     public void testMean() {
         System.out.println("mean");
@@ -87,9 +78,6 @@ public class BetaDistributionTest {
         assertEquals(0.2857143, instance.mean(), 1E-7);
     }
 
-    /**
-     * Test of variance method, of class Beta.
-     */
     @Test
     public void testVariance() {
         System.out.println("variance");
@@ -98,9 +86,6 @@ public class BetaDistributionTest {
         assertEquals(0.0255102, instance.variance(), 1E-7);
     }
 
-    /**
-     * Test of sd method, of class Beta.
-     */
     @Test
     public void testSd() {
         System.out.println("sd");
@@ -109,9 +94,6 @@ public class BetaDistributionTest {
         assertEquals(0.1597191, instance.sd(), 1E-7);
     }
 
-    /**
-     * Test of entropy method, of class Beta.
-     */
     @Test
     public void testEntropy() {
         System.out.println("entropy");
@@ -120,9 +102,6 @@ public class BetaDistributionTest {
         assertEquals(-0.4845307, instance.entropy(), 1E-7);
     }
 
-    /**
-     * Test of p method, of class Beta.
-     */
     @Test
     public void testP() {
         System.out.println("p");
@@ -139,9 +118,6 @@ public class BetaDistributionTest {
         assertEquals(0.0, instance.p(1.5), 1E-4);
     }
 
-    /**
-     * Test of logP method, of class Beta.
-     */
     @Test
     public void testLogP() {
         System.out.println("logP");
@@ -158,9 +134,6 @@ public class BetaDistributionTest {
         assertTrue(Double.isInfinite(instance.logp(1.5)));
     }
 
-    /**
-     * Test of cdf method, of class Beta.
-     */
     @Test
     public void testCdf() {
         System.out.println("cdf");
@@ -177,9 +150,6 @@ public class BetaDistributionTest {
         assertEquals(1.0, instance.cdf(1.5), 1E-5);
     }
 
-    /**
-     * Test of quantile method, of class Beta.
-     */
     @Test
     public void testQuantile() {
         System.out.println("quantile");
