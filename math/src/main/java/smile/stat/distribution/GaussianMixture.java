@@ -58,6 +58,7 @@ public class GaussianMixture extends ExponentialFamilyMixture {
      * Fits the Gaussian mixture model with the EM algorithm.
      * @param k the number of components.
      * @param x the training data.
+     * @return the distribution.
      */
     public static GaussianMixture fit(int k, double[] x) {
         if (k < 2)
@@ -80,6 +81,7 @@ public class GaussianMixture extends ExponentialFamilyMixture {
      * Fits the Gaussian mixture model with the EM algorithm.
      * The number of components will be selected by BIC.
      * @param x the training data.
+     * @return the distribution.
      */
     public static GaussianMixture fit(double[] x) {
         if (x.length < 20) {

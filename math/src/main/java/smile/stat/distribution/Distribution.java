@@ -39,21 +39,25 @@ public interface Distribution extends Serializable {
      * The number of parameters of the distribution.
      * The "length" is in the sense of the minimum description
      * length principle.
+     * @return The number of parameters.
      */
     int length();
 
     /**
      * The mean of distribution.
+     * @return The mean.
      */
     double mean();
     
     /**
      * The variance of distribution.
+     * @return The variance.
      */
     double variance();
     
     /**
      * The standard deviation of distribution.
+     * @return The standard deviation.
      */
     default double sd() {
         return Math.sqrt(variance());
@@ -61,16 +65,20 @@ public interface Distribution extends Serializable {
 
     /**
      * Shannon entropy of the distribution.
+     * @return Shannon entropy.
      */
     double entropy();
 
     /**
      * Generates a random number following this distribution.
+     * @return a random number.
      */
     double rand();
 
     /**
      * Generates a set of random numbers following this distribution.
+     * @param n the number of random numbers to generate.
+     * @return a set of random numbers.
      */
     default double[] rand(int n) {
         double[] data = new double[n];
@@ -83,27 +91,37 @@ public interface Distribution extends Serializable {
     /**
      * The probability density function for continuous distribution
      * or probability mass function for discrete distribution at x.
+     * @param x a real number.
+     * @return the density.
      */
     double p(double x);
 
     /**
      * The density at x in log scale, which may prevents the underflow problem.
+     * @param x a real number.
+     * @return the log density.
      */
     double logp(double x);
 
     /**
      * Cumulative distribution function. That is the probability to the left of x.
+     * @param x a real number.
+     * @return the probability.
      */
     double cdf(double x);
 
     /**
      * The quantile, the probability to the left of quantile is p. It is
      * actually the inverse of cdf.
+     * @param p the probability.
+     * @return the quantile.
      */
     double quantile(double p);
 
     /**
      * The likelihood of the sample set following this distribution.
+     * @param x a set of samples.
+     * @return the likelihood.
      */
     default double likelihood(double[] x) {
         return Math.exp(logLikelihood(x));
@@ -111,6 +129,8 @@ public interface Distribution extends Serializable {
     
     /**
      * The log likelihood of the sample set following this distribution.
+     * @param x a set of samples.
+     * @return the log likelihood.
      */
     default double logLikelihood(double[] x) {
         double L = 0.0;

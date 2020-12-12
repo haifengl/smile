@@ -28,16 +28,20 @@ public interface Dictionary {
 
     /**
      * Returns true if this dictionary contains the specified word.
+     * @param word the query word.
+     * @return true if this dictionary contains the specified word.
      */
     boolean contains(String word);
 
     /**
-     * Returns the number of elements in this dictionary.
+     * Returns the number of words in this dictionary.
+     * @return the number of words in this dictionary.
      */
     int size();
 
     /**
-     * Returns an iterator over the elements in this dictionary.
+     * Returns an iterator over the words in this dictionary.
+     * @return the iterator.
      */
     Iterator<String> iterator();
 }

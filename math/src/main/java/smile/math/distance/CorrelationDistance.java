@@ -29,7 +29,7 @@ import java.util.function.ToDoubleBiFunction;
 public class CorrelationDistance implements Distance<double[]> {
     private static final long serialVersionUID = 1L;
 
-    /** A character string indicating what type of correlation is employed. */
+    /** The type of correlation is employed. */
     private final String method;
     /** Correlation lambda. */
     private final ToDoubleBiFunction<double[], double[]> cor;
@@ -43,6 +43,7 @@ public class CorrelationDistance implements Distance<double[]> {
 
     /**
      * Constructor.
+     * @param method the type of correlation.
      */
     public CorrelationDistance(String method) {
         this.method = method.trim().toLowerCase();

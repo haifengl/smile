@@ -79,7 +79,11 @@ public class DiscreteMixture extends DiscreteDistribution {
         }
     }
 
-    /** Returns the posteriori probabilities. */
+    /**
+     * Returns the posteriori probabilities.
+     * @param x an integer value.
+     * @return the posteriori probabilities.
+     */
     public double[] posteriori(int x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -95,7 +99,11 @@ public class DiscreteMixture extends DiscreteDistribution {
         return prob;
     }
 
-    /** Returns the index of component with maximum a posteriori probability. */
+    /**
+     * Returns the index of component with maximum a posteriori probability.
+     * @param x an integer value.
+     * @return the index of component with maximum a posteriori probability.
+     */
     public int map(int x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -221,13 +229,15 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     /**
      * Returns the number of components in the mixture.
+     * @return the number of components in the mixture.
      */
     public int size() {
         return components.length;
     }
 
     /**
-     * BIC score of the mixture for given data.
+     * returns the BIC score of the mixture for given data.
+     * @return the BIC score.
      */
     public double bic(double[] data) {
         int n = data.length;

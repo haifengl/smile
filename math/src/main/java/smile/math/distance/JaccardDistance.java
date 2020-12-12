@@ -66,6 +66,10 @@ public class JaccardDistance<T> implements Distance<T[]> {
 
     /**
      * Returns the Jaccard distance between sets.
+     * @param a a vector.
+     * @param b a vector.
+     * @param <T> the data type of set elements.
+     * @return the distance.
      */
     public static <T> double d(Set<T> a, Set<T> b) {
         Set<T> union = new HashSet<>(a);

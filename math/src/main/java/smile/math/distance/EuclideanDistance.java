@@ -68,6 +68,9 @@ public class EuclideanDistance implements Metric<double[]> {
     /**
      * Euclidean distance between the two arrays of type integer. No missing
      * value handling in this method.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(int[] x, int[] y) {
         if (x.length != y.length)
@@ -99,6 +102,9 @@ public class EuclideanDistance implements Metric<double[]> {
      * calculation. Let m be the number nonmissing values, and n be the
      * number of all values. The returned distance is sqrt(n * d / m),
      * where d is the square of distance between nonmissing values.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(float[] x, float[] y) {
         if (x.length != y.length)

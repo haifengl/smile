@@ -58,6 +58,9 @@ public class HammingDistance implements Distance<BitSet> {
 
     /**
      * Returns Hamming distance between the two bytes.
+     * @param x a byte.
+     * @param y a byte.
+     * @return the distance.
      */
     public static int d(byte x, byte y) {
         return d((int)x, (int)y);
@@ -65,6 +68,9 @@ public class HammingDistance implements Distance<BitSet> {
     
     /**
      * Returns Hamming distance between the two shorts.
+     * @param x a short.
+     * @param y a short.
+     * @return the distance.
      */
     public static int d(short x, short y) {
         return d((int)x, (int)y);
@@ -72,6 +78,9 @@ public class HammingDistance implements Distance<BitSet> {
     
     /**
      * Returns Hamming distance between the two integers.
+     * @param x an integer.
+     * @param y an integer.
+     * @return the distance.
      */
     public static int d(int x, int y) {
         int dist = 0;
@@ -88,6 +97,9 @@ public class HammingDistance implements Distance<BitSet> {
     
     /**
      * Returns Hamming distance between the two long integers.
+     * @param x a long integer.
+     * @param y a long integer.
+     * @return the distance.
      */
     public static int d(long x, long y) {
         int dist = 0;
@@ -104,6 +116,9 @@ public class HammingDistance implements Distance<BitSet> {
 
     /**
      * Returns Hamming distance between the two byte arrays.
+     * @param x a byte vector.
+     * @param y a byte vector.
+     * @return the distance.
      */
     public static int d(byte[] x, byte[] y) {
         if (x.length != y.length)
@@ -120,6 +135,9 @@ public class HammingDistance implements Distance<BitSet> {
 
     /**
      * Returns Hamming distance between the two short arrays.
+     * @param x a short vector.
+     * @param y a short vector.
+     * @return the distance.
      */
     public static int d(short[] x, short[] y) {
         if (x.length != y.length)
@@ -136,6 +154,9 @@ public class HammingDistance implements Distance<BitSet> {
 
     /**
      * Returns Hamming distance between the two integer arrays.
+     * @param x an integer vector.
+     * @param y an integer vector.
+     * @return the distance.
      */
     public static int d(int[] x, int[] y) {
         if (x.length != y.length)

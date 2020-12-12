@@ -70,6 +70,9 @@ public class ManhattanDistance implements Metric<double[]> {
 
     /**
      * Manhattan distance between two arrays of type integer.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(int[] x, int[] y) {
         if (x.length != y.length)
@@ -99,6 +102,9 @@ public class ManhattanDistance implements Metric<double[]> {
      * calculation. Let m be the number non-missing values, and n be the
      * number of all values. The returned distance is n * d / m,
      * where d is the distance between non-missing values.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(float[] x, float[] y) {
         if (x.length != y.length)

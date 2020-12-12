@@ -37,7 +37,8 @@ public class MahalanobisDistance implements Metric<double[]> {
     private final Matrix sigmaInv;
 
     /**
-     * Constructor with given covariance matrix.
+     * Constructor.
+     * @param cov the covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
         sigma = new Matrix(cov);

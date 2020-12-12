@@ -72,6 +72,8 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GeometricDistribution fit(int[] data) {
         double sum = 0.0;
