@@ -49,7 +49,7 @@ public class ClassLabels implements Serializable {
      * Constructor.
      * @param k The number of classes.
      * @param y The sample class id in [0, k).
-     * @param labels The class labels.
+     * @param labels the class label encoder.
      */
     public ClassLabels(int k, int[] y, IntSet labels) {
         this.k = k;

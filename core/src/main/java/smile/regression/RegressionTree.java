@@ -291,7 +291,8 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, Properties prop) {
         int maxDepth = Integer.parseInt(prop.getProperty("smile.cart.max.depth", "20"));

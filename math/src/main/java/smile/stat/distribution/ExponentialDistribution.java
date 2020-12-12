@@ -75,6 +75,8 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static ExponentialDistribution fit(double[] data) {
         for (double datum : data) {

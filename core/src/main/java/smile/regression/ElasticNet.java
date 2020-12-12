@@ -51,7 +51,8 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         double lambda1 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda1"));

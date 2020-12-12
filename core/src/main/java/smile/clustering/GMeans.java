@@ -65,6 +65,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * determined by G-Means algorithm automatically.
      * @param data the input data of which each row is an observation.
      * @param kmax the maximum number of clusters.
+     * @return the model.
      */
     public static GMeans fit(double[][] data, int kmax) {
         return fit(data, kmax, 100, 1E-4);
@@ -77,6 +78,7 @@ public class GMeans extends CentroidClustering<double[], double[]> {
      * @param kmax the maximum number of clusters.
      * @param maxIter the maximum number of iterations for k-means.
      * @param tol the tolerance of k-means convergence test.
+     * @return the model.
      */
     public static GMeans fit(double[][] data, int kmax, int maxIter, double tol) {
         if (kmax < 2) {

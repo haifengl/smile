@@ -102,6 +102,8 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GaussianDistribution fit(double[] data) {
         double mu = MathEx.mean(data);

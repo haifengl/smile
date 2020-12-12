@@ -62,7 +62,7 @@ public class RDA extends QDA {
      * @param mu the mean vectors of each class.
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public RDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
         super(priori, mu, eigen, scaling, labels);
@@ -73,6 +73,7 @@ public class RDA extends QDA {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static RDA fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -83,6 +84,8 @@ public class RDA extends QDA {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static RDA fit(Formula formula, DataFrame data, Properties prop) {
         double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
@@ -94,6 +97,8 @@ public class RDA extends QDA {
      * Learns regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, Properties prop) {
         double alpha = Double.parseDouble(prop.getProperty("smile.rda.alpha", "0.9"));
@@ -108,6 +113,7 @@ public class RDA extends QDA {
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models
      *              between LDA and QDA.
+     * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, double alpha) {
         return fit(x, y, alpha, null, 1E-4);
@@ -123,6 +129,7 @@ public class RDA extends QDA {
      *               estimated from the training data.
      * @param tol a tolerance to decide if a covariance matrix is singular; it
      *            will reject variables whose variance is less than tol<sup>2</sup>.
+     * @return the model.
      */
     public static RDA fit(double[][] x, int[] y, double alpha, double[] priori, double tol) {
         if (alpha < 0.0 || alpha > 1.0) {

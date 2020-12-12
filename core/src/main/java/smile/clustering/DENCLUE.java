@@ -70,6 +70,7 @@ public class DENCLUE extends PartitionClustering {
      * @param k the number of clusters.
      * @param attractors the density attractor of each observation.
      * @param radius the radius of density attractor.
+     * @param samples the samples in the iterations of hill climbing.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
      *              choose sigma such that number of density attractors is
      *              constant for a long interval of sigma.
@@ -96,6 +97,7 @@ public class DENCLUE extends PartitionClustering {
      *          observations to speed up the algorithm. It should also be
      *          large enough to capture the sufficient information of
      *          underlying distribution.
+     * @return the model.
      */
     public static DENCLUE fit(double[][] data, double sigma, int m) {
         int n = data.length;
@@ -115,6 +117,7 @@ public class DENCLUE extends PartitionClustering {
      *          underlying distribution.
      * @param tol the tolerance of hill-climbing procedure.
      * @param minPts the minimum number of neighbors for a core attractor.
+     * @return the model.
      */
     public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts) {
         if (sigma <= 0.0) {

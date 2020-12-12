@@ -93,7 +93,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * @param condprob the conditional distribution of each variable in
      * each class. In particular, condprob[i][j] is the conditional
      * distribution P(x<sub>j</sub> | class i).
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public NaiveBayes(double[] priori, Distribution[][] condprob, IntSet labels) {
         if (priori.length != condprob.length) {
@@ -121,6 +121,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;

@@ -128,7 +128,7 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param rbf the radial basis functions.
      * @param w the weights of RBFs.
      * @param normalized True if this is a normalized RBF network.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
         this.k = k;
@@ -144,6 +144,8 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf, false);
@@ -156,6 +158,8 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param y training labels in [0, k), where k is the number of classes.
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
@@ -192,7 +196,10 @@ public class RBFNetwork<T> implements Classifier<T> {
         return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);
     }
 
-    /** Returns true if the model is  normalized. */
+    /**
+     * Returns true if the model is  normalized.
+     * @return true if the model is  normalized.
+     */
     public boolean isNormalized() {
         return normalized;
     }

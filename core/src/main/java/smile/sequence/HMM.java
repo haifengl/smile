@@ -312,6 +312,7 @@ public class HMM implements Serializable {
      * values in [0, n), where n is the number of unique symbols.
      * @param labels the state labels of observations, of which states take
      * values in [0, p), where p is the number of hidden states.
+     * @return the model.
      */
     public static HMM fit(int[][] observations, int[][] labels) {
         if (observations.length != labels.length) {
@@ -359,6 +360,7 @@ public class HMM implements Serializable {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @return the model.
      */
     public static <T> HMM fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
         if (observations.length != labels.length) {

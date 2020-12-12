@@ -50,6 +50,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features) {
         return fit(sequences, labels, features, new Properties());
@@ -59,6 +60,8 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.crf.trees", "100"));
@@ -82,6 +85,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
         if (sequences.length != labels.length) {

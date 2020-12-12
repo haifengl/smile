@@ -65,6 +65,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static PoissonDistribution fit(int[] data) {
         for (int datum : data) {

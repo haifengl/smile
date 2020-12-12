@@ -66,6 +66,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
      * Clustering data into k clusters.
      * @param data the input data of which each row is an observation.
      * @param Kmax the maximum number of clusters.
+     * @return the model.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax) {
         return fit(data, Kmax, 0.9, 100, 1E-4, 1E-2);
@@ -80,6 +81,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
      * @param maxIter the maximum number of iterations at each temperature.
      * @param tol the tolerance of convergence test.
      * @param splitTol the tolerance to split a cluster.
+     * @return the model.
      */
     public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol) {
         if (alpha <= 0 || alpha >= 1.0) {

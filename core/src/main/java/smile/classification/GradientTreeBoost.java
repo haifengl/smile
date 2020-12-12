@@ -154,6 +154,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
@@ -166,6 +167,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param formula    a symbolic description of the model to be fitted.
      * @param trees      forest of regression trees.
      * @param b          the intercept
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      * @param labels     class labels
      */
@@ -184,6 +186,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance) {
@@ -195,6 +198,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula    a symbolic description of the model to be fitted.
      * @param forest     forest of regression trees.
+     * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      * @param labels     class labels
      */
@@ -212,6 +216,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data    the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -221,7 +226,9 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * Fits a gradient tree boosting for classification.
      *
      * @param formula a symbolic description of the model to be fitted.
-     * @param data    the data frame of the explanatory and response variables.
+     * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
         int ntrees = Integer.parseInt(prop.getProperty("smile.gbt.trees", "500"));
@@ -245,6 +252,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth,
                                         int maxNodes, int nodeSize, double shrinkage, double subsample) {
@@ -438,6 +446,7 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
     /**
      * Returns the regression trees.
+     * @return the regression trees.
      */
     public RegressionTree[] trees() {
         if (trees != null) {
@@ -598,6 +607,8 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
 
     /**
      * Returns the average of absolute SHAP values over a data frame.
+     * @param data the data set.
+     * @return the average of absolute SHAP values.
      */
     public double[] shap(DataFrame data) {
         // Binds the formula to the data frame's schema in case that

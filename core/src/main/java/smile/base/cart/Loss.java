@@ -386,7 +386,7 @@ public interface Loss {
 
     /**
      * Logistic regression loss for binary classification.
-     * @param labels the class labels.
+     * @param labels the class label encoder.
      * @return the logistic regression loss for binary classification.
      */
     static Loss logistic(int[] labels) {
@@ -445,7 +445,7 @@ public interface Loss {
      * Logistic regression loss for multi-class classification.
      * @param c the class id that this loss function fits on.
      * @param k the number of classes.
-     * @param labels the class labels.
+     * @param labels the class label encoder.
      * @param p the posteriori probabilities.
      * @return the logistic regression loss for multi-class classification.
      */

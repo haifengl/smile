@@ -79,6 +79,7 @@ public class PlattScaling implements Serializable {
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y) {
         return fit(scores, y, 100);
@@ -89,6 +90,7 @@ public class PlattScaling implements Serializable {
      * @param scores The predicted scores.
      * @param y The training labels.
      * @param maxIters The maximal number of iterations.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y, int maxIters) {
         int l = scores.length;
@@ -205,6 +207,8 @@ public class PlattScaling implements Serializable {
      * @param model the binary-class model to fit Platt scaling.
      * @param x training samples.
      * @param y training labels.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> PlattScaling fit(Classifier<T> model, T[] x, int[] y) {
         int n = y.length;

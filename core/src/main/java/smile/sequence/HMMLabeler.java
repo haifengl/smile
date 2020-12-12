@@ -51,6 +51,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @return the model.
      */
     public static <T> HMMLabeler<T> fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
         if (observations.length != labels.length) {

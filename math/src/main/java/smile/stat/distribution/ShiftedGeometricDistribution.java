@@ -58,6 +58,8 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static ShiftedGeometricDistribution fit(int[] data) {
         double sum = 0.0;

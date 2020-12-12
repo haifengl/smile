@@ -99,6 +99,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      * @param k the number of clusters. Note that this is just a hint. The final
      *          number of clusters may be less.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> MEC<T> fit(T[] data, Distance<T> distance, int k, double radius) {
         if (k < 2) {
@@ -132,6 +134,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      * @param y the initial clustering labels, which could be produced by any
      *          other clustering methods.
      * @param tol the tolerance of convergence test.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y, double tol) {
         if (k < 2) {

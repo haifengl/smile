@@ -98,7 +98,7 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
         Canvas plot = ScatterPlot.of(dataset[datasetIndex], membership, mark).canvas();
         pane.add(plot.panel());
 
-        plot = new Dendrogram(hac.getTree(), hac.getHeight()).canvas();
+        plot = new Dendrogram(hac.tree(), hac.height()).canvas();
         plot.setTitle("Dendrogram");
         pane.add(plot.panel());
         return pane;

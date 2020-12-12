@@ -77,7 +77,12 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
         return Double.compare(distortion, o.distortion);
     }
 
-    /** The distance function. */
+    /**
+     * The distance function.
+     * @param x an observation.
+     * @param y the other observation.
+     * @return the distance.
+     */
     protected abstract double distance(T x, U y);
 
     /**
