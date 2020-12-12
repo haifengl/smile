@@ -37,7 +37,7 @@ object SparkDataFrame {
 
 case class SparkRowTuple(row: org.apache.spark.sql.Row, override val schema:StructType) extends Tuple {
   override def length: Int = row.size
-  override def fieldIndex(name: String): Int = row.fieldIndex(name)
+  override def indexOf(name: String): Int = row.fieldIndex(name)
   override def isNullAt(i: Int): Boolean = row.isNullAt(i)
   override def get(i: Int): AnyRef = row.get(i).asInstanceOf[AnyRef]
   override def getBoolean(i: Int): Boolean = row.getBoolean(i)

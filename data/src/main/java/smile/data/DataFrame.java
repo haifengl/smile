@@ -335,7 +335,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the string representation of the field value.
      */
     default String toString(int i, String field) {
-        return toString(i, columnIndex(field));
+        return toString(i, indexOf(field));
     }
 
     /**
@@ -427,7 +427,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @throws ClassCastException when the data is not nominal or ordinal.
      */
     default String getScale(int i, String field) {
-        return getScale(i, columnIndex(field));
+        return getScale(i, indexOf(field));
     }
 
     /**
@@ -470,7 +470,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the index of a given column name.
      * @throws IllegalArgumentException when a field `name` does not exist.
      */
-    int columnIndex(String name);
+    int indexOf(String name);
 
     /** Selects column based on the column name and return it as a Column. */
     default BaseVector apply(String colName) {
@@ -487,12 +487,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default BaseVector column(String colName) {
-        return column(columnIndex(colName));
+        return column(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default BaseVector column(Enum<?> e) {
-        return column(columnIndex(e.toString()));
+        return column(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -500,12 +500,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default <T> Vector<T> vector(String colName) {
-        return vector(columnIndex(colName));
+        return vector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default <T> Vector<T> vector(Enum<?> e) {
-        return vector(columnIndex(e.toString()));
+        return vector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -513,12 +513,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default BooleanVector booleanVector(String colName) {
-        return booleanVector(columnIndex(colName));
+        return booleanVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default BooleanVector booleanVector(Enum<?> e) {
-        return booleanVector(columnIndex(e.toString()));
+        return booleanVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -526,12 +526,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default CharVector charVector(String colName) {
-        return charVector(columnIndex(colName));
+        return charVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default CharVector charVector(Enum<?> e) {
-        return charVector(columnIndex(e.toString()));
+        return charVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -539,12 +539,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default ByteVector byteVector(String colName) {
-        return byteVector(columnIndex(colName));
+        return byteVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default ByteVector byteVector(Enum<?> e) {
-        return byteVector(columnIndex(e.toString()));
+        return byteVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -552,12 +552,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default ShortVector shortVector(String colName) {
-        return shortVector(columnIndex(colName));
+        return shortVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default ShortVector shortVector(Enum<?> e) {
-        return shortVector(columnIndex(e.toString()));
+        return shortVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -565,12 +565,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default IntVector intVector(String colName) {
-        return intVector(columnIndex(colName));
+        return intVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default IntVector intVector(Enum<?> e) {
-        return intVector(columnIndex(e.toString()));
+        return intVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -578,12 +578,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default LongVector longVector(String colName) {
-        return longVector(columnIndex(colName));
+        return longVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default LongVector longVector(Enum<?> e) {
-        return longVector(columnIndex(e.toString()));
+        return longVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -591,12 +591,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default FloatVector floatVector(String colName) {
-        return floatVector(columnIndex(colName));
+        return floatVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default FloatVector floatVector(Enum<?> e) {
-        return floatVector(columnIndex(e.toString()));
+        return floatVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -604,12 +604,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default DoubleVector doubleVector(String colName) {
-        return doubleVector(columnIndex(colName));
+        return doubleVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default DoubleVector doubleVector(Enum<?> e) {
-        return doubleVector(columnIndex(e.toString()));
+        return doubleVector(indexOf(e.toString()));
     }
 
     /** Selects column based on the column index. */
@@ -617,12 +617,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects column based on the column name. */
     default StringVector stringVector(String colName) {
-        return stringVector(columnIndex(colName));
+        return stringVector(indexOf(colName));
     }
 
     /** Selects column using an enum value. */
     default StringVector stringVector(Enum<?> e) {
-        return stringVector(columnIndex(e.toString()));
+        return stringVector(indexOf(e.toString()));
     }
 
     /** Selects a new DataFrame with given column indices. */
@@ -630,7 +630,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Selects a new DataFrame with given column names. */
     default DataFrame select(String... cols) {
-        int[] indices = Arrays.stream(cols).mapToInt(this::columnIndex).toArray();
+        int[] indices = Arrays.stream(cols).mapToInt(this::indexOf).toArray();
         return select(indices);
     }
 
@@ -659,7 +659,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
 
     /** Returns a new DataFrame without given column names. */
     default DataFrame drop(String... cols) {
-        int[] indices = Arrays.stream(cols).mapToInt(this::columnIndex).toArray();
+        int[] indices = Arrays.stream(cols).mapToInt(this::indexOf).toArray();
         return drop(indices);
     }
 
@@ -682,7 +682,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         HashSet<String> set = new HashSet<>(Arrays.asList(cols));
         BaseVector[] vectors = Arrays.stream(names()).map(col -> {
             if (set.contains(col)) {
-                int j = columnIndex(col);
+                int j = indexOf(col);
                 List<String> levels = IntStream.range(0, n)
                         .mapToObj(i -> getString(i, j))
                         .distinct().sorted().collect(Collectors.toList());

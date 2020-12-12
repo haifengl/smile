@@ -466,7 +466,7 @@ package object swing {
     * @param hc hierarchical clustering object.
     */
   def dendrogram(hc: HierarchicalClustering): Canvas = {
-    new Dendrogram(hc.getTree, hc.getHeight).canvas
+    new Dendrogram(hc.tree, hc.height).canvas
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement

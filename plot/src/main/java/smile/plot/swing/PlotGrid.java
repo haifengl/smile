@@ -316,7 +316,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * @param category the category column for coloring.
      */
     public static PlotGrid splom(DataFrame data, char mark, String category) {
-        int clazz = data.columnIndex(category);
+        int clazz = data.indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);

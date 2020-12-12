@@ -61,8 +61,8 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public int columnIndex(String name) {
-        return df.columnIndex(name);
+    public int indexOf(String name) {
+        return df.indexOf(name);
     }
 
     @Override
