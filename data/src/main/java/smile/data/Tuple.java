@@ -541,6 +541,7 @@ public interface Tuple extends Serializable {
      * Returns the value at position i of array type.
      *
      * @param i the index of field.
+     * @param <T> the data type of array elements.
      * @throws ClassCastException when data type does not match.
      * @return the field value.
      */
@@ -552,6 +553,7 @@ public interface Tuple extends Serializable {
      * Returns the field value of array type.
      *
      * @param field the name of field.
+     * @param <T> the data type of array elements.
      * @throws ClassCastException when data type does not match.
      * @return the field value.
      */
@@ -587,6 +589,7 @@ public interface Tuple extends Serializable {
      * ie. 0 for Int - use isNullAt to ensure that value is not null
      *
      * @param i the index of field.
+     * @param <T> the data type of field.
      * @throws ClassCastException when data type does not match.
      * @return the field value.
      */
@@ -601,6 +604,7 @@ public interface Tuple extends Serializable {
      * ie. 0 for Int - use isNullAt to ensure that value is not null
      *
      * @param field the name of field.
+     * @param <T> the data type of field.
      * @throws UnsupportedOperationException when schema is not defined.
      * @throws IllegalArgumentException when fieldName do not exist.
      * @throws ClassCastException when data type does not match.
@@ -681,6 +685,7 @@ public interface Tuple extends Serializable {
      * Returns the current row of a JDBC ResultSet as a tuple.
      * @param rs the JDBC ResultSet.
      * @param schema the schema of tuple.
+     * @throws SQLException when JDBC operation fails.
      * @return the tuple.
      */
     static Tuple of(ResultSet rs, StructType schema) throws SQLException {

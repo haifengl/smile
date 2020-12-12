@@ -20,7 +20,6 @@ package smile.data;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -30,11 +29,15 @@ import java.util.stream.Stream;
  * @author Haifeng Li
  */
 public interface BinarySparseDataset extends Dataset<int[]> {
-    /** Returns the number of nonzero entries. */
+    /**
+     * Returns the number of nonzero entries.
+     * @return the number of nonzero entries.
+     */
     int length();
 
     /**
      * Returns the number of columns.
+     * @return the number of columns.
      */
     int ncols();
     
@@ -42,6 +45,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * Returns the binary value at entry (i, j) by binary search.
      * @param i the row index.
      * @param j the column index.
+     * @return the binary value of cell.
      */
     default int get(int i, int j) {
         if (i < 0 || i >= size()) {
@@ -74,6 +78,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
 
     /**
      * Returns the Harwell-Boeing column-compressed sparse matrix.
+     * @return the sparse matrix.
      */
     smile.math.matrix.SparseMatrix toMatrix();
 
@@ -83,6 +88,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * @param data Each row is a data item which are the indices of
      *             nonzero elements. Every row will be sorted into
      *             ascending order.
+     * @return the sparse dataset.
      */
     static BinarySparseDataset of(Collection<int[]> data) {
         return new BinarySparseDatasetImpl(data);
@@ -95,6 +101,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * @param path the input file path.
      * @exception IOException if stream to file cannot be read or closed.
      * @exception NumberFormatException if an entry is not an integer.
+     * @return the sparse dataset.
      */
     static BinarySparseDataset from(java.nio.file.Path path) throws IOException, NumberFormatException {
         try (Stream<String> stream = java.nio.file.Files.lines(path)) {
@@ -105,7 +112,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
                     index[i] = Integer.parseInt(s[i]);
                 }
                 return index;
-            }).collect(Collectors.toList());
+            }).collect(java.util.stream.Collectors.toList());
 
             return new BinarySparseDatasetImpl(rows);
         }

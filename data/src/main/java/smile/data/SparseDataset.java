@@ -26,7 +26,6 @@ import java.util.Collection;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
@@ -46,14 +45,22 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public interface SparseDataset extends Dataset<SparseArray> {
-    /** Returns the number of nonzero entries. */
+    /**
+     * Returns the number of nonzero entries.
+     * @return the number of nonzero entries.
+     */
     int nz();
 
-    /** Returns the number of nonzero entries in column j. */
+    /**
+     * Returns the number of nonzero entries in column j.
+     * @param j the column index.
+     * @return the number of nonzero entries in column j.
+     */
     int nz(int j);
 
     /**
      * Returns the number of rows.
+     * @return the number of rows.
      */
     default int nrows() {
         return size();
@@ -61,6 +68,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
 
     /**
      * Returns the number of columns.
+     * @return the number of columns.
      */
     int ncols();
 
@@ -68,6 +76,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns the value at entry (i, j).
      * @param i the row index.
      * @param j the column index.
+     * @return the cell value.
      */
     default double get(int i, int j) {
         if (i < 0 || i >= size() || j < 0 || j >= ncols()) {
@@ -121,6 +130,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
 
     /**
      * Convert into Harwell-Boeing column-compressed sparse matrix format.
+     * @return the sparse matrix.
      */
     default SparseMatrix toMatrix() {
         int nz = nz();
@@ -154,15 +164,17 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns a default implementation of SparseDataset from a collection.
      *
      * @param data sparse arrays.
+     * @return the sparse dataset.
      */
     static SparseDataset of(Stream<SparseArray> data) {
-        return of(data.collect(Collectors.toList()));
+        return of(data.collect(java.util.stream.Collectors.toList()));
     }
 
     /**
      * Returns a default implementation of SparseDataset from a collection.
      *
      * @param data sparse arrays.
+     * @return the sparse dataset.
      */
     static SparseDataset of(Collection<SparseArray> data) {
         return new SparseDatasetImpl(data);
@@ -173,14 +185,19 @@ public interface SparseDataset extends Dataset<SparseArray> {
      *
      * @param data sparse arrays.
      * @param ncols the number of columns.
+     * @return the sparse dataset.
      */
     static SparseDataset of(Collection<SparseArray> data, int ncols) {
         return new SparseDatasetImpl(data, ncols);
     }
 
-    /** Strips the response variable and returns a SparseDataset. */
+    /**
+     * Strips the response variable and returns a SparseDataset.
+     * @param data the dataset of sparse arrays.
+     * @return the sparse dataset.
+     */
     static SparseDataset of(Dataset<Instance<SparseArray>> data) {
-        return of(data.stream().map(Instance::x).collect(Collectors.toList()));
+        return of(data.stream().map(Instance::x).collect(java.util.stream.Collectors.toList()));
     }
 
     /**
@@ -188,6 +205,9 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Coordinate file stores a list of (row, column, value) tuples.
      *
      * @param path the input file path.
+     * @throws IOException when fail to read file.
+     * @throws ParseException when fail to parse data.
+     * @return the sparse dataset.
      */
     static SparseDataset from(Path path) throws IOException, ParseException {
         return from(path, 0);
@@ -196,7 +216,6 @@ public interface SparseDataset extends Dataset<SparseArray> {
     /**
      * Reads spare dataset in coordinate triple tuple list format.
      * Coordinate file stores a list of (row, column, value) tuples:
-     * <p>
      * <pre>
      * instanceID attributeID value
      * instanceID attributeID value
@@ -212,12 +231,10 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * construction.
      * <p>
      * In addition, there may a header line
-     * <p>
      * <pre>
      * D W N   // The number of rows, columns and nonzero entries.
      * </pre>
      * or 3 header lines
-     * <p>
      * <pre>
      * D    // The number of rows
      * W    // The number of columns
@@ -231,6 +248,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      *
      * @exception IOException if stream to file cannot be read or closed.
      * @exception ParseException if an index is not an integer or the value is not a double.
+     * @return the sparse dataset.
      */
     static SparseDataset from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));

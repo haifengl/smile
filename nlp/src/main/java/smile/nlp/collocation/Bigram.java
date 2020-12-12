@@ -74,10 +74,10 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Finds top k bigram collocations in the given corpus.
      * @param corpus the corpus.
+     * @param k the top k bigram to compute.
      * @param minFrequency The minimum frequency of bigram in the corpus.
-     * @return the array of significant bigram collocations in descending order
+     * @return the significant bigram collocations in the descending order
      * of likelihood ratio.
-     * @return the top k bigram collocations.
      */
     public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
         Bigram[] bigrams = new Bigram[k];
