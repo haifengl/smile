@@ -39,12 +39,18 @@ import smile.math.matrix.Matrix;
 public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     /**
      * Returns the distance measure between two objects.
+     * @param x an object.
+     * @param y an object.
+     * @return the distance.
      */
     double d(T x, T y);
 
     /**
      * Returns the distance measure between two objects.
      * This is simply for Scala convenience.
+     * @param x an object.
+     * @param y an object.
+     * @return the distance.
      */
     default double apply(T x, T y) {
         return d(x, y);

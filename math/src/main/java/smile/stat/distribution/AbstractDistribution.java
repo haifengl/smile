@@ -53,6 +53,11 @@ public abstract class AbstractDistribution implements Distribution {
      * distribution to achieve simulation from the target distribution
      * <code>f(x)</code>. It forms the basis for algorithms such as
      * the Metropolis algorithm.
+     *
+     * @param pmax the scale of instrumental distribution (uniform).
+     * @param xmin the lower bound of random variable range.
+     * @param xmax the upper bound of random variable range.
+     * @return a random number.
      */
     protected double rejection(double pmax, double xmin, double xmax) {
         double x;
@@ -80,6 +85,8 @@ public abstract class AbstractDistribution implements Distribution {
      * case that, even for simple distributions, the inverse transform
      * sampling method can be improved on, given substantial research
      * effort, e.g. the ziggurat algorithm and rejection sampling.
+     *
+     * @return a random number.
      */
     protected double inverseTransformSampling() {
         double u = MathEx.random();
@@ -89,6 +96,12 @@ public abstract class AbstractDistribution implements Distribution {
     /**
      * Inversion of CDF by bisection numeric root finding of "cdf(x) = p"
      * for continuous distribution.
+     *
+     * @param p the probability.
+     * @param xmin the lower bound of search range.
+     * @param xmax the upper bound of search range.
+     * @param eps the epsilon close to zero.
+     * @return the quantile.
      */
     protected double quantile(double p, double xmin, double xmax, double eps) {
         if (eps <= 0.0) {
@@ -110,6 +123,10 @@ public abstract class AbstractDistribution implements Distribution {
     /**
      * Inversion of CDF by bisection numeric root finding of "cdf(x) = p"
      * for continuous distribution. The default epsilon is 1E-6.
+     * @param p the probability.
+     * @param xmin the lower bound of search range.
+     * @param xmax the upper bound of search range.
+     * @return the quantile.
      */
     protected double quantile(double p, double xmin, double xmax) {
         return quantile(p, xmin, xmax, 1.0E-6);

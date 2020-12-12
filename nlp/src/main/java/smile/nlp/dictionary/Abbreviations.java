@@ -25,14 +25,18 @@ package smile.nlp.dictionary;
 public interface Abbreviations extends Dictionary {
 
     /**
-     * Returns the full word for a given abbreviation. If the abbreviation
+     * Returns the full word of an abbreviation. If the abbreviation
      * doesn't exist in the dictionary return null.
+     * @param abbr the abbreviation.
+     * @return the full word of abbreviation or null.
      */
     String getFull(String abbr);
 
     /**
      * Returns the abbreviation for a word. If the word doesn't exist in the
      * dictionary return null.
+     * @param word the query word.
+     * @return the abbreviation or null.
      */
-    String getAbbreviation(String full);
+    String getAbbreviation(String word);
 }

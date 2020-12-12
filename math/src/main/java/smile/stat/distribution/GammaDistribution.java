@@ -87,6 +87,8 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
     /**
      * Estimates the distribution parameters by (approximate) MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GammaDistribution fit(double[] data) {
         for (double datum : data) {

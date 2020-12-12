@@ -65,6 +65,7 @@ public class EnglishPunctuations implements Punctuations {
 
     /**
      * Returns the singleton instance.
+     * @return the singleton instance.
      */
     public static EnglishPunctuations getInstance() {
         return singleton;

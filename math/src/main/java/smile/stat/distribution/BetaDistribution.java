@@ -76,6 +76,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
 
     /**
      * Estimates the distribution parameters by the moment method.
+     * @param data the samples.
+     * @return the distribution.
      */
     public static BetaDistribution fit(double[] data) {
         for (double datum : data) {
@@ -100,7 +102,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
      * Returns the shape parameter alpha.
      * @return the shape parameter alpha
      */
-    public double getAlpha() {
+    public double alpha() {
         return alpha;
     }
 
@@ -108,7 +110,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
      * Returns the shape parameter beta.
      * @return the shape parameter beta
      */
-    public double getBeta() {
+    public double beta() {
         return beta;
     }
 

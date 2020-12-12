@@ -64,6 +64,7 @@ public class BernoulliDistribution extends DiscreteDistribution {
     /**
      * Estimates the distribution parameters by MLE.
      * @param data data[i] == 1 if the i-<i>th</i> trail is success. Otherwise 0.
+     * @return the distribution.
      */
     public static BernoulliDistribution fit(int[] data) {
         int k = 0;

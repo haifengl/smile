@@ -111,6 +111,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         return new GaussianDistribution(mu, sigma);
     }
 
+    /** Returns the standard normal distribution. */
     public static GaussianDistribution getInstance() {
         return singleton;
     }
@@ -178,6 +179,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     
     /**
      * Generates a Gaussian random number with the inverse CDF method.
+     * @return a random number.
      */
     public double inverseCDF() {
         final double a0 = 2.50662823884;

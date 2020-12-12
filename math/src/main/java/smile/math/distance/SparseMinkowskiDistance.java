@@ -43,6 +43,7 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
     /**
      * Constructor.
+     * @param p the order of Minkowski distance.
      */
     public SparseMinkowskiDistance(int p) {
         this(p, null);
@@ -50,7 +51,7 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
     /**
      * Constructor.
-     *
+     * @param p the order of Minkowski distance.
      * @param weight the weight vector.
      */
     public SparseMinkowskiDistance(int p, double[] weight) {
