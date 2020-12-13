@@ -38,8 +38,6 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SumSquaresRatio implements FeatureRanking {
-    public static final SumSquaresRatio instance = new SumSquaresRatio();
-
     @Override
     public double[] rank(double[][] x, int[] y) {
         return of(x, y);
