@@ -99,12 +99,18 @@ public class Formula implements Serializable {
         this.predictors = predictors;
     }
 
-    /** Returns the predictors. */
+    /**
+     * Returns the predictors.
+     * @return the predictors.
+     */
     public Term[] predictors() {
         return predictors;
     }
 
-    /** Returns the response term. */
+    /**
+     * Returns the response term.
+     * @return the response term.
+     */
     public Term response() {
         return response;
     }
@@ -138,6 +144,7 @@ public class Formula implements Serializable {
      * Factory method. The predictors will be all the columns not otherwise
      * in the formula in the context of a data frame.
      * @param lhs the left-hand side of formula, i.e. dependent variable.
+     * @return the formula.
      */
     public static Formula lhs(String lhs) {
         return lhs(new Variable(lhs));
@@ -147,6 +154,7 @@ public class Formula implements Serializable {
      * Factory method. The predictors will be all the columns not otherwise
      * in the formula in the context of a data frame.
      * @param lhs the left-hand side of formula, i.e. dependent variable.
+     * @return the formula.
      */
     public static Formula lhs(Term lhs) {
         return new Formula(lhs, new Dot());
@@ -155,6 +163,7 @@ public class Formula implements Serializable {
     /**
      * Factory method. No response variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     * @return the formula.
      */
     public static Formula rhs(String... predictors) {
         return of(null, predictors);
@@ -163,6 +172,7 @@ public class Formula implements Serializable {
     /**
      * Factory method. No response variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     * @return the formula.
      */
     public static Formula rhs(Term... predictors) {
         return new Formula(null, predictors);
@@ -172,6 +182,7 @@ public class Formula implements Serializable {
      * Factory method.
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     * @return the formula.
      */
     public static Formula of(String response, String... predictors) {
         return new Formula(
@@ -189,6 +200,7 @@ public class Formula implements Serializable {
      * Factory method.
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     * @return the formula.
      */
     public static Formula of(String response, Term... predictors) {
         return new Formula(new Variable(response), predictors);
@@ -198,6 +210,7 @@ public class Formula implements Serializable {
      * Factory method.
      * @param response the left-hand side of formula, i.e. dependent variable.
      * @param predictors the right-hand side of formula, i.e. independent/predictor variables.
+     * @return the formula.
      */
     public static Formula of(Term response, Term... predictors) {
         return new Formula(response, predictors);
@@ -206,6 +219,7 @@ public class Formula implements Serializable {
     /**
      * Expands the Dot and FactorCrossing terms on the given schema.
      * @param inputSchema the schema to expand on
+     * @return the expanded formula.
      */
     public Formula expand(StructType inputSchema) {
         Set<String> columns = new HashSet<>();
@@ -241,6 +255,7 @@ public class Formula implements Serializable {
     /**
      * Binds the formula to a schema and returns the schema of predictors.
      * @param inputSchema the schema to bind with
+     * @return the data structure of output data frame.
      */
     public StructType bind(StructType inputSchema) {
         if (binding != null && binding.get().inputSchema == inputSchema) {
@@ -288,9 +303,11 @@ public class Formula implements Serializable {
 
     /**
      * Apply the formula on a tuple to generate the model data.
+     * @param tuple the input tuple.
+     * @return the output tuple.
      */
-    public Tuple apply(Tuple t) {
-        bind(t.schema());
+    public Tuple apply(Tuple tuple) {
+        bind(tuple.schema());
 
         Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
@@ -301,27 +318,27 @@ public class Formula implements Serializable {
 
             @Override
             public Object get(int i) {
-                return binding.yx[i].apply(t);
+                return binding.yx[i].apply(tuple);
             }
 
             @Override
             public int getInt(int i) {
-                return binding.yx[i].applyAsInt(t);
+                return binding.yx[i].applyAsInt(tuple);
             }
 
             @Override
             public long getLong(int i) {
-                return binding.yx[i].applyAsLong(t);
+                return binding.yx[i].applyAsLong(tuple);
             }
 
             @Override
             public float getFloat(int i) {
-                return binding.yx[i].applyAsFloat(t);
+                return binding.yx[i].applyAsFloat(tuple);
             }
 
             @Override
             public double getDouble(int i) {
-                return binding.yx[i].applyAsDouble(t);
+                return binding.yx[i].applyAsDouble(tuple);
             }
 
             @Override
@@ -333,9 +350,11 @@ public class Formula implements Serializable {
 
     /**
      * Apply the formula on a tuple to generate the predictors data.
+     * @param tuple the input tuple.
+     * @return the output tuple.
      */
-    public Tuple x(Tuple t) {
-        bind(t.schema());
+    public Tuple x(Tuple tuple) {
+        bind(tuple.schema());
 
         Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
@@ -346,27 +365,27 @@ public class Formula implements Serializable {
 
             @Override
             public Object get(int i) {
-                return binding.x[i].apply(t);
+                return binding.x[i].apply(tuple);
             }
 
             @Override
             public int getInt(int i) {
-                return binding.x[i].applyAsInt(t);
+                return binding.x[i].applyAsInt(tuple);
             }
 
             @Override
             public long getLong(int i) {
-                return binding.x[i].applyAsLong(t);
+                return binding.x[i].applyAsLong(tuple);
             }
 
             @Override
             public float getFloat(int i) {
-                return binding.x[i].applyAsFloat(t);
+                return binding.x[i].applyAsFloat(tuple);
             }
 
             @Override
             public double getDouble(int i) {
-                return binding.x[i].applyAsDouble(t);
+                return binding.x[i].applyAsDouble(tuple);
             }
 
             @Override
@@ -380,26 +399,29 @@ public class Formula implements Serializable {
      * Returns a data frame of predictors and optionally response variable
      * (if input data frame has the related variable(s)).
      *
-     * @param df The input DataFrame.
+     * @param data The input data frame.
+     * @return the output data frame.
      */
-    public DataFrame frame(DataFrame df) {
-        bind(df.schema());
+    public DataFrame frame(DataFrame data) {
+        bind(data.schema());
 
         Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
-                .map(term -> term.apply(df)).toArray(BaseVector[]::new);
+                .map(term -> term.apply(data)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
     /**
      * Returns a data frame of predictors.
-     * @param df The input DataFrame.
+     *
+     * @param data The input data frame.
+     * @return the data frame of predictors.
      */
-    public DataFrame x(DataFrame df) {
-        bind(df.schema());
+    public DataFrame x(DataFrame data) {
+        bind(data.schema());
         Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.x)
-                .map(term -> term.apply(df)).toArray(BaseVector[]::new);
+                .map(term -> term.apply(data)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
     }
 
@@ -410,9 +432,10 @@ public class Formula implements Serializable {
      * column will be included. Otherwise, it is based on the
      * setting of Intercept term.
      *
-     * @param df The input DataFrame.
+     * @param data The input data frame.
+     * @return the design matrix.
      */
-    public Matrix matrix(DataFrame df) {
+    public Matrix matrix(DataFrame data) {
         boolean bias = true;
         Optional<Intercept> intercept = Arrays.stream(predictors)
                 .filter(term -> term instanceof Intercept)
@@ -423,71 +446,77 @@ public class Formula implements Serializable {
             bias = intercept.get().bias();
         }
 
-        return matrix(df, bias);
+        return matrix(data, bias);
     }
 
     /**
      * Returns the design matrix of predictors.
      * All categorical variables will be dummy encoded.
-     * @param df The input DataFrame.
+     * @param data The input data frame.
      * @param bias If true, include the bias column.
+     * @return the design matrix.
      */
-    public Matrix matrix(DataFrame df, boolean bias) {
-        return x(df).toMatrix(bias, CategoricalEncoder.DUMMY, null);
+    public Matrix matrix(DataFrame data, boolean bias) {
+        return x(data).toMatrix(bias, CategoricalEncoder.DUMMY, null);
     }
 
     /**
      * Returns the response vector.
-     * @param df The input DataFrame.
+     * @param data The input data frame.
+     * @return the response vector.
      */
-    public BaseVector y(DataFrame df) {
+    public BaseVector y(DataFrame data) {
         if (response == null) {
             throw new UnsupportedOperationException("The formula has no response variable.");
         }
 
-        bind(df.schema());
+        bind(data.schema());
 
         Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
 
-        return binding.yx[0].apply(df);
+        return binding.yx[0].apply(data);
     }
 
     /**
      * Returns the real-valued response value.
+     * @param tuple the input tuple.
+     * @return the response variable.
      */
-    public double y(Tuple t) {
+    public double y(Tuple tuple) {
         if (response == null) {
             throw new UnsupportedOperationException("The formula has no response variable.");
         }
 
-        bind(t.schema());
+        bind(tuple.schema());
 
         Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
 
-        return binding.yx[0].applyAsDouble(t);
+        return binding.yx[0].applyAsDouble(tuple);
     }
 
     /**
      * Returns the integer-valued response value.
+     * @param tuple the input tuple.
+     * @return the response variable.
      */
-    public int yint(Tuple t) {
+    public int yint(Tuple tuple) {
         if (response == null) {
             throw new UnsupportedOperationException("The formula has no response variable.");
         }
 
-        bind(t.schema());
+        bind(tuple.schema());
 
         Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
 
-        return binding.yx[0].applyAsInt(t);
+        return binding.yx[0].applyAsInt(tuple);
     }
 }

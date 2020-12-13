@@ -34,7 +34,7 @@ public class PerfectMap<T> {
     /** The value set. */
     private final List<T> values;
 
-    /** Builder of perfect map. */
+    /** The builder of perfect map. */
     public static class Builder<T> {
         /** Key-value map. */
         private final Map<String, T> map = new HashMap<>();
@@ -44,18 +44,29 @@ public class PerfectMap<T> {
 
         }
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param map the initialization map.
+         */
         public Builder(Map<String, T> map) {
             this.map.putAll(map);
         }
 
-        /** Add a new key-value pair. */
+        /**
+         * Add a new key-value pair.
+         * @param key the key.
+         * @param value the value.
+         * @return this builder.
+         */
         public Builder<T> add(String key, T value) {
             map.put(key, value);
             return this;
         }
 
-        /** Builds the perfect map. */
+        /**
+         * Builds the perfect map.
+         * @return the perfect map.
+         */
         public PerfectMap<T> build() {
             String[] keys = new String[map.size()];
             List<T> values = new ArrayList<>();
@@ -80,6 +91,8 @@ public class PerfectMap<T> {
     /**
      * Returns the value associated with the key. Returns null if
      * the key doesn't exist in the map.
+     * @param key the key.
+     * @return the value or null.
      */
     public T get(String key) {
         int i = hash.get(key);

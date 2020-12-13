@@ -666,7 +666,8 @@ public class AdjacencyList implements Graph, Serializable {
      * where two vertices i and j are connected if the (i, j)-th entry of
      * the matrix is nonzero. Rectangular or structurally asymmetric
      * matrices are treated as bipartite graphs.
-     * 
+     *
+     * @param matrix the matrix representation of the graph.
      * @return a graph
      */
     public static AdjacencyList of(SparseMatrix matrix) {

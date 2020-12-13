@@ -33,9 +33,16 @@ import java.nio.ByteBuffer;
  *
  * @author Haifeng Li
  */
-public class MurmurHash2 {
-    /** 32-bit MurmurHash. */
-    public static int hash32(ByteBuffer data, int offset, int length, int seed) {
+public interface MurmurHash2 {
+    /**
+     * 32-bit MurmurHash.
+     * @param data the data buffer.
+     * @param offset the start offset of data in the buffer.
+     * @param length the length of data.
+     * @param seed the seed of hash code.
+     * @return the hash code.
+     */
+    static int hash32(ByteBuffer data, int offset, int length, int seed) {
         int m = 0x5bd1e995;
         int r = 24;
 
@@ -84,8 +91,15 @@ public class MurmurHash2 {
         return h;
     }
 
-    /** 64-bit MurmurHash. */
-    public static long hash64(ByteBuffer key, int offset, int length, long seed) {
+    /**
+     * 64-bit MurmurHash.
+     * @param data the data buffer.
+     * @param offset the start offset of data in the buffer.
+     * @param length the length of data.
+     * @param seed the seed of hash code.
+     * @return the hash code.
+     */
+    static long hash64(ByteBuffer data, int offset, int length, long seed) {
         long m64 = 0xc6a4a7935bd1e995L;
         int r64 = 47;
 
@@ -96,14 +110,14 @@ public class MurmurHash2 {
         for (int i = 0; i < lenLongs; ++i) {
             int i_8 = i << 3;
 
-            long k64 = ((long) key.get(offset + i_8 + 0) & 0xff)
-                    + (((long) key.get(offset + i_8 + 1) & 0xff) << 8)
-                    + (((long) key.get(offset + i_8 + 2) & 0xff) << 16)
-                    + (((long) key.get(offset + i_8 + 3) & 0xff) << 24)
-                    + (((long) key.get(offset + i_8 + 4) & 0xff) << 32)
-                    + (((long) key.get(offset + i_8 + 5) & 0xff) << 40)
-                    + (((long) key.get(offset + i_8 + 6) & 0xff) << 48)
-                    + (((long) key.get(offset + i_8 + 7) & 0xff) << 56);
+            long k64 = ((long) data.get(offset + i_8 + 0) & 0xff)
+                    + (((long) data.get(offset + i_8 + 1) & 0xff) << 8)
+                    + (((long) data.get(offset + i_8 + 2) & 0xff) << 16)
+                    + (((long) data.get(offset + i_8 + 3) & 0xff) << 24)
+                    + (((long) data.get(offset + i_8 + 4) & 0xff) << 32)
+                    + (((long) data.get(offset + i_8 + 5) & 0xff) << 40)
+                    + (((long) data.get(offset + i_8 + 6) & 0xff) << 48)
+                    + (((long) data.get(offset + i_8 + 7) & 0xff) << 56);
 
             k64 *= m64;
             k64 ^= k64 >>> r64;
@@ -119,19 +133,19 @@ public class MurmurHash2 {
             case 0:
                 break;
             case 7:
-                h64 ^= (long) key.get(offset + length - rem + 6) << 48;
+                h64 ^= (long) data.get(offset + length - rem + 6) << 48;
             case 6:
-                h64 ^= (long) key.get(offset + length - rem + 5) << 40;
+                h64 ^= (long) data.get(offset + length - rem + 5) << 40;
             case 5:
-                h64 ^= (long) key.get(offset + length - rem + 4) << 32;
+                h64 ^= (long) data.get(offset + length - rem + 4) << 32;
             case 4:
-                h64 ^= (long) key.get(offset + length - rem + 3) << 24;
+                h64 ^= (long) data.get(offset + length - rem + 3) << 24;
             case 3:
-                h64 ^= (long) key.get(offset + length - rem + 2) << 16;
+                h64 ^= (long) data.get(offset + length - rem + 2) << 16;
             case 2:
-                h64 ^= (long) key.get(offset + length - rem + 1) << 8;
+                h64 ^= (long) data.get(offset + length - rem + 1) << 8;
             case 1:
-                h64 ^= (long) key.get(offset + length - rem);
+                h64 ^= (long) data.get(offset + length - rem);
                 h64 *= m64;
         }
 
