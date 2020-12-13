@@ -126,7 +126,11 @@ public class BitString implements Chromosome {
         this.crossover = crossover;
     }
 
-    /** Generate a random bit string. */
+    /**
+     * Generate a random bit string.
+     * @param length the length of bit string.
+     * @return a random bit string.
+     */
     private static byte[] bits(int length) {
         if (length <= 0) {
             throw new IllegalArgumentException("Invalid bit string length: " + length);
@@ -140,13 +144,17 @@ public class BitString implements Chromosome {
         return bits;
     }
 
-    /** Returns the length of bit string. */
+    /**
+     * Returns the length of bit string.
+     * @return the length of bit string.
+     */
     public int length() {
         return bits.length;
     }
 
     /**
      * Returns the bit string of chromosome.
+     * @return the bit string.
      */
     public byte[] bits() {
         return bits;
@@ -171,7 +179,11 @@ public class BitString implements Chromosome {
         return new BitString(bits.length, fitness, crossover, crossoverRate, mutationRate);
     }
 
-    /** Creates a new instance with given bits. */
+    /**
+     * Creates a new instance with given bits.
+     * @param bits the bits.
+     * @return a new <code>BitString</code>.
+     */
     public BitString newInstance(byte[] bits) {
         return new BitString(bits, fitness, crossover, crossoverRate, mutationRate);
     }

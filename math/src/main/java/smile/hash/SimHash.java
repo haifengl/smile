@@ -23,12 +23,23 @@ import java.nio.ByteBuffer;
  * SimHash is a technique for quickly estimating how similar two sets are.
  * The algorithm is used by the Google Crawler to find near duplicate pages.
  *
+ * @param <T> the data type of input objects.
+ *
  * @author Haifeng Li
  */
 public interface SimHash<T> {
+    /**
+     * Return the hash code.
+     * @param x the object.
+     * @return the hash code.
+     */
     long hash(T x);
 
-    /** Returns the SimHash for a set of generic features (represented as byte[]). */
+    /**
+     * Returns the <code>SimHash</code> for a set of generic features (represented as byte[]).
+     * @param features the generic features.
+     * @return the <code>SimHash</code>.
+     */
     static SimHash<int[]> of(byte[][] features) {
         int n = features.length;
         long[] hash = new long[n];
@@ -70,7 +81,10 @@ public interface SimHash<T> {
         };
     }
 
-    /** Returns the SimHash for string tokens. */
+    /**
+     * Returns the <code>SimHash</code> for string tokens.
+     * @return the <code>SimHash</code> for string tokens.
+     */
     static SimHash<String[]> text() {
         return tokens -> {
                 final int BITS = 64;

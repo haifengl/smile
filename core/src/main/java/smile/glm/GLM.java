@@ -132,6 +132,16 @@ public class GLM implements Serializable {
 
     /**
      * Constructor.
+     * @param formula the model formula.
+     * @param predictors the predictors of design matrix.
+     * @param model the generalized linear model specification.
+     * @param beta the linear weights.
+     * @param loglikelihood the log-likelihood.
+     * @param deviance the deviance.
+     * @param nullDeviance the null deviance.
+     * @param mu the fitted mean values.
+     * @param residuals the residuals of fitted values of training data.
+     * @param ztest the z-test of the coefficients.
      */
     public GLM(Formula formula, String[] predictors, Model model, double[] beta, double loglikelihood, double deviance, double nullDeviance, double[] mu, double[] residuals, double[][] ztest) {
         this.formula = formula;
@@ -151,6 +161,8 @@ public class GLM implements Serializable {
      * Returns an array of size (p+1) containing the linear weights
      * of binary logistic regression, where p is the dimension of
      * feature vectors. The last element is the weight of bias.
+     *
+     * @return the linear weights.
      */
     public double[] coefficients() {
         return beta;
@@ -162,6 +174,8 @@ public class GLM implements Serializable {
      * error of coefficients, the third column is the z-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     *
+     * @return the z-test of the coefficients.
      */
     public double[][] ztest() {
         return ztest;
@@ -169,6 +183,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the deviance residuals.
+     * @return the deviance residuals.
      */
     public double[] devianceResiduals() {
         return devianceResiduals;
@@ -176,6 +191,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the fitted mean values.
+     * @return the fitted mean values.
      */
     public double[] fittedValues() {
         return mu;
@@ -183,6 +199,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the deviance of model.
+     * @return the deviance of model.
      */
     public double deviance() {
         return deviance;
@@ -190,6 +207,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
     public double loglikelihood() {
         return loglikelihood;
@@ -197,6 +215,7 @@ public class GLM implements Serializable {
 
     /**
      * Returns the AIC score.
+     * @return the AIC score.
      */
     public double AIC() {
         return ModelSelection.AIC(loglikelihood, beta.length);
@@ -204,12 +223,17 @@ public class GLM implements Serializable {
 
     /**
      * Returns the BIC score.
+     * @return the BIC score.
      */
     public double BIC() {
         return ModelSelection.BIC(loglikelihood, beta.length, mu.length);
     }
 
-    /** Predicts the mean response. */
+    /**
+     * Predicts the mean response.
+     * @param x the instance.
+     * @return the mean response.
+     */
     public double predict(Tuple x) {
         double[] a = formula.x(x).toArray(true, CategoricalEncoder.DUMMY);
         int p = beta.length;
@@ -221,9 +245,13 @@ public class GLM implements Serializable {
         return model.invlink(dot);
     }
 
-    /** Predicts the mean response. */
-    public double[] predict(DataFrame df) {
-        Matrix X = formula.matrix(df, true);
+    /**
+     * Predicts the mean response.
+     * @param data the data frame.
+     * @return the mean response.
+     */
+    public double[] predict(DataFrame data) {
+        Matrix X = formula.matrix(data, true);
         double[] y = X.mv(beta);
         int n = y.length;
         for (int i = 0; i < n; i++) {
@@ -271,6 +299,7 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
      * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model) {
@@ -282,6 +311,7 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
      * @param prop the hyper-parameters.
      * @return the model.
      */
@@ -296,6 +326,7 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param model the generalized linear model specification.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
      * @return the model.

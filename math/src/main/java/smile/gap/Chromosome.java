@@ -28,11 +28,13 @@ public interface Chromosome extends Comparable<Chromosome> {
 
     /**
      * Returns the fitness of chromosome.
+     * @return the fitness of chromosome.
      */
     double fitness();
 
     /**
      * Returns a new random instance.
+     * @return a new random instance.
      */
     Chromosome newInstance();
 
@@ -41,8 +43,10 @@ public interface Chromosome extends Comparable<Chromosome> {
      * according to the crossover rate, which determines how often will be
      * crossover performed. If there is no crossover, offspring is exact copy of
      * parents. Various crossover strategies can be employed.
+     * @param other the other parent.
+     * @return a pair of offsprings.
      */
-    Chromosome[] crossover(Chromosome another);
+    Chromosome[] crossover(Chromosome other);
 
     /**
      * For genetic algorithms, this method mutates the chromosome randomly.
