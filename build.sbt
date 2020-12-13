@@ -5,6 +5,8 @@ lazy val commonSettings = Seq(
   mappings in (Compile, packageDoc) := Seq(),
   // skip javadoc and scaladoc for publishLocal
   publishArtifact in (Compile, packageDoc) := false,
+  // always set scala version including Java only modules
+  scalaVersion := "2.13.4",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
@@ -92,7 +94,6 @@ lazy val java15Settings = javaSettings ++ Seq(
 lazy val scalaSettings = commonSettings ++ Seq(
   crossPaths := true,
   autoScalaLibrary := true,
-  scalaVersion := "2.13.4",
   scalacOptions := Seq(
     "-unchecked",
     "-deprecation",
