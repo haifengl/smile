@@ -9,7 +9,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.6.0",
+  version := "2.6.1",
 
   parallelExecution in Test := false,
   autoAPIMappings := true,

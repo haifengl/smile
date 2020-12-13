@@ -22,5 +22,4 @@
             [smile.classification :refer :all]
             [smile.regression :as regression]
             [smile.clustering :refer :all]
-            [smile.manifold :refer :all]
-            [smile.mds :refer :all]))
+            [smile.manifold :refer :all]))
