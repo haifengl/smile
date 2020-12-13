@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,14 +13,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.vector;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.function.Function;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -108,7 +107,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
 
     /** Returns true if there are any NULL values in this row. */
     default boolean anyNull() {
-        return stream().filter(Objects::isNull).findAny().isPresent();
+        return stream().anyMatch(Objects::isNull);
     }
 
     /**
@@ -127,7 +126,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param clazz the class of data type.
      * @param vector the data of vector.
      */
-    static <T> Vector<T> of(String name, Class clazz, T[] vector) {
+    static <T> Vector<T> of(String name, Class<?> clazz, T[] vector) {
         return new VectorImpl<>(name, clazz, vector);
     }
 
@@ -147,7 +146,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param field the struct field of vector.
      * @param vector the data of vector.
      */
-    static <T> Vector of(StructField field, T[] vector) {
+    static <T> Vector<T> of(StructField field, T[] vector) {
         return new VectorImpl<>(field, vector);
     }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.util;
 
@@ -115,10 +115,9 @@ public final class IntArrayList implements Serializable {
     /**
      * Trims the capacity to be the list's current size.
      */
-    public void trimToSize() {
+    public void trim() {
         if (data.length > size) {
-            int[] tmp = toArray();
-            data = tmp;
+            data = toArray();
         }
     }
 
@@ -170,7 +169,7 @@ public final class IntArrayList implements Serializable {
      *
      * @param index index of the value to replace
      * @param val value to be stored at the specified position 
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public IntArrayList set(int index, int val) {
         if (index < 0 || index >= size) {
@@ -193,7 +192,7 @@ public final class IntArrayList implements Serializable {
      *
      * @param index index of the element to remove.
      * @return the value previously stored at specified index
-     * @throws IndexOutOfBoundsException if the index is out of range (index &lt; 0 || index &ge; size())
+     * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
     public int remove(int index) {
         if (index < 0 || index >= size) {
@@ -205,10 +204,7 @@ public final class IntArrayList implements Serializable {
         if (index == 0) {
             // data at the front
             System.arraycopy(data, 1, data, 0, size - 1);
-        } else if (index == size - 1) {
-            // no copy to make, decrementing pos "deletes" values at
-            // the end
-        } else {
+        } else if (index != size - 1) {
             // data in the middle
             System.arraycopy(data, index + 1, data, index, size - (index + 1));
         }

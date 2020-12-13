@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.svm;
 
@@ -32,7 +32,7 @@ import smile.math.kernel.MercerKernel;
  * learning some fixed set of parameters corresponding to the features of
  * their inputs, they instead store (a subset of) their training set (or
  * a new representation) and learn for it a corresponding weight. Prediction
- * for unlabeled inputs is treated by the application of a similiarity function.
+ * for unlabeled inputs is treated by the application of a similarity function.
  *
  * @author Haifeng Li
  */
@@ -82,6 +82,7 @@ public class KernelMachine<T> implements Serializable {
 
     /**
      * Returns the kernel function.
+     * @return the kernel function.
      */
     public MercerKernel<T> kernel() {
         return kernel;
@@ -89,6 +90,7 @@ public class KernelMachine<T> implements Serializable {
 
     /**
      * Returns the instances of kernel machines.
+     * @return the instances of kernel machines.
      */
     public T[] instances() {
         return instances;
@@ -96,6 +98,7 @@ public class KernelMachine<T> implements Serializable {
 
     /**
      * Returns the weights of instances.
+     * @return the weights of instances.
      */
     public double[] weights() {
         return w;
@@ -103,12 +106,17 @@ public class KernelMachine<T> implements Serializable {
 
     /**
      * Returns the intercept.
+     * @return the intercept.
      */
     public double intercept() {
         return b;
     }
 
-    /** Returns the decision function value. */
+    /**
+     * Returns the decision function value.
+     * @param x an instance.
+     * @return the decision function value.
+     */
     public double score(T x) {
         double f = b;
 
@@ -119,7 +127,10 @@ public class KernelMachine<T> implements Serializable {
         return f;
     }
 
-    /** Convert the kernel machine to SVM instance. */
+    /**
+     * Convert the kernel machine to SVM instance.
+     * @return SVM.
+     */
     public SVM<T> toSVM() {
         return new SVM<>(kernel, instances, w, b);
     }

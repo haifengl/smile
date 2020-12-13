@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.glm;
 
@@ -25,7 +25,6 @@ import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
-import smile.data.type.StructType;
 import smile.glm.model.Model;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -47,9 +46,8 @@ import smile.validation.ModelSelection;
  * The mean, <code>&mu;</code>, of the distribution depends on the
  * independent variables, <code>X</code>, through:
  * <p>
- * <pre>
  *     E(Y) = &mu; = g<sup>-1</sup>(X&beta;)
- * </pre>
+ * <p>
  * where <code>E(Y)</code> is the expected value of <code>Y</code>;
  * <code>X&beta;</code> is the linear combination of linear predictors
  * and unknown parameters &beta;; g is the link function that is a monotonic,
@@ -59,10 +57,8 @@ import smile.validation.ModelSelection;
  * In this framework, the variance is typically a function, <code>V</code>,
  * of the mean:
  * <p>
- * <pre>
  *     Var(Y) = V(&mu;) = V(g<sup>-1</sup>(X&beta;))
- * </pre>
- * </p>
+ * <p>
  * It is convenient if <code>V</code> follows from an exponential family
  * of distributions, but it may simply be that the variance is a function
  * of the predicted value, such as <code>V(&mu;<sub>i</sub>) = &mu;<sub>i</sub></code>
@@ -275,6 +271,7 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model) {
         return fit(formula, data, model, new Properties());
@@ -285,10 +282,12 @@ public class GLM implements Serializable {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Properties prop) {
-        double tol = Double.valueOf(prop.getProperty("smile.glm.tolerance", "1E-5"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.glm.max.iterations", "50"));
+        double tol = Double.parseDouble(prop.getProperty("smile.glm.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.glm.max.iterations", "50"));
         return fit(formula, data, model, tol, maxIter);
     }
 
@@ -299,6 +298,7 @@ public class GLM implements Serializable {
      * @param data the data frame of the explanatory and response variables.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, double tol, int maxIter) {
         if (tol <= 0.0) {

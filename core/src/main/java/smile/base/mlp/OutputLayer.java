@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.mlp;
 
@@ -26,9 +26,9 @@ public class OutputLayer extends Layer {
     private static final long serialVersionUID = 2L;
 
     /** The cost function. */
-    private Cost cost;
+    private final Cost cost;
     /** The output function. */
-    private OutputFunction f;
+    private final OutputFunction f;
 
     /**
      * Constructor.
@@ -42,16 +42,14 @@ public class OutputLayer extends Layer {
 
         switch (cost) {
             case MEAN_SQUARED_ERROR:
-                switch(f) {
-                    case SOFTMAX:
-                        throw new IllegalArgumentException("Softmax output function is not allowed with mean squared error cost function");
+                if (f == OutputFunction.SOFTMAX) {
+                    throw new IllegalArgumentException("Softmax output function is not allowed with mean squared error cost function");
                 }
                 break;
 
             case LIKELIHOOD:
-                switch(f) {
-                    case LINEAR:
-                        throw new IllegalArgumentException("Linear output function is not allowed with likelihood cost function");
+                if (f == OutputFunction.LINEAR) {
+                    throw new IllegalArgumentException("Linear output function is not allowed with likelihood cost function");
                 }
                 break;
         }

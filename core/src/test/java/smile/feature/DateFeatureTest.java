@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -22,7 +22,6 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import java.util.Optional;
 import smile.data.DataFrame;
 import smile.data.Date;
 import smile.data.formula.Formula;
@@ -83,7 +82,7 @@ public class DateFeatureTest {
             if (i == 1 || i == 3) {
                 assertTrue(schema.field(i).measure instanceof NominalScale);
             } else {
-                assertEquals(null, schema.field(i).measure);
+                assertNull(schema.field(i).measure);
             }
         }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.vector;
 
@@ -64,7 +64,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
 
     @Override
     public Vector<LocalDate> toDate(DateTimeFormatter format) {
-        LocalDate[] dates = stream().map(s -> format.parse(s)).toArray(LocalDate[]::new);
+        LocalDate[] dates = stream().map(format::parse).toArray(LocalDate[]::new);
         return new VectorImpl<>(name(), DataTypes.DateType, dates);
     }
 
@@ -75,7 +75,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
 
     @Override
     public Vector<LocalTime> toTime(DateTimeFormatter format) {
-        LocalTime[] dates = stream().map(s -> format.parse(s)).toArray(LocalTime[]::new);
+        LocalTime[] dates = stream().map(format::parse).toArray(LocalTime[]::new);
         return new VectorImpl<>(name(), DataTypes.TimeType, dates);
     }
 
@@ -86,7 +86,7 @@ class StringVectorImpl extends VectorImpl<String> implements StringVector {
 
     @Override
     public Vector<LocalDateTime> toDateTime(DateTimeFormatter format) {
-        LocalDateTime[] dates = stream().map(s -> format.parse(s)).toArray(LocalDateTime[]::new);
+        LocalDateTime[] dates = stream().map(format::parse).toArray(LocalDateTime[]::new);
         return new VectorImpl<>(name(), DataTypes.DateTimeType, dates);
     }
 

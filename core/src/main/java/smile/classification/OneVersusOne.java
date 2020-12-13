@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -32,11 +32,11 @@ import smile.util.IntSet;
 /**
  * One-vs-one strategy for reducing the problem of
  * multiclass classification to multiple binary classification problems.
- * This approach trains <code>K (K − 1) / 2</code> binary classifiers for a
+ * This approach trains {@code K (K − 1) / 2} binary classifiers for a
  * K-way multiclass problem; each receives the samples of a pair of
  * classes from the original training set, and must learn to distinguish
  * these two classes. At prediction time, a voting scheme is applied:
- * all <code>K (K − 1) / 2</code> classifiers are applied to an unseen
+ * all {@code K (K − 1) / 2} classifiers are applied to an unseen
  * sample and the class that got the highest number of positive predictions
  * gets predicted by the combined classifier. Like One-vs-rest, one-vs-one
  * suffers from ambiguities in that some regions of its input space may
@@ -49,32 +49,34 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusOne.class);
 
     /** The number of classes. */
-    private int k;
+    private final int k;
     /** The binary classifier. */
-    private Classifier<T>[][] classifiers;
+    private final Classifier<T>[][] classifiers;
     /** The binary classifier. */
-    private PlattScaling[][] platts;
+    private final PlattScaling[][] platt;
     /** The class label encoder. */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
      * @param classifiers the binary classifier for each one-vs-one case.
      *                    Only the lower half is needed.
+     * @param platt Platt scaling models.
      */
-    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts) {
-        this(classifiers, platts, IntSet.of(classifiers.length));
+    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platt) {
+        this(classifiers, platt, IntSet.of(classifiers.length));
     }
 
     /**
      * Constructor.
      * @param classifiers the binary classifier for each one-vs-one case.
      *                    Only the lower half is needed.
-     * @param labels the class labels.
+     * @param platt Platt scaling models.
+     * @param labels the class label encoder.
      */
-    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platts, IntSet labels) {
+    public OneVersusOne(Classifier<T>[][] classifiers, PlattScaling[][] platt, IntSet labels) {
         this.classifiers = classifiers;
-        this.platts = platts;
+        this.platt = platt;
         this.k = classifiers.length;
         this.labels = labels;
     }
@@ -85,6 +87,8 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param x the training samples.
      * @param y the training labels.
      * @param trainer the lambda to train binary classifiers.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> OneVersusOne<T> fit(T[] x, int[] y, BiFunction<T[], int[], Classifier<T>> trainer) {
         return fit(x, y, +1, -1, trainer);
@@ -97,6 +101,8 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param pos the class label for one case.
      * @param neg the class label for rest cases.
      * @param trainer the lambda to train binary classifiers.
+     * @param <T> the data type.
+     * @return the model.
      */
     @SuppressWarnings("unchecked")
     public static <T> OneVersusOne<T> fit(T[] x, int[] y, int pos, int neg, BiFunction<T[], int[], Classifier<T>> trainer) {
@@ -163,6 +169,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param trainer the lambda to train binary classifiers.
+     * @return the model.
      */
     @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
@@ -216,7 +223,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
      */
     @Override
     public int predict(T x, double[] posteriori) {
-        if (platts == null) {
+        if (platt == null) {
             throw new UnsupportedOperationException("Platt scaling is not available");
         }
 
@@ -224,7 +231,7 @@ public class OneVersusOne<T> implements SoftClassifier<T> {
 
         for (int i = 1; i < k; i++) {
             for (int j = 0; j < i; j++) {
-                r[i][j] = platts[i][j].scale(classifiers[i][j].score(x));
+                r[i][j] = platt[i][j].scale(classifiers[i][j].score(x));
                 r[j][i] = 1.0 - r[i][j];
             }
         }

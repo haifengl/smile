@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp;
 
@@ -41,7 +41,7 @@ public class Trie<K, V> {
      * node will contains a lot of children. A plain list
      * will be slow for search.
      */
-    private HashMap<K, Node> root;
+    private final HashMap<K, Node> root;
     /**
      * The number of entries.
      */
@@ -50,9 +50,9 @@ public class Trie<K, V> {
     /** The nodes in the trie. */
     public class Node {
 
-        private K key;
+        private final K key;
         private V value;
-        private LinkedList<Node> children;
+        private final LinkedList<Node> children;
 
         public Node(K key) {
             this.key = key;

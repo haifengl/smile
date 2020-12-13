@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -29,7 +29,7 @@ import smile.math.special.Gamma;
  * model for waiting times; for instance, the waiting time until death in life testing.
  * The probability density function is
  * f(x; k,&theta;) = x<sup>k-1</sup>e<sup>-x/&theta;</sup> / (&theta;<sup>k</sup>&Gamma;(k))
- * for x &gt; 0 and k, &theta; &gt; 0.
+ * for {@code x > 0} and k, &theta; {@code > 0}.
  * <ul>
  * <li> If X &sim; &Gamma;(k=1, &theta;=1/&lambda;), then X has an exponential
  * distribution with rate parameter &lambda;.
@@ -57,10 +57,10 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     public final double theta;
     /** The shape parameter. */
     public final double k;
-    private double logTheta;
-    private double thetaGammaK;
-    private double logGammaK;
-    private double entropy;
+    private final double logTheta;
+    private final double thetaGammaK;
+    private final double logGammaK;
+    private final double entropy;
 
     /**
      * Constructor.
@@ -87,10 +87,12 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
 
     /**
      * Estimates the distribution parameters by (approximate) MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GammaDistribution fit(double[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] <= 0) {
+        for (double datum : data) {
+            if (datum <= 0) {
                 throw new IllegalArgumentException("Samples contain non-positive values.");
             }
         }
@@ -105,7 +107,7 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
         mu /= data.length;
         s = Math.log(mu) - s / data.length;
 
-        double shape = (3 - s + Math.sqrt((MathEx.sqr(s - 3) + 24 * s))) / (12 * s);
+        double shape = (3 - s + Math.sqrt((MathEx.pow2(s - 3) + 24 * s))) / (12 * s);
         double scale = mu / shape;
         return new GammaDistribution(shape, scale);
     }

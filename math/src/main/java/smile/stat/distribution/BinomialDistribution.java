@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -32,9 +32,8 @@ import static smile.math.MathEx.lfactorial;
  * distribution. The probability of getting exactly k successes in n trials
  * is given by the probability mass function:
  * <p>
- * <pre>
  *     Pr(K = k) = <sub>n</sub>C<sub>k</sub> p<sup>k</sup> (1-p)<sup>n-k</sup>
- * </pre>
+ * <p>
  * where <code><sub>n</sub>C<sub>k</sub></code> is n choose k.
  * <p>
  * It is frequently used to model number of successes in a sample of size
@@ -188,10 +187,10 @@ public class BinomialDistribution extends DiscreteDistribution {
     /**
      * This function generates a random variate with the binomial distribution.
      *
-     * Uses down/up search from the mode by chop-down technique for n*p &lt; 55,
-     * and patchwork rejection method for n*p &ge; 55.
+     * Uses down/up search from the mode by chop-down technique for {@code n*p < 55},
+     * and patchwork rejection method for {@code n*p >= 55}.
      *
-     * For n*p &lt; 1.E-6 numerical inaccuracy is avoided by poisson approximation.
+     * For {@code n*p < 1E-6} numerical inaccuracy is avoided by poisson approximation.
      */
     @Override
     public double rand() {
@@ -233,15 +232,14 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     interface RandomNumberGenerator {
-
-        public int rand();
+        int rand();
     }
 
     class Patchwork implements RandomNumberGenerator {
 
-        private int mode;
-        private int k1, k2, k4, k5;
-        private double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
+        private final int mode;
+        private final int k1, k2, k4, k5;
+        private final double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
 
         public Patchwork(double p) {
             double nu = (n + 1) * p;
@@ -259,8 +257,8 @@ public class BinomialDistribution extends DiscreteDistribution {
             k5 = k4 + k4 - mode;
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             nu = nu / q;
@@ -401,8 +399,8 @@ public class BinomialDistribution extends DiscreteDistribution {
 
         private int mode;                                  // mode
         private int bound;                                 // upper bound
-        private double modeValue;                          // value at mode
-        private double r1;
+        private final double modeValue;                    // value at mode
+        private final double r1;
 
         public ModeSearch(double p) {
             double nu = (n + 1) * p;

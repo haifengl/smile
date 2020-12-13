@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,14 +13,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.kernel;
 
 import smile.math.MathEx;
 
 /**
- * The linear dot product kernel on sparse binary arrays in int[],
+ * The linear dot product kernel on sparse binary arrays in {@code int[]},
  * which are the indices of nonzero elements.
  * When using a linear kernel, input space is identical to feature space.
  *

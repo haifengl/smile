@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.cart;
 
@@ -38,9 +38,17 @@ public class NominalNode extends InternalNode {
      */
     int value;
 
-    /** Constructor. */
-    public NominalNode(int feature, int value, double splitScore, double deviance, Node trueChild, Node falseChild) {
-        super(feature, splitScore, deviance, trueChild, falseChild);
+    /**
+     * Constructor.
+     * @param feature the index of feature column.
+     * @param value the split value.
+     * @param score the split score.
+     * @param deviance the deviance.
+     * @param trueChild the true branch child.
+     * @param falseChild the false branch child.
+     */
+    public NominalNode(int feature, int value, double score, double deviance, Node trueChild, Node falseChild) {
+        super(feature, score, deviance, trueChild, falseChild);
         this.value = value;
     }
 
@@ -74,7 +82,7 @@ public class NominalNode extends InternalNode {
         } else {
             if (field.measure instanceof NominalScale) {
                 NominalScale scale = (NominalScale) field.measure;
-                values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(v -> scale.level(v)).collect(Collectors.joining(","));
+                values = Arrays.stream(scale.values()).filter(v -> v != value).mapToObj(scale::level).collect(Collectors.joining(","));
             } else {
                 values = "/=" + value;
             }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.projection;
 
@@ -24,12 +24,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import smile.data.CPU;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
-import smile.io.Arff;
-import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.util.Paths;
 
 import static org.junit.Assert.*;
 
@@ -37,7 +32,6 @@ import static org.junit.Assert.*;
  *
  * @author Haifeng Li
  */
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class KPCATest {
 
     double[] latent = {
@@ -70,7 +64,7 @@ public class KPCATest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() {
         System.out.println("KPCA");
 

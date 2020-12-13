@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.type;
 
@@ -30,9 +30,9 @@ public class DateType implements DataType {
     static DateType instance = new DateType();
 
     /** Date format pattern. */
-    private String pattern;
+    private final String pattern;
     /** Date formatter. */
-    private DateTimeFormatter formatter;
+    private final DateTimeFormatter formatter;
 
     /**
      * Constructor with the ISO date formatter that formats

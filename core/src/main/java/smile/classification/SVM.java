@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -106,13 +106,14 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param y training labels.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static Classifier<double[]> fit(double[][] x, int[] y, double C, double tol) {
         LASVM<double[]> lasvm = new LASVM<>(new LinearKernel(), C, tol);
         KernelMachine<double[]> svm = lasvm.fit(x, y);
 
         return new Classifier<double[]>() {
-            LinearKernelMachine model = LinearKernelMachine.of(svm);
+            final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
             public int predict(double[] x) {
@@ -128,13 +129,14 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param p the dimension of input vector.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static Classifier<int[]> fit(int[][] x, int[] y, int p, double C, double tol) {
         LASVM<int[]> lasvm = new LASVM<>(new BinarySparseLinearKernel(), C, tol);
         KernelMachine<int[]> svm = lasvm.fit(x, y);
 
         return new Classifier<int[]>() {
-            LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
+            final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
             public int predict(int[] x) {
@@ -150,13 +152,14 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param p the dimension of input vector.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static Classifier<SparseArray> fit(SparseArray[] x, int[] y, int p, double C, double tol) {
         LASVM<SparseArray> lasvm = new LASVM<>(new SparseLinearKernel(), C, tol);
         KernelMachine<SparseArray> svm = lasvm.fit(x, y);
 
         return new Classifier<SparseArray>() {
-            LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
+            final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
             public int predict(SparseArray x) {
@@ -172,6 +175,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @param kernel the kernel function.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> SVM<T> fit(T[] x, int[] y, MercerKernel<T> kernel, double C, double tol) {
         LASVM<T> lasvm = new LASVM<>(kernel, C, tol);

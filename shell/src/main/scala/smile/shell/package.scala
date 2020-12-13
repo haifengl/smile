@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile Shell is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -40,11 +40,9 @@ package object shell {
      """.stripMargin
 
   /** Show demo window */
-  def demo = {
-    javax.swing.SwingUtilities.invokeLater(new Runnable {
-      override def run(): Unit = {
-        smile.demo.SmileDemo.createAndShowGUI(false)
-      }
+  def demo(): Unit = {
+    javax.swing.SwingUtilities.invokeLater(() => {
+      smile.demo.SmileDemo.createAndShowGUI(false)
     })
   }
 }

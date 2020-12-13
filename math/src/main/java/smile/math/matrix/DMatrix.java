@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -96,9 +96,9 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * op(A) * x + beta * y
-     * </code></pre>
+     * }</pre>
      * where op is the transpose operation.
      */
     public abstract void mv(Transpose trans, double alpha, double[] x, double beta, double[] y);
@@ -117,9 +117,9 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void mv(double alpha, double[] x, double beta, double[] y) {
         mv(NO_TRANSPOSE, alpha, x, beta, y);
@@ -139,9 +139,9 @@ public abstract class DMatrix extends IMatrix<double[]> {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A' * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void tv(double alpha, double[] x, double beta, double[] y) {
         mv(TRANSPOSE, alpha, x, beta, y);
@@ -156,7 +156,6 @@ public abstract class DMatrix extends IMatrix<double[]> {
      *
      * @param path the input file path.
      * @return a dense or sparse matrix.
-     * @author Haifeng Li
      */
     public static DMatrix market(Path path) throws IOException, ParseException {
         try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
@@ -320,8 +319,7 @@ public abstract class DMatrix extends IMatrix<double[]> {
                     }
                 }
 
-                SparseMatrix matrix = new SparseMatrix(nrows, ncols, x, rowIndex, colIndex);
-                return matrix;
+                return new SparseMatrix(nrows, ncols, x, rowIndex, colIndex);
 
             }
 
@@ -341,15 +339,15 @@ public abstract class DMatrix extends IMatrix<double[]> {
             /**
              * The larger dimension of A.
              */
-            private int m = Math.max(A.nrows(), A.ncols());
+            private final int m = Math.max(A.nrows(), A.ncols());
             /**
              * The smaller dimension of A.
              */
-            private int n = Math.min(A.nrows(), A.ncols());
+            private final int n = Math.min(A.nrows(), A.ncols());
             /**
              * Workspace for A * x
              */
-            private double[] Ax = new double[m + n];
+            private final double[] Ax = new double[m + n];
 
             @Override
             public int nrows() {

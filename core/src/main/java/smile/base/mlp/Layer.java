@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.mlp;
 
@@ -281,11 +281,11 @@ public abstract class Layer implements Serializable {
             double rho1 = 1.0 - rho;
             for (int j = 0; j < p; j++) {
                 for (int i = 0; i < n; i++) {
-                    rmsWeightGradient.set(i, j, rho * rmsWeightGradient.get(i, j) + rho1 * MathEx.sqr(weightGradient.get(i, j)));
+                    rmsWeightGradient.set(i, j, rho * rmsWeightGradient.get(i, j) + rho1 * MathEx.pow2(weightGradient.get(i, j)));
                 }
             }
             for (int i = 0; i < n; i++) {
-                rmsBiasGradient[i] = rho * rmsBiasGradient[i] + rho1 * MathEx.sqr(biasGradient[i]);
+                rmsBiasGradient[i] = rho * rmsBiasGradient[i] + rho1 * MathEx.pow2(biasGradient[i]);
             }
 
             for (int j = 0; j < p; j++) {

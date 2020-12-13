@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,13 +13,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.Strings;
 
 /**
  * Multivariate Gaussian distribution.
@@ -45,7 +46,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     private Matrix sigmaL;
     private double sigmaDet;
     private double pdfConstant;
-    private int length;
+    private final int length;
 
     /**
      * Constructor. The distribution will have a diagonal covariance matrix of
@@ -59,12 +60,8 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
             throw new IllegalArgumentException("Variance is not positive: " + variance);
         }
 
-        mu = new double[mean.length];
-        sigma = new Matrix(mu.length, mu.length);
-        for (int i = 0; i < mu.length; i++) {
-            mu[i] = mean[i];
-            sigma.set(i, i, variance);
-        }
+        mu = mean;
+        sigma = Matrix.diag(mu.length, variance);
 
         diagonal = true;
         length = mu.length + 1;
@@ -84,16 +81,14 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
-        mu = new double[mean.length];
-        sigma = Matrix.diag(variance);
-        for (int i = 0; i < mu.length; i++) {
-            if (variance[i] <= 0) {
-                throw new IllegalArgumentException("Variance is not positive: " + variance[i]);
+        for (double v : variance) {
+            if (v <= 0) {
+                throw new IllegalArgumentException("Variance is not positive: " + v);
             }
-
-            mu[i] = mean[i];
         }
 
+        mu = mean;
+        sigma = Matrix.diag(variance);
         diagonal = true;
         length = 2 * mu.length;
 
@@ -111,11 +106,8 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
-        mu = new double[mean.length];
+        mu = mean;
         sigma = cov;
-        for (int i = 0; i < mu.length; i++) {
-            mu[i] = mean[i];
-        }
 
         diagonal = false;
         length = mu.length + mu.length * (mu.length + 1) / 2;
@@ -126,6 +118,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     /**
      * Estimates the mean and diagonal covariance by MLE.
      * @param data the training data.
+     * @return the distribution.
      */
     public static MultivariateGaussianDistribution fit(double[][] data) {
         return fit(data, false);
@@ -135,6 +128,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * Estimates the mean and covariance by MLE.
      * @param data the training data.
      * @param diagonal true if covariance matrix is diagonal.
+     * @return the distribution.
      */
     public static MultivariateGaussianDistribution fit(double[][] data, boolean diagonal) {
         double[] mu = MathEx.colMeans(data);
@@ -143,8 +137,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
         if (diagonal) {
             double[] variance = new double[d];
-            for (int i = 0; i < n; i++) {
-                double[] x = data[i];
+            for (double[] x : data) {
                 for (int j = 0; j < d; j++) {
                     variance[j] += (x[j] - mu[j]) * (x[j] - mu[j]);
                 }
@@ -382,20 +375,6 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder("Multivariate Gaussian Distribution:\nmu = [");
-        for (int i = 0; i < mu.length; i++) {
-            builder.append(mu[i]).append(" ");
-        }
-        builder.setCharAt(builder.length() - 1, ']');
-        builder.append("\nSigma = [\n");
-        for (int i = 0; i < sigma.nrows(); i++) {
-            builder.append('\t');
-            for (int j = 0; j < sigma.ncols(); j++) {
-                builder.append(sigma.get(i, j)).append(" ");
-            }
-            builder.append('\n');
-        }
-        builder.append("\t]");
-        return builder.toString();
+        return String.format("MultivariateGaussian(mu = %s, sigma = %s)", Strings.toString(mu), sigma);
     }
 }

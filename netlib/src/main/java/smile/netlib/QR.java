@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.netlib;
 
@@ -24,7 +24,7 @@ import com.github.fommil.netlib.LAPACK;
 import org.netlib.util.intW;
 
 /**
- * For an m-by-n matrix A with m &ge; n, the QR decomposition is an m-by-n
+ * For an m-by-n matrix A with {@code m >= n}, the QR decomposition is an m-by-n
  * orthogonal matrix Q and an n-by-n upper triangular matrix R such that
  * A = Q*R.
  * <p>

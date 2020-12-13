@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -871,7 +871,7 @@ package object classification {
     * training instances is small compared to the dimension of input space,
     * the ML covariance estimation can be ill-posed. One approach to resolve
     * the ill-posed estimation is to regularize the covariance estimation.
-    * One of these regularization methods is {@link rda regularized discriminant analysis}.
+    * One of these regularization methods is [[rda]].
     *
     * @param x training samples.
     * @param y training labels in [0, k), where k is the number of classes.

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -102,7 +102,7 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Data structure for neighborhood search.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
      * Constructor.
@@ -126,6 +126,7 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param data the observations.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @return the model.
      */
     public static DBSCAN<double[]> fit(double[][] data, int minPts, double radius) {
         return fit(data, new KDTree<>(data, data), minPts, radius);
@@ -137,6 +138,8 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param distance the distance measure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> DBSCAN<T> fit(T[] data, Distance<T> distance, int minPts, double radius) {
         return fit(data, new LinearSearch<>(data, distance), minPts, radius);
@@ -148,6 +151,8 @@ public class DBSCAN<T> extends PartitionClustering {
      * @param nns the data structure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> DBSCAN<T> fit(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
         if (minPts < 1) {

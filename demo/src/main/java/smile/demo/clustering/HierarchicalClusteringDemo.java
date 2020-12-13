@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.clustering;
 
@@ -98,7 +98,7 @@ public class HierarchicalClusteringDemo extends ClusteringDemo {
         Canvas plot = ScatterPlot.of(dataset[datasetIndex], membership, mark).canvas();
         pane.add(plot.panel());
 
-        plot = new Dendrogram(hac.getTree(), hac.getHeight()).canvas();
+        plot = new Dendrogram(hac.tree(), hac.height()).canvas();
         plot.setTitle("Dendrogram");
         pane.add(plot.panel());
         return pane;

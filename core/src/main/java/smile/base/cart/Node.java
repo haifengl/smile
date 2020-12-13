@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.cart;
 
@@ -23,7 +23,6 @@ import java.util.List;
 import smile.data.Tuple;
 import smile.data.type.StructField;
 import smile.data.type.StructType;
-import smile.math.MathEx;
 
 /**
  * CART tree node.
@@ -33,36 +32,50 @@ import smile.math.MathEx;
 public interface Node extends Serializable {
     /**
      * Evaluate the tree over an instance.
+     * @param x the instance.
+     * @return the leaf node that the instance falls into.
      */
     LeafNode predict(Tuple x);
 
     /**
-     * Returns a dot representation for visualization.
+     * Returns the dot representation of node.
      * @param schema the schema of data
      * @param response the schema of response variable
      * @param id node id
+     * @return the dot representation of node.
      */
     String dot(StructType schema, StructField response, int id);
 
-    /** Returns the number of samples in the node. */
+    /**
+     * Returns the number of samples in the node.
+     * @return the number of samples in the node.
+     */
     int size();
 
-    /** Returns the number of leaf nodes in the subtree. */
+    /**
+     * Returns the number of leaf nodes in the subtree.
+     * @return the number of leaf nodes in the subtree.
+     */
     int leafs();
 
     /**
      * Returns the maximum depth of the tree -- the number of
      * nodes along the longest path from this node
      * down to the farthest leaf node.
+     * @return the maximum depth of the subtree.
      */
     int depth();
 
-    /** Returns the deviance of node. */
+    /**
+     * Returns the deviance of node.
+     * @return the deviance of node.
+     */
     double deviance();
 
     /**
      * Try to merge the children nodes and return a leaf node.
      * If not able to merge, return this node itself.
+     * @return the merged node, or this node if merge fails.
      */
     Node merge();
 

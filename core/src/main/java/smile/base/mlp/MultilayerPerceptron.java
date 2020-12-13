@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.mlp;
 
@@ -174,6 +174,7 @@ public abstract class MultilayerPerceptron implements Serializable {
      * Sets the weight decay factor. After each weight update,
      * every weight is simply "decayed" or shrunk according to
      * w = w * (1 - 2 * eta * lambda).
+     * @param lambda the weight decay factor.
      */
     public void setWeightDecay(double lambda) {
         if (lambda < 0.0) {
@@ -184,14 +185,16 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
    /**
-     * Returns the learning rate.
-     */
+    * Returns the learning rate.
+    * @return the learning rate.
+    */
     public double getLearningRate() {
         return learningRate.apply(t);
     }
 
     /**
      * Returns the momentum factor.
+     * @return the momentum factor.
      */
     public double getMomentum() {
         return momentum.apply(t);
@@ -199,6 +202,7 @@ public abstract class MultilayerPerceptron implements Serializable {
 
     /**
      * Returns the weight decay factor.
+     * @return the weight decay factor.
      */
     public double getWeightDecay() {
         return lambda;
@@ -206,18 +210,20 @@ public abstract class MultilayerPerceptron implements Serializable {
 
     /**
      * Propagates the signals through the neural network.
+     * @param x the input signal.
      */
     protected void propagate(double[] x) {
         double[] input = x;
-        for (int i = 0; i < net.length; i++) {
-            net[i].propagate(input);
-            input = net[i].output();
+        for (Layer layer : net) {
+            layer.propagate(input);
+            input = layer.output();
         }
         output.propagate(input);
     }
 
     /**
      * Propagates the errors back through the network.
+     * @param x the input signal.
      * @param update the flag if update the weights directly.
      *               It should be false for (mini-)batch.
      */

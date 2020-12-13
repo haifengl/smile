@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -30,7 +30,7 @@ import smile.math.kernel.MercerKernel;
  * learning some fixed set of parameters corresponding to the features of
  * their inputs, they instead store (a subset of) their training set (or
  * a new representation) and learn for it a corresponding weight. Prediction
- * for unlabeled inputs is treated by the application of a similiarity function.
+ * for unlabeled inputs is treated by the application of a similarity function.
  *
  * @author Haifeng Li
  */

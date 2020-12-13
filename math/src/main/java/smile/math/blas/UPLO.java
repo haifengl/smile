@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.blas;
 
@@ -53,9 +53,15 @@ public enum UPLO {
         this.lapack = lapack;
     }
 
-    /** Returns the byte value for BLAS. */
+    /**
+     * Returns the int value for BLAS.
+     * @return the int value for BLAS.
+     */
     public int blas() { return blas; }
 
-    /** Returns the byte value for LAPACK. */
+    /**
+     * Returns the byte value for LAPACK.
+     * @return the byte value for LAPACK.
+     */
     public byte lapack() { return lapack; }
 }

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.imputation;
 
@@ -32,11 +32,11 @@ public class KMeansImputation implements MissingValueImputation {
     /**
      * The number of clusters in KMeans clustering.
      */
-    private int k;
+    private final int k;
     /**
      * The number of runs of K-Means algorithm.
      */
-    private int runs;
+    private final int runs;
 
     /**
      * Constructor.

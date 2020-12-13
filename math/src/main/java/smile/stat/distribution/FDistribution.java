@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -23,16 +23,7 @@ import smile.math.special.Gamma;
 /**
  * F-distribution arises in the testing of whether two observed samples have
  * the same variance. A random variate of the F-distribution arises as the
- * ratio of two chi-squared variates:
- * <p>
- * <pre>
- * U<sub>1</sub> / d<sub>1</sub>
- * -------
- * U<sub>2</sub> / d<sub>2</sub>
- * </pre>
- * where <code>U<sub>1</sub></code> and <code>U<sub>2</sub></code> have
- * chi-square distributions with d1 and d2 degrees of
- * freedom respectively, and U1 and U2 are independent.
+ * ratio of two chi-squared variates.
  *
  * @author Haifeng Li
  */
@@ -50,7 +41,7 @@ public class FDistribution extends AbstractDistribution {
     public final int nu2;
 
     /** The constant part in the pdf function. */
-    private double fac;
+    private final double fac;
 
     /**
      * Constructor.
@@ -97,7 +88,7 @@ public class FDistribution extends AbstractDistribution {
 
     @Override
     public String toString() {
-        return String.format("F-distribution(%.4f, %.4f)", nu1, nu2);
+        return String.format("F-distribution(%d, %d)", nu1, nu2);
     }
 
     @Override

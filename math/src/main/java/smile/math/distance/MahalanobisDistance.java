@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -33,11 +33,12 @@ import smile.math.matrix.Matrix;
 public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
-    private Matrix sigma;
-    private Matrix sigmaInv;
+    private final Matrix sigma;
+    private final Matrix sigmaInv;
 
     /**
-     * Constructor with given covariance matrix.
+     * Constructor.
+     * @param cov the covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
         sigma = new Matrix(cov);

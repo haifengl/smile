@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.hash;
 
@@ -37,39 +37,36 @@ public interface SimHash<T> {
             hash[i] = MurmurHash2.hash64(buffer, 0, features[i].length, 0);
         }
 
-        return new SimHash<int[]>() {
-            @Override
-            public long hash(int[] weight) {
-                if (weight.length != n) {
-                    throw new IllegalArgumentException("Invalid weight vector size");
-                }
-
-                final int BITS = 64;
-                int[] count = new int[n];
-                for (int i = 0; i < n; i++) {
-                    long h = hash[i];
-                    int w = weight[i];
-
-                    for (int j = 0; j < BITS; j++) {
-                        if (((h >>> i) & 1) == 1) {
-                            count[j] += w;
-                        } else {
-                            count[j] -= w;
-                        }
-                    }
-                }
-
-                long bits = 0;
-                long one = 1;
-                for (int i = 0; i < BITS; i++) {
-                    if (count[i] >= 0) {
-                        bits |= one;
-                    }
-                    one <<= 1;
-                }
-
-                return bits;
+        return weight -> {
+            if (weight.length != n) {
+                throw new IllegalArgumentException("Invalid weight vector size");
             }
+
+            final int BITS = 64;
+            int[] count = new int[n];
+            for (int i = 0; i < n; i++) {
+                long h = hash[i];
+                int w = weight[i];
+
+                for (int j = 0; j < BITS; j++) {
+                    if (((h >>> i) & 1) == 1) {
+                        count[j] += w;
+                    } else {
+                        count[j] -= w;
+                    }
+                }
+            }
+
+            long bits = 0;
+            long one = 1;
+            for (int i = 0; i < BITS; i++) {
+                if (count[i] >= 0) {
+                    bits |= one;
+                }
+                one <<= 1;
+            }
+
+            return bits;
         };
     }
 

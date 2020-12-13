@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -29,7 +29,6 @@ import smile.data.formula.Formula;
 import smile.data.vector.DoubleVector;
 import smile.math.MathEx;
 import smile.validation.*;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.*;
 
@@ -83,7 +82,7 @@ public class LASSOTest {
         }
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 

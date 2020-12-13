@@ -1,10 +1,5 @@
 name := "smile-shell"
 
-// Parent project disables Scala as most libraries are in Java.
-// Enable it as this is a Scala project.
-crossPaths := true
-autoScalaLibrary := true
-
 mainClass in Compile := Some("smile.shell.Main")
 
 // native packager
@@ -20,6 +15,34 @@ packageDescription :=
     |state-of-art performance. Smile is well documented and please check out
     |the project website for programming guides and more information.
     |""".stripMargin
+
+// Filter data files in universal
+mappings in Universal := {
+  // universalMappings: Seq[(File,String)]
+  val universalMappings = (mappings in Universal).value
+
+  // removing means filtering
+  universalMappings filter {
+    case (file, name) => !name.startsWith("data/airline") &&
+                         !name.startsWith("data/arrow") &&
+                         !name.startsWith("data/avro") &&
+                         !name.startsWith("data/csv") &&
+                         !name.startsWith("data/json") &&
+                         !name.startsWith("data/matrix") &&
+                         !name.startsWith("data/microarray") &&
+                         !name.startsWith("data/msrp") &&
+                         !name.startsWith("data/neighbor") &&
+                         !name.startsWith("data/nlp") &&
+                         !name.startsWith("data/npr") &&
+                         !name.startsWith("data/parquet") &&
+                         !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sqlite") &&
+                         !name.startsWith("data/text") &&
+                         !name.startsWith("data/transaction") &&
+                         !name.startsWith("data/weka/regression") &&
+                         !name.startsWith("data/wireframe")
+  }
+}
 
 // dealing with long classpaths
 scriptClasspath := Seq("*")
@@ -53,7 +76,7 @@ buildInfoOptions += BuildInfoOption.BuildTime
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-compiler" % "2.12.12",
   "org.slf4j" % "slf4j-simple" % "1.7.30",
-  "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64" classifier "",
+  "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
   "org.bytedeco" % "openblas"  % "0.3.10-1.5.4" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
-  "org.bytedeco" % "javacpp"   % "1.5.4"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
+  "org.bytedeco" % "arpack-ng" % "3.7.0-1.5.4"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
 )

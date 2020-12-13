@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -213,7 +213,7 @@ package object projection {
     */
   def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(w, r)
-    data.foreach(model.update(_))
+    data.foreach(model.update)
     model
   }
 
@@ -225,7 +225,7 @@ package object projection {
     */
   def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(data(0).length, k, r)
-    data.foreach(model.update(_))
+    data.foreach(model.update)
     model
   }
 

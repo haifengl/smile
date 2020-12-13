@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -32,7 +32,7 @@ import smile.data.type.StructType;
  */
 public class DoubleFunction extends AbstractFunction {
     /** The function on a double. */
-    private smile.math.Function lambda;
+    private final smile.math.Function lambda;
 
     /**
      * Constructor.
@@ -58,7 +58,7 @@ public class DoubleFunction extends AbstractFunction {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(
+                final StructField field = new StructField(
                         String.format("%s(%s)", name, xfield.name),
                         type.id() == DataType.ID.Object ? DataTypes.DoubleObjectType : DataTypes.DoubleType,
                         xfield.measure);

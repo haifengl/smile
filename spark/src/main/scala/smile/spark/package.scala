@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -28,19 +28,15 @@ import smile.regression.{Regression, DataFrameRegression}
 import smile.validation._
 
 /**
-  * Package for better integration of Spark MLLib Pipelines and SMILE
+  * Integration of Smile and Spark.
   */
 package object spark {
-  /**
-    * Extension method to Spark [[org.apache.spark.sql.DataFrame]] to convert them to Smile [[DataFrame]]
-    */
+  /** Implicit ops class of SparkSQL DataFrame. */
   implicit class SparkDataFrameOps(df: org.apache.spark.sql.DataFrame) {
     def toSmile: DataFrame = SparkDataFrame(df)
   }
 
-  /**
-    * Extension method to Smile [[DataFrame]] to convert them to Spark [[org.apache.spark.sql.DataFrame]]
-    */
+  /** Implicit ops class of Smile DataFrame. */
   implicit class SmileDataFrameOps(df: DataFrame) {
     def toSpark(implicit spark:SparkSession): org.apache.spark.sql.DataFrame = SmileDataFrame(df)
   }
@@ -63,24 +59,18 @@ package object spark {
                                                        (trainer: (Array[T], Array[Int], Properties) => M)
                                                        (implicit spark: SparkSession): Array[ClassificationValidations[M]] = {
       val sc = spark.sparkContext
-
-      val xBroadcasted = sc.broadcast(x)
-      val yBroadcasted = sc.broadcast(y)
+      val bc = sc.broadcast((x, y))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Int], M] {
           override def apply(x: Array[T], y: Array[Int]): M = trainer(x, y, prop)
         }
 
-        val x = xBroadcasted.value
-        val y = yBroadcasted.value
-
+        val (x, y) = bc.value
         CrossValidation.classification(k, x, y, biFunctionTrainer)
       }).collect()
 
-      xBroadcasted.destroy()
-      yBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -100,24 +90,18 @@ package object spark {
                                               (trainer: (Formula, DataFrame, Properties) => M)
                                               (implicit spark: SparkSession): Array[ClassificationValidations[M]] = {
       val sc = spark.sparkContext
-
-      val formulaBroadcasted = sc.broadcast(formula)
-      val dataBroadcasted = sc.broadcast(data)
+      val bc = sc.broadcast((formula, data))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
           override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
-        val formula = formulaBroadcasted.value
-        val data = dataBroadcasted.value
-
+        val (formula, data) = bc.value
         CrossValidation.classification(k, formula, data, biFunctionTrainer)
       }).collect()
 
-      formulaBroadcasted.destroy()
-      dataBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -138,30 +122,18 @@ package object spark {
                                                        (trainer: (Array[T], Array[Int], Properties) => M)
                                                        (implicit spark: SparkSession): Array[ClassificationValidation[M]] = {
       val sc = spark.sparkContext
-
-      val xBroadcasted = sc.broadcast(x)
-      val yBroadcasted = sc.broadcast(y)
-      val testxBroadcasted = sc.broadcast(testx)
-      val testyBroadcasted = sc.broadcast(testy)
+      val bc = sc.broadcast((x, y, testx, testy))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Int], M] {
           override def apply(x: Array[T], y: Array[Int]): M = trainer(x, y, prop)
         }
 
-        val x = xBroadcasted.value
-        val y = yBroadcasted.value
-        val testx = xBroadcasted.value
-        val testy = yBroadcasted.value
-
+        val (x, y, testx, testy) = bc.value
         ClassificationValidation.of(x, y, testx, testy, biFunctionTrainer)
       }).collect()
 
-      xBroadcasted.destroy()
-      yBroadcasted.destroy()
-      testxBroadcasted.destroy()
-      testyBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -181,27 +153,18 @@ package object spark {
                                               (trainer: (Formula, DataFrame, Properties) => M)
                                               (implicit spark: SparkSession): Array[ClassificationValidation[M]] = {
       val sc = spark.sparkContext
-
-      val formulaBroadcasted = sc.broadcast(formula)
-      val trainBroadcasted = sc.broadcast(train)
-      val testBroadcasted = sc.broadcast(test)
+      val bc = sc.broadcast((formula, train, test))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
           override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
-        val formula = formulaBroadcasted.value
-        val train = trainBroadcasted.value
-        val test = testBroadcasted.value
-
+        val (formula, train, test) = bc.value
         ClassificationValidation.of(formula, train, test, biFunctionTrainer)
       }).collect()
 
-      formulaBroadcasted.destroy()
-      trainBroadcasted.destroy()
-      testBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -221,24 +184,18 @@ package object spark {
                                                    (trainer: (Array[T], Array[Double], Properties) => M)
                                                    (implicit spark: SparkSession): Array[RegressionValidations[M]] = {
       val sc = spark.sparkContext
-
-      val xBroadcasted = sc.broadcast(x)
-      val yBroadcasted = sc.broadcast(y)
+      val bc = sc.broadcast((x, y))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Double], M] {
           override def apply(x: Array[T], y: Array[Double]): M = trainer(x, y, prop)
         }
 
-        val x = xBroadcasted.value
-        val y = yBroadcasted.value
-
+        val (x, y) = bc.value
         CrossValidation.regression(k, x, y, biFunctionTrainer)
       }).collect()
 
-      xBroadcasted.destroy()
-      yBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -258,25 +215,18 @@ package object spark {
                                           (trainer: (Formula, DataFrame, Properties) => M)
                                           (implicit spark: SparkSession): Array[RegressionValidations[M]] = {
       val sc = spark.sparkContext
-
-      val formulaBroadcasted = sc.broadcast(formula)
-      val dataBroadcasted = sc.broadcast(data)
+      val bc = sc.broadcast((formula, data))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
           override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
-        val formula = formulaBroadcasted.value
-        val data = dataBroadcasted.value
-        val y = formula.y(data).toDoubleArray
-
+        val (formula, data) = bc.value
         CrossValidation.regression(k, formula, data, biFunctionTrainer)
       }).collect()
 
-      formulaBroadcasted.destroy()
-      dataBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -297,30 +247,18 @@ package object spark {
                                                    (trainer: (Array[T], Array[Double], Properties) => M)
                                                    (implicit spark: SparkSession): Array[RegressionValidation[M]] = {
       val sc = spark.sparkContext
-
-      val xBroadcasted = sc.broadcast(x)
-      val yBroadcasted = sc.broadcast(y)
-      val testxBroadcasted = sc.broadcast(testx)
-      val testyBroadcasted = sc.broadcast(testy)
+      val bc = sc.broadcast((x, y, testx, testy))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Array[T], Array[Double], M] {
           override def apply(x: Array[T], y: Array[Double]): M = trainer(x, y, prop)
         }
 
-        val x = xBroadcasted.value
-        val y = yBroadcasted.value
-        val testx = testxBroadcasted.value
-        val testy = testyBroadcasted.value
-
+        val (x, y, testx, testy) = bc.value
         RegressionValidation.of(x, y, testx, testy, biFunctionTrainer)
       }).collect()
 
-      xBroadcasted.destroy()
-      yBroadcasted.destroy()
-      testxBroadcasted.destroy()
-      testyBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
 
@@ -340,27 +278,18 @@ package object spark {
                                           (trainer: (Formula, DataFrame, Properties) => M)
                                           (implicit spark: SparkSession): Array[RegressionValidation[M]] = {
       val sc = spark.sparkContext
-
-      val formulaBroadcasted = sc.broadcast(formula)
-      val trainBroadcasted = sc.broadcast(train)
-      val testBroadcasted = sc.broadcast(test)
+      val bc = sc.broadcast((formula, train, test))
 
       val scores = sc.parallelize(configurations).map(prop => {
         val biFunctionTrainer = new BiFunction[Formula, DataFrame, M] {
           override def apply(formula: Formula, data: DataFrame): M = trainer(formula, data, prop)
         }
 
-        val formula = formulaBroadcasted.value
-        val train = trainBroadcasted.value
-        val test = trainBroadcasted.value
-
+        val (formula, train, test) = bc.value
         RegressionValidation.of(formula, train, test, biFunctionTrainer)
       }).collect()
 
-      formulaBroadcasted.destroy()
-      trainBroadcasted.destroy()
-      testBroadcasted.destroy()
-
+      bc.destroy()
       scores
     }
   }

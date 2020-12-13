@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -59,9 +59,9 @@ public class IsotonicRegressionScaling implements Serializable {
     }
 
     /** The step-wise buckets of function values in ascending order. */
-    private double[] buckets;
+    private final double[] buckets;
     /** The probability of instances falling into the corresponding buckets. */
-    private double[] prob;
+    private final double[] prob;
 
     /**
      * Constructor.
@@ -82,6 +82,7 @@ public class IsotonicRegressionScaling implements Serializable {
      *
      * @param scores The predicted scores.
      * @param y      The training labels.
+     * @return the model.
      */
     public static IsotonicRegressionScaling fit(double[] scores, int[] y) {
         double[] sortedScores = Arrays.copyOf(scores, scores.length);

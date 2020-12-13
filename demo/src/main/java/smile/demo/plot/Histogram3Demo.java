@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.plot;
 
@@ -44,8 +44,8 @@ public class Histogram3Demo extends JPanel {
             } while (r >= 1.0);
 
             double z = Math.sqrt(-2.0 * Math.log(r) / r);
-            data[j][0] = new Double(x * z);
-            data[j][1] = new Double(y * z);
+            data[j][0] = x * z;
+            data[j][1] = y * z;
         }
 
         Canvas canvas = Histogram3D.of(data, 20, false).canvas();

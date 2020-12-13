@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -77,9 +77,9 @@ final class Variable implements Term {
     public List<Feature> bind(StructType schema) {
         Feature feature = new Feature() {
             /** The column index in the schema. */
-            private int index = schema.fieldIndex(name);
+            private final int index = schema.fieldIndex(name);
             /** The struct field. */
-            private StructField field = schema.field(index);
+            private final StructField field = schema.field(index);
 
             @Override
             public boolean isVariable() {

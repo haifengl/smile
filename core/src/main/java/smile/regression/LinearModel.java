@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -172,8 +172,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         double ybar = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             residuals[i] = y[i] - fittedValues[i];
-            RSS += MathEx.sqr(residuals[i]);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residuals[i]);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         error = Math.sqrt(RSS / (n - p));
@@ -362,7 +362,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
     /**
      * Recursive least squares. RLS updates an ordinary least squares with
      * samples that arrive sequentially.
-     *
+     * <p>
      * In some adaptive configurations it can be useful not to give equal
      * importance to all the historical data but to assign higher weights
      * to the most recent data (and then to forget the oldest one). This
@@ -370,11 +370,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * or when we want to approximate a nonlinear dependence by using a
      * linear model which is local in time. Both these situations are common
      * in adaptive control problems.
-     *
-     * <h2>References</h2>
-     * <ol>
-     * <li> https://www.otexts.org/1582 </li>
-     * </ol>
      *
      * @param x training instance.
      * @param y response variable.

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -36,11 +36,11 @@ public class SparseOneHotEncoder {
     /**
      * The variable attributes.
      */
-    private StructType schema;
+    private final StructType schema;
     /**
      * Starting index for each nominal attribute.
      */
-    private int[] base;
+    private final int[] base;
 
     /**
      * Constructor.
@@ -52,7 +52,7 @@ public class SparseOneHotEncoder {
         base = new int[schema.length()];
         for (int i = 0; i < base.length; i++) {
             StructField field = schema.field(i);
-            if (field.measure == null || !(field.measure instanceof NominalScale)) {
+            if (!(field.measure instanceof NominalScale)) {
                 throw new IllegalArgumentException("Non-nominal attribute: " + field);
             }
 

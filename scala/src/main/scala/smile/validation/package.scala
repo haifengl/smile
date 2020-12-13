@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -21,7 +21,7 @@ import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.regression.{DataFrameRegression, Regression}
-import smile.util.{toJavaBiFunction, toJavaFunction}
+import smile.util.toJavaBiFunction
 import smile.validation.metric._
 
 /** Model validation.

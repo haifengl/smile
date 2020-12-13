@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,11 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Collection;
 import java.util.stream.Stream;
 
@@ -32,7 +33,7 @@ class DatasetImpl<T> implements Dataset<T> {
     /**
      * The data objects.
      */
-    private ArrayList<T> data;
+    private final ArrayList<T> data;
 
     /**
      * Constructor
@@ -55,5 +56,10 @@ class DatasetImpl<T> implements Dataset<T> {
     @Override
     public Stream<T> stream() {
         return data.stream();
+    }
+
+    @Override
+    public List<T> toList() {
+        return new ArrayList<>(data);
     }
 }

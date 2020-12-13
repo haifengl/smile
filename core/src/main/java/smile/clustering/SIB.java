@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -62,6 +62,9 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
 
     /**
      * Constructor.
+     * @param distortion the total distortion.
+     * @param centroids the centroids of each cluster.
+     * @param y the cluster labels.
      */
     public SIB(double distortion, double[][] centroids, int[] y) {
         super(distortion, centroids, y);
@@ -77,6 +80,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
      * @param data the sparse normalized co-occurrence dataset of which each
      *             row is an observation of which the sum is 1.
      * @param k the number of clusters.
+     * @return the model.
      */
     public static SIB fit(SparseArray[] data, int k) {
         return fit(data, k, 100);
@@ -88,6 +92,7 @@ public class SIB extends CentroidClustering<double[], SparseArray> {
      *             row is an observation of which the sum is 1.
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
     public static SIB fit(SparseArray[] data, int k, int maxIter) {
         if (k < 2) {

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,17 +13,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.Optional;
 import java.util.stream.IntStream;
 import smile.data.measure.Measure;
 import smile.data.measure.NominalScale;
-import smile.data.type.StructField;
 import smile.data.vector.BaseVector;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -47,7 +45,12 @@ public class ClassLabels implements Serializable {
     /** The estimated priori probabilities. */
     public final double[] priori;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param k The number of classes.
+     * @param y The sample class id in [0, k).
+     * @param labels the class label encoder.
+     */
     public ClassLabels(int k, int[] y, IntSet labels) {
         this.k = k;
         this.y = y;
@@ -61,7 +64,10 @@ public class ClassLabels implements Serializable {
         }
     }
 
-    /** Returns the nominal scale for the class labels. */
+    /**
+     * Returns the nominal scale for the class labels.
+     * @return the nominal scale for the class labels.
+     */
     public NominalScale scale() {
         String[] values = new String[labels.size()];
         for (int i = 0; i < labels.size(); i++) {
@@ -70,7 +76,11 @@ public class ClassLabels implements Serializable {
         return new NominalScale(values);
     }
 
-    /** Maps the class labels to index. */
+    /**
+     * Maps the class labels to index.
+     * @param y the sample labels.
+     * @return the indices of labels.
+     */
     public int[] indexOf(int[] y) {
         int[] x = new int[y.length];
         for (int i = 0; i < y.length; i++) {
@@ -81,6 +91,8 @@ public class ClassLabels implements Serializable {
 
     /**
      * Learns the class label mapping from samples.
+     * @param y the sample labels.
+     * @return the class label mapping.
      */
     public static ClassLabels fit(int[] y) {
         int[] labels = MathEx.unique(y);
@@ -95,12 +107,14 @@ public class ClassLabels implements Serializable {
         if (labels[0] == 0 && labels[k-1] == k-1) {
             return new ClassLabels(k, y, encoder);
         } else {
-            return new ClassLabels(k, Arrays.stream(y).map(yi -> encoder.indexOf(yi)).toArray(), encoder);
+            return new ClassLabels(k, Arrays.stream(y).map(encoder::indexOf).toArray(), encoder);
         }
     }
 
     /**
      * Learns the class label mapping from samples.
+     * @param response the sample labels.
+     * @return the class label mapping.
      */
     public static ClassLabels fit(BaseVector response) {
         int[] y = response.toIntArray();

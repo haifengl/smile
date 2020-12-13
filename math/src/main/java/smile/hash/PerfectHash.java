@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.hash;
 
@@ -38,13 +38,13 @@ import java.util.Map;
  * Komlós and Szemerédi (1984) chooses a large prime <code>p</code>
  * (larger than the size of the universe from which <code>S</code> is drawn),
  * and a parameter <code>k</code>, and maps each element <code>x</code> of
- * <code>S</code> to the index <code>g(x) = (kx mod p) mod n</code>.
+ * <code>S</code> to the index {@code g(x) = (kx mod p) mod n}.
  *
  * @author Haifeng Li
  */
 public class PerfectHash implements Serializable {
     /** The keyword set. */
-    private String[] keywords;
+    private final String[] keywords;
     /** Hash table. */
     private int[] table;
     /** The k parameters to calculate the hash. */
@@ -248,9 +248,9 @@ public class PerfectHash implements Serializable {
             }
         }
 
-        for (char i = (char)(freq.length - 1); i >= 0; i--) {
+        for (int i = freq.length - 1; i >= 0; i--) {
             if (freq[i] > 0) {
-                max = i;
+                max = (char) i;
                 break;
             }
         }

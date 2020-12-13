@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.projection;
 
@@ -46,10 +46,10 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
 
     private static String[] datasource = {
         "classification/iris.txt",
-        "projection/USArrests.txt",
-        "projection/food.txt",
+        "clustering/USArrests.txt",
+        "clustering/food.txt",
         "classification/pendigits.txt",
-        "projection/COMBO17.dat"
+        "clustering/COMBO17.dat"
     };
 
     protected static DataFrame[] dataset = new DataFrame[datasetName.length];

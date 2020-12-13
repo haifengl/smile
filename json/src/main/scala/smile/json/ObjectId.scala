@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.json
 
@@ -31,7 +31,7 @@ import scala.util.Try
  * The implementation is adopt from ReactiveMongo.
  */
 case class ObjectId(id: Array[Byte]) {
-  require(id.size == ObjectId.size)
+  require(id.length == ObjectId.size)
 
   override def equals(that: Any): Boolean = {
     that.isInstanceOf[ObjectId] && Arrays.equals(id, that.asInstanceOf[ObjectId].id)
@@ -96,7 +96,7 @@ object ObjectId {
     import java.net._
     val validPlatform = Try {
       val correctVersion = System.getProperty("java.version").substring(0, 3).toFloat >= 1.8
-      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == true
+      val noIpv6 = System.getProperty("java.net.preferIPv4Stack") == "true"
       val isLinux = System.getProperty("os.name") == "Linux"
 
       !isLinux || correctVersion || noIpv6
@@ -104,8 +104,10 @@ object ObjectId {
 
     // Check java policies
     val permitted = {
-      val sec = System.getSecurityManager();
-      Try { sec.checkPermission(new NetPermission("getNetworkInformation")) }.toOption.map(_ => true).getOrElse(false);
+      val sec = System.getSecurityManager
+      Try {
+        sec.checkPermission(new NetPermission("getNetworkInformation"))
+      }.toOption.isDefined
     }
 
     if (validPlatform && permitted) {
@@ -156,7 +158,7 @@ object ObjectId {
    * The returned BSONObjectID contains a timestamp set to the current time (in seconds),
    * with the `machine identifier`, `thread identifier` and `increment` properly set.
    */
-  def generate: ObjectId = fromTime(System.currentTimeMillis, false)
+  def generate: ObjectId = fromTime(System.currentTimeMillis, fillOnlyTimestamp = false)
 
   /**
    * Generates a new BSON ObjectID from the given timestamp in milliseconds.

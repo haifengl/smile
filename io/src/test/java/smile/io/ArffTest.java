@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -56,10 +56,7 @@ public class ArffTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of read method, of class Arff.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseWeather() throws Exception {
         System.out.println("weather");
         Arff arff = new Arff(Paths.getTestData("weka/weather.nominal.arff"));
@@ -91,10 +88,7 @@ public class ArffTest {
         assertEquals("TRUE",  weather.getScale(13, 3));
     }
 
-    /**
-     * Test of read method, of class Arff.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseIris() throws Exception {
         System.out.println("iris");
         Arff arff = new Arff(Paths.getTestData("weka/iris.arff"));
@@ -125,10 +119,7 @@ public class ArffTest {
         assertEquals(1.8, iris.getFloat(149, 3), 1E-7);
     }
 
-    /**
-     * Test of read method, of class Arff.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseString() throws Exception {
         System.out.println("string");
         Arff arff = new Arff(Paths.getTestData("weka/string.arff"));
@@ -149,10 +140,7 @@ public class ArffTest {
         assertEquals("Astronomy, Assyro-Babylonian.;Moon -- Tables.", string.get(4, 1));
     }
 
-    /**
-     * Test of read method, of class Arff.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseDate() throws Exception {
         System.out.println("date");
         Arff arff = new Arff(Paths.getTestData("weka/date.arff"));
@@ -168,10 +156,7 @@ public class ArffTest {
         assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1, 0));
     }
 
-    /**
-     * Test of read method, of class Arff.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseSparse() throws Exception {
         System.out.println("sparse");
         Arff arff = new Arff(Paths.getTestData("weka/sparse.arff"));

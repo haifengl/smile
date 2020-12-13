@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.dictionary;
 
@@ -37,7 +37,7 @@ public enum EnglishDictionary implements Dictionary {
     /**
      * A list of abbreviations.
      */
-    private HashSet<String> dict;
+    private final HashSet<String> dict;
 
     /**
      * Constructor.
@@ -49,7 +49,7 @@ public enum EnglishDictionary implements Dictionary {
 
         try (BufferedReader input = new BufferedReader(new InputStreamReader(this.getClass().getResourceAsStream(resource)))) {
         
-            String line = null;
+            String line;
             while ((line = input.readLine()) != null) {
                 line = line.trim();
                 // Remove blank line or single capital characters from dictionary.

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering.linkage;
 
@@ -52,14 +52,12 @@ public abstract class Linkage {
         this.proximity = new float[size * (size+1) / 2];
 
         // row wise
-        /*
-        for (int i = 0, k = 0; i < size; i++) {
-            double[] pi = proximity[i];
-            for (int j = 0; j <= i; j++, k++) {
-                this.proximity[k] = (float) pi[j];
-            }
-        }
-        */
+        //for (int i = 0, k = 0; i < size; i++) {
+        //    double[] pi = proximity[i];
+        //    for (int j = 0; j <= i; j++, k++) {
+        //        this.proximity[k] = (float) pi[j];
+        //    }
+        //}
 
         // column wise
         for (int j = 0, k = 0; j < size; j++) {

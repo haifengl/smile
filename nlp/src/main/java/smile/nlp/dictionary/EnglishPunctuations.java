@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.dictionary;
 
@@ -29,11 +29,11 @@ public class EnglishPunctuations implements Punctuations {
     /**
      * The singleton instance.
      */
-    private static EnglishPunctuations singleton = new EnglishPunctuations();
+    private static final EnglishPunctuations singleton = new EnglishPunctuations();
     /**
      * A set of punctuation marks.
      */
-    private HashSet<String> dict = new HashSet<>(50);
+    private final HashSet<String> dict = new HashSet<>(50);
 
     /**
      * Constructor.
@@ -65,6 +65,7 @@ public class EnglishPunctuations implements Punctuations {
 
     /**
      * Returns the singleton instance.
+     * @return the singleton instance.
      */
     public static EnglishPunctuations getInstance() {
         return singleton;

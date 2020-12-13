@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
  
 package smile.math
 
@@ -30,7 +30,7 @@ package object distance {
 	  *   - c is incremented if i = 0, j = 1
 	  *   - d is incremented if i = 0, j = 0
 	  */
-	def contingency(x: Array[Int], y: Array[Int]) = {
+	def contingency(x: Array[Int], y: Array[Int]): (Int, Int, Int, Int) = {
 		require(x.length == y.length, "Arrays have different length")
 
 	  var (a,b,c,d) = (0, 0, 0, 0)
