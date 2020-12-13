@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -26,7 +26,6 @@ import smile.math.MathEx;
  * <p>
  * The Jensen-Shannon divergence is a symmetrized and smoothed version of the
  * Kullback-Leibler divergence . It is defined by
- * <p>
  * <pre>
  *     J(P||Q) = (D(P||M) + D(Q||M)) / 2
  * </pre>

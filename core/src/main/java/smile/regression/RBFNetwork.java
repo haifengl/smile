@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -47,7 +47,7 @@ import smile.math.rbf.RadialBasisFunction;
  * called thin plate splines. The advantage of the thin plate splines is that
  * their conditioning is invariant under scalings. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
  * parameter. In particular, increasing r<sub><small>0</small></sub> has the
@@ -78,15 +78,15 @@ public class RBFNetwork<T> implements Regression<T> {
     /**
      * The linear weights.
      */
-    private double[] w;
+    private final double[] w;
     /**
      * The radial basis functions.
      */
-    private RBF<T>[] rbf;
+    private final RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
-    private boolean normalized;
+    private final boolean normalized;
 
     /**
      * Constructor.

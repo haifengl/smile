@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -55,7 +55,7 @@ public class Avro {
     /**
      * Avro schema.
      */
-    private Schema schema;
+    private final Schema schema;
 
     /**
      * Constructor.
@@ -188,7 +188,7 @@ public class Avro {
         }
 
         if (union.size() > 2) {
-            String s = union.stream().map(t -> t.getType()).map(Object::toString).collect(Collectors.joining(", "));
+            String s = union.stream().map(Schema::getType).map(Object::toString).collect(Collectors.joining(", "));
             throw new UnsupportedOperationException(String.format("Unsupported type Union(%s)", s));
         }
 

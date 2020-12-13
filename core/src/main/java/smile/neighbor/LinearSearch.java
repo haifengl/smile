@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
@@ -55,11 +55,11 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
     /**
      * The dataset of search space.
      */
-    private T[] data;
+    private final T[] data;
     /**
      * The distance function used to determine nearest neighbors.
      */
-    private Distance<T> distance;
+    private final Distance<T> distance;
 
     /**
      * Constructor. By default, query object self will be excluded from search.

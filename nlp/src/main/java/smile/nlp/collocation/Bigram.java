@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.collocation;
 
@@ -69,12 +69,14 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Chi-square distribution with 1 degree of freedom.
      */
-    private static ChiSquareDistribution chisq = new ChiSquareDistribution(1);
+    private static final ChiSquareDistribution chisq = new ChiSquareDistribution(1);
 
     /**
      * Finds top k bigram collocations in the given corpus.
+     * @param corpus the corpus.
+     * @param k the top k bigram to compute.
      * @param minFrequency The minimum frequency of bigram in the corpus.
-     * @return the array of significant bigram collocations in descending order
+     * @return the significant bigram collocations in the descending order
      * of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, int k, int minFrequency) {
@@ -109,10 +111,10 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
     /**
      * Finds bigram collocations in the given corpus whose p-value is less than
      * the given threshold.
+     * @param corpus the corpus.
      * @param p the p-value threshold
      * @param minFrequency The minimum frequency of bigram in the corpus.
-     * @return the array of significant bigram collocations in descending
-     * order of likelihood ratio.
+     * @return the significant bigram collocations in descending order of likelihood ratio.
      */
     public static Bigram[] of(Corpus corpus, double p, int minFrequency) {
         if (p <= 0.0 || p >= 1.0) {
@@ -139,7 +141,7 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
             }
         }
 
-        Bigram[] collocations = bigrams.toArray(new Bigram[bigrams.size()]);
+        Bigram[] collocations = bigrams.toArray(new Bigram[0]);
         Arrays.sort(collocations, Collections.reverseOrder());
 
         return collocations;

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -25,10 +25,7 @@ import smile.math.MathEx;
  * <code>{0, 1, 2, 3, &hellip;}</code>.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
- * <p>
- * <pre>
  *     Pr(X = k) = (1 - p)<sup>k</sup> p
- * </pre>.
  *
  * @see GeometricDistribution
  *
@@ -38,8 +35,8 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
     private static final long serialVersionUID = 2L;
 
     /** The probability of success. */
-    public final double p;
-    private double entropy;
+    public  final double p;
+    private final double entropy;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.
@@ -61,6 +58,8 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static ShiftedGeometricDistribution fit(int[] data) {
         double sum = 0.0;

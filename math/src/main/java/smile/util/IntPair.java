@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.util;
 
@@ -40,7 +40,7 @@ public class IntPair {
 
     @Override
     public boolean equals(Object o) {
-        if (o != null && o instanceof IntPair) {
+        if (o instanceof IntPair) {
             IntPair p = (IntPair) o;
             return i == p.i && j == p.j;
         }

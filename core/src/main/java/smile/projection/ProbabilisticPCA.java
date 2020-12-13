@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.projection;
 
@@ -26,7 +26,6 @@ import smile.math.matrix.Matrix;
  * Probabilistic principal component analysis. Probabilistic PCA is
  * a simplified factor analysis that employs a latent variable model
  * with linear relationship:
- * <p>
  * <pre>
  *     y &sim; W * x + &mu; + &epsilon;
  * </pre>
@@ -53,23 +52,23 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
     /**
      * The sample mean.
      */
-    private double[] mu;
+    private final double[] mu;
     /**
      * The projected sample mean.
      */
-    private double[] pmu;
+    private final double[] pmu;
     /**
      * The variance of noise part.
      */
-    private double noise;
+    private final double noise;
     /**
      * The loading matrix.
      */
-    private Matrix loading;
+    private final Matrix loading;
     /**
      * The projection matrix.
      */
-    private Matrix projection;
+    private final Matrix projection;
 
     /**
      * Constructor.
@@ -156,10 +155,10 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
 
         double[] mu = MathEx.colMeans(data);
         Matrix cov = new Matrix(n, n);
-        for (int l = 0; l < m; l++) {
+        for (double[] datum : data) {
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
-                    cov.add(i, j, (data[l][i] - mu[i]) * (data[l][j] - mu[j]));
+                    cov.add(i, j, (datum[i] - mu[i]) * (datum[j] - mu[j]));
                 }
             }
         }

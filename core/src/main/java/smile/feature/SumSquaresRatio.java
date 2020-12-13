@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -91,8 +91,8 @@ public class SumSquaresRatio implements FeatureRanking {
         for (int i = 0; i < n; i++) {
             int yi = y[i];
             for (int j = 0; j < p; j++) {
-                bss[j] += MathEx.sqr(condmu[yi][j] - mu[j]);
-                wss[j] += MathEx.sqr(x[i][j] - condmu[yi][j]);
+                bss[j] += MathEx.pow2(condmu[yi][j] - mu[j]);
+                wss[j] += MathEx.pow2(x[i][j] - condmu[yi][j]);
             }
         }
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -22,21 +22,6 @@ package smile.stat.distribution;
  * cumulative distribution function is the logistic function, which appears
  * in logistic regression and feedforward neural networks. It resembles
  * the normal distribution in shape but has heavier tails (higher kurtosis).
- * <p>
- * The cumulative distribution function of the logistic distribution is given by:
- * <p>
- * <pre>
- *                   1
- * F(x; &mu;,s) = -------------
- *              1 + e<sup>-(x-&mu;)/s</sup>
- * </pre>
- * The probability density function of the logistic distribution is given by:
- * <p>
- * <pre>
- *                  e<sup>-(x-&mu;)/s</sup>
- * f(x; &mu;,s) = -----------------
- *              s(1 + e<sup>-(x-&mu;)/s</sup>)<sup>2</sup>
- * </pre>
  * <p>
  * The logistic distribution and the S-shaped pattern that results from it
  * have been extensively used in many different areas such as:

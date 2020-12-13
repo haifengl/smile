@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,14 +13,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import smile.data.type.StructType;
 
 /**
@@ -30,9 +29,6 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 class Dot implements Term {
-    /** All columns in the schema. */
-    private List<Variable> columns;
-
     /**
      * Constructor.
      */
@@ -47,11 +43,12 @@ class Dot implements Term {
 
     @Override
     public Set<String> variables() {
-        return columns.stream().map(Variable::name).collect(Collectors.toSet());
+        // As bind() should not be called, we simply return an empty set.
+        return Collections.emptySet();
     }
 
     @Override
-    public List<Feature>  bind(StructType schema) {
+    public List<Feature> bind(StructType schema) {
         throw new IllegalStateException("Dot.bind() should not be called.");
     }
 }

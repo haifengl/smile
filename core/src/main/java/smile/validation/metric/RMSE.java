@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.validation.metric;
 
@@ -43,7 +43,7 @@ public class RMSE implements RegressionMetric {
         int n = truth.length;
         double rss = 0.0;
         for (int i = 0; i < n; i++) {
-            rss += MathEx.sqr(truth[i] - prediction[i]);
+            rss += MathEx.pow2(truth[i] - prediction[i]);
         }
 
         return Math.sqrt(rss/n);

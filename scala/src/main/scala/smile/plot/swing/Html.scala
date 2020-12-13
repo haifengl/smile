@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.plot.swing
 
@@ -37,13 +37,13 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 
   /** Returns the HTML img tag of the swing component encoded by BASE64. */
   def of(canvas: JComponent, width: Int = 600, height: Int = 600): String = {
     val headless = new Headless(canvas, width, height)
-    headless.pack
+    headless.pack()
     headless.setVisible(true)
     SwingUtilities.invokeAndWait(new Runnable() {
       override def run(): Unit = { }
@@ -57,6 +57,6 @@ object Html {
     ImageIO.write(bi, "png", os)
     val base64 = Base64.getEncoder.encodeToString(os.toByteArray)
 
-    s"""<img src="data:image/png;base64,${base64}">"""
+    s"""<img src="data:image/png;base64,$base64">"""
   }
 }

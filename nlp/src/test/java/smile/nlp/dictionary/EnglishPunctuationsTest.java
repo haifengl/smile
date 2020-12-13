@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.dictionary;
 
@@ -55,29 +55,29 @@ public class EnglishPunctuationsTest {
     @Test
     public void testContains() {
         System.out.println("contains");
-        assertEquals(true, EnglishPunctuations.getInstance().contains("["));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("]"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("("));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(")"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("{"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("}"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("<"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(">"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(":"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(","));
-        assertEquals(true, EnglishPunctuations.getInstance().contains(";"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("-"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("--"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("---"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("!"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("?"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("."));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("..."));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("`"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("'"));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("\""));
-        assertEquals(true, EnglishPunctuations.getInstance().contains("/"));
-        assertEquals(false, EnglishPunctuations.getInstance().contains(""));
-        assertEquals(false, EnglishPunctuations.getInstance().contains("word"));
+        assertTrue(EnglishPunctuations.getInstance().contains("["));
+        assertTrue(EnglishPunctuations.getInstance().contains("]"));
+        assertTrue(EnglishPunctuations.getInstance().contains("("));
+        assertTrue(EnglishPunctuations.getInstance().contains(")"));
+        assertTrue(EnglishPunctuations.getInstance().contains("{"));
+        assertTrue(EnglishPunctuations.getInstance().contains("}"));
+        assertTrue(EnglishPunctuations.getInstance().contains("<"));
+        assertTrue(EnglishPunctuations.getInstance().contains(">"));
+        assertTrue(EnglishPunctuations.getInstance().contains(":"));
+        assertTrue(EnglishPunctuations.getInstance().contains(","));
+        assertTrue(EnglishPunctuations.getInstance().contains(";"));
+        assertTrue(EnglishPunctuations.getInstance().contains("-"));
+        assertTrue(EnglishPunctuations.getInstance().contains("--"));
+        assertTrue(EnglishPunctuations.getInstance().contains("---"));
+        assertTrue(EnglishPunctuations.getInstance().contains("!"));
+        assertTrue(EnglishPunctuations.getInstance().contains("?"));
+        assertTrue(EnglishPunctuations.getInstance().contains("."));
+        assertTrue(EnglishPunctuations.getInstance().contains("..."));
+        assertTrue(EnglishPunctuations.getInstance().contains("`"));
+        assertTrue(EnglishPunctuations.getInstance().contains("'"));
+        assertTrue(EnglishPunctuations.getInstance().contains("\""));
+        assertTrue(EnglishPunctuations.getInstance().contains("/"));
+        assertFalse(EnglishPunctuations.getInstance().contains(""));
+        assertFalse(EnglishPunctuations.getInstance().contains("word"));
     }
 }

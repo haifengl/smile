@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data
 
@@ -22,14 +22,14 @@ import smile.data.formula.Terms.$
 
 /** Formula DSL. */
 package object formula {
-  implicit def buildFormula(x: FormulaBuilder) = x.toFormula
-  implicit def buildFactorInteraction(x: FactorInteractionBuilder) = x.toFactorInteraction
-  implicit def buildFactorCrossing(x: FactorCrossingBuilder) = x.toFactorCrossing
-  implicit def pimpFormulaBuilder(x: String) = PimpedFormulaBuilder($(x))
-  implicit def pimpFormulaBuilder(x: Term) = PimpedFormulaBuilder(x)
-  implicit def pimpFormulaString(x: String) = PimpedFormulaString(x)
-  implicit def pimpHyperTerm(x: Term) = PimpedHyperTerm(x)
-  implicit def pimpTerm(x: Term) = PimpedTerm(x)
+  implicit def buildFormula(x: FormulaBuilder): Formula = x.toFormula
+  implicit def buildFactorInteraction(x: FactorInteractionBuilder): FactorInteraction = x.toFactorInteraction
+  implicit def buildFactorCrossing(x: FactorCrossingBuilder): FactorCrossing = x.toFactorCrossing
+  implicit def pimpFormulaBuilder(x: String): PimpedFormulaBuilder = PimpedFormulaBuilder($(x))
+  implicit def pimpFormulaBuilder(x: Term): PimpedFormulaBuilder = PimpedFormulaBuilder(x)
+  implicit def pimpFormulaString(x: String): PimpedFormulaString = PimpedFormulaString(x)
+  implicit def pimpHyperTerm(x: Term): PimpedHyperTerm = PimpedHyperTerm(x)
+  implicit def pimpTerm(x: Term): PimpedTerm = PimpedTerm(x)
 
   def abs(x: String): Term = Terms.abs($(x))
   def ceil(x: String): Term = Terms.ceil($(x))

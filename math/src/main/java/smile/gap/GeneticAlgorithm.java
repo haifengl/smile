@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.gap;
 
@@ -120,17 +120,13 @@ public class GeneticAlgorithm <T extends Chromosome> {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GeneticAlgorithm.class);
 
     /**
-     * Population size.
-     */
-    private int size;
-    /**
      * Population.
      */
-    private T[] population;
+    private final T[] population;
     /**
      * Selection strategy.
      */
-    private Selection selection;
+    private final Selection selection;
     /**
      * The number of best chromosomes to copy to new population. When creating
      * new population by crossover and mutation, we have a big chance, that we
@@ -139,7 +135,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * classical way. Elitism can very rapidly increase performance of GA,
      * because it prevents losing the best found solution.
      */
-    private int elitism;
+    private final int elitism;
     /**
      * The number of iterations of local search in case Lamarckian algorithm.
      */
@@ -173,7 +169,6 @@ public class GeneticAlgorithm <T extends Chromosome> {
             throw new IllegalArgumentException("Invalid elitism: " + elitism);
         }
 
-        this.size = seeds.length;
         this.population = seeds;
         this.selection = selection;
         this.elitism = elitism;
@@ -243,6 +238,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
             chromosome.fitness();
         });
 
+        int size = population.length;
         Arrays.sort(population);
         T best = population[size-1];
 

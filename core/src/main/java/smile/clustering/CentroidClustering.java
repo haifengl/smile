@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -77,7 +77,12 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
         return Double.compare(distortion, o.distortion);
     }
 
-    /** The distance function. */
+    /**
+     * The distance function.
+     * @param x an observation.
+     * @param y the other observation.
+     * @return the distance.
+     */
     protected abstract double distance(T x, U y);
 
     /**
@@ -110,7 +115,8 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
      */
     static <T> double assign(int[] y, T[] data, T[] centroids, ToDoubleBiFunction<T, T> distance) {
         int k = centroids.length;
-        double wcss = IntStream.range(0, data.length).parallel().mapToDouble(i -> {
+
+        return IntStream.range(0, data.length).parallel().mapToDouble(i -> {
             double nearest = Double.MAX_VALUE;
             for (int j = 0; j < k; j++) {
                 double dist = distance.applyAsDouble(data[i], centroids[j]);
@@ -121,8 +127,6 @@ public abstract class CentroidClustering<T, U> extends PartitionClustering imple
             }
             return nearest;
         }).sum();
-
-        return wcss;
     }
 
     /**

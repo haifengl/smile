@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.type;
 
@@ -42,7 +42,7 @@ public class StructType implements DataType {
      * Constructor.
      */
     public StructType(List<StructField> fields) {
-        this(fields.toArray(new StructField[fields.size()]));
+        this(fields.toArray(new StructField[0]));
     }
 
     /**
@@ -106,7 +106,7 @@ public class StructType implements DataType {
             StructField field = fields[i];
             if (field.type.isPrimitive()) {
                 final int idx = i;
-                boolean missing = rows.stream().filter(t -> t.isNullAt(idx)).findAny().isPresent();
+                boolean missing = rows.stream().anyMatch(t -> t.isNullAt(idx));
                 if (missing) {
                     field = new StructField(field.name, field.type.boxed(), field.measure);
                 }

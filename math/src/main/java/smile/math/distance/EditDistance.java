@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -29,7 +29,7 @@ import smile.util.IntArray2D;
  * distance (Damerau-Levenshtein distance) allows the transposition of two
  * characters as an operation.
  * <p>
- * Given two strings x and y of length m and n (suppose n &ge; m), this
+ * Given two strings x and y of length m and n (suppose {@code n >= m}), this
  * implementation takes O(ne) time and O(mn) space by an extended Ukkonen's
  * algorithm in case of unit cost, where e is the edit distance between x and y.
  * Thus this algorithm is output sensitive. The smaller the distance, the faster
@@ -116,6 +116,7 @@ public class EditDistance implements Metric<String> {
      * Constructor. Weighted Levenshtein distance without path
      * constraints. Only insertion, deletion, and substitution operations are
      * supported.
+     * @param weight the weight matrix.
      */
     public EditDistance(int[][] weight) {
         this(weight, -1);
@@ -125,6 +126,7 @@ public class EditDistance implements Metric<String> {
      * Constructor. Weighted Levenshtein distance with
      * Sakoe-Chiba band, which improve computational cost. Only
      * insertion, deletion, and substitution operations are supported.
+     * @param weight the weight matrix.
      * @param radius the window width of Sakoe-Chiba band in terms of percentage of sequence length.
      */
     public EditDistance(int[][] weight, double radius) {
@@ -136,12 +138,12 @@ public class EditDistance implements Metric<String> {
     public String toString() {
         if (damerau) {
             if (weight != null)
-                return String.format("Damerau-Levenshtein Distance(radius = %d, weight = %s)", r, weight.toString());
+                return String.format("Damerau-Levenshtein Distance(radius = %f, weight = %s)", r, weight.toString());
             else
                 return "Damerau-Levenshtein Distance";
         } else {
             if (weight != null)
-                return String.format("Levenshtein Distance(radius = %d, weight = %s)", r, weight.toString());
+                return String.format("Levenshtein Distance(radius = %f, weight = %s)", r, weight.toString());
             else
                 return  "Levenshtein Distance";
         }
@@ -168,6 +170,9 @@ public class EditDistance implements Metric<String> {
      * edit distance. O(ne) time and O(mn) space for unit cost edit distance.
      * For weighted edit distance, this method is multi-thread safe. However,
      * it is NOT multi-thread safe for unit cost edit distance.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     public double d(char[] x, char[] y) {
         if (weight != null) {
@@ -181,6 +186,9 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Weighted edit distance.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     private double weightedEdit(char[] x, char[] y) {
         // switch parameters to use the shorter one as y to save space.
@@ -190,7 +198,7 @@ public class EditDistance implements Metric<String> {
             y = swap;
         }
 
-        int radius = (int) Math.round(r * Math.max(x.length, y.length));
+        int radius = (int) Math.round(r * x.length);
 
         double[][] d = new double[2][y.length + 1];
 
@@ -237,6 +245,9 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Weighted edit distance.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     private double weightedEdit(String x, String y) {
         // switch parameters to use the shorter one as y to save space.
@@ -246,7 +257,7 @@ public class EditDistance implements Metric<String> {
             y = swap;
         }
 
-        int radius = (int) Math.round(r * Math.max(x.length(), y.length()));
+        int radius = (int) Math.round(r * x.length());
 
         double[][] d = new double[2][y.length() + 1];
 
@@ -293,6 +304,9 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Berghel & Roach's extended Ukkonen's algorithm.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     private int br(char[] x, char[] y) {
         if (x.length > y.length) {
@@ -344,6 +358,9 @@ public class EditDistance implements Metric<String> {
 
     /**
      * Berghel & Roach's extended Ukkonen's algorithm.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     private int br(String x, String y) {
         if (x.length() > y.length()) {
@@ -479,6 +496,9 @@ public class EditDistance implements Metric<String> {
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
      * Multi-thread safe.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     public static int levenshtein(String x, String y) {
         // switch parameters to use the shorter one as y to save space.
@@ -516,6 +536,9 @@ public class EditDistance implements Metric<String> {
      * Levenshtein distance between two strings allows insertion, deletion,
      * or substitution of characters. O(mn) time and O(n) space.
      * Multi-thread safe.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     public static int levenshtein(char[] x, char[] y) {
         // switch parameters to use the shorter one as y to save space.
@@ -553,6 +576,9 @@ public class EditDistance implements Metric<String> {
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
      * O(mn) time and O(n) space. Multi-thread safe.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     public static int damerau(String x, String y) {
         // switch parameters to use the shorter one as y to save space.
@@ -597,6 +623,9 @@ public class EditDistance implements Metric<String> {
      * Damerau-Levenshtein distance between two strings allows insertion,
      * deletion, substitution, or transposition of characters.
      * O(mn) time and O(n) space. Multi-thread safe.
+     * @param x a string.
+     * @param y a string.
+     * @return the distance.
      */
     public static int damerau(char[] x, char[] y) {
         // switch parameters to use the shorter one as y to save space.

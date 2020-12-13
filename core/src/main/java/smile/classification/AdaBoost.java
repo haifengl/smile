@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -69,11 +69,11 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
     /**
      * The model formula.
      */
-    private Formula formula;
+    private final Formula formula;
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * Forest of decision trees.
      */
@@ -94,11 +94,11 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * variable importance that is often very consistent with the permutation
      * importance measure.
      */
-    private double[] importance;
+    private final double[] importance;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -123,7 +123,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param alpha the weight of each decision tree.
      * @param error the weighted error of each decision tree during training.
      * @param importance variable importance
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, IntSet labels) {
         this.formula = formula;
@@ -140,6 +140,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -150,12 +151,14 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.adaboost.trees", "500"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.adaboost.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.adaboost.max.nodes", "6"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.adaboost.node.size", "1"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.adaboost.trees", "500"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.adaboost.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.adaboost.max.nodes", "6"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.adaboost.node.size", "1"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
     }
 
@@ -169,6 +172,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the number of instances in a node below which the tree will
      *                 not split, setting nodeSize = 5 generally gives good results.
+     * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, int ntrees, int maxDepth, int maxNodes, int nodeSize) {
         if (ntrees < 1) {
@@ -293,6 +297,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
 
     /**
      * Returns the decision trees.
+     * @return the decision trees.
      */
     public DecisionTree[] trees() {
         return trees;
@@ -357,7 +362,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
     
     /**
      * Test the model on a validation dataset.
-     * 
+     * @param data the validation data.
      * @return the predictions with first 1, 2, ..., decision trees.
      */
     public int[][] test(DataFrame data) {

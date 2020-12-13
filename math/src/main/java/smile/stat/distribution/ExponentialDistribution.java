@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -36,12 +36,12 @@ import smile.math.MathEx;
  * change state.
  * <p>
  * The probability density function of an exponential distribution is
- * f(x; &lambda;) = &lambda;e<sup>-&lambda;x</sup> for x &ge; 0. The cumulative
+ * f(x; &lambda;) = &lambda;e<sup>-&lambda;x</sup> for {@code x >= 0}. The cumulative
  * distribution function is given by F(x; &lambda;) = 1 - e<sup>-&lambda; x</sup>
- * for x &ge; 0. An important property of the exponential distribution is that
+ * for {@code x >= 0}. An important property of the exponential distribution is that
  * it is memoryless. This means that if a random variable T is exponentially
  * distributed, its conditional probability obeys
- * Pr(T &gt; s + t | T &gt; s) = Pr(T &gt; t) for all s, t &ge; 0.
+ * {@code Pr(T > s + t | T > s) = Pr(T > t)} for all {@code s, t >= 0}.
  * <p>
  * In queuing theory, the service times of agents in a system are often modeled as
  * exponentially distributed variables. Reliability theory and reliability
@@ -75,10 +75,12 @@ public class ExponentialDistribution extends AbstractDistribution implements Exp
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static ExponentialDistribution fit(double[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] < 0) {
+        for (double datum : data) {
+            if (datum < 0) {
                 throw new IllegalArgumentException("Samples contain negative values.");
             }
         }

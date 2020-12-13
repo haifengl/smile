@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -179,7 +179,7 @@ public class MLPTest {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
-            for (; i < x.length-batch;) {
+            while (i < x.length-batch) {
                 for (int j = 0; j < batch; j++, i++) {
                     batchx[j] = x[permutation[i]];
                     batchy[j] = Segment.y[permutation[i]];
@@ -199,7 +199,7 @@ public class MLPTest {
         assertEquals(28, error);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS SGD");
 
@@ -239,9 +239,9 @@ public class MLPTest {
         smile.data.Serialize.read(temp);
     }
 
-    @Test(expected = Test.None.class)
-    public void testUSPSMiniBatch() throws Exception {
-        System.out.println("USPS Mini-Batch Learning");
+    @Test
+    public void testUSPSMiniBatch() {
+        System.out.println("USPS Mini-Batch");
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
@@ -258,18 +258,23 @@ public class MLPTest {
                 Layer.mle(k, OutputFunction.SIGMOID)
         );
 
-        model.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
+        model.setLearningRate(
+                TimeFunction.piecewise(
+                        new int[]   {1000,  2000,  3000,  4000,  5000},
+                        new double[]{0.01, 0.009, 0.008, 0.007, 0.006, 0.005}
+                )
+        );
         model.setRMSProp(0.9, 1E-7);
 
         int batch = 20;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         int error = 0;
-        for (int epoch = 1; epoch <= 15; epoch++) {
+        for (int epoch = 1; epoch <= 5; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
-            for (; i < x.length-batch;) {
+            while (i < x.length-batch) {
                 for (int j = 0; j < batch; j++, i++) {
                     batchx[j] = x[permutation[i]];
                     batchy[j] = USPS.y[permutation[i]];
@@ -286,6 +291,6 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(127, error);
+        assertEquals(168, error);
     }
 }

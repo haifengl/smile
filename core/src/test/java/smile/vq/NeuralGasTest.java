@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.vq;
 
@@ -52,7 +52,7 @@ public class NeuralGasTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testUSPS() {
         System.out.println("USPS");
         MathEx.setSeed(19650218); // to get repeatable results.
@@ -63,8 +63,8 @@ public class NeuralGasTest {
         int epochs = 20;
         int T = x.length * epochs;
         NeuralGas model = new NeuralGas(NeuralGas.seed(400, x),
-                TimeFunction.exp(0.3, T / 2),
-                TimeFunction.exp(30, T / 8),
+                TimeFunction.exp(0.3, T / 2.0),
+                TimeFunction.exp(30, T / 8.0),
                 TimeFunction.constant(x.length * 2));
 
         for (int i = 1; i <= epochs; i++) {

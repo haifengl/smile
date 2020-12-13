@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data
 
@@ -48,10 +48,10 @@ case class DataFrameOps(data: DataFrame) {
   def foreach[U](p: (Tuple) => U): Unit = data.stream.forEach(asJavaConsumer(t => p(t)))
 
   /** Builds a new data collection by applying a function to all rows. */
-  def map[U](p: (Tuple) => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
+  def map[U](p: Tuple => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
 
   /** Selects all rows which satisfy a predicate. */
-  def filter(p: (Tuple) => Boolean): DataFrame = {
+  def filter(p: Tuple => Boolean): DataFrame = {
     val index = IntStream.range(0, data.size).filter(asJavaIntPredicate((i: Int) => p(data(i)))).toArray
     data.of(index: _*)
   }
@@ -64,7 +64,7 @@ case class DataFrameOps(data: DataFrame) {
     *           that don't. The relative order of the elements in the resulting DataFramess
     *           is the same as in the original DataFrame.
     */
-  def partition(p: (Tuple) => Boolean): (DataFrame, DataFrame) = {
+  def partition(p: Tuple => Boolean): (DataFrame, DataFrame) = {
     val l = new scala.collection.mutable.ArrayBuffer[Int]
     val r = new scala.collection.mutable.ArrayBuffer[Int]
     IntStream.range(0, data.size).forEach(asJavaIntConsumer((i: Int) =>
@@ -80,7 +80,7 @@ case class DataFrameOps(data: DataFrame) {
     * @tparam K the type of keys returned by the discriminator function.
     * @return A map from keys to DataFrames
     */
-  def groupBy[K](f: (Tuple) => K): scala.collection.immutable.Map[K, DataFrame] = {
+  def groupBy[K](f: Tuple => K): scala.collection.immutable.Map[K, DataFrame] = {
     val groups = (0 until data.size).groupBy(i => f(data(i)))
     groups.mapValues(index => data.of(index: _*))
   }
@@ -100,7 +100,7 @@ case class DataFrameOps(data: DataFrame) {
 case class TupleOps(t: Tuple) {
   /** Converts the tuple to a JSON object. */
   def toJSON: JsObject = {
-    JsObject((0 until t.length()).map(valueOf(_)): _*)
+    JsObject((0 until t.length()).map(valueOf): _*)
   }
 
   /** Returns the name value pair of a field. */

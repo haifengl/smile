@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -22,19 +22,18 @@ package smile.math.distance;
  * <code>x<sub>1</sub>x<sub>2</sub>...x<sub>n</sub></code> and
  * <code>y<sub>1</sub>y<sub>2</sub>...y<sub>n</sub></code>
  * of equal length n over the q-ary alphabet <code>{0, 1, ..., q-1}</code>
- * of size <code>q &ge; 2</code>, defined as
+ * of size {@code q >= 2}, defined as
  * <p>
- * <pre>
  *     sum min(|x<sub>i</sub>-y<sub>i</sub>|, q-|x<sub>i</sub>-y<sub>i</sub>|)
- * </pre>
- * If <code>q = 2</code> or <code>q = 3</code> the Lee distance coincides with the Hamming distance.
+ * <p>
+ * If {@code q = 2} or {@code q = 3} the Lee distance coincides with the Hamming distance.
  *
  * @author Haifeng Li
  */
 public class LeeDistance implements Metric<int[]> {
     private static final long serialVersionUID = 1L;
 
-    private int q;
+    private final int q;
 
     /**
      * Constructor with a given size q of alphabet.

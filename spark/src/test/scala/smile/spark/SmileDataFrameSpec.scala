@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.spark
 
@@ -27,7 +27,7 @@ import smile.util.Paths
 class SmileDataFrameSpec extends Specification with BeforeAll with AfterAll{
 
   implicit var spark: SparkSession = _
-  val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
+  private val smileMushrooms = Read.arff(Paths.getTestData("weka/mushrooms.arff")).omitNullRows()
 
   def beforeAll(): Unit = {
     spark = SparkSession.builder().master("local[*]").getOrCreate

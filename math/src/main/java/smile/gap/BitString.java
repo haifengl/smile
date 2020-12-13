@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.gap;
 
@@ -48,29 +48,25 @@ import smile.math.MathEx;
 public class BitString implements Chromosome {
 
     /**
-     * The length of chromosome.
-     */
-    public final int length;
-    /**
      * Binary encoding of chromosome.
      */
-    private byte[] bits;
+    private final byte[] bits;
     /**
      * Mutation rate.
      */
-    private double mutationRate = 0.01;
+    private final double mutationRate;
     /**
      * Crossover strategy.
      */
-    private Crossover crossover = Crossover.TWO_POINT;
+    private final Crossover crossover;
     /**
      * Crossover rate.
      */
-    private double crossoverRate = 0.9;
+    private final double crossoverRate;
     /**
      * The fitness function.
      */
-    private Fitness<BitString> fitness;
+    private final Fitness<BitString> fitness;
     /**
      * The fitness score of chromosome.
      */
@@ -124,7 +120,6 @@ public class BitString implements Chromosome {
         }
 
         this.bits = bits;
-        this.length = bits.length;
         this.fitness = fitness;
         this.crossoverRate = crossoverRate;
         this.mutationRate = mutationRate;
@@ -147,7 +142,7 @@ public class BitString implements Chromosome {
 
     /** Returns the length of bit string. */
     public int length() {
-        return length;
+        return bits.length;
     }
 
     /**
@@ -173,7 +168,7 @@ public class BitString implements Chromosome {
 
     @Override
     public BitString newInstance() {
-        return new BitString(length, fitness, crossover, crossoverRate, mutationRate);
+        return new BitString(bits.length, fitness, crossover, crossoverRate, mutationRate);
     }
 
     /** Creates a new instance with given bits. */
@@ -199,7 +194,7 @@ public class BitString implements Chromosome {
 
     @Override
     public void mutate() {
-        for (int i = 0; i < length; i++) {
+        for (int i = 0; i < bits.length; i++) {
             if (MathEx.random() < mutationRate) {
                 bits[i] ^= 1;
             }

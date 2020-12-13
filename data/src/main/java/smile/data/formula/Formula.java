@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -29,30 +29,34 @@ import smile.math.matrix.Matrix;
 
 /**
  * The model fitting formula in a compact symbolic form.
- * An expression of the form y ~ model is interpreted as a specification that
- * the response y is modelled by a linear predictor specified symbolically by
- * model. Such a model consists of a series of terms separated by + operators.
- * The terms themselves consist of variable and factor names separated by
- * :: operators. Such a term is interpreted as the interaction of all the
- * variables and factors appearing in the term. The special term "." means
+ * An expression of the form {@code y ~ model} is interpreted as a
+ * specification that the response y is modelled by a linear predictor
+ * specified symbolically by model. Such a model consists of a series
+ * of terms separated by {@code +} operators. The terms themselves
+ * consist of variable and factor names separated by {@code ::} operators.
+ * Such a term is interpreted as the interaction of all the variables and
+ * factors appearing in the term. The special term {@code "."} means
  * all columns not otherwise in the formula in the context of a data frame.
  * <p>
- * In addition to + and ::, a number of other operators are useful in model
- * formulae. The && operator denotes factor crossing: a && b interpreted as
- * a+b+a::b. The ^ operator indicates crossing to the specified degree.
- * For example (a+b+c)^2 is identical to (a+b+c)*(a+b+c) which in turn
- * expands to a formula containing the main effects for a, b and c together
- * with their second-order interactions. The - operator removes the specified
- * terms, so that (a+b+c)^2 - a::b is identical to a + b + c + b::c + a::c.
+ * In addition to {@code +} and {@code ::}, a number of other operators
+ * are useful in model formulae. The {@code &&} operator denotes factor
+ * crossing: {@code a && b} interpreted as {@code a+b+a::b}. The {@code ^}
+ * operator indicates crossing to the specified degree. For example
+ * {@code (a+b+c)^2} is identical to {@code :(a+b+c)*(a+b+c)} which in turn
+ * expands to a formula containing the main effects for {@code a},
+ * {@code b} and {@code c} together with their second-order interactions.
+ * The {@code -} operator removes the specified terms, so that
+ * {@code (a+b+c)^2 - a::b} is identical to {@code a + b + c + b::c + a::c}.
  * It can also used to remove the intercept term: when fitting a linear model
- * y ~ x - 1 specifies a line through the origin. A model with no intercept
- * can be also specified as y ~ x + 0 or y ~ 0 + x.
+ * {@code y ~ x - 1} specifies a line through the origin. A model with
+ * no intercept can be also specified as {@code y ~ x + 0}.
  * <p>
  * While formulae usually involve just variable and factor names, they
- * can also involve arithmetic expressions. The formula log(y) ~ a + log(x)
- * is quite legal.
+ * can also involve arithmetic expressions. The formula
+ * {@code log(y) ~ a + log(x)}, for example, is legal.
  * <p>
- * Note that the operators ~, +, ::, ^ are only available in Scala API.
+ * Note that the operators {@code ~}, {@code +}, {@code ::}, {@code ^}
+ * are only available in Scala API.
  *
  * @author Haifeng Li
  */
@@ -61,14 +65,14 @@ public class Formula implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Formula.class);
 
     /** The left-hand side of formula. */
-    private Term response;
+    private final Term response;
     /** The right-hand side of formula. */
-    private Term[] predictors;
+    private final Term[] predictors;
     /** The formula-schema binding. */
-    private transient Binding binding;
+    private transient ThreadLocal<Binding> binding;
 
     /** The formula-schema binding. */
-    private class Binding {
+    private static class Binding {
         /** The input schema. */
         StructType inputSchema;
         /** The output schema with response variable and predictors. */
@@ -231,7 +235,7 @@ public class Formula implements Serializable {
                 .collect(Collectors.toSet());
 
         expanded.removeIf(term -> deletes.contains(term.toString()));
-        return new Formula(response, expanded.toArray(new Term[expanded.size()]));
+        return new Formula(response, expanded.toArray(new Term[0]));
     }
 
     /**
@@ -239,13 +243,13 @@ public class Formula implements Serializable {
      * @param inputSchema the schema to bind with
      */
     public StructType bind(StructType inputSchema) {
-        if (binding != null && binding.inputSchema == inputSchema) {
-            return binding.xschema;
+        if (binding != null && binding.get().inputSchema == inputSchema) {
+            return binding.get().xschema;
         }
 
         Formula formula = expand(inputSchema);
 
-        binding = new Binding();
+        Binding binding = new Binding();
         binding.inputSchema = inputSchema;
 
         List<Feature> features = Arrays.stream(formula.predictors)
@@ -253,20 +257,20 @@ public class Formula implements Serializable {
                 .flatMap(predictor -> predictor.bind(inputSchema).stream())
                 .collect(Collectors.toList());
 
-        binding.x = features.toArray(new Feature[features.size()]);
+        binding.x = features.toArray(new Feature[0]);
         binding.xschema = DataTypes.struct(
                 features.stream()
-                     .map(term -> term.field())
+                     .map(Feature::field)
                      .toArray(StructField[]::new)
         );
 
         if (response != null) {
             try {
                 features.addAll(0, response.bind(inputSchema));
-                binding.yx = features.toArray(new Feature[features.size()]);
+                binding.yx = features.toArray(new Feature[0]);
                 binding.yxschema = DataTypes.struct(
                         features.stream()
-                             .map(term -> term.field())
+                             .map(Feature::field)
                              .toArray(StructField[]::new)
                 );
             } catch (NullPointerException ex) {
@@ -274,6 +278,11 @@ public class Formula implements Serializable {
             }
         }
 
+        this.binding = new ThreadLocal<Binding>() {
+            protected synchronized Binding initialValue() {
+                return binding;
+            }
+        };
         return binding.xschema;
     }
 
@@ -283,6 +292,7 @@ public class Formula implements Serializable {
     public Tuple apply(Tuple t) {
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
@@ -327,6 +337,7 @@ public class Formula implements Serializable {
     public Tuple x(Tuple t) {
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         return new smile.data.AbstractTuple() {
             @Override
             public StructType schema() {
@@ -374,6 +385,7 @@ public class Formula implements Serializable {
     public DataFrame frame(DataFrame df) {
         bind(df.schema());
 
+        Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.yx != null ? binding.yx : binding.x)
                 .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
@@ -385,6 +397,7 @@ public class Formula implements Serializable {
      */
     public DataFrame x(DataFrame df) {
         bind(df.schema());
+        Binding binding = this.binding.get();
         BaseVector[] vectors = Arrays.stream(binding.x)
                 .map(term -> term.apply(df)).toArray(BaseVector[]::new);
         return DataFrame.of(vectors);
@@ -434,6 +447,7 @@ public class Formula implements Serializable {
 
         bind(df.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
@@ -451,6 +465,7 @@ public class Formula implements Serializable {
 
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }
@@ -468,6 +483,7 @@ public class Formula implements Serializable {
 
         bind(t.schema());
 
+        Binding binding = this.binding.get();
         if (binding.yx == null) {
             throw new UnsupportedOperationException("The data has no response variable.");
         }

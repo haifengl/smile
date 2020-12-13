@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
@@ -34,7 +34,7 @@ import static org.junit.Assert.assertEquals;
  * @since 03/31/15
  */
 public class SNLSHTest {
-    private String[] texts = {
+    private final String[] texts = {
             "This is a test case",
             "This is another test case",
             "This is another test case too",
@@ -50,7 +50,7 @@ public class SNLSHTest {
 
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws IOException {
         System.out.println("SNLSH");
 

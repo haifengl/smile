@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.stat.distribution;
 
@@ -60,7 +60,7 @@ public class GammaDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> shapeLabelTable = new Hashtable<>();
         for (int i = 0; i <= 10; i+=2) {
-            shapeLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            shapeLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         shapeSlider = new JSlider(0, 10, (int) Math.round(shape));
@@ -73,7 +73,7 @@ public class GammaDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> scaleLabelTable = new Hashtable<>();
         for (int i = 0; i <= 50; i+=10) {
-            scaleLabelTable.put(new Integer(i), new JLabel(String.valueOf(i/10)));
+            scaleLabelTable.put(i, new JLabel(String.valueOf(i/10)));
         }
 
         scaleSlider = new JSlider(0, 50, (int) Math.round(scale*10));

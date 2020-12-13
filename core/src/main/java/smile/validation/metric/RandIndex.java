@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.validation.metric;
 
@@ -59,20 +59,20 @@ public class RandIndex implements ClusteringMetric {
         double randT = 0.0;
         for (int i = 0; i < n1; i++) {
             for (int j = 0; j < n2; j++) {
-                randT += MathEx.sqr(count[i][j]);
+                randT += MathEx.pow2(count[i][j]);
             }
         }
         randT -= n;
 
         double randP = 0.0;
         for (int i = 0; i < n1; i++) {
-            randP += MathEx.sqr(a[i]);
+            randP += MathEx.pow2(a[i]);
         }
         randP -= n;
 
         double randQ = 0.0;
         for (int j = 0; j < n2; j++) {
-            randQ += MathEx.sqr(b[j]);
+            randQ += MathEx.pow2(b[j]);
         }
         randQ -= n;
 

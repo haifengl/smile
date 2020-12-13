@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.sequence;
 
@@ -51,6 +51,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @return the model.
      */
     public static <T> HMMLabeler<T> fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
         if (observations.length != labels.length) {
@@ -59,7 +60,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
 
         HMM model = HMM.fit(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 labels);
 
@@ -75,7 +76,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
     public void update(T[][] observations, int iterations) {
         model.update(
                 Arrays.stream(observations)
-                        .map(sequence -> Arrays.stream(sequence).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray())
+                        .map(sequence -> Arrays.stream(sequence).mapToInt(ordinal).toArray())
                         .toArray(int[][]::new),
                 iterations);
     }
@@ -89,7 +90,7 @@ public class HMMLabeler<T> implements SequenceLabeler<T> {
      * Translates an observation sequence to internal representation.
      */
     private int[] translate(T[] o) {
-        return Arrays.stream(o).mapToInt(symbol -> ordinal.applyAsInt(symbol)).toArray();
+        return Arrays.stream(o).mapToInt(ordinal).toArray();
     }
 
     /**

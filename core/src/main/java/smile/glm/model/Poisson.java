@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,10 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.glm.model;
 
+import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.math.MathEx;
 
@@ -75,7 +76,7 @@ public interface Poisson {
 
             @Override
             public double nullDeviance(double[] y, double mu) {
-                return IntStream.range(0, y.length).mapToDouble(i -> 2.0 * y[i] * Math.log(y[i] / mu)).sum();
+                return Arrays.stream(y).map(yi -> 2.0 * yi * Math.log(yi / mu)).sum();
             }
 
             @Override

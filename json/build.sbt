@@ -1,13 +1,9 @@
 name := "smile-json"
 
-// Parent project disables Scala as most libraries are in Java.
-// Enable it as this is a Scala project.
-crossPaths := true
-autoScalaLibrary := true
-
-scalacOptions in (Compile, doc) ++= Seq("-groups", "-implicits")
-scalacOptions in (Compile, doc) ++= Seq("-doc-root-content", baseDirectory.value + "/root-doc.txt")
-scalacOptions in (Compile, doc) ++= Seq("-doc-title", "Smile - JSON")
+scalacOptions in (Compile, doc) ++= Seq(
+  "-doc-root-content", baseDirectory.value + "/root-doc.txt",
+  "-doc-title", "Smile - JSON"
+)
 target in Compile in doc := baseDirectory.value / "../doc/api/json"
 
 libraryDependencies ++= Seq(

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.random;
 
@@ -43,7 +43,10 @@ public class UniversalGenerator implements RandomNumberGenerator {
      * <CODE>BIG_PRIME = 899999963</CODE>
      */
     static final int BIG_PRIME = 899999963;
-    private double c, cd, cm, u[];
+    private double c;
+    private double cd;
+    private double cm;
+    private double[] u;
     private int i97, j97;
 
     /**

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
@@ -44,15 +44,15 @@ import scala.language.implicitConversions
   * @author Haifeng Li
   */
 package object cas {
-  implicit def pimpString(x: String) = Var(x)
-  implicit def pimpDouble(x: Double) = Val(x)
-  implicit def pimpInt(x: Int) = IntVal(x)
+  implicit def pimpString(x: String): Var = Var(x)
+  implicit def pimpDouble(x: Double): Val = Val(x)
+  implicit def pimpInt(x: Int): IntVal = IntVal(x)
 
   def exp(x: Scalar): Scalar = Exp(x).simplify
   def log(x: Scalar): Scalar = Log(x).simplify
 
   def sqrt(x: Scalar): Scalar = x ** 0.5
-  def logistic(x: Scalar): Scalar = (1 / exp(-x))
+  def logistic(x: Scalar): Scalar = 1.0 / exp(-x)
 
   def sin(x: Scalar): Scalar = Sin(x).simplify
   def cos(x: Scalar): Scalar = Cos(x).simplify

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.association;
 
@@ -36,7 +36,7 @@ import java.util.stream.StreamSupport;
  */
 class TotalSupportTree implements Iterable<ItemSet> {
 
-    class Node {
+    static class Node {
         /**
          * The id of item.
          */
@@ -68,23 +68,23 @@ class TotalSupportTree implements Iterable<ItemSet> {
     /**
      * The root of t-tree.
      */
-    Node root = new Node();
+    private final Node root = new Node();
     /**
      * The number transactions in the database.
      */
-    int numTransactions = 0;
+    private final int numTransactions;
     /**
      * The required minimum support of item sets.
      */
-    private int minSupport;
+    private final int minSupport;
     /**
      * The index of items after sorting.
      */
-    private int[] order;
+    private final int[] order;
     /**
      * The buffer to collect mining results.
      */
-    private Queue<ItemSet> buffer = new LinkedList<>();
+    private final Queue<ItemSet> buffer = new LinkedList<>();
 
     /**
      * Constructor.
@@ -102,6 +102,13 @@ class TotalSupportTree implements Iterable<ItemSet> {
      */
     public int size() {
         return numTransactions;
+    }
+
+    /**
+     * Returns the root node.
+     */
+    public Node root() {
+        return root;
     }
 
     @Override

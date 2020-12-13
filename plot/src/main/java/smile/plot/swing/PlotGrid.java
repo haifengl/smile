@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.plot.swing;
 
@@ -316,7 +316,7 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
      * @param category the category column for coloring.
      */
     public static PlotGrid splom(DataFrame data, char mark, String category) {
-        int clazz = data.columnIndex(category);
+        int clazz = data.indexOf(category);
         String[] columns = data.names();
         int p = columns.length;
         PlotGrid grid = new PlotGrid(p, p);

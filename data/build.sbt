@@ -1,3 +1,3 @@
 name := "smile-data"
 
-libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.32.3.2" % Test
+libraryDependencies += "org.xerial" % "sqlite-jdbc" % "3.34.0" % Test
