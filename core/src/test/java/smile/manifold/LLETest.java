@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.manifold;
 
@@ -50,10 +50,7 @@ public class LLETest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class LLE.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void test() throws Exception {
         System.out.println("LLE");
 

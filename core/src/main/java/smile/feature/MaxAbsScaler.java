@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -43,11 +43,11 @@ public class MaxAbsScaler implements FeatureTransform {
     /**
      * The schema of data.
      */
-    protected StructType schema;
+    protected final StructType schema;
     /**
      * Scaling factor.
      */
-    private double[] scale;
+    private final double[] scale;
 
     /**
      * Constructor.
@@ -71,6 +71,7 @@ public class MaxAbsScaler implements FeatureTransform {
     /**
      * Learns transformation parameters from a dataset.
      * @param data The training data.
+     * @return the model.
      */
     public static MaxAbsScaler fit(DataFrame data) {
         if (data.isEmpty()) {
@@ -92,6 +93,7 @@ public class MaxAbsScaler implements FeatureTransform {
     /**
      * Learns transformation parameters from a dataset.
      * @param data The training data.
+     * @return the model.
      */
     public static MaxAbsScaler fit(double[][] data) {
         return fit(DataFrame.of(data));

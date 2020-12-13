@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,11 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.util;
 
 import java.util.Arrays;
+import smile.math.MathEx;
 
 /**
  * 2-dimensional array of integers. Java doesn't have real multidimensional
@@ -36,15 +37,15 @@ public class IntArray2D {
     /**
      * The array storage.
      */
-    private int[] A;
+    private final int[] A;
     /**
      * The number of rows.
      */
-    private int nrows;
+    private final int nrows;
     /**
      * The number of columns.
      */
-    private int ncols;
+    private final int ncols;
 
     /**
      * Constructor.
@@ -206,12 +207,7 @@ public class IntArray2D {
     }
 
     public long sum() {
-        long s = 0;
-        for (int i = 0; i < A.length; i++) {
-            s += A[i];
-        }
-
-        return s;
+        return MathEx.sum(A);
     }
 
     @Override

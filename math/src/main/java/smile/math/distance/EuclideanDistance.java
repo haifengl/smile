@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -47,9 +47,9 @@ public class EuclideanDistance implements Metric<double[]> {
      * @param weight the weight vector.
      */
     public EuclideanDistance(double[] weight) {
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        for (double w : weight) {
+            if (w < 0) {
+                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
             }
         }
 
@@ -68,6 +68,9 @@ public class EuclideanDistance implements Metric<double[]> {
     /**
      * Euclidean distance between the two arrays of type integer. No missing
      * value handling in this method.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(int[] x, int[] y) {
         if (x.length != y.length)
@@ -99,6 +102,9 @@ public class EuclideanDistance implements Metric<double[]> {
      * calculation. Let m be the number nonmissing values, and n be the
      * number of all values. The returned distance is sqrt(n * d / m),
      * where d is the square of distance between nonmissing values.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public double d(float[] x, float[] y) {
         if (x.length != y.length)

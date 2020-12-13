@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -72,9 +72,6 @@ public class DiscreteMixture extends DiscreteDistribution {
         double sum = 0.0;
         for (Component component : components) {
             sum += component.priori;
-            if (component.distribution instanceof DiscreteDistribution == false) {
-                throw new IllegalArgumentException("Component " + component + " is not a discrete distribution.");
-            }
         }
 
         if (Math.abs(sum - 1.0) > 1E-3) {
@@ -82,7 +79,11 @@ public class DiscreteMixture extends DiscreteDistribution {
         }
     }
 
-    /** Returns the posteriori probabilities. */
+    /**
+     * Returns the posteriori probabilities.
+     * @param x an integer value.
+     * @return the posteriori probabilities.
+     */
     public double[] posteriori(int x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -98,7 +99,11 @@ public class DiscreteMixture extends DiscreteDistribution {
         return prob;
     }
 
-    /** Returns the index of component with maximum a posteriori probability. */
+    /**
+     * Returns the index of component with maximum a posteriori probability.
+     * @param x an integer value.
+     * @return the index of component with maximum a posteriori probability.
+     */
     public int map(int x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -224,13 +229,15 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     /**
      * Returns the number of components in the mixture.
+     * @return the number of components in the mixture.
      */
     public int size() {
         return components.length;
     }
 
     /**
-     * BIC score of the mixture for given data.
+     * returns the BIC score of the mixture for given data.
+     * @return the BIC score.
      */
     public double bic(double[] data) {
         int n = data.length;

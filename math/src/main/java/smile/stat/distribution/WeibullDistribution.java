@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -24,21 +24,18 @@ import smile.math.special.Gamma;
  * The Weibull distribution is one of the most widely used lifetime distributions
  * in reliability engineering. It is a versatile distribution that can take on
  * the characteristics of other types of distributions, based on the value of
- * the shape parameter. The distribution has two parameters: <code>k &gt; 0</code>
- * is the shape parameter and <code>&lambda; &gt; 0</code> is the scale parameter
+ * the shape parameter. The distribution has two parameters: {@code k > 0}
+ * is the shape parameter and &lambda; {@code > 0} is the scale parameter
  * of the distribution. The probability density function is
- * <p>
- * <pre>
- *     f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)<sup>k</sup></sup>
- * </pre>
- * for <code>x &ge; 0</code>.
+ * f(x;&lambda;,k) = k/&lambda; (x/&lambda;)<sup>k-1</sup>e<sup>-(x/&lambda;)^k</sup>
+ * for {@code x >= 0}.
  * <p>
  * The Weibull distribution is often used in the field of life data analysis
  * due to its flexibility - it can mimic the behavior of other statistical
  * distributions such as the normal and the exponential. If the failure rate
- * decreases over time, then <code>k &lt; 1</code>. If the failure rate is
- * constant over time, then <code>k = 1</code>. If the failure rate increases
- * over time, then <code>k &gt; 1</code>.
+ * decreases over time, then {@code k < 1}. If the failure rate is
+ * constant over time, then {@code k = 1}. If the failure rate increases
+ * over time, then {@code k > 1}.
  * <p>
  * An understanding of the failure rate may provide insight as to what is
  * causing the failures:
@@ -70,12 +67,12 @@ public class WeibullDistribution extends AbstractDistribution {
     private static final long serialVersionUID = 2L;
 
     /** The shape parameter. */
-    public final double k;
+    public  final double k;
     /** The scale parameter. */
-    public final double lambda;
-    private double mean;
-    private double variance;
-    private double entropy;
+    public  final double lambda;
+    private final double mean;
+    private final double variance;
+    private final double entropy;
 
     /**
      * Constructor. The default scale parameter is 1.0.

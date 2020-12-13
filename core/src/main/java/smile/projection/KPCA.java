@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.projection;
 
@@ -54,7 +54,7 @@ import smile.math.matrix.Matrix;
  * @see smile.manifold.IsoMap
  * @see smile.manifold.LLE
  * @see smile.manifold.LaplacianEigenmap
- * @see smile.mds.SammonMapping
+ * @see smile.manifold.SammonMapping
  *
  * @author Haifeng Li
  */
@@ -64,35 +64,35 @@ public class KPCA<T> implements Projection<T>, Serializable {
     /**
      * The dimension of feature space.
      */
-    private int p;
+    private final int p;
     /**
      * Learning data.
      */
-    private T[] data;
+    private final T[] data;
     /**
      * Mercer kernel.
      */
-    private MercerKernel<T> kernel;
+    private final MercerKernel<T> kernel;
     /**
      * The row mean of kernel matrix.
      */
-    private double[] mean;
+    private final double[] mean;
     /**
      * The mean of kernel matrix.
      */
-    private double mu;
+    private final double mu;
     /**
      * The eigenvalues of kernel principal components.
      */
-    private double[] latent;
+    private final double[] latent;
     /**
      * The projection matrix.
      */
-    private Matrix projection;
+    private final Matrix projection;
     /**
      * The coordinates of projected training data.
      */
-    private double[][] coordinates;
+    private final double[][] coordinates;
 
     /**
      * Constructor.
@@ -165,7 +165,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         }
 
         K.uplo(UPLO.LOWER);
-        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, k);;
+        Matrix.EVD eigen = ARPACK.syev(K, ARPACK.SymmOption.LA, k);
 
         double[] eigvalues = eigen.wr;
         Matrix eigvectors = eigen.Vr;
@@ -190,7 +190,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
             }
         }
 
-        return new KPCA<T>(data, kernel, mean, mu, coordinates, latent, projection);
+        return new KPCA<>(data, kernel, mean, mu, coordinates, latent, projection);
     }
 
     /**

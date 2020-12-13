@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.manifold;
 
@@ -144,9 +144,7 @@ public class IsoMap implements Serializable {
         } else {
             int n = data.length;
             double[] M = new double[n];
-            graph = NearestNeighborGraph.of(data, distance, k, false, (v1, v2, weight, j) -> {
-                M[v1] += weight;
-            });
+            graph = NearestNeighborGraph.of(data, distance, k, false, (v1, v2, weight, j) -> M[v1] += weight);
 
             for (int i = 0; i < n; i++) {
                 M[i] = Math.sqrt(M[i] / k);

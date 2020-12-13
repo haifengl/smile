@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -46,9 +46,9 @@ public class PlattScaling implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
 
     /** The scaling parameter. */
-    private double alpha;
+    private final double alpha;
     /** The scaling parameter. */
-    private double beta;
+    private final double beta;
 
     /**
      * Constructor. P(y = 1 | x) = 1 / (1 + exp(alpha * f(x) + beta))
@@ -79,6 +79,7 @@ public class PlattScaling implements Serializable {
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y) {
         return fit(scores, y, 100);
@@ -89,6 +90,7 @@ public class PlattScaling implements Serializable {
      * @param scores The predicted scores.
      * @param y The training labels.
      * @param maxIters The maximal number of iterations.
+     * @return the model.
      */
     public static PlattScaling fit(double[] scores, int[] y, int maxIters) {
         int l = scores.length;
@@ -205,6 +207,8 @@ public class PlattScaling implements Serializable {
      * @param model the binary-class model to fit Platt scaling.
      * @param x training samples.
      * @param y training labels.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> PlattScaling fit(Classifier<T> model, T[] x, int[] y) {
         int n = y.length;

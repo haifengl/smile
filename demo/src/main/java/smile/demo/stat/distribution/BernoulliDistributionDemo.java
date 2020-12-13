@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.stat.distribution;
 
@@ -53,7 +53,7 @@ public class BernoulliDistributionDemo extends JPanel implements ChangeListener 
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 1; i < 10; i+=2) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10.0)));
         }
 
         probSlider = new JSlider(1, 9, (int) Math.round(prob * 10));

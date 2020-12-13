@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,17 +13,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.kernel;
 
 /**
  * The Thin Plate Spline kernel.
  * <p>
- * <pre>
  *     k(u, v) = (||u-v|| / &sigma;)<sup>2</sup> log (||u-v|| / &sigma;)
- * </pre>
- * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ * <p>
+ * where &sigma; {@code > 0} is the scale parameter of the kernel.
  *
  * @author Haifeng Li
  */

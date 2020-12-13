@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math;
 
@@ -211,7 +211,7 @@ public class Complex implements Serializable {
     /** Packed array of complex numbers for better memory efficiency. */
     public static class Array {
         public final int length;
-        private double[] data;
+        private final double[] data;
 
         /** Constructor.
          *

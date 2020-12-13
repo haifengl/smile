@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -37,6 +37,11 @@ import static smile.math.blas.Side.*;
 import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.*;
 
+/**
+ * Dense matrix of single precision values.
+ *
+ * @author Haifeng Li
+ */
 public class FloatMatrix extends SMatrix {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
@@ -223,37 +228,9 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Returns an n-by-n identity matrix.
-     * @param n the number of rows/columns.
-     */
-    public static FloatMatrix eye(int n) {
-        FloatMatrix matrix = new FloatMatrix(n, n);
-
-        for (int i = 0; i < n; i++) {
-            matrix.set(i, i, 1.0f);
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns an m-by-n identity matrix.
+     * Returns a random matrix of standard normal distribution.
      * @param m the number of rows.
      * @param n the number of columns.
-     */
-    public static FloatMatrix eye(int m, int n) {
-        FloatMatrix matrix = new FloatMatrix(m, n);
-
-        int k = Math.min(m, n);
-        for (int i = 0; i < k; i++) {
-            matrix.set(i, i, 1.0f);
-        }
-
-        return matrix;
-    }
-
-    /**
-     * Returns a random matrix of standard normal distribution.
      */
     public static FloatMatrix randn(int m, int n) {
         return rand(m, n, GaussianDistribution.getInstance());
@@ -262,6 +239,8 @@ public class FloatMatrix extends SMatrix {
     /**
      * Returns a random matrix.
      *
+     * @param m the number of rows.
+     * @param n the number of columns.
      * @param distribution the distribution of random number.
      */
     public static FloatMatrix rand(int m, int n, Distribution distribution) {
@@ -279,6 +258,8 @@ public class FloatMatrix extends SMatrix {
     /**
      * Returns a random matrix of uniform distribution.
      *
+     * @param m the number of rows.
+     * @param n the number of columns.
      * @param lo the lower bound of uniform distribution.
      * @param hi the upper bound of uniform distribution.
      */
@@ -295,8 +276,50 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Returns a square diagonal matrix with the elements of vector
-     * v on the main diagonal.
+     * Returns an identity matrix.
+     * @param n the number of rows/columns.
+     */
+    public static FloatMatrix eye(int n) {
+        return diag(n, 1.0f);
+    }
+
+    /**
+     * Returns an m-by-n identity matrix.
+     * @param m the number of rows.
+     * @param n the number of columns.
+     */
+    public static FloatMatrix eye(int m, int n) {
+        return diag(m, n, 1.0f);
+    }
+
+    /**
+     * Returns a square diagonal matrix.
+     *
+     * @param n the number of rows/columns.
+     * @param diag the diagonal value.
+     */
+    public static FloatMatrix diag(int n, float diag) {
+        return diag(n, n, diag);
+    }
+
+    /**
+     * Returns an m-by-n diagonal matrix.
+     *
+     * @param m the number of rows.
+     * @param n the number of columns.
+     * @param diag the diagonal value.
+     */
+    public static FloatMatrix diag(int m, int n, float diag) {
+        FloatMatrix D = new FloatMatrix(m, n);
+        int k = Math.min(m, n);
+        for (int i = 0; i < k; i++) {
+            D.set(i, i, diag);
+        }
+        return D;
+    }
+
+    /**
+     * Returns a square diagonal matrix.
      *
      * @param diag the diagonal elements.
      */
@@ -337,8 +360,8 @@ public class FloatMatrix extends SMatrix {
      * Returns a Toeplitz matrix in which each descending diagonal
      * from left to right is constant.
      *
-     * @param kl A[i, j] = kl[i - j] for i >  j
-     * @param ku A[i, j] = ku[j - i] for i <= j
+     * @param kl {@code A[i, j] = kl[i - j]} for {@code i >  j}
+     * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
      */
     public static FloatMatrix toeplitz(float[] kl, float[] ku) {
         if (kl.length != ku.length - 1) {
@@ -475,7 +498,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * Return if the matrix is symmetric (uplo != null && diag == null).
+     * Return if the matrix is symmetric ({@code uplo != null && diag == null}).
      */
     public boolean isSymmetric() {
         return uplo != null && diag == null;
@@ -641,7 +664,7 @@ public class FloatMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FloatMatrix)) {
+        if (!(o instanceof FloatMatrix)) {
             return false;
         }
 
@@ -1303,9 +1326,9 @@ public class FloatMatrix extends SMatrix {
 
     /**
      * Matrix-vector multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     y = alpha * A * x + beta * y
-     * </code></pre>
+     * }</pre>
      */
     public void mv(Transpose trans, float alpha, FloatBuffer x, float beta, FloatBuffer y) {
         if (uplo != null) {
@@ -1349,9 +1372,9 @@ public class FloatMatrix extends SMatrix {
 
     /**
      * Matrix-matrix multiplication.
-     * <pre><code>
+     * <pre>{@code
      *     C := alpha*A*B + beta*C
-     * </code></pre>
+     * }</pre>
      */
     public void mm(Transpose transA, Transpose transB, float alpha, FloatMatrix B, float beta, FloatMatrix C) {
         if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
@@ -1531,9 +1554,9 @@ public class FloatMatrix extends SMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1549,9 +1572,9 @@ public class FloatMatrix extends SMatrix {
      * Singular Value Decomposition.
      * Returns an compact SVD of m-by-n matrix A:
      * <ul>
-     * <li>m > n — Only the first n columns of U are computed, and S is n-by-n.</li>
-     * <li>m = n — Equivalent to full SVD.</li>
-     * <li>m < n — Only the first m columns of V are computed, and S is m-by-m.</li>
+     * <li>{@code m > n} — Only the first n columns of U are computed, and S is n-by-n.</li>
+     * <li>{@code m = n} — Equivalent to full SVD.</li>
+     * <li>{@code m < n} — Only the first m columns of V are computed, and S is m-by-m.</li>
      * </ul>
      * The compact decomposition removes extra rows or columns of zeros from
      * the diagonal matrix of singular values, S, along with the columns in either
@@ -1643,9 +1666,6 @@ public class FloatMatrix extends SMatrix {
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
             }
 
-            float[] w = new float[2 * n];
-            System.arraycopy(wr, 0, w, 0, n);
-            System.arraycopy(wi, 0, w, n, n);
             return new EVD(wr, wi, vl ? Vl : null, vr ? Vr : null);
         }
     }
@@ -1653,11 +1673,11 @@ public class FloatMatrix extends SMatrix {
     /**
      * Singular Value Decomposition.
      * <p>
-     * For an m-by-n matrix A with m &ge; n, the singular value decomposition is
+     * For an m-by-n matrix A with {@code m >= n}, the singular value decomposition is
      * an m-by-n orthogonal matrix U, an n-by-n diagonal matrix &Sigma;, and
      * an n-by-n orthogonal matrix V so that A = U*&Sigma;*V'.
      * <p>
-     * For m &lt; n, only the first m columns of V are computed and &Sigma; is m-by-m.
+     * For {@code m < n}, only the first m columns of V are computed and &Sigma; is m-by-m.
      * <p>
      * The singular values, &sigma;<sub>k</sub> = &Sigma;<sub>kk</sub>, are ordered
      * so that &sigma;<sub>0</sub> &ge; &sigma;<sub>1</sub> &ge; ... &ge; &sigma;<sub>n-1</sub>.
@@ -1766,8 +1786,8 @@ public class FloatMatrix extends SMatrix {
             int r = 0;
             float tol = rcond();
 
-            for (int i = 0; i < s.length; i++) {
-                if (s[i] > tol) {
+            for (float si : s) {
+                if (si > tol) {
                     r++;
                 }
             }
@@ -1903,19 +1923,17 @@ public class FloatMatrix extends SMatrix {
      * Eigenvalue decomposition. Eigen decomposition is the factorization
      * of a matrix into a canonical form, whereby the matrix is represented in terms
      * of its eigenvalues and eigenvectors:
-     * <p>
-     * <pre><code>
+     * <pre>{@code
      *     A = V*D*V<sup>-1</sup>
-     * </code></pre>
+     * }</pre>
      * If A is symmetric, then A = V*D*V' where the eigenvalue matrix D is
      * diagonal and the eigenvector matrix V is orthogonal.
      * <p>
      * Given a linear transformation A, a non-zero vector x is defined to be an
      * eigenvector of the transformation if it satisfies the eigenvalue equation
-     * <p>
-     * <pre><code>
+     * <pre>{@code
      *     A x = &lambda; x
-     * </code></pre>
+     * }</pre>
      * for some scalar &lambda;. In this situation, the scalar &lambda; is called
      * an eigenvalue of A corresponding to the eigenvector x.
      * <p>
@@ -1925,12 +1943,12 @@ public class FloatMatrix extends SMatrix {
      * is defined by x A = &lambda; x.
      * <p>
      * Let A be a real n-by-n matrix with strictly positive entries a<sub>ij</sub>
-     * &gt; 0. Then the following statements hold.
+     * {@code > 0}. Then the following statements hold.
      * <ol>
      * <li> There is a positive real number r, called the Perron-Frobenius
      * eigenvalue, such that r is an eigenvalue of A and any other eigenvalue &lambda;
      * (possibly complex) is strictly smaller than r in absolute value,
-     * |&lambda;| &lt; r.
+     * |&lambda;| {@code < r}.
      * <li> The Perron-Frobenius eigenvalue is simple: r is a simple root of the
      *      characteristic polynomial of A. Consequently, both the right and the left
      *      eigenspace associated to r is one-dimensional.
@@ -2093,10 +2111,10 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * The LU decomposition. For an m-by-n matrix A with m &ge; n, the LU
+     * The LU decomposition. For an m-by-n matrix A with {@code m >= n}, the LU
      * decomposition is an m-by-n unit lower triangular matrix L, an n-by-n
      * upper triangular matrix U, and a permutation vector piv of length m
-     * so that A(piv,:) = L*U. If m &lt; n, then L is m-by-m and U is m-by-n.
+     * so that A(piv,:) = L*U. If {@code m < n}, then L is m-by-m and U is m-by-n.
      * <p>
      * The LU decomposition with pivoting always exists, even if the matrix is
      * singular. The primary use of the LU decomposition is in the solution of
@@ -2328,7 +2346,7 @@ public class FloatMatrix extends SMatrix {
     }
 
     /**
-     * The QR decomposition. For an m-by-n matrix A with m &ge; n,
+     * The QR decomposition. For an m-by-n matrix A with {@code m >= n},
      * the QR decomposition is an m-by-n orthogonal matrix Q and
      * an n-by-n upper triangular matrix R such that A = Q*R.
      * <p>

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -26,11 +26,8 @@ package smile.stat.distribution;
  * the confusion, we denote the later as shifted geometric distribution.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
+ * Pr(X = k) = (1 - p)<sup>k-1</sup> p.
  * <p>
- * <pre>
- *     Pr(X = k) = (1 - p)<sup>k-1</sup> p
- * </pre>.
- *
  * Like its continuous analogue (the exponential distribution), the geometric
  * distribution is memoryless. That means that if you intend to repeat an
  * experiment until the first success, then, given that the first success has
@@ -75,6 +72,8 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GeometricDistribution fit(int[] data) {
         double sum = 0.0;

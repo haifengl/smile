@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -52,7 +52,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
         super(components);
 
         for (Component component : components) {
-            if (component.distribution instanceof MultivariateExponentialFamily == false) {
+            if (!(component.distribution instanceof MultivariateExponentialFamily)) {
                 throw new IllegalArgumentException("Component " + component + " is not of multivariate exponential family.");
             }
         }
@@ -66,6 +66,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
      * @param x the training data.
      * @param components the initial configuration of mixture. Components may have
      *                   different distribution form.
+     * @return the distribution.
      */
     public static MultivariateExponentialFamilyMixture fit(double[][] x, Component... components) {
         return fit(x, components, 0.2, 500, 1E-4);
@@ -80,6 +81,7 @@ public class MultivariateExponentialFamilyMixture extends MultivariateMixture {
      * @param gamma the regularization parameter.
      * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
+     * @return the distribution.
      */
     public static MultivariateExponentialFamilyMixture fit(double[][] x, Component[] components, double gamma, int maxIter, double tol) {
         if (x.length < components.length / 2) {

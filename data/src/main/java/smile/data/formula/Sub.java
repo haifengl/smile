@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -25,7 +25,7 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 
 /**
- * The term of <code>a - b</code> expression.
+ * The term of {@code a - b} expression.
  *
  * @author Haifeng Li
  */
@@ -63,11 +63,11 @@ public class Sub extends Operator {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(String.format("%s - %s", xfield.name, yfield.name),
+                final StructField field = new StructField(String.format("%s - %s", xfield.name, yfield.name),
                         DataType.prompt(xfield.type, yfield.type),
                         null);
 
-                java.util.function.Function<Tuple, Object> lambda =
+                final java.util.function.Function<Tuple, Object> lambda =
                         field.type.isInt()    ? (Tuple o) -> a.applyAsInt(o)    - b.applyAsInt(o) :
                         field.type.isLong()   ? (Tuple o) -> a.applyAsLong(o)   - b.applyAsLong(o) :
                         field.type.isFloat()  ? (Tuple o) -> a.applyAsFloat(o)  - b.applyAsFloat(o) :

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.special;
 
@@ -23,10 +23,9 @@ import static smile.math.special.Gamma.lgamma;
 /**
  * The beta function, also called the Euler integral of the first kind.
  * <p>
- * <pre>
- *     B(x, y) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
- * </pre>
- * for <code>x, y &gt; 0</code> and the integration is over [0, 1].
+ *     B(x, y) = <i>&#8747;<sub><small>0</small></sub><sup><small>1</small></sup> t<sup>x-1</sup> (1-t)<sup>y-1</sup>dt</i>
+ * <p>
+ * for {@code x, y > 0} and the integration is over [0, 1].
  * The beta function is symmetric, i.e. <code>B(x, y) = B(y, x)</code>.
  *
  * @author Haifeng Li

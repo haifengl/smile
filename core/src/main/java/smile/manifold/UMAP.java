@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.manifold;
 
@@ -37,19 +37,16 @@ import smile.stat.distribution.GaussianDistribution;
  * UMAP is a dimension reduction technique that can be used for visualization
  * similarly to t-SNE, but also for general non-linear dimension reduction.
  * The algorithm is founded on three assumptions about the data:
- * <p>
  * <ul>
  * <li>The data is uniformly distributed on a Riemannian manifold;</li>
  * <li>The Riemannian metric is locally constant (or can be approximated as
  * such);</li>
  * <li>The manifold is locally connected.</li>
  * </ul>
- * <p>
  * From these assumptions it is possible to model the manifold with a fuzzy
  * topological structure. The embedding is found by searching for a low
  * dimensional projection of the data that has the closest possible equivalent
  * fuzzy topological structure.
- * <p>
  * <h2>References</h2>
  * <ol>
  * <li>McInnes, L, Healy, J, UMAP: Uniform Manifold Approximation and Projection for Dimension Reduction, ArXiv e-prints 1802.03426, 2018</li>
@@ -262,7 +259,7 @@ public class UMAP implements Serializable {
      * 1.0 / (1.0 + a * x ^ (2 * b))
      * </pre>
      */
-    private static DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
+    private static final DifferentiableMultivariateFunction func = new DifferentiableMultivariateFunction() {
 
         @Override
         public double f(double[] x) {
@@ -336,7 +333,7 @@ public class UMAP implements Serializable {
         // The distance to nearest neighbor
         double[] rho = new double[n];
 
-        double avg = IntStream.range(0, n).mapToObj(i -> nng.getEdges(i))
+        double avg = IntStream.range(0, n).mapToObj(nng::getEdges)
                 .flatMapToDouble(edges -> edges.stream().mapToDouble(edge -> edge.weight))
                 .filter(w -> !MathEx.isZero(w, EPSILON))
                 .average().orElse(0.0);
@@ -604,12 +601,6 @@ public class UMAP implements Serializable {
      * Clamps a value to range [-4.0, 4.0].
      */
     private static double clamp(double val) {
-        if (val > 4.0) {
-            return 4.0;
-        } else if (val < -4.0) {
-            return -4.0;
-        } else {
-            return val;
-        }
+        return Math.min(4.0, Math.max(val, -4.0));
     }
 }

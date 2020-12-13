@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
@@ -41,7 +41,7 @@ import smile.sort.HeapSelect;
  * <p>
  * KD-trees are not suitable for efficiently finding the nearest neighbor
  * in high dimensional spaces. As a general rule, if the dimensionality is D,
- * then number of points in the dataset, N, should be N &gt;&gt; 2<sup>D</sup>.
+ * then number of points in the dataset, N, should be {@code N >>} 2<sup>D</sup>.
  * Otherwise, when kd-trees are used with high-dimensional dataset, most of the
  * points in the tree will be evaluated and the efficiency is no better than
  * exhaustive search, and approximate nearest-neighbor methods should be used
@@ -59,7 +59,7 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     /**
      * The root in the KD-tree.
      */
-    class Node implements Serializable {
+    static class Node implements Serializable {
 
         /**
          * Number of dataset stored in this node.
@@ -96,19 +96,19 @@ public class KDTree <E> implements NearestNeighborSearch<double[], E>, KNNSearch
     /**
      * The keys of data objects.
      */
-    private double[][] keys;
+    private final double[][] keys;
     /**
      * The data objects.
      */
-    private E[] data;
+    private final E[] data;
     /**
      * The root node of KD-Tree.
      */
-    private Node root;
+    private final Node root;
     /**
      * The index of objects in each nodes.
      */
-    private int[] index;
+    private final int[] index;
 
     /**
      * Constructor.

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.projection;
 
@@ -61,11 +61,11 @@ public class GHA implements LinearProjection, Serializable {
     /**
      * The dimension of feature space.
      */
-    private int p;
+    private final int p;
     /**
      * The dimension of input space.
      */
-    private int n;
+    private final int n;
     /**
      * The learning rate;
      */
@@ -73,15 +73,15 @@ public class GHA implements LinearProjection, Serializable {
     /**
      * Projection matrix.
      */
-    private Matrix projection;
+    private final Matrix projection;
     /**
      * Workspace for W * x.
      */
-    private double[] y;
+    private final double[] y;
     /**
      * Workspace for W' * y.
      */
-    private double[] wy;
+    private final double[] wy;
 
     /**
      * Constructor.

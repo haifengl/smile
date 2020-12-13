@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -27,24 +27,30 @@ import smile.math.matrix.Matrix;
  * An interface to calculate a distance measure between two objects. A distance
  * function maps pairs of points into the nonnegative reals and has to satisfy
  * <ul>
- * <li> non-negativity: <code>d(x, y) &ge; 0</code>
- * <li> isolation: <code>d(x, y) = 0</code> if and only if <code>x = y</code>
- * <li> symmetry: <code>d(x, y) = d(x, y)</code>
+ * <li> non-negativity: {@code d(x, y) >= 0}
+ * <li> isolation: {@code d(x, y) = 0} if and only if {@code x = y}
+ * <li> symmetry: {@code d(x, y) = d(x, y)}
  * </ul>
  * Note that a distance function is not required to satisfy triangular inequality
- * <code>|x - y| + |y - z| &ge; |x - z|</code>, which is necessary for a metric.
+ * {@code |x - y| + |y - z| >= |x - z|}, which is necessary for a metric.
  *
  * @author Haifeng Li
  */
 public interface Distance<T> extends ToDoubleBiFunction<T,T>, Serializable {
     /**
      * Returns the distance measure between two objects.
+     * @param x an object.
+     * @param y an object.
+     * @return the distance.
      */
     double d(T x, T y);
 
     /**
      * Returns the distance measure between two objects.
      * This is simply for Scala convenience.
+     * @param x an object.
+     * @param y an object.
+     * @return the distance.
      */
     default double apply(T x, T y) {
         return d(x, y);

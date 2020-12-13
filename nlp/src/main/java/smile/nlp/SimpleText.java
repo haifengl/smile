@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp;
 
@@ -36,11 +36,11 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * The list of words.
      */
-    private String[] words;
+    private final String[] words;
     /**
      * The term frequency.
      */
-    private HashMap<String, MutableInt> freq = new HashMap<>();
+    private final HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * The maximum term frequency over all terms in the documents;
      */
@@ -126,7 +126,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     
     @Override
     public String toString() {
-        return String.format("Document[%s]", id, Strings.isNullOrEmpty(title) ? id : title);
+        return String.format("Document[%s]", Strings.isNullOrEmpty(title) ? id : title);
     }
 
     @Override

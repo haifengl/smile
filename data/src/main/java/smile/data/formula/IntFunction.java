@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class IntFunction extends AbstractFunction {
     /** The function on an integer. */
-    private smile.math.IntFunction lambda;
+    private final smile.math.IntFunction lambda;
 
     /**
      * Constructor.
@@ -59,7 +59,7 @@ public class IntFunction extends AbstractFunction {
             }
 
             features.add(new Feature() {
-                StructField field = new StructField(
+                final StructField field = new StructField(
                         String.format("%s(%s)", name, xfield.name),
                         type.id() == DataType.ID.Object ? DataTypes.IntegerObjectType : DataTypes.IntegerType,
                         xfield.measure);

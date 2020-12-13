@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,18 +13,15 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data;
 
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import smile.data.type.*;
 import smile.data.vector.*;
-import smile.math.matrix.Matrix;
 
 /**
  * A data frame with a new index instead of the default [0, n) row index.
@@ -33,9 +30,9 @@ import smile.math.matrix.Matrix;
  */
 public class IndexDataFrame implements DataFrame {
     /** The underlying data frame. */
-    private DataFrame df;
+    private final DataFrame df;
     /** The row index. */
-    private int[] index;
+    private final int[] index;
 
     /**
      * Constructor.
@@ -63,8 +60,8 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public int columnIndex(String name) {
-        return df.columnIndex(name);
+    public int indexOf(String name) {
+        return df.indexOf(name);
     }
 
     @Override
@@ -84,7 +81,7 @@ public class IndexDataFrame implements DataFrame {
 
     @Override
     public Stream<Tuple> stream() {
-        return Arrays.stream(index).mapToObj(i -> df.get(i));
+        return Arrays.stream(index).mapToObj(df::get);
     }
 
     @Override
@@ -154,7 +151,7 @@ public class IndexDataFrame implements DataFrame {
 
     /** Returns a new data frame with regular index. */
     private DataFrame rebase() {
-        return DataFrame.of(stream().collect(Collectors.toList()));
+        return DataFrame.of(stream().collect(java.util.stream.Collectors.toList()));
     }
 
     @Override

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
@@ -231,7 +231,7 @@ public class MPLSH <E> extends LSH<E> {
 
     /**
      * Search the neighbors in the given radius of query object, i.e.
-     * d(x, v) &le; radius.
+     * {@code d(q, v) <= radius}.
      *
      * @param q the query object.
      * @param radius the radius of search range.

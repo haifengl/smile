@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data;
 
@@ -41,14 +41,13 @@ public class SparseDatasetTest {
         {0.4000, 0.5000, 0.3000},
         {0.0000, 0.3000, 0.8000}
     };
-    double[] b = {0.5, 0.5, 0.5};
 
     public SparseDatasetTest() {
         List<SparseArray> rows = new ArrayList<>();
-        for (int i = 0; i < A.length; i++) {
+        for (double[] a : A) {
             SparseArray row = new SparseArray();
-            for (int j = 0; j < A[i].length; j++) {
-                row.append(j, A[i][j]);
+            for (int j = 0; j < a.length; j++) {
+                row.append(j, a[j]);
             }
 
             rows.add(row);
@@ -103,7 +102,7 @@ public class SparseDatasetTest {
         assertEquals(0.4, sm.get(0, 1), 1E-7);
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testParse() throws Exception {
         System.out.println("from");
         SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);

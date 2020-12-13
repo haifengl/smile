@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -51,7 +51,7 @@ import smile.math.MathEx;
  */
 public class BBDTree {
 
-    class Node {
+    static class Node {
         /**
          * The number of data stored in this node.
          */
@@ -99,14 +99,15 @@ public class BBDTree {
     /**
      * Root node.
      */
-    private Node root;
+    private final Node root;
     /**
      * The index of data objects.
      */
-    private int[] index;
+    private final int[] index;
 
     /**
-     * Constructs a tree out of the given n data data living in R^d.
+     * Constructs a tree out of the given n data points living in R^d.
+     * @param data the data points.
      */
     public BBDTree(double[][] data) {
         int n = data.length;
@@ -229,14 +230,14 @@ public class BBDTree {
     /**
      * Returns the total contribution of all data in the given kd-tree node,
      * assuming they are all assigned to a mean at the given location.
-     *
-     *   sum_{x \in node} ||x - mean||^2.
-     *
+     * <p>
+     *   sum_{x \in node} ||x - mean||<sup>2</sup>
+     * <p>
      * If c denotes the mean of mass of the data in this node and n denotes
      * the number of data in it, then this quantity is given by
-     *
-     *   n * ||c - mean||^2 + sum_{x \in node} ||x - c||^2
-     *
+     * <p>
+     *   n * ||c - mean||<sup>2</sup> + sum_{x \in node} ||x - c||<sup>2</sup>
+     * <p>
      * The sum is precomputed for each node as cost. This formula follows
      * from expanding both sides as dot products.
      */
@@ -262,6 +263,7 @@ public class BBDTree {
      * @param sum the workspace storing the sum of data in each cluster.
      * @param size the number of samples in each cluster.
      * @param y the class labels.
+     * @return the within cluster sum of the squared distance.
      */
     public double clustering(double[][] centroids, double[][] sum, int[] size, int[] y) {
         int k = centroids.length;
@@ -321,9 +323,7 @@ public class BBDTree {
 
             // Recurse if there's at least two
             if (newk > 1) {
-                double result = filter(node.lower, centroids, newCandidates, newk, sum, size, y) + filter(node.upper, centroids, newCandidates, newk, sum, size, y);
-
-                return result;
+                return filter(node.lower, centroids, newCandidates, newk, sum, size, y) + filter(node.upper, centroids, newCandidates, newk, sum, size, y);
             }
         }
 

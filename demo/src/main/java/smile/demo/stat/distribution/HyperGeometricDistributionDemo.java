@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.demo.stat.distribution;
 
@@ -60,7 +60,7 @@ public class HyperGeometricDistributionDemo extends JPanel implements ChangeList
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         labelTable.put(1, new JLabel(String.valueOf(1)));
         for (int i = 20; i <= 100; i+=20) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            labelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         mSlider = new JSlider(1, 100, m);

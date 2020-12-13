@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.formula;
 
@@ -94,7 +94,7 @@ public class Date implements Term {
         List<Feature> features = new ArrayList<>();
         for (DateFeature feature : this.features) {
             features.add(new Feature() {
-                StructField field = new StructField(
+                final StructField field = new StructField(
                         String.format("%s_%s", name, feature),
                         DataTypes.IntegerType,
                         feature == DateFeature.MONTH ? month : (feature == DateFeature.DAY_OF_WEEK ? dayOfWeek : null));

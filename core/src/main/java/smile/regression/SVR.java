@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -61,7 +61,7 @@ public class SVR {
         KernelMachine<double[]> svm = svr.fit(x, y);
 
         return new Regression<double[]>() {
-            LinearKernelMachine model = LinearKernelMachine.of(svm);
+            final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
             public double predict(double[] x) {
@@ -87,7 +87,7 @@ public class SVR {
         KernelMachine<int[]> svm = svr.fit(x, y);
 
         return new Regression<int[]>() {
-            LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
+            final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
             public double predict(int[] x) {
@@ -113,7 +113,7 @@ public class SVR {
         KernelMachine<SparseArray> svm = svr.fit(x, y);
 
         return new Regression<SparseArray>() {
-            LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
+            final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
             public double predict(SparseArray x) {
@@ -135,7 +135,7 @@ public class SVR {
      * @param tol the tolerance of convergence test.
      */
     public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double eps, double C, double tol) {
-        smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<T>(kernel, eps, C, tol);
+        smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<>(kernel, eps, C, tol);
         return svr.fit(x, y);
     }
 }

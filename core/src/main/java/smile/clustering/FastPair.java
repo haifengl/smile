@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -35,7 +35,7 @@ import smile.clustering.linkage.Linkage;
  * <p>
  * Total space: 20n bytes. (Could be reduced to 4n at some cost in update time.)
  * Time per insertion or single distance update: O(n)
- * Time per deletion or point update: O(n) expected, O(n^2) worst case
+ * Time per deletion or point update: O(n) expected, O(n<sup>2</sup>) worst case
  * Time per closest pair: O(n)
  *
  * <h2>References</h2>
@@ -49,12 +49,12 @@ import smile.clustering.linkage.Linkage;
  */
 class FastPair {
 
-    private int[] points;            // points currently in set
-    private int[] index;             // indices into points
+    private final int[] points;            // points currently in set
+    private final int[] index;             // indices into points
     private int npoints;             // how much of array is actually used?
-    private int[] neighbor;
-    private float[] distance;
-    private Linkage linkage;
+    private final int[] neighbor;
+    private final float[] distance;
+    private final Linkage linkage;
 
     /**
      * Constructor
@@ -139,9 +139,9 @@ class FastPair {
         points[index[p] = npoints++] = p;
     }
 
-/**
- * Remove a point and update neighbors of points for which it had been nearest
- */
+    /**
+     * Remove a point and update neighbors of points for which it had been nearest
+     */
     public void remove(int p) {
         npoints--;
         int q = index[p];

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.pos;
 
@@ -40,7 +40,7 @@ public class EnglishPOSLexicon {
      */
     private static final HashMap<String, PennTreebankPOS[]> dict = new HashMap<>();
 
-    /**
+    /*
      * The part-of-speech.txt file contains is a combination of
      * "Moby (tm) Part-of-Speech II" and the WordNet database.
      * 
@@ -91,13 +91,12 @@ public class EnglishPOSLexicon {
                     for (int i = 0, k = 0; i < pos[1].length(); i++) {
                         switch (pos[1].charAt(i)) {
                             case 'N':
+                            case 'h':
+                            case 'o':
                                 tag[k++] = PennTreebankPOS.NN;
                                 break;
                             case 'p':
                                 tag[k++] = PennTreebankPOS.NNS;
-                                break;
-                            case 'h':
-                                tag[k++] = PennTreebankPOS.NN;
                                 break;
                             case 'V':
                             case 't':
@@ -125,9 +124,6 @@ public class EnglishPOSLexicon {
                             case 'D':
                             case 'I':
                                 tag[k++] = PennTreebankPOS.DT;
-                                break;
-                            case 'o':
-                                tag[k++] = PennTreebankPOS.NN;
                                 break;
                         }
                     }

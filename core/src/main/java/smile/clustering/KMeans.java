@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -97,6 +97,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * Partitions data into k clusters up to 100 iterations.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @return the model.
      */
     public static KMeans fit(double[][] data, int k) {
         return fit(data, k, 100, 1E-4);
@@ -108,6 +109,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static KMeans fit(double[][] data, int k, int maxIter, double tol) {
         return fit(new BBDTree(data), data, k, maxIter, tol);
@@ -120,6 +122,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static KMeans fit(BBDTree bbd, double[][] data, int k, int maxIter, double tol) {
         if (k < 2) {
@@ -163,6 +166,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * 100 iterations.
      * @param data the input data of which each row is an observation.
      * @param k the number of clusters.
+     * @return the model.
      */
     public static KMeans lloyd(double[][] data, int k) {
         return lloyd(data, k, 100, 1E-4);
@@ -175,6 +179,7 @@ public class KMeans extends CentroidClustering<double[], double[]> {
      * @param k the number of clusters.
      * @param maxIter the maximum number of iterations.
      * @param tol the tolerance of convergence test.
+     * @return the model.
      */
     public static KMeans lloyd(double[][] data, int k, int maxIter, double tol) {
         if (k < 2) {

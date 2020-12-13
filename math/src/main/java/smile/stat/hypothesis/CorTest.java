@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.hypothesis;
 
@@ -32,48 +32,7 @@ import smile.sort.QuickSort;
  * is calculated as a value of -1. A values of zero shows no correlation at all.
  * <p>
  * Three common types of correlation are Pearson, Spearman (for ranked data)
- * and Kendall (for uneven or multiple rankings), and can be selected using
- * the table below.
- * <table summary="" border="1" style="border-collapse: collapse" cellspacing="0" id="table3">
- *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">
- *     Parametric variables follow normal distribution and linear
- *     relationship between x and y)</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">Pearson correlation</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
- * <table summary="" border="1" style="border-collapse: collapse" width="100%" cellspacing="0" id="table4">
- *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">Equidistant
- *     positions on variables measured?</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">
- *     Spearman correlation</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
- *     <p style="margin-left: 2px; margin-right: 2px">Kendall correlation</td>
- *   </tr>
- * </table>
- *     </td>
- *   </tr>
- * </table>
+ * and Kendall (for uneven or multiple rankings).
  * <p>
  * To deal with measures of association between nominal variables, we can use Chi-square
  * test for independence. For any pair of nominal variables, the data can be
@@ -86,38 +45,44 @@ import smile.sort.QuickSort;
  */
 public class CorTest {
     /**
-     * A character string indicating what type of test was performed.
+     * The type of test.
      */
     public final String method;
 
     /**
-     * Correlation coefficient
+     * The correlation coefficient.
      */
     public final double cor;
 
     /**
-     * Degree of freedom
-     */
-    public final double df;
-
-    /**
-     * test statistic
+     * The test statistic.
      */
     public final double t;
 
     /**
-     * (two-sided) p-value of test
+     * The degree of freedom of test statistic.
+     * It is set to 0 in case of Kendall test as the test is non-parametric.
+     */
+    public final double df;
+
+    /**
+     * Two-sided p-value.
      */
     public final double pvalue;
 
     /**
      * Constructor.
+     * @param method the type of correlation.
+     * @param cor the correlation coefficient.
+     * @param t the t-statistic.
+     * @param df the degree of freedom.
+     * @param pvalue the p-value.
      */
-    private CorTest(String method, double cor, double df, double t, double pvalue) {
+    public CorTest(String method, double cor, double t, double df, double pvalue) {
         this.method = method;
         this.cor = cor;
-        this.df = df;
         this.t = t;
+        this.df = df;
         this.pvalue = pvalue;
     }
 
@@ -154,9 +119,9 @@ public class CorTest {
         double r = sxy / (Math.sqrt(sxx * syy) + TINY);
         int df = n - 2;
         double t = r * Math.sqrt(df / ((1.0 - r + TINY) * (1.0 + r + TINY)));
-        double prob = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+        double pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new CorTest("Pearson", r, df, t, prob);
+        return new CorTest("Pearson", r, t, df, pvalue);
     }
 
     /**
@@ -205,7 +170,7 @@ public class CorTest {
      * The raw scores are converted to ranks and the differences between
      * the ranks of each observation on the two variables are calculated.
      * <p>
-     *  The p-value is calculated by approximation, which is good for n &gt; 10.
+     *  The p-value is calculated by approximation, which is good for {@code n > 10}.
      */
     public static CorTest spearman(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -227,23 +192,22 @@ public class CorTest {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += MathEx.sqr(wksp1[j] - wksp2[j]);
+            d += MathEx.pow2(wksp1[j] - wksp2[j]);
         }
 
-        int en = n;
-        double  en3n = en * en * en - en;
+        double en3n = n * n * n - n;
         double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
         double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
         fac = (rs + 1.0) * (1.0 - rs);
 
-        double probrs = 0.0;
-        double t = rs * Math.sqrt((en - 2.0) / fac);
-        int df = en - 2;
+        double pvalue = 0.0;
+        double t = rs * Math.sqrt((n - 2.0) / fac);
+        int df = n - 2;
         if (fac > 0.0) {
-            probrs = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }
 
-        return new CorTest("Spearman", rs, df, t, probrs);
+        return new CorTest("Spearman", rs, t, df, pvalue);
     }
 
     /**
@@ -251,7 +215,7 @@ public class CorTest {
      * Coefficient is used to measure the degree of correspondence
      * between sets of rankings where the measures are not equidistant.
      * It is used with non-parametric data. The p-value is calculated by
-     * approximation, which is good for n &gt; 10.
+     * approximation, which is good for {@code n > 10}.
      */
     public static CorTest kendall(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -281,9 +245,22 @@ public class CorTest {
         }
 
         double tau = is / (Math.sqrt(n1) * Math.sqrt(n2));
-        double svar = (4.0 * n + 10.0) / (9.0 * n * (n - 1.0));
-        double z = tau / Math.sqrt(svar);
-        double prob = Erf.erfcc(Math.abs(z) / 1.4142136);
-        return new CorTest("Kendall", tau, 0, z, prob);
+
+        // Kendall test is non-parametric as it does not rely on any
+        // assumptions on the distributions of X or Y or the distribution
+        // of (X,Y).
+
+        // Under the null hypothesis of independence of X and Y, the sampling
+        // distribution of tau has an expected value of zero. The precise
+        // distribution cannot be characterized in terms of common distributions,
+        // but may be calculated exactly for small samples. For larger samples,
+        // it is common to use an approximation to the normal distribution,
+        // with mean zero and variance sqrt(2(2n+5)/9n(n-1)).
+        double var = (4.0 * n + 10.0) / (9.0 * n * (n - 1.0));
+        double z = tau / Math.sqrt(var);
+        double pvalue = Erf.erfcc(Math.abs(z) / 1.4142136);
+
+        // Set the degree of freedom to 0 as the test is non-parametric.
+        return new CorTest("Kendall", tau, z, 0, pvalue);
     }
 }

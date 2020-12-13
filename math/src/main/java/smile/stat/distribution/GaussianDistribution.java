@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -39,7 +39,7 @@ import smile.math.special.Erf;
  * normally, then both <code>X<sub>1</sub></code> and <code>X<sub>2</sub></code>
  * must also be normal, which is known as the Cramer's theorem. Of all
  * probability distributions over the real domain with mean <code>&mu;</code>
- * and variance <code>&sigma;<sup>2</sup>, the normal
+ * and variance <code>&sigma;<sup>2</sup></code>, the normal
  * distribution <code>N(&mu;, &sigma;<sup>2</sup>)</code> is the one with the maximum entropy.
  * <p>
  * The central limit theorem states that under certain, fairly common conditions,
@@ -49,9 +49,8 @@ import smile.math.special.Erf;
  * but otherwise distributions of X<sub>i</sub>'s can be arbitrary, then the
  * central limit theorem states that
  * <p>
- * <pre>
- *     &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n <big>&Sigma;</big> X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
- * </pre>
+ *     &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n &Sigma; X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
+ * <p>
  * The theorem will hold even if the summands <code>X<sub>i</sub></code> are not iid,
  * although some constraints on the degree of dependence and the growth rate
  * of moments still have to be imposed.
@@ -82,10 +81,10 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     public final double mu;
     /** The standard deviation. */
     public final double sigma;
-    private double variance;
+    private final double variance;
 
-    private double entropy;
-    private double pdfConstant;
+    private final double entropy;
+    private final double pdfConstant;
 
     /**
      * Constructor
@@ -103,6 +102,8 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static GaussianDistribution fit(double[] data) {
         double mu = MathEx.mean(data);
@@ -110,6 +111,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         return new GaussianDistribution(mu, sigma);
     }
 
+    /** Returns the standard normal distribution. */
     public static GaussianDistribution getInstance() {
         return singleton;
     }
@@ -177,6 +179,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     
     /**
      * Generates a Gaussian random number with the inverse CDF method.
+     * @return a random number.
      */
     public double inverseCDF() {
         final double a0 = 2.50662823884;

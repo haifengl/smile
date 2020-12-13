@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.gap;
 
@@ -49,7 +49,7 @@ public class GeneticAlgorithmTest {
     public void tearDown() {
     }
 
-    class Knapnack implements Fitness<BitString> {
+    static class Knapnack implements Fitness<BitString> {
 
         int limit = 9; // weight limit
         int[] weight = {2, 3, 4, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};

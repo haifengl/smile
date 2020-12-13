@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -24,7 +24,6 @@ import smile.stat.distribution.EmpiricalDistribution;
 import smile.util.IntSet;
 import smile.validation.ClassificationMetrics;
 import smile.validation.LOOCV;
-import smile.validation.metric.Error;
 
 import org.junit.After;
 import org.junit.AfterClass;
@@ -61,7 +60,7 @@ public class NaiveBayesTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testIris() throws Exception {
         System.out.println("Iris");
 

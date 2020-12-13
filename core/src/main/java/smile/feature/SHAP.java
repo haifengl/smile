@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -40,7 +40,7 @@ import java.util.stream.Stream;
  * In game theory, the Shapley value is the average expected marginal
  * contribution of one player after all possible combinations have
  * been considered.
- * <p>
+ *
  * <h2>References</h2>
  * <ol>
  * <li>Lundberg, Scott M., and Su-In Lee. A unified approach to interpreting model predictions. NIPS, 2017.</li>
@@ -65,6 +65,8 @@ public interface SHAP<T> {
 
     /**
      * Returns the average of absolute SHAP values over a data set.
+     * @param data the data set.
+     * @return the average of absolute SHAP values over a data set.
      */
     default double[] shap(Stream<T> data) {
         return smile.math.MathEx.colMeans(

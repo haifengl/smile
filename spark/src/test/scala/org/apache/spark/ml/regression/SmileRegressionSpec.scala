@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package org.apache.spark.ml.regression
 
@@ -56,7 +56,7 @@ class SmileRegressionSpec extends Specification with BeforeAll with AfterAll{
       val temp = Files.createTempFile("smile-test-", ".tmp")
       val path = temp.normalize().toString
       model.write.overwrite().save(path)
-      temp.toFile().deleteOnExit()
+      temp.toFile.deleteOnExit()
 
       val loaded = SmileRegressionModel.load(path)
       eval.evaluate(loaded.transform(data)) mustEqual eval.evaluate(model.transform(data))

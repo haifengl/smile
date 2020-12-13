@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.special;
 
@@ -119,7 +119,7 @@ public class Gamma {
 
     /**
      * Regularized Incomplete Gamma Function
-     * P(s,x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     * P(s,x) = <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
      */
     public static double regularizedIncompleteGamma(double s, double x) {
         if (s < 0.0) {
@@ -145,7 +145,7 @@ public class Gamma {
 
     /**
      * Regularized Upper/Complementary Incomplete Gamma Function
-     * Q(s,x) = 1 - P(s,x) = 1 - <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     * Q(s,x) = 1 - P(s,x) = 1 - <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
      */
     public static double regularizedUpperIncompleteGamma(double s, double x) {
         if (s < 0.0) {
@@ -159,7 +159,7 @@ public class Gamma {
         double igf = 0.0;
 
         if (x != 0.0) {
-            if (x == 1.0 / 0.0) {
+            if (Double.isNaN(x)) {
                 igf = 1.0;
             } else {
                 if (x < s + 1.0) {
@@ -212,7 +212,7 @@ public class Gamma {
 
     /**
      * Regularized Incomplete Gamma Function P(a,x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(a-1)</sup> dt</i>.
-     * Continued Fraction representation of the function - valid for x &ge; a + 1
+     * Continued Fraction representation of the function - valid for {@code x >= a + 1}.
      * This method follows the general procedure used in Numerical Recipes.
      */
     private static double regularizedIncompleteGammaFraction(double a, double x) {
@@ -235,7 +235,7 @@ public class Gamma {
 
         while (check) {
             ++i;
-            ii = (double) i;
+            ii = i;
             numer = -ii * (ii - a);
             denom += 2.0D;
             first = numer * first + denom;
@@ -265,7 +265,7 @@ public class Gamma {
      * The digamma function is defined as the logarithmic derivative of the gamma function.
      */
     public static double digamma(double x) {
-        final double C7[][] = {
+        final double[][] C7 = {
             {
                 1.3524999667726346383e4, 4.5285601699547289655e4,
                 4.5135168469736662555e4, 1.8529011818582610168e4,
@@ -280,7 +280,7 @@ public class Gamma {
             }
         };
 
-        final double C4[][] = {
+        final double[][] C4 = {
             {
                 -2.728175751315296783e-15, -6.481571237661965099e-1,
                 -4.486165439180193579, -7.016772277667586642,

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -110,11 +110,11 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor.
@@ -125,22 +125,23 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
     public MLP(int p, LayerBuilder... builders) {
         super(net(p, builders));
 
-        k = output.getOutputSize();
-        if (k == 1) k = 2;
-        labels = IntSet.of(k);
+        int outSize = output.getOutputSize();
+        this.k = outSize == 1 ? 2 : outSize;
+        this.labels = IntSet.of(k);
     }
 
     /**
      * Constructor.
      *
+     * @param labels the class label encoder.
      * @param p the number of variables in input layer.
      * @param builders the builders of layers from bottom to top.
      */
     public MLP(IntSet labels, int p, LayerBuilder... builders) {
         super(net(p, builders));
 
-        k = output.getOutputSize();
-        if (k == 1) k = 2;
+        int outSize = output.getOutputSize();
+        this.k = outSize == 1 ? 2 : outSize;
         this.labels = labels;
     }
 
@@ -193,7 +194,7 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         t++;
     }
 
-    /** Updates the model with a mini-batch. RMSProp is applied if rho > 0. */
+    /** Updates the model with a mini-batch. RMSProp is applied if {@code rho > 0}. */
     @Override
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {

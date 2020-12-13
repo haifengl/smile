@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.wavelet;
 
@@ -36,16 +36,17 @@ public class Wavelet {
     /**
      * The number of coefficients.
      */
-    private int ncof;
+    private final int ncof;
     /**
      * Centering.
      */
-    private int ioff, joff;
+    private final int ioff;
+    private final int joff;
     /**
      * Wavelet coefficients.
      */
-    private double[] cc;
-    private double[] cr;
+    private final double[] cc;
+    private final double[] cr;
 
     /**
      * Workspace.
@@ -169,7 +170,7 @@ public class Wavelet {
             throw new IllegalArgumentException("The data vector size is less than wavelet coefficient size.");
         }
 
-        int start = n >> (int) Math.floor(MathEx.log2(n/(ncof-1)));
+        int start = n >> (int) Math.floor(MathEx.log2(n/(ncof-1.)));
         for (int nn = start; nn <= n; nn <<= 1) {
             backward(a, nn);
         }
