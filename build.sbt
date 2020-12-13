@@ -158,7 +158,6 @@ lazy val scala = project.in(file("scala"))
 
 lazy val spark = project.in(file("spark"))
   .settings(scalaSettings: _*)
-  .settings(publish / skip := true)
   .dependsOn(core, data, io % "test")
 
 lazy val shell = project.in(file("shell"))
