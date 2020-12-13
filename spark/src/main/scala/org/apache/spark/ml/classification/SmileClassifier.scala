@@ -165,7 +165,7 @@ class SmileClassificationModel(override val uid: String,
   def this(numClasses: Int, model: smile.classification.Classifier[Array[Double]]) =
     this(Identifiable.randomUID("SmileClassificationModel"), numClasses, model)
 
-  override protected def predictRaw(features: Vector): Vector = {
+  override def predictRaw(features: Vector): Vector = {
     // The Spark API predictRaw function outputs a Vector with
     // "confidence scores" for each class.
     val posteriori = Array.fill(numClasses)(0.0)
