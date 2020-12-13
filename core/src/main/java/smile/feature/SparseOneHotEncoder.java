@@ -79,6 +79,7 @@ public class SparseOneHotEncoder {
     /**
      * Generates the compact representation of sparse binary features for a data frame.
      * @param data a data frame.
+     * @return the binary feature vectors.
      */
     public int[][] apply(DataFrame data) {
         return data.stream().map(this::apply).toArray(int[][]::new);

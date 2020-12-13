@@ -68,6 +68,8 @@ public class Bag {
 
     /**
      * Returns the bag-of-words features of a document.
+     * @param x a bag of words.
+     * @return the feature vector.
      */
     public int[] apply(String[] x) {
         int[] bag = new int[words.size()];

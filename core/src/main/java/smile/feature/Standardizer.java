@@ -76,8 +76,9 @@ public class Standardizer implements FeatureTransform {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
+     * @return the model.
      */
     public static Standardizer fit(DataFrame data) {
         if (data.isEmpty()) {
@@ -106,8 +107,9 @@ public class Standardizer implements FeatureTransform {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
+     * @return the model.
      */
     public static Standardizer fit(double[][] data) {
         return fit(DataFrame.of(data));

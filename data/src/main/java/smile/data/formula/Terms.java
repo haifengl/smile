@@ -33,7 +33,10 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public interface Terms {
-    /** Returns a variable. */
+    /**
+     * Creates a variable.
+     * @return the variable.
+     */
     static Term $(String x) {
         switch (x) {
             case ".":
@@ -50,27 +53,36 @@ public interface Terms {
     /**
      * Returns the special term "." that means all columns not otherwise
      * in the formula in the context of a data frame.
+     * @return the special term ".".
      */
     static Dot dot() {
         return new Dot();
     }
 
-    /** Factor interaction of two or more factors. */
+    /**
+     * Factor interaction of two or more factors.
+     */
     static FactorInteraction interact(String... factors) {
         return new FactorInteraction(factors);
     }
 
-    /** Factor crossing of two or more factors. */
+    /**
+     * Factor crossing of two or more factors.
+     */
     static FactorCrossing cross(String... factors) {
         return new FactorCrossing(factors);
     }
 
-    /** Factor crossing of two or more factors. */
+    /**
+     * Factor crossing of two or more factors.
+     */
     static FactorCrossing cross(int order, String... factors) {
         return new FactorCrossing(order, factors);
     }
 
-    /** Deletes a variable or the intercept ("1") from the formula. */
+    /**
+     * Deletes a variable or the intercept ("1") from the formula.
+     */
     static Term delete(String x) {
         if (x.equals("1"))
             return new Intercept(false);
@@ -78,7 +90,9 @@ public interface Terms {
             return delete($(x));
     }
 
-    /** Deletes a term from the formula. */
+    /**
+     * Deletes a term from the formula.
+     */
     static Term delete(Term x) {
         if (x instanceof Intercept) {
             return new Intercept(false);
@@ -87,32 +101,44 @@ public interface Terms {
         return new Delete(x);
     }
 
-    /** Extracts date/time features. */
+    /**
+     * Extracts date/time features.
+     */
     static Date date(String x, DateFeature... features) {
         return new Date(x, features);
     }
 
-    /** Adds two terms. */
+    /**
+     * Adds two terms.
+     */
     static Term add(Term a, Term b) {
         return new Add(a, b);
     }
 
-    /** Adds two terms. */
+    /**
+     * Adds two terms.
+     */
     static Term add(String a, String b) {
         return new Add($(a), $(b));
     }
 
-    /** Adds two terms. */
+    /**
+     * Adds two terms.
+     */
     static Term add(Term a, String b) {
         return new Add(a, $(b));
     }
 
-    /** Adds two terms. */
+    /**
+     * Adds two terms.
+     */
     static Term add(String a, Term b) {
         return new Add($(a), b);
     }
 
-    /** Subtracts two terms. */
+    /**
+     * Subtracts two terms.
+     */
     static Term sub(Term a, Term b) {
         return new Sub(a, b);
     }

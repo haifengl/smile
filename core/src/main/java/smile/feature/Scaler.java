@@ -80,8 +80,9 @@ public class Scaler implements FeatureTransform {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
-     * @param data The training data.
+     * Fits the transformation parameters.
+     * @param data the training data.
+     * @return the model.
      */
     public static Scaler fit(DataFrame data) {
         if (data.isEmpty()) {
@@ -103,8 +104,9 @@ public class Scaler implements FeatureTransform {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
-     * @param data The training data.
+     * Fits the transformation parameters.
+     * @param data the training data.
+     * @return the model.
      */
     public static Scaler fit(double[][] data) {
         return fit(DataFrame.of(data));

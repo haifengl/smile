@@ -73,7 +73,11 @@ public class MultivariateMixture implements MultivariateDistribution {
         this.components = components;
     }
 
-    /** Returns the posteriori probabilities. */
+    /**
+     * Returns the posteriori probabilities.
+     * @param x a real vector.
+     * @return the posteriori probabilities.
+     */
     public double[] posteriori(double[] x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -89,7 +93,11 @@ public class MultivariateMixture implements MultivariateDistribution {
         return prob;
     }
 
-    /** Returns the index of component with maximum a posteriori probability. */
+    /**
+     * Returns the index of component with maximum a posteriori probability.
+     * @param x a real vector.
+     * @return the index of component with maximum a posteriori probability.
+     */
     public int map(double[] x) {
         int k = components.length;
         double[] prob = new double[k];
@@ -196,13 +204,16 @@ public class MultivariateMixture implements MultivariateDistribution {
 
     /**
      * Returns the number of components in the mixture.
+     * @return the number of components.
      */
     public int size() {
         return components.length;
     }
 
     /**
-     * BIC score of the mixture for given data.
+     * Returns the BIC score.
+     * @param data the data to calculate likelihood.
+     * @return the BIC score.
      */
     public double bic(double[][] data) {
         int n = data.length;

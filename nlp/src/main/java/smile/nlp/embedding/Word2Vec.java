@@ -82,12 +82,19 @@ public class Word2Vec {
         }
     }
 
-    /** Returns the dimension of vector space. */
+    /**
+     * Returns the dimension of embedding vector space.
+     * @return the dimension of embedding vector space.
+     */
     public int dimension() {
         return vectors.ncols();
     }
 
-    /** Returns the vector embedding of a word. */
+    /**
+     * Returns the embedding vector of a word.
+     * @param word the word.
+     * @return the embedding vector.
+     */
     public float[] get(String word) {
         Integer index = map.get(word);
         if (index == null) return null;
@@ -102,7 +109,11 @@ public class Word2Vec {
         return vector;
     }
 
-    /** Returns the vector embedding of a word. For Scala convenience. */
+    /**
+     * Returns the embedding vector of a word. For Scala convenience.
+     * @param word the word.
+     * @return the embedding vector.
+     */
     public float[] apply(String word) {
         return get(word);
     }
@@ -110,6 +121,9 @@ public class Word2Vec {
     /**
      * Loads a <a href="https://code.google.com/archive/p/word2vec/">pre-trained</a>
      * word2vec model from binary file of ByteOrder.LITTLE_ENDIAN.
+     * @param file the path to model file.
+     * @throws IOException when failing to read the file.
+     * @return the word2vec model.
      */
     public static Word2Vec of(Path file) throws IOException {
         return of(file, ByteOrder.LITTLE_ENDIAN);
@@ -118,6 +132,10 @@ public class Word2Vec {
     /**
      * Loads a <a href="https://code.google.com/archive/p/word2vec/">pre-trained</a>
      * word2vec model from binary file.
+     * @param file the path to model file.
+     * @param order the byte order of model file.
+     * @throws IOException when failing to read the file.
+     * @return the word2vec model.
      */
     public static Word2Vec of(Path file, ByteOrder order) throws IOException {
         final long GB = 1024 * 1024 * 1024;

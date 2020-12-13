@@ -236,7 +236,8 @@ public class DiscreteMixture extends DiscreteDistribution {
     }
 
     /**
-     * returns the BIC score of the mixture for given data.
+     * Returns the BIC score.
+     * @param data the data to calculate likelihood.
      * @return the BIC score.
      */
     public double bic(double[] data) {
