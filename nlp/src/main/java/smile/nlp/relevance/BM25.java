@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.relevance;
 
@@ -46,11 +46,11 @@ public class BM25 implements RelevanceRanker {
     /**
      * Free parameter, usually chosen as k1 = 2.0.
      */
-    private double k1;
+    private final double k1;
     /**
      * Free parameter, usually chosen as b = 0.75.
      */
-    private double b;
+    private final double b;
     /**
      * The control parameter in BM25+. The standard BM25 in which the
      * component of term frequency normalization by document length
@@ -59,19 +59,8 @@ public class BM25 implements RelevanceRanker {
      * unfairly by BM25 as having a similar relevance to shorter
      * documents that do not contain the query term at all. 
      */
-    private double delta;
-    
-    /**
-     * BM25F parameters
-     */
-    private double kf = 4.9; // k1 in BM25F
-    private double bTitle = 0.6;
-    private double bBody = 0.5;
-    private double bAnchor = 0.6;
-    private double wTitle = 13.5;
-    private double wBody = 1.0;
-    private double wAnchor = 11.5;
-    
+    private final double delta;
+
     /**
      * Default constructor with k1 = 1.2, b = 0.75, delta = 1.0.
      */
@@ -86,7 +75,7 @@ public class BM25 implements RelevanceRanker {
      * the document term frequency scaling. A k1 value of 0 corresponds to a
      * binary model (no term frequency), and a large value corresponds to using
      * raw term frequency.
-     * @param b b is another tuning parameter (0 &le; b &le; 1) which determines
+     * @param b b is another tuning parameter ({@code 0 <= b <= 1}) which determines
      * the scaling by document length: b = 1 corresponds to fully scaling the
      * term weight by the document length, while b = 0 corresponds to no length
      * normalization.
@@ -117,6 +106,15 @@ public class BM25 implements RelevanceRanker {
      */
     public double score(int termFreq, int docLen, double avgDocLen, int titleTermFreq, int titleLen, double avgTitleLen, int anchorTermFreq, int anchorLen, double avgAnchorLen, long N, long n) {
         if (termFreq <= 0) return 0.0;
+
+        // BM25F parameters
+        final double kf = 4.9; // k1 in BM25F
+        final double bTitle = 0.6;
+        final double bBody = 0.5;
+        final double bAnchor = 0.6;
+        final double wTitle = 13.5;
+        final double wBody = 1.0;
+        final double wAnchor = 11.5;
 
         double tf = wBody * termFreq / (1.0 + bBody * (docLen / avgDocLen - 1.0));
         

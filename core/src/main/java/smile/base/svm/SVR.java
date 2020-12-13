@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.base.svm;
 
@@ -54,19 +54,19 @@ public class SVR<T> {
     /**
      * The kernel function.
      */
-    private MercerKernel<T> kernel;
+    private final MercerKernel<T> kernel;
     /**
      * The loss function error threshold.
      */
-    private double eps = 0.1;
+    private final double eps;
     /**
      * The soft margin penalty parameter.
      */
-    private double C = 1.0;
+    private final double C;
     /**
      * The tolerance of convergence test.
      */
-    private double tol = 1E-3;
+    private final double tol;
     /**
      * Support vectors.
      */
@@ -282,7 +282,7 @@ public class SVR<T> {
 
             double gj = -v.g[0];
             if (v.alpha[0] > 0.0 && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;
@@ -293,7 +293,7 @@ public class SVR<T> {
 
             gj = v.g[1];
             if (v.alpha[1] < C && gj < gi) {
-                double gain = -MathEx.sqr(gi - gj) / curv;
+                double gain = -MathEx.pow2(gi - gj) / curv;
                 if (gain < best) {
                     best = gain;
                     v2 = v;

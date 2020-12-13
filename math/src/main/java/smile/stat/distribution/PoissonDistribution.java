@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -28,18 +28,13 @@ import smile.math.special.Gamma;
  * intervals such as distance, area or volume. If the expected number of
  * occurrences in this interval is &lambda;, then the probability that there
  * are exactly n occurrences (n = 0, 1, 2, ...) is equal to
- * <p>
- * <pre>
- *             &lambda;<sup>n</sup> e<sup>-&lambda;</sup>
- * f(n; &lambda;) = ---------
- *               n!
- * </pre>
- * For sufficiently large values of &lambda;, (say &lambda; &gt; 1000), the normal
+ * f(n; &lambda;) = &lambda;<sup>n</sup> e<sup>-&lambda;</sup> / n!.
+ * For sufficiently large values of &lambda;, (say &lambda; {@code > 1000}), the normal
  * distribution with mean &lambda; and variance &lambda;, is an excellent
  * approximation to the Poisson distribution. If &lambda; is greater than about
  * 10, then the normal distribution is a good approximation if an appropriate
- * continuity correction is performed, i.e., P(X &le; x), where (lower-case) x
- * is a non-negative integer, is replaced by P(X &le; x + 0.5).
+ * continuity correction is performed, i.e., {@code P(X <= x)}, where (lower-case) x
+ * is a non-negative integer, is replaced by {@code P(X <= x + 0.5)}.
  * <p>
  * When a variable is Poisson distributed, its square root is approximately
  * normally distributed with expected value of about &lambda;<sup>1/2</sup>
@@ -52,7 +47,7 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
     /** The average number of events per interval. */
     public final double lambda;
-    private double entropy;
+    private final double entropy;
     private RandomNumberGenerator rng;
 
     /**
@@ -70,10 +65,12 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
 
     /**
      * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
     public static PoissonDistribution fit(int[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] < 0) {
+        for (int datum : data) {
+            if (datum < 0) {
                 throw new IllegalArgumentException("Samples contain negative values.");
             }
         }
@@ -197,10 +194,10 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     /**
      * This function generates a random variate with the poisson distribution.
      * <p>
-     * Uses down/up search from the mode by chop-down technique for &lambda; &lt; 20,
-     * and patchwork rejection method for &lambda; &ge; 20.
+     * Uses down/up search from the mode by chop-down technique for &lambda; {@code < 20},
+     * and patchwork rejection method for &lambda; {@code >= 20}.
      * <p>
-     * For &lambda; &lt; 1.E-6 numerical inaccuracy is avoided by direct calculation.
+     * For &lambda; {@code < 1E-6} numerical inaccuracy is avoided by direct calculation.
      */
     @Override
     public double rand() {
@@ -245,11 +242,11 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
         /**
          * value at x=0 or at mode
          */
-        private double f0Mode;
+        private final double f0Mode;
         /**
          * upper bound
          */
-        private int upperBound;
+        private final int upperBound;
 
         /**
          * Initialize the Poisson random number generator.
@@ -316,8 +313,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
     }
 
     private class Patchwork implements RandomNumberGenerator {
-        private int k1,  k2,  k4,  k5;
-        private double dl,  dr,  r1,  r2,  r4,  r5,  ll,  rr,  l_my,  c_pm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
+        private final int k1,  k2,  k4,  k5;
+        private final double dl,  dr,  r1,  r2,  r4,  r5,  ll,  rr,  l_my,  c_pm,  f1,  f2,  f4,  f5,  p1,  p2,  p3,  p4,  p5,  p6;
 
         /**
          * Initialize the Poisson random number generator.
@@ -336,8 +333,8 @@ public class PoissonDistribution extends DiscreteDistribution implements Discret
             k5 = k4 + k4 - mode;
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             r1 = lambda / (double) k1;

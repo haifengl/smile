@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,17 +13,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.kernel;
 
 /**
  * Laplacian kernel, also referred as exponential kernel.
  * <p>
- * <pre>
- *     k(u, v) = e<sup>-||u-v|| / &sigma;</sup>
- * </pre>
- * where <code>&sigma; &gt; 0</code> is the scale parameter of the kernel.
+ *     k(u, v) = exp(-||u-v|| / &sigma;)
+ * <p>
+ * where &sigma; {@code > 0} is the scale parameter of the kernel.
  *
  * @author Haifeng Li
  */

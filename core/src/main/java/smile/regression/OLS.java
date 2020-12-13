@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -21,7 +21,6 @@ import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
-import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.math.special.Beta;
 
@@ -96,12 +95,13 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
         String method = prop.getProperty("smile.ols.method", "qr");
-        boolean stderr = Boolean.valueOf(prop.getProperty("smile.ols.standard.error", "true"));
-        boolean recursive = Boolean.valueOf(prop.getProperty("smile.ols.recursive", "true"));
+        boolean stderr = Boolean.parseBoolean(prop.getProperty("smile.ols.standard.error", "true"));
+        boolean recursive = Boolean.parseBoolean(prop.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, recursive);
     }
     
@@ -129,9 +129,9 @@ public class OLS {
         }
 
         // weights and intercept
-        double[] w = null;
+        double[] w;
         Matrix.QR qr = null;
-        Matrix.SVD svd = null;
+        Matrix.SVD svd;
 
         if (method.equalsIgnoreCase("svd")) {
             svd = X.svd();

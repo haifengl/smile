@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.plot.swing;
 
@@ -180,8 +180,8 @@ public class ScatterPlot extends Plot {
      * @param y the column as y-axis.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, char mark, Color color) {
-        int ix = data.columnIndex(x);
-        int iy = data.columnIndex(y);
+        int ix = data.indexOf(x);
+        int iy = data.indexOf(y);
         double[][] xy = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy)}).toArray(double[][]::new);
         return of(xy, mark, color);
     }
@@ -194,8 +194,8 @@ public class ScatterPlot extends Plot {
      * @param category the category column for coloring.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String category, char mark) {
-        int ix = data.columnIndex(x);
-        int iy = data.columnIndex(y);
+        int ix = data.indexOf(x);
+        int iy = data.indexOf(y);
         double[][] xy = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy)}).toArray(double[][]::new);
         String[] label = data.column(category).toStringArray();
         return of(xy, label, mark);
@@ -209,9 +209,9 @@ public class ScatterPlot extends Plot {
      * @param z the column as z-axis.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String z, char mark, Color color) {
-        int ix = data.columnIndex(x);
-        int iy = data.columnIndex(y);
-        int iz = data.columnIndex(z);
+        int ix = data.indexOf(x);
+        int iy = data.indexOf(y);
+        int iz = data.indexOf(z);
         double[][] xyz = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy), row.getDouble(iz)}).toArray(double[][]::new);
         return of(xyz, mark, color);
     }
@@ -224,9 +224,9 @@ public class ScatterPlot extends Plot {
      * @param z the column as z-axis.
      */
     public static ScatterPlot of(DataFrame data, String x, String y, String z, String category, char mark) {
-        int ix = data.columnIndex(x);
-        int iy = data.columnIndex(y);
-        int iz = data.columnIndex(z);
+        int ix = data.indexOf(x);
+        int iy = data.indexOf(y);
+        int iz = data.indexOf(z);
         double[][] xyz = data.stream().map(row -> new double[]{row.getDouble(ix), row.getDouble(iy), row.getDouble(iz)}).toArray(double[][]::new);
         String[] label = data.column(category).toStringArray();
         return of(xyz, label, mark);

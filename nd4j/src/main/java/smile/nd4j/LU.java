@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nd4j;
 
@@ -22,10 +22,10 @@ import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.factory.Nd4j;
 
 /**
- * For an m-by-n matrix A with m &ge; n, the LU decomposition is an m-by-n
+ * For an m-by-n matrix A with {@code m >= n}, the LU decomposition is an m-by-n
  * unit lower triangular matrix L, an n-by-n upper triangular matrix U,
  * and a permutation vector piv of length m so that A(piv,:) = L*U.
- * If m &lt; n, then L is m-by-m and U is m-by-n.
+ * If {@code m < n}, then L is m-by-m and U is m-by-n.
  * <p>
  * The LU decomposition with pivoting always exists, even if the matrix is
  * singular. The primary use of the LU decomposition is in the solution of

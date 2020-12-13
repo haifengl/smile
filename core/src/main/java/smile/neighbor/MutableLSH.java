@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,11 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import smile.neighbor.lsh.Bucket;
 import smile.neighbor.lsh.Hash;
@@ -116,11 +117,11 @@ public class MutableLSH<E> extends LSH<E> {
 
     /** Returns the keys. */
     public List<double[]> keys() {
-        return keys.stream().filter(key -> key != null).collect(Collectors.toList());
+        return keys.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 
     /** Returns the values. */
     public List<E> values() {
-        return data.stream().filter(value -> value != null).collect(Collectors.toList());
+        return data.stream().filter(Objects::nonNull).collect(Collectors.toList());
     }
 }

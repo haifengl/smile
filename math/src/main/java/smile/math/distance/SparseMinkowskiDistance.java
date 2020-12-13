@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.distance;
 
@@ -34,37 +34,36 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
     /**
      * The order of Minkowski distance.
      */
-    private int p;
+    private final int p;
 
     /**
      * The weights used in weighted distance.
      */
-    private double[] weight = null;
+    private final double[] weight;
 
     /**
      * Constructor.
+     * @param p the order of Minkowski distance.
      */
     public SparseMinkowskiDistance(int p) {
-        if (p <= 0) {
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
-        }
-
-        this.p = p;
+        this(p, null);
     }
 
     /**
      * Constructor.
-     *
+     * @param p the order of Minkowski distance.
      * @param weight the weight vector.
      */
     public SparseMinkowskiDistance(int p, double[] weight) {
         if (p <= 0) {
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = %d", p));
         }
 
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0) {
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        if (weight != null) {
+            for (double w : weight) {
+                if (w < 0) {
+                    throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", w));
+                }
             }
         }
 

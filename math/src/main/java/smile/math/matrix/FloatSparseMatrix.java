@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -169,7 +169,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     /**
      * Constructor.
      * @param A a dense matrix to converted into sparse matrix format.
-     * @param tol the tolerance to regard a value as zero if |x| &lt; tol.
+     * @param tol the tolerance to regard a value as zero if {@code |x| < tol}.
      */
     public FloatSparseMatrix(float[][] A, float tol) {
         m = A.length;

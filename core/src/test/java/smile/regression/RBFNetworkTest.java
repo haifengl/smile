@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -29,7 +29,6 @@ import smile.validation.CrossValidation;
 import smile.validation.LOOCV;
 import smile.validation.RegressionMetrics;
 import smile.validation.RegressionValidations;
-import smile.validation.metric.RMSE;
 
 import static org.junit.Assert.assertEquals;
 
@@ -58,7 +57,7 @@ public class RBFNetworkTest {
     public void tearDown() {
     }
 
-    @Test(expected = Test.None.class)
+    @Test
     public void testLongley() throws Exception {
         System.out.println("longley");
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.neighbor;
 
@@ -122,7 +122,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * e.g. edit distance, Hamming distance, Lee distance, Jaccard distance,
      * and taxonomic distance, etc.
      */
-    private Metric<E> distance;
+    private final Metric<E> distance;
     /**
      * The number of nodes in the tree.
      */
@@ -180,7 +180,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
      * @param node the root of subtree.
      * @param q the query object.
      * @param k the range of query.
-     * @param neighbors the returned results of which d(x, target) &le; k.
+     * @param neighbors the returned results of which {@code d(x, target) <= k}.
      */
     private void search(Node node, E q, int k, List<Neighbor<E, E>> neighbors) {
         int d = (int) distance.d(node.object, q);
@@ -212,7 +212,7 @@ public class BKTree<E> implements RNNSearch<E, E>, Serializable {
 
     /**
      * Search the neighbors in the given radius of query object, i.e.
-     * d(q, v) &le; radius.
+     * {@code d(q, v) <= radius}.
      *
      * @param q the query object.
      * @param radius the radius of search range from target.

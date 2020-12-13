@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.projection;
 
@@ -92,6 +92,8 @@ public class ICA implements Serializable {
      *             number of samples of mixed signals and the number of rows
      *             corresponding with the number of independent source signals.
      * @param p the number of independent components.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static ICA fit(double[][] data, int p, Properties prop) {
         DifferentiableFunction f;
@@ -106,8 +108,8 @@ public class ICA implements Serializable {
             default:
                 throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
         }
-        double tol = Double.valueOf(prop.getProperty("smile.ica.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.ica.max.iterations", "100"));
+        double tol = Double.parseDouble(prop.getProperty("smile.ica.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.ica.max.iterations", "100"));
         return fit(data, p, f, tol, maxIter);
     }
 
@@ -138,8 +140,6 @@ public class ICA implements Serializable {
         if (p < 1 || p > m) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
-
-        Matrix projection = new Matrix(p, m);
 
         GaussianDistribution g = new GaussianDistribution(0, 1);
         double[][] W = new double[p][n];

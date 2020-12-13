@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -40,8 +40,8 @@ import smile.neighbor.RNNSearch;
  * conditional entropy H(C | X) is small. MEC also generalizes the criterion
  * by replacing Shannon's entropy with Havrda-Charvat's structural
  * &alpha;-entropy. Interestingly, the minimum entropy criterion based
- * on structural &alpha;-entropy is equal to the probability error of the
- * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
+ * on structural &alpha;-entropy is equal to the probability error of the
+ * nearest neighbor method when &alpha;= 2. To estimate p(C | x), MEC employs
  * Parzen density estimation, a nonparametric approach.
  * <p>
  * MEC is an iterative algorithm starting with an initial partition given by
@@ -70,7 +70,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * The neighborhood search data structure.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
      * Constructor.
@@ -99,6 +99,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      * @param k the number of clusters. Note that this is just a hint. The final
      *          number of clusters may be less.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> MEC<T> fit(T[] data, Distance<T> distance, int k, double radius) {
         if (k < 2) {
@@ -115,7 +117,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
             KMeans kmeans = KMeans.fit((double[][]) data, k);
             y = kmeans.y;
         } else {
-            CLARANS<T> clarans = CLARANS.fit(data, distance::d, k);
+            CLARANS<T> clarans = CLARANS.fit(data, distance, k);
             y = clarans.y;
         }
 
@@ -132,6 +134,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
      * @param y the initial clustering labels, which could be produced by any
      *          other clustering methods.
      * @param tol the tolerance of convergence test.
+     * @param <T> the data type.
+     * @return the model.
      */
     public  static <T> MEC<T> fit(T[] data, RNNSearch<T,T> nns, int k, double radius, int[] y, double tol) {
         if (k < 2) {
@@ -149,7 +153,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         // Neighbors of each observation.
         ArrayList<int[]> neighbors = new ArrayList<>();
 
-        logger.info(String.format("Estimating the probabilities ..."));
+        logger.info("Estimating the probabilities ...");
         IntStream stream = IntStream.range(0, n);
         if (!(nns instanceof LinearSearch)) {
             stream = stream.parallel();

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.swing.table;
 
@@ -66,8 +66,8 @@ public class DoubleCellEditor extends DefaultCellEditor {
     public DoubleCellEditor(double min, double max) {
         super(new JFormattedTextField());
         textField = (JFormattedTextField) getComponent();
-        minimum = new Double(min);
-        maximum = new Double(max);
+        minimum = min;
+        maximum = max;
 
         // Set up the editor for the double cells.
         doubleFormat = NumberFormat.getNumberInstance();
@@ -125,7 +125,7 @@ public class DoubleCellEditor extends DefaultCellEditor {
         if (o instanceof Double) {
             return o;
         } else if (o instanceof Number) {
-            return new Double(((Number) o).doubleValue());
+            return ((Number) o).doubleValue();
         } else {
             try {
                 return doubleFormat.parseObject(o.toString());

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,14 +13,13 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile
 
 import scala.language.implicitConversions
 import scala.compat.java8.FunctionConverters._
 import com.typesafe.scalalogging.LazyLogging
-import smile.math.distance.{EuclideanDistance, Distance}
 
 /** Utility functions.
   *
@@ -39,12 +38,12 @@ package object util extends LazyLogging {
     var echo = true
 
     /** Turn on printing out running time. */
-    def on = {
+    def on(): Unit = {
       echo = true
     }
 
     /** Turn on printing out running time. */
-    def off = {
+    def off(): Unit = {
       echo = false
     }
 
@@ -53,7 +52,7 @@ package object util extends LazyLogging {
       * @tparam A The output type of code block.
       * @return the code block expression result.
       */
-    def apply[A](message: String)(f: => A) = {
+    def apply[A](message: String)(f: => A): A = {
       val s = System.nanoTime
       val ret = f
       if (echo) {
@@ -65,45 +64,5 @@ package object util extends LazyLogging {
       }
       ret
     }
-  }
-
-  /** Returns the proximity matrix of a dataset for given distance function.
-    *
-    * @param data the data set.
-    * @param dist the distance function.
-    * @param half if true, only the lower half of matrix is allocated to save space.
-    * @return the lower half of proximity matrix.
-    */
-  def proximity[T](data: Array[T], dist: Distance[T], half: Boolean = true): Array[Array[Double]] = {
-    val n = data.length
-
-    if (half) {
-      val d = new Array[Array[Double]](n)
-      for (i <- 0 until n) {
-        d(i) = new Array[Double](i + 1)
-        for (j <- 0 until i)
-          d(i)(j) = dist.d(data(i), data(j))
-      }
-      d
-    } else {
-      val d = Array.ofDim[Double](n, n)
-      for (i <- 0 until n) {
-        for (j <- 0 until i) {
-          d(i)(j) = dist.d(data(i), data(j))
-          d(j)(i) = d(i)(j)
-        }
-      }
-      d
-    }
-  }
-
-  /** Returns the pairwise Euclidean distance matrix.
-    *
-    * @param data the data set.
-    * @param half if true, only the lower half of matrix is allocated to save space.
-    * @return the lower half of proximity matrix.
-    */
-  def pdist(data: Array[Array[Double]], half: Boolean = true): Array[Array[Double]] = {
-    proximity(data, new EuclideanDistance, half)
   }
 }

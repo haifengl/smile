@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.sort;
 
@@ -36,10 +36,12 @@ import java.util.Arrays;
  */
 public class IQAgent {
 
-    private int nbuf;
-    private int nq,  nt,  nd;
-    private double[] pval;
-    private double[] dbuf;
+    private final int nbuf;
+    private final int nq;
+    private int nt;
+    private int nd;
+    private final double[] pval;
+    private final double[] dbuf;
     private double[] qile;
     private double q0,  qm;
 
@@ -53,7 +55,7 @@ public class IQAgent {
     /**
      * Constructor.
      * @param nbuf batch size. You may use 10000 if you expected
-     * &gt; 10<sup>6</sup> data values. Otherwise, 1000 should be fine.
+     * {@code > 1,000,000} data values. Otherwise, 1000 should be fine.
      */
     public IQAgent(int nbuf) {
         this.nbuf = nbuf;

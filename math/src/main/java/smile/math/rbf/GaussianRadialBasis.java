@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,12 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.rbf;
 
 /**
- * Gaussian RBF. &phi;(r) = e<sup>-0.5 * r<sup>2</sup> / r<sup>2</sup><sub>0</sub></sup>
+ * Gaussian RBF. &phi;(r) = exp(-0.5 * r<sup>2</sup> / r<sub>0</sub><sup>2</sup>)
  * where r<sub>0</sub> is a scale factor. The interpolation accuracy using
  * Gaussian basis functions can be very sensitive to r<sub>0</sub>, and they
  * are often avoided for this reason. However, for smooth functions and with
@@ -47,7 +47,7 @@ public class GaussianRadialBasis implements RadialBasisFunction {
     /**
      * The scale factor.
      */
-    private double r0;
+    private final double r0;
 
     /**
      * Constructor. The default bandwidth is 1.0.

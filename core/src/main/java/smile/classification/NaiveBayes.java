@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -56,23 +56,23 @@ public class NaiveBayes implements SoftClassifier<double[]> {
     /**
      * The number of classes.
      */
-    private int k;
+    private final int k;
     /**
      * The number of independent variables.
      */
-    private int p;
+    private final int p;
     /**
      * The priori probability of each class.
      */
-    private double[] priori;
+    private final double[] priori;
     /**
      * The conditional distribution for general purpose naive Bayes classifier.
      */
-    private Distribution[][] prob;
+    private final Distribution[][] prob;
     /**
      * The class label encoder.
      */
-    private IntSet labels;
+    private final IntSet labels;
 
     /**
      * Constructor of general naive Bayes classifier.
@@ -93,7 +93,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
      * @param condprob the conditional distribution of each variable in
      * each class. In particular, condprob[i][j] is the conditional
      * distribution P(x<sub>j</sub> | class i).
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public NaiveBayes(double[] priori, Distribution[][] condprob, IntSet labels) {
         if (priori.length != condprob.length) {
@@ -121,6 +121,7 @@ public class NaiveBayes implements SoftClassifier<double[]> {
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;

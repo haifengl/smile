@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data;
 
@@ -70,7 +70,7 @@ public interface Sequence {
             k = Integer.parseInt(words[1]);
             p = Integer.parseInt(words[2]);
 
-            String line = null;
+            String line;
             while ((line = input.readLine()) != null) {
                 words = line.split(" ");
                 int seqid = Integer.parseInt(words[0]);

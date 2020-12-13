@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data.vector;
 
@@ -29,11 +29,11 @@ import smile.data.type.StructField;
  */
 class ShortVectorImpl implements ShortVector {
     /** The name of vector. */
-    private String name;
+    private final String name;
     /** Optional measure. */
-    private Measure measure;
+    private final Measure measure;
     /** The vector data. */
-    private short[] vector;
+    private final short[] vector;
 
     /** Constructor. */
     public ShortVectorImpl(String name, short[] vector) {

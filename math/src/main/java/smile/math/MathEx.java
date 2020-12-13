@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math;
 
@@ -123,17 +123,17 @@ public class MathEx {
      * Each thread will use different seed and unlikely generates
      * the correlated sequences with other threads.
      */
-    private static Random seedRNG = new Random();
+    private static final Random seedRNG = new Random();
 
     /**
      * Used seeds.
      */
-    private static HashSet<Long> seeds = new HashSet<>();
+    private static final HashSet<Long> seeds = new HashSet<>();
 
     /**
      * High quality random number generator.
      */
-    private static ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
+    private static final ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
         protected synchronized Random initialValue() {
             // For the first RNG, we use the default seed so that we can
             // get repeatable results for random algorithms.
@@ -159,22 +159,22 @@ public class MathEx {
      * Dynamically determines the machine parameters of the floating-point arithmetic.
      */
     private static class FPU {
-        int RADIX = 2;
-        int DIGITS = 53;
+        int RADIX;
+        int DIGITS;
         int FLOAT_DIGITS = 24;
-        int ROUND_STYLE = 2;
-        int MACHEP = -52;
+        int ROUND_STYLE;
+        int MACHEP;
         int FLOAT_MACHEP = -23;
-        int NEGEP = -53;
+        int NEGEP;
         int FLOAT_NEGEP = -24;
         float FLOAT_EPSILON = (float) Math.pow(2.0, FLOAT_MACHEP);
-        double EPSILON = Math.pow(2.0, MACHEP);
+        double EPSILON;
 
         FPU() {
             double beta, betain, betah, a, b, ZERO, ONE, TWO, temp, tempa, temp1;
             int i, itemp;
 
-            ONE = (double) 1;
+            ONE = 1;
             TWO = ONE + ONE;
             ZERO = ONE - ONE;
 
@@ -193,7 +193,7 @@ public class MathEx {
                 itemp = (int) (temp - a);
             }
             RADIX = itemp;
-            beta = (double) RADIX;
+            beta = RADIX;
 
             DIGITS = 0;
             b = ONE;
@@ -337,13 +337,17 @@ public class MathEx {
 
     /**
      * Returns x * x.
+     * @param x a real number.
+     * @return the square of x.
      */
-    public static double sqr(double x) {
+    public static double pow2(double x) {
         return x * x;
     }
 
     /**
      * Returns true if x is a power of 2.
+     * @param x a real number.
+     * @return true if .
      */
     public static boolean isPower2(int x) {
         return x > 0 && (x & (x - 1)) == 0;
@@ -484,7 +488,7 @@ public class MathEx {
      * The log of n choose k.
      */
     public static double lchoose(int n, int k) {
-        if (n < 0 || k < 0 || k > n) {
+        if (k < 0 || k > n) {
             throw new IllegalArgumentException(String.format("Invalid n = %d, k = %d", n, k));
         }
 
@@ -497,13 +501,11 @@ public class MathEx {
     public static void setSeed(long seed) {
         if (seeds.isEmpty()) {
             seedRNG.setSeed(seed);
-            random.get().setSeed(seed);
             seeds.clear();
-            seeds.add(seed);
-        } else {
-            random.get().setSeed(seed);
-            seeds.add(seed);
         }
+
+        random.get().setSeed(seed);
+        seeds.add(seed);
     }
 
     /**
@@ -1591,10 +1593,10 @@ public class MathEx {
         int[] x = new int[data[0].length];
         Arrays.fill(x, Integer.MAX_VALUE);
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] > data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] > datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1609,10 +1611,10 @@ public class MathEx {
         int[] x = new int[data[0].length];
         Arrays.fill(x, Integer.MIN_VALUE);
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] < data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] < datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1626,9 +1628,9 @@ public class MathEx {
     public static long[] colSums(int[][] data) {
         long[] x = new long[data[0].length];
 
-        for (int i = 0; i < data.length; i++) {
+        for (int[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                x[j] += data[i][j];
+                x[j] += datum[j];
             }
         }
 
@@ -1642,10 +1644,10 @@ public class MathEx {
         double[] x = new double[data[0].length];
         Arrays.fill(x, Double.POSITIVE_INFINITY);
 
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] > data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] > datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -1660,10 +1662,10 @@ public class MathEx {
         double[] x = new double[data[0].length];
         Arrays.fill(x, Double.NEGATIVE_INFINITY);
 
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < x.length; j++) {
-                if (x[j] < data[i][j]) {
-                    x[j] = data[i][j];
+                if (x[j] < datum[j]) {
+                    x[j] = datum[j];
                 }
             }
         }
@@ -2252,14 +2254,14 @@ public class MathEx {
         double sum = 0.0;
         while (e1 != null && e2 != null) {
             if (e1.i == e2.i) {
-                sum += sqr(e1.x - e2.x);
+                sum += pow2(e1.x - e2.x);
                 e1 = it1.hasNext() ? it1.next() : null;
                 e2 = it2.hasNext() ? it2.next() : null;
             } else if (e1.i > e2.i) {
-                sum += sqr(e2.x);
+                sum += pow2(e2.x);
                 e2 = it2.hasNext() ? it2.next() : null;
             } else {
-                sum += sqr(e1.x);
+                sum += pow2(e1.x);
                 e1 = it1.hasNext() ? it1.next() : null;
             }
         }
@@ -2941,10 +2943,10 @@ public class MathEx {
      */
     public static double[][] cov(double[][] data, double[] mu) {
         double[][] sigma = new double[data[0].length][data[0].length];
-        for (int i = 0; i < data.length; i++) {
+        for (double[] datum : data) {
             for (int j = 0; j < mu.length; j++) {
                 for (int k = 0; k <= j; k++) {
-                    sigma[j][k] += (data[i][j] - mu[j]) * (data[i][k] - mu[k]);
+                    sigma[j][k] += (datum[j] - mu[j]) * (datum[k] - mu[k]);
                 }
             }
         }
@@ -3209,8 +3211,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3250,8 +3251,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3291,8 +3291,7 @@ public class MathEx {
             }
         }
 
-        double tau = is / (sqrt(n1) * sqrt(n2));
-        return tau;
+        return is / (sqrt(n1) * sqrt(n2));
     }
 
     /**
@@ -3460,8 +3459,8 @@ public class MathEx {
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                scale[j] += sqr(x[i][j]);
+            for (double[] xi : x) {
+                scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j] / (n-1));
 
@@ -3499,8 +3498,8 @@ public class MathEx {
 
         double[] scale = new double[p];
         for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                scale[j] += sqr(x[i][j]);
+            for (double[] xi : x) {
+                scale[j] += pow2(xi[j]);
             }
             scale[j] = sqrt(scale[j]);
         }
@@ -3997,11 +3996,7 @@ public class MathEx {
 
     /**
      * Solve the tridiagonal linear set which is of diagonal dominance
-     * <p>
-     * <pre>
-     *     |b<sub>i</sub>| &gt; |a<sub>i</sub>| + |c<sub>i</sub>|.
-     * </pre>
-     * <p>
+     *     |b<sub>i</sub>| {@code >} |a<sub>i</sub>| + |c<sub>i</sub>|.
      * <pre>
      *     | b0 c0  0  0  0 ...                        |
      *     | a1 b1 c1  0  0 ...                        |

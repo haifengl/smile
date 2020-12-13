@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.feature;
 
@@ -32,13 +32,13 @@ public class Bag {
     /**
      * The mapping from feature words to indices.
      */
-    private Map<String, Integer> words;
+    private final Map<String, Integer> words;
 
     /**
      * True to check if feature words appear in a document instead of their
      * frequencies.
      */
-    private boolean binary;
+    private final boolean binary;
 
     /**
      * Constructor.

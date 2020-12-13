@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 /**
  * Mercer kernels. A Mercer kernel is a kernel that is positive
@@ -21,7 +21,7 @@
  * the kernel trick, the idea of implicitly mapping data to a high-dimensional
  * feature space where some linear algorithm is applied that works exclusively
  * with inner products. Assume we have some mapping &#934; from an input
- * space X to a feature space H, then a kernel <code>k(u, v) = &lt;&#934;(u), &#934;(v)&gt;</code>
+ * space X to a feature space H, then a kernel {@code k(u, v) = <&#934;(u), &#934;(v)>}
  * may be used to define the inner product in feature space H.
  * <p>
  * Positive definiteness in the context of kernel functions also implies that

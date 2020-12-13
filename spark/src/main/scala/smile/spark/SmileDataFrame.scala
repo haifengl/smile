@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,29 +13,22 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.spark
 
-import java.util.stream.Collectors
 import org.apache.spark.ml.DataTypeOps
 import org.apache.spark.sql.{Row, SparkSession}
 import smile.data.{DataFrame, Tuple}
 import scala.collection.JavaConverters._
 
-/**
-  * Converts Spark [[org.apache.spark.sql.DataFrame]] to Smile [[DataFrame]]
-  */
+/** Converts Spark DataFrame to Smile DataFrame. */
 object SmileDataFrame {
   /** Returns a distributed Spark DataFrame. */
   def apply(df: DataFrame)(implicit spark: SparkSession): org.apache.spark.sql.DataFrame = {
     val schema = DataTypeOps.toSparkSchema(df.schema)
     spark.createDataFrame(
-      df.stream()
-        .collect(Collectors.toList())
-        .asScala
-        .map(tuple => SparkRow(tuple, schema).asInstanceOf[Row])
-        .asJava,
+      df.toList.asScala.map(tuple => SparkRow(tuple, schema).asInstanceOf[Row]).asJava,
       schema)
   }
 }

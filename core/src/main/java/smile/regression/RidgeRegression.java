@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
@@ -91,10 +91,11 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.valueOf(prop.getProperty("smile.ridge.lambda", "1"));
+        double lambda = Double.parseDouble(prop.getProperty("smile.ridge.lambda", "1"));
         return fit(formula, data, lambda);
     }
 
@@ -117,9 +118,9 @@ public class RidgeRegression {
      * Fits a generalized ridge regression model that minimizes a
      * weighted least squares criterion augmented with a
      * generalized ridge penalty:
-     * <pre><code>
+     * <pre>{@code
      *     (Y - X'*beta)' * W * (Y - X'*beta) + (beta - beta0)' * lambda * (beta - beta0)
-     * </code></pre>
+     * }</pre>
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.

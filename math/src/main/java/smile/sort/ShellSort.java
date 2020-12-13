@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,14 +13,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.sort;
 
 /**
  * Shell sort is a generalization of insertion sort.
- * For n &lt; 50, roughly, Shell sort is competitive with the more complicated
- * Quicksort on many machines. For n &gt; 50, Quicksort is generally faster.
+ * For {@code n < 50}, roughly, Shell sort is competitive with the more complicated
+ * Quicksort on many machines. For {@code n > 50}, Quicksort is generally faster.
  * <p>
  * Shell sort is based on two observations:
  * <ul>

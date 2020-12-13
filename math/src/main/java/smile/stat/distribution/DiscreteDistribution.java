@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -29,7 +29,8 @@ import smile.math.MathEx;
  */
 public abstract class DiscreteDistribution extends AbstractDistribution {
     /**
-     * Generates an integer random numbers following this discrete distribution.
+     * Generates an integer random number following this discrete distribution.
+     * @return an integer random number.
      */
     public int randi() {
         return (int) rand();
@@ -37,6 +38,8 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
 
     /**
      * Generates a set of integer random numbers following this discrete distribution.
+     * @param n the number of random numbers to generate.
+     * @return a set of integer random numbers.
      */
     public int[] randi(int n) {
         int[] data = new int[n];
@@ -48,6 +51,8 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
 
     /**
      * The probability mass function.
+     * @param x a real value.
+     * @return the probability.
      */
     public abstract double p(int x);
 
@@ -62,6 +67,8 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
 
     /**
      * The probability mass function in log scale.
+     * @param x a real value.
+     * @return the log probability.
      */
     public abstract double logp(int x);
     
@@ -76,6 +83,8 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
     
     /**
      * The likelihood given a sample set following the distribution.
+     * @param x a set of samples.
+     * @return the likelihood.
      */
     public double likelihood(int[] x) {
         return Math.exp(logLikelihood(x));        
@@ -83,6 +92,8 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
     
     /**
      * The likelihood given a sample set following the distribution.
+     * @param x a set of samples.
+     * @return the log likelihood.
      */
     public double logLikelihood(int[] x) {
         double L = 0.0;
@@ -94,10 +105,13 @@ public abstract class DiscreteDistribution extends AbstractDistribution {
     }
 
     /**
-     * Invertion of cdf by bisection numeric root finding of
+     * Inversion of cdf by bisection numeric root finding of
      * <code>cdf(x) = p</code> for discrete distribution.
-     * @return an integer <code>n</code> such that
-     *         <code>P(&lt;n) &le; p &le; P(&lt;n+1)</code>.
+     * @param p the probability.
+     * @param xmin the lower bound of search range.
+     * @param xmax the upper bound of search range.
+     * @return an integer {@code n} such that
+     *         {@code P(<n) <= p <= P(<n+1)}.
      */
     protected double quantile(double p, int xmin, int xmax) {
         while (xmax - xmin > 1) {

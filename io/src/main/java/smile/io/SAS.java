@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -22,17 +22,13 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import com.epam.parso.Column;
 import com.epam.parso.SasFileProperties;
 import com.epam.parso.SasFileReader;
 import com.epam.parso.impl.SasFileReaderImpl;
 import smile.data.DataFrame;
-import smile.data.type.DataType;
 import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
 import smile.data.vector.Vector;

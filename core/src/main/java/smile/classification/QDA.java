@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -103,7 +103,7 @@ public class QDA implements SoftClassifier<double[]> {
      * @param mu the mean vectors of each class.
      * @param eigen the eigen values of each variance matrix.
      * @param scaling the eigen vectors of each covariance matrix.
-     * @param labels class labels
+     * @param labels the class label encoder.
      */
     public QDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
         this.k = priori.length;
@@ -130,6 +130,7 @@ public class QDA implements SoftClassifier<double[]> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static QDA fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -140,6 +141,8 @@ public class QDA implements SoftClassifier<double[]> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static QDA fit(Formula formula, DataFrame data, Properties prop) {
         double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
@@ -151,6 +154,7 @@ public class QDA implements SoftClassifier<double[]> {
      * Learn quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
     public static QDA fit(double[][] x, int[] y) {
         return fit(x, y, null, 1E-4);
@@ -160,10 +164,12 @@ public class QDA implements SoftClassifier<double[]> {
      * Learns quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static QDA fit(double[][] x, int[] y, Properties prop) {
         double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.qda.priori"));
-        double tol = Double.valueOf(prop.getProperty("smile.qda.tolerance", "1E-4"));
+        double tol = Double.parseDouble(prop.getProperty("smile.qda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 
@@ -172,9 +178,10 @@ public class QDA implements SoftClassifier<double[]> {
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param priori the priori probability of each class. If null, it will be
-     * estimated from the training data.
-     * @param tol a tolerance to decide if a covariance matrix is singular; it
-     * will reject variables whose variance is less than tol<sup>2</sup>.
+     *               estimated from the training data.
+     * @param tol a tolerance to decide if a covariance matrix is singular;
+     *            it will reject variables whose variance is less than tol<sup>2</sup>.
+     * @return the model.
      */
     public static QDA fit(double[][] x, int[] y, double[] priori, double tol) {
         DiscriminantAnalysis da = DiscriminantAnalysis.fit(x, y, priori, tol);
@@ -212,6 +219,7 @@ public class QDA implements SoftClassifier<double[]> {
 
     /**
      * Returns a priori probabilities.
+     * @return a priori probabilities.
      */
     public double[] priori() {
         return priori;

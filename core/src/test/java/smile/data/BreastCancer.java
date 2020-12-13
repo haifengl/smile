@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,16 +13,12 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.data;
 
 import org.apache.commons.csv.CSVFormat;
 import smile.data.formula.Formula;
-import smile.data.measure.NominalScale;
-import smile.data.type.DataTypes;
-import smile.data.type.StructField;
-import smile.data.type.StructType;
 import smile.io.Read;
 import smile.util.Paths;
 

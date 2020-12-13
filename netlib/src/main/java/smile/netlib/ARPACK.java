@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.netlib;
 
@@ -62,7 +62,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
+     * @param k Number of eigenvalues of OP to be computed. {@code 0 < k < N}.
      * @param ritz Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, Ritz ritz) {
@@ -73,7 +73,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
+     * @param k Number of eigenvalues of OP to be computed. {@code 0 < k < N}.
      * @param which Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, String which) {
@@ -84,7 +84,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 &lt; k &lt; N.
+     * @param k Number of eigenvalues of OP to be computed. {@code 0 < k < N}.
      * @param ritz Specify which of the Ritz values to compute.
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
@@ -97,7 +97,7 @@ public class ARPACK {
      * Find k approximate eigen pairs of a symmetric matrix by the
      * Lanczos algorithm.
      *
-     * @param k Number of eigenvalues of OP to be computed. 0 &lt; NEV &lt; N.
+     * @param k Number of eigenvalues of OP to be computed. {@code 0 < NEV < N}.
      * @param which Specify which of the Ritz values to compute.
      * @param kappa Relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.

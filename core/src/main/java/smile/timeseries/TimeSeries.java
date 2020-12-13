@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.timeseries;
 
@@ -108,13 +108,13 @@ public interface TimeSeries {
 
         double variance = 0.0;
         for (int i = 0; i < lag; i++) {
-            variance += MathEx.sqr(x[i] - mu);
+            variance += MathEx.pow2(x[i] - mu);
         }
 
         double cov = 0.0;
         for (int i = lag; i < T; i++) {
             cov += (x[i] - mu) * (x[i-lag] - mu);
-            variance += MathEx.sqr(x[i] - mu);
+            variance += MathEx.pow2(x[i] - mu);
         }
 
         return cov / variance;

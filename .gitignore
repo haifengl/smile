@@ -1,7 +1,18 @@
+# class and package Files
 *.class
+*.jar
+*.war
+*.ear
 
 # Intellij
 .idea
+
+# Eclipse
+.project
+.settings
+.cache-main
+.cache-tests
+.classpath
 
 # jupyter
 .ipynb_checkpoints
@@ -10,9 +21,7 @@
 doc/api
 web/node_modules/
 web/_site/
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
+shell/src/universal/data/nlp
 
 #clojure
 .lein-repl-*
@@ -22,21 +31,10 @@ clojure/pom.xml*
 .gradle
 build
 
-# Package Files #
-*.jar
-*.war
-*.ear
-
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
 .DS_Store
 *.iml
 **/target
 
-.project
-.settings
-.cache-main
-.cache-tests
-.classpath
-*/.gitignore

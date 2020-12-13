@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -57,12 +57,14 @@ import static smile.math.blas.UPLO.*;
  * involved in performing operations such as multiplication falls significantly,
  * often leading to huge savings in terms of calculation time and complexity.
  * <p>
- * Given a n-by-n band matrix with m<sub>1</sub> rows below the diagonal and m<sub>2</sub> rows above.
- * The matrix is compactly stored in an array A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]. The diagonal
- * elements are in A[0,n-1][m<sub>1</sub>]. Subdiagonal elements are in A[j,n-1][0,m<sub>1</sub>-1]
- * with j &gt; 0 appropriate to the number of elements on each subdiagonal.
- * Superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
- * with j &lt; n-1 appropriate to the number of elements on each superdiagonal.
+ * Given a n-by-n band matrix with <code>m<sub>1</sub></code> rows below the
+ * diagonal and <code>m<sub>2</sub></code> rows above. The matrix is compactly
+ * stored in an array <code>A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]</code>.
+ * The diagonal elements are in <code>A[0,n-1][m<sub>1</sub>]</code>.
+ * The sub-diagonal elements are in <code>A[j,n-1][0,m<sub>1</sub>-1]</code>
+ * with {@code j > 0} appropriate to the number of elements on each sub-diagonal.
+ * The super-diagonal elements are in <code>A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]</code>
+ * with {@code j < n-1} appropriate to the number of elements on each super-diagonal.
  * 
  * @author Haifeng Li
  */
@@ -137,8 +139,8 @@ public class FloatBandMatrix extends SMatrix {
      * @param n the number of columns.
      * @param kl the number of subdiagonals.
      * @param ku the number of superdiagonals.
-     * @param AB the band matrix. A[i, j] is stored in
-     *           AB[ku+i-j, j] for max(0, j-ku) <= i <= min(m-1, j+kl).
+     * @param AB the band matrix. A[i, j] is stored in {@code AB[ku+i-j, j]}
+     *           for {@code max(0, j-ku) <= i <= min(m-1, j+kl)}.
      */
     public FloatBandMatrix(int m, int n, int kl, int ku, float[][] AB) {
         this(m, n, kl, ku);
@@ -229,7 +231,7 @@ public class FloatBandMatrix extends SMatrix {
 
     @Override
     public boolean equals(Object o) {
-        if (o == null || !(o instanceof FloatBandMatrix)) {
+        if (!(o instanceof FloatBandMatrix)) {
             return false;
         }
 
@@ -365,10 +367,10 @@ public class FloatBandMatrix extends SMatrix {
     }
 
     /**
-     * The LU decomposition. For an m-by-n matrix A with m &ge; n, the LU
+     * The LU decomposition. For an m-by-n matrix A with {@code m >= n}, the LU
      * decomposition is an m-by-n unit lower triangular matrix L, an n-by-n
      * upper triangular matrix U, and a permutation vector piv of length m
-     * so that A(piv,:) = L*U. If m &lt; n, then L is m-by-m and U is m-by-n.
+     * so that A(piv,:) = L*U. If {@code m < n}, then L is m-by-m and U is m-by-n.
      * <p>
      * The LU decomposition with pivoting always exists, even if the matrix is
      * singular. The primary use of the LU decomposition is in the solution of

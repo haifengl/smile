@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.matrix;
 
@@ -22,8 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
-import smile.math.MathEx;
 
 /**
  *
@@ -65,8 +67,7 @@ public class PowerIterationTest {
     public void testEigen() {
         System.out.println("Eigen");
         double[] v = new double[3];
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
+        Arrays.fill(v, 1.0);
 
         double eigenvalue = PowerIteration.eigen(new Matrix(A), v);
         assertEquals(eigenValues[0], eigenvalue, 1E-4);
@@ -81,9 +82,7 @@ public class PowerIterationTest {
                 A[i][j] = -A[i][j];
         }
 
-        for (int i = 0; i < v.length; i++)
-            v[i] = 1.0;
-
+        Arrays.fill(v, 1.0);
         eigenvalue = PowerIteration.eigen(new Matrix(A), v, 0.22, 1E-4, 4);
         assertEquals(-eigenValues[0], eigenvalue, 1E-3);
 

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -142,8 +142,7 @@ class DiscriminantAnalysis {
         Matrix St = new Matrix(p, p);
         St.uplo(UPLO.LOWER);
 
-        for (int i = 0; i < n; i++) {
-            double[] xi = x[i];
+        for (double[] xi : x) {
             for (int j = 0; j < p; j++) {
                 for (int l = 0; l <= j; l++) {
                     St.add(j, l, (xi[j] - mean[j]) * (xi[l] - mean[l]));

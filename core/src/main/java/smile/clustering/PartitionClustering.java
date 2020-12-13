@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.clustering;
 
@@ -111,8 +111,7 @@ public abstract class PartitionClustering implements Serializable {
      * of k-means. Although the initial selection in the algorithm takes extra time,
      * the k-means part itself converges very fast after this seeding and thus
      * the algorithm actually lowers the computation time too.
-     * 
-     * <h2>References</h2>
+     *
      * <ol>
      * <li> D. Arthur and S. Vassilvitskii. "K-means++: the advantages of careful seeding". ACM-SIAM symposium on Discrete algorithms, 1027-1035, 2007.</li>
      * <li> Anna D. Peterson, Arka P. Ghosh and Ranjan Maitra. A systematic evaluation of different methods for initializing the K-means clustering algorithm. 2010.</li>
@@ -122,6 +121,7 @@ public abstract class PartitionClustering implements Serializable {
      * @param data data objects array of size n.
      * @param medoids an array of size k to store cluster medoids on output.
      * @param y an array of size n to store cluster labels on output.
+     * @param distance the distance function.
      * @return an array of size n to store the distance of each observation to nearest medoid.
      */
     public static <T> double[] seed(T[] data, T[] medoids, int[] y, ToDoubleBiFunction<T, T> distance) {
@@ -167,6 +167,9 @@ public abstract class PartitionClustering implements Serializable {
      * Runs a clustering algorithm multiple times and return the best one
      * (e.g. smallest distortion).
      * @param runs the number of runs.
+     * @param clustering the clustering algorithm.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T extends PartitionClustering & Comparable<? super T>> T run(int runs, Supplier<T> clustering) {
         if (runs <= 0) {

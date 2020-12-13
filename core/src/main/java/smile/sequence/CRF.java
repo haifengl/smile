@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.sequence;
 
@@ -67,15 +67,15 @@ public class CRF implements Serializable {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CRF.class);
 
     /** The schema of (x, s_j). */
-    private StructType schema;
+    private final StructType schema;
     /**
      * The potential functions for each class.
      */
-    private RegressionTree[][] potentials;
+    private final RegressionTree[][] potentials;
     /**
      * The learning rate.
      */
-    private double shrinkage;
+    private final double shrinkage;
 
     /**
      * Constructor.
@@ -227,6 +227,7 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels) {
         return fit(sequences, labels, new Properties());
@@ -236,13 +237,15 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
-        int ntrees = Integer.valueOf(prop.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.valueOf(prop.getProperty("smile.crf.max.depth", "20"));
-        int maxNodes = Integer.valueOf(prop.getProperty("smile.crf.max.nodes", "100"));
-        int nodeSize = Integer.valueOf(prop.getProperty("smile.crf.node.size", "5"));
-        double shrinkage = Double.valueOf(prop.getProperty("smile.crf.shrinkage", "1.0"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.crf.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.crf.max.nodes", "100"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.crf.node.size", "5"));
+        double shrinkage = Double.parseDouble(prop.getProperty("smile.crf.shrinkage", "1.0"));
         return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
     }
 
@@ -256,6 +259,7 @@ public class CRF implements Serializable {
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @return the model.
      */
     public static CRF fit(Tuple[][] sequences, int[][] labels, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
         int k = MathEx.max(labels) + 1;

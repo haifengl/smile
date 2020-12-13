@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.kernel;
 
@@ -23,9 +23,8 @@ import smile.util.SparseArray;
 /**
  * The hyperbolic tangent kernel on sparse data.
  * <p>
- * <pre>
  *     k(u, v) = tanh(&gamma; u<sup>T</sup>v - &lambda;)
- * </pre>
+ * <p>
  * where &gamma; is the scale of the used inner product and &lambda; is
  * the offset of the used inner product. If the offset is negative the
  * likelihood of obtaining a kernel matrix that is not positive definite

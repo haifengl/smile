@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.classification;
 
@@ -75,19 +75,20 @@ public class KNN<T> implements SoftClassifier<T> {
     /**
      * The data structure for nearest neighbor search.
      */
-    private KNNSearch<T, T> knn;
+    private final KNNSearch<T, T> knn;
     /**
      * The labels of training samples.
      */
-    private int[] y;
+    private final int[] y;
     /**
      * The number of neighbors for decision.
      */
-    private int k;
+    private final int k;
     /**
      * The class labels.
      */
-    private IntSet labels;
+    private final IntSet labels;
+
     /**
      * Constructor.
      * @param knn k-nearest neighbor search data structure of training instances.
@@ -102,21 +103,25 @@ public class KNN<T> implements SoftClassifier<T> {
     }
 
     /**
-     * Learn the 1-NN classifier.
+     * Fits the 1-NN classifier.
      * @param x training samples.
      * @param y training labels.
      * @param distance the distance measure for finding nearest neighbors.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> KNN<T> fit(T[] x, int[] y, Distance<T> distance) {
         return fit(x, y, 1, distance);
     }
 
     /**
-     * Learn the K-NN classifier.
+     * Fits the K-NN classifier.
      * @param k the number of neighbors.
      * @param x training samples.
      * @param y training labels.
      * @param distance the distance measure for finding nearest neighbors.
+     * @param <T> the data type.
+     * @return the model.
      */
     public static <T> KNN<T> fit(T[] x, int[] y, int k, Distance<T> distance) {
         if (x.length != y.length) {
@@ -138,19 +143,21 @@ public class KNN<T> implements SoftClassifier<T> {
     }
 
     /**
-     * Learn the 1-NN classifier.
+     * Fits the 1-NN classifier.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static KNN<double[]> fit(double[][] x, int[] y) {
         return fit(x, y, 1);
     }
 
     /**
-     * Learn the K-NN classifier.
+     * Fits the K-NN classifier.
      * @param k the number of neighbors for classification.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public static KNN<double[]> fit(double[][] x, int[] y, int k) {
         if (x.length != y.length) {

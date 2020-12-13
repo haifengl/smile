@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math.random;
 
@@ -32,7 +32,7 @@ package smile.math.random;
  * far larger seed value.
  *
  * <h2>References</h2>
- * <uol>
+ * <ol>
  * <li> Makato Matsumoto and Takuji Nishimura,
  * <a href="http://www.math.sci.hiroshima-u.ac.jp/~m-mat/MT/ARTICLES/mt.pdf">"Mersenne Twister: A 623-Dimensionally Equidistributed Uniform Pseudo-Random Number Generator"</a>,
  * <i>ACM Transactions on Modeling and Computer Simulation, </i> Vol. 8, No. 1,
@@ -48,7 +48,7 @@ public class MersenneTwister implements RandomNumberGenerator {
     private final static int LOWER_MASK = 0x7fffffff;
     private final static int N = 624;
     private final static int M = 397;
-    private final static int MAGIC[] = {0x0, 0x9908b0df};
+    private final static int[] MAGIC = {0x0, 0x9908b0df};
     private final static int MAGIC_FACTOR1 = 1812433253;
     //private final static int MAGIC_FACTOR2 = 1664525;
     //private final static int MAGIC_FACTOR3 = 1566083941;
@@ -58,7 +58,7 @@ public class MersenneTwister implements RandomNumberGenerator {
     // The seed used in the paper.
     //private final static int DEFAULT_SEED = 5489;
     // Internal state
-    private transient int[] mt = new int[N];
+    private final transient int[] mt = new int[N];
     private transient int mti;
 
     /**

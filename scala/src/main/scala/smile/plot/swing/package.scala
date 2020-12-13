@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,17 +13,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.plot
 
 import java.awt.Color
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
-import java.util.Base64
-import javax.imageio.ImageIO
-import javax.swing.JComponent
-import javax.swing.SwingUtilities
 import smile.data.DataFrame
 import smile.clustering.HierarchicalClustering
 import smile.math.matrix.SparseMatrix
@@ -158,7 +152,7 @@ package object swing {
     * @return the plot panel.
     */
   def splom(data: DataFrame, mark: Char, category: String): PlotGrid = {
-    PlotGrid.splom(data, mark, category);
+    PlotGrid.splom(data, mark, category)
   }
 
   /**
@@ -472,7 +466,7 @@ package object swing {
     * @param hc hierarchical clustering object.
     */
   def dendrogram(hc: HierarchicalClustering): Canvas = {
-    new Dendrogram(hc.getTree, hc.getHeight).canvas
+    new Dendrogram(hc.tree, hc.height).canvas
   }
 
   /** A dendrogram is a tree diagram to illustrate the arrangement

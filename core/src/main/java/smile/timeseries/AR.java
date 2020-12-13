@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.timeseries;
 
@@ -78,27 +78,27 @@ public class AR implements Serializable {
     /**
      * The time series.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The mean of time series.
      */
-    private double mean;
+    private final double mean;
     /**
      * The fitting method.
      */
-    private Method method;
+    private final Method method;
     /**
      * The order.
      */
-    private int p;
+    private final int p;
     /**
      * The intercept.
      */
-    private double b;
+    private final double b;
     /**
      * The linear weights of AR.
      */
-    private double[] ar;
+    private final double[] ar;
     /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
@@ -106,11 +106,11 @@ public class AR implements Serializable {
     /**
      * The fitted values.
      */
-    private double[] fittedValues;
+    private final double[] fittedValues;
     /**
      * The residuals, that is response minus fitted values.
      */
-    private double[] residuals;
+    private final double[] residuals;
     /**
      * Residual sum of squares.
      */
@@ -122,7 +122,7 @@ public class AR implements Serializable {
     /**
      * The degree-of-freedom of residual variance.
      */
-    private int df;
+    private final int df;
     /**
      * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
      * about the goodness of fit of a model. In regression, the R<sup>2</sup>
@@ -138,13 +138,13 @@ public class AR implements Serializable {
      * This leads to the alternative approach of looking at the
      * adjusted R<sup>2</sup>.
      */
-    private double RSquared;
+    private final double RSquared;
     /**
      * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
      * explanation as R<sup>2</sup> but it penalizes the statistic as
      * extra variables are included in the model.
      */
-    private double adjustedRSquared;
+    private final double adjustedRSquared;
 
     /**
      * Constructor.
@@ -177,8 +177,8 @@ public class AR implements Serializable {
 
             double residual = y[i] - yi;
             residuals[i] = residual;
-            RSS += MathEx.sqr(residual);
-            TSS += MathEx.sqr(y[i] - ybar);
+            RSS += MathEx.pow2(residual);
+            TSS += MathEx.pow2(y[i] - ybar);
         }
 
         df = x.length - p;

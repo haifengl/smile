@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -81,8 +81,8 @@ public interface HadoopInput {
             case "s3n":
             case "hdfs":
                 Configuration conf = new Configuration();
-                FileSystem fs = FileSystem.get(conf);
-                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), new org.apache.hadoop.conf.Configuration());
+                FileSystem fs = FileSystem.get(conf); // initialize file system
+                return HadoopInputFile.fromPath(new org.apache.hadoop.fs.Path(path), conf);
 
             default: // http, ftp, ...
                 throw new IllegalArgumentException("Unsupported URI schema for Parquet files: " + path);

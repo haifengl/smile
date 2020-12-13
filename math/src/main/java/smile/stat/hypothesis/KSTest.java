@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.hypothesis;
 
@@ -55,21 +55,27 @@ import smile.stat.distribution.Distribution;
  */
 public class KSTest {
     /**
-     * A character string indicating what type of test was performed.
+     * The type of test.
      */
     public final String method;
 
     /**
-     * Kolmogorov-Smirnov statistic
+     * Kolmogorov-Smirnov statistic.
      */
     public final double d;
 
     /**
-     * P-value
+     * P-value.
      */
     public final double pvalue;
 
-    private KSTest(String method, double d, double pvalue) {
+    /**
+     * Constructor.
+     * @param method the type of test.
+     * @param d the Kolmogorov-Smirnov statistic.
+     * @param pvalue the p-value.
+     */
+    public KSTest(String method, double d, double pvalue) {
         this.method = method;
         this.d = d;
         this.pvalue = pvalue;
@@ -136,12 +142,12 @@ public class KSTest {
         }
 
         if (q > 0.3) {
-            double f = -0.392699081698724155 * MathEx.sqr(1. - q);
+            double f = -0.392699081698724155 * MathEx.pow2(1. - q);
             double y = invxlogx(f);
             double t;
             do {
                 double logy = Math.log(y);
-                double ff = f / MathEx.sqr(1. + Math.pow(y, 4) + Math.pow(y, 12));
+                double ff = f / MathEx.pow2(1. + Math.pow(y, 4) + Math.pow(y, 12));
                 double u = (y * logy - ff) / (1. + logy);
                 t = u / Math.max(0.5, 1. - 0.5 * u / (y * (1. + logy)));
                 y -= t;

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -49,10 +49,7 @@ public class LibsvmTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of parse method, of class LibsvmParser.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
@@ -87,10 +84,7 @@ public class LibsvmTest {
         assertEquals(17, test.get(n-1).label());
     }
 
-    /**
-     * Test of parse method, of class LibsvmParser.
-     */
-    @Test(expected = Test.None.class)
+    @Test
     public void testParseGlass() throws Exception {
         System.out.println("glass");
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/glass.txt"));

@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.io;
 
@@ -50,7 +50,7 @@ public class CSV {
     /** The schema of data structure. */
     private StructType schema;
     /** The CSV file format. */
-    private CSVFormat format;
+    private final CSVFormat format;
     /** Charset of file. */
     private Charset charset = StandardCharsets.UTF_8;
 

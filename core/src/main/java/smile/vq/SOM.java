@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.vq;
 
@@ -22,9 +22,9 @@ import java.util.Arrays;
 import java.util.stream.IntStream;
 import smile.clustering.CentroidClustering;
 import smile.math.MathEx;
-import smile.mds.MDS;
-import smile.sort.QuickSort;
 import smile.math.TimeFunction;
+import smile.manifold.MDS;
+import smile.sort.QuickSort;
 
 /**
  * Self-Organizing Map. An SOM is a unsupervised learning method to produce
@@ -115,31 +115,31 @@ public class SOM implements VectorQuantizer {
     /**
      * The number of rows in the lattice.
      */
-    private int nrows;
+    private final int nrows;
     /**
      * The number of columns in the lattice.
      */
-    private int ncols;
+    private final int ncols;
     /**
      * The lattice of neurons.
      */
-    private Neuron[][] map;
+    private final Neuron[][] map;
     /**
      * The neurons in linear array.
      */
-    private Neuron[] neurons;
+    private final Neuron[] neurons;
     /**
      * The distance between a new observation to neurons.
      */
-    private double[] dist;
+    private final double[] dist;
     /**
      * The learning rate function.
      */
-    private TimeFunction alpha;
+    private final TimeFunction alpha;
     /**
      * The neighborhood function.
      */
-    private Neighborhood theta;
+    private final Neighborhood theta;
     /**
      * The current iteration.
      */
@@ -147,7 +147,7 @@ public class SOM implements VectorQuantizer {
     /*
      * The threshold to update neuron if alpha * theta > eps.
      */
-    private double eps = 1E-5;
+    private final double eps = 1E-5;
 
     /**
      * Constructor.

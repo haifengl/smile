@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.stat.distribution;
 
@@ -42,14 +42,14 @@ public class EmpiricalDistribution extends DiscreteDistribution {
     /**
      * The possible values of random variable.
      */
-    private IntSet x;
+    private final IntSet x;
     /**
      * CDF at each x.
      */
-    private double[] cdf;
+    private final double[] cdf;
     private double mean;
-    private double variance;
-    private double sd;
+    private final double variance;
+    private final double sd;
     private double entropy;
     // Walker's alias method to generate random samples.
     private int[] a;
@@ -109,6 +109,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
     /**
      * Estimates the distribution.
      * @param data the training data.
+     * @return the distribution.
      */
     public static EmpiricalDistribution fit(int[] data) {
         return fit(data, IntSet.of(data));
@@ -120,6 +121,7 @@ public class EmpiricalDistribution extends DiscreteDistribution {
      * provide the value set.
      * @param data the training data.
      * @param x the value set.
+     * @return the distribution.
      */
     public static EmpiricalDistribution fit(int[] data, IntSet x) {
         if (data.length == 0) {

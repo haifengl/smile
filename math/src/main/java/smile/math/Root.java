@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.math;
 
@@ -106,7 +106,7 @@ public interface Root {
                 p = Math.abs(p);
                 double min1 = 3.0 * xm * q - Math.abs(tol * q);
                 double min2 = Math.abs(e * q);
-                if (2.0 * p < (min1 < min2 ? min1 : min2)) {
+                if (2.0 * p < Math.min(min1, min2)) {
                     e = d;
                     d = p / q;
                 } else {

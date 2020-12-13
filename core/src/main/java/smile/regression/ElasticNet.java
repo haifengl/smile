@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,11 +13,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.regression;
 
-import java.util.Arrays;
 import java.util.Properties;
 import smile.data.DataFrame;
 import smile.data.formula.Formula;
@@ -52,13 +51,14 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop Training algorithm hyper-parameters and properties.
+     * @param prop the hyper-parameters.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda1"));
-        double lambda2 = Double.valueOf(prop.getProperty("smile.elastic.net.lambda2"));
-        double tol = Double.valueOf(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
-        int maxIter = Integer.valueOf(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+        double lambda1 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda1"));
+        double lambda2 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda2"));
+        double tol = Double.parseDouble(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 

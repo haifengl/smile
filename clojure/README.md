@@ -18,12 +18,9 @@ some clustering algorithms, Gaussian Process regression, MLP, etc).
 To use these algorithms, you should include OpenBLAS for optimized matrix
 computation:
 ```
-    [org.bytedeco/arpack-ng "3.7.0-1.5.4"]
-    [org.bytedeco/openblas-platform "0.3.10-1.5.4"]
-    [org.bytedeco/arpack-ng          "3.7.0-1.5.4"]
+    [org.bytedeco/javacpp-platform   "1.5.4"]
+    [org.bytedeco/openblas-platform  "0.3.10-1.5.4"]
     [org.bytedeco/arpack-ng-platform "3.7.0-1.5.4"]
-    [org.bytedeco/openblas "0.3.10-1.5.4"]
-    [org.bytedeco/javacpp "1.5.4"]
 ```
 
 If you prefer other BLAS implementations, you can use any library found on

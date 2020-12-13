@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.nlp.embedding;
 
@@ -49,8 +49,7 @@ import java.util.stream.Stream;
  */
 public class GloVe {
     /**
-     * Loads a <a href="https://nlp.stanford.edu/projects/glove/>pre-trained</a>
-     * GloVe model.
+     * Loads a GloVe model.
      */
     public static Word2Vec of(Path file) throws IOException {
         try (Stream<String> stream = Files.lines(file)) {
@@ -61,7 +60,7 @@ public class GloVe {
                 words.add(tokens[0]);
                 float[] vector = new float[tokens.length-1];
                 for (int i = 0; i < vector.length; i++) {
-                    vector[i] = Float.valueOf(tokens[i+1]);
+                    vector[i] = Float.parseFloat(tokens[i+1]);
                 }
                 vectors.add(vector);
             });

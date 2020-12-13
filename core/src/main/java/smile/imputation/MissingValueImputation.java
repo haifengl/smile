@@ -1,4 +1,4 @@
-/*******************************************************************************
+/*
  * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
  * Smile is free software: you can redistribute it and/or modify
@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public License
  * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
- ******************************************************************************/
+ */
 
 package smile.imputation;
 
@@ -39,10 +39,10 @@ public interface MissingValueImputation {
             int n = 0;
             double sum = 0.0;
 
-            for (int i = 0; i < data.length; i++) {
-                if (!Double.isNaN(data[i][j])) {
+            for (double[] x : data) {
+                if (!Double.isNaN(x[j])) {
                     n++;
-                    sum += data[i][j];
+                    sum += x[j];
                 }
             }
 
