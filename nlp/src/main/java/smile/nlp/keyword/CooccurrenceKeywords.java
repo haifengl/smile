@@ -62,6 +62,7 @@ public interface CooccurrenceKeywords {
     /**
      * Returns a given number of top keywords.
      * @param text A single document.
+     * @param maxNumKeywords the maximum number of keywords.
      * @return The top keywords.
      */
     static NGram[] of(String text, int maxNumKeywords) {

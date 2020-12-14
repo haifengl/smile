@@ -23,6 +23,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.text.ParseException;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.parquet.hadoop.util.HadoopInputFile;
@@ -35,17 +37,36 @@ import org.apache.parquet.io.InputFile;
  * @author Haifeng Li
  */
 public interface HadoopInput {
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the reader of a file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file reader.
+     */
     static BufferedReader reader(String path) throws IOException, URISyntaxException {
         return new BufferedReader(new InputStreamReader(stream(path)));
     }
 
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the reader of a file path or URI.
+     * @param path the input file path.
+     * @param charset the charset of file.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file reader.
+     */
     static BufferedReader reader(String path, Charset charset) throws IOException, URISyntaxException {
         return new BufferedReader(new InputStreamReader(stream(path), charset));
     }
 
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the reader of a file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file input stream.
+     */
     static InputStream stream(String path) throws IOException, URISyntaxException {
         URI uri = new URI(path);
         if (uri.getScheme() == null) return Files.newInputStream(Paths.get(path));
@@ -67,7 +88,13 @@ public interface HadoopInput {
         }
     }
 
-    /** Returns the Parquet's InputFile instance of a file path or URI. */
+    /**
+     * Returns the Parquet's InputFile instance of a file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return Parquet's InputFile.
+     */
     static InputFile file(String path) throws IOException, URISyntaxException {
         URI uri = new URI(path);
         if (uri.getScheme() == null) return new LocalInputFile(Paths.get(path));

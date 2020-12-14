@@ -101,7 +101,7 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      *
-     * @param path the path to data file.
+     * @param path the input file path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      * @throws URISyntaxException when the file path syntax is wrong.
@@ -113,7 +113,7 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      *
-     * @param path the path to data file.
+     * @param path the input file path.
      * @param charset the charset of file.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
@@ -126,7 +126,7 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      *
-     * @param path the path to data file.
+     * @param path the input file path.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      */
@@ -137,7 +137,7 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      *
-     * @param path the path to data file.
+     * @param path the input file path.
      * @param charset the charset of file.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
@@ -149,7 +149,7 @@ public class Arff implements AutoCloseable {
     /**
      * Constructor.
      *
-     * @param reader the reader of file.
+     * @param reader the file reader.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
 ]     */
@@ -411,7 +411,7 @@ public class Arff implements AutoCloseable {
     /**
      * Reads a limited number of records.
      *
-     * @param limit reads a limited number of records.
+     * @param limit the number number of records to read.
      * @throws IOException when fails to read the file.
      * @throws ParseException when fails to parse the file.
      * @return the data frame.
@@ -516,7 +516,7 @@ public class Arff implements AutoCloseable {
      * Writes the data frame to an ARFF file.
      *
      * @param data the data frame.
-     * @param path the file path.
+     * @param path the output file path.
      * @param relation the relation name of ARFF.
      * @throws IOException when fails to write the file.
      */

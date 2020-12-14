@@ -46,7 +46,9 @@ public interface SAS {
     /**
      * Reads a SAS7BDAT file.
      *
-     * @param path a SAS7BDAT file path.
+     * @param path the input file path.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     static DataFrame read(Path path) throws IOException {
         return read(Files.newInputStream(path), Integer.MAX_VALUE);
@@ -55,7 +57,10 @@ public interface SAS {
     /**
      * Reads a SAS7BDAT file.
      *
-     * @param path a SAS7BDAT file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to write the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame read(String path) throws IOException, URISyntaxException {
         return read(Input.stream(path), Integer.MAX_VALUE);
@@ -65,7 +70,9 @@ public interface SAS {
      * Reads a limited number of records from a SAS7BDAT file.
      *
      * @param input a SAS7BDAT file input stream.
-     * @param limit reads a limited number of records.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     static DataFrame read(InputStream input, int limit) throws IOException {
         try {
