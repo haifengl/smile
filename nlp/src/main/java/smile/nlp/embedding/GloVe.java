@@ -51,7 +51,7 @@ public class GloVe {
     /**
      * Loads a GloVe model.
      * @param file the path to model file.
-     * @throws IOException when failing to read the file.
+     * @throws IOException when fails to read the file.
      * @return the GloVe model.
      */
     public static Word2Vec of(Path file) throws IOException {

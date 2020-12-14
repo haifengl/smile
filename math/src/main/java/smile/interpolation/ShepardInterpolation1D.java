@@ -41,8 +41,9 @@ public class ShepardInterpolation1D implements Interpolation {
 
     /**
      * Constructor. By default p = 2.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      */
     public ShepardInterpolation1D(double[] x, double[] y) {
         this(x, y, 2);
@@ -50,8 +51,9 @@ public class ShepardInterpolation1D implements Interpolation {
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation1D(double[] x, double[] y, double p) {

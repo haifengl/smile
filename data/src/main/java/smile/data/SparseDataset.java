@@ -205,8 +205,8 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Coordinate file stores a list of (row, column, value) tuples.
      *
      * @param path the input file path.
-     * @throws IOException when fail to read file.
-     * @throws ParseException when fail to parse data.
+     * @throws IOException when fails to read file.
+     * @throws ParseException when fails to parse data.
      * @return the sparse dataset.
      */
     static SparseDataset from(Path path) throws IOException, ParseException {

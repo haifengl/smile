@@ -100,6 +100,7 @@ public class ChiSqTest {
      * a significant difference between the distributions.
      * @param bins the observed number of events.
      * @param prob the expected probabilities of events.
+     * @return the test results.
      */
     public static ChiSqTest test(int[] bins, double[] prob) {
         return test(bins, prob, 1);
@@ -114,6 +115,7 @@ public class ChiSqTest {
      * @param bins the observed number of events.
      * @param prob the expected probabilities of events.
      * @param constraints the constraints on the degree of freedom.
+     * @return the test results.
      */
     public static ChiSqTest test(int[] bins, double[] prob, int constraints) {
         int nbins = bins.length;
@@ -151,6 +153,7 @@ public class ChiSqTest {
      * a significant difference between the distributions.
      * @param bins1 the observed number of events in first sample.
      * @param bins2 the observed number of events in second sample.
+     * @return the test results.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2) {
         return test(bins1, bins2, 1);
@@ -164,6 +167,7 @@ public class ChiSqTest {
      * @param bins1 the observed number of events in first sample.
      * @param bins2 the observed number of events in second sample.
      * @param constraints the constraints on the degree of freedom.
+     * @return the test results.
      */
     public static ChiSqTest test(int[] bins1, int[] bins2, int constraints) {
         if (bins1.length != bins2.length) {
@@ -200,6 +204,7 @@ public class ChiSqTest {
      * calculated as Cramer's V.
      *
      * @param table the contingency table.
+     * @return the test results.
      */
     public static ChiSqTest test(int[][] table) {
         final double TINY = 1.0e-16;
