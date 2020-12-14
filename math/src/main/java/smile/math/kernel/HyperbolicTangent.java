@@ -59,12 +59,18 @@ public class HyperbolicTangent implements DotProductKernel {
         this.hi = hi;
     }
 
-    /** Returns the scale of kernel. */
+    /**
+     * Returns the scale of kernel.
+     * @return the scale of kernel.
+     */
     public double scale() {
         return scale;
     }
 
-    /** Returns the offset of kernel. */
+    /**
+     * Returns the offset of kernel.
+     * @return the offset of kernel.
+     */
     public double offset() {
         return offset;
     }

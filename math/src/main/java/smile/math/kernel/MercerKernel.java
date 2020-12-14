@@ -56,17 +56,26 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
 
     /**
      * Kernel function.
+     * @param x an object.
+     * @param y an object.
+     * @return the kernel value.
      */
     double k(T x, T y);
 
     /**
      * Computes the kernel and its gradient over hyperparameters.
+     * @param x an object.
+     * @param y an object.
+     * @return the kernel value and gradient.
      */
     double[] kg(T x, T y);
 
     /**
      * Kernel function.
      * This is simply for Scala convenience.
+     * @param x an object.
+     * @param y an object.
+     * @return the kernel value.
      */
     default double apply(T x, T y) {
         return k(x, y);
@@ -80,7 +89,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     /**
      * Computes the kernel and gradient matrices.
      *
-     * @param x samples.
+     * @param x objects.
      * @return the kernel and gradient matrices.
      */
     default Matrix[] KG(T[] x) {
@@ -108,7 +117,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     /**
      * Computes the kernel matrix.
      *
-     * @param x samples.
+     * @param x objects.
      * @return the kernel matrix.
      */
     default Matrix K(T[] x) {
@@ -128,8 +137,8 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     /**
      * Returns the kernel matrix.
      *
-     * @param x samples.
-     * @param y samples.
+     * @param x objects.
+     * @param y objects.
      * @return the kernel matrix.
      */
     default Matrix K(T[] x, T[] y) {
@@ -146,15 +155,28 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         return K;
     }
 
-    /** Returns the same kind kernel with the new hyperparameters. */
+    /**
+     * Returns the same kind kernel with the new hyperparameters.
+     * @param params the hyperparameters.
+     * @return the same kind kernel with the new hyperparameters.
+     */
     MercerKernel<T> of(double[] params);
 
-    /** Returns the hyperparameters for tuning. */
+    /**
+     * Returns the hyperparameters of kernel.
+     * @return the hyperparameters of kernel.
+     */
     double[] hyperparameters();
 
-    /** Returns the lower bound of hyperparameters. */
+    /**
+     * Returns the lower bound of hyperparameters (in hyperparameter tuning).
+     * @return the lower bound of hyperparameters.
+     */
     double[] lo();
 
-    /** Returns the upper bound of hyperparameters. */
+    /**
+     * Returns the upper bound of hyperparameters (in hyperparameter tuning).
+     * @return the upper bound of hyperparameters.
+     */
     double[] hi();
 }
