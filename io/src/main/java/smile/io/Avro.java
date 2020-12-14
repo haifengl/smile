@@ -59,6 +59,8 @@ public class Avro {
 
     /**
      * Constructor.
+     *
+     * @param schema the data schema.
      */
     public Avro(Schema schema) {
         if (schema.getType() != Schema.Type.RECORD) {
@@ -71,6 +73,7 @@ public class Avro {
      * Constructor.
      *
      * @param schema the input stream of schema.
+     * @throws IOException when fails to read the file.
      */
     public Avro(InputStream schema) throws IOException {
         this(new Schema.Parser().parse(schema));
@@ -79,7 +82,8 @@ public class Avro {
     /**
      * Constructor.
      *
-     * @param schema Avro schema file path.
+     * @param schema the path to Avro schema file.
+     * @throws IOException when fails to read the file.
      */
     public Avro(Path schema) throws IOException {
         this(Files.newInputStream(schema));
@@ -88,7 +92,9 @@ public class Avro {
     /**
      * Reads an avro file.
      *
-     * @param path an Apache Avro file path.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path) throws IOException {
         return read(Files.newInputStream(path), Integer.MAX_VALUE);
@@ -97,7 +103,10 @@ public class Avro {
     /**
      * Reads an avro file.
      *
-     * @param path an Apache Avro file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
         return read(HadoopInput.stream(path), Integer.MAX_VALUE);
@@ -106,8 +115,10 @@ public class Avro {
     /**
      * Reads a limited number of records from an avro file.
      *
-     * @param input  an Apache Avro file input stream.
-     * @param limit reads a limited number of records.
+     * @param input the input stream of data file.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(InputStream input, int limit) throws IOException {
         DatumReader<GenericRecord> datumReader = new GenericDatumReader<>(schema);

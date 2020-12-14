@@ -64,7 +64,9 @@ public class Parquet {
 
     /**
      * Reads a local parquet file.
-     * @param path an Apache Parquet file path.
+     * @param path the input file path.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     public static DataFrame read(Path path) throws IOException {
         return read(path, Integer.MAX_VALUE);
@@ -72,8 +74,10 @@ public class Parquet {
 
     /**
      * Reads a local parquet file.
-     * @param path an Apache Parquet file path.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     public static DataFrame read(Path path, int limit) throws IOException {
         return read(new LocalInputFile(path), limit);
@@ -81,7 +85,10 @@ public class Parquet {
 
     /**
      * Reads a HDFS parquet file.
-     * @param path an Apache Parquet file path.
+     * @param path the input file path.
+     * @throws IOException when fails to write the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public static DataFrame read(String path) throws IOException, URISyntaxException {
         return read(path, Integer.MAX_VALUE);
@@ -89,8 +96,11 @@ public class Parquet {
 
     /**
      * Reads a HDFS parquet file.
-     * @param path an Apache Parquet file path.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to write the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public static DataFrame read(String path, int limit) throws IOException, URISyntaxException {
         return read(HadoopInput.file(path), limit);
@@ -100,6 +110,8 @@ public class Parquet {
      * Reads a parquet file.
      * @param file an interface with the methods needed by Parquet
      *             to read data files. See HadoopInputFile for example.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     public static DataFrame read(InputFile file) throws IOException {
         return read(file, Integer.MAX_VALUE);
@@ -109,7 +121,9 @@ public class Parquet {
      * Reads a limited number of records from a parquet file.
      * @param file an interface with the methods needed by Parquet
      *             to read data files. See HadoopInputFile for example.
-     * @param limit reads a limited number of records.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to write the file.
+     * @return the data frame.
      */
     public static DataFrame read(InputFile file, int limit) throws IOException {
         try (ParquetFileReader reader = ParquetFileReader.open(file)) {

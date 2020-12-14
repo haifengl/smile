@@ -34,63 +34,128 @@ import smile.data.type.StructType;
 import smile.util.SparseArray;
 
 /**
- * Interface to read data from external storage systems.
+ * Reads data from external storage systems.
  * 
  * @author Haifeng Li
  */
 public interface Read {
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
     static DataFrame csv(String path) throws IOException, URISyntaxException {
         return csv(path, CSVFormat.DEFAULT);
     }
 
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @param format the CSV file format.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
     static DataFrame csv(String path, CSVFormat format) throws IOException, URISyntaxException {
         return csv(path, format, null);
     }
 
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @param format the CSV file format.
+     * @param schema the data schema.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
     static DataFrame csv(String path, CSVFormat format, StructType schema) throws IOException, URISyntaxException {
         CSV csv = new CSV(format);
         if (schema != null) csv.schema(schema);
         return csv.read(path);
     }
 
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame csv(Path path) throws IOException {
         return csv(path, CSVFormat.DEFAULT);
     }
 
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @param format the CSV file format.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame csv(Path path, CSVFormat format) throws IOException {
         return csv(path, format, null);
     }
 
-    /** Reads a CSV file. */
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @param format the CSV file format.
+     * @param schema the data schema.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame csv(Path path, CSVFormat format, StructType schema) throws IOException {
         CSV csv = new CSV(format);
         if (schema != null) csv.schema(schema);
         return csv.read(path);
     }
 
-    /** Reads a JSON file. */
+    /**
+     * Reads a JSON file.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
     static DataFrame json(String path) throws IOException, URISyntaxException {
         return json(path, JSON.Mode.SINGLE_LINE, null);
     }
 
-    /** Reads a JSON file. */
+    /**
+     * Reads a JSON file.
+     * @param path the input file path.
+     * @param mode the file mode (single-line or multi-line).
+     * @param schema the data schema.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
     static DataFrame json(String path, JSON.Mode mode, StructType schema) throws IOException, URISyntaxException {
         JSON json = new JSON().mode(mode);
         if (schema != null) json.schema(schema);
         return json.read(path);
     }
 
-    /** Reads a JSON file. */
+    /**
+     * Reads a JSON file.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame json(Path path) throws IOException {
         return json(path, JSON.Mode.SINGLE_LINE, null);
     }
 
-    /** Reads a JSON file. */
+    /**
+     * Reads a JSON file.
+     * @param path the input file path.
+     * @param mode the file mode (single-line or multi-line).
+     * @param schema the data schema.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
+     */
     static DataFrame json(Path path, JSON.Mode mode, StructType schema) throws IOException {
         JSON json = new JSON().mode(mode);
         if (schema != null) json.schema(schema);
@@ -123,6 +188,10 @@ public interface Read {
      * how it might be cited.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame arff(String path) throws IOException, ParseException, URISyntaxException {
         Arff arff = new Arff(path);
@@ -155,6 +224,9 @@ public interface Read {
      * how it might be cited.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @return the data frame.
      */
     static DataFrame arff(Path path) throws IOException, ParseException {
         Arff arff = new Arff(path);
@@ -165,6 +237,9 @@ public interface Read {
      * Reads a SAS7BDAT file.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame sas(String path) throws IOException, URISyntaxException {
         return SAS.read(path);
@@ -174,6 +249,8 @@ public interface Read {
      * Reads a SAS7BDAT file.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static DataFrame sas(Path path) throws IOException {
         return SAS.read(path);
@@ -187,6 +264,9 @@ public interface Read {
      * operations on modern hardware.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame arrow(String path) throws IOException, URISyntaxException {
         Arrow arrow = new Arrow();
@@ -201,6 +281,8 @@ public interface Read {
      * operations on modern hardware.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static DataFrame arrow(Path path) throws IOException {
         Arrow arrow = new Arrow();
@@ -210,8 +292,11 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input data file path.
-     * @param schema the input stream of schema.
+     * @param path the input file path.
+     * @param schema the input stream of data schema.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame avro(String path, InputStream schema) throws IOException, URISyntaxException {
         Avro avro = new Avro(schema);
@@ -221,8 +306,11 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input data file path.
-     * @param schema the input schema file path.
+     * @param path the input file path.
+     * @param schema the data schema file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame avro(String path, String schema) throws IOException, URISyntaxException {
         Avro avro = new Avro(HadoopInput.stream(schema));
@@ -232,8 +320,10 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input data file path.
-     * @param schema the input stream of schema.
+     * @param path the input file path.
+     * @param schema the input stream of data schema.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static DataFrame avro(Path path, InputStream schema) throws IOException {
         Avro avro = new Avro(schema);
@@ -243,8 +333,10 @@ public interface Read {
     /**
      * Reads an Apache Avro file.
      *
-     * @param path the input data file path.
-     * @param schema the input schema file path.
+     * @param path the input file path.
+     * @param schema the data schema file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static DataFrame avro(Path path, Path schema) throws IOException {
         Avro avro = new Avro(schema);
@@ -255,6 +347,9 @@ public interface Read {
      * Reads an Apache Parquet file.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static DataFrame parquet(String path) throws IOException, URISyntaxException {
         return Parquet.read(path);
@@ -264,6 +359,8 @@ public interface Read {
      * Reads an Apache Parquet file.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static DataFrame parquet(Path path) throws IOException {
         return Parquet.read(path);
@@ -285,6 +382,9 @@ public interface Read {
      * are unknown, just fill this column with a number.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     static Dataset<Instance<SparseArray>> libsvm(String path) throws IOException, URISyntaxException {
         return libsvm(Input.reader(path));
@@ -306,6 +406,8 @@ public interface Read {
      * are unknown, just fill this column with a number.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static Dataset<Instance<SparseArray>> libsvm(Path path) throws IOException {
         return libsvm(Files.newBufferedReader(path));
@@ -326,7 +428,9 @@ public interface Read {
      * the testing data file are only used to calculate accuracy or error. If they
      * are unknown, just fill this column with a number.
      *
-     * @param reader the input reader.
+     * @param reader the file reader.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     static Dataset<Instance<SparseArray>> libsvm(BufferedReader reader) throws IOException {
         try {
