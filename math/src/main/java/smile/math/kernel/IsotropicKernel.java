@@ -38,18 +38,22 @@ public interface IsotropicKernel extends Function {
     /**
      * Computes the isotropic kernel function.
      * @param dist The distance.
+     * @return the kernel value.
      */
     double k(double dist);
 
     /**
      * Computes the isotropic kernel function and its gradient over hyperparameters..
      * @param dist The distance.
+     * @return the kernel value and gradient.
      */
     double[] kg(double dist);
 
     /**
      * Computes the kernel function.
      * This is simply for Scala convenience.
+     * @param dist The distance.
+     * @return the kernel value.
      */
     default double apply(double dist) {
         return k(dist);

@@ -55,7 +55,10 @@ public class Gaussian implements IsotropicKernel {
         this.hi = hi;
     }
 
-    /** Returns the length scale of kernel. */
+    /**
+     * Returns the length scale of kernel.
+     * @return the length scale of kernel.
+     */
     public double scale() {
         return sigma;
     }

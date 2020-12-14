@@ -36,18 +36,22 @@ public interface DotProductKernel extends Function {
     /**
      * Computes the dot product kernel function.
      * @param dot the dot product.
+     * @return the kernel value.
      */
     double k(double dot);
 
     /**
      * Computes the dot product kernel function and its gradient over hyperparameters..
      * @param dot The dot product.
+     * @return the kernel value and gradient.
      */
     double[] kg(double dot);
 
     /**
      * Computes the kernel function.
      * This is simply for Scala convenience.
+     * @param dot the dot product.
+     * @return the kernel value.
      */
     default double apply(double dot) {
         return k(dot);

@@ -69,12 +69,18 @@ public class Matern implements IsotropicKernel {
         this.hi = hi;
     }
 
-    /** Returns the length scale of kernel. */
+    /**
+     * Returns the length scale of kernel.
+     * @return the length scale of kernel.
+     */
     public double scale() {
         return sigma;
     }
 
-    /** Returns the smoothness of kernel. */
+    /**
+     * Returns the smoothness of kernel.
+     * @return the smoothness of kernel.
+     */
     public double smoothness() {
         return nu;
     }
