@@ -122,7 +122,7 @@ public class Word2Vec {
      * Loads a <a href="https://code.google.com/archive/p/word2vec/">pre-trained</a>
      * word2vec model from binary file of ByteOrder.LITTLE_ENDIAN.
      * @param file the path to model file.
-     * @throws IOException when failing to read the file.
+     * @throws IOException when fails to read the file.
      * @return the word2vec model.
      */
     public static Word2Vec of(Path file) throws IOException {
@@ -134,7 +134,7 @@ public class Word2Vec {
      * word2vec model from binary file.
      * @param file the path to model file.
      * @param order the byte order of model file.
-     * @throws IOException when failing to read the file.
+     * @throws IOException when fails to read the file.
      * @return the word2vec model.
      */
     public static Word2Vec of(Path file, ByteOrder order) throws IOException {

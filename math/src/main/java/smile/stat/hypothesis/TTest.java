@@ -105,6 +105,10 @@ public class TTest {
      * Independent one-sample t-test whether the mean of a normally distributed
      * population has a value specified in a null hypothesis. Small values of
      * p-value indicate that the array has significantly different mean.
+     *
+     * @param x the sample values.
+     * @param mean the mean.
+     * @return the test results.
      */
     public static TTest test(double[] x, double mean) {
         int n = x.length;
@@ -125,6 +129,10 @@ public class TTest {
      * arrays are assumed to be drawn from populations with unequal variances.
      * Small values of p-value indicate that the two arrays have significantly
      * different means.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static TTest test(double[] x, double[] y) {
         return test(x, y, false);
@@ -134,9 +142,13 @@ public class TTest {
      * Test if the arrays x and y have significantly different means.  Small
      * values of p-value indicate that the two arrays have significantly
      * different means.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
      * @param equalVariance true if the data arrays are assumed to be
      * drawn from populations with the same true variance. Otherwise, The data
      * arrays are allowed to be drawn from populations with unequal variances.
+     * @return the test results.
      */
     public static TTest test(double[] x, double[] y, boolean equalVariance) {
         int n1 = x.length;
@@ -171,6 +183,10 @@ public class TTest {
      * Given the paired arrays x and y, test if they have significantly
      * different means. Small values of p-value indicate that the two arrays
      * have significantly different means.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static TTest testPaired(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -203,9 +219,11 @@ public class TTest {
      * Test whether the Pearson correlation coefficient, the slope of
      * a regression line, differs significantly from 0. Small values of p-value
      * indicate a significant correlation.
+     *
      * @param r the Pearson correlation coefficient.
      * @param df the degree of freedom. df = n - 2, where n is the number of samples
      * used in the calculation of r.
+     * @return the test results.
      */
     public static TTest test(double r, int df) {
         final double TINY = 1.0e-16;

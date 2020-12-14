@@ -70,6 +70,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data a data set with missing values (represented as Double.NaN).
      * On output, missing values are filled with estimated values.
      * @param maxIter the maximum number of iterations.
+     * @throws MissingValueImputationException when the whole row or column is missing.
      */
     public void impute(double[][] data, int maxIter) throws MissingValueImputationException {
         if (maxIter < 1) {

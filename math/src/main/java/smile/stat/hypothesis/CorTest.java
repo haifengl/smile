@@ -93,6 +93,10 @@ public class CorTest {
 
     /**
      * Pearson correlation coefficient test.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest pearson(double[] x, double[] y) {
         final double TINY = 1.0e-16;
@@ -170,7 +174,11 @@ public class CorTest {
      * The raw scores are converted to ranks and the differences between
      * the ranks of each observation on the two variables are calculated.
      * <p>
-     *  The p-value is calculated by approximation, which is good for {@code n > 10}.
+     * The p-value is calculated by approximation, which is good for {@code n > 10}.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest spearman(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -216,6 +224,10 @@ public class CorTest {
      * between sets of rankings where the measures are not equidistant.
      * It is used with non-parametric data. The p-value is calculated by
      * approximation, which is good for {@code n > 10}.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest kendall(double[] x, double[] y) {
         if (x.length != y.length) {

@@ -100,6 +100,11 @@ public class Arff implements AutoCloseable {
 
     /**
      * Constructor.
+     *
+     * @param path the path to data file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
      */
     public Arff(String path) throws IOException, ParseException, URISyntaxException {
         this(Input.reader(path));
@@ -107,13 +112,23 @@ public class Arff implements AutoCloseable {
 
     /**
      * Constructor.
-     */
+     *
+     * @param path the path to data file.
+     * @param charset the charset of file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+    */
     public Arff(String path, Charset charset) throws IOException, ParseException, URISyntaxException {
         this(Input.reader(path, charset));
     }
 
     /**
      * Constructor.
+     *
+     * @param path the path to data file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
      */
     public Arff(Path path) throws IOException, ParseException {
         this(Files.newBufferedReader(path));
@@ -121,6 +136,11 @@ public class Arff implements AutoCloseable {
 
     /**
      * Constructor.
+     *
+     * @param path the path to data file.
+     * @param charset the charset of file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
      */
     public Arff(Path path, Charset charset) throws IOException, ParseException {
         this(Files.newBufferedReader(path, charset));
@@ -128,7 +148,11 @@ public class Arff implements AutoCloseable {
 
     /**
      * Constructor.
-     */
+     *
+     * @param reader the reader of file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+]     */
     public Arff(Reader reader) throws IOException, ParseException {
         this.reader = reader;
 
@@ -152,13 +176,17 @@ public class Arff implements AutoCloseable {
         reader.close();
     }
 
-    /** Returns the name of relation. */
+    /**
+     * Returns the name of relation.
+     * @return the name of relation.
+     */
     public String name() {
         return name;
     }
 
     /**
-     * Returns the attribute set of given stream.
+     * Returns the data schema.
+     * @return the data schema.
      */
     public StructType schema() {
         return schema;
@@ -371,6 +399,10 @@ public class Arff implements AutoCloseable {
 
     /**
      * Reads all the records.
+     *
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @return the data frame.
      */
     public DataFrame read() throws IOException, ParseException {
         return read(Integer.MAX_VALUE);
@@ -378,7 +410,11 @@ public class Arff implements AutoCloseable {
 
     /**
      * Reads a limited number of records.
+     *
      * @param limit reads a limited number of records.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @return the data frame.
      */
     public DataFrame read(int limit) throws IOException, ParseException {
         if (limit <= 0) {
@@ -478,24 +514,26 @@ public class Arff implements AutoCloseable {
 
     /**
      * Writes the data frame to an ARFF file.
-     * @param df the data frame.
+     *
+     * @param data the data frame.
      * @param path the file path.
      * @param relation the relation name of ARFF.
+     * @throws IOException when fails to write the file.
      */
-    public static void write(DataFrame df, Path path, String relation) throws IOException {
+    public static void write(DataFrame data, Path path, String relation) throws IOException {
         try (PrintWriter writer = new PrintWriter(Files.newOutputStream(path))) {
 
             writer.print("@RELATION ");
             writer.println(relation);
 
-            for (StructField field : df.schema().fields()) {
+            for (StructField field : data.schema().fields()) {
                 writeField(writer, field);
             }
 
             writer.println("@DATA");
 
-            int p = df.ncols();
-            df.stream().forEach(t -> {
+            int p = data.ncols();
+            data.stream().forEach(t -> {
                 String line = IntStream.range(0, p).mapToObj(i -> t.toString()).collect(Collectors.joining(","));
                 writer.println(line);
             });

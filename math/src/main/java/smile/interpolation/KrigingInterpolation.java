@@ -83,6 +83,9 @@ public class KrigingInterpolation {
     /**
      * Constructor. The power variogram is employed. We assume no errors,
      * i.e. we are doing interpolation rather fitting.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      */
     public KrigingInterpolation(double[][] x, double[] y) {
         this(x, y, new PowerVariogram(x, y), null);
@@ -90,8 +93,9 @@ public class KrigingInterpolation {
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      * @param variogram the variogram function of offset distance to estimate
      * the mean square variation of function y(x).
      * @param error the measure error associated with y. It is the sqrt of diagonal
@@ -133,6 +137,8 @@ public class KrigingInterpolation {
 
     /**
      * Interpolate the function at given point.
+     * @param x a point.
+     * @return the interpolated function value.
      */
     public double interpolate(double... x) {
         if (x.length != this.x[0].length) {
