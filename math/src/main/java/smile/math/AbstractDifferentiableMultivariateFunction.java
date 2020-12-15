@@ -25,26 +25,29 @@ package smile.math;
  */
 public abstract class AbstractDifferentiableMultivariateFunction implements DifferentiableMultivariateFunction {
 
-    private static final double EPS = 1.0E-8;
+    /** A number close to zero, between machine epsilon and its square root. */
+    private static final double EPSILON = Double.parseDouble(System.getProperty("smile.gradient.epsilon", "1E-8"));
 
     @Override
     public double g(double[] x, double[] gradient) {
-        double f = applyAsDouble(x);
+        double fx = f(x);
 
-        double[] xh = x.clone();
-        for (int j = 0; j < x.length; j++) {
-            double temp = x[j];
-            double h = EPS * Math.abs(temp);
+        int n = x.length;
+        double[] xh = new double[n];
+        for (int i = 0; i < n; i++) {
+            double xi = x[i];
+            double h = EPSILON * Math.abs(xi);
             if (h == 0.0) {
-                h = EPS;
+                h = EPSILON;
             }
-            xh[j] = temp + h; // trick to reduce finite-precision error.
-            h = xh[j] - temp;
-            double fh = applyAsDouble(xh);
-            xh[j] = temp;
-            gradient[j] = (fh - f) / h;
+            xh[i] = xi + h; // trick to reduce finite-precision error.
+            h = xh[i] - xi;
+
+            double fh = f(xh);
+            xh[i] = xi;
+            gradient[i] = (fh - fx) / h;
         }
 
-        return f;
+        return fx;
     }
 }

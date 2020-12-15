@@ -84,6 +84,7 @@ public class LLE implements Serializable {
      * Runs the LLE algorithm.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k) {
         return of(data, k, 2);
@@ -94,6 +95,7 @@ public class LLE implements Serializable {
      * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k, int d) {
         int D = data[0].length;

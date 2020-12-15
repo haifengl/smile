@@ -135,7 +135,7 @@ public class DBSCAN<T> extends PartitionClustering {
     /**
      * Clustering the data.
      * @param data the observations.
-     * @param distance the distance measure for neighborhood search.
+     * @param distance the distance function.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
      * @param <T> the data type.

@@ -18,7 +18,6 @@
 package smile.neighbor;
 
 import java.util.*;
-
 import smile.neighbor.lsh.*;
 import smile.util.IntArrayList;
 import smile.math.MathEx;

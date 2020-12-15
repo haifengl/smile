@@ -13,11 +13,15 @@ public class MultiProbeSample {
      */
     public final double[] query;
     /**
-     * Neighbors of query object in terms of kNN or range search.
+     * The neighbors of query object in terms of kNN or range search.
      */
     public final List<double[]> neighbors;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param query the query object.
+     * @param neighbors the neighbors of query object.
+     */
     public MultiProbeSample(double[] query, List<double[]> neighbors) {
         this.query = query;
         this.neighbors = neighbors;
