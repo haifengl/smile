@@ -81,7 +81,7 @@ import static smile.math.MathEx.norm;
 public class BFGS {
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BFGS.class);
     /** A number close to zero, between machine epsilon and its square root. */
-    private static final double EPSILON = Double.parseDouble(System.getProperty("smile.bfgs.epsilon", "1E-10"));
+    private static final double EPSILON = Double.parseDouble(System.getProperty("smile.bfgs.epsilon", "1E-8"));
     /** The convergence criterion on x values. */
     private static final double TOLX = 4 * EPSILON;
     /** The convergence criterion on function value. */
@@ -91,7 +91,6 @@ public class BFGS {
 
     /**
      * This method solves the unconstrained minimization problem
-     * <p>
      * <pre>
      *     min f(x),    x = (x1,x2,...,x_n),
      * </pre>
@@ -242,7 +241,6 @@ public class BFGS {
 
     /**
      * This method solves the unconstrained minimization problem
-     * <p>
      * <pre>
      *     min f(x),    x = (x1,x2,...,x_n),
      * </pre>

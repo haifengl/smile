@@ -24,9 +24,37 @@ package smile.math;
  * @author Haifeng Li
  */
 public interface DifferentiableMultivariateFunction extends MultivariateFunction {
+    /** A number close to zero, between machine epsilon and its square root. */
+    double EPSILON = Double.parseDouble(System.getProperty("smile.gradient.epsilon", "1E-8"));
 
     /**
-     * Computes the value and gradient at x.
+     * Computes the value and gradient at x. The default implementation
+     * uses finite differences to calculate the gradient. When possible,
+     * the subclass should compute the gradient analytically.
+     *
+     * @param x a real vector.
+     * @param gradient the output variable of gradient.
+     * @return the function value.
      */
-    double g(double[] x, double[] gradient);
+    default double g(double[] x, double[] gradient) {
+        double fx = f(x);
+
+        int n = x.length;
+        double[] xh = new double[n];
+        for (int i = 0; i < n; i++) {
+            double xi = x[i];
+            double h = EPSILON * Math.abs(xi);
+            if (h == 0.0) {
+                h = EPSILON;
+            }
+            xh[i] = xi + h; // trick to reduce finite-precision error.
+            h = xh[i] - xi;
+
+            double fh = f(xh);
+            xh[i] = xi;
+            gradient[i] = (fh - fx) / h;
+        }
+
+        return fx;
+    }
 }

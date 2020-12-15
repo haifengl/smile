@@ -35,8 +35,8 @@ public class UPGMCLinkage extends Linkage {
 
     /**
      * Constructor.
-     * @param proximity  the proximity matrix to store the distance measure of
-     * dissimilarity. To save space, we only need the lower half of matrix.
+     * @param proximity the proximity matrix. Only the lower half will
+     *                  be referred.
      */
     public UPGMCLinkage(double[][] proximity) {
         super(proximity);
@@ -46,7 +46,7 @@ public class UPGMCLinkage extends Linkage {
     /**
      * Constructor. Initialize the linkage with the lower triangular proximity matrix.
      * @param size the data size.
-     * @param proximity column-wise linearized proximity matrix that stores
+     * @param proximity the column-wise linearized proximity matrix that stores
      *                  only the lower half. The length of proximity should be
      *                  size * (size+1) / 2.
      *                  To save space, Linkage will use this argument directly
@@ -69,12 +69,24 @@ public class UPGMCLinkage extends Linkage {
         }
     }
 
-    /** Given a set of data, computes the proximity and then the linkage. */
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @return the linkage.
+     */
     public static UPGMCLinkage of(double[][] data) {
         return new UPGMCLinkage(data.length, proximity(data));
     }
 
-    /** Given a set of data, computes the proximity and then the linkage. */
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the linkage.
+     */
     public static <T> UPGMCLinkage of(T[] data, Distance<T> distance) {
         return new UPGMCLinkage(data.length, proximity(data, distance));
     }

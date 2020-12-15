@@ -20,7 +20,6 @@ package smile.neighbor;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 

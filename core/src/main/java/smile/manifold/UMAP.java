@@ -90,6 +90,7 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data the input data.
+     * @return the model.
      */
     public static UMAP of(double[][] data) {
         return of(data, 15);
@@ -99,7 +100,9 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data     the input data.
-     * @param distance the distance measure.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance) {
         return of(data, distance, 15);
@@ -112,6 +115,7 @@ public class UMAP implements Serializable {
      * @param k       k-nearest neighbors. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
+     * @return the model.
      */
     public static UMAP of(double[][] data, int k) {
         return of(data, new EuclideanDistance(), k);
@@ -121,9 +125,12 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data    the input data.
+     * @param distance the distance function.
      * @param k       k-nearest neighbor. Larger values result in more global views
      *                of the manifold, while smaller values result in more local data
      *                being preserved. Generally in the range 2 to 100.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, data.length > 10000 ? 200 : 500, 1.0, 0.1, 1.0, 5, 1.0);
@@ -163,6 +170,7 @@ public class UMAP implements Serializable {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     * @return the model.
      */
     public static UMAP of(double[][] data, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
         return of(data, new EuclideanDistance(), k, d, iterations, learningRate, minDist, spread, negativeSamples, repulsionStrength);
@@ -172,7 +180,7 @@ public class UMAP implements Serializable {
      * Runs the UMAP algorithm.
      *
      * @param data               the input data.
-     * @param distance           the distance measure.
+     * @param distance           the distance function.
      * @param k                  k-nearest neighbor. Larger values result in more global views
      *                           of the manifold, while smaller values result in more local data
      *                           being preserved. Generally in the range 2 to 100.
@@ -203,6 +211,8 @@ public class UMAP implements Serializable {
      * @param repulsionStrength  Weighting applied to negative samples in low dimensional
      *                           embedding optimization. Values higher than one will result in
      *                           greater weight being given to negative samples, default 1.0.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> UMAP of(T[] data, Distance<T> distance, int k, int d, int iterations, double learningRate, double minDist, double spread, int negativeSamples, double repulsionStrength) {
         if (d < 2) {

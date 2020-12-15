@@ -39,22 +39,12 @@ public class Complex implements Serializable {
 
     /**
      * Constructor.
-     * @param real real part
-     * @param imag imaginary part
+     * @param real the real part
+     * @param imag the imaginary part
      */
     public Complex(double real, double imag) {
         re = real;
         im = imag;
-    }
-
-    /** Returns a Complex instance representing the specified value. */
-    public static Complex of(double real) {
-        return new Complex(real, 0.0);
-    }
-
-    /** Returns a Complex instance representing the specified value. */
-    public static Complex of(double real, double imag) {
-        return new Complex(real, imag);
     }
 
     @Override
@@ -94,6 +84,8 @@ public class Complex implements Serializable {
 
     /**
      * Returns this + b.
+     * @param b the operand.
+     * @return the result.
      */
     public Complex add(Complex b) {
         Complex a = this;
@@ -104,6 +96,8 @@ public class Complex implements Serializable {
 
     /**
      * Returns this - b.
+     * @param b the operand.
+     * @return the result.
      */
     public Complex sub(Complex b) {
         Complex a = this;
@@ -114,6 +108,8 @@ public class Complex implements Serializable {
 
     /**
      * Returns this * b.
+     * @param b the operand.
+     * @return the result.
      */
     public Complex mul(Complex b) {
         Complex a = this;
@@ -124,7 +120,8 @@ public class Complex implements Serializable {
 
     /**
      * Scalar multiplication.
-     * @return this * b.
+     * @param b the operand.
+     * @return the result.
      */
     public Complex scale(double b) {
         return new Complex(b * re, b * im);
@@ -132,6 +129,8 @@ public class Complex implements Serializable {
 
     /**
      * Returns a / b.
+     * @param b the operand.
+     * @return the result.
      */
     public Complex div(Complex b) {
         double cdivr, cdivi;
@@ -152,14 +151,16 @@ public class Complex implements Serializable {
     }
 
     /**
-     * Returns abs/modulus/magnitude.
+     * Returns the abs/modulus/magnitude.
+     * @return the modulus.
      */
     public double abs() {
         return Math.hypot(re, im);
     }
 
     /**
-     * Returns angle/phase/argument between -pi and pi.
+     * Returns the angle/phase/argument between -pi and pi.
+     * @return the phase between -pi and pi.
      */
     public double phase() {
         return Math.atan2(im, re);
@@ -167,6 +168,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the conjugate.
+     * @return the conjugate.
      */
     public Complex conjugate() {
         return new Complex(re, -im);
@@ -174,6 +176,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the reciprocal.
+     * @return the reciprocal.
      */
     public Complex reciprocal() {
         double scale = re * re + im * im;
@@ -182,6 +185,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the complex exponential.
+     * @return the complex exponential.
      */
     public Complex exp() {
         return new Complex(Math.exp(re) * Math.cos(im), Math.exp(re) * Math.sin(im));
@@ -189,6 +193,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the complex sine.
+     * @return the complex sine.
      */
     public Complex sin() {
         return new Complex(Math.sin(re) * Math.cosh(im), Math.cos(re) * Math.sinh(im));
@@ -196,6 +201,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the complex cosine.
+     * @return the complex cosine.
      */
     public Complex cos() {
         return new Complex(Math.cos(re) * Math.cosh(im), -Math.sin(re) * Math.sinh(im));
@@ -203,6 +209,7 @@ public class Complex implements Serializable {
 
     /**
      * Returns the complex tangent.
+     * @return the complex tangent.
      */
     public Complex tan() {
         return sin().div(cos());
@@ -210,10 +217,13 @@ public class Complex implements Serializable {
 
     /** Packed array of complex numbers for better memory efficiency. */
     public static class Array {
+        /** The length of array. */
         public final int length;
+        /** The packed array. */
         private final double[] data;
 
-        /** Constructor.
+        /**
+         * Constructor.
          *
          * @param length the length of array.
          */
@@ -225,40 +235,69 @@ public class Complex implements Serializable {
             data = new double[length * 2];
         }
 
-        /** Returns the i-th element. */
+        /**
+         * Returns the i-th element.
+         * @param i the index.
+         * @return the i-th element.
+         */
         public Complex get(int i) {
             int idx = i << 1;
             return new Complex(data[idx], data[idx+1]);
         }
 
-        /** Returns the i-th element. For Scala convenience. */
+        /**
+         * Returns the i-th element. For Scala convenience.
+         * @param i the index.
+         * @return the i-th element.
+         */
         public Complex apply(int i) {
             return get(i);
         }
 
-        /** Sets the i-th element. */
+        /**
+         * Sets the i-th element.
+         * @param i the index.
+         * @param c the new value.
+         */
         public void set(int i, Complex c) {
             int idx = i << 1;
             data[idx] = c.re;
             data[idx+1] = c.im;
         }
 
-        /** Sets the i-th element with a real value. */
+        /**
+         * Sets the i-th element with a real value.
+         * @param i the index.
+         * @param re the new value.
+         */
         public void set(int i, double re) {
             int idx = i << 1;
             data[idx] = re;
         }
 
-        /** Sets the i-th element. For Scala convenience. */
+        /**
+         * Sets the i-th element. For Scala convenience.
+         * @param i the index.
+         * @param c the new value.
+         */
         public void update(int i, Complex c) {
             set(i, c);
         }
 
-        /** Sets the i-th element with a real value. For Scala convenience. */
+        /**
+         * Sets the i-th element with a real value. For Scala convenience.
+         * @param i the index.
+         * @param re the new value.
+         */
         public void update(int i, double re) {
             set(i, re);
         }
 
+        /**
+         * Creates a packed array of complex values.
+         * @param x the complex values.
+         * @return the packed array of complex values.
+         */
         public static Array of(Complex... x) {
             Array a = new Array(x.length);
             for (int i = 0; i < x.length; i++) {

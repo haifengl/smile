@@ -20,7 +20,7 @@ package smile.neighbor.lsh;
 import java.io.Serializable;
 
 /**
- * Probability for given query object and hash function.
+ * The probability for given query object and hash function.
  *
  * @author Haifeng Li
  */
@@ -32,11 +32,15 @@ public class PrH implements Comparable<PrH>, Serializable {
      */
     public final int u;
     /**
-     * The probability
+     * The probability.
      */
     public final double pr;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param u the index of bucket.
+     * @param pr the probability.
+     */
     public PrH(int u, double pr) {
         this.u = u;
         this.pr = pr;
