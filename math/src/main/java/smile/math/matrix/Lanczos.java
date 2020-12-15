@@ -41,6 +41,7 @@ public class Lanczos {
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
+     * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k) {
         return eigen(A, k, 1.0E-8, 10 * A.nrows());
@@ -55,6 +56,7 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
+     * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
         if (A.nrows() != A.ncols()) {
@@ -312,7 +314,7 @@ public class Lanczos {
      * Generate a starting vector in r and returns |r|. It returns zero if the
      * range is spanned, and throws exception if no starting vector within range
      * of operator can be found.
-     * @param step   starting index for a Lanczos run
+     * @param step starting index for a Lanczos run
      */
     private static double startv(DMatrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random

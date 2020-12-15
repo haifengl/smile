@@ -43,13 +43,18 @@ public class AdjustedRandIndex implements ClusteringMetric {
     public final static AdjustedRandIndex instance = new AdjustedRandIndex();
 
     @Override
-    public double score(int[] y1, int[] y2) {
-        return of(y1, y2);
+    public double score(int[] truth, int[] cluster) {
+        return of(truth, cluster);
     }
 
-    /** Calculates the adjusted rand index. */
-    public static double of(int[] y1, int[] y2) {
-        ContingencyTable contingency = new ContingencyTable(y1, y2);
+    /**
+     * Calculates the adjusted rand index.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
+     */
+    public static double of(int[] truth, int[] cluster) {
+        ContingencyTable contingency = new ContingencyTable(truth, cluster);
         int n = contingency.n;
         int n1 = contingency.n1;
         int n2 = contingency.n2;

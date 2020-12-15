@@ -42,7 +42,10 @@ import java.text.NumberFormat;
  */
 public class RatioScale extends NumericalMeasure {
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param format the number format.
+     */
     public RatioScale(NumberFormat format) {
         super(format);
     }

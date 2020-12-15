@@ -32,15 +32,20 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public interface PageRank {
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
+public class PageRank {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
+
+    /** Private constructor to prevent instance creation. */
+    private PageRank() {
+
+    }
 
     /**
      * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @return the page rank vector.
      */
-    static double[] of(DMatrix A) {
+    public static double[] of(DMatrix A) {
         int n = A.nrows();
         double[] v = new double[n];
         Arrays.fill(v, 1.0 / n);
@@ -53,7 +58,7 @@ public interface PageRank {
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    static double[] of(DMatrix A, double[] v) {
+    public static double[] of(DMatrix A, double[] v) {
         return of(A, v, 0.85, 1E-7, 57);
     }
 
@@ -67,7 +72,7 @@ public interface PageRank {
      *                algorithm does not converge.
      * @return the page rank vector.
      */
-    static double[] of(DMatrix A, double[] v, double damping, double tol, int maxIter) {
+    public static double[] of(DMatrix A, double[] v, double damping, double tol, int maxIter) {
         if (A.nrows() != A.ncols()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }

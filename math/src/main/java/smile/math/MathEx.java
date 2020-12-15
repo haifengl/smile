@@ -3730,9 +3730,9 @@ public class MathEx {
     }
 
     /**
-     * L1 vector norm.
+     * L<sub>1</sub> vector norm.
      * @param x a vector.
-     * @return the L1 norm.
+     * @return L<sub>1</sub> norm.
      */
     public static float norm1(float[] x) {
         float norm = 0.0F;
@@ -3745,9 +3745,9 @@ public class MathEx {
     }
 
     /**
-     * L1 vector norm.
+     * L<sub>1</sub> vector norm.
      * @param x a vector.
-     * @return the L1 norm.
+     * @return L<sub>1</sub> norm.
      */
     public static double norm1(double[] x) {
         double norm = 0.0;
@@ -3760,9 +3760,9 @@ public class MathEx {
     }
 
     /**
-     * L2 vector norm.
+     * L<sub>2</sub> vector norm.
      * @param x a vector.
-     * @return the L2 norm.
+     * @return L<sub>2</sub> norm.
      */
     public static float norm2(float[] x) {
         float norm = 0.0F;
@@ -3777,9 +3777,9 @@ public class MathEx {
     }
 
     /**
-     * L2 vector norm.
+     * L<sub>2</sub> vector norm.
      * @param x a vector.
-     * @return the L2 norm.
+     * @return L<sub>2</sub> norm.
      */
     public static double norm2(double[] x) {
         double norm = 0.0;
@@ -3794,9 +3794,9 @@ public class MathEx {
     }
 
     /**
-     * L-infinity vector norm. Maximum absolute value.
+     * L<sub>&infin;</sub> vector norm that is the maximum absolute value.
      * @param x a vector.
-     * @return the L-infinity norm.
+     * @return L<sub>&infin;</sub> norm.
      */
     public static float normInf(float[] x) {
         int n = x.length;
@@ -3810,9 +3810,9 @@ public class MathEx {
     }
 
     /**
-     * L-infinity vector norm. Maximum absolute value.
+     * L<sub>&infin;</sub> vector norm. Maximum absolute value.
      * @param x a vector.
-     * @return the L-infinity norm.
+     * @return L<sub>&infin;</sub> norm.
      */
     public static double normInf(double[] x) {
         int n = x.length;
@@ -3826,18 +3826,18 @@ public class MathEx {
     }
 
     /**
-     * L2 vector norm.
+     * L<sub>2</sub> vector norm.
      * @param x a vector.
-     * @return the L2 norm.
+     * @return L<sub>2</sub> norm.
      */
     public static float norm(float[] x) {
         return norm2(x);
     }
 
     /**
-     * L2 vector norm.
+     * L<sub>2</sub> vector norm.
      * @param x a vector.
-     * @return the L2 norm.
+     * @return L<sub>2</sub> norm.
      */
     public static double norm(double[] x) {
         return norm2(x);
@@ -3980,7 +3980,7 @@ public class MathEx {
     }
 
     /**
-     * Unitize an array so that L2 norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of x = 1.
      *
      * @param x the vector.
      */
@@ -3989,7 +3989,7 @@ public class MathEx {
     }
 
     /**
-     * Unitize an array so that L1 norm of x is 1.
+     * Unitize an array so that L<sub>1</sub> norm of x is 1.
      *
      * @param x the vector.
      */
@@ -4002,7 +4002,7 @@ public class MathEx {
     }
 
     /**
-     * Unitize an array so that L2 norm of x = 1.
+     * Unitize an array so that L<sub>2</sub> norm of x = 1.
      *
      * @param x the vector.
      */
