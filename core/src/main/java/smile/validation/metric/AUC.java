@@ -51,8 +51,8 @@ public class AUC implements ProbabilisticClassificationMetric {
 
     /**
      * Calculates AUC for binary classifier.
-     * @param truth The sample labels
-     * @param probability The posterior probability of positive class.
+     * @param truth the ground truth.
+     * @param probability the posterior probability of positive class.
      * @return AUC
      */
     public static double of(int[] truth, double[] probability) {

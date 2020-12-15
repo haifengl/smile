@@ -106,6 +106,9 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
         /**
          * Private constructor. Only the enclosure matrix can creates
          * the instances of entry.
+         * @param i the row index.
+         * @param j the column index.
+         * @param index the storage index.
          */
         private Entry(int i, int j, int index) {
             this.i = i;
@@ -115,8 +118,9 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
         }
 
         /**
-         * Update the value of entry in the matrix. Note that the field <code>value</code>
+         * Update the entry value in the matrix. Note that the field <code>value</code>
          * is final and thus not updated.
+         * @param value the new entry value.
          */
         public void update(double value) {
             nonzeros[index] = value;
@@ -223,7 +227,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Provides a stream over all of the non-zero elements of a sparse matrix.
+     * Returns the stream of the non-zero elements.
+     * @return the stream of the non-zero elements
      */
     public Stream<Entry> nonzeros() {
         Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(), size(), ORDERED | SIZED | IMMUTABLE);
@@ -231,10 +236,11 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Provides a stream over all of the non-zero elements of range of columns of a sparse matrix.
+     * Returns the stream of the non-zero elements in given column range.
      *
-     * @param beginColumn The beginning column, inclusive.
-     * @param endColumn   The end column, exclusive.
+     * @param beginColumn the beginning column, inclusive.
+     * @param endColumn   the end column, exclusive.
+     * @return the stream of non-zero elements.
      */
     public Stream<Entry> nonzeros(int beginColumn, int endColumn) {
         Spliterator<Entry> spliterator = Spliterators.spliterator(iterator(beginColumn, endColumn), colIndex[endColumn] - colIndex[beginColumn], ORDERED | SIZED | IMMUTABLE);
@@ -242,8 +248,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Returns an iterator of nonzero entries.
-     * @return an iterator of nonzero entries
+     * Returns the iterator of nonzero entries.
+     * @return the iterator of nonzero entries
      */
     @Override
     public Iterator<Entry> iterator() {
@@ -251,10 +257,10 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Returns an iterator of nonzero entries.
-     * @param beginColumn The beginning column, inclusive.
-     * @param endColumn   The end column, exclusive.
-     * @return an iterator of nonzero entries
+     * Returns the iterator of nonzero entries.
+     * @param beginColumn the beginning column, inclusive.
+     * @param endColumn   the end column, exclusive.
+     * @return the iterator of nonzero entries
      */
     public Iterator<Entry> iterator(int beginColumn, int endColumn) {
         if (beginColumn < 0 || beginColumn >= n) {
@@ -331,14 +337,22 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
         }
     }
 
-    /** Returns the element at the storage index. */
+    /**
+     * Returns the element at the storage index.
+     * @param index the storage index.
+     * @return the element.
+     */
     public double get(int index) {
         return nonzeros[index];
     }
 
-    /** Sets the element at the storage index. */
-    public double set(int index, double value) {
-        return nonzeros[index] = value;
+    /**
+     * Sets the element at the storage index.
+     * @param index the storage index.
+     * @param value the element.
+     */
+    public void set(int index, double value) {
+        nonzeros[index] = value;
     }
 
     @Override
@@ -416,6 +430,7 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
 
     /**
      * Returns the transpose of matrix.
+     * @return the transpose of matrix.
      */
     public SparseMatrix transpose() {
         SparseMatrix trans = new SparseMatrix(n, m, nonzeros.length);
@@ -448,6 +463,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
 
     /**
      * Returns the matrix multiplication C = A * B.
+     * @param B the operand.
+     * @return the multiplication.
      */
     public SparseMatrix mm(SparseMatrix B) {
         if (n != B.m) {
@@ -526,7 +543,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Returns A' * A
+     * Returns {@code A' * A}.
+     * @return {@code A' * A}
      */
     public SparseMatrix ata() {
         SparseMatrix AT = transpose();
@@ -534,7 +552,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
     }
 
     /**
-     * Returns A * A'
+     * Returns {@code A * A'}.
+     * @return {@code A * A'}
      */
     public SparseMatrix aat() {
         SparseMatrix AT = transpose();
@@ -645,6 +664,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
      * ignore the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the matrix.
      */
     public static SparseMatrix harwell(Path path) throws IOException {
         logger.info("Reads sparse matrix file '{}'", path.toAbsolutePath());
@@ -708,6 +729,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
      * the optional supplementary data (e.g. right hand side vectors).
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the matrix.
      */
     public static SparseMatrix rutherford(Path path) throws IOException {
         // As we ignore the supplementary data, the parsing process
@@ -727,6 +750,8 @@ public class SparseMatrix extends DMatrix implements Iterable<SparseMatrix.Entry
      * entries.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the matrix.
      */
     public static SparseMatrix text(Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path);

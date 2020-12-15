@@ -36,6 +36,8 @@ public class BiconjugateGradient {
     /**
      * Returns a simple preconditioner matrix that is the
      * trivial diagonal part of A in some cases.
+     * @param A the matrix.
+     * @return the preconditioner matrix.
      */
     public static Preconditioner Jacobi(DMatrix A) {
         return (b, x) -> {
@@ -51,6 +53,7 @@ public class BiconjugateGradient {
      * Solves A * x = b by iterative biconjugate gradient method with Jacobi
      * preconditioner matrix.
      *
+     * @param A the matrix.
      * @param b the right hand side of linear equations.
      * @param x on input, x should be set to an initial guess of the solution
      * (or all zeros). On output, x is reset to the improved solution.
@@ -62,10 +65,11 @@ public class BiconjugateGradient {
 
     /**
      * Solves A * x = b by iterative biconjugate gradient method.
+     *
+     * @param A the matrix.
      * @param b the right hand side of linear equations.
      * @param x on input, x should be set to an initial guess of the solution
      * (or all zeros). On output, x is reset to the improved solution.
-     * @return the estimated error.
      * @param preconditioner The preconditioner matrix.
      * @param tol The desired convergence tolerance.
      * @param itol Which convergence test is applied.
@@ -78,6 +82,7 @@ public class BiconjugateGradient {
      *             The setting of tol = 4 is same as tol = 3 except that the
      *             L<sub>&infin;</sub> norm instead of L<sub>2</sub>.
      * @param maxIter The maximum number of iterations.
+     * @return the estimated error.
      */
     public static double solve(DMatrix A, double[] b, double[] x, Preconditioner preconditioner, double tol, int itol, int maxIter) {
         if (tol <= 0.0) {

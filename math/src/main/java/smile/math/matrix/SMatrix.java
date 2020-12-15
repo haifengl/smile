@@ -38,24 +38,38 @@ import static smile.math.blas.UPLO.LOWER;
  */
 public abstract class SMatrix extends IMatrix<float[]> {
     /**
-     * Sets A[i,j] = x.
+     * Sets {@code A[i,j] = x}.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the matrix cell value.
+     * @return this matrix.
      */
     public abstract SMatrix set(int i, int j, float x);
 
     /**
-     * Sets A[i,j] = x for Scala users.
+     * Sets {@code A[i,j] = x} for Scala users.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the matrix cell value.
+     * @return this matrix.
      */
     public SMatrix update(int i, int j, float x) {
         return set(i, j, x);
     }
 
     /**
-     * Returns A[i, j].
+     * Returns {@code A[i, j]}.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the matrix cell value.
      */
     public abstract float get(int i, int j);
 
     /**
-     * Returns A[i, j]. For Scala users.
+     * Returns {@code A[i, j]}. For Scala users.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the matrix cell value.
      */
     public float apply(int i, int j) {
         return get(i, j);
@@ -68,6 +82,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     /**
      * Returns the diagonal elements.
+     * @return the diagonal elements.
      */
     public float[] diag() {
         int n = Math.min(nrows(), ncols());
@@ -82,6 +97,7 @@ public abstract class SMatrix extends IMatrix<float[]> {
 
     /**
      * Returns the matrix trace. The sum of the diagonal elements.
+     * @return the matrix trace.
      */
     public float trace() {
         int n = Math.min(nrows(), ncols());
@@ -100,6 +116,14 @@ public abstract class SMatrix extends IMatrix<float[]> {
      *     y = alpha * op(A) * x + beta * y
      * }</pre>
      * where op is the transpose operation.
+     *
+     * @param trans normal, transpose, or conjugate transpose
+     *              operation on the matrix.
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
      */
     public abstract void mv(Transpose trans, float alpha, float[] x, float beta, float[] y);
 
@@ -120,6 +144,12 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * <pre>{@code
      *     y = alpha * A * x + beta * y
      * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
      */
     public void mv(float alpha, float[] x, float beta, float[] y) {
         mv(NO_TRANSPOSE, alpha, x, beta, y);
@@ -142,6 +172,12 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * <pre>{@code
      *     y = alpha * A' * x + beta * y
      * }</pre>
+     *
+     * @param alpha the scalar alpha.
+     * @param x the input vector.
+     * @param beta the scalar beta. When beta is supplied as zero
+     *             then y need not be set on input.
+     * @param y  the input and output vector.
      */
     public void tv(float alpha, float[] x, float beta, float[] y) {
         mv(TRANSPOSE, alpha, x, beta, y);
@@ -155,6 +191,8 @@ public abstract class SMatrix extends IMatrix<float[]> {
      * The returned matrix may be dense or sparse.
      *
      * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException  when fails to parse the file.
      * @return a dense or sparse matrix.
      */
     public static SMatrix market(Path path) throws IOException, ParseException {

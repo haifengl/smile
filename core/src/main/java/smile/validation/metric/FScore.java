@@ -81,6 +81,9 @@ public class FScore implements ClassificationMetric {
      *             the effectiveness of retrieval with respect
      *             to a user who attaches &beta; times as much
      *             importance to recall as precision.
+     * @param truth the ground truth.
+     * @param prediction the prediction.
+     * @return the metric.
      */
     public static double of(double beta, int[] truth, int[] prediction) {
         double beta2 = beta * beta;
