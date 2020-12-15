@@ -378,7 +378,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         return schema;
     }
 
-    /** Private constructor. */
+    /** Private constructor for prune(). */
     private DecisionTree(Formula formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, IntSet labels) {
         super(formula, schema, response, root, importance);
         this.k = k;
