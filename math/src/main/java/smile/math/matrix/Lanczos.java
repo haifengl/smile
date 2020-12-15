@@ -130,7 +130,7 @@ public class Lanczos {
         t = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-t, wptr[1], wptr[0]);
         alf[0] += t;
-        MathEx.copy(wptr[0], wptr[4]);
+        System.arraycopy(wptr[0], 0, wptr[4], 0, n);
         rnm = MathEx.norm(wptr[0]);
         double anorm = rnm + Math.abs(alf[0]);
         double tol = reps * anorm;
@@ -225,7 +225,7 @@ public class Lanczos {
                 t = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-t, wptr[1], wptr[0]);
                 alf[j] = alf[j] + t;
-                MathEx.copy(wptr[0], wptr[4]);
+                System.arraycopy(wptr[0], 0, wptr[4], 0, n);
                 rnm = MathEx.norm(wptr[0]);
                 anorm = bet[j] + Math.abs(alf[j]) + rnm;
                 tol = reps * anorm;
@@ -318,17 +318,18 @@ public class Lanczos {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
+        int n = r.length;
         for (int id = 0; id < 3; id++) {
             if (id > 0 || step > 0 || rnm == 0) {
                 for (int i = 0; i < r.length; i++) {
                     r[i] = Math.random() - 0.5;
                 }
             }
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
 
             // apply operator to put r in range (essential if m singular)
             A.mv(wptr[3], wptr[0]);
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
                 break;
@@ -350,7 +351,7 @@ public class Lanczos {
             // make sure q[step] is orthogonal to q[step-1]
             double t = MathEx.dot(wptr[4], wptr[0]);
             MathEx.axpy(-t, wptr[2], wptr[0]);
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             t = MathEx.dot(wptr[3], wptr[0]);
             if (t <= MathEx.EPSILON * rnm) {
                 t = 0.0;
@@ -437,11 +438,11 @@ public class Lanczos {
                         tr += Math.abs(t);
                         MathEx.axpy(t, Q[i], r);
                     }
-                    MathEx.copy(q, qa);
+                    System.arraycopy(q, 0, qa, 0, q.length);
                     t = -MathEx.dot(r, qa);
                     tr += Math.abs(t);
                     MathEx.axpy(t, q, r);
-                    MathEx.copy(r, ra);
+                    System.arraycopy(r, 0, ra, 0, r.length);
                     rnm = Math.sqrt(MathEx.dot(ra, r));
                     if (tq <= reps1 && tr <= reps1 * rnm) {
                         flag = false;
@@ -561,7 +562,7 @@ public class Lanczos {
         if (null == q[j]) {
             q[j] = s.clone();
         } else {
-            MathEx.copy(s, q[j]);
+            System.arraycopy(s, 0, q[j], 0, s.length);
         }
     }
 

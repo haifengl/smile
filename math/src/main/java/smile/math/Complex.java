@@ -39,12 +39,31 @@ public class Complex implements Serializable {
 
     /**
      * Constructor.
-     * @param real the real part
-     * @param imag the imaginary part
+     * @param real the real part.
+     * @param imag the imaginary part.
      */
     public Complex(double real, double imag) {
         re = real;
         im = imag;
+    }
+
+    /**
+     * Returns a Complex instance representing the specified value.
+     * @param real the real part.
+     * @return the complex object.
+     */
+    public static Complex of(double real) {
+        return new Complex(real, 0.0);
+    }
+
+    /**
+     * Returns a Complex instance representing the specified value.
+     * @param real the real part.
+     * @param imag the imaginary part.
+     * @return the complex object.
+     */
+    public static Complex of(double real, double imag) {
+        return new Complex(real, imag);
     }
 
     @Override

@@ -22,8 +22,13 @@ package smile.math;
  *
  * @author Haifeng Li
  */
-public interface Root {
-    org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);
+public class Root {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(Root.class);
+
+    /** Private constructor to prevent instance creation. */
+    private Root() {
+
+    }
 
     /**
      * Brent's method for root-finding. It combines the bisection method,
@@ -44,7 +49,7 @@ public interface Root {
      * @param maxIter the maximum number of iterations.
      * @return the root.
      */
-    static double find(Function func, double x1, double x2, double tol, int maxIter) {
+    public static double find(Function func, double x1, double x2, double tol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
@@ -150,7 +155,7 @@ public interface Root {
      * @param maxIter the maximum number of iterations.
      * @return the root.
      */
-    static double find(DifferentiableFunction func, double x1, double x2, double tol, int maxIter) {
+    public static double find(DifferentiableFunction func, double x1, double x2, double tol, int maxIter) {
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
