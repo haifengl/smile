@@ -44,7 +44,7 @@ public class Lanczos {
      * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k) {
-        return eigen(A, k, 1.0E-8, 10 * A.nrows());
+        return eigen(A, k, 1.0E-8, 10 * A.nrow());
     }
 
     /**
@@ -59,12 +59,12 @@ public class Lanczos {
      * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        if (k < 1 || k > A.nrows()) {
-            throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrows());
+        if (k < 1 || k > A.nrow()) {
+            throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrow());
         }
 
         if (kappa <= MathEx.EPSILON) {
@@ -72,10 +72,10 @@ public class Lanczos {
         }
 
         if (maxIter <= 0) {
-            maxIter = 10 * A.nrows();
+            maxIter = 10 * A.nrow();
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
         int intro = 0;
 
         // roundoff estimate for dot product of two unit vectors
@@ -588,7 +588,7 @@ public class Lanczos {
      * matrix, with e[0] arbitrary. On output, its contents are destroyed.
      */
     private static void tql2(Matrix V, double[] d, double[] e) {
-        int n = V.nrows();
+        int n = V.nrow();
         for (int i = 1; i < n; i++) {
             e[i - 1] = e[i];
         }

@@ -39,7 +39,7 @@ public interface BinarySparseDataset extends Dataset<int[]> {
      * Returns the number of columns.
      * @return the number of columns.
      */
-    int ncols();
+    int ncol();
     
     /**
      * Returns the binary value at entry (i, j) by binary search.

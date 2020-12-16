@@ -299,15 +299,15 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
         DataFrame x = formula.x(data);
         BaseVector y = formula.y(data);
 
-        if (mtry > x.ncols()) {
+        if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : (int) Math.sqrt(x.ncols());
+        int mtryFinal = mtry > 0 ? mtry : (int) Math.sqrt(x.ncol());
 
         ClassLabels codec = ClassLabels.fit(y);
         final int k = codec.k;
-        final int n = x.nrows();
+        final int n = x.nrow();
 
         final int[] weight = classWeight != null ? classWeight : Collections.nCopies(k, 1).stream().mapToInt(i -> i).toArray();
 

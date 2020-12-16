@@ -341,11 +341,11 @@ public class GLM implements Serializable {
         }
 
         Matrix X = formula.matrix(data, true);
-        Matrix XW = new Matrix(X.nrows(), X.ncols());
+        Matrix XW = new Matrix(X.nrow(), X.ncol());
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
 
         if (n <= p) {
             throw new IllegalArgumentException(String.format("The input matrix is not over determined: %d rows, %d columns", n, p));

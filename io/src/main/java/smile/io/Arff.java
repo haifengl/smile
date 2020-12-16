@@ -532,7 +532,7 @@ public class Arff implements AutoCloseable {
 
             writer.println("@DATA");
 
-            int p = data.ncols();
+            int p = data.ncol();
             data.stream().forEach(t -> {
                 String line = IntStream.range(0, p).mapToObj(i -> t.toString()).collect(Collectors.joining(","));
                 writer.println(line);

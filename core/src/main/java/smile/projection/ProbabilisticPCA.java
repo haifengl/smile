@@ -83,7 +83,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
         this.loading = loading;
         this.projection = projection;
 
-        pmu = new double[projection.nrows()];
+        pmu = new double[projection.nrow()];
         projection.mv(mu, pmu);
     }
 
@@ -124,7 +124,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, mu.length));
         }
 
-        double[] y = new double[projection.nrows()];
+        double[] y = new double[projection.nrow()];
         projection.mv(x, y);
         MathEx.sub(y, pmu);
         return y;
@@ -136,7 +136,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, mu.length));
         }
 
-        double[][] y = new double[x.length][projection.nrows()];
+        double[][] y = new double[x.length][projection.nrow()];
         for (int i = 0; i < x.length; i++) {
             projection.mv(x[i], y[i]);
             MathEx.sub(y[i], pmu);

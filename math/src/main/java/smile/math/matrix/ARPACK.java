@@ -116,7 +116,7 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static Matrix.EVD syev(DMatrix A, SymmOption which, int nev) {
-        return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
+        return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
     /**
@@ -130,11 +130,11 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static Matrix.EVD syev(DMatrix A, SymmOption which, int nev, int ncv, double tol) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
 
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV parameter k: " + nev);
@@ -216,7 +216,7 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev) {
-        return syev(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
+        return syev(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6f);
     }
 
     /**
@@ -230,11 +230,11 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static FloatMatrix.EVD syev(SMatrix A, SymmOption which, int nev, int ncv, float tol) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
 
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV: " + nev);
@@ -316,7 +316,7 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev) {
-        return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6);
+        return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6);
     }
 
     /**
@@ -330,11 +330,11 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, AsymmOption which, int nev, int ncv, double tol) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
 
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV: " + nev);
@@ -420,7 +420,7 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static FloatMatrix.EVD eigen(SMatrix A, AsymmOption which, int nev) {
-        return eigen(A, which, nev, Math.min(3 * nev, A.nrows()), 1E-6f);
+        return eigen(A, which, nev, Math.min(3 * nev, A.nrow()), 1E-6f);
     }
 
     /**
@@ -434,11 +434,11 @@ public class ARPACK {
      * @return the eigen decomposition.
      */
     public static FloatMatrix.EVD eigen(SMatrix A, AsymmOption which, int nev, int ncv, float tol) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
 
         if (nev <= 0 || nev >= n) {
             throw new IllegalArgumentException("Invalid NEV: " + nev);
@@ -523,7 +523,7 @@ public class ARPACK {
      * @return the singular value decomposition.
      */
     public static Matrix.SVD svd(DMatrix A, int k) {
-        return svd(A, k, Math.min(3 * k, Math.min(A.nrows(), A.ncols())), 1E-6);
+        return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6);
     }
 
     /**
@@ -536,8 +536,8 @@ public class ARPACK {
      * @return the singular value decomposition.
      */
     public static Matrix.SVD svd(DMatrix A, int k, int ncv, double tol) {
-        int m = A.nrows();
-        int n = A.ncols();
+        int m = A.nrow();
+        int n = A.ncol();
 
         DMatrix ata = A.square();
         Matrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);
@@ -596,7 +596,7 @@ public class ARPACK {
      * @return the singular value decomposition.
      */
     public static FloatMatrix.SVD svd(SMatrix A, int k) {
-        return svd(A, k, Math.min(3 * k, Math.min(A.nrows(), A.ncols())), 1E-6f);
+        return svd(A, k, Math.min(3 * k, Math.min(A.nrow(), A.ncol())), 1E-6f);
     }
 
     /**
@@ -609,8 +609,8 @@ public class ARPACK {
      * @return the singular value decomposition.
      */
     public static FloatMatrix.SVD svd(SMatrix A, int k, int ncv, float tol) {
-        int m = A.nrows();
-        int n = A.ncols();
+        int m = A.nrow();
+        int n = A.ncol();
 
         SMatrix ata = A.square();
         FloatMatrix.EVD eigen = syev(ata, SymmOption.LM, k, ncv, tol);

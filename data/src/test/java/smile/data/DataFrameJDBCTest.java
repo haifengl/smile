@@ -80,21 +80,21 @@ public class DataFrameJDBCTest {
     }
 
     /**
-     * Test of nrows method, of class DataFrame.
+     * Test of nrow method, of class DataFrame.
      */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(412, df.nrows());
+        System.out.println("nrow");
+        assertEquals(412, df.nrow());
     }
 
     /**
-     * Test of ncols method, of class DataFrame.
+     * Test of ncol method, of class DataFrame.
      */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(6, df.ncols());
+        System.out.println("ncol");
+        assertEquals(6, df.ncol());
     }
 
     /**
@@ -149,8 +149,8 @@ public class DataFrameJDBCTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(1, output.nrows());
-        assertEquals(5, output.ncols());
+        assertEquals(1, output.nrow());
+        assertEquals(5, output.ncol());
         assertEquals("Total", output.get(0,0));
         assertEquals(412L, output.get(0,1));
         assertEquals(0.99, output.get(0,2));
@@ -166,8 +166,8 @@ public class DataFrameJDBCTest {
         System.out.println("toMatrix");
         Matrix output = df.select("Total").toMatrix(false, CategoricalEncoder.LEVEL, null);
         System.out.println(output);
-        assertEquals(412, output.nrows());
-        assertEquals(1, output.ncols());
+        assertEquals(412, output.nrow());
+        assertEquals(1, output.ncol());
         assertEquals(3.98, output.get(0, 0), 1E-10);
         assertEquals(3.96, output.get(1, 0), 1E-10);
         assertEquals(5.94, output.get(2, 0), 1E-10);

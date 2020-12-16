@@ -64,11 +64,11 @@ public interface DotProductKernel extends Function {
      * @return the kernel matrix.
      */
     default Matrix K(Matrix pdot) {
-        if (pdot.nrows() != pdot.ncols()) {
+        if (pdot.nrow() != pdot.ncol()) {
             throw new IllegalArgumentException("pdot is not square");
         }
 
-        int n = pdot.nrows();
+        int n = pdot.nrow();
         Matrix K = new Matrix(n, n);
 
         for (int j = 0; j < n; j++) {

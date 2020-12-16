@@ -81,17 +81,17 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * Returns the number of rows.
      * @return the number of rows.
      */
-    public abstract int nrows();
+    public abstract int nrow();
 
     /**
      * Returns the number of columns.
      * @return the number of columns.
      */
-    public abstract int ncols();
+    public abstract int ncol();
 
     /**
      * Returns the number of stored matrix elements. For conventional matrix,
-     * it is simplify nrows * ncols. But it is usually much less for band,
+     * it is simplify nrow * ncol. But it is usually much less for band,
      * packed or sparse matrix.
      * @return the number of stored matrix elements.
      */
@@ -110,8 +110,8 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * @param names the row names.
      */
     public void rowNames(String[] names) {
-        if (names != null && names.length != nrows()) {
-            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrows()));
+        if (names != null && names.length != nrow()) {
+            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrow()));
         }
         rowNames = names;
     }
@@ -138,8 +138,8 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * @param names the column names.
      */
     public void colNames(String[] names) {
-        if (names != null && names.length != ncols()) {
-            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncols()));
+        if (names != null && names.length != ncol()) {
+            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncol()));
         }
         colNames = names;
     }
@@ -165,7 +165,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * @return the string representation of matrix.
      */
     public String toString(boolean full) {
-        return full ? toString(nrows(), ncols()) : toString(7, 7);
+        return full ? toString(nrow(), ncol()) : toString(7, 7);
     }
 
     /**
@@ -175,11 +175,11 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * @return the string representation of matrix.
      */
     public String toString(int m, int n) {
-        StringBuilder sb = new StringBuilder(nrows() + " x " + ncols() + "\n");
-        m = Math.min(m, nrows());
-        n = Math.min(n, ncols());
+        StringBuilder sb = new StringBuilder(nrow() + " x " + ncol() + "\n");
+        m = Math.min(m, nrow());
+        n = Math.min(n, ncol());
 
-        String newline = n < ncols() ? "  ...\n" : "\n";
+        String newline = n < ncol() ? "  ...\n" : "\n";
 
         if (colNames != null) {
             sb.append(rowNames == null ? "   " : "            ");
@@ -199,7 +199,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
             sb.append(newline);
         }
 
-        if (m < nrows()) {
+        if (m < nrow()) {
             sb.append("  ...\n");
         }
 

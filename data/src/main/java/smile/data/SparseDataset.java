@@ -62,7 +62,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns the number of rows.
      * @return the number of rows.
      */
-    default int nrows() {
+    default int nrow() {
         return size();
     }
 
@@ -70,7 +70,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns the number of columns.
      * @return the number of columns.
      */
-    int ncols();
+    int ncol();
 
     /**
      * Returns the value at entry (i, j).
@@ -79,7 +79,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * @return the cell value.
      */
     default double get(int i, int j) {
-        if (i < 0 || i >= size() || j < 0 || j >= ncols()) {
+        if (i < 0 || i >= size() || j < 0 || j >= ncol()) {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
 
@@ -134,19 +134,19 @@ public interface SparseDataset extends Dataset<SparseArray> {
      */
     default SparseMatrix toMatrix() {
         int nz = nz();
-        int ncols = ncols();
+        int ncol = ncol();
 
-        int[] pos = new int[ncols];
-        int[] colIndex = new int[ncols + 1];
-        for (int i = 0; i < ncols; i++) {
+        int[] pos = new int[ncol];
+        int[] colIndex = new int[ncol + 1];
+        for (int i = 0; i < ncol; i++) {
             colIndex[i + 1] = colIndex[i] + nz(i);
         }
 
-        int nrows = size();
+        int nrow = size();
         int[] rowIndex = new int[nz];
         double[] x = new double[nz];
 
-        for (int i = 0; i < nrows; i++) {
+        for (int i = 0; i < nrow; i++) {
             for (SparseArray.Entry e : get(i)) {
                 int j = e.i;
                 int k = colIndex[j] + pos[j];
@@ -157,7 +157,7 @@ public interface SparseDataset extends Dataset<SparseArray> {
             }
         }
 
-        return new SparseMatrix(nrows, ncols, x, rowIndex, colIndex);
+        return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);
     }
 
     /**
@@ -184,11 +184,11 @@ public interface SparseDataset extends Dataset<SparseArray> {
      * Returns a default implementation of SparseDataset from a collection.
      *
      * @param data sparse arrays.
-     * @param ncols the number of columns.
+     * @param ncol the number of columns.
      * @return the sparse dataset.
      */
-    static SparseDataset of(Collection<SparseArray> data, int ncols) {
-        return new SparseDatasetImpl(data, ncols);
+    static SparseDataset of(Collection<SparseArray> data, int ncol) {
+        return new SparseDatasetImpl(data, ncol);
     }
 
     /**

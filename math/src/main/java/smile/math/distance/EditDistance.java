@@ -320,7 +320,7 @@ public class EditDistance implements Metric<String> {
 
         int ZERO_K = n;
 
-        if (n+2 > FKP.ncols())
+        if (n+2 > FKP.ncol())
             FKP = new IntArray2D(2*n+1, n+2);
 
         for (int k = -ZERO_K; k < 0; k++) {
@@ -374,7 +374,7 @@ public class EditDistance implements Metric<String> {
 
         int ZERO_K = n;
 
-        if (n+3 > FKP.ncols())
+        if (n+3 > FKP.ncol())
             FKP = new IntArray2D(2*n+1, n+3);
 
         for (int k = -ZERO_K; k < 0; k++) {

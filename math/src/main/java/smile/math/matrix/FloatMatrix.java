@@ -474,12 +474,12 @@ public class FloatMatrix extends SMatrix {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return m;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -2575,7 +2575,7 @@ public class FloatMatrix extends SMatrix {
          *           factorization.
          */
         public Cholesky(FloatMatrix lu) {
-            if (lu.nrows() != lu.ncols()) {
+            if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
             this.lu = lu;
@@ -2764,14 +2764,14 @@ public class FloatMatrix extends SMatrix {
          */
         public void solve(FloatMatrix B) {
             if (B.m != qr.m) {
-                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrows(), qr.nrows(), B.nrows(), B.ncols()));
+                throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
             }
 
             int m = qr.m;
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrows(), B.ncols(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
+            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);

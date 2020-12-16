@@ -95,8 +95,8 @@ public abstract class Layer implements Serializable {
      * @param bias the bias vector.
      */
     public Layer(Matrix weight, double[] bias) {
-        this.n = weight.nrows();
-        this.p = weight.ncols();
+        this.n = weight.nrow();
+        this.p = weight.ncol();
         this.weight = weight;
         this.bias = bias;
 

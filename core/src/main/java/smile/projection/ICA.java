@@ -230,8 +230,8 @@ public class ICA implements Serializable {
         // covariance matrix on centered data.
         double[] mean = MathEx.rowMeans(data);
         Matrix X = new Matrix(data);
-        int n = X.nrows();
-        int m = X.ncols();
+        int n = X.nrow();
+        int m = X.ncol();
         for (int j = 0; j < m; j++) {
             for (int i = 0; i < n; i++) {
                 X.sub(i, j, mean[i]);

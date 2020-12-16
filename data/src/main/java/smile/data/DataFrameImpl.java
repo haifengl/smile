@@ -357,7 +357,7 @@ class DataFrameImpl implements DataFrame, Serializable {
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return columns.size();
     }
 
@@ -460,7 +460,7 @@ class DataFrameImpl implements DataFrame, Serializable {
 
         List<BaseVector> all = new ArrayList<>(columns);
         for (DataFrame df : dataframes) {
-            for (int i = 0; i < df.ncols(); i++) {
+            for (int i = 0; i < df.ncol(); i++) {
                 all.add(df.column(i));
             }
         }
@@ -489,54 +489,54 @@ class DataFrameImpl implements DataFrame, Serializable {
             }
         }
 
-        int nrows = nrows();
+        int nrow = nrow();
         for (DataFrame df : dataframes) {
-            nrows += df.nrows();
+            nrow += df.nrow();
         }
 
         // Single line solution
         // Stream.of(a, b).flatMap(Stream::of).toArray(Object[]::new)
         // It doesn't work for boolean, byte, char, short though.
-        Object[] vectors = new Object[ncols()];
+        Object[] vectors = new Object[ncol()];
         for (int i = 0; i < vectors.length; i++) {
             BaseVector column = columns.get(i);
             switch (column.type().id()) {
                 case Boolean:
-                    vectors[i] = new boolean[nrows];
+                    vectors[i] = new boolean[nrow];
                     break;
                 case Char:
-                    vectors[i] = new char[nrows];
+                    vectors[i] = new char[nrow];
                     break;
                 case Byte:
-                    vectors[i] = new byte[nrows];
+                    vectors[i] = new byte[nrow];
                     break;
                 case Short:
-                    vectors[i] = new short[nrows];
+                    vectors[i] = new short[nrow];
                     break;
                 case Integer:
-                    vectors[i] = new int[nrows];
+                    vectors[i] = new int[nrow];
                     break;
                 case Long:
-                    vectors[i] = new long[nrows];
+                    vectors[i] = new long[nrow];
                     break;
                 case Float:
-                    vectors[i] = new float[nrows];
+                    vectors[i] = new float[nrow];
                     break;
                 case Double:
-                    vectors[i] = new double[nrows];
+                    vectors[i] = new double[nrow];
                     break;
                 default:
-                    vectors[i] = new Object[nrows];
+                    vectors[i] = new Object[nrow];
             }
-            System.arraycopy(column.array(), 0, vectors[i], 0, nrows());
+            System.arraycopy(column.array(), 0, vectors[i], 0, nrow());
         }
 
-        int destPos = nrows();
+        int destPos = nrow();
         for (DataFrame df : dataframes) {
             for (int i = 0; i < vectors.length; i++) {
-                System.arraycopy(df.column(i).array(), 0, vectors[i], destPos, df.nrows());
+                System.arraycopy(df.column(i).array(), 0, vectors[i], destPos, df.nrow());
             }
-            destPos += df.nrows();
+            destPos += df.nrow();
         }
 
         List<BaseVector> data = new ArrayList<>();

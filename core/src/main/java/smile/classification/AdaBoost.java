@@ -252,7 +252,7 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
             }
         }
         
-        double[] importance = new double[x.ncols()];
+        double[] importance = new double[x.ncol()];
         for (DecisionTree tree : trees) {
             double[] imp = tree.importance();
             for (int i = 0; i < imp.length; i++) {

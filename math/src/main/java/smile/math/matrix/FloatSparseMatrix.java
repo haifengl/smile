@@ -212,12 +212,12 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return m;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -468,7 +468,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
      */
     public FloatSparseMatrix mm(FloatSparseMatrix B) {
         if (n != B.m) {
-            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrows(), ncols(), B.nrows(), B.ncols()));
+            throw new IllegalArgumentException(String.format("Matrix dimensions do not match for matrix multiplication: %d x %d vs %d x %d", nrow(), ncol(), B.nrow(), B.ncol()));
         }
 
         int n = B.n;
@@ -640,7 +640,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
 
     @Override
     public float[] diag() {
-        int n = Math.min(nrows(), ncols());
+        int n = Math.min(nrow(), ncol());
         float[] d = new float[n];
 
         for (int i = 0; i < n; i++) {
@@ -688,8 +688,8 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
             }
 
             tokens = line.split("\\s+");
-            int nrows = Integer.parseInt(tokens[1]);
-            int ncols = Integer.parseInt(tokens[2]);
+            int nrow = Integer.parseInt(tokens[1]);
+            int ncol = Integer.parseInt(tokens[2]);
             int nz = Integer.parseInt(tokens[3]);
 
             line = scanner.nextLine();
@@ -699,10 +699,10 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
                 logger.info(line);
             }
 
-            int[] colIndex = new int[ncols + 1];
+            int[] colIndex = new int[ncol + 1];
             int[] rowIndex = new int[nz];
             float[] data = new float[nz];
-            for (int i = 0; i <= ncols; i++) {
+            for (int i = 0; i <= ncol; i++) {
                 colIndex[i] = scanner.nextInt() - 1;
             }
             for (int i = 0; i < nz; i++) {
@@ -712,7 +712,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
                 data[i] = scanner.nextFloat();
             }
 
-            return new FloatSparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+            return new FloatSparseMatrix(nrow, ncol, data, rowIndex, colIndex);
         }
     }
 
@@ -756,14 +756,14 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
     public static FloatSparseMatrix text(Path path) throws IOException {
         try (InputStream stream = Files.newInputStream(path);
              Scanner scanner = new Scanner(stream)) {
-            int nrows = scanner.nextInt();
-            int ncols = scanner.nextInt();
+            int nrow = scanner.nextInt();
+            int ncol = scanner.nextInt();
             int nz = scanner.nextInt();
 
-            int[] colIndex = new int[ncols + 1];
+            int[] colIndex = new int[ncol + 1];
             int[] rowIndex = new int[nz];
             float[] data = new float[nz];
-            for (int i = 0; i <= ncols; i++) {
+            for (int i = 0; i <= ncol; i++) {
                 colIndex[i] = scanner.nextInt() - 1;
             }
             for (int i = 0; i < nz; i++) {
@@ -773,7 +773,7 @@ public class FloatSparseMatrix extends SMatrix implements Iterable<FloatSparseMa
                 data[i] = scanner.nextFloat();
             }
 
-            return new FloatSparseMatrix(nrows, ncols, data, rowIndex, colIndex);
+            return new FloatSparseMatrix(nrow, ncol, data, rowIndex, colIndex);
         }
     }
 }

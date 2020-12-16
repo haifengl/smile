@@ -213,13 +213,13 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
-        if (mtry > x.ncols()) {
+        if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);
         }
 
-        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncols()/3, 1);
+        int mtryFinal = mtry > 0 ? mtry : Math.max(x.ncol()/3, 1);
 
-        final int n = x.nrows();
+        final int n = x.nrow();
         double[] prediction = new double[n];
         int[] oob = new int[n];
         final int[][] order = CART.order(x);
@@ -455,7 +455,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
     public double[][] test(DataFrame data) {
         DataFrame x = formula.x(data);
 
-        int n = x.nrows();
+        int n = x.nrow();
         int ntrees = models.length;
         double[][] prediction = new double[ntrees][n];
 
