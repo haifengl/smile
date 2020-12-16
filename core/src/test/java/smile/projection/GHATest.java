@@ -26,6 +26,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 import smile.data.USArrests;
 import smile.math.MathEx;
+import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
 
 /**
@@ -73,7 +74,7 @@ public class GHATest {
            MathEx.sub(USArrests.x[i], mu);
         }
 
-        double r = 0.00001;
+        TimeFunction r = TimeFunction.constant(0.00001);
         GHA gha = new GHA(4, k, r);
         for (int iter = 1, t = 0; iter <= 1000; iter++) {
             double error = 0.0;
@@ -87,7 +88,7 @@ public class GHATest {
             }
         }
 
-        Matrix p = gha.getProjection();
+        Matrix p = gha.projection();
         Matrix t = p.ata();
         System.out.println(t);
 

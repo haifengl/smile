@@ -92,7 +92,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * by corresponding eigenvalues.
      * @return the variable loading matrix.
      */
-    public Matrix getLoadings() {
+    public Matrix loadings() {
         return loading;
     }
 
@@ -100,7 +100,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * Returns the center of data.
      * @return the center of data.
      */
-    public double[] getCenter() {
+    public double[] center() {
         return mu;
     }
 
@@ -108,7 +108,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * Returns the variance of noise.
      * @return the variance of noise.
      */
-    public double getNoiseVariance() {
+    public double variance() {
         return noise;
     }
 
@@ -117,7 +117,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * latent model.
      */
     @Override
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 

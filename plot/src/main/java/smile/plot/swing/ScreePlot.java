@@ -61,7 +61,7 @@ public class ScreePlot extends Plot {
      */
     public ScreePlot(PCA pca) {
         this.pca = pca;
-        int n = pca.getVarianceProportion().length;
+        int n = pca.varianceProportion().length;
 
         labels = new String[n];
         x = new double[n];
@@ -71,9 +71,9 @@ public class ScreePlot extends Plot {
             labels[i] = "PC" + (i + 1);
             x[i] = i + 1;
             var[i][0] = x[i];
-            var[i][1] = pca.getVarianceProportion()[i];
+            var[i][1] = pca.varianceProportion()[i];
             cumVar[i][0] = x[i];
-            cumVar[i][1] = pca.getCumulativeVarianceProportion()[i];
+            cumVar[i][1] = pca.cumulativeVarianceProportion()[i];
         }
 
         lines = new Line[] {
@@ -111,7 +111,7 @@ public class ScreePlot extends Plot {
 
     @Override
     public double[] getUpperBound() {
-        int n = pca.getVarianceProportion().length;
+        int n = pca.varianceProportion().length;
         double[] bound = {n, 1.0};
         return bound;
     }

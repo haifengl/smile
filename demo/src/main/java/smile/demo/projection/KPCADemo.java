@@ -27,7 +27,6 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JTextField;
 
-import smile.plot.swing.Palette;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 import smile.plot.swing.TextPlot;
@@ -114,7 +113,7 @@ public class KPCADemo extends ProjectionDemo {
 
         KPCA<double[]> kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 2);
 
-        y = kpca.getCoordinates();
+        y = kpca.coordinates();
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {
@@ -130,7 +129,7 @@ public class KPCADemo extends ProjectionDemo {
         kpca = KPCA.fit(data, new GaussianKernel(gamma[datasetIndex]), 3);
         System.out.format("Learn KPCA from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        y = kpca.getCoordinates();
+        y = kpca.coordinates();
         if (names != null) {
             plot = TextPlot.of(names, y).canvas();
         } else if (labels != null) {

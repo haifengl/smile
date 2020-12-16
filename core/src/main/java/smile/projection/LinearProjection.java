@@ -31,11 +31,11 @@ public interface LinearProjection extends Projection<double[]> {
      * by y = W * x.
      * @return the projection matrix.
      */
-    Matrix getProjection();
+    Matrix projection();
 
     @Override
     default double[] project(double[] x) {
-        Matrix A = getProjection();
+        Matrix A = projection();
         int p = A.nrow();
         int n = A.ncol();
 
@@ -50,7 +50,7 @@ public interface LinearProjection extends Projection<double[]> {
 
     @Override
     default double[][] project(double[][] x) {
-        Matrix A = getProjection();
+        Matrix A = projection();
         int p = A.nrow();
         int n = A.ncol();
 

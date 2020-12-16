@@ -85,7 +85,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
 
         RandomProjection rp = sparseBox.isSelected() ? RandomProjection.sparse(data[0].length, 0) : RandomProjection.of(data[0].length, 2);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
-        Matrix projection = rp.getProjection();
+        Matrix projection = rp.projection();
         for (int i = 0; i < projection.nrow(); i++) {
             for (int j = 0; j < projection.ncol(); j++) {
                 System.out.format("% .4f ", projection.get(i, j));
@@ -107,7 +107,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
 
         rp = sparseBox.isSelected() ?  RandomProjection.sparse(data[0].length, 3) : RandomProjection.of(data[0].length, 3);
         System.out.format("%d x %d Random Projection:\n", data[0].length, 3);
-        projection = rp.getProjection();
+        projection = rp.projection();
         for (int i = 0; i < projection.nrow(); i++) {
             for (int j = 0; j < projection.ncol(); j++) {
                 System.out.format("% .4f ", projection.get(i, j));
