@@ -32,6 +32,8 @@ public interface Normalizer {
 
     /**
      * Normalize the given string.
+     * @param text the text.
+     * @return the normalized text.
      */
     String normalize(String text);
 }

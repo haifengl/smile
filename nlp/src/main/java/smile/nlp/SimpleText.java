@@ -49,6 +49,8 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * Constructor.
      * @param id the id of document.
+     * @param title the title of document.
+     * @param body the text body of document.
      * @param words the word list of document.
      */
     public SimpleText(String id, String title, String body, String[] words) {

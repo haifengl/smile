@@ -137,8 +137,10 @@ public class EnglishPOSLexicon {
     }
 
     /**
-     * Returns part-of-speech tags for given word, or null if the word does
+     * Returns the part-of-speech tags for given word, or null if the word does
      * not exist in the dictionary.
+     * @param word the word.
+     * @return the part-of-speech tags.
      */
     public static PennTreebankPOS[] get(String word) {
         return dict.get(word);

@@ -105,7 +105,9 @@ public class SimpleCorpus implements Corpus {
     }
 
     /**
-     * Add a document to the corpus.
+     * Adds a document to the corpus.
+     * @param text the document text.
+     * @return the document.
      */
     public Text add(Text text) {
         ArrayList<String> bag = new ArrayList<>();
