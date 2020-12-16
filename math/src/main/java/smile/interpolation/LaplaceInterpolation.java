@@ -58,9 +58,9 @@ public class LaplaceInterpolation {
      * @return the estimated error.
      */
     public static double interpolate(double[][] matrix, double tol, int maxIter) {
-        int nrows = matrix.length;
-        int ncols = matrix[0].length;
-        int n = nrows * ncols;
+        int nrow = matrix.length;
+        int ncol = matrix[0].length;
+        int n = nrow * ncol;
 
         double[] b = new double[n];
         double[] y = new double[n];
@@ -68,8 +68,8 @@ public class LaplaceInterpolation {
 
         double vl = 0.;
         for (int k = 0; k < n; k++) {
-            int i = k / ncols;
-            int j = k - i * ncols;
+            int i = k / ncol;
+            int j = k - i * ncol;
             if (!Double.isNaN(matrix[i][j])) {
                 b[k] = y[k] = vl = matrix[i][j];
                 mask[k] = true;
@@ -82,8 +82,8 @@ public class LaplaceInterpolation {
 
         double err = solve(matrix, b, y, mask, tol, maxIter);
 
-        for (int k = 0, i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
+        for (int k = 0, i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
                 matrix[i][j] = y[k++];
             }
         }
@@ -173,25 +173,25 @@ public class LaplaceInterpolation {
      * Returns A * x.
      */
     private static void ax(double[][] matrix, double[] x, double[] r, boolean[] mask) {
-        int nrows = matrix.length;
-        int ncols = matrix[0].length;
+        int nrow = matrix.length;
+        int ncol = matrix[0].length;
 
         int n = r.length, jjt, it;
 
         Arrays.fill(r, 0.0);
         for (int k = 0; k < n; k++) {
-            int i = k / ncols;
-            int j = k - i * ncols;
+            int i = k / ncol;
+            int j = k - i * ncol;
             if (mask[k]) {
                 r[k] += x[k];
-            } else if (i > 0 && i < nrows - 1 && j > 0 && j < ncols - 1) {
-                r[k] = x[k] - 0.25 * (x[k - 1] + x[k + 1] + x[k + ncols] + x[k - ncols]);
-            } else if (i > 0 && i < nrows - 1) {
-                r[k] = x[k] - 0.5 * (x[k + ncols] + x[k - ncols]);
-            } else if (j > 0 && j < ncols - 1) {
+            } else if (i > 0 && i < nrow - 1 && j > 0 && j < ncol - 1) {
+                r[k] = x[k] - 0.25 * (x[k - 1] + x[k + 1] + x[k + ncol] + x[k - ncol]);
+            } else if (i > 0 && i < nrow - 1) {
+                r[k] = x[k] - 0.5 * (x[k + ncol] + x[k - ncol]);
+            } else if (j > 0 && j < ncol - 1) {
                 r[k] = x[k] - 0.5 * (x[k + 1] + x[k - 1]);
             } else {
-                jjt = i == 0 ? ncols : -ncols;
+                jjt = i == 0 ? ncol : -ncol;
                 it = j == 0 ? 1 : -1;
                 r[k] = x[k] - 0.5 * (x[k + jjt] + x[k + it]);
             }
@@ -202,38 +202,38 @@ public class LaplaceInterpolation {
      * Returns A' * x.
      */
     private static void atx(double[][] matrix, double[] x, double[] r, boolean[] mask) {
-        int nrows = matrix.length;
-        int ncols = matrix[0].length;
+        int nrow = matrix.length;
+        int ncol = matrix[0].length;
 
         int n = r.length, jjt, it;
         double del;
         
         Arrays.fill(r, 0.0);
         for (int k = 0; k < n; k++) {
-            int i = k / ncols;
-            int j = k - i * ncols;
+            int i = k / ncol;
+            int j = k - i * ncol;
 
             if (mask[k]) {
                 r[k] += x[k];
-            } else if (i > 0 && i < nrows - 1 && j > 0 && j < ncols - 1) {
+            } else if (i > 0 && i < nrow - 1 && j > 0 && j < ncol - 1) {
                 r[k] += x[k];
                 del = -0.25 * x[k];
                 r[k - 1] += del;
                 r[k + 1] += del;
-                r[k - ncols] += del;
-                r[k + ncols] += del;
-            } else if (i > 0 && i < nrows - 1) {
+                r[k - ncol] += del;
+                r[k + ncol] += del;
+            } else if (i > 0 && i < nrow - 1) {
                 r[k] += x[k];
                 del = -0.5 * x[k];
-                r[k - ncols] += del;
-                r[k + ncols] += del;
-            } else if (j > 0 && j < ncols - 1) {
+                r[k - ncol] += del;
+                r[k + ncol] += del;
+            } else if (j > 0 && j < ncol - 1) {
                 r[k] += x[k];
                 del = -0.5 * x[k];
                 r[k - 1] += del;
                 r[k + 1] += del;
             } else {
-                jjt = i == 0 ? ncols : -ncols;
+                jjt = i == 0 ? ncol : -ncol;
                 it = j == 0 ? 1 : -1;
                 r[k] += x[k];
                 del = -0.5 * x[k];

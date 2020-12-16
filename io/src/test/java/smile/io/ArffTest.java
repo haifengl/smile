@@ -71,8 +71,8 @@ public class ArffTest {
                 new StructField("play", DataTypes.ByteType, new NominalScale("yes", "no")));
         assertEquals(schema, weather.schema());
 
-        assertEquals(14, weather.nrows());
-        assertEquals(5, weather.ncols());
+        assertEquals(14, weather.nrow());
+        assertEquals(5, weather.ncol());
         assertEquals("no",    weather.getScale(0, "play"));
         assertEquals("no",    weather.getScale(1, "play"));
         assertEquals("yes",   weather.getScale(2, "play"));
@@ -102,8 +102,8 @@ public class ArffTest {
                 new StructField("class", DataTypes.ByteType, new NominalScale("Iris-setosa", "Iris-versicolor", "Iris-virginica")));
         assertEquals(schema, iris.schema());
 
-        assertEquals(150, iris.nrows());
-        assertEquals(5,   iris.ncols());
+        assertEquals(150, iris.nrow());
+        assertEquals(5,   iris.ncol());
         assertEquals("Iris-setosa", iris.getScale(0, "class"));
         assertEquals("Iris-setosa", iris.getScale(1, "class"));
         assertEquals("Iris-setosa", iris.getScale(2, "class"));
@@ -132,8 +132,8 @@ public class ArffTest {
 
         System.out.println(string);
         System.out.println(string.schema());
-        assertEquals(5, string.nrows());
-        assertEquals(2, string.ncols());
+        assertEquals(5, string.nrow());
+        assertEquals(2, string.ncol());
         assertEquals("AG5", string.get(0).get(0));
         assertEquals("Encyclopedias and dictionaries.;Twentieth century.", string.get(0, 1));
         assertEquals("AS281", string.get(4, 0));
@@ -150,8 +150,8 @@ public class ArffTest {
         StructType schema = DataTypes.struct(new StructField("timestamp", DataTypes.DateTimeType));
         assertEquals(schema, date.schema());
 
-        assertEquals(2, date.nrows());
-        assertEquals(1, date.ncols());
+        assertEquals(2, date.nrow());
+        assertEquals(1, date.ncol());
         assertEquals(LocalDateTime.parse("2001-04-03T12:12:12"), date.get(0, 0));
         assertEquals(LocalDateTime.parse("2001-05-03T12:59:55"), date.get(1, 0));
     }
@@ -170,8 +170,8 @@ public class ArffTest {
                 new StructField("class", DataTypes.ByteType, new NominalScale("class A", "class B")));
         assertEquals(schema, sparse.schema());
 
-        assertEquals(2, sparse.nrows());
-        assertEquals(5, sparse.ncols());
+        assertEquals(2, sparse.nrow());
+        assertEquals(5, sparse.ncol());
             
         assertEquals(0.0, sparse.getDouble(0, 0), 1E-7);
         assertEquals(2.0, sparse.getDouble(0, 1), 1E-7);

@@ -41,7 +41,7 @@ public class PowerIteration {
      * @return the largest eigen value.
      */
     public static double eigen(DMatrix A, double[] v) {
-        return eigen(A, v, 0.0f, Math.max(1.0E-6, A.nrows() * MathEx.EPSILON), Math.max(20, 2 * A.nrows()));
+        return eigen(A, v, 0.0f, Math.max(1.0E-6, A.nrow() * MathEx.EPSILON), Math.max(20, 2 * A.nrow()));
     }
 
     /**
@@ -69,7 +69,7 @@ public class PowerIteration {
      * @return the largest eigen value.
      */
     public static double eigen(DMatrix A, double[] v, double p, double tol, int maxIter) {
-        if (A.nrows() != A.ncols()) {
+        if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
 
@@ -81,7 +81,7 @@ public class PowerIteration {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
         tol = Math.max(tol, MathEx.EPSILON * n);
 
         double[] z = new double[n];

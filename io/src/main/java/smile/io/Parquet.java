@@ -132,15 +132,15 @@ public class Parquet {
             StructType struct = toSmileSchema(schema);
             logger.debug("The meta data of parquet file {}: {}", file.toString(), ParquetMetadata.toPrettyJSON(footer));
 
-            int nrows = (int) Math.min(reader.getRecordCount(), limit);
-            List<Tuple> rows = new ArrayList<>(nrows);
+            int nrow = (int) Math.min(reader.getRecordCount(), limit);
+            List<Tuple> rows = new ArrayList<>(nrow);
 
             PageReadStore store;
             while ((store = reader.readNextRowGroup()) != null) {
                 final long rowCount = store.getRowCount();
                 final MessageColumnIO columnIO = new ColumnIOFactory().getColumnIO(schema);
                 final RecordReader<Group> recordReader = columnIO.getRecordReader(store, new GroupRecordConverter(schema));
-                for (int i = 0; i < rowCount && rows.size() < nrows; i++) {
+                for (int i = 0; i < rowCount && rows.size() < nrow; i++) {
                     rows.add(Tuple.of(group2object(recordReader.read(), schema.getColumns(), struct), struct));
                 }
             }

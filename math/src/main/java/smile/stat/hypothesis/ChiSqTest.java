@@ -209,19 +209,19 @@ public class ChiSqTest {
     public static ChiSqTest test(int[][] table) {
         final double TINY = 1.0e-16;
 
-        int nrows = table.length;
-        int ncols = table[0].length;
+        int nrow = table.length;
+        int ncol = table[0].length;
 
         boolean correct = false;
-        if (nrows == 2 && ncols == 2) {
+        if (nrow == 2 && ncol == 2) {
             correct = true;
         }
 
         double n = 0.0; // total observations
-        int r = nrows; // without all zero rows
-        double[] ni = new double[nrows]; // observations per row
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
+        int r = nrow; // without all zero rows
+        double[] ni = new double[nrow]; // observations per row
+        for (int i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
                 ni[i] += table[i][j];
                 n += table[i][j];
             }
@@ -230,9 +230,9 @@ public class ChiSqTest {
             }
         }
 
-        int k = ncols; // without all zero columns
-        double[] nj = new double[ncols]; // observations per column
-        for (int j = 0; j < ncols; j++) {
+        int k = ncol; // without all zero columns
+        double[] nj = new double[ncol]; // observations per column
+        for (int j = 0; j < ncol; j++) {
             for (int[] row : table) {
                 nj[j] += row[j];
             }
@@ -243,8 +243,8 @@ public class ChiSqTest {
 
         int df = r * k - r - k + 1;
         double chisq = 0.0;
-        for (int i = 0; i < nrows; i++) {
-            for (int j = 0; j < ncols; j++) {
+        for (int i = 0; i < nrow; i++) {
+            for (int j = 0; j < ncol; j++) {
                 double expctd = nj[j] * ni[i] / n;
                 double temp = table[i][j] - expctd;
                 if (correct) temp = Math.abs(temp) - 0.5;

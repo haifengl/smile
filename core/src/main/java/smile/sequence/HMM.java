@@ -70,11 +70,11 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("Invalid initial state probabilities.");
         }
 
-        if (pi.length != a.nrows()) {
+        if (pi.length != a.nrow()) {
             throw new IllegalArgumentException("Invalid state transition probability matrix.");
         }
 
-        if (a.nrows() != b.nrows()) {
+        if (a.nrow() != b.nrow()) {
             throw new IllegalArgumentException("Invalid symbol emission probability matrix.");
         }
 
@@ -157,7 +157,7 @@ public class HMM implements Serializable {
      * @return the log probability of this sequence.
      */
     public double logp(int[] o) {
-        double[][] alpha = new double[o.length][a.nrows()];
+        double[][] alpha = new double[o.length][a.nrow()];
         double[] scaling = new double[o.length];
 
         forward(o, alpha, scaling);
@@ -196,7 +196,7 @@ public class HMM implements Serializable {
      * @param scaling on output, it holds scaling factors.
      */
     private void forward(int[] o, double[][] alpha, double[] scaling) {
-        int N = a.nrows();
+        int N = a.nrow();
         for (int k = 0; k < N; k++) {
             alpha[0][k] = pi[k] * b.get(k, o[0]);
         }
@@ -226,7 +226,7 @@ public class HMM implements Serializable {
      * forward procedure.
      */
     private void backward(int[] o, double[][] beta, double[] scaling) {
-        int N = a.nrows();
+        int N = a.nrow();
         int n = o.length - 1;
         for (int i = 0; i < N; i++) {
             beta[n][i] = 1.0 / scaling[n];
@@ -255,7 +255,7 @@ public class HMM implements Serializable {
      * @return the most likely state sequence.
      */
     public int[] predict(int[] o) {
-        int N = a.nrows();
+        int N = a.nrow();
         // The probability of the most probable path.
         double[][] trellis = new double[o.length][N];
         // Backtrace.
@@ -407,8 +407,8 @@ public class HMM implements Serializable {
      * @param sequences the training observation sequences.
      */
     private void iterate(int[][] sequences) {
-        int N = a.nrows();
-        int M = b.ncols();
+        int N = a.nrow();
+        int M = b.ncol();
 
         // gamma[n] = gamma array associated to observation sequence n
         double[][][] gamma = new double[sequences.length][][];
@@ -501,7 +501,7 @@ public class HMM implements Serializable {
             throw new IllegalArgumentException("Observation sequence is too short.");
         }
 
-        int N = a.nrows();
+        int N = a.nrow();
         int n = o.length - 1;
         double[][][] xi = new double[n][N][N];
 
@@ -523,7 +523,7 @@ public class HMM implements Serializable {
      * beta arrays).
      */
     private double[][] estimateGamma(double[][][] xi) {
-        int N = a.nrows();
+        int N = a.nrow();
         double[][] gamma = new double[xi.length + 1][N];
 
         for (int t = 0; t < xi.length; t++) {
@@ -547,7 +547,7 @@ public class HMM implements Serializable {
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();
-        sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrows(), b.ncols()));
+        sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrow(), b.ncol()));
 
         sb.append("Initial state probability: ");
         sb.append(Strings.toString(pi));

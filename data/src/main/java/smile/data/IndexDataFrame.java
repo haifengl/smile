@@ -70,8 +70,8 @@ public class IndexDataFrame implements DataFrame {
     }
 
     @Override
-    public int ncols() {
-        return df.ncols();
+    public int ncol() {
+        return df.ncol();
     }
 
     @Override

@@ -66,11 +66,11 @@ public interface IsotropicKernel extends Function {
      * @return The kernel matrix.
      */
     default Matrix K(Matrix pdist) {
-        if (pdist.nrows() != pdist.ncols()) {
-            throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrows(), pdist.ncols()));
+        if (pdist.nrow() != pdist.ncol()) {
+            throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrow(), pdist.ncol()));
         }
 
-        int n = pdist.nrows();
+        int n = pdist.nrow();
         Matrix K = new Matrix(n, n);
 
         for (int j = 0; j < n; j++) {
@@ -93,11 +93,11 @@ public interface IsotropicKernel extends Function {
      * @return the kernel and gradient matrices.
      */
     default Matrix[] KG(Matrix pdist) {
-        if (pdist.nrows() != pdist.ncols()) {
-            throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrows(), pdist.ncols()));
+        if (pdist.nrow() != pdist.ncol()) {
+            throw new IllegalArgumentException(String.format("pdist is not square: %d x %d", pdist.nrow(), pdist.ncol()));
         }
 
-        int n = pdist.nrows();
+        int n = pdist.nrow();
         int m = kg(pdist.get(0, 0)).length;
         Matrix[] K = new Matrix[m];
         for (int i = 0; i < m; i++) {

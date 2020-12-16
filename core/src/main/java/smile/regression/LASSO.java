@@ -176,8 +176,8 @@ public class LASSO {
         final double eta = 1E-3;  // tolerance for PCG termination
 
         int pitr = 0;
-        int n = x.nrows();
-        int p = x.ncols();
+        int n = x.nrow();
+        int p = x.ncol();
 
         double[] Y = new double[n];
         double ym = MathEx.mean(y);
@@ -392,23 +392,23 @@ public class LASSO {
             this.prb = prb;
             this.prs = prs;
 
-            int n = A.nrows();
-            p = A.ncols();
+            int n = A.nrow();
+            p = A.ncol();
             ax = new double[n];
             atax = new double[p];
 
-            if (A.ncols() < 10000) {
+            if (A.ncol() < 10000) {
                 AtA = A.ata();
             }
         }
 
         @Override
-        public int nrows() {
+        public int nrow() {
             return 2 * p;
         }
 
         @Override
-        public int ncols() {
+        public int ncol() {
             return 2 * p;
         }
 

@@ -112,7 +112,7 @@ public class RegressionValidation<M> implements Serializable {
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
-        int n = test.nrows();
+        int n = test.nrow();
         double[] prediction = new double[n];
         for (int i = 0; i < n; i++) {
             prediction[i] = model.predict(test.get(i));

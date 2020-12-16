@@ -189,7 +189,7 @@ public class QDA implements SoftClassifier<double[]> {
         Matrix[] cov = DiscriminantAnalysis.cov(x, y, da.mu, da.ni);
 
         int k = cov.length;
-        int p = cov[0].nrows();
+        int p = cov[0].nrow();
         double[][] eigen = new double[k][];
         Matrix[] scaling = new Matrix[k];
 

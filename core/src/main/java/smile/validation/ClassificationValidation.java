@@ -170,7 +170,7 @@ public class ClassificationValidation<M> implements Serializable {
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
-        int n = test.nrows();
+        int n = test.nrow();
         int[] prediction = new int[n];
         if (model instanceof SoftClassifier) {
             double[][] posteriori = new double[n][k];

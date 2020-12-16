@@ -70,8 +70,8 @@ public class LanczosTest {
         Matrix.EVD result = Lanczos.eigen(a, 3);
         assertTrue(MathEx.equals(eigenValues, result.wr, 1E-7));
 
-        assertEquals(eigenVectors.length,    result.Vr.nrows());
-        assertEquals(eigenVectors[0].length, result.Vr.ncols());
+        assertEquals(eigenVectors.length,    result.Vr.nrow());
+        assertEquals(eigenVectors[0].length, result.Vr.ncol());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
                 assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.Vr.get(i, j)), 1E-7);

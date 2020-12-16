@@ -85,8 +85,8 @@ public class EVDTest {
         EVD result = a.eigen();
         assertTrue(MathEx.equals(eigenValues, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectors.length,    result.getEigenVectors().nrows());
-        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncols());
+        assertEquals(eigenVectors.length,    result.getEigenVectors().nrow());
+        assertEquals(eigenVectors[0].length, result.getEigenVectors().ncol());
         for (int i = 0; i < eigenVectors.length; i++) {
             for (int j = 0; j < eigenVectors[i].length; j++) {
                 assertEquals(Math.abs(eigenVectors[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
@@ -103,7 +103,7 @@ public class EVDTest {
         NLMatrix a = new NLMatrix(A);
         a.setSymmetric(true);
         double[] result = a.eig();
-        assertEquals(2*a.nrows(), result.length);
+        assertEquals(2*a.nrow(), result.length);
         for (int i = 0; i < eigenValues.length; i++)
             assertEquals(eigenValues[i], result[i], 1E-7);
         for (int i = eigenValues.length; i < result.length; i++)
@@ -120,8 +120,8 @@ public class EVDTest {
         EVD result = a.eigen();
         assertTrue(MathEx.equals(eigenValuesB, result.getEigenValues(), 1E-7));
 
-        assertEquals(eigenVectorsB.length,    result.getEigenVectors().nrows());
-        assertEquals(eigenVectorsB[0].length, result.getEigenVectors().ncols());
+        assertEquals(eigenVectorsB.length,    result.getEigenVectors().nrow());
+        assertEquals(eigenVectorsB[0].length, result.getEigenVectors().ncol());
         for (int i = 0; i < eigenVectorsB.length; i++) {
             for (int j = 0; j < eigenVectorsB[i].length; j++) {
                 assertEquals(Math.abs(eigenVectorsB[i][j]), Math.abs(result.getEigenVectors().get(i, j)), 1E-7);
@@ -137,7 +137,7 @@ public class EVDTest {
         System.out.println("decompose");
         NLMatrix a = new NLMatrix(B);
         double[] result = a.eig();
-        assertEquals(2*a.nrows(), result.length);
+        assertEquals(2*a.nrow(), result.length);
         for (int i = 0; i < eigenValuesB.length; i++)
             assertEquals(eigenValuesB[i], result[i], 1E-7);
         for (int i = eigenValuesB.length; i < result.length; i++)

@@ -85,7 +85,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the number of rows.
      * @return the number of rows.
      */
-    default int nrows() {
+    default int nrow() {
         return size();
     }
 
@@ -93,7 +93,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * Returns the number of columns.
      * @return the number of columns.
      */
-    int ncols();
+    int ncol();
 
     /**
      * Returns the structure of data frame.
@@ -1040,13 +1040,13 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @return the numeric array.
      */
     default double[][] toArray(boolean bias, CategoricalEncoder encoder) {
-        int nrows = nrows();
-        int ncols = ncols();
+        int nrow = nrow();
+        int ncol = ncol();
         StructType schema = schema();
 
         ArrayList<String> colNames = new ArrayList<>();
         if (bias) colNames.add("Intercept");
-        for (int j = 0; j < ncols; j++) {
+        for (int j = 0; j < ncol; j++) {
             StructField field = schema.field(j);
 
             Measure measure = field.measure;
@@ -1068,37 +1068,37 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             }
         }
 
-        double[][] matrix = new double[nrows][colNames.size()];
+        double[][] matrix = new double[nrow][colNames.size()];
 
         int j = 0;
         if (bias) {
             j++;
-            for (int i = 0; i < nrows; i++) {
+            for (int i = 0; i < nrow; i++) {
                 matrix[i][0] = 1.0;
             }
         }
 
-        for (int col = 0; col < ncols; col++) {
+        for (int col = 0; col < ncol; col++) {
             StructField field = schema.field(col);
 
             Measure measure = field.measure;
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 if (encoder == CategoricalEncoder.DUMMY) {
-                    for (int i = 0; i < nrows; i++) {
+                    for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
                         if (k > 0) matrix[i][j + k - 1] = 1.0;
                     }
                     j += cat.size() - 1;
                 } else if (encoder == CategoricalEncoder.ONE_HOT) {
-                    for (int i = 0; i < nrows; i++) {
+                    for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
                         matrix[i][j + k] = 1.0;
                     }
                     j += cat.size();
                 }
             } else {
-                for (int i = 0; i < nrows; i++) {
+                for (int i = 0; i < nrow; i++) {
                     matrix[i][j] = getDouble(i, col);
                 }
                 j++;
@@ -1132,13 +1132,13 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @return the numeric matrix.
      */
     default Matrix toMatrix(boolean bias, CategoricalEncoder encoder, String rowNames) {
-        int nrows = nrows();
-        int ncols = ncols();
+        int nrow = nrow();
+        int ncol = ncol();
         StructType schema = schema();
 
         ArrayList<String> colNames = new ArrayList<>();
         if (bias) colNames.add("Intercept");
-        for (int j = 0; j < ncols; j++) {
+        for (int j = 0; j < ncol; j++) {
             StructField field = schema.field(j);
             if (field.name.equals(rowNames)) continue;
 
@@ -1161,12 +1161,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             }
         }
 
-        Matrix matrix = new Matrix(nrows, colNames.size());
+        Matrix matrix = new Matrix(nrow, colNames.size());
         matrix.colNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
             int j = schema.fieldIndex(rowNames);
-            String[] rows = new String[nrows];
-            for (int i = 0; i < nrows; i++) {
+            String[] rows = new String[nrow];
+            for (int i = 0; i < nrow; i++) {
                 rows[i] = getString(i, j);
             }
             matrix.rowNames(rows);
@@ -1175,12 +1175,12 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         int j = 0;
         if (bias) {
             j++;
-            for (int i = 0; i < nrows; i++) {
+            for (int i = 0; i < nrow; i++) {
                 matrix.set(i, 0, 1.0);
             }
         }
 
-        for (int col = 0; col < ncols; col++) {
+        for (int col = 0; col < ncol; col++) {
             StructField field = schema.field(col);
             if (field.name.equals(rowNames)) continue;
 
@@ -1188,20 +1188,20 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
             if (encoder != CategoricalEncoder.LEVEL && measure instanceof CategoricalMeasure) {
                 CategoricalMeasure cat = (CategoricalMeasure) measure;
                 if (encoder == CategoricalEncoder.DUMMY) {
-                    for (int i = 0; i < nrows; i++) {
+                    for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
                         if (k > 0) matrix.set(i, j + k - 1, 1.0);
                     }
                     j += cat.size() - 1;
                 } else if (encoder == CategoricalEncoder.ONE_HOT) {
-                    for (int i = 0; i < nrows; i++) {
+                    for (int i = 0; i < nrow; i++) {
                         int k = cat.factor(getInt(i, col));
                         matrix.set(i, j + k, 1.0);
                     }
                     j += cat.size();
                 }
             } else {
-                for (int i = 0; i < nrows; i++) {
+                for (int i = 0; i < nrow; i++) {
                     matrix.set(i, j, getDouble(i, col));
                 }
                 j++;
@@ -1216,18 +1216,18 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
      * @return the statistic summary of numeric columns.
      */
     default DataFrame summary() {
-        int ncols = ncols();
+        int ncol = ncol();
         String[] names = names();
         DataType[] types = types();
         Measure[] measures = measures();
-        String[] col = new String[ncols];
-        double[] min = new double[ncols];
-        double[] max = new double[ncols];
-        double[] avg = new double[ncols];
-        long[] count = new long[ncols];
+        String[] col = new String[ncol];
+        double[] min = new double[ncol];
+        double[] max = new double[ncol];
+        double[] avg = new double[ncol];
+        long[] count = new long[ncol];
 
         int k = 0;
-        for (int j = 0; j < ncols; j++) {
+        for (int j = 0; j < ncol; j++) {
             if (measures[j] instanceof CategoricalMeasure) continue;
 
             DataType type = types[j];
@@ -1663,11 +1663,11 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
                         if (container.isEmpty()) {
                             throw new IllegalArgumentException("Empty list of tuples");
                         }
-                        int nrows = container.size();
-                        int ncols = container.get(0).length();
-                        Matrix m = new Matrix(nrows, ncols);
-                        for (int i = 0; i < nrows; i++) {
-                            for (int j = 0; j < ncols; j++) {
+                        int nrow = container.size();
+                        int ncol = container.get(0).length();
+                        Matrix m = new Matrix(nrow, ncol);
+                        for (int i = 0; i < nrow; i++) {
+                            for (int j = 0; j < ncol; j++) {
                                 m.set(i, j, container.get(i).getDouble(j));
                             }
                         }

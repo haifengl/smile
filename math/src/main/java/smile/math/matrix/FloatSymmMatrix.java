@@ -93,12 +93,12 @@ public class FloatSymmMatrix extends SMatrix {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return n;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -408,7 +408,7 @@ public class FloatSymmMatrix extends SMatrix {
          *           factorization.
          */
         public Cholesky(FloatSymmMatrix lu) {
-            if (lu.nrows() != lu.ncols()) {
+            if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
             this.lu = lu;

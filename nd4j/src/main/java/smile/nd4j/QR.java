@@ -51,7 +51,7 @@ class QR extends smile.math.matrix.QR {
      */
     @Override
     public Cholesky CholeskyOfAtA() {
-        int n = qr.ncols();
+        int n = qr.ncol();
 
         DenseMatrix L = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
@@ -65,7 +65,7 @@ class QR extends smile.math.matrix.QR {
 
     @Override
     public DenseMatrix getR() {
-        int n = qr.ncols();
+        int n = qr.ncol();
         DenseMatrix R = Matrix.zeros(n, n);
         for (int i = 0; i < n; i++) {
             R.set(i, i, tau[i]);
@@ -78,8 +78,8 @@ class QR extends smile.math.matrix.QR {
 
     @Override
     public DenseMatrix getQ() {
-        int m = qr.nrows();
-        int n = qr.ncols();
+        int m = qr.nrow();
+        int n = qr.ncol();
         int k = Math.min(m, n);
 
         throw new UnsupportedOperationException("dorgqr is not supported by ND4J");
@@ -113,11 +113,11 @@ class QR extends smile.math.matrix.QR {
 
     @Override
     public void solve(double[] b, double[] x) {
-        if (b.length != qr.nrows()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.nrows(), qr.nrows(), b.length));
+        if (b.length != qr.nrow()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.nrow(), qr.nrow(), b.length));
         }
 
-        if (x.length != qr.ncols()) {
+        if (x.length != qr.ncol()) {
             throw new IllegalArgumentException("A and x dimensions don't match.");
         }
 
@@ -132,8 +132,8 @@ class QR extends smile.math.matrix.QR {
 
     @Override
     public void solve(DenseMatrix B) {
-        if (B.nrows() != qr.nrows()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrows(), qr.nrows(), B.nrows(), B.ncols()));
+        if (B.nrow() != qr.nrow()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
         }
 
         if (singular) {
@@ -142,13 +142,13 @@ class QR extends smile.math.matrix.QR {
 
         throw new UnsupportedOperationException("dtrtrs is not supported by ND4J");
         /*
-        int m = qr.nrows();
-        int n = qr.ncols();
+        int m = qr.nrow();
+        int n = qr.ncol();
         int k = Math.min(m, n);
 
         intW info = new intW(0);
         double[] work = new double[1];
-        LAPACK.getInstance().dormqr(NLMatrix.Left, NLMatrix.Transpose, B.nrows(), B.ncols(), k, qr.data(), qr.ld(), tau, B.data(), B.ld(), work, -1, info);
+        LAPACK.getInstance().dormqr(NLMatrix.Left, NLMatrix.Transpose, B.nrow(), B.ncol(), k, qr.data(), qr.ld(), tau, B.data(), B.ld(), work, -1, info);
 
         int lwork = n;
         if (info.val == 0) {
@@ -162,7 +162,7 @@ class QR extends smile.math.matrix.QR {
         work = new double[lwork];
 
         info.val = 0;
-        LAPACK.getInstance().dormqr(NLMatrix.Left, NLMatrix.Transpose, B.nrows(), B.ncols(), k, qr.data(), qr.ld(), tau, B.data(), B.ld(), work, lwork, info);
+        LAPACK.getInstance().dormqr(NLMatrix.Left, NLMatrix.Transpose, B.nrow(), B.ncol(), k, qr.data(), qr.ld(), tau, B.data(), B.ld(), work, lwork, info);
 
         if (info.val < 0) {
             logger.error("LAPACK DORMQR error code: {}", info.val);
@@ -170,7 +170,7 @@ class QR extends smile.math.matrix.QR {
         }
 
         info.val = 0;
-        LAPACK.getInstance().dtrtrs(NLMatrix.Upper, NLMatrix.NoTranspose, NLMatrix.NonUnitTriangular, qr.ncols(), B.ncols(), qr.data(), qr.ld(), B.data(), B.ld(), info);
+        LAPACK.getInstance().dtrtrs(NLMatrix.Upper, NLMatrix.NoTranspose, NLMatrix.NonUnitTriangular, qr.ncol(), B.ncol(), qr.data(), qr.ld(), B.data(), B.ld(), info);
 
         if (info.val != 0) {
             logger.error("LAPACK DTRTRS error code: {}", info.val);

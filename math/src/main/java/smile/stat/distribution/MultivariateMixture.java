@@ -134,8 +134,8 @@ public class MultivariateMixture implements MultivariateDistribution {
         double w = components[0].priori;
         Matrix v = components[0].distribution.cov();
 
-        int m = v.nrows();
-        int n = v.ncols();
+        int m = v.nrow();
+        int n = v.ncol();
         Matrix cov = new Matrix(m, n);
 
         for (int i = 0; i < m; i++) {

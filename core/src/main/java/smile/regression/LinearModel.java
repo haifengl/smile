@@ -157,11 +157,11 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         this.formula = formula;
         this.schema = schema;
         this.predictors = X.colNames();
-        this.p = X.ncols();
+        this.p = X.ncol();
         this.w = w;
         this.b = b;
 
-        int n = X.nrows();
+        int n = X.nrow();
         fittedValues = new double[n];
         Arrays.fill(fittedValues, b);
         X.mv(1.0, w, 1.0, fittedValues);
@@ -326,7 +326,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             return X.mv(w);
         } else {
             Matrix X = formula.matrix(df, false);
-            double[] y = new double[X.nrows()];
+            double[] y = new double[X.nrow()];
             Arrays.fill(y, b);
             X.mv(1.0, w, 1.0, y);
             return y;

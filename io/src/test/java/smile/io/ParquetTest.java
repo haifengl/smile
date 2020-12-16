@@ -65,21 +65,21 @@ public class ParquetTest {
 
 
     /**
-     * Test of nrows method, of class DataFrame.
+     * Test of nrow method, of class DataFrame.
      */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(1000, df.nrows());
+        System.out.println("nrow");
+        assertEquals(1000, df.nrow());
     }
 
     /**
-     * Test of ncols method, of class DataFrame.
+     * Test of ncol method, of class DataFrame.
      */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(13, df.ncols());
+        System.out.println("ncol");
+        assertEquals(13, df.ncol());
     }
 
     /**
@@ -141,8 +141,8 @@ public class ParquetTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrows());
-        assertEquals(5, output.ncols());
+        assertEquals(2, output.nrow());
+        assertEquals(5, output.ncol());
         assertEquals("id", output.get(0,0));
         assertEquals(1000L, output.get(0,1));
         assertEquals(1.0, output.get(0,2));
@@ -164,8 +164,8 @@ public class ParquetTest {
         System.out.println("toMatrix");
         Matrix output = df.select("id", "salary").toMatrix();
         System.out.println(output);
-        assertEquals(1000, output.nrows());
-        assertEquals(2, output.ncols());
+        assertEquals(1000, output.nrow());
+        assertEquals(2, output.ncol());
         assertEquals(1, output.get(0, 0), 1E-10);
         assertEquals(2, output.get(1, 0), 1E-10);
         assertEquals(3, output.get(2, 0), 1E-10);

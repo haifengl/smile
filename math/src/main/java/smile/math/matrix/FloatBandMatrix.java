@@ -164,12 +164,12 @@ public class FloatBandMatrix extends SMatrix {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return m;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -553,7 +553,7 @@ public class FloatBandMatrix extends SMatrix {
          *           factorization.
          */
         public Cholesky(FloatBandMatrix lu) {
-            if (lu.nrows() != lu.ncols()) {
+            if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
             this.lu = lu;

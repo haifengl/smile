@@ -190,7 +190,7 @@ public class LaplacianEigenmap implements Serializable {
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
             double norm = 0.0;
-            int c = V.ncols() - j - 2;
+            int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
                 double xi = V.get(i, c) * D[i];
                 coordinates[i][j] = xi;

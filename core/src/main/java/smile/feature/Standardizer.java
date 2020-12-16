@@ -89,7 +89,7 @@ public class Standardizer implements FeatureTransform {
         double[] mu = new double[schema.length()];
         double[] std = new double[schema.length()];
 
-        int n = data.nrows();
+        int n = data.nrow();
         for (int i = 0; i < mu.length; i++) {
             if (schema.field(i).isNumeric()) {
                 final int col = i;

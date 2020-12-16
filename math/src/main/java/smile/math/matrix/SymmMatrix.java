@@ -93,12 +93,12 @@ public class SymmMatrix extends DMatrix {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return n;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -408,7 +408,7 @@ public class SymmMatrix extends DMatrix {
          *           factorization.
          */
         public Cholesky(SymmMatrix lu) {
-            if (lu.nrows() != lu.ncols()) {
+            if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
             this.lu = lu;

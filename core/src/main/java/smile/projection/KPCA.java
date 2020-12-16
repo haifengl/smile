@@ -112,7 +112,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         this.coordinates = coordinates;
         this.latent = latent;
         this.projection = projection;
-        this.p = projection.nrows();
+        this.p = projection.nrow();
     }
 
     /**

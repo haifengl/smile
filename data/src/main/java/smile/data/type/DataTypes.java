@@ -160,9 +160,9 @@ public class DataTypes {
 
     /** Creates a struct data type from JDBC result set meta data. */
     public static StructType struct(ResultSetMetaData meta, String dbms) throws SQLException {
-        int ncols = meta.getColumnCount();
-        StructField[] fields = new StructField[ncols];
-        for (int i = 1; i <= ncols; i++) {
+        int ncol = meta.getColumnCount();
+        StructField[] fields = new StructField[ncol];
+        for (int i = 1; i <= ncol; i++) {
             String name = meta.getColumnName(i);
             DataType type = DataType.of(
                     JDBCType.valueOf(meta.getColumnType(i)),

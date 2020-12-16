@@ -79,25 +79,25 @@ public interface SAS {
             SasFileReader reader = new SasFileReaderImpl(input);
             SasFileProperties properties = reader.getSasFileProperties();
             List<Column> columns = reader.getColumns();
-            int nrows = (int) properties.getRowCount();
-            int ncols = (int) properties.getColumnsCount();
+            int nrow = (int) properties.getRowCount();
+            int ncol = (int) properties.getColumnsCount();
 
-            Object[][] rows = new Object[Math.min(nrows, limit)][];
+            Object[][] rows = new Object[Math.min(nrow, limit)][];
             for (int i = 0; i < rows.length; i++) {
                 rows[i] = reader.readNext();
             }
 
-            BaseVector[] vectors = new BaseVector[ncols];
-            for (int j = 0; j < ncols; j++) {
+            BaseVector[] vectors = new BaseVector[ncol];
+            for (int j = 0; j < ncol; j++) {
                 Column column = columns.get(j);
                 if (column.getType() == String.class) {
-                    String[] vector = new String[nrows];
+                    String[] vector = new String[nrow];
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = (String) rows[i][j];
                     }
                     vectors[j] = Vector.of(column.getName(), DataTypes.StringType, vector);
                 } else {
-                    double[] vector = new double[nrows];
+                    double[] vector = new double[nrow];
                     for (int i = 0; i < rows.length; i++) {
                         vector[i] = ((Number) rows[i][j]).doubleValue();
                     }

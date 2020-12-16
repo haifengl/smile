@@ -102,7 +102,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * @param cov covariance matrix.
      */
     public MultivariateGaussianDistribution(double[] mean, Matrix cov) {
-        if (mean.length != cov.nrows()) {
+        if (mean.length != cov.nrow()) {
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
@@ -289,7 +289,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
             spt[i] = v / u;
         }
 
-        double[] pt = new double[sigmaL.nrows()];
+        double[] pt = new double[sigmaL.nrow()];
 
         // pt = sigmaL * spt
         for (int i = 0; i < pt.length; i++) {

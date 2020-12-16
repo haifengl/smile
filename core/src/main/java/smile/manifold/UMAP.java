@@ -464,7 +464,7 @@ public class UMAP implements Serializable {
         Matrix V = eigen.Vr;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - 2;
+            int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
                 double x = V.get(i, c);
                 coordinates[i][j] = x;

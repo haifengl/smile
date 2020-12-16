@@ -344,7 +344,7 @@ public class CRF implements Serializable {
             });
 
             for (int j = 0; j < k; j++) {
-                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncols(), samples, order);
+                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncol(), samples, order);
                 potentials[j][iter] = tree;
 
                 double[] hj = h[j];

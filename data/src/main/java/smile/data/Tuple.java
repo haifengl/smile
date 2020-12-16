@@ -74,11 +74,11 @@ public interface Tuple extends Serializable {
      * @return the tuple as an array of doubles.
      */
     default double[] toArray(boolean bias, CategoricalEncoder encoder) {
-        int ncols = length();
+        int ncol = length();
         StructType schema = schema();
 
         int n = bias ? 1 : 0;
-        for (int i = 0; i < ncols; i++) {
+        for (int i = 0; i < ncol; i++) {
             StructField field = schema.field(i);
 
             Measure measure = field.measure;
@@ -102,7 +102,7 @@ public interface Tuple extends Serializable {
             array[j++] = 1.0;
         }
 
-        for (int i = 0; i < ncols; i++) {
+        for (int i = 0; i < ncol; i++) {
             StructField field = schema.field(i);
 
             Measure measure = field.measure;

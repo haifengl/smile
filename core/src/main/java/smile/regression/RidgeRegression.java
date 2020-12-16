@@ -140,8 +140,8 @@ public class RidgeRegression {
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
 
         if (weights.length != n) {
             throw new IllegalArgumentException(String.format("Invalid weights vector size: %d != %d", weights.length, n));

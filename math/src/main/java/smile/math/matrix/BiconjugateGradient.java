@@ -60,7 +60,7 @@ public class BiconjugateGradient {
      * @return the estimated error.
      */
     public static double solve(DMatrix A, double[] b, double[] x) {
-        return solve(A, b, x, Jacobi(A), 1E-6, 1, 2 * Math.max(A.nrows(), A.ncols()));
+        return solve(A, b, x, Jacobi(A), 1E-6, 1, 2 * Math.max(A.nrow(), A.ncol()));
     }
 
     /**

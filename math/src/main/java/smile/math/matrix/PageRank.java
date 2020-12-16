@@ -46,7 +46,7 @@ public class PageRank {
      * @return the page rank vector.
      */
     public static double[] of(DMatrix A) {
-        int n = A.nrows();
+        int n = A.nrow();
         double[] v = new double[n];
         Arrays.fill(v, 1.0 / n);
         return of(A, v);
@@ -73,7 +73,7 @@ public class PageRank {
      * @return the page rank vector.
      */
     public static double[] of(DMatrix A, double[] v, double damping, double tol, int maxIter) {
-        if (A.nrows() != A.ncols()) {
+        if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
 
@@ -85,7 +85,7 @@ public class PageRank {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
         tol = Math.max(tol, MathEx.EPSILON * n);
 
         double[] z = new double[n];
