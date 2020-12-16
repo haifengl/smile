@@ -113,13 +113,13 @@ public class NeuralGas implements VectorQuantizer {
      */
     private final double[] dist;
     /**
+     * The threshold to update neuron if {@code alpha * theta > eps}.
+     */
+    private final double eps = 1E-7;
+    /**
      * The current iteration.
      */
     private int t = 0;
-    /**
-     * The threshold to update neuron if alpha * theta > eps.
-     */
-    private final double eps = 1E-7;
 
     /**
      * Constructor.

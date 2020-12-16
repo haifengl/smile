@@ -254,11 +254,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -277,7 +277,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -307,11 +307,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -330,7 +330,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -360,11 +360,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -383,7 +383,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -413,11 +413,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -436,7 +436,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -466,11 +466,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -489,7 +489,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -497,7 +497,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -517,11 +517,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -540,7 +540,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -548,7 +548,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -568,11 +568,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -591,7 +591,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -599,7 +599,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -619,11 +619,11 @@ public interface LAPACK {
      *
      * The diagonal pivoting method is used to factor A as
      * <pre>{@code
-     *     A = U * D * U**T,  if UPLO = 'U'
+     *     A = U * D * U<sup>T</sup>,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * D * L**T,  if UPLO = 'L'
+     *     A = L * D * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U (or L) is a product of permutation and unit upper (lower)
      * triangular matrices, and D is symmetric and block diagonal with
@@ -642,7 +642,7 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param ipiv The pivot indices that define the permutation matrix P;
      *             row i of the matrix was interchanged with row IPIV(i).
@@ -650,7 +650,7 @@ public interface LAPACK {
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -670,11 +670,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -692,7 +692,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -719,11 +719,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -741,7 +741,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -768,11 +768,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -790,7 +790,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -817,11 +817,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -839,7 +839,7 @@ public interface LAPACK {
      *
      * @param A The symmetric matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -866,11 +866,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -888,12 +888,12 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -913,11 +913,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -935,12 +935,12 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -960,11 +960,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -982,12 +982,12 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -1007,11 +1007,11 @@ public interface LAPACK {
      *
      * The Cholesky decomposition is used to factor A as
      * <pre>{@code
-     *     A = U**T* U,  if UPLO = 'U'
+     *     A = U<sup>T</sup>* U,  if UPLO = 'U'
      * }</pre>
      * or
      * <pre>{@code
-     *     A = L * L**T,  if UPLO = 'L'
+     *     A = L * L<sup>T</sup>,  if UPLO = 'L'
      * }</pre>
      * where U is an upper triangular matrix and L is a lower triangular
      * matrix.  The factored form of A is then used to solve the system of
@@ -1029,12 +1029,12 @@ public interface LAPACK {
      *
      * @param A The symmetric packed matrix.
      *          On exit, the factor U or L from the Cholesky factorization
-     *          {@code A = U**T*U} or A = {@code L*L**T}, in the same storage format as A.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, in the same storage format as A.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
      *
-     * @param ldb The leading dimension of the matrix B. LDB >= max(1,N).
+     * @param ldb The leading dimension of the matrix B. {@code LDB >= max(1,N)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -3471,7 +3471,7 @@ public interface LAPACK {
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,M)}.
      *
-     * @param s The singular values of A, sorted so that S(i) >= S(i+1).
+     * @param s The singular values of A, sorted so that {@code S(i) >= S(i+1)}.
      *          Dimension min(M,N).
      *
      * @param U If JOBU = 'N' or 'O', U is not referenced.
@@ -3563,7 +3563,7 @@ public interface LAPACK {
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
-     *          A is overwritten with the first M rows of V**T (the right
+     *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
@@ -3606,7 +3606,7 @@ public interface LAPACK {
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
-     *          A is overwritten with the first M rows of V**T (the right
+     *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
@@ -3649,7 +3649,7 @@ public interface LAPACK {
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
-     *          A is overwritten with the first M rows of V**T (the right
+     *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
@@ -3692,7 +3692,7 @@ public interface LAPACK {
      *
      *          If JOBZ = 'O', A is overwritten with the first N columns
      *          of U (the left singular vectors, stored columnwise) if {@code M >= N};
-     *          A is overwritten with the first M rows of V**T (the right
+     *          A is overwritten with the first M rows of V<sup>T</sup> (the right
      *         singular vectors, stored rowwise) otherwise.
      *
      *          If JOBZ != 'O', the contents of A are destroyed.
@@ -4678,7 +4678,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4704,7 +4704,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4730,7 +4730,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4756,7 +4756,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4782,7 +4782,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4808,7 +4808,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4834,7 +4834,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4860,7 +4860,7 @@ public interface LAPACK {
      *
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4888,7 +4888,7 @@ public interface LAPACK {
      *
      * @param AB The band matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4916,7 +4916,7 @@ public interface LAPACK {
      *
      * @param AB The band matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4944,7 +4944,7 @@ public interface LAPACK {
      *
      * @param AB The band matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4972,7 +4972,7 @@ public interface LAPACK {
      *
      * @param AB The band matrix of dimension (LDA, N).
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @param ldab The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -4999,7 +4999,7 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5023,7 +5023,7 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5047,7 +5047,7 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5071,7 +5071,7 @@ public interface LAPACK {
      *
      * @param AP The packed matrix.
      *          On exit, the factor U or L from the Cholesky
-     *          factorization A = U**T*U or A = L*L**T.
+     *          factorization A = U<sup>T</sup>*U or A = L*L<sup>T</sup>.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5089,7 +5089,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5102,7 +5102,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by POTRF.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -5124,7 +5124,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5137,7 +5137,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by POTRF.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -5159,7 +5159,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5172,7 +5172,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by POTRF.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -5194,7 +5194,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5207,7 +5207,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param A The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by POTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by POTRF.
      *
      * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
      *
@@ -5229,7 +5229,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5244,7 +5244,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AB The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PBTRF.
      *
      * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
@@ -5266,7 +5266,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5281,7 +5281,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AB The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PBTRF.
      *
      * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
@@ -5303,7 +5303,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5318,7 +5318,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AB The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PBTRF.
      *
      * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
@@ -5340,7 +5340,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite band matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by POTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by POTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5355,7 +5355,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AB The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PBTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PBTRF.
      *
      * @param ldab The leading dimension of the matrix AB. {@code LDA >= max(1,N)}.
      *
@@ -5377,7 +5377,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by PPTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by PPTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5390,7 +5390,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AP The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PPTRF.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5410,7 +5410,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by PPTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by PPTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5423,7 +5423,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AP The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PPTRF.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5443,7 +5443,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by PPTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by PPTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5456,7 +5456,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AP The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PPTRF.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5476,7 +5476,7 @@ public interface LAPACK {
      * }</pre>
      * where A is an N-by-N symmetric positive definite packed matrix and
      * X and B are N-by-NRHS matrices using the Cholesky factorization
-     * A = U**T*U or A = L*L**T computed by PPTRF.
+     * A = U<sup>T</sup>*U or A = L*L<sup>T</sup> computed by PPTRF.
      *
      * @param layout The matrix layout.
      *
@@ -5489,7 +5489,7 @@ public interface LAPACK {
      *             of the matrix B.
      *
      * @param AP The triangular factor U or L from the Cholesky factorization
-     *          A = U**T*U or A = L*L**T, as computed by PPTRF.
+     *          A = U<sup>T</sup>*U or A = L*L<sup>T</sup>, as computed by PPTRF.
      *
      * @param B On entry, the N-by-NRHS matrix of right hand side matrix B.
      *          On exit, if INFO = 0, the N-by-NRHS solution matrix X.
@@ -5514,7 +5514,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
-     *          upper triangular if m >= n); the elements below the diagonal,
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
@@ -5540,7 +5540,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
-     *          upper triangular if m >= n); the elements below the diagonal,
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
@@ -5566,7 +5566,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
-     *          upper triangular if m >= n); the elements below the diagonal,
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
@@ -5592,7 +5592,7 @@ public interface LAPACK {
      * @param A The matrix of dimension (LDA, N).
      *          On exit, the elements on and above the diagonal of the array
      *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
-     *          upper triangular if m >= n); the elements below the diagonal,
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
      *          with the array TAU, represent the orthogonal matrix Q as a
      *          product of min(m,n) elementary reflectors.
      *
@@ -5623,11 +5623,11 @@ public interface LAPACK {
      *
      * @param layout The matrix layout.
      *
-     * @param side Apply Q or Q**T from the Left;
-     *             or apply Q or Q**T from the Right.
+     * @param side Apply Q or Q<sup>T</sup> from the Left;
+     *             or apply Q or Q<sup>T</sup> from the Right.
      *
      * @param trans No transpose, apply Q;
-     *              Transpose, apply Q**T.
+     *              Transpose, apply Q<sup>T</sup>.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -5648,9 +5648,9 @@ public interface LAPACK {
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
      * @param C On entry, the M-by-N matrix C.
-     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *          On exit, C is overwritten by Q*C or Q<sup>T</sup>*C or C*Q<sup>T</sup> or C*Q.
      *
-     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     * @param ldc The leading dimension of the matrix C. {@code LDC >= max(1,M)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5675,11 +5675,11 @@ public interface LAPACK {
      *
      * @param layout The matrix layout.
      *
-     * @param side Apply Q or Q**T from the Left;
-     *             or apply Q or Q**T from the Right.
+     * @param side Apply Q or Q<sup>T</sup> from the Left;
+     *             or apply Q or Q<sup>T</sup> from the Right.
      *
      * @param trans No transpose, apply Q;
-     *              Transpose, apply Q**T.
+     *              Transpose, apply Q<sup>T</sup>.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -5700,9 +5700,9 @@ public interface LAPACK {
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
      * @param C On entry, the M-by-N matrix C.
-     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *          On exit, C is overwritten by Q*C or Q<sup>T</sup>*C or C*Q<sup>T</sup> or C*Q.
      *
-     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     * @param ldc The leading dimension of the matrix C. {@code LDC >= max(1,M)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5727,11 +5727,11 @@ public interface LAPACK {
      *
      * @param layout The matrix layout.
      *
-     * @param side Apply Q or Q**T from the Left;
-     *             or apply Q or Q**T from the Right.
+     * @param side Apply Q or Q<sup>T</sup> from the Left;
+     *             or apply Q or Q<sup>T</sup> from the Right.
      *
      * @param trans No transpose, apply Q;
-     *              Transpose, apply Q**T.
+     *              Transpose, apply Q<sup>T</sup>.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -5752,9 +5752,9 @@ public interface LAPACK {
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
      * @param C On entry, the M-by-N matrix C.
-     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *          On exit, C is overwritten by Q*C or Q<sup>T</sup>*C or C*Q<sup>T</sup> or C*Q.
      *
-     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     * @param ldc The leading dimension of the matrix C. {@code LDC >= max(1,M)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit
@@ -5779,11 +5779,11 @@ public interface LAPACK {
      *
      * @param layout The matrix layout.
      *
-     * @param side Apply Q or Q**T from the Left;
-     *             or apply Q or Q**T from the Right.
+     * @param side Apply Q or Q<sup>T</sup> from the Left;
+     *             or apply Q or Q<sup>T</sup> from the Right.
      *
      * @param trans No transpose, apply Q;
-     *              Transpose, apply Q**T.
+     *              Transpose, apply Q<sup>T</sup>.
      *
      * @param m The number of rows of the matrix A.
      *
@@ -5804,9 +5804,9 @@ public interface LAPACK {
      * @param tau The scalar factors of the elementary reflectors, as returned by GEQRF.
      *
      * @param C On entry, the M-by-N matrix C.
-     *          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+     *          On exit, C is overwritten by Q*C or Q<sup>T</sup>*C or C*Q<sup>T</sup> or C*Q.
      *
-     * @param ldc The leading dimension of the matrix C. LDC >= max(1,M).
+     * @param ldc The leading dimension of the matrix C. {@code LDC >= max(1,M)}.
      *
      * @return INFO flag.
      *         {@code = 0}:  successful exit

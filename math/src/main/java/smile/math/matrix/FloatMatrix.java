@@ -2432,8 +2432,8 @@ public class FloatMatrix extends SMatrix {
         public final int[] ipiv;
 
         /**
-         * If info = 0, the LU decomposition was successful.
-         * If info = i > 0,  U(i,i) is exactly zero. The factorization
+         * If {@code info = 0}, the LU decomposition was successful.
+         * If {@code info = i > 0}, U(i,i) is exactly zero. The factorization
          * has been completed, but the factor U is exactly
          * singular, and division by zero will occur if it is used
          * to solve a system of equations.
@@ -2442,9 +2442,9 @@ public class FloatMatrix extends SMatrix {
 
         /**
          * Constructor.
-         * @param lu       LU decomposition matrix
-         * @param ipiv     the pivot vector
-         * @param info     info > 0 if the matrix is singular
+         * @param lu   LU decomposition matrix.
+         * @param ipiv the pivot vector.
+         * @param info {@code info > 0} if the matrix is singular.
          */
         public LU(FloatMatrix lu, int[] ipiv, int info) {
             this.lu = lu;
