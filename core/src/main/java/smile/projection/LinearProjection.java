@@ -29,6 +29,7 @@ public interface LinearProjection extends Projection<double[]> {
     /**
      * Returns the projection matrix. The dimension reduced data can be obtained
      * by y = W * x.
+     * @return the projection matrix.
      */
     Matrix getProjection();
 
