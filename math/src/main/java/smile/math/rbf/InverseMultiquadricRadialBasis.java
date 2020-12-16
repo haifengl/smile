@@ -43,10 +43,17 @@ public class InverseMultiquadricRadialBasis implements RadialBasisFunction {
 
     private final double r02;
 
+    /**
+     * Constructor. The default scale is 1.0.
+     */
     public InverseMultiquadricRadialBasis() {
         this(1.0);
     }
 
+    /**
+     * Constructor.
+     * @param scale the scale parameter.
+     */
     public InverseMultiquadricRadialBasis(double scale) {
         r02 = scale * scale;
     }

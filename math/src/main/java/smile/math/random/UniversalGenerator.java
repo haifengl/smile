@@ -58,6 +58,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
     /**
      * Initialize Random with a specified integer seed
+     * @param seed the seed of random numbers.
      */
     public UniversalGenerator(int seed) {
         setSeed(seed);
@@ -65,6 +66,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
     /**
      * Initialize Random with a specified long seed
+     * @param seed the seed of random numbers.
      */
     public UniversalGenerator(long seed) {
         setSeed(seed);

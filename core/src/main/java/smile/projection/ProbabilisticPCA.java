@@ -90,6 +90,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues.
+     * @return the variable loading matrix.
      */
     public Matrix getLoadings() {
         return loading;
@@ -97,6 +98,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
 
     /**
      * Returns the center of data.
+     * @return the center of data.
      */
     public double[] getCenter() {
         return mu;
@@ -104,6 +106,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
 
     /**
      * Returns the variance of noise.
+     * @return the variance of noise.
      */
     public double getNoiseVariance() {
         return noise;
@@ -148,6 +151,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * Fits probabilistic principal component analysis.
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
+     * @return the model.
      */
     public static ProbabilisticPCA fit(double[][] data, int k) {
         int m = data.length;
