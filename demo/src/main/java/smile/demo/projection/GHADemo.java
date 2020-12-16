@@ -23,6 +23,7 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+import smile.math.TimeFunction;
 import smile.plot.swing.Canvas;
 import smile.plot.swing.ScatterPlot;
 import smile.plot.swing.TextPlot;
@@ -77,7 +78,8 @@ public class GHADemo extends ProjectionDemo {
         pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
-        GHA gha = new GHA(data[0].length, 2, 0.00001);
+        TimeFunction r = TimeFunction.constant(0.00001);
+        GHA gha = new GHA(data[0].length, 2, r);
         for (int iter = 1; iter <= 500; iter++) {
             double error = 0.0;
             for (int i = 0; i < data.length; i++) {
@@ -103,7 +105,7 @@ public class GHADemo extends ProjectionDemo {
         pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
-        gha = new GHA(data[0].length, 3, 0.00001);
+        gha = new GHA(data[0].length, 3, r);
         for (int iter = 1; iter <= 500; iter++) {
             double error = 0.0;
             for (int i = 0; i < data.length; i++) {

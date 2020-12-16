@@ -249,7 +249,7 @@ public class PCA implements LinearProjection, Serializable {
      * Returns the center of data.
      * @return the center of data.
      */
-    public double[] getCenter() {
+    public double[] center() {
         return mu;
     }
 
@@ -258,7 +258,7 @@ public class PCA implements LinearProjection, Serializable {
      * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
      * @return the variable loading matrix.
      */
-    public Matrix getLoadings() {
+    public Matrix loadings() {
         return eigvectors;
     }
 
@@ -267,7 +267,7 @@ public class PCA implements LinearProjection, Serializable {
      * which are the eigenvalues of the covariance or correlation matrix of learning data.
      * @return the principal component variances.
      */
-    public double[] getVariance() {
+    public double[] variance() {
         return eigvalues;
     }
 
@@ -276,7 +276,7 @@ public class PCA implements LinearProjection, Serializable {
      * ordered from largest to smallest.
      * @return the proportion of variance contained in each principal component.
      */
-    public double[] getVarianceProportion() {
+    public double[] varianceProportion() {
         return proportion;
     }
 
@@ -285,12 +285,12 @@ public class PCA implements LinearProjection, Serializable {
      * ordered from largest to smallest.
      * @return the cumulative proportion of variance.
      */
-    public double[] getCumulativeVarianceProportion() {
+    public double[] cumulativeVarianceProportion() {
         return cumulativeProportion;
     }
 
     @Override
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 

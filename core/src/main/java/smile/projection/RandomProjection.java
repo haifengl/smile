@@ -136,7 +136,7 @@ public class RandomProjection implements LinearProjection, Serializable {
     }
 
     @Override
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 }

@@ -201,7 +201,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * Returns the eigenvalues of kernel principal components, ordered from largest to smallest.
      * @return the eigenvalues of kernel principal components, ordered from largest to smallest.
      */
-    public double[] getVariances() {
+    public double[] variances() {
         return latent;
     }
 
@@ -210,7 +210,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * by y = W * K(x, &middot;).
      * @return the projection matrix.
      */
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 
@@ -220,7 +220,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * correspond to observations, columns to components.
      * @return the nonlinear principal component scores.
      */
-    public double[][] getCoordinates() {
+    public double[][] coordinates() {
         return coordinates;
     }
 

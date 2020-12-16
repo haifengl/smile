@@ -70,11 +70,11 @@ public class KPCATest {
 
         KPCA<double[]> kpca = KPCA.fit(CPU.x, new GaussianKernel(Math.sqrt(2.5)), 29);
         for (int i = 0; i < latent.length; i++) {
-            assertEquals(latent[i], kpca.getVariances()[i], 1E-3);
+            assertEquals(latent[i], kpca.variances()[i], 1E-3);
         }
 
         double[][] points = kpca.project(CPU.x);
-        double[][] coord = kpca.getCoordinates();
+        double[][] coord = kpca.coordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[i].length; j++) {
                 assertEquals(points[i][j], coord[i][j], 1E-7);
