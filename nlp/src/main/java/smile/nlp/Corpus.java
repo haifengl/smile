@@ -30,63 +30,86 @@ public interface Corpus {
 
     /**
      * Returns the number of words in the corpus.
+     * @return the number of words in the corpus.
      */
     long size();
     
     /**
      * Returns the number of documents in the corpus.
+     * @return the number of documents in the corpus.
      */
     int getNumDocuments();
 
     /**
      * Returns the number of unique terms in the corpus.
+     * @return the number of unique terms in the corpus.
      */
     int getNumTerms();
 
     /**
      * Returns the number of bigrams in the corpus.
+     * @return the number of bigrams in the corpus.
      */
     long getNumBigrams();
 
     /**
      * Returns the average size of documents in the corpus.
+     * @return the average size of documents in the corpus.
      */
     int getAverageDocumentSize();
 
     /**
      * Returns the total frequency of the term in the corpus.
+     * @param term the term.
+     * @return the total frequency of the term in the corpus.
      */
     int getTermFrequency(String term);
 
     /**
      * Returns the total frequency of the bigram in the corpus.
+     * @param bigram the bigram.
+     * @return the total frequency of the bigram in the corpus.
      */
     int getBigramFrequency(Bigram bigram);
 
     /**
-     * Returns an iterator over the terms in the corpus.
+     * Returns the iterator over the terms in the corpus.
+     * @return the iterator of terms.
      */
     Iterator<String> getTerms();
 
     /**
-     * Returns an iterator over the bigrams in the corpus.
+     * Returns the iterator over the bigrams in the corpus.
+     * @return the iterator of bigrams.
      */
     Iterator<Bigram> getBigrams();
 
     /**
-     * Returns an iterator over the set of documents containing the given term.
+     * Returns the iterator over the set of documents containing the given term.
+     *
+     * @param term the search term.
+     * @return the iterator of documents containing the term.
      */
     Iterator<Text> search(String term);
 
     /**
-     * Returns an iterator over the set of documents containing the given term
-     * in descending order of relevance.
+     * Returns the iterator over the set of documents containing
+     * the given term in descending order of relevance.
+     *
+     * @param ranker the relevance ranker.
+     * @param term the search term.
+     * @return the iterator of documents in descending order of relevance.
      */
     Iterator<Relevance> search(RelevanceRanker ranker, String term);
 
     /**
-     * Returns an iterator over the set of documents containing (at least one
-     * of) the given terms in descending order of relevance.
+     * Returns the iterator over the set of documents containing
+     * (at least one of) the given terms in descending order of
+     * relevance.
+     *
+     * @param ranker the relevance ranker.
+     * @param terms the search terms.
+     * @return the iterator of documents in descending order of relevance.
      */
     Iterator<Relevance> search(RelevanceRanker ranker, String[] terms);
 }

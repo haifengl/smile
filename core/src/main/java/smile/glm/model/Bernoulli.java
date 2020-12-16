@@ -26,7 +26,10 @@ import java.util.stream.IntStream;
  * @author Haifeng Li
  */
 public interface Bernoulli {
-    /** logit link function. */
+    /**
+     * logit link function.
+     * @return logit link function.
+     */
     static Model logit() {
         return new Model() {
             @Override
