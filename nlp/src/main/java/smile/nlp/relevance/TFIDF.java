@@ -100,7 +100,7 @@ public class TFIDF implements RelevanceRanker {
     public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
         if (tf == 0) return 0.0;
 
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         return rank(tf, maxtf, N, n);
@@ -108,7 +108,7 @@ public class TFIDF implements RelevanceRanker {
 
     @Override
     public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         double r = 0.0;

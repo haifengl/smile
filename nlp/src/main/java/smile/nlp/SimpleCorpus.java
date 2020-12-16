@@ -177,44 +177,44 @@ public class SimpleCorpus implements Corpus {
     }
 
     @Override
-    public int getNumDocuments() {
+    public int ndoc() {
         return docs.size();
     }
 
     @Override
-    public int getNumTerms() {
+    public int nterm() {
         return freq.size();
     }
 
     @Override
-    public long getNumBigrams() {
+    public long nbigram() {
         return freq2.size();
     }
 
     @Override
-    public int getAverageDocumentSize() {
+    public int avgDocSize() {
         return (int) (size / docs.size());
     }
 
     @Override
-    public int getTermFrequency(String term) {
+    public int count(String term) {
         MutableInt count = freq.get(term);
         return count == null ? 0 : count.value;
     }
 
     @Override
-    public int getBigramFrequency(Bigram bigram) {
+    public int count(Bigram bigram) {
         MutableInt count = freq2.get(bigram);
         return count == null ? 0 : count.value;
     }
 
     @Override
-    public Iterator<String> getTerms() {
+    public Iterator<String> terms() {
         return freq.keySet().iterator();
     }
 
     @Override
-    public Iterator<Bigram> getBigrams() {
+    public Iterator<Bigram> bigrams() {
         return freq2.keySet().iterator();
     }
 

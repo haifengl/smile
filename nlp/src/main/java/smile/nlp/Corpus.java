@@ -38,51 +38,51 @@ public interface Corpus {
      * Returns the number of documents in the corpus.
      * @return the number of documents in the corpus.
      */
-    int getNumDocuments();
+    int ndoc();
 
     /**
      * Returns the number of unique terms in the corpus.
      * @return the number of unique terms in the corpus.
      */
-    int getNumTerms();
+    int nterm();
 
     /**
      * Returns the number of bigrams in the corpus.
      * @return the number of bigrams in the corpus.
      */
-    long getNumBigrams();
+    long nbigram();
 
     /**
      * Returns the average size of documents in the corpus.
      * @return the average size of documents in the corpus.
      */
-    int getAverageDocumentSize();
+    int avgDocSize();
 
     /**
      * Returns the total frequency of the term in the corpus.
      * @param term the term.
      * @return the total frequency of the term in the corpus.
      */
-    int getTermFrequency(String term);
+    int count(String term);
 
     /**
      * Returns the total frequency of the bigram in the corpus.
      * @param bigram the bigram.
      * @return the total frequency of the bigram in the corpus.
      */
-    int getBigramFrequency(Bigram bigram);
+    int count(Bigram bigram);
 
     /**
      * Returns the iterator over the terms in the corpus.
      * @return the iterator of terms.
      */
-    Iterator<String> getTerms();
+    Iterator<String> terms();
 
     /**
      * Returns the iterator over the bigrams in the corpus.
      * @return the iterator of bigrams.
      */
-    Iterator<Bigram> getBigrams();
+    Iterator<Bigram> bigrams();
 
     /**
      * Returns the iterator over the set of documents containing the given term.
