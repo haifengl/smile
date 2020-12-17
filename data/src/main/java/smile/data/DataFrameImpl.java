@@ -580,10 +580,15 @@ class DataFrameImpl implements DataFrame, Serializable {
         return new DataFrameRow(i);
     }
 
+    /** A row in data frame. */
     class DataFrameRow implements Tuple {
         /** Row index. */
         private final int i;
 
+        /**
+         * Constructor.
+         * @param i the index of row.
+         */
         DataFrameRow(int i) {
             this.i = i;
         }

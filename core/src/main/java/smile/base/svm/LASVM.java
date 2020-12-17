@@ -80,9 +80,13 @@ public class LASVM<T> implements Serializable {
      * where m_i = min{0, y_i * C}
      * and   M_i = max{0, y_i * C}
      */
+    /** The most violating pair. */
     private SupportVector<T> svmin = null;
+    /** The most violating pair. */
     private SupportVector<T> svmax = null;
+    /** The gradient of most violating pair. */
     private double gmin = Double.MAX_VALUE;
+    /** The gradient of most violating pair. */
     private double gmax = -Double.MAX_VALUE;
 
     /**
