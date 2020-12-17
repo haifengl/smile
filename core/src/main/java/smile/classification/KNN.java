@@ -106,7 +106,7 @@ public class KNN<T> implements SoftClassifier<T> {
      * Fits the 1-NN classifier.
      * @param x training samples.
      * @param y training labels.
-     * @param distance the distance measure for finding nearest neighbors.
+     * @param distance the distance function.
      * @param <T> the data type.
      * @return the model.
      */
@@ -119,7 +119,7 @@ public class KNN<T> implements SoftClassifier<T> {
      * @param k the number of neighbors.
      * @param x training samples.
      * @param y training labels.
-     * @param distance the distance measure for finding nearest neighbors.
+     * @param distance the distance function.
      * @param <T> the data type.
      * @return the model.
      */

@@ -66,17 +66,27 @@ public class HeapSelect<T extends Comparable<? super T>> {
         sorted = false;
     }
 
-    /** Returns the number of objects that have been added into heap. */
+    /**
+     * Returns the number of objects that have been added into heap.
+     * @return the number of objects that have been added into heap.
+     */
     public int size() {
         return n;
     }
 
-    /** Returns the array back the heap. */
+    /**
+     * Returns the array back the heap.
+     * @return the array back the heap.
+     */
     public T[] toArray() {
         return heap;
     }
 
-    /** Returns the array back the heap. */
+    /**
+     * Returns the array back the heap.
+     * @param a the array to copy into.
+     * @return the array back the heap.
+     */
     public T[] toArray(T[] a) {
         System.arraycopy(heap, 0, a, 0, k);
         return a;
@@ -84,6 +94,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
 
     /**
      * Assimilate a new value from the stream.
+     * @param datum a new value.
      */
     public void add(T datum) {
         sorted = false;
@@ -116,6 +127,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
 
     /**
      * Returns the k-<i>th</i> smallest value seen so far.
+     * @return the k-<i>th</i> smallest value.
      */
     public T peek() {
         return heap[0];
@@ -125,6 +137,9 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * Returns the i-<i>th</i> smallest value seen so far. i = 0 returns the smallest
      * value seen, i = 1 the second largest, ..., i = k-1 the last position
      * tracked. Also, i must be less than the number of previous assimilated.
+     *
+     * @param i the ordinal index of smallest values.
+     * @return the i-<i>th</i> smallest value.
      */
     public T get(int i) {
         if (i > Math.min(k, n) - 1) {

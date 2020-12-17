@@ -33,6 +33,7 @@ public interface Binomial {
      * So E(y) is independent of n.
      *
      * @param n each sample y[i] is of bin(n[i], p_i) distribution.
+     * @return logit link function.
      */
     static Model logit(int[] n) {
         return new Model() {

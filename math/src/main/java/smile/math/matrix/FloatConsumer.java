@@ -27,9 +27,9 @@ public interface FloatConsumer {
      * Accepts one matrix element and performs the operation
      * on the given arguments.
      *
-     * @param i the row
-     * @param j the column
-     * @param x the value
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the matrix cell value.
      */
     void accept(int i, int j, float x);
 }

@@ -42,6 +42,7 @@ public class Random {
 
     /**
      * Initialize with given seed for default random number generator engine.
+     * @param seed the RNG seed.
      */
     public Random(long seed) {
         real = new UniversalGenerator(seed);
@@ -50,6 +51,7 @@ public class Random {
 
     /**
      * Initialize the random generator with a seed.
+     * @param seed the RNG seed.
      */
     public void setSeed(long seed) {
         real.setSeed(seed);
@@ -100,6 +102,7 @@ public class Random {
 
     /**
      * Returns a random integer.
+     * @return a random integer.
      */
     public int nextInt() {
         return twister.nextInt();
@@ -107,6 +110,8 @@ public class Random {
     
     /**
      * Returns a random integer in [0, n).
+     * @param n the upper bound of random number.
+     * @return a random integer.
      */
     public int nextInt(int n) {
         return twister.nextInt(n);
@@ -114,14 +119,17 @@ public class Random {
 
     /**
      * Returns a random long integer.
+     * @return a random long integer.
      */
     public long nextLong() {
         return twister.nextLong();
     }
 
     /**
-     * Generates a permutation of 0, 1, 2, ..., n-1, which is useful for
-     * sampling without replacement.
+     * Returns a permutation of <code>(0, 1, 2, ..., n-1)</code>.
+     *
+     * @param n the upper bound.
+     * @return the permutation of <code>(0, 1, 2, ..., n-1)</code>.
      */
     public int[] permutate(int n) {
         int[] x = IntStream.range(0, n).toArray();
@@ -130,7 +138,8 @@ public class Random {
     }
 
     /**
-     * Generates a permutation of given array.
+     * Permutates an array.
+     * @param x the array.
      */
     public void permutate(int[] x) {
         for (int i = 0; i < x.length; i++) {
@@ -140,7 +149,8 @@ public class Random {
     }
 
     /**
-     * Generates a permutation of given array.
+     * Permutates an array.
+     * @param x the array.
      */
     public void permutate(float[] x) {
         for (int i = 0; i < x.length; i++) {
@@ -150,7 +160,8 @@ public class Random {
     }
 
     /**
-     * Generates a permutation of given array.
+     * Permutates an array.
+     * @param x the array.
      */
     public void permutate(double[] x) {
         for (int i = 0; i < x.length; i++) {
@@ -160,7 +171,8 @@ public class Random {
     }
 
     /**
-     * Generates a permutation of given array.
+     * Permutates an array.
+     * @param x the array.
      */
     public void permutate(Object[] x) {
         for (int i = 0; i < x.length; i++) {

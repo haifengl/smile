@@ -37,8 +37,6 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class SignalNoiseRatio implements FeatureRanking {
-    public static final SignalNoiseRatio instance = new SignalNoiseRatio();
-
     @Override
     public double[] rank(double[][] x, int[] y) {
         return of(x, y);

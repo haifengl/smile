@@ -19,10 +19,16 @@ package smile.util;
 
 /** A pair of integer. */
 public class IntPair {
+    /** The first integer. */
     public final int i;
+    /** The second integer. */
     public final int j;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param i the first integer.
+     * @param j the second integer.
+     */
     public IntPair(int i, int j) {
         this.i = i;
         this.j = j;

@@ -24,6 +24,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -65,7 +66,7 @@ public class CSV {
 
     /**
      * Constructor.
-     * @param format The format of a CSV file.
+     * @param format the CSV file format.
      */
     public CSV(CSVFormat format) {
         this.format = format;
@@ -73,7 +74,8 @@ public class CSV {
 
     /**
      * Sets the schema.
-     * @param schema the schema of file.
+     * @param schema the data schema.
+     * @return this object.
      */
     public CSV schema(StructType schema) {
         this.schema = schema;
@@ -83,6 +85,7 @@ public class CSV {
     /**
      * Sets the charset.
      * @param charset the charset of file.
+     * @return this object.
      */
     public CSV charset(Charset charset) {
         this.charset = charset;
@@ -91,7 +94,10 @@ public class CSV {
 
     /**
      * Reads a CSV file.
-     * @param path a CSV file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
         return read(path, Integer.MAX_VALUE);
@@ -99,8 +105,11 @@ public class CSV {
 
     /**
      * Reads a limited number of records from a CSV file.
-     * @param path a CSV file path or URI.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
         if (schema == null) {
@@ -113,7 +122,9 @@ public class CSV {
 
     /**
      * Reads a CSV file.
-     * @param path a CSV file path.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path) throws IOException {
         return read(path, Integer.MAX_VALUE);
@@ -121,8 +132,10 @@ public class CSV {
 
     /**
      * Reads a limited number of records from a CSV file.
-     * @param path a CSV file path.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path, int limit) throws IOException {
         if (schema == null) {
@@ -163,9 +176,16 @@ public class CSV {
 
     /**
      * Infer the schema from the top n rows.
-     *  - Infer type of each row.
-     *  - Merge row types to find common type
-     *  - String type by default.
+     * <ol>
+     *  <li>Infer type of each row.</li>
+     *  <li>Merge row types to find common type</li>
+     *  <li>String type by default.</li>
+     * </ol>
+     *
+     * @param reader the file reader.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public StructType inferSchema(Reader reader, int limit) throws IOException {
         try (CSVParser parser = CSVParser.parse(reader, format)) {
@@ -210,19 +230,25 @@ public class CSV {
             return DataTypes.struct(fields);
         }
     }
-
-    /** Writes a data frame to a file with UTF-8. */
-    public void write(DataFrame df, Path path) throws IOException {
-        int p = df.schema().length();
+    
+    /**
+     * Writes the data frame to a csv file with UTF-8 encoding.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
+     * @throws IOException when fails to write the file.
+     */
+    public void write(DataFrame data, Path path) throws IOException {
+        int p = data.schema().length();
         String[] header = new String[p];
         for (int i = 0; i < p; i++) {
-            header[i] = df.schema().field(i).name;
+            header[i] = data.schema().field(i).name;
         }
 
         List<String> record = new ArrayList<>(p);
         try (CSVPrinter printer = format.withHeader(header).print(path, charset)) {
-            for (int i = 0; i < df.size(); i++) {
-                Tuple row = df.get(i);
+            for (int i = 0; i < data.size(); i++) {
+                Tuple row = data.get(i);
                 for (int j = 0; j < p; j++) record.add(row.getString(j));
                 printer.printRecord(record);
                 record.clear();

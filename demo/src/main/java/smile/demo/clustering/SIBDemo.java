@@ -129,7 +129,7 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
                 dataset[datasetIndex] = SparseDataset.from(smile.util.Paths.getTestData(datasource[datasetIndex]), arrayIndexOrigin);
                 dataset[datasetIndex] = SparseDataset.of(
                         dataset[datasetIndex].stream().filter(a -> !a.isEmpty()).collect(Collectors.toList()),
-                        dataset[datasetIndex].ncols()
+                        dataset[datasetIndex].ncol()
                 );
                 dataset[datasetIndex].unitize1();
             } catch (Exception ex) {
@@ -138,13 +138,13 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
             }
         }
 
-        System.out.println("The dataset " + datasetName[datasetIndex] + " has " + dataset[datasetIndex].size() + " documents and " + dataset[datasetIndex].ncols() + " words.");
+        System.out.println("The dataset " + datasetName[datasetIndex] + " has " + dataset[datasetIndex].size() + " documents and " + dataset[datasetIndex].ncol() + " words.");
 
         long clock = System.currentTimeMillis();
         SparseArray[] data = dataset[datasetIndex].stream().toArray(SparseArray[]::new);
         SIB sib = SIB.fit(data, clusterNumber, 20);
         outputArea.setText("");
-        for (int j = 0; j < dataset[datasetIndex].ncols(); j++) {
+        for (int j = 0; j < dataset[datasetIndex].ncol(); j++) {
             for (int i = 0; i < clusterNumber; i++) {
                 outputArea.append(String.format("%.5f\t", sib.centroids[i][j]));
             }

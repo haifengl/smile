@@ -40,7 +40,10 @@ public class RegressionValidations<M> implements Serializable {
     /** The standard deviation of metrics. */
     public final RegressionMetrics sd;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param rounds the validation metrics of multipl rounds.
+     */
     public RegressionValidations(List<RegressionValidation<M>> rounds) {
         this.rounds = rounds;
 

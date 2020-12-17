@@ -31,12 +31,13 @@ public class Edge implements Serializable {
      */
     public final Neuron neighbor;
     /**
-     * The age of this edges.
+     * The age of the edges.
      */
     public int age;
 
     /**
      * Constructor.
+     * @param neighbor the neighbor neuron.
      */
     public Edge(Neuron neighbor) {
         this(neighbor, 0);
@@ -44,6 +45,8 @@ public class Edge implements Serializable {
 
     /**
      * Constructor.
+     * @param neighbor the neighbor neuron.
+     * @param age the age of edge.
      */
     public Edge(Neuron neighbor, int age) {
         this.neighbor = neighbor;

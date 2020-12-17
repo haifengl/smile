@@ -447,7 +447,10 @@ public enum PennTreebankPOS {
     /**
      * Returns an enum value from a string. Note that valueOf cannot be
      * overridden so we have to use this workaround for converting custom
-     * strings to enum values without using valueOf method. 
+     * strings to enum values without using valueOf method.
+     *
+     * @param value the string value.
+     * @return the enum value.
      */
     public static PennTreebankPOS getValue(String value) {
         String s = map.get(value);

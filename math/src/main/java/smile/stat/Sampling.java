@@ -34,6 +34,7 @@ public interface Sampling {
      *
      * @param n the size of samples.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
+     * @return the indices of selected samples.
      */
     static int[] random(int n, double subsample) {
         if (subsample == 1.0) {
@@ -59,6 +60,7 @@ public interface Sampling {
      *
      * @param category the strata labels.
      * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
+     * @return the indices of selected samples.
      */
     static int[] strateified(int[] category, double subsample) {
         int[] unique = MathEx.unique(category);

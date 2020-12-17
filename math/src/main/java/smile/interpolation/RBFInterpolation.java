@@ -87,8 +87,9 @@ public class RBFInterpolation {
     /**
      * Constructor. By default, it is a regular rbf interpolation without
      * normalization.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      * @param normalized the radial basis function used in the interpolation
      */
     public RBFInterpolation(double[][] x, double[] y, RadialBasisFunction normalized) {
@@ -97,8 +98,9 @@ public class RBFInterpolation {
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      * @param rbf the radial basis function used in the interpolation
      * @param normalized true for the normalized RBF interpolation.
      */
@@ -143,6 +145,8 @@ public class RBFInterpolation {
 
     /**
      * Interpolate the function at given point.
+     * @param x a point.
+     * @return the interpolated function value.
      */
     public double interpolate(double... x) {
         if (x.length != this.x[0].length) {

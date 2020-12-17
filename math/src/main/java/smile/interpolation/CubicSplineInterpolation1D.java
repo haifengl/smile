@@ -43,6 +43,9 @@ public class CubicSplineInterpolation1D extends AbstractInterpolation {
 
     /**
      * Constructor.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      */
     public CubicSplineInterpolation1D(double[] x, double[] y) {
         super(x, y);

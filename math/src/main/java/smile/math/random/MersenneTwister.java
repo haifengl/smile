@@ -70,6 +70,7 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     /**
      * Constructor.
+     * @param seed the seed of random numbers.
      */
     public MersenneTwister(int seed) {
         setSeed(seed);
@@ -77,6 +78,7 @@ public class MersenneTwister implements RandomNumberGenerator {
 
     /**
      * Constructor.
+     * @param seed the seed of random numbers.
      */
     public MersenneTwister(long seed) {
         setSeed(seed);
@@ -87,6 +89,10 @@ public class MersenneTwister implements RandomNumberGenerator {
         setSeed((int) (seed % UniversalGenerator.BIG_PRIME));
     }
 
+    /**
+     * Sets the seed of random numbers.
+     * @param seed the seed of random numbers.
+     */
     public void setSeed(int seed) {
         mt[0] = seed;
         for (mti = 1; mti < N; mti++) {

@@ -107,6 +107,9 @@ public class CRF implements Serializable {
      * labels a sequence by individual prediction on each position.
      * This usually produces better accuracy although the results may not
      * be coherent.
+     *
+     * @param x the sequence.
+     * @return the sequence labels.
      */
     public int[] viterbi(Tuple[] x) {
         int n = x.length;
@@ -344,7 +347,7 @@ public class CRF implements Serializable {
             });
 
             for (int j = 0; j < k; j++) {
-                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncols(), samples, order);
+                RegressionTree tree = new RegressionTree(data, loss[j], field, maxDepth, maxNodes, nodeSize, data.ncol(), samples, order);
                 potentials[j][iter] = tree;
 
                 double[] hj = h[j];

@@ -20,12 +20,16 @@ package smile.gap;
 /**
  * A measure to evaluate the fitness of chromosomes.
  *
+ * @param <T> the type of <code>Chromosome</code>.
+ *
  * @author Haifeng Li
  */
 public interface Fitness<T extends Chromosome> {
     /**
      * Returns the non-negative fitness value of a chromosome. Large values
      * indicate better fitness.
+     * @param chromosome the chromosome.
+     * @return the fitness score.
      */
     double score(T chromosome);
 }

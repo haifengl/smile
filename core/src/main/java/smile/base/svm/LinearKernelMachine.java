@@ -125,6 +125,8 @@ public class LinearKernelMachine implements Serializable {
 
     /**
      * Returns the value of decision function.
+     * @param x the instance.
+     * @return the score.
      */
     public double f(double[] x) {
         return b + MathEx.dot(w, x);
@@ -132,6 +134,8 @@ public class LinearKernelMachine implements Serializable {
 
     /**
      * Returns the value of decision function.
+     * @param x the binary sparse instance.
+     * @return the score.
      */
     public double f(int[] x) {
         double f = b;
@@ -144,6 +148,8 @@ public class LinearKernelMachine implements Serializable {
 
     /**
      * Returns the value of decision function.
+     * @param x the sparse instance.
+     * @return the score.
      */
     public double f(SparseArray x) {
         double f = b;

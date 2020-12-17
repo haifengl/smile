@@ -112,7 +112,7 @@ public class KPCA<T> implements Projection<T>, Serializable {
         this.coordinates = coordinates;
         this.latent = latent;
         this.projection = projection;
-        this.p = projection.nrows();
+        this.p = projection.nrow();
     }
 
     /**
@@ -120,6 +120,8 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * @param data training data.
      * @param kernel Mercer kernel.
      * @param k choose up to k principal components (larger than 0.0001) used for projection.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> KPCA<T> fit(T[] data, MercerKernel<T> kernel, int k) {
         return fit(data, kernel, k, 0.0001);
@@ -132,6 +134,8 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * @param k choose top k principal components used for projection.
      * @param threshold only principal components with eigenvalues
      *                  larger than the given threshold will be kept.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> KPCA<T> fit(T[] data, MercerKernel<T> kernel, int k, double threshold) {
         if (threshold < 0) {
@@ -195,16 +199,18 @@ public class KPCA<T> implements Projection<T>, Serializable {
 
     /**
      * Returns the eigenvalues of kernel principal components, ordered from largest to smallest.
+     * @return the eigenvalues of kernel principal components, ordered from largest to smallest.
      */
-    public double[] getVariances() {
+    public double[] variances() {
         return latent;
     }
 
     /**
      * Returns the projection matrix. The dimension reduced data can be obtained
      * by y = W * K(x, &middot;).
+     * @return the projection matrix.
      */
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 
@@ -212,8 +218,9 @@ public class KPCA<T> implements Projection<T>, Serializable {
      * Returns the nonlinear principal component scores, i.e., the representation
      * of learning data in the nonlinear principal component space. Rows
      * correspond to observations, columns to components.
+     * @return the nonlinear principal component scores.
      */
-    public double[][] getCoordinates() {
+    public double[][] coordinates() {
         return coordinates;
     }
 

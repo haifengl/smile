@@ -132,6 +132,8 @@ public class TDistribution extends AbstractDistribution {
 
     /**
      * Two-tailed cdf.
+     * @param x a real number.
+     * @return the two-tailed cdf.
      */
     public double cdf2tailed(double x) {
         if (x < 0) {
@@ -143,6 +145,8 @@ public class TDistribution extends AbstractDistribution {
 
     /**
      * Two-tailed quantile.
+     * @param p a probability.
+     * @return the two-tailed quantile.
      */
     public double quantile2tailed(double p) {
         if (p < 0.0 || p > 1.0) {

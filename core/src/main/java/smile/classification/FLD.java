@@ -115,7 +115,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
         this.scaling = scaling;
         this.labels = labels;
 
-        int L = scaling.ncols();
+        int L = scaling.ncol();
         this.mean = new double[L];
         scaling.tv(mean, this.mean);
 
@@ -357,7 +357,7 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
 
     @Override
     public double[][] project(double[][] x) {
-        double[][] y = new double[x.length][scaling.ncols()];
+        double[][] y = new double[x.length][scaling.ncol()];
         
         for (int i = 0; i < x.length; i++) {
             if (x[i].length != p) {

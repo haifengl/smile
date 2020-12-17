@@ -101,7 +101,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.formula, WeatherNominal.data,
@@ -123,7 +123,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         ClassificationMetrics metrics = LOOCV.classification(Iris.formula, Iris.data, (f, x) -> RandomForest.fit(f, x, 100, 3, SplitRule.GINI, 20, 100, 5, 1.0, null, Arrays.stream(seeds)));
@@ -164,7 +164,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(Segment.test);
@@ -188,7 +188,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
@@ -261,7 +261,7 @@ public class RandomForestTest {
 
         double[] importance = model.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         int[] prediction = model.predict(USPS.test);
@@ -274,7 +274,7 @@ public class RandomForestTest {
 
         importance = lean.importance();
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", lean.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", lean.schema().name(i), importance[i]);
         }
 
         // The old model should not be modified.

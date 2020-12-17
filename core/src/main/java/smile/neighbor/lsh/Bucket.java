@@ -51,7 +51,10 @@ public class Bucket implements Serializable {
         this.bucket = bucket;
     }
 
-    /** Returns the points in the bucket. */
+    /**
+     * Returns the points in the bucket.
+     * @return the points in the bucket.
+     */
     public IntArrayList points() {
         return entry;
     }

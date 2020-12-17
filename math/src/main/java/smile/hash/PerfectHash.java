@@ -54,14 +54,18 @@ public class PerfectHash implements Serializable {
     /** The character positions in keywords used to calculate the hash. */
     private int[] select;
 
-    /** Constructs the perfect hash of strings. */
+    /**
+     * Constructor.
+     * @param keywords the fixed set of keywords.
+     */
     public PerfectHash(String... keywords) {
         this(null, keywords);
     }
 
     /**
-     * Constructs the perfect hash of strings.
+     * Constructor.
      * @param select The character positions in keywords used to calculate the hash.
+     * @param keywords the fixed set of keywords.
      */
     public PerfectHash(int[] select, String... keywords) {
         if (keywords.length == 0) {
@@ -78,8 +82,10 @@ public class PerfectHash implements Serializable {
     }
 
     /**
-     * Returns the index of a string. If the string
-     * is in the set, returns its array index. Otherwise, -1.
+     * Returns the index of a keyword. If the string
+     * is not in the set, returns -1.
+     * @param key the keyword.
+     * @return the index of keyword or -1.
      */
      public int get(String key) {
         int i = hash(key);
@@ -89,13 +95,17 @@ public class PerfectHash implements Serializable {
         return idx;
     }
 
-    /** Returns the hash code of a string. */
-    private int hash(String k) {
-        int klen = k.length();
+    /**
+     * Returns the hash code of a string.
+     * @param key the keyword.
+     * @return the hash code.
+     */
+    private int hash(String key) {
+        int klen = key.length();
         int out = klen;
         if (select == null) {
             for (int i = 0; i < klen; i++) {
-                int c = k.charAt(i) - min;
+                int c = key.charAt(i) - min;
                 if (c < 0) return -1;
                 if (c >= kvals.length) return -2;
                 out += kvals[c];
@@ -104,7 +114,7 @@ public class PerfectHash implements Serializable {
         } else {
             for (int i : select) {
                 if (i >= klen) continue;
-                int c = k.charAt(i) - min;
+                int c = key.charAt(i) - min;
                 if (c < 0) return -1;
                 if (c >= kvals.length) return -2;
                 out += kvals[c];

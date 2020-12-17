@@ -81,16 +81,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.getU().nrow());
+        assertEquals(U[0].length, result.getU().ncol());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.getV().nrow());
+        assertEquals(V[0].length, result.getV().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -139,16 +139,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
-        assertEquals(U[0].length, result.getU().ncols());
+        assertEquals(U.length, result.getU().nrow());
+        assertEquals(U[0].length, result.getU().ncol());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.getV().nrow());
+        assertEquals(V[0].length, result.getV().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -196,16 +196,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        //assertEquals(U.length, result.getU().nrows());
-        //assertEquals(U[0].length, result.getU().ncols());
+        //assertEquals(U.length, result.getU().nrow());
+        //assertEquals(U[0].length, result.getU().ncol());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.getV().nrow());
+        assertEquals(V[0].length, result.getV().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -252,16 +252,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        //assertEquals(U.length, result.getU().nrows());
-        //assertEquals(U[0].length, result.getU().ncols());
+        //assertEquals(U.length, result.getU().nrow());
+        //assertEquals(U[0].length, result.getU().ncol());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.getV().nrow());
+        assertEquals(V[0].length, result.getV().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -307,16 +307,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        //assertEquals(U.length, result.getU().nrows());
-        //assertEquals(U[0].length, result.getU().ncols());
+        //assertEquals(U.length, result.getU().nrow());
+        //assertEquals(U[0].length, result.getU().ncol());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
-        assertEquals(V[0].length, result.getV().ncols());
+        assertEquals(V.length, result.getV().nrow());
+        assertEquals(V[0].length, result.getV().ncol());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -362,14 +362,14 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U.length, result.getU().nrow());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V.length, result.getV().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -413,14 +413,14 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-7));
 
-        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U.length, result.getU().nrow());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-7);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V.length, result.getV().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-7);
@@ -462,14 +462,14 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-5));
 
-        assertEquals(U.length, result.getU().nrows());
+        assertEquals(U.length, result.getU().nrow());
         for (int i = 0; i < U.length; i++) {
             for (int j = 0; j < U[i].length; j++) {
                 assertEquals(Math.abs(U[i][j]), Math.abs(result.getU().get(i, j)), 1E-5);
             }
         }
 
-        assertEquals(V.length, result.getV().nrows());
+        assertEquals(V.length, result.getV().nrow());
         for (int i = 0; i < V.length; i++) {
             for (int j = 0; j < V[i].length; j++) {
                 assertEquals(Math.abs(V[i][j]), Math.abs(result.getV().get(i, j)), 1E-5);
@@ -527,16 +527,16 @@ public class SVDTest {
         SVD result = Matrix.of(A).svd();
         assertTrue(MathEx.equals(s, result.getSingularValues(), 1E-5));
 
-        //assertEquals(Ut[0].length, result.getU().nrows());
-        //assertEquals(Ut.length, result.getU().ncols());
+        //assertEquals(Ut[0].length, result.getU().nrow());
+        //assertEquals(Ut.length, result.getU().ncol());
         for (int i = 0; i < Ut.length; i++) {
             for (int j = 0; j < Ut[i].length; j++) {
                 assertEquals(Math.abs(Ut[i][j]), Math.abs(result.getU().get(j, i)), 1E-5);
             }
         }
 
-        assertEquals(Vt[0].length, result.getV().nrows());
-        assertEquals(Vt.length, result.getV().ncols());
+        assertEquals(Vt[0].length, result.getV().nrow());
+        assertEquals(Vt.length, result.getV().ncol());
         for (int i = 0; i < Vt.length; i++) {
             for (int j = 0; j < Vt[i].length; j++) {
                 assertEquals(Math.abs(Vt[i][j]), Math.abs(result.getV().get(j, i)), 1E-5);
@@ -592,8 +592,8 @@ public class SVDTest {
         SVD result = new NDMatrix(A).svd();
         NDMatrix x = new NDMatrix(B);
         result.solve(x);
-        for (int i = 0; i < x.nrows(); i++) {
-            for (int j = 0; j < x.ncols(); j++) {
+        for (int i = 0; i < x.nrow(); i++) {
+            for (int j = 0; j < x.ncol(); j++) {
                 assertEquals(X[i][j], x.get(i, j), 1E-7);
             }
         }

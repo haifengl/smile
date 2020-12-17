@@ -143,7 +143,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(2, output.ncols());
+        assertEquals(2, output.ncol());
 
         smile.data.type.StructType schema = DataTypes.struct(
                 new StructField("salary", DataTypes.object(Double.class)),
@@ -154,7 +154,7 @@ public class FormulaTest {
         DataFrame x = formula.x(df);
         System.out.println(x);
         assertEquals(df.size(), x.size());
-        assertEquals(1, x.ncols());
+        assertEquals(1, x.ncol());
 
         smile.data.type.StructType xschema = DataTypes.struct(
                 new StructField("age", DataTypes.IntegerType)
@@ -165,8 +165,8 @@ public class FormulaTest {
         assertEquals(Double.NaN, formula.y(df.get(1)), 1E-7);
 
         Matrix matrix = formula.matrix(df);
-        assertEquals(df.size(), matrix.nrows());
-        assertEquals(2, matrix.ncols());
+        assertEquals(df.size(), matrix.nrow());
+        assertEquals(2, matrix.ncol());
     }
 
     @Test
@@ -269,7 +269,7 @@ public class FormulaTest {
         System.out.println(output.schema());
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(4, output.ncols());
+        assertEquals(4, output.ncol());
         assertEquals(1980, output.get(0,0));
         assertEquals(10, output.get(0,1));
         assertEquals(1, output.get(0,2));
@@ -289,7 +289,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.abs(38), output.get(0,0));
         assertEquals(Math.abs(23), output.get(1,0));
         assertEquals(Math.abs(48), output.get(2,0));
@@ -305,7 +305,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.abs(10000.), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.abs(230000.), output.get(2,0));
@@ -321,7 +321,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.exp(38), output.get(0,0));
         assertEquals(Math.exp(23), output.get(1,0));
         assertEquals(Math.exp(48), output.get(2,0));
@@ -337,7 +337,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.exp(1), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.exp(23), output.get(2,0));
@@ -353,7 +353,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.log(38), output.get(0,0));
         assertEquals(Math.log(23), output.get(1,0));
         assertEquals(Math.log(48), output.get(2,0));
@@ -369,7 +369,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.log(10000), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.log(230000), output.get(2,0));
@@ -385,7 +385,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.log10(38), output.get(0,0));
         assertEquals(Math.log10(23), output.get(1,0));
         assertEquals(Math.log10(48), output.get(2,0));
@@ -401,7 +401,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.log10(10000), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.log10(230000), output.get(2,0));
@@ -417,7 +417,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.sqrt(38), output.get(0,0));
         assertEquals(Math.sqrt(23), output.get(1,0));
         assertEquals(Math.sqrt(48), output.get(2,0));
@@ -433,7 +433,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.sqrt(10000), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.sqrt(230000), output.get(2,0));
@@ -449,7 +449,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.ceil(10000), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.ceil(230000), output.get(2,0));
@@ -465,7 +465,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.floor(10000), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.floor(230000), output.get(2,0));
@@ -481,7 +481,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.round(10000.), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.round(230000.), output.get(2,0));
@@ -489,8 +489,8 @@ public class FormulaTest {
 
         Matrix matrix = formula.matrix(df);
         System.out.println(matrix);
-        assertEquals(df.size(), matrix.nrows());
-        assertEquals(2, matrix.ncols());
+        assertEquals(df.size(), matrix.nrow());
+        assertEquals(2, matrix.ncol());
         assertEquals(1, matrix.get(0,0), 1E-10);
         assertEquals(1, matrix.get(1,0), 1E-10);
         assertEquals(1, matrix.get(2,0), 1E-10);
@@ -510,7 +510,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(1, output.ncols());
+        assertEquals(1, output.ncol());
         assertEquals(Math.signum(10000.), output.get(0,0));
         assertNull(output.get(1, 0));
         assertEquals(Math.signum(230000.), output.get(2,0));
@@ -526,7 +526,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(48, output.get(0,5));
         assertEquals(33, output.get(1,5));
         assertEquals(58, output.get(2,5));
@@ -542,7 +542,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(10038., output.get(0,5));
         assertNull(output.get(1, 5));
         assertEquals(230048., output.get(2,5));
@@ -558,7 +558,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(28, output.get(0,5));
         assertEquals(13, output.get(1,5));
         assertEquals(38, output.get(2,5));
@@ -574,7 +574,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(10000.-38, output.get(0,5));
         assertNull(output.get(1, 5));
         assertEquals(230000.-48, output.get(2,5));
@@ -590,7 +590,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(380, output.get(0,5));
         assertEquals(230, output.get(1,5));
         assertEquals(480, output.get(2,5));
@@ -606,7 +606,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(10000.*38, output.get(0,5));
         assertNull(output.get(1, 5));
         assertEquals(230000.*48, output.get(2,5));
@@ -622,7 +622,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(3, output.get(0,5));
         assertEquals(2, output.get(1,5));
         assertEquals(4, output.get(2,5));
@@ -638,7 +638,7 @@ public class FormulaTest {
         DataFrame output = formula.frame(df);
         System.out.println(output);
         assertEquals(df.size(), output.size());
-        assertEquals(6, output.ncols());
+        assertEquals(6, output.ncol());
         assertEquals(10000./38, output.get(0,5));
         assertNull(output.get(1, 5));
         assertEquals(230000./48, output.get(2,5));

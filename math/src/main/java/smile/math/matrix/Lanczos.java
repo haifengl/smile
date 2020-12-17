@@ -41,9 +41,10 @@ public class Lanczos {
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param k the number of eigenvalues we wish to compute for the input matrix.
      * This number cannot exceed the size of A.
+     * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k) {
-        return eigen(A, k, 1.0E-8, 10 * A.nrows());
+        return eigen(A, k, 1.0E-8, 10 * A.nrow());
     }
 
     /**
@@ -55,14 +56,15 @@ public class Lanczos {
      * This number cannot exceed the size of A.
      * @param kappa relative accuracy of ritz values acceptable as eigenvalues.
      * @param maxIter Maximum number of iterations.
+     * @return eigen value decomposition.
      */
     public static Matrix.EVD eigen(DMatrix A, int k, double kappa, int maxIter) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
-        if (k < 1 || k > A.nrows()) {
-            throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrows());
+        if (k < 1 || k > A.nrow()) {
+            throw new IllegalArgumentException("k is larger than the size of A: " + k + " > " + A.nrow());
         }
 
         if (kappa <= MathEx.EPSILON) {
@@ -70,10 +72,10 @@ public class Lanczos {
         }
 
         if (maxIter <= 0) {
-            maxIter = 10 * A.nrows();
+            maxIter = 10 * A.nrow();
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
         int intro = 0;
 
         // roundoff estimate for dot product of two unit vectors
@@ -130,7 +132,7 @@ public class Lanczos {
         t = MathEx.dot(wptr[0], wptr[3]);
         MathEx.axpy(-t, wptr[1], wptr[0]);
         alf[0] += t;
-        MathEx.copy(wptr[0], wptr[4]);
+        System.arraycopy(wptr[0], 0, wptr[4], 0, n);
         rnm = MathEx.norm(wptr[0]);
         double anorm = rnm + Math.abs(alf[0]);
         double tol = reps * anorm;
@@ -225,7 +227,7 @@ public class Lanczos {
                 t = MathEx.dot(wptr[0], wptr[3]);
                 MathEx.axpy(-t, wptr[1], wptr[0]);
                 alf[j] = alf[j] + t;
-                MathEx.copy(wptr[0], wptr[4]);
+                System.arraycopy(wptr[0], 0, wptr[4], 0, n);
                 rnm = MathEx.norm(wptr[0]);
                 anorm = bet[j] + Math.abs(alf[j]) + rnm;
                 tol = reps * anorm;
@@ -312,23 +314,24 @@ public class Lanczos {
      * Generate a starting vector in r and returns |r|. It returns zero if the
      * range is spanned, and throws exception if no starting vector within range
      * of operator can be found.
-     * @param step   starting index for a Lanczos run
+     * @param step starting index for a Lanczos run
      */
     private static double startv(DMatrix A, double[][] q, double[][] wptr, int step) {
         // get initial vector; default is random
         double rnm = MathEx.dot(wptr[0], wptr[0]);
         double[] r = wptr[0];
+        int n = r.length;
         for (int id = 0; id < 3; id++) {
             if (id > 0 || step > 0 || rnm == 0) {
                 for (int i = 0; i < r.length; i++) {
                     r[i] = Math.random() - 0.5;
                 }
             }
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
 
             // apply operator to put r in range (essential if m singular)
             A.mv(wptr[3], wptr[0]);
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             rnm = MathEx.dot(wptr[0], wptr[3]);
             if (rnm > 0.0) {
                 break;
@@ -350,7 +353,7 @@ public class Lanczos {
             // make sure q[step] is orthogonal to q[step-1]
             double t = MathEx.dot(wptr[4], wptr[0]);
             MathEx.axpy(-t, wptr[2], wptr[0]);
-            MathEx.copy(wptr[0], wptr[3]);
+            System.arraycopy(wptr[0], 0, wptr[3], 0, n);
             t = MathEx.dot(wptr[3], wptr[0]);
             if (t <= MathEx.EPSILON * rnm) {
                 t = 0.0;
@@ -437,11 +440,11 @@ public class Lanczos {
                         tr += Math.abs(t);
                         MathEx.axpy(t, Q[i], r);
                     }
-                    MathEx.copy(q, qa);
+                    System.arraycopy(q, 0, qa, 0, q.length);
                     t = -MathEx.dot(r, qa);
                     tr += Math.abs(t);
                     MathEx.axpy(t, q, r);
-                    MathEx.copy(r, ra);
+                    System.arraycopy(r, 0, ra, 0, r.length);
                     rnm = Math.sqrt(MathEx.dot(ra, r));
                     if (tq <= reps1 && tr <= reps1 * rnm) {
                         flag = false;
@@ -561,7 +564,7 @@ public class Lanczos {
         if (null == q[j]) {
             q[j] = s.clone();
         } else {
-            MathEx.copy(s, q[j]);
+            System.arraycopy(s, 0, q[j], 0, s.length);
         }
     }
 
@@ -585,7 +588,7 @@ public class Lanczos {
      * matrix, with e[0] arbitrary. On output, its contents are destroyed.
      */
     private static void tql2(Matrix V, double[] d, double[] e) {
-        int n = V.nrows();
+        int n = V.nrow();
         for (int i = 1; i < n; i++) {
             e[i - 1] = e[i];
         }

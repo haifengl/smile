@@ -111,7 +111,10 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
         return new GaussianDistribution(mu, sigma);
     }
 
-    /** Returns the standard normal distribution. */
+    /**
+     * Returns the standard normal distribution.
+     * @return the standard normal distribution.
+     */
     public static GaussianDistribution getInstance() {
         return singleton;
     }

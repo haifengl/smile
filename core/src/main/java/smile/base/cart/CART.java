@@ -152,14 +152,14 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
         this.x = x;
         this.response = y;
         this.schema = x.schema();
-        this.importance = new double[x.ncols()];
+        this.importance = new double[x.ncol()];
         this.maxDepth = maxDepth;
         this.maxNodes = maxNodes;
         this.nodeSize = nodeSize;
         this.mtry = mtry;
 
         int n = x.size();
-        int p = x.ncols();
+        int p = x.ncol();
 
         if (mtry < 1 || mtry > p) {
             logger.debug("Invalid mtry. Use all features.");
@@ -225,7 +225,7 @@ public abstract class CART implements SHAP<Tuple>, Serializable {
      */
     public static int[][] order(DataFrame x) {
         int n = x.size();
-        int p = x.ncols();
+        int p = x.ncol();
         StructType schema = x.schema();
 
         double[] a = new double[n];

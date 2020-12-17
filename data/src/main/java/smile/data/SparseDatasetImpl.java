@@ -48,7 +48,7 @@ class SparseDatasetImpl implements SparseDataset {
     /**
      * The number of columns.
      */
-    private final int ncols;
+    private final int ncol;
     /**
      * The number of nonzero entries in each column.
      */
@@ -68,12 +68,12 @@ class SparseDatasetImpl implements SparseDataset {
      * @param data Each row is a data item which are the indices
      *             of nonzero elements. Every row will be sorted
      *             into ascending order.
-     * @param ncols The number of columns.
+     * @param ncol The number of columns.
      */
-    public SparseDatasetImpl(Collection<SparseArray> data, int ncols) {
+    public SparseDatasetImpl(Collection<SparseArray> data, int ncol) {
         this.data = data.toArray(new SparseArray[0]);
-        this.ncols = ncols;
-        colSize = new int[ncols];
+        this.ncol = ncol;
+        colSize = new int[ncol];
 
         for (SparseArray x : data) {
             x.sort(); // sort array index into ascending order.
@@ -87,9 +87,9 @@ class SparseDatasetImpl implements SparseDataset {
                 if (e.i == i) {
                     logger.warn(String.format("Ignore duplicated indices: %d in [%s]", e.i, x));
                 } else {
-                    if (ncols <= e.i) {
-                        ncols = e.i + 1;
-                        int[] newColSize = new int[3 * ncols / 2];
+                    if (ncol <= e.i) {
+                        ncol = e.i + 1;
+                        int[] newColSize = new int[3 * ncol / 2];
                         System.arraycopy(colSize, 0, newColSize, 0, colSize.length);
                         colSize = newColSize;
                     }
@@ -118,8 +118,8 @@ class SparseDatasetImpl implements SparseDataset {
     }
 
     @Override
-    public int ncols() {
-        return ncols;
+    public int ncol() {
+        return ncol;
     }
 
     @Override

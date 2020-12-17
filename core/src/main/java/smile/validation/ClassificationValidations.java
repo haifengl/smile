@@ -40,7 +40,10 @@ public class ClassificationValidations<M> implements Serializable {
     /** The standard deviation of metrics. */
     public final ClassificationMetrics sd;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param rounds the validation metrics of multipl rounds.
+     */
     public ClassificationValidations(List<ClassificationValidation<M>> rounds) {
         this.rounds = rounds;
 

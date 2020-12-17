@@ -475,7 +475,10 @@ public class BIRCH implements VectorQuantizer {
         return cluster.centroid();
     }
 
-    /** Returns the cluster centroids of leaf nodes. */
+    /**
+     * Returns the cluster centroids of leaf nodes.
+     * @return the cluster centroids of leaf nodes.
+     */
     public double[][] centroids() {
         ArrayList<double[]> list = new ArrayList<>();
         centroids(root, list);

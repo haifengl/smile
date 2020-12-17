@@ -272,7 +272,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         LeafNode node = new DecisionNode(count);
         this.root = node;
 
-        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncols()]);
+        Optional<Split> split = findBestSplit(node, 0, index.length, new boolean[x.ncol()]);
 
         if (maxNodes == Integer.MAX_VALUE) {
             // deep-first split
@@ -378,7 +378,7 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
         return schema;
     }
 
-    /** Private constructor. */
+    /** Private constructor for prune(). */
     private DecisionTree(Formula formula, StructType schema, StructField response, Node root, int k, SplitRule rule, double[] importance, IntSet labels) {
         super(formula, schema, response, root, importance);
         this.k = k;

@@ -96,21 +96,21 @@ public class IndexDataFrameTest {
     }
 
     /**
-     * Test of nrows method, of class DataFrame.
+     * Test of nrow method, of class DataFrame.
      */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(4, df.nrows());
+        System.out.println("nrow");
+        assertEquals(4, df.nrow());
     }
 
     /**
-     * Test of ncols method, of class DataFrame.
+     * Test of ncol method, of class DataFrame.
      */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(5, df.ncols());
+        System.out.println("ncol");
+        assertEquals(5, df.ncol());
     }
 
     /**
@@ -183,8 +183,8 @@ public class IndexDataFrameTest {
         System.out.println("toMatrix");
         Matrix output = df.select("name", "age", "salary", "gender").toMatrix(false, CategoricalEncoder.ONE_HOT, "name");
         System.out.println(output);
-        assertEquals(4, output.nrows());
-        assertEquals(4, output.ncols());
+        assertEquals(4, output.nrow());
+        assertEquals(4, output.ncol());
         assertEquals(48., output.get(0, 0), 1E-10);
         assertEquals(23., output.get(1, 0), 1E-10);
         assertEquals(13., output.get(2, 0), 1E-10);

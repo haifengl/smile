@@ -26,11 +26,17 @@ package smile.math;
 public interface DifferentiableFunction extends Function {
     /**
      * Computes the gradient/derivative at x.
+     *
+     * @param x a real number.
+     * @return the derivative.
      */
     double g(double x);
 
     /**
      * Compute the second-order derivative at x.
+     *
+     * @param x a real number.
+     * @return the second-order derivative.
      */
     default double g2(double x) {
         throw new UnsupportedOperationException();
