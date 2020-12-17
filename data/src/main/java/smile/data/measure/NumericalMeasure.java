@@ -31,7 +31,10 @@ public abstract class NumericalMeasure implements Measure {
     /** For formatting and parsing numbers. */
     private final NumberFormat format;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param format the number format.
+     */
     public NumericalMeasure(NumberFormat format) {
         this.format = format;
     }

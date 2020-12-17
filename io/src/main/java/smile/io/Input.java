@@ -30,17 +30,36 @@ import java.nio.file.Paths;
  * @author Haifeng Li
  */
 public interface Input {
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the reader of a file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file reader.
+     */
     static BufferedReader reader(String path) throws IOException, URISyntaxException {
         return new BufferedReader(new InputStreamReader(stream(path)));
     }
 
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the reader of a file path or URI.
+     * @param path the input file path.
+     * @param charset the charset of file.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file reader.
+     */
     static BufferedReader reader(String path, Charset charset) throws IOException, URISyntaxException {
         return new BufferedReader(new InputStreamReader(stream(path), charset));
     }
 
-    /** Returns the reader of a file path or URI. */
+    /**
+     * Returns the input stream of a file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the file input stream.
+     */
     static InputStream stream(String path) throws IOException, URISyntaxException {
         // Windows file path
         if (path.matches("[a-zA-Z]:\\\\[\\\\\\S|*\\S]?.*")) {

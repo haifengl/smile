@@ -41,139 +41,222 @@ public class Array2D {
     /**
      * The number of rows.
      */
-    private final int nrows;
+    private final int nrow;
     /**
      * The number of columns.
      */
-    private final int ncols;
+    private final int ncol;
 
     /**
      * Constructor.
      * @param A the array of matrix.
      */
     public Array2D(double[][] A) {
-        this.nrows = A.length;
-        this.ncols = A[0].length;
-        this.A = new double[nrows*ncols];
+        this.nrow = A.length;
+        this.ncol = A[0].length;
+        this.A = new double[nrow*ncol];
 
         int pos = 0;
-        for (int i = 0; i < nrows; i++) {
-            System.arraycopy(A[i], 0, this.A, pos, ncols);
-            pos += ncols;
+        for (int i = 0; i < nrow; i++) {
+            System.arraycopy(A[i], 0, this.A, pos, ncol);
+            pos += ncol;
         }
     }
 
     /**
      * Constructor of all-zero matrix.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
-    public Array2D(int rows, int cols) {
-        this.nrows = rows;
-        this.ncols = cols;
-        A = new double[rows*cols];
+    public Array2D(int nrow, int ncol) {
+        this.nrow = nrow;
+        this.ncol = ncol;
+        A = new double[ncol*ncol];
     }
 
     /**
      * Constructor. Fill the matrix with given value.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
+     * @param value the initial value.
      */
-    public Array2D(int rows, int cols, double value) {
-        this(rows, cols);
+    public Array2D(int nrow, int ncol, double value) {
+        this(nrow, ncol);
         if (value != 0.0)
             Arrays.fill(A, value);
     }
 
     /**
      * Constructor.
-     * @param value the array of matrix values arranged in row major format
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
+     * @param value the array of matrix values arranged in row major format.
      */
-    public Array2D(int rows, int cols, double[] value) {
-        this.nrows = rows;
-        this.ncols = cols;
+    public Array2D(int nrow, int ncol, double[] value) {
+        this.nrow = nrow;
+        this.ncol = ncol;
         this.A = value;
     }
 
-    public int nrows() {
-        return nrows;
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
+    public int nrow() {
+        return nrow;
     }
 
-    public int ncols() {
-        return ncols;
+    /**
+     * Returns the number of columns.
+     * @return the number of columns.
+     */
+    public int ncol() {
+        return ncol;
     }
 
-    /** Returns A(i, j). Useful in Scala. */
+    /**
+     * Returns A[i, j]. Useful in Scala.
+     * @param i the row index.
+     * @param j the column index.
+     * @return A[i, j].
+     */
     public double apply(int i, int j) {
-        return A[i*ncols + j];
+        return A[i*ncol + j];
     }
 
-    /** Returns A(i, j). */
+    /**
+     * Returns A[i, j].
+     * @param i the row index.
+     * @param j the column index.
+     * @return A[i, j].
+     */
     public double get(int i, int j) {
-        return A[i*ncols + j];
+        return A[i*ncol + j];
     }
 
-    /** Sets A(i, j). */
-    public double set(int i, int j, double x) {
-        return A[i*ncols + j] = x;
+    /**
+     * Sets A[i, j].
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the value.
+     */
+    public void set(int i, int j, double x) {
+        A[i*ncol + j] = x;
     }
 
+    /**
+     * A[i, j] += x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public double add(int i, int j, double x) {
-        return A[i*ncols + j] += x;
+        return A[i*ncol + j] += x;
     }
 
+    /**
+     * A[i, j] -= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public double sub(int i, int j, double x) {
-        return A[i*ncols + j] -= x;
+        return A[i*ncol + j] -= x;
     }
 
+    /**
+     * A[i, j] *= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public double mul(int i, int j, double x) {
-        return A[i*ncols + j] *= x;
+        return A[i*ncol + j] *= x;
     }
 
+    /**
+     * A[i, j] /= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public double div(int i, int j, double x) {
-        return A[i*ncols + j] /= x;
+        return A[i*ncol + j] /= x;
     }
 
-    public Array2D add(Array2D b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+    /**
+     * A += B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public Array2D add(Array2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] += b.A[i];
+            A[i] += B.A[i];
         }
         return this;
     }
 
-    public Array2D sub(Array2D b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+    /**
+     * A -= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public Array2D sub(Array2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] -= b.A[i];
+            A[i] -= B.A[i];
         }
         return this;
     }
 
-    public Array2D mul(Array2D b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+    /**
+     * A *= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public Array2D mul(Array2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] *= b.A[i];
+            A[i] *= B.A[i];
         }
         return this;
     }
 
-    public Array2D div(Array2D b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+    /**
+     * A /= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public Array2D div(Array2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] /= b.A[i];
+            A[i] /= B.A[i];
         }
         return this;
     }
 
+    /**
+     * A += x.
+     * @param x the operand.
+     * @return this object.
+     */
     public Array2D add(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] += x;
@@ -182,6 +265,11 @@ public class Array2D {
         return this;
     }
 
+    /**
+     * A -= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public Array2D sub(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] -= x;
@@ -190,6 +278,11 @@ public class Array2D {
         return this;
     }
 
+    /**
+     * A *= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public Array2D mul(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] *= x;
@@ -198,6 +291,11 @@ public class Array2D {
         return this;
     }
 
+    /**
+     * A /= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public Array2D div(double x) {
         for (int i = 0; i < A.length; i++) {
             A[i] /= x;
@@ -206,6 +304,11 @@ public class Array2D {
         return this;
     }
 
+    /**
+     * Replaces NaN values with x.
+     * @param x the value.
+     * @return this object.
+     */
     public Array2D replaceNaN(double x) {
         for (int i = 0; i < A.length; i++) {
             if (Double.isNaN(A[i])) {
@@ -216,6 +319,10 @@ public class Array2D {
         return this;
     }
 
+    /**
+     * Returns the sum of all elements.
+     * @return the sum of all elements.
+     */
     public double sum() {
         return MathEx.sum(A);
     }
@@ -229,22 +336,24 @@ public class Array2D {
      * Returns the string representation of matrix.
      * @param full Print the full matrix if true. Otherwise,
      *             print only top left 7 x 7 submatrix.
+     * @return the string representation of matrix.
      */
     public String toString(boolean full) {
-        return full ? toString(nrows(), ncols()) : toString(7, 7);
+        return full ? toString(nrow, ncol) : toString(7, 7);
     }
 
     /**
      * Returns the string representation of matrix.
      * @param m the number of rows to print.
      * @param n the number of columns to print.
+     * @return the string representation of matrix.
      */
     public String toString(int m, int n) {
         StringBuilder sb = new StringBuilder();
-        m = Math.min(m, nrows());
-        n = Math.min(n, ncols());
+        m = Math.min(m, nrow);
+        n = Math.min(n, ncol);
 
-        String newline = n < ncols() ? "...\n" : "\n";
+        String newline = n < ncol ? "...\n" : "\n";
 
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
@@ -253,7 +362,7 @@ public class Array2D {
             sb.append(newline);
         }
 
-        if (m < nrows()) {
+        if (m < nrow) {
             sb.append("  ...\n");
         }
 

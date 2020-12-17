@@ -34,6 +34,7 @@ public class MissingValueImputationException extends Exception {
 
     /**
      * Constructor.
+     * @param message the error message.
      */
     public  MissingValueImputationException(String message) {
         super(message);

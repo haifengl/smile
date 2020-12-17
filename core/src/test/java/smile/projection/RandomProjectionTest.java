@@ -55,7 +55,7 @@ public class RandomProjectionTest {
         System.out.println("regular random projection");
         RandomProjection instance = RandomProjection.of(128, 40);
 
-        Matrix p = instance.getProjection();
+        Matrix p = instance.projection();
         Matrix t = p.aat();
 
         System.out.println(p.toString(true));
@@ -74,7 +74,7 @@ public class RandomProjectionTest {
         System.out.println("sparse random projection");
         RandomProjection instance = RandomProjection.sparse(128, 40);
 
-        Matrix p = instance.getProjection();
+        Matrix p = instance.projection();
         System.out.println(p.toString(true));
     }
 }

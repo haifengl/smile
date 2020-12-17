@@ -172,7 +172,17 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         initHashTable(d, L, k, w, H);
     }
 
-    /** Initialize the hash tables. */
+    /**
+     * Initialize the hash tables.
+     * @param d the dimensionality of data.
+     * @param L the number of hash tables.
+     * @param k the number of random projection hash functions, which is usually
+     *          set to log(N) where N is the dataset size.
+     * @param w the width of random projections. It should be sufficiently
+     *          away from 0. But we should not choose an w value that is too
+     *          large, which will increase the query time.
+     * @param H the size of universal hash tables.
+     */
     protected void initHashTable(int d, int L, int k, double w, int H) {
         hash = new ArrayList<>(L);
         for (int i = 0; i < L; i++) {
@@ -187,6 +197,8 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
 
     /**
      * Insert an item into the hash table.
+     * @param key the key.
+     * @param value the value.
      */
     public void put(double[] key, E value) {
         int index = keys.size();

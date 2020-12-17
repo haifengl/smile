@@ -50,7 +50,7 @@ public class GaussianRadialBasis implements RadialBasisFunction {
     private final double r0;
 
     /**
-     * Constructor. The default bandwidth is 1.0.
+     * Constructor. The default scale is 1.0.
      */
     public GaussianRadialBasis() {
         this(1.0);
@@ -59,7 +59,7 @@ public class GaussianRadialBasis implements RadialBasisFunction {
     /**
      * Constructor.
      *
-     * @param scale the scale (bandwidth/sigma) parameter.
+     * @param scale the scale parameter.
      */
     public GaussianRadialBasis(double scale) {
         r0 = scale;

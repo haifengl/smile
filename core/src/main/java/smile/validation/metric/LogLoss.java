@@ -40,8 +40,8 @@ public class LogLoss implements ProbabilisticClassificationMetric {
 
     /**
      * Calculates the Log Loss for binary classifier.
-     * @param truth The sample labels
-     * @param probability The posterior probability of positive class.
+     * @param truth the ground truth.
+     * @param probability the posterior probability of positive class.
      * @return Log Loss
      */
     public static double of(int[] truth, double[] probability) {

@@ -21,7 +21,7 @@ package smile.math.kernel;
  * The class of Matérn kernels is a generalization of the Gaussian/RBF.
  * It has an additional parameter nu which controls the smoothness of
  * the kernel function. The smaller nu, the less smooth the approximated
- * function is. As nu -> inf, the kernel becomes equivalent to the
+ * function is. As {@code nu -> inf}, the kernel becomes equivalent to the
  * Gaussian/RBF kernel. When nu = 1/2, the kernel becomes identical to the
  * Laplacian kernel. The Matern kernel become especially simple
  * when nu is half-integer. Important intermediate values are 3/2
@@ -69,12 +69,18 @@ public class Matern implements IsotropicKernel {
         this.hi = hi;
     }
 
-    /** Returns the length scale of kernel. */
+    /**
+     * Returns the length scale of kernel.
+     * @return the length scale of kernel.
+     */
     public double scale() {
         return sigma;
     }
 
-    /** Returns the smoothness of kernel. */
+    /**
+     * Returns the smoothness of kernel.
+     * @return the smoothness of kernel.
+     */
     public double smoothness() {
         return nu;
     }

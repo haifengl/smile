@@ -87,14 +87,14 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     /**
      * Constructor of all-zero matrix.
      */
-    public NDMatrix(int rows, int cols) {
+    public NDMatrix(int nrow, int ncol) {
         A = Nd4j.zeros(rows, cols);
     }
 
     /**
      * Constructor. Fill the matrix with given value.
      */
-    public NDMatrix(int rows, int cols, double value) {
+    public NDMatrix(int nrow, int ncol, double value) {
         if (value == 0.0)
             A = Nd4j.zeros(rows, cols);
         else if (value == 1.0)
@@ -138,12 +138,12 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return A.rows();
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return A.columns();
     }
 
@@ -171,7 +171,7 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public Cholesky cholesky() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Cholesky decomposition on non-square matrix");
         }
 
@@ -181,8 +181,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public QR qr() {
-        double[] tau = new double[Math.min(nrows(), ncols())];
-        INDArray R = Nd4j.create(ncols(), ncols());
+        double[] tau = new double[Math.min(nrow(), ncol())];
+        INDArray R = Nd4j.create(ncol(), ncol());
         Nd4j.getNDArrayFactory().lapack().geqrf(A, R);
         for (int i = 0; i < tau.length; i++) {
             tau[i] = R.getDouble(i, i);
@@ -193,8 +193,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public SVD svd() {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         int mn = Math.min(m, n);
 
         INDArray S = Nd4j.create(mn);
@@ -211,11 +211,11 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] eig() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
         }
 
-        int n = nrows();
+        int n = nrow();
         INDArray V = Nd4j.create(n);
 
         if (symmetric) {
@@ -236,11 +236,11 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public EVD eigen() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
         }
 
-        int n = nrows();
+        int n = nrow();
         INDArray V = Nd4j.create(n);
 
         if (symmetric) {
@@ -264,8 +264,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.create(m, 1);
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, 0.0, ndy);
@@ -278,8 +278,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.create(y, new int[]{m, 1});
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, 1.0, ndy);
@@ -292,8 +292,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{n, 1});
         INDArray ndy = Nd4j.create(y, new int[]{m, 1});
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, NoTranspose, 1.0, A, ndx, b, ndy);
@@ -306,8 +306,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.create(n, 1);
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, 0.0, ndy);
@@ -320,8 +320,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.create(y, new int[]{n, 1});
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, 1.0, ndy);
@@ -334,8 +334,8 @@ public class NDMatrix implements DenseMatrix, Cloneable {
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         INDArray ndx = Nd4j.create(x, new int[]{m, 1});
         INDArray ndy = Nd4j.create(y, new int[]{n, 1});
         Nd4j.getBlasWrapper().level2().gemv(ColOrder, Transpose, 1.0, A, ndx, b, ndy);
@@ -431,7 +431,7 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     }
 
     public NDMatrix add(NDMatrix b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+        if (nrow() != b.nrow() || ncol() != b.ncol()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
@@ -463,7 +463,7 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     }
 
     public NDMatrix sub(NDMatrix b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+        if (nrow() != b.nrow() || ncol() != b.ncol()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
@@ -495,7 +495,7 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     }
 
     public NDMatrix mul(NDMatrix b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+        if (nrow() != b.nrow() || ncol() != b.ncol()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
@@ -527,7 +527,7 @@ public class NDMatrix implements DenseMatrix, Cloneable {
     }
 
     public NDMatrix div(NDMatrix b) {
-        if (nrows() != b.nrows() || ncols() != b.ncols()) {
+        if (nrow() != b.nrow() || ncol() != b.ncol()) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 

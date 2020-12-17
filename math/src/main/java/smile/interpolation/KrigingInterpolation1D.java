@@ -38,8 +38,9 @@ public class KrigingInterpolation1D implements Interpolation {
 
     /**
      * Constructor. The power variogram is employed for interpolation.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      */
     public KrigingInterpolation1D(double[] x, double[] y) {
         this(x, y, 1.5);
@@ -47,8 +48,9 @@ public class KrigingInterpolation1D implements Interpolation {
 
     /**
      * Constructor. The power variogram is employed for interpolation.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      * @param beta the parameter of power variogram. The value of &beta;
      *             should be in the range {@code 1 <=} &beta; {@code < 2}.
      *             A good general choice is 1.5, but for functions with

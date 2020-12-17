@@ -49,14 +49,17 @@ public class TaxonomicDistance implements Distance<Concept> {
     }
 
     /**
-     * Compute the distance between two concepts in a taxonomy.
+     * Computes the distance between two concepts in a taxonomy.
+     * @param x a concept.
+     * @param y the other concept.
+     * @return the distance.
      */
     public double d(String x, String y) {
         return d(taxonomy.getConcept(x), taxonomy.getConcept(y));
     }
 
     /**
-     * Compute the distance between two concepts in a taxonomy.
+     * Computes the distance between two concepts in a taxonomy.
      */
     @Override
     public double d(Concept x, Concept y) {

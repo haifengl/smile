@@ -41,7 +41,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
      * Constructor. The power variogram is employed for interpolation.
      * @param x1 the 1st dimension of data points.
      * @param x2 the 2nd dimension of data points.
-     * @param y the function values.
+     * @param y the function values at <code>(x1, x2)</code>.
      */
     public KrigingInterpolation2D(double[] x1, double[] x2, double[] y) {
         this(x1, x2, y, 1.5);
@@ -51,7 +51,7 @@ public class KrigingInterpolation2D implements Interpolation2D {
      * Constructor. The power variogram is employed for interpolation.
      * @param x1 the 1st dimension of data points.
      * @param x2 the 2nd dimension of data points.
-     * @param y the function values.
+     * @param y the function values at <code>(x1, x2)</code>.
      * @param beta the parameter of power variogram. The value of &beta;
      *             should be in the range {@code 1 <=} &beta; {@code < 2}.
      *             A good general choice is 1.5, but for functions with

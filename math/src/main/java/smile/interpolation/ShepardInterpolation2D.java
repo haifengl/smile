@@ -44,7 +44,7 @@ public class ShepardInterpolation2D implements Interpolation2D {
      * Constructor. By default p = 2.
      * @param x1 the 1st dimension of data points.
      * @param x2 the 2nd dimension of data points.
-     * @param y the function values.
+     * @param y the function values at <code>(x1, x2)</code>.
      */
     public ShepardInterpolation2D(double[] x1, double[] x2, double[] y) {
         this(x1, x2, y, 2);
@@ -54,7 +54,7 @@ public class ShepardInterpolation2D implements Interpolation2D {
      * Constructor.
      * @param x1 the 1st dimension of data points.
      * @param x2 the 2nd dimension of data points.
-     * @param y the function values.
+     * @param y the function values at <code>(x1, x2)</code>.
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation2D(double[] x1, double[] x2, double[] y, double p) {

@@ -84,6 +84,7 @@ public class LLE implements Serializable {
      * Runs the LLE algorithm.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k) {
         return of(data, k, 2);
@@ -94,6 +95,7 @@ public class LLE implements Serializable {
      * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static LLE of(double[][] data, int k, int d) {
         int D = data[0].length;
@@ -188,7 +190,7 @@ public class LLE implements Serializable {
         int offset = eigen.wr[eigen.wr.length - 1] < 1E-12 ? 2 : 1;
         double[][] coordinates = new double[n][d];
         for (int j = d; --j >= 0; ) {
-            int c = V.ncols() - j - offset;
+            int c = V.ncol() - j - offset;
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, c);
             }
@@ -213,20 +215,20 @@ public class LLE implements Serializable {
         public M(SparseMatrix Wt) {
             this.Wt = Wt;
 
-            x = new double[Wt.nrows()];
-            Wx = new double[Wt.nrows()];
-            Wtx = new double[Wt.ncols()];
-            WtWx = new double[Wt.nrows()];
+            x = new double[Wt.nrow()];
+            Wx = new double[Wt.nrow()];
+            Wtx = new double[Wt.ncol()];
+            WtWx = new double[Wt.nrow()];
         }
 
         @Override
-        public int nrows() {
-            return Wt.nrows();
+        public int nrow() {
+            return Wt.nrow();
         }
 
         @Override
-        public int ncols() {
-            return nrows();
+        public int ncol() {
+            return nrow();
         }
 
         @Override

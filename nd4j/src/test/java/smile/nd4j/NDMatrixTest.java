@@ -63,21 +63,21 @@ public class NDMatrixTest {
     }
 
     /**
-     * Test of nrows method, of class NDMatrix.
+     * Test of nrow method, of class NDMatrix.
      */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(3, matrix.nrows());
+        System.out.println("nrow");
+        assertEquals(3, matrix.nrow());
     }
 
     /**
-     * Test of ncols method, of class NDMatrix.
+     * Test of ncol method, of class NDMatrix.
      */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(3, matrix.ncols());
+        System.out.println("ncol");
+        assertEquals(3, matrix.ncol());
     }
 
     /**
@@ -100,7 +100,7 @@ public class NDMatrixTest {
     @Test
     public void testAx() {
         System.out.println("ax");
-        double[] d = new double[matrix.nrows()];
+        double[] d = new double[matrix.nrow()];
         matrix.ax(b, d);
         assertEquals(0.65, d[0], 1E-7);
         assertEquals(0.60, d[1], 1E-7);
@@ -113,7 +113,7 @@ public class NDMatrixTest {
     @Test
     public void testAtx() {
         System.out.println("atx");
-        double[] d = new double[matrix.nrows()];
+        double[] d = new double[matrix.nrow()];
         matrix.atx(b, d);
         assertEquals(0.65, d[0], 1E-7);
         assertEquals(0.60, d[1], 1E-7);
@@ -127,8 +127,8 @@ public class NDMatrixTest {
     public void testAAT() {
         System.out.println("AAT");
         NDMatrix c = matrix.aat();
-        assertEquals(c.nrows(), 3);
-        assertEquals(c.ncols(), 3);
+        assertEquals(c.nrow(), 3);
+        assertEquals(c.ncol(), 3);
         for (int i = 0; i < C.length; i++) {
             for (int j = 0; j < C[i].length; j++) {
                 assertEquals(C[i][j], c.get(i, j), 1E-7);

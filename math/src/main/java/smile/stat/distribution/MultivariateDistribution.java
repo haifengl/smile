@@ -32,44 +32,55 @@ public interface MultivariateDistribution extends Serializable {
      * The number of parameters of the distribution.
      * The "length" is in the sense of the minimum description
      * length principle.
+     * @return the number of parameters of the distribution.
      */
     int length();
 
     /**
      * Shannon entropy of the distribution.
+     * @return Shannon entropy
      */
     double entropy();
 
     /**
      * The mean vector of distribution.
+     * @return the mean vector.
      */
     double[] mean();
 
     /**
      * The covariance matrix of distribution.
+     * @return the covariance matrix.
      */
     Matrix cov();
     
     /**
      * The probability density function for continuous distribution
      * or probability mass function for discrete distribution at x.
+     * @param x a real vector.
+     * @return the desnity.
      */
     double p(double[] x);
 
     /**
      * The density at x in log scale, which may prevents the underflow problem.
+     * @param x a real vector.
+     * @return the log density.
      */
     double logp(double[] x);
 
     /**
      * Cumulative distribution function. That is the probability to the left of x.
+     * @param x a real vector.
+     * @return the probability.
      */
     double cdf(double[] x);
 
     /**
      * The likelihood of the sample set following this distribution.
      *
-     * @param x sample set. Each row is a sample.
+     * @param x a set of samples.
+     * @return the likelihood.
      */
     default double likelihood(double[][] x) {
         return Math.exp(logLikelihood(x));
@@ -78,7 +89,8 @@ public interface MultivariateDistribution extends Serializable {
     /**
      * The log likelihood of the sample set following this distribution.
      *
-     * @param x sample set. Each row is a sample.
+     * @param x a set of samples.
+     * @return the log likelihood.
      */
     default double logLikelihood(double[][] x) {
         double L = 0.0;

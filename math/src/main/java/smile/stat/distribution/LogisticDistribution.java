@@ -49,6 +49,8 @@ public class LogisticDistribution extends AbstractDistribution {
 
     /**
      * Constructor.
+     * @param mu the location parameter.
+     * @param scale the scale parameter.
      */
     public LogisticDistribution(double mu, double scale) {
         if (scale <= 0.0) {

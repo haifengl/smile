@@ -157,6 +157,8 @@ public class Hash implements Serializable {
 
     /**
      * Insert an item into the hash table.
+     * @param index the index of point in the data set.
+     * @param x the data point.
      */
     public void add(int index, double[] x) {
         int bucket = hash(x);
@@ -171,6 +173,8 @@ public class Hash implements Serializable {
 
     /**
      * Returns the bucket entry for the given hash value.
+     * @param i the hash code.
+     * @return the bucket.
      */
     public Bucket get(int i) {
         return table[i % H];
@@ -178,6 +182,8 @@ public class Hash implements Serializable {
 
     /**
      * Returns the bucket entry for the given point.
+     * @param x the data point.
+     * @return the bucket.
      */
     public Bucket get(double[] x) {
         return table[hash(x) % H];

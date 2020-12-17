@@ -27,6 +27,7 @@ public interface MissingValueImputation {
      * Impute missing values in the data.
      * @param data a data set with missing values (represented as Double.NaN).
      * On output, missing values are filled with estimated values.
+     * @throws MissingValueImputationException when fails to impute the data.
      */
     void impute(double[][] data) throws MissingValueImputationException;
 

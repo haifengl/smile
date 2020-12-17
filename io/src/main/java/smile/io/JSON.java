@@ -71,7 +71,8 @@ public class JSON {
 
     /**
      * Sets the schema.
-     * @param schema the schema of file.
+     * @param schema the data schema.
+     * @return this object.
      */
     public JSON schema(StructType schema) {
         this.schema = schema;
@@ -81,13 +82,18 @@ public class JSON {
     /**
      * Sets the charset.
      * @param charset the charset of file.
+     * @return this object.
      */
     public JSON charset(Charset charset) {
         this.charset = charset;
         return this;
     }
 
-    /** Reads JSON files in single-line or multi-line mode. */
+    /**
+     * Sets the file mode (single-line or multi-line).
+     * @param mode the file mode.
+     * @return this object.
+     */
     public JSON mode(Mode mode) {
         this.mode = mode;
         return this;
@@ -95,7 +101,9 @@ public class JSON {
 
     /**
      * Reads a JSON file.
-     * @param path a JSON file path.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path) throws IOException {
         return read(path, Integer.MAX_VALUE);
@@ -103,8 +111,10 @@ public class JSON {
 
     /**
      * Reads a JSON file.
-     * @param path a JSON file path.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path, int limit) throws IOException {
         if (schema == null) {
@@ -117,7 +127,10 @@ public class JSON {
 
     /**
      * Reads a JSON file.
-     * @param path a JSON file path or URI.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
         return read(path, Integer.MAX_VALUE);
@@ -125,8 +138,11 @@ public class JSON {
 
     /**
      * Reads a JSON file.
-     * @param path a JSON file path or URI.
-     * @param limit reads a limited number of records.
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
         if (schema == null) {
@@ -139,8 +155,10 @@ public class JSON {
 
     /**
      * Reads a limited number of records from a JSON file.
-     * @param reader a JSON file reader.
-     * @param limit reads a limited number of records.
+     * @param reader the file reader.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(BufferedReader reader, int limit) throws IOException {
         if (schema == null) {
@@ -189,10 +207,17 @@ public class JSON {
     }
 
     /**
-     * Infer the schema from the top n objects.
-     *  - Infer type of each row.
-     *  - Merge row types to find common type
-     *  - String type by default.
+     * Infer the schema from the top n rows.
+     * <ol>
+     *  <li>Infer type of each row.</li>
+     *  <li>Merge row types to find common type</li>
+     *  <li>String type by default.</li>
+     * </ol>
+     *
+     * @param reader the file reader.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public StructType inferSchema(BufferedReader reader, int limit) throws IOException {
         List<Map<String, String>> rows = new ArrayList<>();

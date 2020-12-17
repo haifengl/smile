@@ -28,7 +28,10 @@ import java.io.Serializable;
  */
 public interface ActivationFunction extends Serializable {
 
-    /** Returns the name of activation function. */
+    /**
+     * Returns the name of activation function.
+     * @return the name of activation function.
+     */
     String name();
 
     /**
@@ -47,7 +50,9 @@ public interface ActivationFunction extends Serializable {
     void g(double[] g, double[] y);
 
     /**
-     * Linear/Identity function.
+     * Linear/Identity activation function.
+     *
+     * @return the linear activation function.
      */
     static ActivationFunction linear() {
         return new ActivationFunction() {
@@ -74,6 +79,8 @@ public interface ActivationFunction extends Serializable {
      * The rectifier is the most popular activation function for deep
      * neural networks. A unit employing the rectifier is called a
      * rectified linear unit (ReLU).
+     *
+     * @return the rectifier activation function.
      */
     static ActivationFunction rectifier() {
         return new ActivationFunction() {
@@ -105,6 +112,8 @@ public interface ActivationFunction extends Serializable {
      * corresponds to a class. For binary classification and cross
      * entropy error function, there is only one output unit whose
      * value can be regarded as posteriori probability.
+     *
+     * @return the logistic sigmoid activation function.
      */
     static ActivationFunction sigmoid() {
         return new ActivationFunction() {
@@ -133,6 +142,8 @@ public interface ActivationFunction extends Serializable {
      * Hyperbolic tangent activation function. The tanh function is a
      * rescaling of the logistic sigmoid, such that its outputs range
      * from -1 to 1.
+     *
+     * @return the hyperbolic tangent activation function.
      */
     static ActivationFunction tanh() {
         return new ActivationFunction() {

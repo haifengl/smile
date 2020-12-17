@@ -83,29 +83,32 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
         this.loading = loading;
         this.projection = projection;
 
-        pmu = new double[projection.nrows()];
+        pmu = new double[projection.nrow()];
         projection.mv(mu, pmu);
     }
 
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues.
+     * @return the variable loading matrix.
      */
-    public Matrix getLoadings() {
+    public Matrix loadings() {
         return loading;
     }
 
     /**
      * Returns the center of data.
+     * @return the center of data.
      */
-    public double[] getCenter() {
+    public double[] center() {
         return mu;
     }
 
     /**
      * Returns the variance of noise.
+     * @return the variance of noise.
      */
-    public double getNoiseVariance() {
+    public double variance() {
         return noise;
     }
 
@@ -114,7 +117,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * latent model.
      */
     @Override
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 
@@ -124,7 +127,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, mu.length));
         }
 
-        double[] y = new double[projection.nrows()];
+        double[] y = new double[projection.nrow()];
         projection.mv(x, y);
         MathEx.sub(y, pmu);
         return y;
@@ -136,7 +139,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, mu.length));
         }
 
-        double[][] y = new double[x.length][projection.nrows()];
+        double[][] y = new double[x.length][projection.nrow()];
         for (int i = 0; i < x.length; i++) {
             projection.mv(x[i], y[i]);
             MathEx.sub(y[i], pmu);
@@ -148,6 +151,7 @@ public class ProbabilisticPCA implements LinearProjection, Serializable {
      * Fits probabilistic principal component analysis.
      * @param data training data of which each row is a sample.
      * @param k the number of principal component to learn.
+     * @return the model.
      */
     public static ProbabilisticPCA fit(double[][] data, int k) {
         int m = data.length;

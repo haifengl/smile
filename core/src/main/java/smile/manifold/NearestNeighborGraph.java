@@ -79,7 +79,7 @@ class NearestNeighborGraph {
      *
      * @param data the dataset.
      * @param k k-nearest neighbor.
-     * @param distance the distance measure.
+     * @param distance the distance function.
      * @param digraph flag to create a directed graph.
      * @param consumer an optional lambda to perform some side effect operations.
      */

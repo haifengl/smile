@@ -28,7 +28,9 @@ package smile.nlp.pos;
 public interface POSTagger {
 
     /**
-     * Tags the sentence in the form of a sequence of words
+     * Tags the sentence in the form of a sequence of words.
+     * @param sentence the sentence.
+     * @return the POS tags.
      */
     PennTreebankPOS[] tag(String[] sentence);
 }

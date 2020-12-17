@@ -84,11 +84,12 @@ public class TFIDF implements RelevanceRanker {
     }
 
     /**
-     * Returns a relevance score between a term and a document based on a corpus.
+     * Returns the relevance score between a term and a document based on a corpus.
      * @param tf the frequency of searching term in the document to rank.
      * @param maxtf the maximum frequency over all terms in the document.
      * @param N the number of documents in the corpus.
      * @param n the number of documents containing the given term in the corpus;
+     * @return the relevance score.
      */
     public double rank(int tf, int maxtf, long N, long n) {
         if (tf == 0) return 0.0;
@@ -100,7 +101,7 @@ public class TFIDF implements RelevanceRanker {
     public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
         if (tf == 0) return 0.0;
 
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         return rank(tf, maxtf, N, n);
@@ -108,7 +109,7 @@ public class TFIDF implements RelevanceRanker {
 
     @Override
     public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         double r = 0.0;

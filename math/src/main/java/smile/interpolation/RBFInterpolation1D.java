@@ -86,8 +86,9 @@ public class RBFInterpolation1D implements Interpolation {
     /**
      * Constructor. By default, it is a regular rbf interpolation without
      * normalization.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      * @param rbf the radial basis function used in the interpolation
      */
     public RBFInterpolation1D(double[] x, double[] y, RadialBasisFunction rbf) {
@@ -96,8 +97,9 @@ public class RBFInterpolation1D implements Interpolation {
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      * @param rbf the radial basis function used in the interpolation
      * @param normalized true for the normalized RBF interpolation.
      */

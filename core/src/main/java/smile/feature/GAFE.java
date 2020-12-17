@@ -85,6 +85,7 @@ public class GAFE {
     /**
      * Constructor.
      * @param selection the selection strategy.
+     * @param elitism the number of best chromosomes to copy to new population.
      * @param crossover the strategy of crossover operation.
      * @param crossoverRate the crossover rate.
      * @param mutationRate the mutation rate.
@@ -102,6 +103,7 @@ public class GAFE {
      * @param size the population size of Genetic Algorithm.
      * @param generation the maximum number of iterations.
      * @param length the length of bit string, i.e. the number of features.
+     * @param fitness the fitness function.
      * @return bit strings of last generation.
      */
     public BitString[] apply(int size, int generation, int length, Fitness<BitString> fitness) {
@@ -120,8 +122,11 @@ public class GAFE {
         return seeds;
     }
 
-    /** Returns the index of 1's. */
-    private static int[] indexOfOnes(byte[] bits) {
+    /**
+     * Returns the index of 1's.
+     * @return the index of 1's.
+     */
+    private static int[] indexOf(byte[] bits) {
         int p = MathEx.sum(bits);
         if (p == 0) return null;
 
@@ -132,7 +137,10 @@ public class GAFE {
         return index;
     }
 
-    /** Returns the data with selected features. */
+    /**
+     * Returns the data with selected features.
+     * @return the data with selected features.
+     */
     private static double[][] select(double[][] x, int[] features) {
         int p = features.length;
         int n = x.length;
@@ -148,7 +156,7 @@ public class GAFE {
     }
 
     /**
-     * Returns a classification fitness measure.
+     * Returns the fitness of the classification model.
      *
      * @param x training samples.
      * @param y training labels.
@@ -156,11 +164,12 @@ public class GAFE {
      * @param testy testing labels.
      * @param metric classification metric.
      * @param trainer the lambda to train a model.
+     * @return the fitness of model.
      */
     public static Fitness<BitString> fitness(double[][] x, int[] y, double[][] testx, int[] testy, ClassificationMetric metric, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         return chromosome -> {
             byte[] bits = chromosome.bits();
-            int[] features = indexOfOnes(bits);
+            int[] features = indexOf(bits);
             if (features == null) return 0.0;
 
             double[][] xx = select(x, features);
@@ -172,7 +181,7 @@ public class GAFE {
     }
 
     /**
-     * Returns a regression fitness function.
+     * Returns the fitness of the regression model.
      *
      * @param x training samples.
      * @param y training response.
@@ -180,11 +189,12 @@ public class GAFE {
      * @param testy testing response.
      * @param metric classification metric.
      * @param trainer the lambda to train a model.
+     * @return the fitness of model.
      */
     public static Fitness<BitString> fitness(double[][] x, double[] y, double[][] testx, double[] testy, RegressionMetric metric, BiFunction<double[][], double[], Regression<double[]>> trainer) {
         return chromosome -> {
             byte[] bits = chromosome.bits();
-            int[] features = indexOfOnes(bits);
+            int[] features = indexOf(bits);
             if (features == null) return Double.NEGATIVE_INFINITY;
 
             double[][] xx = select(x, features);
@@ -215,13 +225,14 @@ public class GAFE {
     }
 
     /**
-     * Returns a classification fitness function.
+     * Returns the fitness of the classification model.
      *
      * @param y the column name of class labels.
      * @param train training data.
      * @param test testing data.
      * @param metric classification metric.
      * @param trainer the lambda to train a model.
+     * @return the fitness of model.
      */
     public static Fitness<BitString> fitness(String y, DataFrame train, DataFrame test, ClassificationMetric metric, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         String[] names = train.names();
@@ -239,13 +250,14 @@ public class GAFE {
     }
 
     /**
-     * Returns a regression fitness function.
+     * Returns the fitness of the regression model.
      *
      * @param y the column name of response variable.
      * @param train training data.
      * @param test testing data.
      * @param metric classification metric.
      * @param trainer the lambda to train a model.
+     * @return the fitness of model.
      */
     public static Fitness<BitString> fitness(String y, DataFrame train, DataFrame test, RegressionMetric metric, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         String[] names = train.names();

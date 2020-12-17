@@ -47,7 +47,10 @@ import java.text.NumberFormat;
  */
 public class IntervalScale extends NumericalMeasure {
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param format the number format.
+     */
     public IntervalScale(NumberFormat format) {
         super(format);
     }

@@ -75,14 +75,14 @@ public class SparseDatasetTest {
 
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(3, sm.nrows());
+        System.out.println("nrow");
+        assertEquals(3, sm.nrow());
     }
 
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(3, sm.ncols());
+        System.out.println("ncol");
+        assertEquals(3, sm.ncol());
     }
 
     @Test
@@ -107,7 +107,7 @@ public class SparseDatasetTest {
         System.out.println("from");
         SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("text/kos.txt"), 1);
         assertEquals(3430, data.size());
-        assertEquals(6906, data.ncols());
+        assertEquals(6906, data.ncol());
         assertEquals(353160, data.nz());
         assertEquals(2.0, data.get(0, 60), 1E-7);
         assertEquals(1.0, data.get(1, 1062), 1E-7);
@@ -115,8 +115,8 @@ public class SparseDatasetTest {
         assertEquals(1.0, data.get(3429, 6821), 1E-7);
 
         SparseMatrix sm = data.toMatrix();
-        assertEquals(3430, sm.nrows());
-        assertEquals(6906, sm.ncols());
+        assertEquals(3430, sm.nrow());
+        assertEquals(6906, sm.ncol());
         assertEquals(353160, sm.size());
         assertEquals(2.0, sm.get(0, 60), 1E-7);
         assertEquals(1.0, sm.get(1, 1062), 1E-7);

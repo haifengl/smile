@@ -95,8 +95,8 @@ public abstract class Layer implements Serializable {
      * @param bias the bias vector.
      */
     public Layer(Matrix weight, double[] bias) {
-        this.n = weight.nrows();
-        this.p = weight.ncols();
+        this.n = weight.nrow();
+        this.p = weight.ncol();
         this.weight = weight;
         this.bias = bias;
 
@@ -105,6 +105,9 @@ public abstract class Layer implements Serializable {
 
     /**
      * Initializes the workspace when deserializing the object.
+     * @param in the input stream.
+     * @throws IOException when fails to read the stream.
+     * @throws ClassNotFoundException when fails to load the class.
      */
     private void readObject(java.io.ObjectInputStream in) throws IOException, ClassNotFoundException {
         in.defaultReadObject();
@@ -157,22 +160,34 @@ public abstract class Layer implements Serializable {
         };
     }
 
-    /** Returns the dimension of output vector. */
+    /**
+     * Returns the dimension of output vector.
+     * @return the dimension of output vector.
+     */
     public int getOutputSize() {
         return n;
     }
 
-    /** Returns the dimension of input vector (not including bias value). */
+    /**
+     * Returns the dimension of input vector (not including bias value).
+     * @return the dimension of input vector.
+     */
     public int getInputSize() {
         return p;
     }
 
-    /** Returns the output vector. */
+    /**
+     * Returns the output vector.
+     * @return the output vector.
+     */
     public double[] output() {
         return output.get();
     }
 
-    /** Returns the output gradient vector. */
+    /**
+     * Returns the output gradient vector.
+     * @return the output gradient vector.
+     */
     public double[] gradient() {
         return outputGradient.get();
     }
@@ -205,8 +220,8 @@ public abstract class Layer implements Serializable {
      *
      * @param x the input vector.
      * @param learningRate the learning rate.
-     * @param momentum the momentum factor
-     * @param decay weight decay factor
+     * @param momentum the momentum factor.
+     * @param decay weight decay factor.
      */
     public void computeGradientUpdate(double[] x, double learningRate, double momentum, double decay) {
         double[] outputGradient = this.outputGradient.get();
@@ -257,8 +272,10 @@ public abstract class Layer implements Serializable {
      *
      * @param m the size of mini-batch.
      * @param learningRate the learning rate.
-     * @param momentum the momentum factor
-     * @param decay weight decay factor
+     * @param momentum the momentum factor.
+     * @param decay weight decay factor.
+     * @param rho RMSProp discounting factor for the history/coming gradient.
+     * @param epsilon a small constant for numerical stability.
      */
     public void update(int m, double learningRate, double momentum, double decay, double rho, double epsilon) {
         Matrix weightGradient = this.weightGradient.get();
@@ -331,6 +348,7 @@ public abstract class Layer implements Serializable {
     /**
      * Returns a hidden layer with linear activation function.
      * @param n the number of neurons.
+     * @return the layer builder.
      */
     public static HiddenLayerBuilder linear(int n) {
         return new HiddenLayerBuilder(n, ActivationFunction.linear());
@@ -339,6 +357,7 @@ public abstract class Layer implements Serializable {
     /**
      * Returns a hidden layer with rectified linear activation function.
      * @param n the number of neurons.
+     * @return the layer builder.
      */
     public static HiddenLayerBuilder rectifier(int n) {
         return new HiddenLayerBuilder(n, ActivationFunction.rectifier());
@@ -347,6 +366,7 @@ public abstract class Layer implements Serializable {
     /**
      * Returns a hidden layer with sigmoid activation function.
      * @param n the number of neurons.
+     * @return the layer builder.
      */
     public static HiddenLayerBuilder sigmoid(int n) {
         return new HiddenLayerBuilder(n, ActivationFunction.sigmoid());
@@ -355,6 +375,7 @@ public abstract class Layer implements Serializable {
     /**
      * Returns a hidden layer with hyperbolic tangent activation function.
      * @param n the number of neurons.
+     * @return the layer builder.
      */
     public static HiddenLayerBuilder tanh(int n) {
         return new HiddenLayerBuilder(n, ActivationFunction.tanh());
@@ -364,6 +385,7 @@ public abstract class Layer implements Serializable {
      * Returns an output layer with mean squared error cost function.
      * @param n the number of neurons.
      * @param f the output function.
+     * @return the layer builder.
      */
     public static OutputLayerBuilder mse(int n, OutputFunction f) {
         return new OutputLayerBuilder(n, f, Cost.MEAN_SQUARED_ERROR);
@@ -373,6 +395,7 @@ public abstract class Layer implements Serializable {
      * Returns an output layer with (log-)likelihood cost function.
      * @param n the number of neurons.
      * @param f the output function.
+     * @return the layer builder.
      */
     public static OutputLayerBuilder mle(int n, OutputFunction f) {
         return new OutputLayerBuilder(n, f, Cost.LIKELIHOOD);

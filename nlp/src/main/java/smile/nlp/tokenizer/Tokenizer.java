@@ -34,6 +34,8 @@ package smile.nlp.tokenizer;
 public interface Tokenizer {
     /**
      * Splits the string into a list of tokens.
+     * @param text the text.
+     * @return the tokens.
      */
     String[] split(String text);
 }

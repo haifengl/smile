@@ -67,7 +67,7 @@ class Cholesky extends smile.math.matrix.Cholesky {
      * Returns the matrix inverse.
      */
     public DenseMatrix inverse() {
-        int n = L.nrows();
+        int n = L.nrow();
         DenseMatrix inv = Matrix.eye(n);
         solve(inv);
         return inv;
@@ -91,12 +91,12 @@ class Cholesky extends smile.math.matrix.Cholesky {
      * @param  B   the right hand side of linear systems.
      */
     public void solve(DenseMatrix B) {
-        if (B.nrows() != L.nrows()) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", L.nrows(), L.ncols(), B.nrows(), B.ncols()));
+        if (B.nrow() != L.nrow()) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", L.nrow(), L.ncol(), B.nrow(), B.ncol()));
         }
 
         intW info = new intW(0);
-        LAPACK.getInstance().dpotrs(NLMatrix.Lower, L.nrows(), B.ncols(), L.data(), L.ld(), B.data(), B.ld(), info);
+        LAPACK.getInstance().dpotrs(NLMatrix.Lower, L.nrow(), B.ncol(), L.data(), L.ld(), B.data(), B.ld(), info);
 
         if (info.val < 0) {
             logger.error("LAPACK DPOTRS error code: {}", info.val);

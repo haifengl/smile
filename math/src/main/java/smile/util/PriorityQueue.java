@@ -122,8 +122,9 @@ public class PriorityQueue {
 
     /**
      * Returns true if the queue is empty.
+     * @return true if the queue is empty.
      */
-    public boolean empty() {
+    public boolean isEmpty() {
         return n == 0;
     }
 
@@ -139,6 +140,7 @@ public class PriorityQueue {
 
     /**
      * Removes and returns the index of item with minimum value (highest priority).
+     * @return the index of item with minimum value.
      */
     public int poll() {
         swap(1, n);
@@ -148,6 +150,7 @@ public class PriorityQueue {
 
     /**
      * The value of item k is lower (higher priority) now.
+     * @param k the item index.
      */
     public void lower(int k) {
         swim(qp[k]);
@@ -155,6 +158,7 @@ public class PriorityQueue {
 
     /**
      * The priority of item k has changed.
+     * @param k the item index.
      */
     public void change(int k) {
         swim(qp[k]);

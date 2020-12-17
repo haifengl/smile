@@ -66,8 +66,8 @@ public class SparseMatrixPlot extends Plot {
         super(color);
         this.sparse = sparse;
 
-        int m = sparse.nrows();
-        int n = sparse.ncols();
+        int m = sparse.nrow();
+        int n = sparse.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -87,8 +87,8 @@ public class SparseMatrixPlot extends Plot {
         this.sparse = sparse;
         this.palette = palette;
 
-        int m = sparse.nrows();
-        int n = sparse.ncols();
+        int m = sparse.nrow();
+        int n = sparse.ncol();
         x = new double[n];
         for (int i = 0; i < x.length; i++) {
             x[i] = i + 0.5;
@@ -121,7 +121,7 @@ public class SparseMatrixPlot extends Plot {
 
     @Override
     public double[] getUpperBound() {
-        double[] bound = {sparse.ncols(), sparse.nrows()};
+        double[] bound = {sparse.ncol(), sparse.nrow()};
         return bound;
     }
 
@@ -216,7 +216,7 @@ public class SparseMatrixPlot extends Plot {
     @Override
     public Canvas canvas() {
         double[] lowerBound = {0, 0};
-        double[] upperBound = {sparse.ncols(), sparse.nrows()};
+        double[] upperBound = {sparse.ncol(), sparse.nrow()};
         Canvas canvas = new Canvas(lowerBound, upperBound, false);
         canvas.add(this);
 

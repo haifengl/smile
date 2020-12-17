@@ -29,14 +29,15 @@ public interface LinearProjection extends Projection<double[]> {
     /**
      * Returns the projection matrix. The dimension reduced data can be obtained
      * by y = W * x.
+     * @return the projection matrix.
      */
-    Matrix getProjection();
+    Matrix projection();
 
     @Override
     default double[] project(double[] x) {
-        Matrix A = getProjection();
-        int p = A.nrows();
-        int n = A.ncols();
+        Matrix A = projection();
+        int p = A.nrow();
+        int n = A.ncol();
 
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
@@ -49,9 +50,9 @@ public interface LinearProjection extends Projection<double[]> {
 
     @Override
     default double[][] project(double[][] x) {
-        Matrix A = getProjection();
-        int p = A.nrows();
-        int n = A.ncols();
+        Matrix A = projection();
+        int p = A.nrow();
+        int n = A.ncol();
 
         if (x[0].length != n) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));

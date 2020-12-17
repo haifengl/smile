@@ -105,7 +105,7 @@ public class DeterministicAnnealing extends CentroidClustering<double[], double[
         Matrix cov = new Matrix(MathEx.cov(data, centroids[0]));
         double[] ev = new double[d];
         Arrays.fill(ev, 1.0);
-        double lambda = PowerIteration.eigen(cov, ev, 0.0f, 1E-4, Math.max(20, 2 * cov.nrows()));
+        double lambda = PowerIteration.eigen(cov, ev, 0.0f, 1E-4, Math.max(20, 2 * cov.nrow()));
         double T = 2.0 * lambda + 0.01;
         
         int k = 2;

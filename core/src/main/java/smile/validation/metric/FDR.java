@@ -36,7 +36,12 @@ public class FDR implements ClassificationMetric {
         return of(truth, prediction);
     }
 
-    /** Calculates the false discovery rate. */
+    /**
+     * Calculates the false discovery rate.
+     * @param truth the ground truth.
+     * @param prediction the prediction.
+     * @return the metric.
+     */
     public static double of(int[] truth, int[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));
