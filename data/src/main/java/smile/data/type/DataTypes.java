@@ -95,22 +95,38 @@ public class DataTypes {
     /** Double Array data type. */
     public static smile.data.type.ArrayType DoubleArrayType = smile.data.type.ArrayType.DoubleArrayType;
 
-    /** Date data type with customized format. */
+    /**
+     * Date data type with customized format.
+     * @param pattern the date regex pattern.
+     * @return the Date type.
+     */
     public static smile.data.type.DateType date(String pattern) {
         return new smile.data.type.DateType(pattern);
     }
 
-    /** ime data type with customized format. */
+    /**
+     * Time data type with customized format.
+     * @param pattern the time regex pattern.
+     * @return the Time type.
+     */
     public static smile.data.type.TimeType time(String pattern) {
         return new smile.data.type.TimeType(pattern);
     }
 
-    /** DateTime data type with customized format. */
+    /**
+     * DateTime data type with customized format.
+     * @param pattern the date time regex pattern.
+     * @return the DateTime type.
+     */
     public static smile.data.type.DateTimeType datetime(String pattern) {
         return new smile.data.type.DateTimeType(pattern);
     }
 
-    /** Creates an object data type of a given class. */
+    /**
+     * Creates an object data type of a given class.
+     * @param clazz the object class.
+     * @return the object data type.
+     */
     public static DataType object(Class<?> clazz) {
         if (clazz == Integer.class) return IntegerObjectType;
         if (clazz == Long.class) return LongObjectType;
@@ -128,7 +144,11 @@ public class DataTypes {
         return new ObjectType(clazz);
     }
 
-    /** Creates an array data type. */
+    /**
+     * Creates an array data type.
+     * @param type the data type of array elements.
+     * @return the array data type.
+     */
     public static ArrayType array(DataType type) {
         if (type == IntegerType) return IntegerArrayType;
         if (type == LongType) return LongArrayType;
@@ -141,24 +161,43 @@ public class DataTypes {
         return new ArrayType(type);
     }
 
-    /** Creates a struct data type. */
+    /**
+     * Creates a struct data type.
+     * @param fields the struct fields.
+     * @return the struct data type.
+     */
     public static StructType struct(StructField... fields) {
         return new StructType(fields);
     }
 
-    /** Creates a struct data type. */
+    /**
+     * Creates a struct data type.
+     * @param fields the struct fields.
+     * @return the struct data type.
+     */
     public static StructType struct(List<StructField> fields) {
         return new StructType(fields);
     }
 
-    /** Creates a struct data type from JDBC result set meta data. */
+    /**
+     * Creates a struct data type from JDBC result set meta data.
+     * @param rs the JDBC result set.
+     * @throws SQLException when JDBC operation fails.
+     * @return the struct data type.
+     */
     public static StructType struct(ResultSet rs) throws SQLException {
         ResultSetMetaData meta = rs.getMetaData();
         String dbms = rs.getStatement().getConnection().getMetaData().getDatabaseProductName();
         return struct(meta, dbms);
     }
 
-    /** Creates a struct data type from JDBC result set meta data. */
+    /**
+     * Creates a struct data type from JDBC result set meta data.
+     * @param meta the JDBC result set meta data.
+     * @param dbms the name of database management system.
+     * @throws SQLException when JDBC operation fails.
+     * @return the struct data type.
+     */
     public static StructType struct(ResultSetMetaData meta, String dbms) throws SQLException {
         int ncol = meta.getColumnCount();
         StructField[] fields = new StructField[ncol];

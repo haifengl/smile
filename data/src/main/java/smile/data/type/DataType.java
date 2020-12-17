@@ -36,21 +36,37 @@ public interface DataType extends Serializable {
      * Data type ID.
      */
     enum ID {
+        /** Boolean type ID. */
         Boolean,
+        /** Byte type ID. */
         Byte,
+        /** Char type ID. */
         Char,
+        /** Short type ID. */
         Short,
+        /** Integer type ID. */
         Integer,
+        /** Long type ID. */
         Long,
+        /** Float type ID. */
         Float,
+        /** Double type ID. */
         Double,
+        /** Decimal type ID. */
         Decimal,
+        /** String type ID. */
         String,
+        /** Date type ID. */
         Date,
+        /** Time type ID. */
         Time,
+        /** DateTime type ID. */
         DateTime,
+        /** Object type ID. */
         Object,
+        /** Array type ID. */
         Array,
+        /** Struct type ID. */
         Struct
     }
 
@@ -72,25 +88,37 @@ public interface DataType extends Serializable {
     /**
      * Returns the type name used in external catalogs.
      * DataType.of(name()) should returns the same type.
+     * @return the type name used in external catalogs.
      */
     String name();
 
-    /** Returns the type ID enum. */
+    /**
+     * Returns the type ID enum.
+     * @return the type ID enum.
+     */
     ID id();
 
     /**
      * Returns the value from its string representation.
      * @param s the string representation of a value of this type.
+     * @return the value.
      */
     Object valueOf(String s);
 
-    /** Returns the string representation of a value of the type. */
+    /**
+     * Returns the string representation of a value of the type.
+     * @param o the value.
+     * @return the string representation
+     */
     default String toString(Object o) {
         // no check the type of o.
         return o == null ? "null" : o.toString();
     }
 
-    /** Returns true if this is a primitive data type. */
+    /**
+     * Returns true if this is a primitive data type.
+     * @return true if this is a primitive data type.
+     */
     default boolean isPrimitive() {
         switch (id()) {
             case Integer:
@@ -107,65 +135,104 @@ public interface DataType extends Serializable {
         }
     }
 
-    /** Returns true if the type is float or double. */
+    /**
+     * Returns true if the type is float or double.
+     * @return true if the type is float or double.
+     */
     default boolean isFloating() {
         return isFloat() || isDouble();
     }
 
-    /** Returns true if the type is int, long, short or byte. */
+    /**
+     * Returns true if the type is int, long, short or byte.
+     * @return true if the type is int, long, short or byte.
+     */
     default boolean isIntegral() {
         return isInt() || isLong() || isShort() || isByte();
     }
 
-    /** Returns true if the type is numeric (integral or floating). */
+    /**
+     * Returns true if the type is numeric (integral or floating).
+     * @return true if the type is numeric (integral or floating).
+     */
     default boolean isNumeric() {
         return isFloating() || isIntegral();
     }
 
-    /** Returns true if the type is boolean or Boolean. */
+    /**
+     * Returns true if the type is boolean or Boolean.
+     * @return true if the type is boolean or Boolean.
+     */
     default boolean isBoolean() {
         return false;
     }
 
-    /** Returns true if the type is char or Char. */
+    /**
+     * Returns true if the type is char or Char.
+     * @return true if the type is char or Char.
+     */
     default boolean isChar() {
         return false;
     }
 
-    /** Returns true if the type is byte or Byte. */
+    /**
+     * Returns true if the type is byte or Byte.
+     * @return true if the type is byte or Byte.
+     */
     default boolean isByte() {
         return false;
     }
 
-    /** Returns true if the type is short or Shorter. */
+    /**
+     * Returns true if the type is short or Short.
+     * @return true if the type is short or Short.
+     */
     default boolean isShort() {
         return false;
     }
 
-    /** Returns true if the type is int or Integer. */
+    /**
+     * Returns true if the type is int or Integer.
+     * @return true if the type is int or Integer.
+     */
     default boolean isInt() {
         return false;
     }
 
-    /** Returns true if the type is long or Long. */
+    /**
+     * Returns true if the type is long or Long.
+     * @return true if the type is long or Long.
+     */
     default boolean isLong() {
         return false;
     }
 
-    /** Returns true if the type is float or Float. */
+    /**
+     * Returns true if the type is float or Float.
+     * @return true if the type is float or Float.
+     */
     default boolean isFloat() {
         return false;
     }
 
-    /** Returns true if the type is double or Double. */
+    /**
+     * Returns true if the type is double or Double.
+     * @return true if the type is double or Double.
+     */
     default boolean isDouble() {
         return false;
     }
 
-    /** Returns true if the type is String. */
+    /**
+     * Returns true if the type is String.
+     * @return true if the type is String.
+     */
     default boolean isString() { return false; }
 
-    /** Returns true if the type is ObjectType. */
+    /**
+     * Returns true if the type is ObjectType.
+     * @return true if the type is ObjectType.
+     */
     default boolean isObject() {
         return false;
     }
@@ -173,6 +240,7 @@ public interface DataType extends Serializable {
     /**
      * Returns the boxed data type if this is a primitive type.
      * Otherwise, return this type.
+     * @return the boxed data type.
      */
     default DataType boxed() {
         switch (id()) {
@@ -191,6 +259,7 @@ public interface DataType extends Serializable {
     /**
      * Returns the unboxed data type if this is a boxed primitive type.
      * Otherwise, return this type.
+     * @return the unboxed data type.
      */
     default DataType unboxed() {
         if (isObject()) {
@@ -207,7 +276,11 @@ public interface DataType extends Serializable {
         return this;
     }
 
-    /** Infers the type of a string. */
+    /**
+     * Infers the type of a string.
+     * @param s the string value.
+     * @return the inferred data type of string value.
+     */
     static DataType infer(String s) {
         if (Strings.isNullOrEmpty(s)) return null;
         if (DateTimePattern.matcher(s).matches()) return DataTypes.DateTimeType;
@@ -220,7 +293,12 @@ public interface DataType extends Serializable {
         return DataTypes.StringType;
     }
 
-    /** Returns a DataType from its string representation. */
+    /**
+     * Returns a DataType from its string representation.
+     * @param s the string representation of data type.
+     * @throws ClassNotFoundException when fails to load a class.
+     * @return the data type.
+     */
     static DataType of(String s) throws ClassNotFoundException {
         switch (s) {
             case "boolean": return DataTypes.BooleanType;
@@ -260,7 +338,11 @@ public interface DataType extends Serializable {
         throw new IllegalArgumentException(String.format("Unknown data type: %s", s));
     }
 
-    /** Returns the DataType of a class. */
+    /**
+     * Returns the DataType of a class.
+     * @param clazz the Class object.
+     * @return Smile data type.
+     */
     static DataType of(Class clazz) {
         if (clazz == int.class)
             return DataTypes.IntegerType;
@@ -322,9 +404,10 @@ public interface DataType extends Serializable {
 
     /**
      * Returns the DataType of a JDBC type.
-     * @param type a JDBCType
-     * @param nullable true if the column value may be null
+     * @param type the JDBC data type.
+     * @param nullable true if the column value may be null.
      * @param dbms The database product name.
+     * @return Smile data type.
      */
     static DataType of(java.sql.JDBCType type, boolean nullable, String dbms) {
         switch (type) {
@@ -383,6 +466,9 @@ public interface DataType extends Serializable {
      * the whole expression is promoted to long. If one operand is a float,
      * the entire expression is promoted to float. If any of the operands
      * is double, the result is double.
+     * @param a the data type.
+     * @param b the data type.
+     * @return the promoted type.
      */
     static DataType prompt(DataType a, DataType b) {
         if (!a.isInt() && !a.isLong() && !a.isFloat() && !a.isDouble())
@@ -422,6 +508,9 @@ public interface DataType extends Serializable {
      * Returns the common type. This method is intended to be
      * used for inferring the schema from text files.
      * This is NOT a general implementation of type coercion.
+     * @param a the data type.
+     * @param b the data type.
+     * @return the common type.
      */
     static DataType coerce(DataType a, DataType b) {
         if (a == null) return b;
@@ -443,6 +532,8 @@ public interface DataType extends Serializable {
     /**
      * Returns true if the given type is of int, short, byte, char,
      * either primitive or boxed.
+     * @param t the data type.
+     * @return true if the given type is of int.
      */
     static boolean isInt(DataType t) {
         switch (t.id()) {
@@ -461,6 +552,8 @@ public interface DataType extends Serializable {
     /**
      * Returns true if the given type is of long,
      * either primitive or boxed.
+     * @param t the data type.
+     * @return true if the given type is of long.
      */
     static boolean isLong(DataType t) {
         return (t.id() == ID.Long) ||
@@ -470,6 +563,8 @@ public interface DataType extends Serializable {
     /**
      * Returns true if the given type is of float,
      * either primitive or boxed.
+     * @param t the data type.
+     * @return true if the given type is of float.
      */
     static boolean isFloat(DataType t) {
         return (t.id () == ID.Float) ||
@@ -479,6 +574,8 @@ public interface DataType extends Serializable {
     /**
      * Returns true if the given type is of double,
      * either primitive or boxed.
+     * @param t the data type.
+     * @return true if the given type is of double.
      */
     static boolean isDouble(DataType t) {
         return (t.id() == ID.Double) ||
