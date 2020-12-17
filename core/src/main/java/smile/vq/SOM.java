@@ -179,6 +179,7 @@ public class SOM implements VectorQuantizer {
      * @param nrow the number of rows in the lattice.
      * @param ncol the number of columns in the lattice.
      * @param samples the samples to draw initial weight vectors.
+     * @return the lattice.
      */
     public static double[][][] lattice(int nrow, int ncol, double[][] samples) {
         int k = nrow * ncol;
@@ -240,6 +241,7 @@ public class SOM implements VectorQuantizer {
 
     /**
      * Returns the lattice of neurons.
+     * @return the lattice of neurons.
      */
     public double[][][] neurons() {
         double[][][] lattice = new double[nrow][ncol][];
@@ -255,6 +257,8 @@ public class SOM implements VectorQuantizer {
      * Calculates the unified distance matrix (u-matrix) for visualization.
      * U-matrix is a popular method of displaying SOMs. The value of umatrix
      * is the maximum of distances between a map unit to its neighbors.
+     *
+     * @return the unified distance matrix.
      */
     public double[][] umatrix() {
         double[][] umatrix = new double[nrow][ncol];

@@ -427,7 +427,11 @@ public class FloatMatrix extends SMatrix {
         return (((n * elementSize + 511) / 512) * 512 + 64) / elementSize;
     }
 
-    /** Customized object serialization. */
+    /**
+     * Customized object serialization.
+     * @param out the output stream.
+     * @throws IOException when fails to write to the stream.
+     */
     private void writeObject(ObjectOutputStream out) throws IOException {
         // write default properties
         out.defaultWriteObject();
@@ -448,7 +452,12 @@ public class FloatMatrix extends SMatrix {
         }
     }
 
-    /** Customized object serialization. */
+    /**
+     * Customized object serialization.
+     * @param in the input stream.
+     * @throws IOException when fails to read the stream.
+     * @throws ClassNotFoundException when fails to load the class.
+     */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
         //read default properties
         in.defaultReadObject();

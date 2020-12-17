@@ -89,6 +89,7 @@ public class CoifletWavelet extends Wavelet {
     /**
      * Constructor. Create a Coiflet wavelet with n coefficients.
      * n = 6, 12, 18, 24, or 30 are supported.
+     * @param n the number of wavelet coefficients.
      */
     public CoifletWavelet(int n) {
         super(n == 6 ? c6 :

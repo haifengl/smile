@@ -163,6 +163,7 @@ public interface LOOCV {
      * @param formula the model formula.
      * @param data the training data.
      * @param trainer the lambda to train the model.
+     * @return the validation results.
      */
     @SuppressWarnings("unchecked")
     static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
@@ -288,6 +289,7 @@ public interface LOOCV {
      * @param formula the model formula.
      * @param data the training data.
      * @param trainer the lambda to train the model.
+     * @return the validation results.
      */
     static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         int n = data.size();
