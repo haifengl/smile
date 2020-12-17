@@ -43,6 +43,7 @@ public class BreakIteratorTokenizer implements Tokenizer {
 
     /**
      * Constructor for the given locale.
+     * @param locale the locale.
      */
     public BreakIteratorTokenizer(Locale locale) {
         boundary = BreakIterator.getWordInstance(locale);

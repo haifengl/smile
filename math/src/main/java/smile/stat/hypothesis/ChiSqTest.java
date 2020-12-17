@@ -98,6 +98,7 @@ public class ChiSqTest {
      * and an array prob containing the expected probabilities of events,
      * and given one constraint, a small value of p-value indicates
      * a significant difference between the distributions.
+     *
      * @param bins the observed number of events.
      * @param prob the expected probabilities of events.
      * @return the test results.
@@ -112,6 +113,7 @@ public class ChiSqTest {
      * and an array prob containing the expected probabilities of events,
      * and given the number of constraints (normally one), a small value
      * of p-value indicates a significant difference between the distributions.
+     *
      * @param bins the observed number of events.
      * @param prob the expected probabilities of events.
      * @param constraints the constraints on the degree of freedom.
@@ -151,6 +153,7 @@ public class ChiSqTest {
      * Given the arrays bins1 and bins2, containing two sets of binned data,
      * and given one constraint, a small value of p-value indicates
      * a significant difference between the distributions.
+     *
      * @param bins1 the observed number of events in first sample.
      * @param bins2 the observed number of events in second sample.
      * @return the test results.
@@ -164,6 +167,7 @@ public class ChiSqTest {
      * Given the arrays bins1 and bins2, containing two sets of binned data,
      * and given the number of constraints (normally one), a small value of
      * p-value indicates a significant difference between the distributions.
+     *
      * @param bins1 the observed number of events in first sample.
      * @param bins2 the observed number of events in second sample.
      * @param constraints the constraints on the degree of freedom.

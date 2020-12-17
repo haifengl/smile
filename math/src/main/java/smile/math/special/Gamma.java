@@ -61,6 +61,8 @@ public class Gamma {
 
     /**
      * Gamma function. Lanczos approximation (6 terms).
+     * @param x a real number.
+     * @return the function value.
      */
     public static double gamma(double x) {
         double xcopy = x;
@@ -86,6 +88,8 @@ public class Gamma {
 
     /**
      * The log of the Gamma function. Lanczos approximation (6 terms)
+     * @param x a real number.
+     * @return the function value.
      */
     public static double lgamma(double x) {
         double xcopy = x;
@@ -120,6 +124,10 @@ public class Gamma {
     /**
      * Regularized Incomplete Gamma Function
      * P(s,x) = <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     *
+     * @param s {@code s >= 0}
+     * @param x {@code x >= 0}
+     * @return the function value.
      */
     public static double regularizedIncompleteGamma(double s, double x) {
         if (s < 0.0) {
@@ -146,6 +154,10 @@ public class Gamma {
     /**
      * Regularized Upper/Complementary Incomplete Gamma Function
      * Q(s,x) = 1 - P(s,x) = 1 - <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t</sup> t<sup>(s-1)</sup> dt</i>
+     *
+     * @param s {@code s >= 0}
+     * @param x {@code x >= 0}
+     * @return the function value.
      */
     public static double regularizedUpperIncompleteGamma(double s, double x) {
         if (s < 0.0) {
@@ -263,6 +275,9 @@ public class Gamma {
 
     /**
      * The digamma function is defined as the logarithmic derivative of the gamma function.
+     *
+     * @param x a real number.
+     * @return the function value.
      */
     public static double digamma(double x) {
         final double[][] C7 = {
@@ -323,6 +338,10 @@ public class Gamma {
 
     /**
      * The inverse of regularized incomplete gamma function.
+     *
+     * @param a {@code a > 0}
+     * @param p a real number.
+     * @return the function value.
      */
     public static double inverseRegularizedIncompleteGamma(double a, double p) {
         if (a <= 0.0) {
