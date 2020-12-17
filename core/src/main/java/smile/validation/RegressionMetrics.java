@@ -29,18 +29,28 @@ public class RegressionMetrics implements Serializable {
     public final double scoreTime;
     /** The validation data size. */
     public final int size;
-    /** The residual sum of squares. on validation data. */
+    /** The residual sum of squares on validation data. */
     public final double rss;
     /** The mean squared error on validation data. */
     public final double mse;
-    /** The root mean squared error  on validation data. */
+    /** The root mean squared error on validation data. */
     public final double rmse;
     /** The mean absolute deviation on validation data. */
     public final double mad;
     /** The R-squared score on validation data. */
     public final double r2;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param rss the residual sum of squares on validation data.
+     * @param mse the mean squared error on validation data.
+     * @param rmse the root mean squared error on validation data.
+     * @param mad the mean absolute deviation on validation data.
+     * @param r2 the R-squared score on validation data.
+     */
     public RegressionMetrics(double fitTime, double scoreTime, int size, double rss, double mse, double rmse, double mad, double r2) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;

@@ -576,7 +576,7 @@ public class AdjacencyList implements Graph, Serializable {
         wt[s] = 0.0;
         queue.lower(s);
 
-        while (!queue.empty()) {
+        while (!queue.isEmpty()) {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
                 for (Edge edge : graph[v]) {

@@ -72,7 +72,12 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param x the training data.
+     * @param y the class labels of training data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     static <T, M extends Classifier<T>> ClassificationMetrics classification(T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         int k = MathEx.unique(y).length;
@@ -155,7 +160,9 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param trainer the lambda to train the model.
      */
     @SuppressWarnings("unchecked")
     static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
@@ -237,7 +244,12 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param x the training data.
+     * @param y the responsible variable of training data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     static <T, M extends Regression<T>> RegressionMetrics regression(T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         int n = x.length;
@@ -273,7 +285,9 @@ public interface LOOCV {
 
     /**
      * Runs leave-one-out cross validation tests.
-     * @return the predictions.
+     * @param formula the model formula.
+     * @param data the training data.
+     * @param trainer the lambda to train the model.
      */
     static RegressionMetrics regression(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameRegression> trainer) {
         int n = data.size();

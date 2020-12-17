@@ -55,7 +55,10 @@ public class IntSet implements Serializable {
         }
     }
 
-    /** Returns the number of values. */
+    /**
+     * Returns the number of values.
+     * @return the number of values.
+     */
     public int size() {
         return values.length;
     }
@@ -70,15 +73,20 @@ public class IntSet implements Serializable {
         return values[index];
     }
 
-    /** Maps the value to index. */
+    /**
+     * Maps the value to index.
+     * @param x the value.
+     * @return the index.
+     */
     public int indexOf(int x) {
         return index.get(x);
     }
 
     /**
-     * Returns an IntSet of [0, k).
+     * Returns the IntSet of [0, k).
      *
      * @param k the number of unique values.
+     * @return the set.
      */
     public static IntSet of(int k) {
         int[] values = IntStream.range(0, k).toArray();
@@ -87,6 +95,8 @@ public class IntSet implements Serializable {
 
     /**
      * Finds the unique values from samples.
+     * @param y the samples.
+     * @return the set.
      */
     public static IntSet of(int[] y) {
         int[] values = MathEx.unique(y);
