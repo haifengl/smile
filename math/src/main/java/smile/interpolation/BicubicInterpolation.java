@@ -69,6 +69,9 @@ public class BicubicInterpolation implements Interpolation2D {
 
     /**
      * Constructor. The value in x1 and x2 must be monotonically increasing.
+     * @param x1 the 1st dimension value.
+     * @param x2 the 2nd dimension value.
+     * @param y the function values at <code>(x1, x2)</code>.
      */
     public BicubicInterpolation(double[] x1, double[] x2, double[][] y) {
         if (x1.length != y.length) {

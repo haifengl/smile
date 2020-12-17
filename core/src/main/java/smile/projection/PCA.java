@@ -131,6 +131,7 @@ public class PCA implements LinearProjection, Serializable {
      *             dimension and cor = false, SVD is employed for
      *             efficiency. Otherwise, eigen decomposition on
      *             covariance or correlation matrix is performed.
+     * @return the model.
      */
     public static PCA fit(double[][] data) {
         int m = data.length;
@@ -189,6 +190,7 @@ public class PCA implements LinearProjection, Serializable {
      *             dimension and cor = false, SVD is employed for
      *             efficiency. Otherwise, eigen decomposition on
      *             covariance or correlation matrix is performed.
+     * @return the model.
      */
     public static PCA cor(double[][] data) {
         int m = data.length;
@@ -245,45 +247,50 @@ public class PCA implements LinearProjection, Serializable {
 
     /**
      * Returns the center of data.
+     * @return the center of data.
      */
-    public double[] getCenter() {
+    public double[] center() {
         return mu;
     }
 
     /**
      * Returns the variable loading matrix, ordered from largest to smallest
      * by corresponding eigenvalues. The matrix columns contain the eigenvectors.
+     * @return the variable loading matrix.
      */
-    public Matrix getLoadings() {
+    public Matrix loadings() {
         return eigvectors;
     }
 
     /**
      * Returns the principal component variances, ordered from largest to smallest,
      * which are the eigenvalues of the covariance or correlation matrix of learning data.
+     * @return the principal component variances.
      */
-    public double[] getVariance() {
+    public double[] variance() {
         return eigvalues;
     }
 
     /**
      * Returns the proportion of variance contained in each principal component,
      * ordered from largest to smallest.
+     * @return the proportion of variance contained in each principal component.
      */
-    public double[] getVarianceProportion() {
+    public double[] varianceProportion() {
         return proportion;
     }
 
     /**
      * Returns the cumulative proportion of variance contained in principal components,
      * ordered from largest to smallest.
+     * @return the cumulative proportion of variance.
      */
-    public double[] getCumulativeVarianceProportion() {
+    public double[] cumulativeVarianceProportion() {
         return cumulativeProportion;
     }
 
     @Override
-    public Matrix getProjection() {
+    public Matrix projection() {
         return projection;
     }
 
@@ -291,7 +298,7 @@ public class PCA implements LinearProjection, Serializable {
      * Set the projection matrix with given number of principal components.
      * @param p choose top p principal components used for projection.
      */
-    public PCA setProjection(int p) {
+    public void setProjection(int p) {
         if (p < 1 || p > n) {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
@@ -305,8 +312,6 @@ public class PCA implements LinearProjection, Serializable {
         }
 
         pmu = projection.mv(mu);
-
-        return this;
     }
 
     /**
@@ -314,7 +319,7 @@ public class PCA implements LinearProjection, Serializable {
      * (more than) the given percentage of variance.
      * @param p the required percentage of variance.
      */
-    public PCA setProjection(double p) {
+    public void setProjection(double p) {
         if (p <= 0 || p > 1) {
             throw new IllegalArgumentException("Invalid percentage of variance: " + p);
         }
@@ -325,8 +330,6 @@ public class PCA implements LinearProjection, Serializable {
                 break;
             }
         }
-
-        return this;
     }
 
     @Override

@@ -18,7 +18,7 @@
 package smile.neighbor.lsh;
 
 /**
- * Probability list of all buckets for given query object.
+ * The probability list of all buckets for given query object.
  *
  * @author Haifeng Li
  */
@@ -29,12 +29,16 @@ public class PrZ implements Comparable<PrZ> {
      */
     public final int m;
     /**
-     * The n_i probabilities for h_m hash function,
-     * where n_i = u_i_max - u_i_min + 1.
+     * The n<sub>i</sub> probabilities for h<sub>m</sub> hash function,
+     * where n<sub>i</sub> = u<sub>i_max</sub> - u<sub>i_min</sub> + 1.
      */
     public final PrH[] prh;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param m the index of hash function.
+     * @param prh the n<sub>i</sub> probabilities for h<sub>m</sub> hash function.
+     */
     public PrZ(int m, PrH[] prh) {
         this.m = m;
         this.prh = prh;

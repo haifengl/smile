@@ -67,7 +67,8 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -78,6 +79,7 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      *
      * @param name the name of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static ShortVector of(String name, short[] vector) {
         return new ShortVectorImpl(name, vector);
@@ -87,6 +89,7 @@ public interface ShortVector extends BaseVector<Short, Integer, IntStream> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static ShortVector of(StructField field, short[] vector) {
         return new ShortVectorImpl(field, vector);

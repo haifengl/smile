@@ -30,7 +30,10 @@ import java.util.LinkedList;
  * and the root is associated with the empty string. Values are normally
  * not associated with every node, only with leaves and some inner nodes
  * that correspond to keys of interest.
- *  
+ *
+ * @param <K> the data type of key.
+ * @param <V> the data type of value.
+ *
  * @author Haifeng Li
  */
 public class Trie<K, V> {
@@ -54,27 +57,46 @@ public class Trie<K, V> {
         private V value;
         private final LinkedList<Node> children;
 
+        /**
+         * Constructor.
+         * @param key the key.
+         */
         public Node(K key) {
             this.key = key;
             this.value = null;
             this.children = new LinkedList<>();
         }
-        
+
+        /**
+         * Returns the key.
+         * @return the key.
+         */
         public K getKey() {
             return key;
         }
-        
+
+        /**
+         * Returns the value.
+         * @return the value.
+         */
         public V getValue() {
             return value;
         }
 
+        /**
+         * Returns the value matching the key sequence.
+         * @param key the key sequence.
+         * @param index the index of current element in the key sequence.
+         * @return the value.
+         */
         public V getChild(K[] key, int index) {
             if (index >= key.length) {
                 return value;
             }
 
+            K k = key[index];
             for (Node child : children) {
-                if (child.key.equals(key[index])) {
+                if (child.key.equals(k)) {
                     return child.getChild(key, index + 1);
                 }
             }
@@ -82,6 +104,11 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Returns the child with the key.
+         * @param key the key.
+         * @return the child.
+         */
         public Node getChild(K key) {
             for (Node child : children) {
                 if (child.key.equals(key)) {
@@ -92,6 +119,12 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Adds a child.
+         * @param key the key sequence.
+         * @param value the value.
+         * @param index the index of current element in the key sequence.
+         */
         public void addChild(K[] key, V value, int index) {
             if (index >= key.length) {
                 if (this.value == null) {

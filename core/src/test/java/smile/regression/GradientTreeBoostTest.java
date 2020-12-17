@@ -69,7 +69,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
         }
 
         System.out.println("----- Progressive RMSE -----");
@@ -96,7 +96,7 @@ public class GradientTreeBoostTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %12.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %12.4f%n", model.schema().name(i), importance[i]);
         }
 
         RegressionValidations<GradientTreeBoost> result = CrossValidation.regression(10, formula, data,

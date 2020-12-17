@@ -43,8 +43,9 @@ public class ShepardInterpolation {
 
     /**
      * Constructor. By default p = 2.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      */
     public ShepardInterpolation(double[][] x, double[] y) {
         this(x, y, 2);
@@ -52,8 +53,9 @@ public class ShepardInterpolation {
 
     /**
      * Constructor.
-     * @param x the point set.
-     * @param y the function values at given points.
+     *
+     * @param x the data points.
+     * @param y the function values at <code>x</code>.
      * @param p the parameter in the radial basis function &phi;(r) = r<sup>-p</sup>.
      */
     public ShepardInterpolation(double[][] x, double[] y, double p) {
@@ -72,6 +74,8 @@ public class ShepardInterpolation {
 
     /**
      * Interpolate the function at given point.
+     * @param x a point.
+     * @return the interpolated function value.
      */
     public double interpolate(double... x) {
         if (x.length != this.x[0].length) {

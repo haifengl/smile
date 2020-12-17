@@ -33,13 +33,23 @@ import smile.data.type.StructType;
  * @author Haifeng Li
  */
 public interface Term extends Serializable {
-    /** Binds the term to a schema. */
-    List<Feature>  bind(StructType schema);
+    /**
+     * Binds the term to a schema.
+     * @param schema the schema to bind the term with.
+     * @return the feature list.
+     */
+    List<Feature> bind(StructType schema);
 
-    /** Returns the list of variables used in this term. */
+    /**
+     * Returns the list of variables used in this term.
+     * @return the list of variables used in this term.
+     */
     Set<String> variables();
 
-    /** Expands the term (e.g. FactorCrossing). */
+    /**
+     * Expands the term (e.g. FactorCrossing).
+     * @return the expanded terms.
+     */
     default List<Term> expand() {
         return Collections.singletonList(this);
     }

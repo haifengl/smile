@@ -34,6 +34,9 @@ public interface Interpolation extends Serializable {
 
     /**
      * Given a value x, return an interpolated value.
+     *
+     * @param x a real number.
+     * @return the interpolated function value.
      */
     double interpolate(double x);
 }

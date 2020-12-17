@@ -516,7 +516,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
         wt[s] = 0.0;
         queue.lower(s);
 
-        while (!queue.empty()) {
+        while (!queue.isEmpty()) {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
                 for (int w = 0; w < n; w++) {
@@ -605,7 +605,11 @@ public class AdjacencyMatrix implements Graph, Serializable {
     }
     
     /**
-     * Push-relabel algorithm for maximum flow
+     * Push-relabel algorithm for maximum flow.
+     * @param flow the flow network.
+     * @param source the source vertex.
+     * @param sink the sink vertex.
+     * @return the maximum flow between source and sink.
      */
     public double pushRelabel(double[][] flow, int source, int sink) {
         int n = graph.length;

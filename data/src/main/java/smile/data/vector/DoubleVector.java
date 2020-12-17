@@ -67,7 +67,8 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -78,6 +79,7 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      *
      * @param name the name of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static DoubleVector of(String name, double[] vector) {
         return new DoubleVectorImpl(name, vector);
@@ -87,6 +89,7 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      *
      * @param name the name of vector.
      * @param stream the data stream of vector.
+     * @return the vector.
      */
     static DoubleVector of(String name, DoubleStream stream) {
         return new DoubleVectorImpl(name, stream.toArray());
@@ -96,6 +99,7 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static DoubleVector of(StructField field, double[] vector) {
         return new DoubleVectorImpl(field, vector);
@@ -105,6 +109,7 @@ public interface DoubleVector extends BaseVector<Double, Double, DoubleStream> {
      *
      * @param field the struct field of vector.
      * @param stream the data stream of vector.
+     * @return the vector.
      */
     static DoubleVector of(StructField field, DoubleStream stream) {
         return new DoubleVectorImpl(field, stream.toArray());

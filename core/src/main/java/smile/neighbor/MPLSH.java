@@ -18,7 +18,6 @@
 package smile.neighbor;
 
 import java.util.*;
-
 import smile.neighbor.lsh.*;
 import smile.util.IntArrayList;
 import smile.math.MathEx;
@@ -114,6 +113,7 @@ public class MPLSH <E> extends LSH<E> {
      * Fits the posteriori multiple probe algorithm.
      * @param range the neighborhood search data structure.
      * @param radius the radius for range search.
+     * @param samples the training samples.
      * @param Nz the number of quantized values.
      */
     public void fit(RNNSearch<double[], double[]> range, double[][] samples, double radius, int Nz) {
@@ -124,6 +124,7 @@ public class MPLSH <E> extends LSH<E> {
      * Train the posteriori multiple probe algorithm.
      * @param range the neighborhood search data structure.
      * @param radius the radius for range search.
+     * @param samples the training samples.
      * @param Nz the number of quantized values.
      * @param sigma the Parzen window width.
      */
@@ -156,6 +157,7 @@ public class MPLSH <E> extends LSH<E> {
      * @param q the query object.
      * @param recall the expected recall rate.
      * @param T the maximum number of probes.
+     * @return the approximate nearest neighbor.
      */
     public Neighbor<double[], E> nearest(double[] q, double recall, int T) {
         if (recall > 1 || recall < 0) {
@@ -195,6 +197,7 @@ public class MPLSH <E> extends LSH<E> {
      * @param k the number of nearest neighbors to search for.
      * @param recall the expected recall rate.
      * @param T the maximum number of probes.
+     * @return the approximate k-nearest neighbors.
      */
     @SuppressWarnings("unchecked")
     public Neighbor<double[], E>[] knn(double[] q, int k, double recall, int T) {

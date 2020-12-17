@@ -66,7 +66,7 @@ public class ARPACK {
      * @param ritz Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, Ritz ritz) {
-        return eigen(A, k, ritz, 1E-8, 10 * A.nrows());
+        return eigen(A, k, ritz, 1E-8, 10 * A.nrow());
     }
 
     /**
@@ -77,7 +77,7 @@ public class ARPACK {
      * @param which Specify which of the Ritz values to compute.
      */
     public static EVD eigen(Matrix A, int k, String which) {
-        return eigen(A, k, which, 1E-8, 10 * A.nrows());
+        return eigen(A, k, which, 1E-8, 10 * A.nrow());
     }
 
     /**
@@ -103,15 +103,15 @@ public class ARPACK {
      * @param maxIter Maximum number of iterations.
      */
     public static EVD eigen(Matrix A, int k, String which, double kappa, int maxIter) {
-        if (A.nrows() != A.ncols()) {
-            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrows(), A.ncols()));
+        if (A.nrow() != A.ncol()) {
+            throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", A.nrow(), A.ncol()));
         }
 
         if (!A.isSymmetric()) {
             throw new UnsupportedOperationException("This matrix is not symmetric.");
         }
 
-        int n = A.nrows();
+        int n = A.nrow();
 
         if (k <= 0 || k >= n) {
             throw new IllegalArgumentException("Invalid NEV parameter k: " + k);
@@ -122,7 +122,7 @@ public class ARPACK {
         }
 
         if (maxIter <= 0) {
-            maxIter = 10 * A.nrows();
+            maxIter = 10 * A.nrow();
         }
 
         intW nev = new intW(k);
@@ -193,10 +193,10 @@ public class ARPACK {
     }
 
     private static void av(Matrix A, double[] work, int inputOffset, int outputOffset) {
-        int n = A.ncols();
-        double[] x = new double[A.ncols()];
+        int n = A.ncol();
+        double[] x = new double[A.ncol()];
         System.arraycopy(work, inputOffset, x, 0, n);
-        double[] y = new double[A.ncols()];
+        double[] y = new double[A.ncol()];
         A.ax(x, y);
         System.arraycopy(y, 0, work, outputOffset, n);
     }

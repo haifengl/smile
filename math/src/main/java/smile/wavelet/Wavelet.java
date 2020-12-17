@@ -55,6 +55,7 @@ public class Wavelet {
 
     /**
      * Constructor. Create a wavelet with given coefficients.
+     * @param coefficients wavelet coefficients.
      */
     public Wavelet(double[] coefficients) {
         ncof = coefficients.length;
@@ -72,7 +73,9 @@ public class Wavelet {
     }
 
     /**
-     * Applies the wavelet filter to a data vector a[0, n-1].
+     * Applies the wavelet filter to a signal vector a[0, n-1].
+     * @param a the signal vector.
+     * @param n the length of vector.
      */
     void forward(double[] a, int n) {
         if (n < ncof) {
@@ -104,7 +107,9 @@ public class Wavelet {
     }
 
     /**
-     * Applies the inverse wavelet filter to a data vector a[0, n-1].
+     * Applies the inverse wavelet filter to a signal vector a[0, n-1].
+     * @param a the signal vector.
+     * @param n the length of vector.
      */
     void backward(double[] a, int n) {
         if (n < ncof) {
@@ -139,6 +144,7 @@ public class Wavelet {
 
     /**
      * Discrete wavelet transform.
+     * @param a the signal vector.
      */
     public void transform(double[] a) {
         int n = a.length;
@@ -158,6 +164,7 @@ public class Wavelet {
 
     /**
      * Inverse discrete wavelet transform.
+     * @param a the signal vector.
      */
     public void inverse(double[] a) {
         int n = a.length;

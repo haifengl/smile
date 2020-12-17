@@ -72,6 +72,7 @@ public class MDS {
      * diagonal should be zero and all other elements should be positive and
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
+     * @return the model.
      */
     public static MDS of(double[][] proximity) {
         return of(proximity, new Properties());
@@ -84,6 +85,7 @@ public class MDS {
      * symmetric. For pairwise distances matrix, it should be just the plain
      * distance, not squared.
      * @param k the dimension of the projection.
+     * @return the model.
      */
     public static MDS of(double[][] proximity, int k) {
         return of(proximity, k, false);
@@ -122,6 +124,7 @@ public class MDS {
      * such that proximity + c may be taken as ratio data, and also possibly
      * to minimize the dimensionality of the Euclidean space required for
      * representing the objects.
+     * @return the model.
      */
     public static MDS of(double[][] proximity, int k, boolean positive) {
         int m = proximity.length;

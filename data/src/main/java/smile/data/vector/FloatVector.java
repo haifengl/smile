@@ -67,7 +67,8 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -78,6 +79,7 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
      *
      * @param name the name of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static FloatVector of(String name, float[] vector) {
         return new FloatVectorImpl(name, vector);
@@ -87,6 +89,7 @@ public interface FloatVector extends BaseVector<Float, Double, DoubleStream> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static FloatVector of(StructField field, float[] vector) {
         return new FloatVectorImpl(field, vector);

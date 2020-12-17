@@ -70,11 +70,11 @@ public class NaiveBayesDemo extends ClassificationDemo {
     @Override
     protected Canvas paintOnCanvas(double[][] data, int[] label) {
 
-        int rows = data.length;
+        int nrow = data.length;
         int features = data[0].length;
 
-        double[][] paintPoints = new double[rows][features - 2];// iris data set has 4 features
-        for(int i = 0;i < rows;i++) {
+        double[][] paintPoints = new double[nrow][features - 2];// iris data set has 4 features
+        for(int i = 0;i < nrow;i++) {
             for(int j = 0;j < pIdx.length;j++) {
                 paintPoints[i][j] = data[i][pIdx[j]];
             }

@@ -131,6 +131,9 @@ public enum Crossover {
 
     /**
      * Returns a pair of offsprings by crossovering parent chromosomes.
+     * @param father the parent chromosome.
+     * @param mother the other parent chromosome.
+     * @return a pair of offsprings.
      */
     public abstract BitString[] apply(BitString father, BitString mother);
 }

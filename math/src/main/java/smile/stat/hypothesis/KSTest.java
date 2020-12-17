@@ -171,7 +171,7 @@ public class KSTest {
      * Inverse of the cumulative distribution function of Kolmogorov-Smirnov
      * distribution.
      */
-    static double invpks(double p) {
+    private static double invpks(double p) {
         return invqks(1.0 - p);
     }
 
@@ -206,6 +206,10 @@ public class KSTest {
      * the cumulative distribution function of x is significantly different from
      * the given distribution. The array x is modified by being sorted into
      * ascending order.
+     *
+     * @param x the sample values.
+     * @param dist the distribution.
+     * @return the test results.
      */
     public static KSTest test(double[] x, Distribution dist) {
         Arrays.sort(x);
@@ -238,6 +242,10 @@ public class KSTest {
      * the cumulative distribution function of x is significantly different from
      * that of y. The arrays x and y are modified by being sorted into
      * ascending order.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static KSTest test(double[] x, double[] y) {
         Arrays.sort(x);

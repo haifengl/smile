@@ -55,7 +55,6 @@ import smile.feature._
 import smile.clustering._
 import smile.vq._
 import smile.manifold._
-import smile.mds._
 import smile.sequence._
 import smile.projection._
 import smile.nlp._

@@ -61,6 +61,7 @@ public class IsotonicMDS {
      * Fits Kruskal's non-metric MDS with default k = 2, tolerance = 1E-4 and maxIter = 200.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
+     * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity) {
         return of(proximity, new Properties());
@@ -71,6 +72,7 @@ public class IsotonicMDS {
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
+     * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, int k) {
         return of(proximity, k, 1E-4, 200);
@@ -100,6 +102,7 @@ public class IsotonicMDS {
      * @param k the dimension of the projection.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, int k, double tol, int maxIter) {
         Properties prop = new Properties();
@@ -115,6 +118,7 @@ public class IsotonicMDS {
      * size is the projection dimension.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static IsotonicMDS of(double[][] proximity, double[][] init, double tol, int maxIter) {
         if (proximity.length != proximity[0].length) {

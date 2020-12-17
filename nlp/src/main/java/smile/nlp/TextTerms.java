@@ -26,27 +26,33 @@ public interface TextTerms {
     
     /**
      * Returns the number of words.
+     * @return the number of words.
      */
     int size();
 
     /**
      * Returns the iterator of the words of the document.
      * The stop words and punctuations may be removed.
+     * @return the iterator of the words of the document.
      */
     Iterable<String> words();
 
     /**
      * Returns the iterator of unique words.
+     * @return the iterator of unique words.
      */
     Iterable<String> unique();
 
     /**
      * Returns the term frequency.
+     * @param term the term.
+     * @return the term frequency.
      */
     int tf(String term);
 
     /**
      * Returns the maximum term frequency over all terms in the document.
+     * @return the maximum term frequency.
      */
     int maxtf();
 

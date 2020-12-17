@@ -295,7 +295,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int p = x.ncols();
+        int p = x.ncol();
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         y = codec.y;
@@ -366,7 +366,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int p = x.ncols();
+        int p = x.ncol();
         ClassLabels codec = ClassLabels.fit(y);
         int k = codec.k;
         y = codec.y;
@@ -475,7 +475,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             this.x = x;
             this.y = y;
             this.lambda = lambda;
-            this.p = x.ncols();
+            this.p = x.ncol();
 
             partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);
@@ -593,7 +593,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
             this.y = y;
             this.k = k;
             this.lambda = lambda;
-            this.p = x.ncols();
+            this.p = x.ncol();
 
             partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
             partitions = x.size() / partitionSize + (x.size() % partitionSize == 0 ? 0 : 1);

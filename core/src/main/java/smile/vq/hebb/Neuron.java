@@ -41,7 +41,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
     /**
      * The distance between the neuron and an input signal.
      */
-    public double distance = Double.MAX_VALUE;
+    public transient double distance = Double.MAX_VALUE;
     /**
      * The local counter variable (e.g. the accumulated error, freshness, etc.)
      */
@@ -49,6 +49,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Constructor.
+     * @param w the reference vector.
      */
     public Neuron(double[] w) {
         this(w, 0.0);
@@ -56,6 +57,8 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Constructor.
+     * @param w the reference vector.
+     * @param counter the local counter.
      */
     public Neuron(double[] w, double counter) {
         this.w = w;
@@ -74,17 +77,27 @@ public class Neuron implements Comparable<Neuron>, Serializable {
         }
     }
 
-    /** Adds an edge. */
+    /**
+     * Adds an edge.
+     * @param neighbor the neighbor neuron.
+     */
     public void addEdge(Neuron neighbor) {
         addEdge(neighbor, 0);
     }
 
-    /** Adds an edge. */
+    /**
+     * Adds an edge.
+     * @param neighbor the neighbor neuron.
+     * @param age the age of edge.
+     */
     public void addEdge(Neuron neighbor, int age) {
         edges.add(new Edge(neighbor, age));
     }
 
-    /** Removes an edge. */
+    /**
+     * Removes an edge.
+     * @param neighbor the neighbor neuron of the edge.
+     */
     public void removeEdge(Neuron neighbor) {
         for (Iterator<Edge> iter = edges.iterator(); iter.hasNext();) {
             Edge edge = iter.next();
@@ -95,7 +108,11 @@ public class Neuron implements Comparable<Neuron>, Serializable {
         }
     }
 
-    /** Sets the age of edge. */
+    /**
+     * Sets the age of edge.
+     * @param neighbor the neighbor neuron of the edge.
+     * @param age the age of edge.
+     */
     public void setEdgeAge(Neuron neighbor, int age) {
         for (Edge edge : edges) {
             if (edge.neighbor == neighbor) {
@@ -114,6 +131,7 @@ public class Neuron implements Comparable<Neuron>, Serializable {
 
     /**
      * Computes the distance between the neuron and a signal.
+     * @param x the signal.
      */
     public void distance(double[] x) {
         distance = MathEx.distance(w, x);

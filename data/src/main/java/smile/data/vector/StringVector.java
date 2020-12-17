@@ -38,6 +38,8 @@ public interface StringVector extends Vector<String> {
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and
      * uses the given date format pattern to parse strings.
+     * @param pattern the datetime formatter pattern.
+     * @return the date vector.
      */
     default Vector<LocalDate> toDate(String pattern) {
         return toDate(DateTimeFormatter.ofPattern(pattern));
@@ -46,12 +48,16 @@ public interface StringVector extends Vector<String> {
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and
      * uses the given date format pattern to parse strings.
+     * @param format the datetime formatter.
+     * @return the date vector.
      */
     Vector<LocalDate> toDate(DateTimeFormatter format);
 
     /**
      * Returns a vector of LocalTime. This method assumes that this is a string vector and
      * uses the given time format pattern to parse strings.
+     * @param pattern the datetime formatter pattern.
+     * @return the time vector.
      */
     default Vector<LocalTime> toTime(String pattern) {
         return toTime(DateTimeFormatter.ofPattern(pattern));
@@ -60,12 +66,16 @@ public interface StringVector extends Vector<String> {
     /**
      * Returns a vector of LocalDate. This method assumes that this is a string vector and
      * uses the given time format pattern to parse strings.
+     * @param format the datetime formatter.
+     * @return the time vector.
      */
     Vector<LocalTime> toTime(DateTimeFormatter format);
 
     /**
      * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
      * uses the given date time format pattern to parse strings.
+     * @param pattern the datetime formatter pattern.
+     * @return the datetime vector.
      */
     default Vector<LocalDateTime> toDateTime(String pattern) {
         return toDateTime(DateTimeFormatter.ofPattern(pattern));
@@ -74,12 +84,15 @@ public interface StringVector extends Vector<String> {
     /**
      * Returns a vector of LocalDateTime. This method assumes that this is a string vector and
      * uses the given date time format pattern to parse strings.
+     * @param format the datetime formatter.
+     * @return the datetime vector.
      */
     Vector<LocalDateTime> toDateTime(DateTimeFormatter format);
 
     /**
      * Returns a nominal scale of measure based on distinct values in
      * the vector.
+     * @return the nominal scale.
      */
     NominalScale nominal();
 
@@ -87,12 +100,15 @@ public interface StringVector extends Vector<String> {
      * Converts strings to discrete measured values. Depending on how many levels
      * in the nominal scale, the type of returned vector may be byte, short
      * or integer. The missing values/nulls will be converted to -1.
+     * @param scale the categorical measure.
+     * @return the factorized vector.
      */
     BaseVector factorize(CategoricalMeasure scale);
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -103,6 +119,7 @@ public interface StringVector extends Vector<String> {
      * Creates a named string vector.
      *
      * @param name the name of vector.
+     * @return the vector.
      * @param vector the data of vector.
      */
     static StringVector of(String name, String... vector) {
@@ -113,6 +130,7 @@ public interface StringVector extends Vector<String> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static StringVector of(StructField field, String... vector) {
         return new StringVectorImpl(field, vector);

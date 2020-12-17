@@ -28,6 +28,9 @@ public class LinearInterpolation extends AbstractInterpolation {
 
     /**
      * Constructor.
+     *
+     * @param x the tabulated points.
+     * @param y the function values at <code>x</code>.
      */
     public LinearInterpolation(double[] x, double[] y) {
         super(x, y);

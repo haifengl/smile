@@ -83,14 +83,14 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
         Bigram[] bigrams = new Bigram[k];
         HeapSelect<Bigram> heap = new HeapSelect<>(bigrams);
 
-        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
+        Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
         while (iterator.hasNext()) {
             smile.nlp.Bigram bigram = iterator.next();
-            int c12 = corpus.getBigramFrequency(bigram);
+            int c12 = corpus.count(bigram);
 
             if (c12 > minFrequency) {
-                int c1 = corpus.getTermFrequency(bigram.w1);
-                int c2 = corpus.getTermFrequency(bigram.w2);
+                int c1 = corpus.count(bigram.w1);
+                int c2 = corpus.count(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
                 heap.add(new Bigram(bigram.w1, bigram.w2, c12, -score));
@@ -125,14 +125,14 @@ public class Bigram extends smile.nlp.Bigram implements Comparable<Bigram> {
 
         ArrayList<Bigram> bigrams = new ArrayList<>();
 
-        Iterator<smile.nlp.Bigram> iterator = corpus.getBigrams();
+        Iterator<smile.nlp.Bigram> iterator = corpus.bigrams();
         while (iterator.hasNext()) {
             smile.nlp.Bigram bigram = iterator.next();
-            int c12 = corpus.getBigramFrequency(bigram);
+            int c12 = corpus.count(bigram);
 
             if (c12 > minFrequency) {
-                int c1 = corpus.getTermFrequency(bigram.w1);
-                int c2 = corpus.getTermFrequency(bigram.w2);
+                int c1 = corpus.count(bigram.w1);
+                int c2 = corpus.count(bigram.w2);
 
                 double score = likelihoodRatio(c1, c2, c12, corpus.size());
                 if (score > cutoff) {

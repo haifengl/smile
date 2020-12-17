@@ -41,7 +41,7 @@ public class ThinPlateRadialBasis implements RadialBasisFunction {
     private final double r0;
 
     /**
-     * Constructor.
+     * Constructor. The default scale is 1.0.
      */
     public ThinPlateRadialBasis() {
         this(1.0);
@@ -49,6 +49,7 @@ public class ThinPlateRadialBasis implements RadialBasisFunction {
 
     /**
      * Constructor.
+     * @param scale the scale parameter.
      */
     public ThinPlateRadialBasis(double scale) {
         r0 = scale;

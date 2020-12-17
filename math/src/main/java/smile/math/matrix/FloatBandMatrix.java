@@ -57,14 +57,13 @@ import static smile.math.blas.UPLO.*;
  * involved in performing operations such as multiplication falls significantly,
  * often leading to huge savings in terms of calculation time and complexity.
  * <p>
- * Given a n-by-n band matrix with <code>m<sub>1</sub></code> rows below the
- * diagonal and <code>m<sub>2</sub></code> rows above. The matrix is compactly
- * stored in an array <code>A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]</code>.
- * The diagonal elements are in <code>A[0,n-1][m<sub>1</sub>]</code>.
- * The sub-diagonal elements are in <code>A[j,n-1][0,m<sub>1</sub>-1]</code>
- * with {@code j > 0} appropriate to the number of elements on each sub-diagonal.
- * The super-diagonal elements are in <code>A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]</code>
- * with {@code j < n-1} appropriate to the number of elements on each super-diagonal.
+ * Given a n-by-n band matrix with m<sub>1</sub> rows below the diagonal
+ * and m<sub>2</sub> rows above. The matrix is compactly stored in an array
+ * A[0,n-1][0,m<sub>1</sub>+m<sub>2</sub>]. The diagonal elements are in
+ * A[0,n-1][m<sub>1</sub>]. The subdiagonal elements are in A[j,n-1][0,m<sub>1</sub>-1]
+ * with {@code j > 0} appropriate to the number of elements on each subdiagonal.
+ * The superdiagonal elements are in A[0,j][m<sub>1</sub>+1,m<sub>2</sub>+m<sub>2</sub>]
+ * with {@code j < n-1} appropriate to the number of elements on each superdiagonal.
  * 
  * @author Haifeng Li
  */
@@ -165,12 +164,12 @@ public class FloatBandMatrix extends SMatrix {
     }
 
     @Override
-    public int nrows() {
+    public int nrow() {
         return m;
     }
 
     @Override
-    public int ncols() {
+    public int ncol() {
         return n;
     }
 
@@ -179,18 +178,25 @@ public class FloatBandMatrix extends SMatrix {
         return AB.length;
     }
 
-    /** Returns the number of subdiagonals. */
+    /**
+     * Returns the number of subdiagonals.
+     * @return the number of subdiagonals.
+     */
     public int kl() {
         return kl;
     }
 
-    /** Returns the number of superdiagonals. */
+    /**
+     * Returns the number of superdiagonals.
+     * @return the number of superdiagonals.
+     */
     public int ku() {
         return ku;
     }
 
     /**
      * Returns the matrix layout.
+     * @return the matrix layout.
      */
     public Layout layout() {
         return COL_MAJOR;
@@ -198,19 +204,25 @@ public class FloatBandMatrix extends SMatrix {
 
     /**
      * Returns the leading dimension.
+     * @return the leading dimension.
      */
     public int ld() {
         return ld;
     }
 
     /**
-     * Return if the matrix is symmetric (uplo != null).
+     * Return true if the matrix is symmetric (uplo != null).
+     * @return true if the matrix is symmetric (uplo != null).
      */
     public boolean isSymmetric() {
         return uplo != null;
     }
 
-    /** Sets the format of symmetric band matrix. */
+    /**
+     * Sets the format of symmetric band matrix.
+     * @param uplo the format of symmetric band matrix.
+     * @return this matrix.
+     */
     public FloatBandMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
@@ -224,7 +236,10 @@ public class FloatBandMatrix extends SMatrix {
         return this;
     }
 
-    /** Gets the format of packed matrix. */
+    /**
+     * Gets the format of packed matrix.
+     * @return the format of packed matrix.
+     */
     public UPLO uplo() {
         return uplo;
     }
@@ -239,19 +254,20 @@ public class FloatBandMatrix extends SMatrix {
     }
 
     /**
-     * Returns if two matrices equals given an error margin.
+     * Returns true if two matrices equal in given precision.
      *
      * @param o the other matrix.
-     * @param eps the error margin.
+     * @param epsilon a number close to zero.
+     * @return true if two matrices equal in given precision.
      */
-    public boolean equals(FloatBandMatrix o, float eps) {
+    public boolean equals(FloatBandMatrix o, float epsilon) {
         if (m != o.m || n != o.n) {
             return false;
         }
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                if (!MathEx.isZero(get(i, j) - o.get(i, j), eps)) {
+                if (!MathEx.isZero(get(i, j) - o.get(i, j), epsilon)) {
                     return false;
                 }
             }
@@ -313,6 +329,7 @@ public class FloatBandMatrix extends SMatrix {
 
     /**
      * LU decomposition.
+     * @return LU decomposition.
      */
     public LU lu() {
         FloatBandMatrix lu = new FloatBandMatrix(m, n, 2*kl, ku);
@@ -335,6 +352,7 @@ public class FloatBandMatrix extends SMatrix {
      * Cholesky decomposition for symmetric and positive definite matrix.
      *
      * @throws ArithmeticException if the matrix is not positive definite.
+     * @return Cholesky decomposition.
      */
     public Cholesky cholesky() {
         if (uplo == null) {
@@ -392,8 +410,8 @@ public class FloatBandMatrix extends SMatrix {
         public final int[] ipiv;
 
         /**
-         * If info = 0, the LU decomposition was successful.
-         * If info = i > 0,  U(i,i) is exactly zero. The factorization
+         * If {@code info = 0}, the LU decomposition was successful.
+         * If {@code info = i > 0}, U(i,i) is exactly zero. The factorization
          * has been completed, but the factor U is exactly
          * singular, and division by zero will occur if it is used
          * to solve a system of equations.
@@ -402,9 +420,9 @@ public class FloatBandMatrix extends SMatrix {
 
         /**
          * Constructor.
-         * @param lu       LU decomposition matrix
-         * @param ipiv     the pivot vector
-         * @param info     info > 0 if the matrix is singular
+         * @param lu   LU decomposition matrix.
+         * @param ipiv the pivot vector.
+         * @param info {@code info > 0} if the matrix is singular.
          */
         public LU(FloatBandMatrix lu, int[] ipiv, int info) {
             this.lu = lu;
@@ -413,7 +431,8 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Returns if the matrix is singular.
+         * Returns true if the matrix is singular.
+         * @return true if the matrix is singular.
          */
         public boolean isSingular() {
             return info > 0;
@@ -421,6 +440,7 @@ public class FloatBandMatrix extends SMatrix {
 
         /**
          * Returns the matrix determinant.
+         * @return the matrix determinant.
          */
         public float det() {
             int m = lu.m;
@@ -445,7 +465,8 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix inverse. For pseudo inverse, use QRDecomposition.
+         * Returns the inverse of matrix. For pseudo inverse, use QRDecomposition.
+         * @return the inverse of matrix.
          */
         public FloatMatrix inverse() {
             FloatMatrix inv = FloatMatrix.eye(lu.n);
@@ -454,10 +475,10 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Solve A * x = b.
-         * @param b  right hand side of linear system.
-         *           On output, b will be overwritten with the solution matrix.
-         * @exception  RuntimeException  if matrix is singular.
+         * Solve {@code A * x = b}.
+         * @param b the right hand side of linear system.
+         * @throws RuntimeException when the matrix is singular.
+         * @return the solution vector.
          */
         public float[] solve(float[] b) {
             float[] x = b.clone();
@@ -466,10 +487,10 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Solve A * X = B. B will be overwritten with the solution matrix on output.
-         * @param B  right hand side of linear system.
-         *           On output, B will be overwritten with the solution matrix.
-         * @throws  RuntimeException  if matrix is singular.
+         * Solve {@code A * X = B}. B will be overwritten with the solution matrix on output.
+         * @param B the right hand side of linear system.
+         *          On output, B will be overwritten with the solution matrix.
+         * @throws RuntimeException when the matrix is singular.
          */
         public void solve(FloatMatrix B) {
             if (lu.m != lu.n) {
@@ -532,7 +553,7 @@ public class FloatBandMatrix extends SMatrix {
          *           factorization.
          */
         public Cholesky(FloatBandMatrix lu) {
-            if (lu.nrows() != lu.ncols()) {
+            if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
             this.lu = lu;
@@ -540,6 +561,7 @@ public class FloatBandMatrix extends SMatrix {
 
         /**
          * Returns the matrix determinant.
+         * @return the matrix determinant.
          */
         public float det() {
             double d = 1.0;
@@ -552,6 +574,7 @@ public class FloatBandMatrix extends SMatrix {
 
         /**
          * Returns the log of matrix determinant.
+         * @return the log of matrix determinant.
          */
         public float logdet() {
             int n = lu.n;
@@ -564,7 +587,8 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Returns the matrix inverse.
+         * Returns the inverse of matrix.
+         * @return the inverse of matrix.
          */
         public FloatMatrix inverse() {
             FloatMatrix inv = FloatMatrix.eye(lu.n);
@@ -573,7 +597,7 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Solves the linear system A * x = b.
+         * Solves the linear system {@code A * x = b}.
          * @param b the right hand side of linear systems.
          * @return the solution vector.
          */
@@ -584,7 +608,7 @@ public class FloatBandMatrix extends SMatrix {
         }
 
         /**
-         * Solves the linear system A * X = B.
+         * Solves the linear system {@code A * X = B}.
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */

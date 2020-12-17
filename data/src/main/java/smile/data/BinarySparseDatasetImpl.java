@@ -43,7 +43,7 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     /**
      * The number of columns.
      */
-    private final int ncols;
+    private final int ncol;
     /**
      * The number of nonzero entries in each column.
      */
@@ -58,8 +58,8 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     public BinarySparseDatasetImpl(Collection<int[]> data) {
         this.data = data.toArray(new int[data.size()][]);
 
-        ncols = MathEx.max(this.data) + 1;
-        colSize = new int[ncols];
+        ncol = MathEx.max(this.data) + 1;
+        colSize = new int[ncol];
         for (int[] x : this.data) {
             Arrays.sort(x);
 
@@ -91,8 +91,8 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
     }
 
     @Override
-    public int ncols() {
-        return ncols;
+    public int ncol() {
+        return ncol;
     }
 
     @Override
@@ -107,17 +107,17 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
 
     @Override
     public SparseMatrix toMatrix() {
-        int[] pos = new int[ncols];
-        int[] colIndex = new int[ncols + 1];
-        for (int i = 0; i < ncols; i++) {
+        int[] pos = new int[ncol];
+        int[] colIndex = new int[ncol + 1];
+        for (int i = 0; i < ncol; i++) {
             colIndex[i + 1] = colIndex[i] + colSize[i];
         }
 
-        int nrows = data.length;
+        int nrow = data.length;
         int[] rowIndex = new int[n];
         double[] x = new double[n];
 
-        for (int i = 0; i < nrows; i++) {
+        for (int i = 0; i < nrow; i++) {
             for (int j : data[i]) {
                 int k = colIndex[j] + pos[j];
 
@@ -127,6 +127,6 @@ class BinarySparseDatasetImpl implements BinarySparseDataset {
             }
         }
 
-        return new SparseMatrix(nrows, ncols, x, rowIndex, colIndex);
+        return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);
     }
 }

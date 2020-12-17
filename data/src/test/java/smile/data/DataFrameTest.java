@@ -96,21 +96,21 @@ public class DataFrameTest {
     }
 
     /**
-     * Test of nrows method, of class DataFrame.
+     * Test of nrow method, of class DataFrame.
      */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(4, df.nrows());
+        System.out.println("nrow");
+        assertEquals(4, df.nrow());
     }
 
     /**
-     * Test of ncols method, of class DataFrame.
+     * Test of ncol method, of class DataFrame.
      */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(5, df.ncols());
+        System.out.println("ncol");
+        assertEquals(5, df.ncol());
     }
 
     /**
@@ -159,8 +159,8 @@ public class DataFrameTest {
     public void testUnion() {
         System.out.println("union");
         DataFrame two = df.union(df);
-        assertEquals(2*df.nrows(), two.nrows());
-        assertEquals(df.ncols(), two.ncols());
+        assertEquals(2*df.nrow(), two.nrow());
+        assertEquals(df.ncol(), two.ncol());
 
         assertEquals(38, two.getInt(0,0));
         assertEquals("Alex", two.getString(0, 3));
@@ -185,8 +185,8 @@ public class DataFrameTest {
         System.out.println("union");
         StringVector edu = StringVector.of("Education","MS", "BS", "Ph.D", "Middle School");
         DataFrame two = df.merge(edu);
-        assertEquals(df.nrows(), two.nrows());
-        assertEquals(df.ncols()+1, two.ncols());
+        assertEquals(df.nrow(), two.nrow());
+        assertEquals(df.ncol()+1, two.ncol());
 
         assertEquals(38, two.getInt(0, 0));
         assertEquals("Alex", two.getString(0, 3));
@@ -230,8 +230,8 @@ public class DataFrameTest {
         DataFrame output = df.summary();
         System.out.println(output);
         System.out.println(output.schema());
-        assertEquals(2, output.nrows());
-        assertEquals(5, output.ncols());
+        assertEquals(2, output.nrow());
+        assertEquals(5, output.ncol());
         assertEquals("age", output.get(0,0));
         assertEquals(4L, output.get(0,1));
         assertEquals(13., output.get(0,2));
@@ -252,8 +252,8 @@ public class DataFrameTest {
         System.out.println("toMatrix");
         Matrix output = df.select("name", "age", "salary", "gender").toMatrix(true, CategoricalEncoder.DUMMY, "name");
         System.out.println(output);
-        assertEquals(4, output.nrows());
-        assertEquals(4, output.ncols());
+        assertEquals(4, output.nrow());
+        assertEquals(4, output.ncol());
         assertEquals(38., output.get(0, 1), 1E-10);
         assertEquals(23., output.get(1, 1), 1E-10);
         assertEquals(48., output.get(2, 1), 1E-10);

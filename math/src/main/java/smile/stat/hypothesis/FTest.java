@@ -69,6 +69,10 @@ public class FTest {
      * Test if the arrays x and y have significantly different variances.
      * Small values of p-value indicate that the two arrays have significantly
      * different variances.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static FTest test(double[] x, double[] y) {
         int n1 = x.length;

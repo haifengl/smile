@@ -36,20 +36,32 @@ public class MutualInformation implements ClusteringMetric {
     public final static MutualInformation instance = new MutualInformation();
 
     @Override
-    public double score(int[] y1, int[] y2) {
-        return of(y1, y2);
+    public double score(int[] truth, int[] cluster) {
+        return of(truth, cluster);
     }
 
-    /** Calculates the mutual information. */
-    public static double of(int[] y1, int[] y2) {
-        ContingencyTable contingency = new ContingencyTable(y1, y2);
+    /**
+     * Calculates the mutual information.
+     * @param truth the ground truth (or simply a clustering labels).
+     * @param cluster the alternative cluster labels.
+     * @return the metric.
+     */
+    public static double of(int[] truth, int[] cluster) {
+        ContingencyTable contingency = new ContingencyTable(truth, cluster);
         double n = contingency.n;
         double[] p1 = Arrays.stream(contingency.a).mapToDouble(a -> a/n).toArray();
         double[] p2 = Arrays.stream(contingency.b).mapToDouble(b -> b/n).toArray();
         return of(n, p1, p2, contingency.table);
     }
 
-    /** Calculates the mutual information. */
+    /**
+     * Calculates the mutual information.
+     * @param n the data size.
+     * @param p1 the row marginal probability of contingency table.
+     * @param p2 the column marginal probability of contingency table.
+     * @param count the contingency table.
+     * @return the metric.
+     */
     static double of(double n, double[] p1, double[] p2, int[][] count) {
         int n1 = p1.length;
         int n2 = p2.length;

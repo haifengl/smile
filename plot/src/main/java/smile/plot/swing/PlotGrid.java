@@ -76,11 +76,11 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
 
     /**
      * Constructor.
-     * @param nrows the number of rows.
-     * @param ncols the number of columns.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
-    public PlotGrid(int nrows, int ncols) {
-        init(layout(nrows, ncols));
+    public PlotGrid(int nrow, int ncol) {
+        init(layout(nrow, ncol));
     }
 
     /**
@@ -119,11 +119,11 @@ public class PlotGrid extends JPanel implements ActionListener, Printable {
 
     /**
      * Returns a layout manager for content pane.
-     * @param nrows the number of rows.
-     * @param ncols the number of columns.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
-    private LayoutManager layout(int nrows, int ncols) {
-        return new GridLayout(nrows, ncols, 0, 0);
+    private LayoutManager layout(int nrow, int ncol) {
+        return new GridLayout(nrow, ncol, 0, 0);
     }
 
     /**

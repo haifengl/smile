@@ -48,6 +48,8 @@ public class PowerVariogram implements Variogram {
 
     /**
      * Constructor. No nugget effect and &beta; = 1.5 and &alpha; will be estimated from x and y.
+     * @param x the training data.
+     * @param y the responsible variable.
      */
     public PowerVariogram(double[][] x, double[] y) {
         this(x, y, 1.5);
@@ -55,6 +57,9 @@ public class PowerVariogram implements Variogram {
 
     /**
      * Constructor. No nugget effect and &alpha; will be estimated from x and y.
+     * @param x the training data.
+     * @param y the responsible variable.
+     * @param beta the beta parameter {@code 1 <=} &beta; {@code < 2}.
      */
     public PowerVariogram(double[][] x, double[] y, double beta) {
         this(x, y, beta, 0.0);
@@ -62,6 +67,9 @@ public class PowerVariogram implements Variogram {
 
     /**
      * Constructor. &alpha; will be estimated from x and y.
+     * @param x the training data.
+     * @param y the responsible variable.
+     * @param beta the beta parameter {@code 1 <=} &beta; {@code < 2}.
      * @param nugget the nugget effect parameter. The height of the jump of
      * the variogram at the discontinuity at the origin.
      */

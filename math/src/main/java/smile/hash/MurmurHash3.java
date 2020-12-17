@@ -63,13 +63,18 @@ public class MurmurHash3 {
 
     /**
      * 32-bit MurmurHash3.
+     * @param data the data buffer.
+     * @param offset the start offset of data in the buffer.
+     * @param length the length of data.
+     * @param seed the seed of hash code.
+     * @return the hash code.
      */
-    public static int hash32(byte[] data, int offset, int len, int seed) {
+    public static int hash32(byte[] data, int offset, int length, int seed) {
         int c1 = 0xcc9e2d51;
         int c2 = 0x1b873593;
         int h1 = seed;
         // round down to 4 byte block
-        int roundedEnd = offset + (len & 0xfffffffc);
+        int roundedEnd = offset + (length & 0xfffffffc);
         for (int i = offset; i < roundedEnd; i += 4) {
             // little endian load order
             int k1 = (data[i] & 0xff) | ((data[i + 1] & 0xff) << 8) | ((data[i + 2] & 0xff) << 16)
@@ -85,7 +90,7 @@ public class MurmurHash3 {
         }
         // tail
         int k1 = 0;
-        switch (len & 0x03) {
+        switch (length & 0x03) {
             case 3:
                 k1 = (data[roundedEnd + 2] & 0xff) << 16;
                 // fallthrough
@@ -101,7 +106,7 @@ public class MurmurHash3 {
                 h1 ^= k1;
         }
         // finalization
-        h1 ^= len;
+        h1 ^= length;
         // fmix(h1);
         h1 ^= h1 >>> 16;
         h1 *= 0x85ebca6b;
@@ -116,8 +121,14 @@ public class MurmurHash3 {
      * When using 128-bits, the x86 and x64 versions do not produce
      * the same values, as the algorithms are optimized for their
      * respective platforms.
+     *
+     * @param data the data buffer.
+     * @param offset the start offset of data in the buffer.
+     * @param length the length of data.
+     * @param seed the seed of hash code.
+     * @param result the output of hash code.
      */
-    public static void hash128(ByteBuffer key, int offset, int length, long seed, long[] result) {
+    public static void hash128(ByteBuffer data, int offset, int length, long seed, long[] result) {
         final int nblocks = length >> 4; // Process as 128-bit blocks.
 
         long h1 = seed;
@@ -130,8 +141,8 @@ public class MurmurHash3 {
         // body
 
         for (int i = 0; i < nblocks; i++) {
-            long k1 = getblock(key, offset, i * 2 + 0);
-            long k2 = getblock(key, offset, i * 2 + 1);
+            long k1 = getblock(data, offset, i * 2 + 0);
+            long k2 = getblock(data, offset, i * 2 + 1);
 
             k1 *= c1;
             k1 = rotl64(k1, 31);
@@ -163,40 +174,40 @@ public class MurmurHash3 {
 
         switch (length & 15) {
             case 15:
-                k2 ^= ((long) key.get(offset + 14)) << 48;
+                k2 ^= ((long) data.get(offset + 14)) << 48;
             case 14:
-                k2 ^= ((long) key.get(offset + 13)) << 40;
+                k2 ^= ((long) data.get(offset + 13)) << 40;
             case 13:
-                k2 ^= ((long) key.get(offset + 12)) << 32;
+                k2 ^= ((long) data.get(offset + 12)) << 32;
             case 12:
-                k2 ^= ((long) key.get(offset + 11)) << 24;
+                k2 ^= ((long) data.get(offset + 11)) << 24;
             case 11:
-                k2 ^= ((long) key.get(offset + 10)) << 16;
+                k2 ^= ((long) data.get(offset + 10)) << 16;
             case 10:
-                k2 ^= ((long) key.get(offset + 9)) << 8;
+                k2 ^= ((long) data.get(offset + 9)) << 8;
             case 9:
-                k2 ^= ((long) key.get(offset + 8)) << 0;
+                k2 ^= ((long) data.get(offset + 8)) << 0;
                 k2 *= c2;
                 k2 = rotl64(k2, 33);
                 k2 *= c1;
                 h2 ^= k2;
 
             case 8:
-                k1 ^= ((long) key.get(offset + 7)) << 56;
+                k1 ^= ((long) data.get(offset + 7)) << 56;
             case 7:
-                k1 ^= ((long) key.get(offset + 6)) << 48;
+                k1 ^= ((long) data.get(offset + 6)) << 48;
             case 6:
-                k1 ^= ((long) key.get(offset + 5)) << 40;
+                k1 ^= ((long) data.get(offset + 5)) << 40;
             case 5:
-                k1 ^= ((long) key.get(offset + 4)) << 32;
+                k1 ^= ((long) data.get(offset + 4)) << 32;
             case 4:
-                k1 ^= ((long) key.get(offset + 3)) << 24;
+                k1 ^= ((long) data.get(offset + 3)) << 24;
             case 3:
-                k1 ^= ((long) key.get(offset + 2)) << 16;
+                k1 ^= ((long) data.get(offset + 2)) << 16;
             case 2:
-                k1 ^= ((long) key.get(offset + 1)) << 8;
+                k1 ^= ((long) data.get(offset + 1)) << 8;
             case 1:
-                k1 ^= ((long) key.get(offset));
+                k1 ^= ((long) data.get(offset));
                 k1 *= c1;
                 k1 = rotl64(k1, 31);
                 k1 *= c2;

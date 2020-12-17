@@ -23,20 +23,33 @@ import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 
 /**
- * Interface to write data to external storage systems.
+ * Writes data to external storage systems.
  *
  * @author Haifeng Li
  */
 public interface Write {
-    /** Writes a CSV file. */
-    static void csv(DataFrame df, Path path) throws IOException {
-        csv(df, path, CSVFormat.DEFAULT);
+    /**
+     * Writes a CSV file.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
+     * @throws IOException when fails to write the file.
+     */
+    static void csv(DataFrame data, Path path) throws IOException {
+        csv(data, path, CSVFormat.DEFAULT);
     }
 
-    /** Writes a CSV file. */
-    static void csv(DataFrame df, Path path, CSVFormat format) throws IOException {
+    /**
+     * Writes a CSV file.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
+     * @param format the CSV file format.
+     * @throws IOException when fails to write the file.
+     */
+    static void csv(DataFrame data, Path path, CSVFormat format) throws IOException {
         CSV csv = new CSV(format);
-        csv.write(df, path);
+        csv.write(data, path);
     }
 
     /**
@@ -45,19 +58,25 @@ public interface Write {
      * It specifies a standardized language-independent columnar memory format
      * for flat and hierarchical data, organized for efficient analytic
      * operations on modern hardware.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
+     * @throws IOException when fails to write the file.
      */
-    static void arrow(DataFrame df, Path path) throws IOException {
+    static void arrow(DataFrame data, Path path) throws IOException {
         Arrow arrow = new Arrow();
-        arrow.write(df, path);
+        arrow.write(data, path);
     }
 
     /**
      * Writes the data frame to an ARFF file.
-     * @param df the data frame.
-     * @param path the file path.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
      * @param relation the relation name of ARFF.
+     * @throws IOException when fails to write the file.
      */
-    static void arff(DataFrame df, Path path, String relation) throws IOException {
-        Arff.write(df, path, relation);
+    static void arff(DataFrame data, Path path, String relation) throws IOException {
+        Arff.write(data, path, relation);
     }
 }

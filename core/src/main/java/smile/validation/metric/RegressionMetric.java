@@ -29,6 +29,7 @@ public interface RegressionMetric extends Serializable {
      * Returns a score to measure the quality of regression.
      * @param truth the true response values.
      * @param prediction the predicted response values.
+     * @return the metric.
      */
     double score(double[] truth, double[] prediction);
 }

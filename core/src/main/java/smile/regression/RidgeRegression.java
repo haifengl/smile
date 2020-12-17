@@ -75,6 +75,7 @@ public class RidgeRegression {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -106,6 +107,7 @@ public class RidgeRegression {
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
         int n = data.size();
@@ -132,6 +134,7 @@ public class RidgeRegression {
      *               be 1 so that its value is applied to all variables.
      * @param beta0 generalized ridge penalty target. Its length may
      *              be 1 so that its value is applied to all variables.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double[] weights, double[] lambda, double[] beta0) {
         formula = formula.expand(data.schema());
@@ -140,8 +143,8 @@ public class RidgeRegression {
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
 
         if (weights.length != n) {
             throw new IllegalArgumentException(String.format("Invalid weights vector size: %d != %d", weights.length, n));

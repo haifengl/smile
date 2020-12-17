@@ -87,8 +87,8 @@ public class LUTest {
         LU result = a.lu();
         NDMatrix x = new NDMatrix(B2);
         result.solve(x);
-        assertEquals(X2.length, x.nrows());
-        assertEquals(X2[0].length, x.ncols());
+        assertEquals(X2.length, x.nrow());
+        assertEquals(X2[0].length, x.ncol());
         for (int i = 0; i < X2.length; i++) {
             for (int j = 0; j < X2[i].length; j++) {
                 assertEquals(X2[i][j], x.get(i, j), 1E-7);

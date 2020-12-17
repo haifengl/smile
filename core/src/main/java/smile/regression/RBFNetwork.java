@@ -69,7 +69,9 @@ import smile.math.rbf.RadialBasisFunction;
  * 
  * @see RadialBasisFunction
  * @see SVR
- * 
+ *
+ * @param <T> the data type of samples.
+ *
  * @author Haifeng Li
  */
 public class RBFNetwork<T> implements Regression<T> {
@@ -105,6 +107,8 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param x the training dataset.
      * @param y the response variable.
      * @param rbf the radial basis functions.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf) {
         return fit(x, y, rbf, false);
@@ -116,6 +120,8 @@ public class RBFNetwork<T> implements Regression<T> {
      * @param y the response variable.
      * @param rbf the radial basis functions.
      * @param normalized true for the normalized RBF network.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> RBFNetwork<T> fit(T[] x, double[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
@@ -148,7 +154,10 @@ public class RBFNetwork<T> implements Regression<T> {
         return new RBFNetwork<>(rbf, w, normalized);
     }
 
-    /** Returns true if the model is  normalized. */
+    /**
+     * Returns true if the model is normalized.
+     * @return true if the model is normalized.
+     */
     public boolean isNormalized() {
         return normalized;
     }

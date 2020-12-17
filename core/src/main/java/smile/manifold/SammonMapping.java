@@ -83,6 +83,7 @@ public class SammonMapping {
      * Fits Sammon's mapping with default k = 2, lambda = 0.2, tolerance = 1E-4 and maxIter = 100.
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
+     * @return the model.
      */
     public static SammonMapping of(double[][] proximity) {
         return of(proximity, new Properties());
@@ -93,6 +94,7 @@ public class SammonMapping {
      * @param proximity the nonnegative proximity matrix of dissimilarities. The
      * diagonal should be zero and all other elements should be positive and symmetric.
      * @param k the dimension of the projection.
+     * @return the model.
      */
     public static SammonMapping of(double[][] proximity, int k) {
         return of(proximity, k, 0.2, 1E-4, 1E-3, 100);
@@ -126,6 +128,7 @@ public class SammonMapping {
      * @param tol the tolerance on objective function for stopping iterations.
      * @param stepTol the tolerance on step size.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static SammonMapping of(double[][] proximity, int k, double lambda, double tol, double stepTol, int maxIter) {
         Properties prop = new Properties();
@@ -144,6 +147,7 @@ public class SammonMapping {
      * @param tol the tolerance for stopping iterations.
      * @param stepTol the tolerance on step size.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
     public static SammonMapping of(double[][] proximity, double[][] init, double lambda, double tol, double stepTol, int maxIter) {
         if (proximity.length != proximity[0].length) {

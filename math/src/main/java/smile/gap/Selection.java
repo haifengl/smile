@@ -32,6 +32,9 @@ public interface Selection {
      * Select a chromosome with replacement from the population based on their
      * fitness. Note that the population should be in ascending order in terms
      * of fitness.
+     * @param population the population to select from.
+     * @param <T> the type of <code>Chromosome</code>.
+     * @return the chromosomes as parents to crossover.
      */
     <T extends Chromosome> T apply(T[] population);
 
@@ -39,7 +42,9 @@ public interface Selection {
      * Roulette Wheel Selection, also called fitness proportionate selection.
      * Parents are selected by the ratio of its fitness to the fitness of
      * other members of the current population.
-     * */
+     *
+     * @return the roulette wheel selection algorithm.
+     */
     static Selection RouletteWheel() {
         return new Selection() {
             @Override
@@ -74,6 +79,8 @@ public interface Selection {
      * subtract the fitness of the worst chromosome in the population
      * from the fitnesses of all chromosomes in the population.
      * Alternatively, one may use rank based selection.
+     *
+     * @return the scaled roulette wheel selection algorithm.
      */
     static Selection ScaledRouletteWheel() {
         return new Selection() {
@@ -104,6 +111,8 @@ public interface Selection {
      * chromosomes have a chance to be selected. But this method can lead
      * to slower convergence, because the best chromosomes do not differ
      * so much from other ones.
+     *
+     * @return the rank selection algorithm.
      */
     static Selection Rank() {
         return new Selection() {
@@ -143,6 +152,7 @@ public interface Selection {
      *
      * @param size the size of tournament pool.
      * @param probability the best-player-wins probability.
+     * @return the tournament selection algorithm.
      */
     static Selection Tournament(int size, double probability) {
         return new Selection() {

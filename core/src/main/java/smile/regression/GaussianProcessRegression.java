@@ -128,7 +128,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         /** The joint predictive distribution. */
         private MultivariateGaussianDistribution dist;
 
-        /** Constructor. */
+        /**
+         * Constructor.
+         * @param x the query points.
+         * @param mu the mean of predictive distribution at query points.
+         * @param sd the standard deviation of predictive distribution at query points.
+         * @param cov the covariance matrix of joint predictive distribution at query points.
+         */
         public JointPrediction(T[] x, double[] mu, double[] sd, Matrix cov) {
             this.x = x;
             this.mu = mu;
@@ -298,6 +304,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param prop the hyper-parameters.
+     * @param <T> the data type of samples.
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties prop) {
@@ -314,6 +321,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise) {
         return fit(x, y, kernel, noise,true,1E-5, 0);
@@ -328,6 +337,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param normalize the flag if normalize the response variable.
      * @param tol the stopping tolerance for HPO.
      * @param maxIter the maximum number of iterations for HPO. No HPO if {@code maxIter <= 0}.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double noise, boolean normalize, double tol, int maxIter) {
         if (x.length != y.length) {
@@ -388,8 +399,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model by the method of subset of regressors.
      * @param x the training dataset.
      * @param y the response variable.
+     * @param t the inducing input, which are pre-selected or inducing samples
+     *          acting as active set of regressors. In simple case, these can
+     *          be chosen randomly from the training set or as the centers of
+     *          k-means clustering.
      * @param kernel the Mercer kernel.
      * @param prop the hyper-parameters.
+     * @param <T> the data type of samples.
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
@@ -408,6 +424,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          k-means clustering.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
         return fit(x, y, t, kernel, noise, true);
@@ -424,6 +442,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the option to normalize the response variable.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
         if (x.length != y.length) {
@@ -463,8 +483,13 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
+     * @param t the inducing input, which are pre-selected or inducing samples
+     *          acting as active set of regressors. In simple case, these can
+     *          be chosen randomly from the training set or as the centers of
+     *          k-means clustering.
      * @param kernel the Mercer kernel.
      * @param prop the hyper-parameters.
+     * @param <T> the data type of samples.
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
@@ -483,6 +508,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      *          k-means clustering.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise) {
         return nystrom(x, y, t, kernel, noise, true);
@@ -497,6 +524,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the option to normalize the response variable.
+     * @param <T> the data type of samples.
+     * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, double noise, boolean normalize) {
         if (x.length != y.length) {
@@ -553,6 +582,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
     }
 
+    /** Log marginal likelihhod as optimization objective function. */
     private static class LogMarginalLikelihood<T> implements DifferentiableMultivariateFunction {
         final T[] x;
         final double[] y;

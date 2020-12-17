@@ -116,12 +116,12 @@ public class PCATest {
         };
         PCA pca = PCA.fit(USArrests.x);
         pca.setProjection(4);
-        assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
-        assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.loadings().get(i, j)), 1E-5);
             }
         }
 
@@ -199,13 +199,13 @@ public class PCATest {
 
         PCA pca = PCA.cor(USArrests.x);
         pca.setProjection(4);
-        System.out.println(java.util.Arrays.toString(pca.getVarianceProportion()));
-        assertTrue(MathEx.equals(prop, pca.getVarianceProportion(), 1E-7));
-        assertTrue(MathEx.equals(cumprop, pca.getCumulativeVarianceProportion(), 1E-7));
+        System.out.println(java.util.Arrays.toString(pca.varianceProportion()));
+        assertTrue(MathEx.equals(prop, pca.varianceProportion(), 1E-7));
+        assertTrue(MathEx.equals(cumprop, pca.cumulativeVarianceProportion(), 1E-7));
 
         for (int i = 0; i < loadings.length; i++) {
             for (int j = 0; j < loadings[i].length; j++) {
-                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.getLoadings().get(i, j)), 1E-5);
+                assertEquals(Math.abs(loadings[i][j]), Math.abs(pca.loadings().get(i, j)), 1E-5);
             }
         }
 

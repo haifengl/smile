@@ -43,6 +43,7 @@ public class Probe implements Comparable<Probe> {
 
     /**
      * Constructor.
+     * @param range the valid range of buckets.
      */
     public Probe(int[] range) {
         this.range = range;
@@ -58,6 +59,10 @@ public class Probe implements Comparable<Probe> {
         return p;
     }
 
+    /**
+     * Returns true if the probe is shiftable.
+     * @return true if the probe is shiftable.
+     */
     public boolean isShiftable() {
         return bucket[last] == 1 && last + 1 < bucket.length && range[last + 1] > 1;
     }
@@ -65,6 +70,7 @@ public class Probe implements Comparable<Probe> {
     /**
      * This operation shifts to the right the last nonzero component if
      * it is equal to one and if it is not the last one.
+     * @return the shifted probe.
      */
     public Probe shift() {
         Probe p = clone();
@@ -74,6 +80,10 @@ public class Probe implements Comparable<Probe> {
         return p;
     }
 
+    /**
+     * Returns true if the probe is expandable.
+     * @return true if the probe is expandable.
+     */
     public boolean isExpandable() {
         return last + 1 < bucket.length && range[last + 1] > 1;
     }
@@ -81,6 +91,7 @@ public class Probe implements Comparable<Probe> {
     /**
      * This operation sets to one the component following the last nonzero
      * component if it is not the last one.
+     * @return the expanded probe.
      */
     public Probe expand() {
         Probe p = clone();
@@ -89,12 +100,17 @@ public class Probe implements Comparable<Probe> {
         return p;
     }
 
+    /**
+     * Returns true if the probe is extendable.
+     * @return true if the probe is extendable.
+     */
     public boolean isExtendable() {
         return bucket[last] + 1 < range[last];
     }
 
     /**
      * This operation adds one to the last nonzero component.
+     * @return the extended probe.
      */
     public Probe extend() {
         Probe p = clone();
@@ -109,6 +125,7 @@ public class Probe implements Comparable<Probe> {
 
     /**
      * Calculate the probability of the probe.
+     * @param pz the probability of the probe.
      */
     public void setProb(PrZ[] pz) {
         prob = 1.0;
@@ -119,6 +136,9 @@ public class Probe implements Comparable<Probe> {
 
     /**
      * Returns the bucket number of the probe.
+     * @param hash the hash function.
+     * @param pz the probability list of all buckets for given query object.
+     * @return the hash code.
      */
     public int hash(Hash hash, PrZ[] pz) {
         long r = 0;

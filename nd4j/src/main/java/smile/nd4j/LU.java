@@ -45,7 +45,7 @@ class LU extends smile.math.matrix.LU {
      * @param singular True if the matrix is singular
      */
     public LU(NDMatrix lu, int[] piv, boolean singular) {
-        super(lu, piv, pivsign(piv, Math.min(lu.nrows(), lu.ncols())), singular);
+        super(lu, piv, pivsign(piv, Math.min(lu.nrow(), lu.ncol())), singular);
     }
 
     /** Returns the pivot sign. */
@@ -65,18 +65,18 @@ class LU extends smile.math.matrix.LU {
      */
     @Override
     public DenseMatrix inverse() {
-        int m = lu.nrows();
-        int n = lu.ncols();
+        int m = lu.nrow();
+        int n = lu.ncol();
 
         if (m != n) {
             throw new IllegalArgumentException(String.format("Matrix is not square: %d x %d", m, n));
         }
 
         int nb = 1;
-        int lwork = lu.ncols() * nb;
+        int lwork = lu.ncol() * nb;
         INDArray work = Nd4j.create(lwork);
         int info = 0;
-        Nd4j.getBlasWrapper().lapack().getri(lu.ncols(), ((NDMatrix) lu).A, lu.ld(), piv, work, lwork, info);
+        Nd4j.getBlasWrapper().lapack().getri(lu.ncol(), ((NDMatrix) lu).A, lu.ld(), piv, work, lwork, info);
 
         return lu;
     }
@@ -90,11 +90,11 @@ class LU extends smile.math.matrix.LU {
 
     @Override
     public void solve(DenseMatrix B) {
-        int m = lu.nrows();
-        int n = lu.ncols();
+        int m = lu.nrow();
+        int n = lu.ncol();
 
-        if (B.nrows() != m) {
-            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrows(), lu.ncols(), B.nrows(), B.ncols()));
+        if (B.nrow() != m) {
+            throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.nrow(), lu.ncol(), B.nrow(), B.ncol()));
         }
 
         if (isSingular()) {
@@ -104,7 +104,7 @@ class LU extends smile.math.matrix.LU {
         throw new UnsupportedOperationException("dgetrs is not supported by ND4J");
         /*
         intW info = new intW(0);
-        LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrows(), B.ncols(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
+        LAPACK.getInstance().dgetrs(NLMatrix.Transpose, lu.nrow(), B.ncol(), lu.data(), lu.ld(), piv, B.data(), B.ld(), info);
 
         if (info.val < 0) {
             logger.error("LAPACK DGETRS error code: {}", info.val);

@@ -102,7 +102,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
      * @param cov covariance matrix.
      */
     public MultivariateGaussianDistribution(double[] mean, Matrix cov) {
-        if (mean.length != cov.nrows()) {
+        if (mean.length != cov.nrow()) {
             throw new IllegalArgumentException("Mean vector and covariance matrix have different dimension");
         }
 
@@ -189,6 +189,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
     /**
      * Returns the scatter of distribution, which is defined as |&Sigma;|.
+     * @return the scatter of distribution.
      */
     public double scatter() {
         return sigmaDet;
@@ -270,6 +271,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
     /**
      * Generate a random multivariate Gaussian sample.
+     * @return a random sample.
      */
     public double[] rand() {
         double[] spt = new double[mu.length];
@@ -287,7 +289,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
             spt[i] = v / u;
         }
 
-        double[] pt = new double[sigmaL.nrows()];
+        double[] pt = new double[sigmaL.nrow()];
 
         // pt = sigmaL * spt
         for (int i = 0; i < pt.length; i++) {
@@ -303,6 +305,8 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
     /**
      * Generates a set of random numbers following this distribution.
+     * @param n the number of random samples to generate.
+     * @return a set of random samples.
      */
     public double[][] rand(int n) {
         double[][] data = new double[n][];

@@ -154,6 +154,7 @@ public class DaubechiesWavelet extends Wavelet {
      * Constructor. Create a Daubechies wavelet with n coefficients.
      * n = 4, 6, 8, 10, 12, 14, 16, 18, or 20 are supported. For n = 4,
      * D4Wavelet can be used instead.
+     * @param n the number of wavelet coefficients.
      */
     public DaubechiesWavelet(int n) {
         super(n == 4 ? c4 :

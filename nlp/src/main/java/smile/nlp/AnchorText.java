@@ -30,17 +30,22 @@ public interface AnchorText {
      * Returns the anchor text if any. The anchor text is the visible,
      * clickable text in a hyperlink. The anchor text is all the
      * anchor text in the corpus pointing to this text.
+     * @return the anchor text.
      */
     String getAnchor();
     
     /**
      * Sets the anchor text. Note that anchor is all link labels in the corpus
      * pointing to this text. So addAnchor is more appropriate in most cases.
+     * @param anchor the anchor text.
+     * @return this object.
      */
     AnchorText setAnchor(String anchor);
     
     /**
-     * Add a link label to the anchor text.
+     * Adds a link label to the anchor text.
+     * @param linkLabel the link label.
+     * @return this object.
      */
     AnchorText addAnchor(String linkLabel);
 }

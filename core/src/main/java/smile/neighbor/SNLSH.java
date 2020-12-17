@@ -107,13 +107,17 @@ public class SNLSH<K, V> implements RNNSearch<K, V>, Serializable {
         mask = -1 >>> (BITS / L * (L - 1));
     }
 
-    /** Adds a new item. */
-    public void put(K k, V v) {
+    /**
+     * Adds a new item.
+     * @param key the key.
+     * @param value the value.
+     */
+    public void put(K key, V value) {
         int index = data.size();
-        keys.add(k);
-        data.add(v);
+        keys.add(key);
+        data.add(value);
 
-        long signature = simhash.hash(k);
+        long signature = simhash.hash(key);
         signatures.add(signature);
 
         for (int i = 0; i < bands.length; i++) {
