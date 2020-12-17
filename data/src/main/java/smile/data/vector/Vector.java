@@ -100,19 +100,27 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
         return x == null ? Double.NaN : x.doubleValue();
     }
 
-    /** Checks whether the value at position i is null. */
+    /**
+     * Checks if the value at position i is null.
+     * @param i the index.
+     * @return true if the value is null.
+     */
     default boolean isNullAt(int i) {
         return get(i) == null;
     }
 
-    /** Returns true if there are any NULL values in this row. */
+    /**
+     * Returns true if there are any NULL values in this row.
+     * @return true if there are any NULL values in this row.
+     */
     default boolean anyNull() {
         return stream().anyMatch(Objects::isNull);
     }
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -125,6 +133,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param name the name of vector.
      * @param clazz the class of data type.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static <T> Vector<T> of(String name, Class<?> clazz, T[] vector) {
         return new VectorImpl<>(name, clazz, vector);
@@ -136,6 +145,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      * @param name the name of vector.
      * @param type the data type of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static <T> Vector<T> of(String name, DataType type, T[] vector) {
         return new VectorImpl<>(name, type, vector);
@@ -145,6 +155,7 @@ public interface Vector<T> extends BaseVector<T, T, Stream<T>> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static <T> Vector<T> of(StructField field, T[] vector) {
         return new VectorImpl<>(field, vector);

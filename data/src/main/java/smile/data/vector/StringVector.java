@@ -92,7 +92,8 @@ public interface StringVector extends Vector<String> {
 
     /**
      * Returns the string representation of vector.
-     * @param n Number of elements to show
+     * @param n the number of elements to show.
+     * @return the string representation of vector.
      */
     default String toString(int n) {
         String suffix = n >= size() ? "]" : String.format(", ... %,d more]", size() - n);
@@ -103,6 +104,7 @@ public interface StringVector extends Vector<String> {
      * Creates a named string vector.
      *
      * @param name the name of vector.
+     * @return the vector.
      * @param vector the data of vector.
      */
     static StringVector of(String name, String... vector) {
@@ -113,6 +115,7 @@ public interface StringVector extends Vector<String> {
      *
      * @param field the struct field of vector.
      * @param vector the data of vector.
+     * @return the vector.
      */
     static StringVector of(StructField field, String... vector) {
         return new StringVectorImpl(field, vector);
