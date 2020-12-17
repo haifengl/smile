@@ -142,6 +142,7 @@ public class NeuralGas implements VectorQuantizer {
      * Selects random samples as initial neurons of Neural Gas.
      * @param k the number of neurons.
      * @param samples some samples to select initial weight vectors.
+     * @return the initial neurons.
      */
     public static double[][] seed(int k, double[][] samples) {
         int n = samples.length;
@@ -154,6 +155,7 @@ public class NeuralGas implements VectorQuantizer {
 
     /**
      * Returns the neurons.
+     * @return the neurons.
      */
     public double[][] neurons() {
         Arrays.sort(neurons, Comparator.comparingInt(x -> x.i));
@@ -162,6 +164,7 @@ public class NeuralGas implements VectorQuantizer {
 
     /**
      * Returns the network of neurons.
+     * @return the network of neurons.
      */
     public Graph network() {
         double lifetime = this.lifetime.apply(t);
