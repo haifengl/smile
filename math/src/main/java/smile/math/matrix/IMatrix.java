@@ -79,55 +79,78 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
 
     /**
      * Returns the number of rows.
+     * @return the number of rows.
      */
-    public abstract int nrows();
+    public abstract int nrow();
 
     /**
      * Returns the number of columns.
+     * @return the number of columns.
      */
-    public abstract int ncols();
+    public abstract int ncol();
 
     /**
      * Returns the number of stored matrix elements. For conventional matrix,
-     * it is simplify nrows * ncols. But it is usually much less for band,
+     * it is simplify nrow * ncol. But it is usually much less for band,
      * packed or sparse matrix.
+     * @return the number of stored matrix elements.
      */
     public abstract long size();
 
-    /** Returns the row names. */
+    /**
+     * Returns the row names.
+     * @return the row names.
+     */
     public String[] rowNames() {
         return rowNames;
     }
 
-    /** Sets the row names. */
+    /**
+     * Sets the row names.
+     * @param names the row names.
+     */
     public void rowNames(String[] names) {
-        if (names != null && names.length != nrows()) {
-            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrows()));
+        if (names != null && names.length != nrow()) {
+            throw new IllegalArgumentException(String.format("Invalid row names length: %d != %d", names.length, nrow()));
         }
         rowNames = names;
     }
 
-    /** Returns the name of i-th row. */
+    /**
+     * Returns the name of i-th row.
+     * @param i the row index.
+     * @return the name of i-th row.
+     */
     public String rowName(int i) {
         return rowNames[i];
     }
 
-    /** Returns the column names. */
+    /**
+     * Returns the column names.
+     * @return the column names.
+     */
     public String[] colNames() {
         return colNames;
     }
 
-    /** Returns the name of i-th column. */
-    public String colName(int i) {
-        return colNames[i];
-    }
-
-    /** Sets the column names. */
+    /**
+     * Sets the column names.
+     * @param names the column names.
+     */
     public void colNames(String[] names) {
-        if (names != null && names.length != ncols()) {
-            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncols()));
+        if (names != null && names.length != ncol()) {
+            throw new IllegalArgumentException(String.format("Invalid column names length: %d != %d", names.length, ncol()));
         }
         colNames = names;
+    }
+
+    /**
+     * Returns the name of i-th column.
+     * @param i the column index.
+     * @return the name of i-th column.
+     */
+    public String colName(int i) {
+        return colNames[i];
     }
 
     @Override
@@ -139,22 +162,24 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
      * Returns the string representation of matrix.
      * @param full Print the full matrix if true. Otherwise,
      *             print only top left 7 x 7 submatrix.
+     * @return the string representation of matrix.
      */
     public String toString(boolean full) {
-        return full ? toString(nrows(), ncols()) : toString(7, 7);
+        return full ? toString(nrow(), ncol()) : toString(7, 7);
     }
 
     /**
      * Returns the string representation of matrix.
      * @param m the number of rows to print.
      * @param n the number of columns to print.
+     * @return the string representation of matrix.
      */
     public String toString(int m, int n) {
-        StringBuilder sb = new StringBuilder(nrows() + " x " + ncols() + "\n");
-        m = Math.min(m, nrows());
-        n = Math.min(n, ncols());
+        StringBuilder sb = new StringBuilder(nrow() + " x " + ncol() + "\n");
+        m = Math.min(m, nrow());
+        n = Math.min(n, ncol());
 
-        String newline = n < ncols() ? "  ...\n" : "\n";
+        String newline = n < ncol() ? "  ...\n" : "\n";
 
         if (colNames != null) {
             sb.append(rowNames == null ? "   " : "            ");
@@ -174,7 +199,7 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
             sb.append(newline);
         }
 
-        if (m < nrows()) {
+        if (m < nrow()) {
             sb.append("  ...\n");
         }
 
@@ -182,22 +207,29 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
     }
 
     /**
-     * Returns the string representation of A[i, j].
+     * Returns the string representation of <code>A[i, j]</code>.
+     * @param i the row index.
+     * @param j the column index.
+     * @return the string representation of <code>A[i, j]</code>.
      */
     abstract String str(int i, int j);
 
     /**
-     * Returns the matrix-vector multiplication A * x.
+     * Returns the matrix-vector multiplication {@code A * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A * x}.
      */
     public abstract T mv(T x);
 
     /**
-     * Matrix-vector multiplication y = A * x.
+     * Matrix-vector multiplication {@code y = A * x}.
+     * @param x the input vector.
+     * @param y the output vector.
      */
     public abstract void mv(T x, T y);
 
     /**
-     * Matrix-vector multiplication A * x.
+     * Matrix-vector multiplication {@code A * x}.
      * @param work the workspace for both input and output vector.
      * @param inputOffset the offset of input vector in workspace.
      * @param outputOffset the offset of output vector in workspace.
@@ -205,17 +237,21 @@ public abstract class IMatrix<T> implements Cloneable, Serializable {
     public abstract void mv(T work, int inputOffset, int outputOffset);
 
     /**
-     * Returns Matrix-vector multiplication A' * x.
+     * Returns Matrix-vector multiplication {@code A' * x}.
+     * @param x the vector.
+     * @return the matrix-vector multiplication {@code A' * x}.
      */
     public abstract T tv(T x);
 
     /**
-     * Matrix-vector multiplication y = A' * x.
+     * Matrix-vector multiplication {@code y = A' * x}.
+     * @param x the input vector.
+     * @param y the output vector.
      */
     public abstract void tv(T x, T y);
 
     /**
-     * Matrix-vector multiplication A' * x.
+     * Matrix-vector multiplication {@code A' * x}.
      * @param work the workspace for both input and output vector.
      * @param inputOffset the offset of input vector in workspace.
      * @param outputOffset the offset of output vector in workspace.

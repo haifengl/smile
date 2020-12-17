@@ -95,7 +95,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     /**
      * Clustering the data.
      * @param data the observations.
-     * @param distance the distance measure for neighborhood search.
+     * @param distance the distance function.
      * @param k the number of clusters. Note that this is just a hint. The final
      *          number of clusters may be less.
      * @param radius the neighborhood radius.

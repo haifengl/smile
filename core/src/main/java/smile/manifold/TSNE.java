@@ -168,7 +168,10 @@ public class TSNE implements Serializable {
         update(iterations);
     }
 
-    /** Performs additional iterations. */
+    /**
+     * Performs additional iterations.
+     * @param iterations the number of iterations.
+     */
     public void update(int iterations) {
         double[][] Y = coordinates;
         int n = Y.length;

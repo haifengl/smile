@@ -576,7 +576,7 @@ public class AdjacencyList implements Graph, Serializable {
         wt[s] = 0.0;
         queue.lower(s);
 
-        while (!queue.empty()) {
+        while (!queue.isEmpty()) {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
                 for (Edge edge : graph[v]) {
@@ -666,15 +666,16 @@ public class AdjacencyList implements Graph, Serializable {
      * where two vertices i and j are connected if the (i, j)-th entry of
      * the matrix is nonzero. Rectangular or structurally asymmetric
      * matrices are treated as bipartite graphs.
-     * 
+     *
+     * @param matrix the matrix representation of the graph.
      * @return a graph
      */
     public static AdjacencyList of(SparseMatrix matrix) {
         boolean symmetric = false;
         
-        if (matrix.nrows() == matrix.ncols()) {
+        if (matrix.nrow() == matrix.ncol()) {
             symmetric = true;
-            for (int i = 0; i < matrix.nrows(); i++) {
+            for (int i = 0; i < matrix.nrow(); i++) {
                 for (int j = 0; j < i; j++) {
                     if (matrix.get(i, j) != matrix.get(j, i)) {
                         symmetric = false;
@@ -689,9 +690,9 @@ public class AdjacencyList implements Graph, Serializable {
         }
         
         if (symmetric) {
-            AdjacencyList graph = new AdjacencyList(matrix.nrows());
+            AdjacencyList graph = new AdjacencyList(matrix.nrow());
             
-            for (int i = 0; i < matrix.nrows(); i++) {
+            for (int i = 0; i < matrix.nrow(); i++) {
                 for (int j = 0; j < i; j++) {
                     double z = matrix.get(i, j);
                     if (z != 0.0) {
@@ -702,13 +703,13 @@ public class AdjacencyList implements Graph, Serializable {
             
             return graph;
         } else {
-            AdjacencyList graph = new AdjacencyList(matrix.nrows() + matrix.ncols());
+            AdjacencyList graph = new AdjacencyList(matrix.nrow() + matrix.ncol());
             
-            for (int i = 0; i < matrix.nrows(); i++) {
-                for (int j = 0; j < matrix.ncols(); j++) {
+            for (int i = 0; i < matrix.nrow(); i++) {
+                for (int j = 0; j < matrix.ncol(); j++) {
                     double z = matrix.get(i, j);
                     if (z != 0.0) {
-                        graph.addEdge(i, matrix.nrows() + j, z);
+                        graph.addEdge(i, matrix.nrow() + j, z);
                     }
                 }
             }

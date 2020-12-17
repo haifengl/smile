@@ -34,7 +34,12 @@ public class RMSE implements RegressionMetric {
         return of(truth, prediction);
     }
 
-    /** Calculates the root mean squared error. */
+    /**
+     * Calculates the root mean squared error.
+     * @param truth the ground truth.
+     * @param prediction the prediction.
+     * @return the metric.
+     */
     public static double of(double[] truth, double[] prediction) {
         if (truth.length != prediction.length) {
             throw new IllegalArgumentException(String.format("The vector sizes don't match: %d != %d.", truth.length, prediction.length));

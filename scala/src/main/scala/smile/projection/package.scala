@@ -18,6 +18,7 @@
 package smile
 
 import smile.math.kernel.MercerKernel
+import smile.math.TimeFunction
 import smile.util.time
 
 /** Feature extraction. Feature extraction transforms the data in the
@@ -211,7 +212,7 @@ package object projection {
     * @param w the initial projection matrix.
     * @param r the learning rate.
     */
-  def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: Double): GHA = time("Generalized Hebbian Algorithm") {
+  def gha(data: Array[Array[Double]], w: Array[Array[Double]], r: TimeFunction): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(w, r)
     data.foreach(model.update)
     model
@@ -223,7 +224,7 @@ package object projection {
     * @param k the dimension of feature space.
     * @param r the learning rate.
     */
-  def gha(data: Array[Array[Double]], k: Int, r: Double): GHA = time("Generalized Hebbian Algorithm") {
+  def gha(data: Array[Array[Double]], k: Int, r: TimeFunction): GHA = time("Generalized Hebbian Algorithm") {
     val model = new GHA(data(0).length, k, r)
     data.foreach(model.update)
     model

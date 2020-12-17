@@ -31,6 +31,7 @@ public interface Neighborhood extends Serializable {
      * @param i the row distance of topology from the the winner neuron.
      * @param j the column distance of topology from the the winner neuron.
      * @param t the order number of current iteration.
+     * @return the changing rate of neighborhood.
      */
     double of(int i, int j, int t);
 
@@ -44,6 +45,7 @@ public interface Neighborhood extends Serializable {
      * computational cost and the approximation of the Gaussian.
      *
      * @param radius the radius of neighborhood.
+     * @return the bubble neighborhood function.
      */
     static Neighborhood bubble(int radius) {
         return (i, j, t) -> Math.abs(i) < radius && Math.abs(j) < radius ? 1 : 0;
@@ -53,6 +55,7 @@ public interface Neighborhood extends Serializable {
      * Returns Gaussian neighborhood function.
      * @param sigma the initial radius of neighborhood.
      * @param T the number of iterations.
+     * @return Gaussian neighborhood function.
      */
     static Neighborhood Gaussian(double sigma, double T) {
         return (i, j, t) -> {

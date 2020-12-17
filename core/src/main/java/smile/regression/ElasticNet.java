@@ -76,6 +76,7 @@ public class ElasticNet {
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda1 the shrinkage/regularization parameter for L1
      * @param lambda2 the shrinkage/regularization parameter for L2
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
         return fit(formula, data, lambda1, lambda2, 1E-4, 1000);
@@ -97,6 +98,7 @@ public class ElasticNet {
      * @param lambda2 the shrinkage/regularization parameter for L2
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, double tol, int maxIter) {
         if (lambda1 <= 0) {
@@ -114,8 +116,8 @@ public class ElasticNet {
         Matrix X = formula.matrix(data, false);
         double[] y = formula.y(data).toDoubleArray();
 
-        int n = X.nrows();
-        int p = X.ncols();
+        int n = X.nrow();
+        int p = X.ncol();
         double[] center = X.colMeans();
         double[] scale = X.colSds();
 
@@ -124,7 +126,7 @@ public class ElasticNet {
         System.arraycopy(y, 0, y2, 0, y.length);
 
         // Scales the original data array and pads a weighted identity matrix
-        Matrix X2 = new Matrix(X.nrows()+ p, p);
+        Matrix X2 = new Matrix(X.nrow()+ p, p);
         double padding = c * Math.sqrt(lambda2);
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {

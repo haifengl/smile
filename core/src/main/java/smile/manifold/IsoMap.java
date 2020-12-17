@@ -104,6 +104,7 @@ public class IsoMap implements Serializable {
      * Runs the C-Isomap algorithm with Euclidean distance.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @return the model.
      */
     public static IsoMap of(double[][] data, int k) {
         return of(data, k, 2, true);
@@ -115,6 +116,7 @@ public class IsoMap implements Serializable {
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @return the model.
      */
     public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
         return of(data, new EuclideanDistance(), k, d, conformal);
@@ -124,6 +126,9 @@ public class IsoMap implements Serializable {
      * Runs the C-Isomap algorithm.
      * @param data the input data.
      * @param k k-nearest neighbor.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> IsoMap of(T[] data, Distance<T> distance, int k) {
         return of(data, distance, k, 2, true);
@@ -132,10 +137,12 @@ public class IsoMap implements Serializable {
     /**
      * Runs the Isomap algorithm.
      * @param data the input data.
-     * @param distance the distance measure.
+     * @param distance the distance function.
      * @param k k-nearest neighbor.
      * @param d the dimension of the manifold.
      * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param <T> the data type of points.
+     * @return the model.
      */
     public static <T> IsoMap of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
         AdjacencyList graph;

@@ -30,57 +30,62 @@ package smile.sort;
 public interface HeapSort {
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(int[] arr) {
-        int n = arr.length;
+    static void sort(int[] x) {
+        int n = x.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+            Sort.siftDown(x, i, n - 1);
 
         for (int i = n - 1; i > 0; i--) {
-            Sort.swap(arr, 0, i);
-            Sort.siftDown(arr, 0, i - 1);
+            Sort.swap(x, 0, i);
+            Sort.siftDown(x, 0, i - 1);
         }
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(float[] arr) {
-        int n = arr.length;
+    static void sort(float[] x) {
+        int n = x.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+            Sort.siftDown(x, i, n - 1);
 
         for (int i = n - 1; i > 0; i--) {
-            Sort.swap(arr, 0, i);
-            Sort.siftDown(arr, 0, i - 1);
+            Sort.swap(x, 0, i);
+            Sort.siftDown(x, 0, i - 1);
         }
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(double[] arr) {
-        int n = arr.length;
+    static void sort(double[] x) {
+        int n = x.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+            Sort.siftDown(x, i, n - 1);
 
         for (int i = n - 1; i > 0; i--) {
-            Sort.swap(arr, 0, i);
-            Sort.siftDown(arr, 0, i - 1);
+            Sort.swap(x, 0, i);
+            Sort.siftDown(x, 0, i - 1);
         }
     }
 
     /**
      * Sorts the specified array into ascending order.
+     * @param x the array.
+     * @param <T> the data type of array elements.
      */
-    static <T extends Comparable<? super T>> void sort(T[] arr) {
-        int n = arr.length;
+    static <T extends Comparable<? super T>> void sort(T[] x) {
+        int n = x.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            Sort.siftDown(arr, i, n - 1);
+            Sort.siftDown(x, i, n - 1);
 
         for (int i = n - 1; i > 0; i--) {
-            Sort.swap(arr, 0, i);
-            Sort.siftDown(arr, 0, i - 1);
+            Sort.swap(x, 0, i);
+            Sort.siftDown(x, 0, i - 1);
         }
     }
 }

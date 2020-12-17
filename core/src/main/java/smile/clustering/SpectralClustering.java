@@ -88,7 +88,7 @@ public class SpectralClustering extends PartitionClustering implements Serializa
             throw new IllegalArgumentException("Invalid number of clusters: " + k);
         }
 
-        int n = W.nrows();
+        int n = W.nrow();
         double[] D = W.colSums();
         for (int i = 0; i < n; i++) {
             if (D[i] == 0.0) {

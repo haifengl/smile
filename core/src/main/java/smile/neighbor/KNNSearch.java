@@ -31,10 +31,11 @@ package smile.neighbor;
  */
 public interface KNNSearch<K, V> {
     /**
-     * Search the k nearest neighbors to the query.
+     * Search the k nearest neighbors to the query key.
      *
      * @param q the query key.
      * @param k the number of nearest neighbors to search for.
+     * @return the k nearest neighbors
      */
     Neighbor<K,V>[] knn(K q, int k);
 }

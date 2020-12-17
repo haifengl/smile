@@ -27,6 +27,8 @@ import java.io.Serializable;
 public interface IntFunction extends Serializable {
     /**
      * Computes the value of the function at x.
+     * @param x an integer value.
+     * @return the function value.
      */
     int f(int x);
 
@@ -34,6 +36,8 @@ public interface IntFunction extends Serializable {
      * Computes the value of the function at x.
      * It delegates the computation to f().
      * This is simply for Scala convenience.
+     * @param x an integer value.
+     * @return the function value.
      */
     default int apply(int x) {
         return f(x);

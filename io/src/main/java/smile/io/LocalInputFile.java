@@ -36,7 +36,11 @@ class LocalInputFile implements InputFile {
     /** Local file object. */
     private final RandomAccessFile input;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param path the input file path.
+     * @throws FileNotFoundException when file cannot be found.
+     */
     public LocalInputFile(Path path) throws FileNotFoundException {
         input = new RandomAccessFile(path.toFile(), "r");
     }

@@ -29,117 +29,164 @@ import smile.data.DataFrame;
  * @author Haifeng Li
  */
 public interface Feature {
-    /** Returns the meta data of feature. */
+    /**
+     * Returns the meta data of feature.
+     * @return the meta data of feature.
+     */
     StructField field();
 
-    /** Applies the term on a data object. */
-    Object apply(Tuple o);
+    /**
+     * Applies the term on a tuple.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    Object apply(Tuple tuple);
 
-    /** Applies the term on a data object and produces an double-valued result. */
-    default double applyAsDouble(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an double-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default double applyAsDouble(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an float-valued result. */
-    default float applyAsFloat(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an float-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default float applyAsFloat(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an int-valued result. */
-    default int applyAsInt(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an int-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default int applyAsInt(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an long-valued result. */
-    default long applyAsLong(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an long-valued result.
+     * @param tuple the input tuple
+     * @return the feature value.
+     */
+    default long applyAsLong(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an boolean-valued result. */
-    default boolean applyAsBoolean(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an boolean-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default boolean applyAsBoolean(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an byte-valued result. */
-    default byte applyAsByte(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an byte-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default byte applyAsByte(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an short-valued result. */
-    default short applyAsShort(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an short-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default short applyAsShort(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Applies the term on a data object and produces an char-valued result. */
-    default char applyAsChar(Tuple o) {
+    /**
+     * Applies the term on a data object and produces an char-valued result.
+     * @param tuple the input tuple.
+     * @return the feature value.
+     */
+    default char applyAsChar(Tuple tuple) {
         throw new UnsupportedOperationException();
     }
 
-    /** Returns true if the term represents a plain variable/column in the data frame. */
+    /**
+     * Returns true if the term represents a plain variable/column in the data frame.
+     * @return true if the term represents a plain variable/column in the data frame.
+     */
     default boolean isVariable() {
         return false;
     }
 
-    default BaseVector apply(DataFrame df) {
+    /**
+     * Applies the term on a data frame.
+     * @param data the data frame.
+     * @return the feature vector.
+     */
+    default BaseVector apply(DataFrame data) {
         StructField field = field();
 
         if (isVariable()) {
-            return df.column(field.name);
+            return data.column(field.name);
         }
 
-        int size = df.size();
+        int size = data.size();
         switch (field.type.id()) {
             case Integer: {
                 int[] values = new int[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsInt(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsInt(data.get(i));
                 return IntVector.of(field, values);
             }
 
             case Long: {
                 long[] values = new long[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsLong(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsLong(data.get(i));
                 return LongVector.of(field, values);
             }
 
             case Double: {
                 double[] values = new double[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsDouble(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsDouble(data.get(i));
                 return DoubleVector.of(field, values);
             }
 
             case Float: {
                 float[] values = new float[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsFloat(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsFloat(data.get(i));
                 return FloatVector.of(field, values);
             }
 
             case Boolean: {
                 boolean[] values = new boolean[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsBoolean(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsBoolean(data.get(i));
                 return BooleanVector.of(field, values);
             }
 
             case Byte: {
                 byte[] values = new byte[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsByte(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsByte(data.get(i));
                 return ByteVector.of(field, values);
             }
 
             case Short: {
                 short[] values = new short[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsShort(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsShort(data.get(i));
                 return ShortVector.of(field, values);
             }
 
             case Char: {
                 char[] values = new char[size];
-                for (int i = 0; i < size; i++) values[i] = applyAsChar(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = applyAsChar(data.get(i));
                 return CharVector.of(field, values);
             }
 
             default: {
                 Object[] values = new Object[size];
-                for (int i = 0; i < size; i++) values[i] = apply(df.get(i));
+                for (int i = 0; i < size; i++) values[i] = apply(data.get(i));
                 return Vector.of(field, values);
             }
         }

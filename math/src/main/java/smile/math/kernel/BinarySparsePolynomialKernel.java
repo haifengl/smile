@@ -34,6 +34,7 @@ import smile.math.MathEx;
 public class BinarySparsePolynomialKernel extends Polynomial implements MercerKernel<int[]> {
     /**
      * Constructor with scale 1 and offset 0.
+     * @param degree The degree of polynomial.
      */
     public BinarySparsePolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);

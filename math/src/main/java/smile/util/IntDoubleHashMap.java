@@ -88,6 +88,8 @@ public class IntDoubleHashMap {
     /**
      * Returns the value to which the specified key is mapped,
      * or Double.NaN if this map contains no mapping for the key.
+     * @param key the key.
+     * @return the value.
      */
     public double get(int key) {
         if (key == FREE_KEY) {
@@ -104,7 +106,12 @@ public class IntDoubleHashMap {
         } while (true);
     }
 
-    /** Associates the specified value with the specified key in this map. */
+    /**
+     * Associates the specified value with the specified key in this map.
+     * @param key the key.
+     * @param value the value.
+     * @return the old value.
+     */
     public double put(int key, double value) {
         if (key == FREE_KEY) {
             throw new IllegalArgumentException("key cannot be 0x80000000");
@@ -133,7 +140,11 @@ public class IntDoubleHashMap {
         } while (true);
     }
 
-    /** Removes the mapping for the specified key from this map if present. */
+    /**
+     * Removes the mapping for the specified key from this map if present.
+     * @param key the key.
+     * @return the value.
+     */
     public double remove(int key) {
         if (key == FREE_KEY) {
             throw new IllegalArgumentException("key cannot be 0x80000000");
@@ -156,7 +167,10 @@ public class IntDoubleHashMap {
         } while (true);
     }
 
-    /** Returns the number of key-value mappings in this map. */
+    /**
+     * Returns the number of key-value mappings in this map.
+     * @return the number of key-value mappings in this map.
+     */
     public int size() {
         return size;
     }

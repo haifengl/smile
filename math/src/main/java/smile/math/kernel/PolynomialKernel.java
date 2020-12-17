@@ -32,6 +32,7 @@ import smile.math.MathEx;
 public class PolynomialKernel extends Polynomial implements MercerKernel<double[]> {
     /**
      * Constructor with scale 1 and offset 0.
+     * @param degree The degree of polynomial.
      */
     public PolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);

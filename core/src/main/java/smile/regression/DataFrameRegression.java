@@ -53,9 +53,15 @@ public interface DataFrameRegression {
         return y;
     }
 
-    /** Returns the formula associated with the model. */
+    /**
+     * Returns the model formula.
+     * @return the model formula.
+     */
     Formula formula();
 
-    /** Returns the schema of predictors. */
+    /**
+     * Returns the schema of predictors.
+     * @return the schema of predictors.
+     */
     StructType schema();
 }

@@ -65,7 +65,8 @@ public interface Graph {
     }
 
     /**
-     * Returns the number vertices.
+     * Returns the number of vertices.
+     * @return the number of vertices.
      */
     int getNumVertices();
 
@@ -97,26 +98,28 @@ public interface Graph {
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
      * @param weight the edge weight
+     * @return this graph.
      */
     Graph setWeight(int source, int target, double weight);
 
     /**
-     * Returns a set of the edges contained in this graph.
+     * Returns the edges in this graph.
+     * @return the edges.
      */
     Collection<Edge> getEdges();
 
     /**
-     * Returns a set of all edges from the specified vertex. If no edges are
+     * Returns the edges from the specified vertex. If no edges are
      * touching the specified vertex returns an empty set.
      *
      * @param vertex the id of vertex for which a set of touching edges is to be
      * returned.
-     * @return a set of all edges touching the specified vertex.
+     * @return the edges touching the specified vertex.
      */
     Collection<Edge> getEdges(int vertex);
 
     /**
-     * Returns a set of all edges connecting source vertex to target vertex if
+     * Returns the edges connecting source vertex to target vertex if
      * such vertices exist in this graph. If both vertices
      * exist but no edges found, returns an empty set.
      * <p>
@@ -125,7 +128,7 @@ public interface Graph {
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
-     * @return a set of all edges connecting source vertex to target vertex.
+     * @return the edges connecting source vertex to target vertex.
      */
     Collection<Edge> getEdges(int source, int target);
 
@@ -160,6 +163,7 @@ public interface Graph {
      *
      * @param source the id of source vertex of the edge.
      * @param target the id of target vertex of the edge.
+     * @param weight the weight of edge.
      */
     void addEdge(int source, int target, double weight);
 
@@ -290,6 +294,7 @@ public interface Graph {
 
     /**
      * Returns the (dense or sparse) matrix representation of the graph.
+     * @return the matrix representation of the graph.
      */
     DMatrix toMatrix();
 }

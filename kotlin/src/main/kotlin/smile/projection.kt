@@ -18,6 +18,7 @@
 package smile.projection
 
 import smile.math.kernel.MercerKernel
+import smile.math.TimeFunction
 
 /**
  * Principal component analysis. PCA is an orthogonal
@@ -147,7 +148,7 @@ fun <T> kpca(data: Array<T>, kernel: MercerKernel<T>, k: Int, threshold: Double 
  * @param w the initial projection matrix.
  * @param r the learning rate.
  */
-fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: Double): GHA {
+fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: TimeFunction): GHA {
     val model = GHA(w, r)
     for (x in data) model.update(x)
     return model
@@ -160,7 +161,7 @@ fun gha(data: Array<DoubleArray>, w: Array<DoubleArray>, r: Double): GHA {
  * @param k the dimension of feature space.
  * @param r the learning rate.
  */
-fun gha(data: Array<DoubleArray>, k: Int, r: Double): GHA {
+fun gha(data: Array<DoubleArray>, k: Int, r: TimeFunction): GHA {
     val model = GHA(data[0].size, k, r)
     for (x in data) model.update(x)
     return model

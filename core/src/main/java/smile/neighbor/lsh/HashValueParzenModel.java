@@ -45,6 +45,9 @@ public class HashValueParzenModel {
 
     /**
      * Constructor.
+     * @param hash the hash function.
+     * @param samples training data for multi-probe LSH.
+     * @param sigma the width of Parzen window.
      */
     public HashValueParzenModel(MultiProbeHash hash, MultiProbeSample[] samples, double sigma) {
         int k = hash.k;
@@ -117,12 +120,18 @@ public class HashValueParzenModel {
         }
     }
 
-    /** Returns the mean. */
+    /**
+     * Returns the mean.
+     * @return the mean.
+     */
     public double mean() {
         return mean;
     }
 
-    /** Returns the standard deviation. */
+    /**
+     * Returns the standard deviation.
+     * @return the conditional standard deviation..
+     */
     public double sd() {
         return sd;
     }

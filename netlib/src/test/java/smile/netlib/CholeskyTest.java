@@ -79,7 +79,7 @@ public class CholeskyTest {
         System.out.println("decompose");
         NLMatrix a = new NLMatrix(A);
         Cholesky cholesky = a.cholesky();
-        for (int i = 0; i < a.nrows(); i++) {
+        for (int i = 0; i < a.nrow(); i++) {
             for (int j = 0; j <= i; j++) {
                 assertEquals(Math.abs(L[i][j]), Math.abs(a.get(i, j)), 1E-7);
             }

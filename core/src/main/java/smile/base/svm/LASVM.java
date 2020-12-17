@@ -80,9 +80,13 @@ public class LASVM<T> implements Serializable {
      * where m_i = min{0, y_i * C}
      * and   M_i = max{0, y_i * C}
      */
+    /** The most violating pair. */
     private SupportVector<T> svmin = null;
+    /** The most violating pair. */
     private SupportVector<T> svmax = null;
+    /** The gradient of most violating pair. */
     private double gmin = Double.MAX_VALUE;
+    /** The gradient of most violating pair. */
     private double gmax = -Double.MAX_VALUE;
 
     /**
@@ -96,6 +100,7 @@ public class LASVM<T> implements Serializable {
 
     /**
      * Constructor.
+     * @param kernel the kernel.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
      */
@@ -105,6 +110,7 @@ public class LASVM<T> implements Serializable {
 
     /**
      * Constructor.
+     * @param kernel the kernel.
      * @param Cp the soft margin penalty parameter for positive instances.
      * @param Cn the soft margin penalty parameter for negative instances.
      * @param tol the tolerance of convergence test.
@@ -120,6 +126,7 @@ public class LASVM<T> implements Serializable {
      * Trains the model.
      * @param x training samples.
      * @param y training labels.
+     * @return the model.
      */
     public KernelMachine<T> fit(T[] x, int[] y) {
         return fit(x, y, 2);
@@ -130,6 +137,7 @@ public class LASVM<T> implements Serializable {
      * @param x training samples.
      * @param y training labels.
      * @param epoch the number of epochs, usually 1 or 2 is sufficient.
+     * @return the model.
      */
     public KernelMachine<T>  fit(T[] x, int[] y, int epoch) {
         this.x = x;

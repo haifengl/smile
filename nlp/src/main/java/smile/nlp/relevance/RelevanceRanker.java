@@ -27,22 +27,24 @@ import smile.nlp.TextTerms;
  */
 public interface RelevanceRanker {
     /**
-     * Returns a relevance score between a term and a document based on a corpus.
+     * Returns the relevance score between a term and a document based on a corpus.
      * @param corpus the corpus.
      * @param doc the document to rank.
      * @param term the searching term.
      * @param tf the term frequency in the document.
      * @param n the number of documents containing the given term in the corpus;
+     * @return the relevance score.
      */
     double rank(Corpus corpus, TextTerms doc, String term, int tf, int n);
 
     /**
-     * Returns a relevance score between a set of terms and a document based on a corpus.
+     * Returns the relevance score between a set of terms and a document based on a corpus.
      * @param corpus the corpus.
      * @param doc the document to rank.
      * @param terms the searching terms.
      * @param tf the term frequencies in the document.
      * @param n the number of documents containing the given term in the corpus;
+     * @return the relevance score.
      */
     double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n);
 }

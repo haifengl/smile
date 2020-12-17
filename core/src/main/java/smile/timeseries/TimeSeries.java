@@ -34,6 +34,7 @@ public interface TimeSeries {
      *
      * @param x time series
      * @param lag the lag at which to difference
+     * @return the first-differencing of time series.
      */
     static double[] diff(double[] x, int lag) {
         return diff(x, lag, 1)[0];
@@ -49,6 +50,7 @@ public interface TimeSeries {
      * @param x time series
      * @param lag the lag at which to difference
      * @param differences the order of differencing
+     * @return the differencing of time series.
      */
     static double[][] diff(double[] x, int lag, int differences) {
         double[][] diff = new double[differences][];
@@ -69,8 +71,9 @@ public interface TimeSeries {
     /**
      * Autocovariance function.
      *
-     * @param x time series
-     * @param lag the lag
+     * @param x time series.
+     * @param lag the lag.
+     * @return autocovariance.
      */
     static double cov(double[] x, int lag) {
         if (lag < 0) {
@@ -91,8 +94,9 @@ public interface TimeSeries {
     /**
      * Autocorrelation function.
      *
-     * @param x time series
-     * @param lag the lag
+     * @param x time series.
+     * @param lag the lag.
+     * @return autocorrelation.
      */
     static double acf(double[] x, int lag) {
         if (lag == 0) {
@@ -126,8 +130,9 @@ public interface TimeSeries {
      * its own lagged values, regressed the values of the time series at all
      * shorter lags.
      *
-     * @param x time series
-     * @param lag the lag
+     * @param x time series.
+     * @param lag the lag.
+     * @return partial autocorrelation.
      */
     static double pacf(double[] x, int lag) {
         if (lag < 0) {

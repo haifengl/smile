@@ -56,6 +56,17 @@ public class SupportVector<T> implements Serializable {
      */
     final double k;
 
+    /**
+     * Constructor.
+     * @param i the index of support vector.
+     * @param x the support vector.
+     * @param y the class label.
+     * @param alpha Lagrangian multiplier of support vector.
+     * @param g the gradient.
+     * @param Cp the bound on positive samples.
+     * @param Cn the bound on negative samples.
+     * @param k the kernel value k(x, x).
+     */
     public SupportVector(int i, T x, int y, double alpha, double g, double Cp, double Cn, double k) {
         this.i = i;
         this.x = x;

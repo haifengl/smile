@@ -104,6 +104,7 @@ public class SymletWavelet extends Wavelet {
     /**
      * Constructor. Create a Symmlet wavelet with n coefficients.
      * n = 8, 10, 12, 14, 16, 18, or 20 are supported.
+     * @param n the number of wavelet coefficients.
      */
     public SymletWavelet(int n) {
         super(n == 8 ? c8 :

@@ -113,7 +113,9 @@ import java.util.Arrays;
  * then we're doing more hill-climbing and thus more exploiting; whereas if
  * t is very small, then we're spending more time in the outer algorithm and
  * thus doing more exploring.
- * 
+ *
+ * @param <T> the type of <code>Chromosome</code>.
+ *
  * @author Haifeng Li
  */
 public class GeneticAlgorithm <T extends Chromosome> {
@@ -176,6 +178,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
 
     /**
      * Returns the population of current generation.
+     * @return the population of current generation.
      */
     public T[] population() {
         return population;
@@ -185,6 +188,7 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * Sets the number of iterations of local search for Lamarckian algorithm.
      * Sets it be zero to disable local search.
      * @param t the number of iterations of local search.
+     * @return this object.
      */
     public GeneticAlgorithm<T> setLocalSearchSteps(int t) {
         if (t < 0) {
@@ -196,8 +200,8 @@ public class GeneticAlgorithm <T extends Chromosome> {
     }
     
     /**
-     * Gets the number of iterations of local search for Lamarckian algorithm.
-     * @return t the number of iterations of local search.
+     * Gets the number of iterations of local search in Lamarckian algorithm.
+     * @return the number of iterations of local search for Lamarckian algorithm.
      */
     public int getLocalSearchSteps() {
         return t;
@@ -217,8 +221,8 @@ public class GeneticAlgorithm <T extends Chromosome> {
      * or the best fitness is larger than the given threshold.
      *
      * @param generation the maximum number of iterations.
-     * @param threshold the fitness threshold. The algorithm stops when a
-     * solution is found that satisfies minimum criteria.
+     * @param threshold the fitness threshold. The algorithm stops when
+     *                  a solution is found that satisfies minimum criteria.
      * @return the best chromosome of last generation in terms of fitness.
      */
     public T evolve(int generation, double threshold) {

@@ -82,6 +82,7 @@ public class IQAgent {
 
     /**
      * Assimilate a new value from the stream.
+     * @param datum a new value.
      */
     public void add(double datum) {
         dbuf[nd++] = datum;
@@ -154,6 +155,9 @@ public class IQAgent {
     /**
      * Returns the estimated p-quantile for the data seen so far. For example,
      * p = 0.5 for median.
+     *
+     * @param p the percentile.
+     * @return the quantile.
      */
     public double quantile(double p) {
         if (nd > 0) {

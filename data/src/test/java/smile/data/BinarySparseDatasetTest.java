@@ -57,7 +57,7 @@ public class BinarySparseDatasetTest {
         try {
             BinarySparseDataset data = BinarySparseDataset.from(smile.util.Paths.getTestData("transaction/kosarak.dat"));
             assertEquals(990002, data.size());
-            assertEquals(41271, data.ncols());
+            assertEquals(41271, data.ncol());
             assertEquals(8018988, data.length());
             assertEquals(1, data.get(0, 1));
             assertEquals(1, data.get(0, 2));
@@ -66,8 +66,8 @@ public class BinarySparseDatasetTest {
             assertEquals(1, data.get(990001, 1056));
 
             SparseMatrix sm = data.toMatrix();
-            assertEquals(990002, sm.nrows());
-            assertEquals(41271, sm.ncols());
+            assertEquals(990002, sm.nrow());
+            assertEquals(41271, sm.ncol());
             assertEquals(8018988, sm.size());
             assertEquals(1, sm.get(0, 1), 1E-16);
             assertEquals(1, sm.get(0, 2), 1E-16);

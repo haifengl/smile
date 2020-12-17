@@ -72,6 +72,7 @@ public class ObjectType implements DataType {
      * Returns the class of objects.
      * This is different from Object.getClass(), which returns
      * ObjectType.class.
+     * @return the class of objects.
      */
     public Class<?> getObjectClass() {
         return clazz;

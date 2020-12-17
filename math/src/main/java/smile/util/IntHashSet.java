@@ -83,6 +83,8 @@ public class IntHashSet {
 
     /**
      * Returns true if this set contains the specified element.
+     * @param key the element.
+     * @return true if this set contains the specified element.
      */
     public boolean contains(int key) {
         if (key == FREE_KEY) {
@@ -103,6 +105,8 @@ public class IntHashSet {
      * Adds the specified element to this set if it is not already present.
      * If this set already contains the element, the call leaves the set unchanged
      * and returns false.
+     * @param key the element.
+     * @return true if this set didn't contain the specified element.
      */
     public boolean add(int key) {
         if (key == FREE_KEY) {
@@ -133,6 +137,8 @@ public class IntHashSet {
      * Removes the specified element from this set if it is present.
      * Returns true if this set contained the element (or equivalently,
      * if this set changed as a result of the call).
+     * @param key the element.
+     * @return true if this set contains the specified element.
      */
     public boolean remove(int key) {
         if (key == FREE_KEY) {
@@ -155,12 +161,18 @@ public class IntHashSet {
         } while (true);
     }
 
-    /** Returns the number of elements in this set. */
+    /**
+     * Returns the number of elements in this set.
+     * @return the number of elements in this set.
+     */
     public int size() {
         return size;
     }
 
-    /** Returns the elements as an array. */
+    /**
+     * Returns the elements as an array.
+     * @return the elements as an array.
+     */
     public int[] toArray() {
         int[] a = new int[size];
         int i = 0;

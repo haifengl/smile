@@ -33,6 +33,7 @@ import smile.util.SparseArray;
 public class SparsePolynomialKernel extends Polynomial implements MercerKernel<SparseArray> {
     /**
      * Constructor with scale 1 and offset 0.
+     * @param degree The degree of polynomial.
      */
     public SparsePolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);

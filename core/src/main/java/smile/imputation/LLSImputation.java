@@ -124,7 +124,7 @@ public class LLSImputation implements MissingValueImputation {
             }
 
             boolean sufficient = true;
-            for (int m = 0; m < A.nrows(); m++) {
+            for (int m = 0; m < A.nrow(); m++) {
                 for (int n = 0; n < k; n++) {
                     if (Double.isNaN(A.get(m, n))) {
                         sufficient = false;

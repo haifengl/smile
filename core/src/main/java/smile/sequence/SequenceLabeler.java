@@ -27,9 +27,9 @@ import java.io.Serializable;
 public interface SequenceLabeler<T> extends Serializable {
     /**
      * Predicts the sequence labels.
-     * @param x a sequence. At each position, it may be the original symbol or
+     * @param x the sequence. At each position, it may be the original symbol or
      * a feature set about the symbol, its neighborhood, and/or other information.
-     * @return the predicted sequence labels.
+     * @return the sequence labels.
      */
     int[] predict(T[] x);
 }

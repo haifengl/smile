@@ -78,14 +78,14 @@ public class NLMatrix extends JMatrix {
     /**
      * Constructor of all-zero matrix.
      */
-    public NLMatrix(int rows, int cols) {
+    public NLMatrix(int nrow, int ncol) {
         super(rows, cols);
     }
 
     /**
      * Constructor. Fill the matrix with given value.
      */
-    public NLMatrix(int rows, int cols, double value) {
+    public NLMatrix(int nrow, int ncol, double value) {
         super(rows, cols, value);
     }
 
@@ -93,48 +93,48 @@ public class NLMatrix extends JMatrix {
      * Constructor.
      * @param value the array of matrix values arranged in column major format
      */
-    public NLMatrix(int rows, int cols, double[] value) {
+    public NLMatrix(int nrow, int ncol, double[] value) {
         super(rows, cols, value);
     }
 
     @Override
     public NLMatrix clone() {
-        return new NLMatrix(nrows(), ncols(), data().clone());
+        return new NLMatrix(nrow(), ncol(), data().clone());
     }
 
     @Override
     public double[] ax(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrow(), ncol(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
         return y;
     }
 
     @Override
     public double[] axpy(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrow(), ncol(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
         return y;
     }
 
     @Override
     public double[] axpy(double[] x, double[] y, double b) {
-        BLAS.getInstance().dgemv(NoTranspose, nrows(), ncols(), 1.0, data(), ld(), x, 1, b, y, 1);
+        BLAS.getInstance().dgemv(NoTranspose, nrow(), ncol(), 1.0, data(), ld(), x, 1, b, y, 1);
         return y;
     }
 
     @Override
     public double[] atx(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrow(), ncol(), 1.0, data(), ld(), x, 1, 0.0, y, 1);
         return y;
     }
 
     @Override
     public double[] atxpy(double[] x, double[] y) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrow(), ncol(), 1.0, data(), ld(), x, 1, 1.0, y, 1);
         return y;
     }
 
     @Override
     public double[] atxpy(double[] x, double[] y, double b) {
-        BLAS.getInstance().dgemv(Transpose, nrows(), ncols(), 1.0, data(), ld(), x, 1, b, y, 1);
+        BLAS.getInstance().dgemv(Transpose, nrow(), ncol(), 1.0, data(), ld(), x, 1, b, y, 1);
         return y;
     }
 
@@ -151,9 +151,9 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix abmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            int m = nrows();
-            int n = B.ncols();
-            int k = ncols();
+            int m = nrow();
+            int n = B.ncol();
+            int k = ncol();
             NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(NoTranspose, NoTranspose,
                     m, n, k, 1.0, data(), m, B.data(),
@@ -167,9 +167,9 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix abtmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            int m = nrows();
-            int n = B.nrows();
-            int k = ncols();
+            int m = nrow();
+            int n = B.nrow();
+            int k = ncol();
             NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(NoTranspose, Transpose,
                     m, n, k, 1.0, data(), m, B.data(),
@@ -183,9 +183,9 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix atbmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            int m = ncols();
-            int n = B.ncols();
-            int k = nrows();
+            int m = ncol();
+            int n = B.ncol();
+            int k = nrow();
             NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(Transpose, NoTranspose,
                     m, n, k, 1.0, data(), k, B.data(),
@@ -199,9 +199,9 @@ public class NLMatrix extends JMatrix {
     @Override
     public NLMatrix atbtmm(DenseMatrix B) {
         if (B instanceof JMatrix) {
-            int m = ncols();
-            int n = B.nrows();
-            int k = nrows();
+            int m = ncol();
+            int n = B.nrow();
+            int k = nrow();
             NLMatrix C = new NLMatrix(m, n);
             BLAS.getInstance().dgemm(Transpose, Transpose,
                     m, n, k, 1.0, data(), k, B.data(),
@@ -214,9 +214,9 @@ public class NLMatrix extends JMatrix {
 
     @Override
     public NLMatrix transpose() {
-        NLMatrix B = new NLMatrix(ncols(), nrows());
-        for (int i = 0; i < nrows(); i++) {
-            for (int j = 0; j < ncols(); j++) {
+        NLMatrix B = new NLMatrix(ncol(), nrow());
+        for (int i = 0; i < nrow(); i++) {
+            for (int j = 0; j < ncol(); j++) {
                 B.set(j, i, get(i, j));
             }
         }
@@ -228,9 +228,9 @@ public class NLMatrix extends JMatrix {
     public LU lu() {
         boolean singular = false;
 
-        int[] piv = new int[Math.min(nrows(), ncols())];
+        int[] piv = new int[Math.min(nrow(), ncol())];
         intW info = new intW(0);
-        LAPACK.getInstance().dgetrf(nrows(), ncols(), data(), ld(), piv, info);
+        LAPACK.getInstance().dgetrf(nrow(), ncol(), data(), ld(), piv, info);
 
         if (info.val > 0) {
             singular = true;
@@ -246,12 +246,12 @@ public class NLMatrix extends JMatrix {
 
     @Override
     public Cholesky cholesky() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Cholesky decomposition on non-square matrix");
         }
 
         intW info = new intW(0);
-        LAPACK.getInstance().dpotrf(NLMatrix.Lower, nrows(), data(), ld(), info);
+        LAPACK.getInstance().dpotrf(NLMatrix.Lower, nrow(), data(), ld(), info);
 
         if (info.val > 0) {
             logger.error("LAPACK DPOTRF error code: {}", info.val);
@@ -270,8 +270,8 @@ public class NLMatrix extends JMatrix {
     public QR qr() {
         boolean singular = false;
 
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
 
         // Query optimal workspace.
         double[] work = new double[1];
@@ -290,8 +290,8 @@ public class NLMatrix extends JMatrix {
         work = new double[lwork];
 
         info.val = 0;
-        double[] tau = new double[Math.min(nrows(), ncols())];
-        LAPACK.getInstance().dgeqrf(nrows(), ncols(), data(), ld(), tau, work, lwork, info);
+        double[] tau = new double[Math.min(nrow(), ncol())];
+        LAPACK.getInstance().dgeqrf(nrow(), ncol(), data(), ld(), tau, work, lwork, info);
 
         if (info.val > 0) {
             singular = true;
@@ -307,8 +307,8 @@ public class NLMatrix extends JMatrix {
 
     @Override
     public SVD svd() {
-        int m = nrows();
-        int n = ncols();
+        int m = nrow();
+        int n = ncol();
         int mx = Math.max(m, n);
         int mn = Math.min(m, n);
 
@@ -346,11 +346,11 @@ public class NLMatrix extends JMatrix {
 
     @Override
     public double[] eig() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
         }
 
-        int n = nrows();
+        int n = nrow();
 
         if (isSymmetric()) {
             double[] V  = new double[0];
@@ -445,11 +445,11 @@ public class NLMatrix extends JMatrix {
 
     @Override
     public EVD eigen() {
-        if (nrows() != ncols()) {
+        if (nrow() != ncol()) {
             throw new UnsupportedOperationException("Eigen decomposition on non-square matrix");
         }
 
-        int n = nrows();
+        int n = nrow();
 
         if (isSymmetric()) {
             NLMatrix V  = new NLMatrix(n, n);
@@ -537,7 +537,7 @@ public class NLMatrix extends JMatrix {
     // In contrast, JMatrix returns eigen values in descending order.
     // Reverse the array to match JMatrix.
     static void reverse(double[] d, DenseMatrix V) {
-        int m = V.nrows();
+        int m = V.nrow();
         int n = d.length;
         int half = n / 2;
         for (int i = 0; i < half; i++) {

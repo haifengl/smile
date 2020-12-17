@@ -25,20 +25,23 @@ package smile.neighbor.lsh;
 public class NeighborHashValueModel {
 
     /**
-     * Hash values of query object.
+     * The hash values of query object.
      */
     public final double[] H;
     /**
-     * Mean of hash values of neighbors.
+     * The mean of hash values of neighbors.
      */
     public final double[] mean;
     /**
-     * Variance of hash values of neighbors.
+     * The variance of hash values of neighbors.
      */
     public double[] var;
 
     /**
      * Constructor.
+     * @param H the hash values of query object.
+     * @param mean the mean of hash values of neighbors.
+     * @param var the variance of hash values of neighbors.
      */
     public NeighborHashValueModel(double[] H, double[] mean, double[] var) {
         this.H = H;

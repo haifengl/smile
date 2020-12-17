@@ -104,7 +104,7 @@ public class Arrow {
      * The RootAllocator is responsible for being the master
      * bookeeper for memory allocations.
      *
-     * @param limit memory allocation limit in bytes.
+     * @param limit the memory allocation limit in bytes.
      */
     public static void allocate(long limit) {
         if (limit <= 0) {
@@ -116,7 +116,10 @@ public class Arrow {
 
     /**
      * Reads an arrow file.
-     * @param path an Apache Arrow file path.
+     *
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path) throws IOException {
         return read(path, Integer.MAX_VALUE);
@@ -124,7 +127,11 @@ public class Arrow {
 
     /**
      * Reads an arrow file.
-     * @param path an Apache Arrow file path.
+     *
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(Path path, int limit) throws IOException {
         return read(Files.newInputStream(path), limit);
@@ -132,7 +139,11 @@ public class Arrow {
 
     /**
      * Reads a limited number of records from an arrow file.
-     * @param path an Apache Arrow file path or URI.
+     *
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path) throws IOException, URISyntaxException {
         return read(path, Integer.MAX_VALUE);
@@ -140,8 +151,12 @@ public class Arrow {
 
     /**
      * Reads a limited number of records from an arrow file.
-     * @param path an Apache Arrow file path or URI.
-     * @param limit reads a limited number of records.
+     *
+     * @param path the input file path.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
      */
     public DataFrame read(String path, int limit) throws IOException, URISyntaxException {
         return read(Input.stream(path), limit);
@@ -149,8 +164,11 @@ public class Arrow {
 
     /**
      * Reads a limited number of records from an arrow file.
-     * @param input an Apache Arrow file input stream.
-     * @param limit reads a limited number of records.
+     *
+     * @param input the input stream.
+     * @param limit the number number of records to read.
+     * @throws IOException when fails to read the file.
+     * @return the data frame.
      */
     public DataFrame read(InputStream input, int limit) throws IOException {
         if (allocator == null) {
@@ -250,13 +268,19 @@ public class Arrow {
         }
     }
 
-    /** Writes the DataFrame to a file. */
-    public void write(DataFrame df, Path path) throws IOException {
+    /**
+     * Writes the data frame to an arrow file.
+     *
+     * @param data the data frame.
+     * @param path the output file path.
+     * @throws IOException when fails to write the file.
+     */
+    public void write(DataFrame data, Path path) throws IOException {
         if (allocator == null) {
             allocate(Long.MAX_VALUE);
         }
 
-        Schema schema = toArrowSchema(df.schema());
+        Schema schema = toArrowSchema(data.schema());
         /*
          * When a field is dictionary encoded, the values are represented
          * by an array of Int32 representing the index of the value in the
@@ -274,7 +298,7 @@ public class Arrow {
              ArrowStreamWriter writer = new ArrowStreamWriter(root, provider, output)) {
 
             writer.start();
-            final int size = df.size();
+            final int size = data.size();
             for (int from = 0; from < size; from += batch) {
                 int count = Math.min(batch, size - from);
                 // set the batch row count
@@ -282,72 +306,72 @@ public class Arrow {
 
                 for (Field field : root.getSchema().getFields()) {
                     FieldVector vector = root.getVector(field.getName());
-                    DataType type = df.schema().field(field.getName()).type;
+                    DataType type = data.schema().field(field.getName()).type;
                     switch (type.id()) {
                         case Integer:
-                            writeIntField(df, vector, from, count);
+                            writeIntField(data, vector, from, count);
                             break;
                         case Long:
-                            writeLongField(df, vector, from, count);
+                            writeLongField(data, vector, from, count);
                             break;
                         case Double:
-                            writeDoubleField(df, vector, from, count);
+                            writeDoubleField(data, vector, from, count);
                             break;
                         case Float:
-                            writeFloatField(df, vector, from, count);
+                            writeFloatField(data, vector, from, count);
                             break;
                         case Boolean:
-                            writeBooleanField(df, vector, from, count);
+                            writeBooleanField(data, vector, from, count);
                             break;
                         case Byte:
-                            writeByteField(df, vector, from, count);
+                            writeByteField(data, vector, from, count);
                             break;
                         case Short:
-                            writeShortField(df, vector, from, count);
+                            writeShortField(data, vector, from, count);
                             break;
                         case Char:
-                            writeCharField(df, vector, from, count);
+                            writeCharField(data, vector, from, count);
                             break;
                         case String:
-                            writeStringField(df, vector, from, count);
+                            writeStringField(data, vector, from, count);
                             break;
                         case Date:
-                            writeDateField(df, vector, from, count);
+                            writeDateField(data, vector, from, count);
                             break;
                         case Time:
-                            writeTimeField(df, vector, from, count);
+                            writeTimeField(data, vector, from, count);
                             break;
                         case DateTime:
-                            writeDateTimeField(df, vector, from, count);
+                            writeDateTimeField(data, vector, from, count);
                             break;
                         case Object: {
                             Class<?> clazz = ((ObjectType) type).getObjectClass();
                             if (clazz == Integer.class) {
-                                writeIntObjectField(df, vector, from, count);
+                                writeIntObjectField(data, vector, from, count);
                             } else if (clazz == Long.class) {
-                                writeLongObjectField(df, vector, from, count);
+                                writeLongObjectField(data, vector, from, count);
                             } else if (clazz == Double.class) {
-                                writeDoubleObjectField(df, vector, from, count);
+                                writeDoubleObjectField(data, vector, from, count);
                             } else if (clazz == Float.class) {
-                                writeFloatObjectField(df, vector, from, count);
+                                writeFloatObjectField(data, vector, from, count);
                             } else if (clazz == Boolean.class) {
-                                writeBooleanObjectField(df, vector, from, count);
+                                writeBooleanObjectField(data, vector, from, count);
                             } else if (clazz == Byte.class) {
-                                writeByteObjectField(df, vector, from, count);
+                                writeByteObjectField(data, vector, from, count);
                             } else if (clazz == Short.class) {
-                                writeShortObjectField(df, vector, from, count);
+                                writeShortObjectField(data, vector, from, count);
                             } else if (clazz == Character.class) {
-                                writeCharObjectField(df, vector, from, count);
+                                writeCharObjectField(data, vector, from, count);
                             } else if (clazz == BigDecimal.class) {
-                                writeDecimalField(df, vector, from, count);
+                                writeDecimalField(data, vector, from, count);
                             } else if (clazz == String.class) {
-                                writeStringField(df, vector, from, count);
+                                writeStringField(data, vector, from, count);
                             } else if (clazz == LocalDate.class) {
-                                writeDateField(df, vector, from, count);
+                                writeDateField(data, vector, from, count);
                             } else if (clazz == LocalTime.class) {
-                                writeTimeField(df, vector, from, count);
+                                writeTimeField(data, vector, from, count);
                             } else if (clazz == LocalDateTime.class) {
-                                writeDateTimeField(df, vector, from, count);
+                                writeDateTimeField(data, vector, from, count);
                             } else {
                                 throw new UnsupportedOperationException("Unsupported type: " + type);
                             }
@@ -356,7 +380,7 @@ public class Arrow {
                         case Array: {
                             DataType etype = ((ArrayType) type).getComponentType();
                             if (etype.id() == DataType.ID.Byte) {
-                                writeByteArrayField(df, vector, from, count);
+                                writeByteArrayField(data, vector, from, count);
                             } else {
                                 throw new UnsupportedOperationException("Unsupported type: " + type);
                             }

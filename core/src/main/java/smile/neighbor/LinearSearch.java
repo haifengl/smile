@@ -20,7 +20,6 @@ package smile.neighbor;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
-
 import smile.math.distance.Distance;
 import smile.sort.HeapSelect;
 
@@ -63,9 +62,11 @@ public class LinearSearch<T> implements NearestNeighborSearch<T,T>, KNNSearch<T,
 
     /**
      * Constructor. By default, query object self will be excluded from search.
+     * @param data the data set.
+     * @param distance the distance function.
      */
-    public LinearSearch(T[] dataset, Distance<T> distance) {
-        this.data = dataset;
+    public LinearSearch(T[] data, Distance<T> distance) {
+        this.data = data;
         this.distance = distance;
     }
 

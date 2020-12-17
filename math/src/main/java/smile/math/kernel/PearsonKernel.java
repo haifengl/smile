@@ -72,6 +72,7 @@ public class PearsonKernel implements MercerKernel<double[]> {
 
     /**
      * Returns Pearson width.
+     * @return Pearson width.
      */
     public double sigma() {
         return sigma;
@@ -79,6 +80,7 @@ public class PearsonKernel implements MercerKernel<double[]> {
 
     /**
      * Returns the tailing factor of the peak.
+     * @return the tailing factor of the peak.
      */
     public double omega() {
         return omega;

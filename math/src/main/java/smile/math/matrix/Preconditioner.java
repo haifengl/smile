@@ -29,6 +29,9 @@ public interface Preconditioner {
      * easy to solve for linear systems. This method is useful for preconditioned
      * conjugate gradient method. The preconditioner matrix could be as simple
      * as the trivial diagonal part of A in some cases.
+     *
+     * @param b the right hand side of linear system.
+     * @param x the output solution vector.
      */
     void solve(double[] b, double[] x);
 }

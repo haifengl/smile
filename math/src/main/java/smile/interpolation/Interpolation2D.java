@@ -28,6 +28,10 @@ public interface Interpolation2D extends Serializable {
 
     /**
      * Interpolate the data at a given 2-dimensional point.
+     *
+     * @param x1 the 1st dimension value.
+     * @param x2 the 2nd dimension value.
+     * @return the interpolated function value.
      */
     double interpolate(double x1, double x2);
 }
