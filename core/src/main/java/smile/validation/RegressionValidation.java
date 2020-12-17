@@ -47,7 +47,13 @@ public class RegressionValidation<M> implements Serializable {
     /** The regression metrics. */
     public final RegressionMetrics metrics;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param model the model.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     * @param metrics the validation metrics.
+     */
     public RegressionValidation(M model, double[] truth, double[] prediction, RegressionMetrics metrics) {
         this.model = model;
         this.truth = truth;
@@ -62,6 +68,14 @@ public class RegressionValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on a train/validation split.
+     * @param x the training data.
+     * @param y the responsible variable of training data.
+     * @param testx the validation data.
+     * @param testy the responsible variable of validation data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <T, M extends Regression<T>> RegressionValidation<M> of(T[] x, double[] y, T[] testx, double[] testy, BiFunction<T[], double[], M> trainer) {
         long start = System.nanoTime();
@@ -85,6 +99,13 @@ public class RegressionValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on multiple train/validation split.
+     * @param bags the data splits.
+     * @param x the training data.
+     * @param y the responsible variable.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <T, M extends Regression<T>> RegressionValidations<M> of(Bag[] bags, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);
@@ -103,6 +124,12 @@ public class RegressionValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on a train/validation split.
+     * @param formula the model formula.
+     * @param train the training data.
+     * @param test the validation data.
+     * @param trainer the lambda to train the model.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <M extends DataFrameRegression> RegressionValidation<M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
         double[] testy = formula.y(test).toDoubleArray();
@@ -132,6 +159,12 @@ public class RegressionValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on multiple train/validation split.
+     * @param bags the data splits.
+     * @param formula the model formula.
+     * @param data the data.
+     * @param trainer the lambda to train the model.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <M extends DataFrameRegression> RegressionValidations<M> of(Bag[] bags, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         List<RegressionValidation<M>> rounds = new ArrayList<>(bags.length);

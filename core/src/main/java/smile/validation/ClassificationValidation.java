@@ -55,12 +55,27 @@ public class ClassificationValidation<M> implements Serializable {
     /** The classification metrics. */
     public final ClassificationMetrics metrics;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param model the model.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     */
     public ClassificationValidation(M model, int[] truth, int[] prediction, double fitTime, double scoreTime) {
         this(model, truth, prediction, null, fitTime, scoreTime);
     }
 
-    /** Constructor of soft classifier validation. */
+    /**
+     * Constructor of soft classifier validation..
+     * @param model the model.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     * @param posteriori the posteriori probabilities of predictions.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     */
     public ClassificationValidation(M model, int[] truth, int[] prediction, double[][] posteriori, double fitTime, double scoreTime) {
         this.model = model;
         this.truth = truth;
@@ -116,6 +131,14 @@ public class ClassificationValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on a train/validation split.
+     * @param x the training data.
+     * @param y the class labels of training data.
+     * @param testx the validation data.
+     * @param testy the class labels of validation data.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <T, M extends Classifier<T>> ClassificationValidation<M> of(T[] x, int[] y, T[] testx, int[] testy, BiFunction<T[], int[], M> trainer) {
         int k = MathEx.unique(y).length;
@@ -140,6 +163,13 @@ public class ClassificationValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on multiple train/validation split.
+     * @param bags the data splits.
+     * @param x the training data.
+     * @param y the class labels.
+     * @param trainer the lambda to train the model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <T, M extends Classifier<T>> ClassificationValidations<M> of(Bag[] bags, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);
@@ -158,6 +188,12 @@ public class ClassificationValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on a train/validation split.
+     * @param formula the model formula.
+     * @param train the training data.
+     * @param test the validation data.
+     * @param trainer the lambda to train the model.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     @SuppressWarnings("unchecked")
     public static <M extends DataFrameClassifier> ClassificationValidation<M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
@@ -192,6 +228,12 @@ public class ClassificationValidation<M> implements Serializable {
 
     /**
      * Trains and validates a model on multiple train/validation split.
+     * @param bags the data splits.
+     * @param formula the model formula.
+     * @param data the data.
+     * @param trainer the lambda to train the model.
+     * @param <M> the model type.
+     * @return the validation results.
      */
     public static <M extends DataFrameClassifier> ClassificationValidations<M> of(Bag[] bags, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         List<ClassificationValidation<M>> rounds = new ArrayList<>(bags.length);

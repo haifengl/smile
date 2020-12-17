@@ -65,6 +65,8 @@ public class IntArray2D {
 
     /**
      * Constructor of all-zero matrix.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
      */
     public IntArray2D(int nrow, int ncol) {
         this.nrow = nrow;
@@ -74,6 +76,9 @@ public class IntArray2D {
 
     /**
      * Constructor. Fill the matrix with given value.
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
+     * @param value the initial value.
      */
     public IntArray2D(int nrow, int ncol, int value) {
         this(nrow, ncol);
@@ -83,7 +88,9 @@ public class IntArray2D {
 
     /**
      * Constructor.
-     * @param value the array of matrix values arranged in row major format
+     * @param nrow the number of rows.
+     * @param ncol the number of columns.
+     * @param value the array of matrix values arranged in row major format.
      */
     public IntArray2D(int nrow, int ncol, int[] value) {
         this.nrow = nrow;
@@ -91,89 +98,165 @@ public class IntArray2D {
         this.A = value;
     }
 
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
     public int nrow() {
         return nrow;
     }
 
+    /**
+     * Returns the number of columns.
+     * @return the number of columns.
+     */
     public int ncol() {
         return ncol;
     }
 
-    /** Returns A(i, j). Useful in Scala. */
+    /**
+     * Returns A[i, j]. Useful in Scala.
+     * @param i the row index.
+     * @param j the column index.
+     * @return A[i, j].
+     */
     public int apply(int i, int j) {
         return A[i*ncol + j];
     }
 
-    /** Returns A(i, j). */
+    /**
+     * Returns A[i, j].
+     * @param i the row index.
+     * @param j the column index.
+     * @return A[i, j].
+     */
     public int get(int i, int j) {
         return A[i*ncol + j];
     }
 
-    /** Sets A(i, j). */
-    public int set(int i, int j, int x) {
-        return A[i*ncol + j] = x;
+    /**
+     * Sets A[i, j].
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the value.
+     */
+    public void set(int i, int j, int x) {
+        A[i*ncol + j] = x;
     }
 
+    /**
+     * A[i, j] += x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public int add(int i, int j, int x) {
         return A[i*ncol + j] += x;
     }
 
+    /**
+     * A[i, j] -= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public int sub(int i, int j, int x) {
         return A[i*ncol + j] -= x;
     }
 
+    /**
+     * A[i, j] *= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public int mul(int i, int j, int x) {
         return A[i*ncol + j] *= x;
     }
 
+    /**
+     * A[i, j] /= x.
+     * @param i the row index.
+     * @param j the column index.
+     * @param x the operand.
+     * @return the updated cell value.
+     */
     public int div(int i, int j, int x) {
         return A[i*ncol + j] /= x;
     }
 
-    public IntArray2D add(IntArray2D b) {
-        if (nrow != b.nrow || ncol != b.ncol) {
+    /**
+     * A += B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public IntArray2D add(IntArray2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] += b.A[i];
+            A[i] += B.A[i];
         }
         return this;
     }
 
-    public IntArray2D sub(IntArray2D b) {
-        if (nrow != b.nrow || ncol != b.ncol) {
+    /**
+     * A -= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public IntArray2D sub(IntArray2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] -= b.A[i];
+            A[i] -= B.A[i];
         }
         return this;
     }
 
-    public IntArray2D mul(IntArray2D b) {
-        if (nrow != b.nrow || ncol != b.ncol) {
+    /**
+     * A *= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public IntArray2D mul(IntArray2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] *= b.A[i];
+            A[i] *= B.A[i];
         }
         return this;
     }
 
-    public IntArray2D div(IntArray2D b) {
-        if (nrow != b.nrow || ncol != b.ncol) {
+    /**
+     * A /= B.
+     * @param B the operand.
+     * @return this object.
+     */
+    public IntArray2D div(IntArray2D B) {
+        if (nrow != B.nrow || ncol != B.ncol) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         for (int i = 0; i < A.length; i++) {
-            A[i] /= b.A[i];
+            A[i] /= B.A[i];
         }
         return this;
     }
 
+    /**
+     * A += x.
+     * @param x the operand.
+     * @return this object.
+     */
     public IntArray2D add(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] += x;
@@ -182,6 +265,11 @@ public class IntArray2D {
         return this;
     }
 
+    /**
+     * A -= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public IntArray2D sub(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] -= x;
@@ -190,6 +278,11 @@ public class IntArray2D {
         return this;
     }
 
+    /**
+     * A *= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public IntArray2D mul(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] *= x;
@@ -198,6 +291,11 @@ public class IntArray2D {
         return this;
     }
 
+    /**
+     * A /= x.
+     * @param x the operand.
+     * @return this object.
+     */
     public IntArray2D div(int x) {
         for (int i = 0; i < A.length; i++) {
             A[i] /= x;
@@ -206,6 +304,10 @@ public class IntArray2D {
         return this;
     }
 
+    /**
+     * Returns the sum of all elements.
+     * @return the sum of all elements.
+     */
     public long sum() {
         return MathEx.sum(A);
     }
@@ -219,6 +321,7 @@ public class IntArray2D {
      * Returns the string representation of matrix.
      * @param full Print the full matrix if true. Otherwise,
      *             print only top left 7 x 7 submatrix.
+     * @return the string representation of matrix.
      */
     public String toString(boolean full) {
         return full ? toString(nrow, ncol) : toString(7, 7);
@@ -228,6 +331,7 @@ public class IntArray2D {
      * Returns the string representation of matrix.
      * @param m the number of rows to print.
      * @param n the number of columns to print.
+     * @return the string representation of matrix.
      */
     public String toString(int m, int n) {
         StringBuilder sb = new StringBuilder();

@@ -73,7 +73,10 @@ public final class IntArrayList implements Serializable {
         return Arrays.stream(data).limit(size).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    /** Returns the stream of the array list. */
+    /**
+     * Returns the stream of the array list.
+     * @return the stream of the array list.
+     */
     public IntStream stream() {
         return IntStream.of(data).limit(size);
     }
@@ -171,12 +174,11 @@ public final class IntArrayList implements Serializable {
      * @param val value to be stored at the specified position 
      * @throws IndexOutOfBoundsException if the index is out of range ({@code index < 0 || index >= size()})
      */
-    public IntArrayList set(int index, int val) {
+    public void set(int index, int val) {
         if (index < 0 || index >= size) {
             throw new IndexOutOfBoundsException(String.valueOf(index));
         }
         data[index] = val;
-        return this;
     }
 
     /**
@@ -217,6 +219,7 @@ public final class IntArrayList implements Serializable {
      * Returns an array containing all of the values in this list in
      * proper sequence (from first to last value). 
      * The caller is thus free to modify the returned array. 
+     * @return an array containing the values of the list.
      */
     public int[] toArray() {
         return toArray(null);
@@ -231,7 +234,7 @@ public final class IntArrayList implements Serializable {
      * @param dest the array into which the values of the list are to
      * be stored, if it is big enough; otherwise, a new array is allocated
      * for this purpose. 
-     * @return an array containing the values of the list 
+     * @return an array containing the values of the list.
      */
     public int[] toArray(int[] dest) {
         if (dest == null || dest.length < size()) {

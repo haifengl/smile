@@ -32,12 +32,20 @@ public interface Strings {
     /** Decimal format for floating numbers. */
     DecimalFormat decimal = new DecimalFormat("#.####");
 
-    /** Returns true if the string is null or empty. */
-    static boolean isNullOrEmpty(String str) {
-        return str == null || str.isEmpty();
+    /**
+     * Returns true if the string is null or empty.
+     * @param s the string.
+     * @return true if the string is null or empty.
+     */
+    static boolean isNullOrEmpty(String s) {
+        return s == null || s.isEmpty();
     }
 
-    /** Returns the string representation of ordinal number with suffix. */
+    /**
+     * Returns the string representation of ordinal number with suffix.
+     * @param i the ordinal number.
+     * @return the string representation of ordinal number with suffix.
+     */
     static String ordinal(int i) {
         final String[] suffixes = {"th", "st", "nd", "rd", "th", "th", "th", "th", "th", "th"};
         switch (i % 100) {
@@ -51,58 +59,72 @@ public interface Strings {
     }
 
     /**
-     * Left pad a String with a specified character.
+     * Left pad a string with a specified character.
      *
-     * @param str  the String to pad out, may be null
+     * @param s  the string to pad out, may be null
      * @param size  the size to pad to
      * @param padChar  the character to pad with
      * @return left padded String or original String if no padding is necessary,
      *         null if null String input
      */
-    static String leftPad(String str, int size, char padChar) {
-        if (str == null)
+    static String leftPad(String s, int size, char padChar) {
+        if (s == null)
             return null;
 
-        int pads = size - str.length();
+        int pads = size - s.length();
         if (pads <= 0)
-            return str; // returns original String when possible
+            return s; // returns original String when possible
 
-        return fill(padChar, pads).concat(str);
+        return fill(padChar, pads).concat(s);
     }
 
     /**
-     * Right pad a String with a specified character.
+     * Right pad a string with a specified character.
      *
-     * @param str  the String to pad out, may be null
+     * @param s  the string to pad out, may be null
      * @param size  the size to pad to
      * @param padChar  the character to pad with
      * @return left padded String or original String if no padding is necessary,
      *         null if null String input
      */
-    static String rightPad(String str, int size, char padChar) {
-        if (str == null)
+    static String rightPad(String s, int size, char padChar) {
+        if (s == null)
             return null;
 
-        int pads = size - str.length();
+        int pads = size - s.length();
         if (pads <= 0)
-            return str; // returns original String when possible
+            return s; // returns original String when possible
 
-        return str.concat(fill(padChar, pads));
+        return s.concat(fill(padChar, pads));
     }
 
-    /** Returns a string with a single repeated character to a specific length. */
+    /**
+     * Returns the string with a single repeated character to a specific length.
+     * @param ch the character.
+     * @param len the length of string.
+     * @return the string.
+     */
     static String fill(char ch, int len) {
         char[] chars = new char[len];
         Arrays.fill(chars, ch);
         return new String(chars);
     }
 
-    /** Returns the string representation of a floating number without trailing zeros. */
+    /**
+     * Returns the string representation of a floating number without trailing zeros.
+     * @param x a real number.
+     * @return the string representation.
+     */
     static String format(float x) {
         return format(x, false);
     }
 
-    /** Returns the string representation of a floating number. */
+    /**
+     * Returns the string representation of a floating number.
+     * @param x a real number.
+     * @param trailingZeros the flag if removes the trailing zeros.
+     * @return the string representation.
+     */
     static String format(float x, boolean trailingZeros) {
         if (MathEx.isZero(x, 1E-7f)) {
             return trailingZeros ? "0.0000" : "0";
@@ -116,12 +138,21 @@ public interface Strings {
         return String.format("%.4e", x);
     }
 
-    /** Returns the string representation of a floating number without trailing zeros. */
+    /**
+     * Returns the string representation of a floating number without trailing zeros.
+     * @param x a real number.
+     * @return the string representation.
+     */
     static String format(double x) {
         return format(x, false);
     }
 
-    /** Returns the string representation of a floating number. */
+    /**
+     * Returns the string representation of a floating number.
+     * @param x a real number.
+     * @param trailingZeros the flag if removes the trailing zeros.
+     * @return the string representation.
+     */
     static String format(double x, boolean trailingZeros) {
         if (MathEx.isZero(x, 1E-14)) {
             return trailingZeros ? "0.0000" : "0";
@@ -135,17 +166,29 @@ public interface Strings {
         return String.format("%.4e", x);
     }
 
-    /** Returns the string representation of array in format '[1, 2, 3]'." */
+    /**
+     * Returns the string representation of array in format '[1, 2, 3]'.
+     * @param a the array.
+     * @return the string representation.
+     */
     static String toString(int[] a) {
         return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
+    /**
+     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
+     * @param a the array.
+     * @return the string representation.
+     */
     static String toString(float[] a) {
         return IntStream.range(0, a.length).mapToObj(i -> format(a[i])).collect(Collectors.joining(", ", "[", "]"));
     }
 
-    /** Returns the string representation of array in format '[1.0, 2.0, 3.0]'." */
+    /**
+     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
+     * @param a the array.
+     * @return the string representation.
+     */
     static String toString(double[] a) {
         return Arrays.stream(a).mapToObj(Strings::format).collect(Collectors.joining(", ", "[", "]"));
     }
@@ -153,6 +196,8 @@ public interface Strings {
     /**
      * Parses a double array in format '[1.0, 2.0, 3.0]'.
      * Returns null if s is null or empty.
+     * @param s the string.
+     * @return the array.
      */
     static int[] parseIntArray(String s) {
         if (isNullOrEmpty(s)) return null;
@@ -164,6 +209,8 @@ public interface Strings {
     /**
      * Parses a double array in format '[1.0, 2.0, 3.0]'.
      * Returns null if s is null or empty.
+     * @param s the string.
+     * @return the array.
      */
     static double[] parseDoubleArray(String s) {
         if (isNullOrEmpty(s)) return null;

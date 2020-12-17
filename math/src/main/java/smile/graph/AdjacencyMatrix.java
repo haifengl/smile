@@ -516,7 +516,7 @@ public class AdjacencyMatrix implements Graph, Serializable {
         wt[s] = 0.0;
         queue.lower(s);
 
-        while (!queue.empty()) {
+        while (!queue.isEmpty()) {
             int v = queue.poll();
             if (!Double.isInfinite(wt[v])) {
                 for (int w = 0; w < n; w++) {

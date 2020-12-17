@@ -50,12 +50,27 @@ public class ClassificationMetrics implements Serializable {
     /** The cross entropy on validation data. */
     public final double crossentropy;
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param error the number of errors.
+     * @param accuracy the accuracy on validation data.
+     */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy) {
         this(fitTime, scoreTime, size, error, accuracy, Double.NaN);
     }
 
-    /** Constructor of multiclass soft classifier validation. */
+    /**
+     * Constructor of multiclass soft classifier validation.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param error the number of errors.
+     * @param accuracy the accuracy on validation data.
+     * @param crossentropy the cross entropy on validation data.
+     */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error, double accuracy, double crossentropy) {
         this.fitTime = fitTime;
         this.scoreTime = scoreTime;
@@ -72,14 +87,40 @@ public class ClassificationMetrics implements Serializable {
         this.logloss = Double.NaN;
     }
 
-    /** Constructor of binary classifier validation. */
+    /**
+     * Constructor of binary classifier validation.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param error the number of errors.
+     * @param accuracy the accuracy on validation data.
+     * @param sensitivity the sensitivity on validation data.
+     * @param specificity the specificity on validation data.
+     * @param precision the precision on validation data.
+     * @param f1 the F-1 score on validation data.
+     * @param mcc the Matthews correlation coefficient on validation data.
+     */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
                                  double accuracy, double sensitivity, double specificity,
                                  double precision, double f1, double mcc) {
         this(fitTime, scoreTime, size, error, accuracy, sensitivity, specificity, precision, f1, mcc, Double.NaN, Double.NaN);
     }
 
-    /** Constructor of binary soft classifier validation. */
+    /**
+     * Constructor of binary soft classifier validation.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param error the number of errors.
+     * @param accuracy the accuracy on validation data.
+     * @param sensitivity the sensitivity on validation data.
+     * @param specificity the specificity on validation data.
+     * @param precision the precision on validation data.
+     * @param f1 the F-1 score on validation data.
+     * @param mcc the Matthews correlation coefficient on validation data.
+     * @param auc the AUC on validation data.
+     * @param logloss the log loss on validation data.
+     */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
                                  double accuracy, double sensitivity, double specificity,
                                  double precision, double f1, double mcc, double auc,
@@ -99,7 +140,22 @@ public class ClassificationMetrics implements Serializable {
         this.crossentropy = logloss;
     }
 
-    /** Constructor. */
+    /**
+     * Constructor.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param size the validation data size.
+     * @param error the number of errors.
+     * @param accuracy the accuracy on validation data.
+     * @param sensitivity the sensitivity on validation data.
+     * @param specificity the specificity on validation data.
+     * @param precision the precision on validation data.
+     * @param f1 the F-1 score on validation data.
+     * @param mcc the Matthews correlation coefficient on validation data.
+     * @param auc the AUC on validation data.
+     * @param logloss the log loss on validation data.
+     * @param crossentropy the cross entropy on validation data.
+     */
     public ClassificationMetrics(double fitTime, double scoreTime, int size, int error,
                                  double accuracy, double sensitivity, double specificity,
                                  double precision, double f1, double mcc, double auc,
