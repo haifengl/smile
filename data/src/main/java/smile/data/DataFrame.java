@@ -1164,7 +1164,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         Matrix matrix = new Matrix(nrow, colNames.size());
         matrix.colNames(colNames.toArray(new String[0]));
         if (rowNames != null) {
-            int j = schema.fieldIndex(rowNames);
+            int j = schema.indexOf(rowNames);
             String[] rows = new String[nrow];
             for (int i = 0; i < nrow; i++) {
                 rows[i] = getString(i, j);
@@ -1573,7 +1573,7 @@ public interface DataFrame extends Dataset<Tuple>, Iterable<BaseVector> {
         List<Tuple> rows = data.stream().map(map -> {
             Object[] row = new Object[schema.length()];
             for (int i = 0; i < row.length; i++) {
-                row[i] = map.get(schema.fieldName(i));
+                row[i] = map.get(schema.name(i));
             }
             return Tuple.of(row, schema);
         }).collect(java.util.stream.Collectors.toList());

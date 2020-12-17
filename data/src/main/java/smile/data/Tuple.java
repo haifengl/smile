@@ -622,7 +622,7 @@ public interface Tuple extends Serializable {
      * @return the field index.
      */
     default int indexOf(String field) {
-        return schema().fieldIndex(field);
+        return schema().indexOf(field);
     }
 
     /**
