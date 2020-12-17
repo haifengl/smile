@@ -85,6 +85,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the initial state probabilities.
+     * @return the initial state probabilities.
      */
     public double[] getInitialStateProbabilities() {
         return pi;
@@ -92,6 +93,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the state transition probabilities.
+     * @return the state transition probabilities.
      */
     public Matrix getStateTransitionProbabilities() {
         return a;
@@ -99,6 +101,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the symbol emission probabilities.
+     * @return the symbol emission probabilities.
      */
     public Matrix getSymbolEmissionProbabilities() {
         return b;
@@ -360,6 +363,7 @@ public class HMM implements Serializable {
      * @param labels the state labels of observations, of which states take
      *               values in [0, p), where p is the number of hidden states.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @param <T> the data type of observations.
      * @return the model.
      */
     public static <T> HMM fit(T[][] observations, int[][] labels, ToIntFunction<T> ordinal) {
@@ -380,6 +384,7 @@ public class HMM implements Serializable {
      * @param observations the training observation sequences.
      * @param iterations the number of iterations to execute.
      * @param ordinal a lambda returning the ordinal numbers of symbols.
+     * @param <T> the data type of observations.
      */
     public <T> void update(T[][] observations, int iterations, ToIntFunction<T> ordinal) {
         update(

@@ -142,6 +142,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
      * @param formula a symbolic description of the model to be fitted.
      * @param trees forest of regression trees.
      * @param b the intercept
+     * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance) {
@@ -157,6 +158,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -195,6 +197,7 @@ public class GradientTreeBoost implements Regression<Tuple>, DataFrameRegression
      *                 not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
      * @param subsample the sampling fraction for stochastic tree boosting.
+     * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Loss loss, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage, double subsample) {
         if (ntrees < 1) {

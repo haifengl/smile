@@ -138,6 +138,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -176,6 +177,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      *                 not split, nodeSize = 5 generally gives good results.
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
      *                  replacement. {@code < 1.0} means sampling without replacement.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample) {
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample, null);
@@ -197,6 +199,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * @param subsample the sampling rate for training tree. 1.0 means sampling with
      *                  replacement. {@code < 1.0} means sampling without replacement.
      * @param seeds optional RNG seeds for each regression tree.
+     * @return the model.
      */
     public static RandomForest fit(Formula formula, DataFrame data, int ntrees, int mtry, int maxDepth, int maxNodes, int nodeSize, double subsample, LongStream seeds) {
         if (ntrees < 1) {
@@ -372,6 +375,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
     /**
      * Returns the base models.
+     * @return the base models.
      */
     public Model[] models() {
         return models;
@@ -389,6 +393,7 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
      * prediction.
      * 
      * @param ntrees the new (smaller) size of tree model set.
+     * @return the trimmed model.
      */
     public RandomForest trim(int ntrees) {
         if (ntrees > models.length) {
@@ -405,6 +410,9 @@ public class RandomForest implements Regression<Tuple>, DataFrameRegression, Tre
 
     /**
      * Merges two random forests.
+     *
+     * @param other the model to merge with.
+     * @return the merged model.
      */
     public RandomForest merge(RandomForest other) {
         if (!formula.equals(other.formula)) {
