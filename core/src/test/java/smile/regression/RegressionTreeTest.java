@@ -69,7 +69,7 @@ public class RegressionTreeTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data, (formula, x) -> RegressionTree.fit(formula, x, 100, 20, 2));
@@ -93,7 +93,7 @@ public class RegressionTreeTest {
         double[] importance = model.importance();
         System.out.println("----- importance -----");
         for (int i = 0; i < importance.length; i++) {
-            System.out.format("%-15s %.4f%n", model.schema().fieldName(i), importance[i]);
+            System.out.format("%-15s %.4f%n", model.schema().name(i), importance[i]);
         }
 
         RegressionValidations<RegressionTree> result = CrossValidation.regression(10, formula, data, RegressionTree::fit);
