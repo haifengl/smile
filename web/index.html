@@ -469,9 +469,10 @@ permalink: "{{ page.filePathStem }}.html"
           <pre class="prettyprint lang-scala"><code>
 val iris = read.arff("iris.arff")
 
-val rf = randomForest("class" ~, iris)
+val model = randomForest("class" ~, iris)
 
-println(s"OOB error = ${rf.error}")
+println(model.metrics)
+
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
@@ -479,9 +480,11 @@ println(s"OOB error = ${rf.error}")
         <div class="tab-pane" id="java_1">
           <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-DataFrame iris = Read.arff("iris.arff");
-RandomForest rf = RandomForest.fit(Formula.lhs("class"), iris);
-System.out.format("OOB error = %.2f%n", rf.error());
+var iris = Read.arff("iris.arff");
+
+var model = RandomForest.fit(Formula.lhs("class"), iris);
+
+println(model.metrics());
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
@@ -490,9 +493,10 @@ System.out.format("OOB error = %.2f%n", rf.error());
           <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
 val iris = read.arff("iris.arff")
-val rf = randomForest(Formula.lhs("class"), iris)
-println("OOB error = ${rf.error()}")
 
+val model = randomForest(Formula.lhs("class"), iris)
+
+println(model.metrics())
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
@@ -504,7 +508,8 @@ println("OOB error = ${rf.error()}")
             "data/weka/iris.arff")
       model (random-forest
              (Formula/lhs "class") iris)]
-  (.error model))
+  (.metrics model))
+
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
@@ -512,9 +517,11 @@ println("OOB error = ${rf.error()}")
         <div class="tab-pane" id="groovy_1">
           <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-groovy"><code>
-var iris = arff("d:/tmp/iris.arff")
-var rf = RandomForest.fit(Formula.lhs("class"), iris)
-println "OOB error = ${rf.metrics()}"
+var iris = Read.arff("iris.arff")
+
+var model = RandomForest.fit(Formula.lhs("class"), iris)
+
+println model.metrics()
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
