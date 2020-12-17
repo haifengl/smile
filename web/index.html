@@ -461,6 +461,7 @@ permalink: "{{ page.filePathStem }}.html"
         <li><a href="#java_1" data-toggle="tab">Java</a></li>
         <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
         <li><a href="#clojure_1" data-toggle="tab">Clojure</a></li>
+        <li><a href="#groovy_1" data-toggle="tab">Groovy</a></li>
       </ul>
       <div class="tab-content">
         <div class="tab-pane active" id="scala_1">
@@ -504,6 +505,16 @@ println("OOB error = ${rf.error()}")
       model (random-forest
              (Formula/lhs "class") iris)]
   (.error model))
+          </code></pre>
+          </div>
+          <div class="caption">Random Forest</div>
+        </div>
+        <div class="tab-pane" id="groovy_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-groovy"><code>
+var iris = arff("d:/tmp/iris.arff")
+var rf = RandomForest.fit(Formula.lhs("class"), iris)
+println "OOB error = ${rf.metrics()}"
           </code></pre>
           </div>
           <div class="caption">Random Forest</div>
