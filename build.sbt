@@ -111,7 +111,7 @@ lazy val root = project.in(file("."))
   .settings(commonSettings: _*)
   .enablePlugins(JavaUnidocPlugin)
   .settings(
-    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell)
+    unidocProjectFilter in (JavaUnidoc, unidoc) := inAnyProject -- inProjects(json, demo, scala, spark, shell, plot)
   )
   .aggregate(core, data, io, math, mkl, nlp, plot, json, demo, scala, spark, shell)
 
