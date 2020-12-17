@@ -66,6 +66,7 @@ public class FloatHeapSelect {
 
     /**
      * Assimilate a new value from the stream.
+     * @param datum a new value.
      */
     public void add(float datum) {
         sorted = false;
@@ -85,6 +86,7 @@ public class FloatHeapSelect {
 
     /**
      * Returns the k-<i>th</i> smallest value seen so far.
+     * @return the k-<i>th</i> smallest value seen so far.
      */
     public float peek() {
         return heap[0];
@@ -94,6 +96,9 @@ public class FloatHeapSelect {
      * Returns the i-<i>th</i> smallest value seen so far. i = 0 returns the smallest
      * value seen, i = 1 the second largest, ..., i = k-1 the last position
      * tracked. Also, i must be less than the number of previous assimilated.
+     *
+     * @param i the ordinal index of smallest values.
+     * @return the i-<i>th</i> smallest value.
      */
     public float get(int i) {
         if (i > Math.min(k, n) - 1) {
