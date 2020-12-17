@@ -53,7 +53,6 @@ import smile.feature.*;
 import smile.clustering.*;
 import smile.vq.*;
 import smile.manifold.*;
-import smile.mds.*;
 import smile.sequence.*;
 import smile.projection.*;
 import smile.nlp.*;
