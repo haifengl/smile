@@ -105,6 +105,7 @@ public class LancasterStemmer implements Stemmer {
     /**
      * Constructor with customized rules. By default, the stemmer will not strip prefix from words.
      * @param customizedRules an input stream to read customized rules.
+     * @throws IOException when fails to read the rule file.
      */
     public LancasterStemmer(InputStream customizedRules) throws IOException {
         this(customizedRules, false);
@@ -116,6 +117,7 @@ public class LancasterStemmer implements Stemmer {
      * @param customizedRules an input stream to read customized rules.
      * @param stripPrefix true if the stemmer will strip prefix such as kilo,
      * micro, milli, intra, ultra, mega, nano, pico, pseudo.
+     * @throws IOException when fails to read the rule file.
      */
     public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) throws IOException {
         this.stripPrefix = stripPrefix;

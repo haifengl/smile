@@ -51,6 +51,8 @@ public class Erf {
 
     /**
      * The Gauss error function.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erf(double x) {
         if (x >= 0.) {
@@ -62,6 +64,8 @@ public class Erf {
 
     /**
      * The complementary error function.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erfc(double x) {
         if (x >= 0.) {
@@ -74,6 +78,8 @@ public class Erf {
     /**
      * The complementary error function with fractional error everywhere less
      * than 1.2 &times; 10<sup>-7</sup>. This concise routine is faster than erfc.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erfcc(double x) {
         double z = abs(x);
@@ -102,6 +108,8 @@ public class Erf {
 
     /**
      * The inverse complementary error function.
+     * @param p a real number.
+     * @return the function value.
      */
     public static double inverfc(double p) {
         double x, err, t, pp;
@@ -123,6 +131,8 @@ public class Erf {
 
     /**
      * The inverse error function.
+     * @param p a real number.
+     * @return the function value.
      */
     public static double inverf(double p) {
         return inverfc(1. - p);
