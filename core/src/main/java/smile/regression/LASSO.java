@@ -76,6 +76,7 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -108,6 +109,7 @@ public class LASSO {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
         return fit(formula, data, lambda, 1E-4, 1000);
@@ -121,6 +123,7 @@ public class LASSO {
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
         formula = formula.expand(data.schema());

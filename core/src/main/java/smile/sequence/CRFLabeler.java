@@ -50,6 +50,8 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param features the feature function.
+     * @param <T> the data type of observations.
      * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features) {
@@ -60,7 +62,9 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
+     * @param features the feature function.
      * @param prop the hyper-parameters.
+     * @param <T> the data type of observations.
      * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, Properties prop) {
@@ -85,6 +89,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * @param nodeSize  the number of instances in a node below which the tree will
      *                  not split, setting nodeSize = 5 generally gives good results.
      * @param shrinkage the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+     * @param <T> the data type of observations.
      * @return the model.
      */
     public static <T> CRFLabeler<T> fit(T[][] sequences, int[][] labels, Function<T, Tuple> features, int ntrees, int maxDepth, int maxNodes, int nodeSize, double shrinkage) {
@@ -117,7 +122,7 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * Returns the most likely label sequence given the feature sequence by the
      * forward-backward algorithm.
      *
-     * @param o an observation sequence.
+     * @param o the observation sequence.
      * @return the most likely state sequence.
      */
     @Override
@@ -133,6 +138,9 @@ public class CRFLabeler<T> implements SequenceLabeler<T> {
      * labels a sequence by individual prediction on each position.
      * This usually produces better accuracy although the results may not
      * be coherent.
+     *
+     * @param o the observation sequence.
+     * @return the sequence labels.
      */
     public int[] viterbi(T[] o) {
         return model.viterbi(translate(o));

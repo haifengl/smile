@@ -76,6 +76,7 @@ public class ElasticNet {
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda1 the shrinkage/regularization parameter for L1
      * @param lambda2 the shrinkage/regularization parameter for L2
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2) {
         return fit(formula, data, lambda1, lambda2, 1E-4, 1000);
@@ -97,6 +98,7 @@ public class ElasticNet {
      * @param lambda2 the shrinkage/regularization parameter for L2
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
     public static LinearModel fit(Formula formula, DataFrame data, double lambda1, double lambda2, double tol, int maxIter) {
         if (lambda1 <= 0) {

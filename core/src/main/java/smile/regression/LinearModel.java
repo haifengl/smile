@@ -210,6 +210,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * error of coefficients, the third column is the t-score of the hypothesis
      * test if the coefficient is zero, the fourth column is the p-values of
      * test. The last row is of intercept.
+     * @return the t-test of the coefficients.
      */
     public double[][] ttest() {
         return ttest;
@@ -217,6 +218,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the linear coefficients (without intercept).
+     * @return the linear coefficients.
      */
     public double[] coefficients() {
         return w;
@@ -224,13 +226,15 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the intercept.
+     * @return the intercept.
      */
     public double intercept() {
         return b;
     }
 
     /**
-     * Returns the residuals, that is response minus fitted values.
+     * Returns the residuals, which is response minus fitted values.
+     * @return the residuals
      */
     public double[] residuals() {
         return residuals;
@@ -238,6 +242,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the fitted values.
+     * @return the fitted values.
      */
     public double[] fittedValues() {
         return fittedValues;
@@ -245,6 +250,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the residual sum of squares.
+     * @return the residual sum of squares.
      */
     public double RSS() {
         return RSS;
@@ -252,6 +258,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the residual standard error.
+     * @return the residual standard error.
      */
     public double error() {
         return error;
@@ -259,6 +266,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the degree-of-freedom of residual standard error.
+     * @return the degree-of-freedom of residual standard error.
      */
     public int df() {
         return df;
@@ -276,6 +284,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * one possible use of R<sup>2</sup>, where one might try to include more
      * variables in the model until "there is no more improvement". This leads
      * to the alternative approach of looking at the adjusted R<sup>2</sup>.
+     *
+     * @return R<sup>2</sup> statistic.
      */
     public double RSquared() {
         return RSquared;
@@ -285,6 +295,8 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
      * has almost same explanation as R<sup>2</sup> but it penalizes the
      * statistic as extra variables are included in the model.
+     *
+     * @return adjusted R<sup>2</sup> statistic.
      */
     public double adjustedRSquared() {
         return adjustedRSquared;
@@ -292,6 +304,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the F-statistic of goodness-of-fit.
+     * @return the F-statistic of goodness-of-fit.
      */
     public double ftest() {
         return F;
@@ -299,6 +312,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     /**
      * Returns the p-value of goodness-of-fit test.
+     * @return the p-value of goodness-of-fit test.
      */
     public double pvalue() {
         return pvalue;
@@ -333,13 +347,19 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         }
     }
 
-    /** Online update the regression model with a new training instance. */
+    /**
+     * Online update the regression model with a new training instance.
+     * @param data the training data.
+     */
     public void update(Tuple data) {
         boolean bias = b == 0.0;
         update(formula.x(data).toArray(bias, CategoricalEncoder.DUMMY), formula.y(data));
     }
 
-    /** Online update the regression model with a new data frame. */
+    /**
+     * Online update the regression model with a new data frame.
+     * @param data the training data.
+     */
     public void update(DataFrame data) {
         // Don't use data.stream, which may run in parallel.
         // However, update is not multi-thread safe.

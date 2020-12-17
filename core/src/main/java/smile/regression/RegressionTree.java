@@ -277,6 +277,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * Learns a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data) {
         return fit(formula, data, new Properties());
@@ -308,6 +309,7 @@ public class RegressionTree extends CART implements Regression<Tuple>, DataFrame
      * @param maxDepth the maximum depth of the tree.
      * @param maxNodes the maximum number of leaf nodes in the tree.
      * @param nodeSize the minimum size of leaf nodes.
+     * @return the model.
      */
     public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());

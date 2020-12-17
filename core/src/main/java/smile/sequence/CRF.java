@@ -107,6 +107,9 @@ public class CRF implements Serializable {
      * labels a sequence by individual prediction on each position.
      * This usually produces better accuracy although the results may not
      * be coherent.
+     *
+     * @param x the sequence.
+     * @return the sequence labels.
      */
     public int[] viterbi(Tuple[] x) {
         int n = x.length;
