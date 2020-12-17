@@ -45,9 +45,10 @@ package smile.sort;
 public interface ShellSort {
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(int[] a) {
-        int n = a.length;
+    static void sort(int[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -58,25 +59,26 @@ public interface ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                int v = a[i];
+                int v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(float[] a) {
-        int n = a.length;
+    static void sort(float[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -87,25 +89,26 @@ public interface ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                float v = a[i];
+                float v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    static void sort(double[] a) {
-        int n = a.length;
+    static void sort(double[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -116,25 +119,27 @@ public interface ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                double v = a[i];
+                double v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending order.
+     * @param x the array.
+     * @param <T> the data type of array elements.
      */
-    static <T extends Comparable<? super T>> void sort(T[] a) {
-        int n = a.length;
+    static <T extends Comparable<? super T>> void sort(T[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -145,16 +150,16 @@ public interface ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                T v = a[i];
+                T v = x[i];
                 int j = i;
-                while (a[j - inc].compareTo(v) > 0) {
-                    a[j] = a[j - inc];
+                while (x[j - inc].compareTo(v) > 0) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }

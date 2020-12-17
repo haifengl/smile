@@ -54,7 +54,7 @@ import java.util.Comparator;
  * @author Haifeng Li
  */
 public class QuickSort {
-    /** Utility classes should not have public constructors. */
+    /** Private constructor to prevent instance creation. */
     private QuickSort() {
 
     }
@@ -64,31 +64,37 @@ public class QuickSort {
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      * @return the original index of elements after sorting in range [0, n).
      */
-    public static int[] sort(int[] arr) {
-        int[] order = new int[arr.length];
+    public static int[] sort(int[] x) {
+        int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        sort(arr, order);
+        sort(x, order);
         return order;
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(int[] arr, int[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(int[] x, int[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(int[] arr, int[] brr, int n) {
+    public static void sort(int[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -98,17 +104,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -117,41 +123,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -172,19 +178,24 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(int[] arr, double[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(int[] x, double[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(int[] arr, double[] brr, int n) {
+    public static void sort(int[] x, double[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -195,17 +206,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -214,41 +225,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -269,19 +280,24 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(int[] arr, Object[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(int[] x, Object[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(int[] arr, Object[] brr, int n) {
+    public static void sort(int[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -292,17 +308,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -311,41 +327,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -367,31 +383,37 @@ public class QuickSort {
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      * @return the original index of elements after sorting in range [0, n).
      */
-    public static int[] sort(float[] arr) {
-        int[] order = new int[arr.length];
+    public static int[] sort(float[] x) {
+        int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        sort(arr, order);
+        sort(x, order);
         return order;
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(float[] arr, int[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(float[] x, int[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(float[] arr, int[] brr, int n) {
+    public static void sort(float[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -403,17 +425,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -422,41 +444,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -477,19 +499,24 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(float[] arr, float[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(float[] x, float[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(float[] arr, float[] brr, int n) {
+    public static void sort(float[] x, float[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -500,17 +527,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -519,41 +546,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -574,19 +601,24 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(float[] arr, Object[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(float[] x, Object[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(float[] arr, Object[] brr, int n) {
+    public static void sort(float[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -598,17 +630,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -617,41 +649,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -674,30 +706,36 @@ public class QuickSort {
     /**
      * Sorts the specified array into ascending numerical order.
      * @return the original index of elements after sorting in range [0, n).
+     * @param x the array to sort.
      */
-    public static int[] sort(double[] arr) {
-        int[] order = new int[arr.length];
+    public static int[] sort(double[] x) {
+        int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        sort(arr, order);
+        sort(x, order);
         return order;
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(double[] arr, int[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(double[] x, int[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(double[] arr, int[] brr, int n) {
+    public static void sort(double[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -709,17 +747,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -728,41 +766,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -784,19 +822,24 @@ public class QuickSort {
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * recursive. Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(double[] arr, double[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(double[] x, double[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(double[] arr, double[] brr, int n) {
+    public static void sort(double[] x, double[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -807,17 +850,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -826,41 +869,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -881,19 +924,24 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
      */
-    public static void sort(double[] arr, Object[] brr) {
-        sort(arr, brr, arr.length);
+    public static void sort(double[] x, Object[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
      */
-    public static void sort(double[] arr, Object[] brr, int n) {
+    public static void sort(double[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -905,17 +953,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i] <= a) {
+                        if (x[i] <= a) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -924,41 +972,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l] > arr[ir]) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l] > x[ir]) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1] > arr[ir]) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1] > x[ir]) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l] > arr[l + 1]) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l] > x[l + 1]) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i] < a);
+                    } while (x[i] < a);
                     do {
                         j--;
-                    } while (arr[j] > a);
+                    } while (x[j] > a);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -981,30 +1029,39 @@ public class QuickSort {
     /**
      * Sorts the specified array into ascending order.
      * @return the original index of elements after sorting in range [0, n).
+     * @param x the array to sort.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  int[] sort(T[] arr) {
-        int[] order = new int[arr.length];
+    public static <T extends Comparable<? super T>>  int[] sort(T[] x) {
+        int[] order = new int[x.length];
         for (int i = 0; i < order.length; i++) {
             order[i] = i;
         }
-        sort(arr, order);
+        sort(x, order);
         return order;
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] arr, int[] brr) {
-        sort(arr, brr, arr.length);
+    public static <T extends Comparable<? super T>>  void sort(T[] x, int[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] arr, int[] brr, int n) {
+    public static <T extends Comparable<? super T>>  void sort(T[] x, int[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1016,17 +1073,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i].compareTo(a) <= 0) {
+                        if (x[i].compareTo(a) <= 0) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -1035,41 +1092,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l].compareTo(arr[ir]) > 0) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l].compareTo(x[ir]) > 0) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1].compareTo(arr[ir]) > 0) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1].compareTo(x[ir]) > 0) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l].compareTo(arr[l + 1]) > 0) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l].compareTo(x[l + 1]) > 0) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i].compareTo(a) < 0);
+                    } while (x[i].compareTo(a) < 0);
                     do {
                         j--;
-                    } while (arr[j].compareTo(a) > 0);
+                    } while (x[j].compareTo(a) > 0);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -1091,10 +1148,15 @@ public class QuickSort {
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
+     * @param comparator the comparator.
+     * @param <T> the data type of array elements.
      */
-    public static <T>  void sort(T[] arr, int[] brr, int n, Comparator<T> comparator) {
+    public static <T>  void sort(T[] x, int[] y, int n, Comparator<T> comparator) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1106,17 +1168,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (comparator.compare(arr[i], a) <= 0) {
+                        if (comparator.compare(x[i], a) <= 0) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -1125,41 +1187,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (comparator.compare(arr[l], arr[ir]) > 0) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (comparator.compare(x[l], x[ir]) > 0) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (comparator.compare(arr[l + 1], arr[ir]) > 0) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (comparator.compare(x[l + 1], x[ir]) > 0) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (comparator.compare(arr[l], arr[l + 1]) > 0) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (comparator.compare(x[l], x[l + 1]) > 0) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (comparator.compare(arr[i], a) < 0);
+                    } while (comparator.compare(x[i], a) < 0);
                     do {
                         j--;
-                    } while (comparator.compare(arr[j], a) > 0);
+                    } while (comparator.compare(x[j], a) > 0);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
@@ -1180,19 +1242,26 @@ public class QuickSort {
     }
 
     /**
-     * Besides sorting the array arr, the array brr will be also
-     * rearranged as the same order of arr.
+     * Besides sorting the array x, the array y will be also
+     * rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] arr, Object[] brr) {
-        sort(arr, brr, arr.length);
+    public static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y) {
+        sort(x, y, x.length);
     }
 
     /**
      * This is an efficient implementation Quick Sort algorithm without
-     * recursive. Besides sorting the first n elements of array arr, the first
-     * n elements of array brr will be also rearranged as the same order of arr.
+     * recursive. Besides sorting the first n elements of array x, the first
+     * n elements of array y will be also rearranged as the same order of x.
+     * @param x the array to sort.
+     * @param y the associate array.
+     * @param n the first n elements to sort.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>>  void sort(T[] arr, Object[] brr, int n) {
+    public static <T extends Comparable<? super T>>  void sort(T[] x, Object[] y, int n) {
         int jstack = -1;
         int l = 0;
         int[] istack = new int[NSTACK];
@@ -1204,17 +1273,17 @@ public class QuickSort {
         for (;;) {
             if (ir - l < M) {
                 for (j = l + 1; j <= ir; j++) {
-                    a = arr[j];
-                    b = brr[j];
+                    a = x[j];
+                    b = y[j];
                     for (i = j - 1; i >= l; i--) {
-                        if (arr[i].compareTo(a) <= 0) {
+                        if (x[i].compareTo(a) <= 0) {
                             break;
                         }
-                        arr[i + 1] = arr[i];
-                        brr[i + 1] = brr[i];
+                        x[i + 1] = x[i];
+                        y[i + 1] = y[i];
                     }
-                    arr[i + 1] = a;
-                    brr[i + 1] = b;
+                    x[i + 1] = a;
+                    y[i + 1] = b;
                 }
                 if (jstack < 0) {
                     break;
@@ -1223,41 +1292,41 @@ public class QuickSort {
                 l = istack[jstack--];
             } else {
                 k = (l + ir) >> 1;
-                Sort.swap(arr, k, l + 1);
-                Sort.swap(brr, k, l + 1);
-                if (arr[l].compareTo(arr[ir]) > 0) {
-                    Sort.swap(arr, l, ir);
-                    Sort.swap(brr, l, ir);
+                Sort.swap(x, k, l + 1);
+                Sort.swap(y, k, l + 1);
+                if (x[l].compareTo(x[ir]) > 0) {
+                    Sort.swap(x, l, ir);
+                    Sort.swap(y, l, ir);
                 }
-                if (arr[l + 1].compareTo(arr[ir]) > 0) {
-                    Sort.swap(arr, l + 1, ir);
-                    Sort.swap(brr, l + 1, ir);
+                if (x[l + 1].compareTo(x[ir]) > 0) {
+                    Sort.swap(x, l + 1, ir);
+                    Sort.swap(y, l + 1, ir);
                 }
-                if (arr[l].compareTo(arr[l + 1]) > 0) {
-                    Sort.swap(arr, l, l + 1);
-                    Sort.swap(brr, l, l + 1);
+                if (x[l].compareTo(x[l + 1]) > 0) {
+                    Sort.swap(x, l, l + 1);
+                    Sort.swap(y, l, l + 1);
                 }
                 i = l + 1;
                 j = ir;
-                a = arr[l + 1];
-                b = brr[l + 1];
+                a = x[l + 1];
+                b = y[l + 1];
                 for (;;) {
                     do {
                         i++;
-                    } while (arr[i].compareTo(a) < 0);
+                    } while (x[i].compareTo(a) < 0);
                     do {
                         j--;
-                    } while (arr[j].compareTo(a) > 0);
+                    } while (x[j].compareTo(a) > 0);
                     if (j < i) {
                         break;
                     }
-                    Sort.swap(arr, i, j);
-                    Sort.swap(brr, i, j);
+                    Sort.swap(x, i, j);
+                    Sort.swap(y, i, j);
                 }
-                arr[l + 1] = arr[j];
-                arr[j] = a;
-                brr[l + 1] = brr[j];
-                brr[j] = b;
+                x[l + 1] = x[j];
+                x[j] = a;
+                y[l + 1] = y[j];
+                y[j] = b;
                 jstack += 2;
 
                 if (jstack >= NSTACK) {
