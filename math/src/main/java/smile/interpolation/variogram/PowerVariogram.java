@@ -42,8 +42,11 @@ import smile.math.MathEx;
  */
 public class PowerVariogram implements Variogram {
 
+    /** The parameter fitted by unweighted least squares on data points. */
     private final double alpha;
+    /** The fixed parameter {@code 1 <= beta < 2}. */
     private final double beta;
+    /** The nugget effect parameter. */
     private final double nugget;
 
     /**
