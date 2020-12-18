@@ -164,7 +164,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
         return "t-SNE";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         TSNEDemo demo = new TSNEDemo();
         JFrame f = new JFrame("t-SNE");
         f.setSize(new Dimension(1000, 1000));

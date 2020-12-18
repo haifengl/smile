@@ -86,7 +86,7 @@ public class KNNDemo extends ClassificationDemo {
         return "K Nearest Neighbors";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new KNNDemo();
         JFrame f = new JFrame("K Nearest Neighbors");
         f.setSize(new Dimension(1000, 1000));
