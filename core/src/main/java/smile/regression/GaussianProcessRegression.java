@@ -308,8 +308,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize", "true"));
         double tol = Double.parseDouble(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
         int maxIter = Integer.parseInt(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
         return fit(x, y, kernel, noise, normalize, tol, maxIter);
@@ -409,8 +409,8 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> fit(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize", "true"));
         return fit(x, y, t, kernel, noise, normalize);
     }
 
@@ -483,18 +483,15 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param t the inducing input, which are pre-selected or inducing samples
-     *          acting as active set of regressors. In simple case, these can
-     *          be chosen randomly from the training set or as the centers of
-     *          k-means clustering.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
      * @param prop the hyper-parameters.
      * @param <T> the data type of samples.
      * @return the model.
      */
     public static <T> GaussianProcessRegression<T> nystrom(T[] x, double[] y, T[] t, MercerKernel<T> kernel, Properties prop) {
-        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise"));
-        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize"));
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize", "true"));
         return nystrom(x, y, t, kernel, noise, normalize);
     }
 
@@ -502,10 +499,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param t the inducing input, which are pre-selected or inducing samples
-     *          acting as active set of regressors. In simple case, these can
-     *          be chosen randomly from the training set or as the centers of
-     *          k-means clustering.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param <T> the data type of samples.
@@ -519,8 +513,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits an approximate Gaussian process model with Nystrom approximation of kernel matrix.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param t the inducing input for Nystrom approximation. Commonly, these
-     * can be chosen as the centers of k-means clustering.
+     * @param t the inducing input, which are pre-selected for Nystrom approximation.
      * @param kernel the Mercer kernel.
      * @param noise the noise variance, which also works as a regularization parameter.
      * @param normalize the option to normalize the response variable.
@@ -582,7 +575,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         return new GaussianProcessRegression<>(kernel, x, w, noise, mean, sd);
     }
 
-    /** Log marginal likelihhod as optimization objective function. */
+    /** Log marginal likelihood as optimization objective function. */
     private static class LogMarginalLikelihood<T> implements DifferentiableMultivariateFunction {
         final T[] x;
         final double[] y;
