@@ -169,7 +169,7 @@ public class SammonMappingDemo extends JPanel implements Runnable, ActionListene
         return "Sammon's Mapping";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         SammonMappingDemo demo = new SammonMappingDemo();
         JFrame f = new JFrame("Sammon's Mapping");
         f.setSize(new Dimension(1000, 1000));

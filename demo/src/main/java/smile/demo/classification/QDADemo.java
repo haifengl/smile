@@ -67,7 +67,7 @@ public class QDADemo extends ClassificationDemo {
         return "Quadratic Disiminant Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new QDADemo();
         JFrame f = new JFrame("Quadratic Disiminant Analysis");
         f.setSize(new Dimension(1000, 1000));

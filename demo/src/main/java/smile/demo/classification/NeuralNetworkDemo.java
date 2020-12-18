@@ -124,7 +124,7 @@ public class NeuralNetworkDemo extends ClassificationDemo {
         return "Neural Network";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new NeuralNetworkDemo();
         JFrame f = new JFrame("Neural Network");
         f.setSize(new Dimension(1000, 1000));

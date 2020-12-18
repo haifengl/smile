@@ -129,7 +129,7 @@ public class BIRCHDemo extends VQDemo {
         return "BIRCH";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         BIRCHDemo demo = new BIRCHDemo();
         JFrame f = new JFrame("BIRCH");
         f.setSize(new Dimension(1000, 1000));

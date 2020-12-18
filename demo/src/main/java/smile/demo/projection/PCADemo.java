@@ -84,7 +84,7 @@ public class PCADemo extends ProjectionDemo {
         return "Principal Component Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         PCADemo demo = new PCADemo();
         JFrame f = new JFrame("Principal Component Analysis");
         f.setSize(new Dimension(1000, 1000));
