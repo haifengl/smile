@@ -75,7 +75,7 @@ public class GMeansDemo extends ClusteringDemo {
         return "G-Means";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClusteringDemo demo = new GMeansDemo();
         JFrame f = new JFrame("G-Means");
         f.setSize(new Dimension(1000, 1000));
