@@ -406,7 +406,7 @@ public class HMMPOSTagger implements POSTagger, Serializable {
     
     /**
      * Train the default model on WSJ and BROWN datasets.
-     * @param argv the command line arguments.
+     * @param args the command line arguments.
      */
     public static void main(String[] args) {
         List<String[]> sentences = new ArrayList<>();
