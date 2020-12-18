@@ -70,8 +70,11 @@ public class WeibullDistribution extends AbstractDistribution {
     public  final double k;
     /** The scale parameter. */
     public  final double lambda;
+    /** The mean value. */
     private final double mean;
+    /** The variance. */
     private final double variance;
+    /** Shannon entropy. */
     private final double entropy;
 
     /**

@@ -40,9 +40,13 @@ public class LogNormalDistribution extends AbstractDistribution {
     public final double mu;
     /** The standard deviation of normal distribution. */
     public final double sigma;
-    private final double mean;
-    private final double var;
+    /** The mean. */
+    public final double mean;
+    /** The variance. */
+    private final double variance;
+    /** Shannon entropy. */
     private final double entropy;
+    /** The corresponding Gaussian distribution. */
     private GaussianDistribution gaussian;
 
     /**
@@ -58,7 +62,7 @@ public class LogNormalDistribution extends AbstractDistribution {
         this.sigma = sigma;
 
         mean = Math.exp(mu + sigma * sigma / 2);
-        var = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
+        variance = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
         entropy = 0.5 + 0.5 * Math.log(2 * Math.PI * sigma * sigma) + mu;
     }
 
@@ -94,7 +98,7 @@ public class LogNormalDistribution extends AbstractDistribution {
 
     @Override
     public double variance() {
-        return var;
+        return variance;
     }
 
     @Override

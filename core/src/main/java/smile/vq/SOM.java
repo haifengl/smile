@@ -141,13 +141,13 @@ public class SOM implements VectorQuantizer {
      */
     private final Neighborhood theta;
     /**
+     * The threshold to update neuron if alpha * theta > eps.
+     */
+    private final double tol = 1E-5;
+    /**
      * The current iteration.
      */
     private int t = 0;
-    /*
-     * The threshold to update neuron if alpha * theta > eps.
-     */
-    private final double eps = 1E-5;
 
     /**
      * Constructor.
@@ -228,7 +228,7 @@ public class SOM implements VectorQuantizer {
         double alpha = this.alpha.apply(t);
         Arrays.stream(neurons).parallel().forEach(neuron -> {
             double delta = alpha * theta.of(neuron.i - i, neuron.j - j, t);
-            if (delta > eps) {
+            if (delta > tol) {
                 double[] w = neuron.w;
                 for (int k = 0; k < d; k++) {
                     w[k] += delta * (x[k] - w[k]);

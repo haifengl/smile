@@ -39,8 +39,11 @@ public class TDistribution extends AbstractDistribution {
 
     /** The degree of freedom. */
     public  final int nu;
+    /** Shannon entropy. */
     private final double entropy;
+    /** The constant factor in PDF. */
     private final double np;
+    /** The constant factor in PDF. */
     private final double fac;
 
     /**
