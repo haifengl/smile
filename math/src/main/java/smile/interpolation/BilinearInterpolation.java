@@ -28,8 +28,18 @@ package smile.interpolation;
  */
 public class BilinearInterpolation implements Interpolation2D {
 
+    /**
+     * The function values at xx.
+     */
     private final double[][] y;
-    private final LinearInterpolation x1terp, x2terp;
+    /**
+     * To locate the control point in the first dimension.
+     */
+    private final LinearInterpolation x1terp;
+    /**
+     * To locate the control point in the second dimension.
+     */
+    private final LinearInterpolation x2terp;
 
     /**
      * Constructor.

@@ -57,9 +57,13 @@ public class GammaDistribution extends AbstractDistribution implements Exponenti
     public final double theta;
     /** The shape parameter. */
     public final double k;
+    /** log(theta) */
     private final double logTheta;
+    /** theta * gamma(k) */
     private final double thetaGammaK;
+    /** log(theta * gamma(k)) */
     private final double logGammaK;
+    /** Shannon entropy. */
     private final double entropy;
 
     /**
