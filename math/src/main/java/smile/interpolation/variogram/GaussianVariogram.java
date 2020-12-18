@@ -41,8 +41,11 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public class GaussianVariogram implements Variogram {
+    /** The range parameter. */
     private final double a;
+    /** The sill parameter. */
     private final double b;
+    /** The nugget effect parameter. */
     private final double c;
 
     /**
