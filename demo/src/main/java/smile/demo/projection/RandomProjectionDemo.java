@@ -135,7 +135,7 @@ public class RandomProjectionDemo extends ProjectionDemo {
         return "Random Projection";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         RandomProjectionDemo demo = new RandomProjectionDemo();
         JFrame f = new JFrame("Random Projection");
         f.setSize(new Dimension(1000, 1000));

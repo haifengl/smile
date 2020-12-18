@@ -69,7 +69,7 @@ public class LLEDemo extends ManifoldDemo {
         return "Locally Linear Embedding";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         LLEDemo demo = new LLEDemo();
         JFrame f = new JFrame("Locally Linear Embedding");
         f.setSize(new Dimension(1000, 1000));

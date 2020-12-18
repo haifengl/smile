@@ -50,7 +50,7 @@ public class KMeansDemo extends ClusteringDemo {
         return "K-Means";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClusteringDemo demo = new KMeansDemo();
         JFrame f = new JFrame("K-Means");
         f.setSize(new Dimension(1000, 1000));
