@@ -17,6 +17,7 @@
 
 package smile
 
+import java.time.{Duration, LocalDateTime}
 import scala.language.implicitConversions
 import com.typesafe.scalalogging.LazyLogging
 
@@ -51,15 +52,23 @@ package object util extends LazyLogging {
       * @tparam A The output type of code block.
       * @return the code block expression result.
       */
+    def apply[A](f: => A): A = {
+      apply("duration")(f)
+    }
+
+    /** Executes a code block and measure the running time.
+      * @param message the log message.
+      * @param f a code block to measure the running time.
+      * @tparam A The output type of code block.
+      * @return the code block expression result.
+      */
     def apply[A](message: String)(f: => A): A = {
-      val s = System.nanoTime
+      val start = LocalDateTime.now
       val ret = f
       if (echo) {
-        val time = System.nanoTime - s
-        val micron = (time % 1000000000) / 1000
-        val seconds = time / 1000000000
-        val duration = String.format("%d:%02d:%02d.%d", seconds / 3600, (seconds % 3600) / 60, seconds % 60, micron)
-        logger.info("{} runtime: {}", message, duration)
+        val end = LocalDateTime.now
+        val duration = Duration.between(start, end)
+        logger.info("{}: {}", message, duration)
       }
       ret
     }
