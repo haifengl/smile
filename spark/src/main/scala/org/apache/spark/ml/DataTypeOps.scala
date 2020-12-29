@@ -97,8 +97,13 @@ object DataTypeOps {
     * @return Spark field
     */
   def toSparkField(field: StructField): org.apache.spark.sql.types.StructField = {
-    //TODO: add metadata for measure
-    org.apache.spark.sql.types.StructField(field.name, toSparkType(field.`type`))
+    val sparkType = toSparkType(field.`type`)
+    val nullable = !field.`type`.isPrimitive
+    val builder = new MetadataBuilder
+    if (field.measure != null) {
+      builder.putString("measure", field.measure.toString)
+    }
+    org.apache.spark.sql.types.StructField(field.name, sparkType, nullable, builder.build)
   }
 
   /**
