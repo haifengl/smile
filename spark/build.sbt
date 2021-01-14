@@ -1,7 +1,7 @@
 name := "smile-spark"
 
 // Spark doesn't support 2.13+
-scalaVersion := "2.12.12"
+scalaVersion := "2.12.13"
 
 libraryDependencies ++= {
   val sparkV = "3.0.1"
