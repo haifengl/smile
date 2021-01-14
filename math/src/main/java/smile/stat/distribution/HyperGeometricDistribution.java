@@ -43,7 +43,7 @@ public class HyperGeometricDistribution extends DiscreteDistribution {
     public final int m;
     /** The number of draws. */
     public final int n;
-
+    /** The random number generator. */
     private RandomNumberGenerator rng;
 
     /**

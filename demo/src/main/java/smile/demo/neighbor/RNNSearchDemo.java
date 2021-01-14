@@ -249,7 +249,7 @@ public class RNNSearchDemo extends JPanel implements Runnable, ActionListener {
         return "Range Search";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         RNNSearchDemo demo = new RNNSearchDemo();
         JFrame f = new JFrame("Range Search");
         f.setSize(new Dimension(1000, 1000));

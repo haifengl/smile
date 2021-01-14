@@ -37,8 +37,11 @@ import smile.math.MathEx;
  */
 public class ShepardInterpolation {
 
+    /** The control points. */
     private final double[][] x;
+    /** The function values. */
     private final double[] y;
+    /** The parameter in the radial basis function. */
     private final double p;
 
     /**

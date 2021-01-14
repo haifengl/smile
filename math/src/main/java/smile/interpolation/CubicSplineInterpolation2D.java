@@ -27,9 +27,22 @@ package smile.interpolation;
  * @author Haifeng Li
  */
 public class CubicSplineInterpolation2D implements Interpolation2D {
+    /**
+     * The number of control points on the first dimension.
+     */
     private final int m;
+    /**
+     * The function values at xx.
+     */
+    private final double[]yv;
+    /**
+     * The first dimension of tabulated control points.
+     */
     private final double[] x1;
-    private final double[] yv;
+    /**
+     * The interpolation along the second dimension
+     * on every control point of first dimension.
+     */
     private final CubicSplineInterpolation1D[] srp;
 
     /**

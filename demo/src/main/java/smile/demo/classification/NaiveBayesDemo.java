@@ -131,7 +131,7 @@ public class NaiveBayesDemo extends ClassificationDemo {
         return "Naive Bayes";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new NaiveBayesDemo();
         JFrame f = new JFrame(demo.toString());
         f.setSize(new Dimension(1000, 1000));

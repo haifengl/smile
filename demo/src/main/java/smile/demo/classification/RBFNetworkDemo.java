@@ -86,7 +86,7 @@ public class RBFNetworkDemo extends ClassificationDemo {
         return "RBF Networks";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new RBFNetworkDemo();
         JFrame f = new JFrame("RBF Networks");
         f.setSize(new Dimension(1000, 1000));

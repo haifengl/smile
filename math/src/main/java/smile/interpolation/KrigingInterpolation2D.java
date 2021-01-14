@@ -31,10 +31,15 @@ import smile.math.matrix.Matrix;
  */
 public class KrigingInterpolation2D implements Interpolation2D {
 
+    /** The first dimension of tabulated control points. */
     private final double[] x1;
+    /** The second dimension of tabulated control points. */
     private final double[] x2;
+    /** The linear weights. */
     private final double[] yvi;
+    /** The parameter of power variogram. */
     private final double alpha;
+    /** The parameter of power variogram. */
     private final double beta;
 
     /**

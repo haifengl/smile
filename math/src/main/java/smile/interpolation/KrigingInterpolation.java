@@ -76,8 +76,11 @@ import smile.interpolation.variogram.Variogram;
  */
 public class KrigingInterpolation {
 
+    /** The control points. */
     private final double[][] x;
+    /** The variogram. */
     private final Variogram variogram;
+    /** The linear weights. */
     private final double[] yvi;
 
     /**

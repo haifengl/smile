@@ -36,6 +36,9 @@ package smile.interpolation;
  */
 public class BicubicInterpolation implements Interpolation2D {
 
+    /**
+     * The coefficients to obtain the 16 quantities c[4][4].
+     */
     private static final int[][] wt = {
         { 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
         { 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0},
@@ -55,16 +58,42 @@ public class BicubicInterpolation implements Interpolation2D {
         { 4,-4, 4,-4, 2, 2,-2,-2, 2,-2,-2, 2, 1, 1, 1, 1}
     };
 
-    private final int m, n;
+    /**
+     * The number of control points on the first dimension.
+     */
+    private final int m;
+    /**
+     * The number of control points on the second dimension.
+     */
+    private final int n;
+    /**
+     * The function values at control points.
+     */
     private final double[][] yv;
+    /**
+     * The first dimension of tabulated control points.
+     */
     private final double[] x1;
+    /**
+     * The second dimension of tabulated control points.
+     */
     private final double[] x2;
+    /**
+     * To locate the control point in the first dimension.
+     */
     private final LinearInterpolation x1terp;
+    /**
+     * To locate the control point in the second dimension.
+     */
     private final LinearInterpolation x2terp;
 
+    /** The workspace of function values. */
     private final double[] y = new double[4];
+    /** The workspace of derivatives. */
     private final double[] y1 = new double[4];
+    /** The workspace of derivatives. */
     private final double[] y2 = new double[4];
+    /** The workspace of derivatives. */
     private final double[] y12 = new double[4];
 
     /**

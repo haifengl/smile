@@ -159,7 +159,7 @@ public class SIBDemo extends JPanel implements Runnable, ActionListener {
         return "Sequential Information Bottleneck";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         SIBDemo demo = new SIBDemo();
         JFrame f = new JFrame("SIB");
         f.setSize(new Dimension(1000, 1000));

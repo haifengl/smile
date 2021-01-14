@@ -35,9 +35,13 @@ package smile.interpolation;
  */
 public class ShepardInterpolation2D implements Interpolation2D {
 
+    /** The first dimension of tabulated control points. */
     private final double[] x1;
+    /** The second dimension of tabulated control points. */
     private final double[] x2;
+    /** The function values. */
     private final double[] y;
+    /** The parameter in the radial basis function. */
     private final double p;
 
     /**

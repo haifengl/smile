@@ -49,7 +49,9 @@ package smile.math.distance;
 public class DynamicTimeWarping<T> implements Distance<T[]> {
     private static final long serialVersionUID = 1L;
 
+    /** The distance function. */
     private final Distance<T> distance;
+    /** The window width of Sakoe-Chiba band. */
     private final double width;
 
     /**
