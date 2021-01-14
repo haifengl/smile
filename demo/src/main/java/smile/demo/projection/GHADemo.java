@@ -138,7 +138,7 @@ public class GHADemo extends ProjectionDemo {
         return "Generalized Hebbian Algorithm";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         GHADemo demo = new GHADemo();
         JFrame f = new JFrame("Generalized Hebbian Algorithm");
         f.setSize(new Dimension(1000, 1000));

@@ -65,7 +65,7 @@ public class FLDDemo extends ClassificationDemo {
         return "Fisher's Linear Disiminant";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         JFrame f = new JFrame("Fisher's Linear Disiminant");
         f.setSize(new Dimension(1000, 1000));
         f.setLocationRelativeTo(null);

@@ -67,7 +67,7 @@ public class LDADemo extends ClassificationDemo {
         return "Linear Disiminant Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new LDADemo();
         JFrame f = new JFrame("Linear Disiminant Analysis");
         f.setSize(new Dimension(1000, 1000));

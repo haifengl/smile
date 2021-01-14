@@ -89,7 +89,7 @@ public class LaplacianEigenmapDemo extends ManifoldDemo {
         return "Laplacian Eigenmap";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         LaplacianEigenmapDemo demo = new LaplacianEigenmapDemo();
         JFrame f = new JFrame("Laplacian Eigenmap");
         f.setSize(new Dimension(1000, 1000));

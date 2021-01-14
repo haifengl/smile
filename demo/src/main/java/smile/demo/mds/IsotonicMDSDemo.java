@@ -169,7 +169,7 @@ public class IsotonicMDSDemo extends JPanel implements Runnable, ActionListener 
         return "Kruskal's Nonmetric MDS";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         IsotonicMDSDemo demo = new IsotonicMDSDemo();
         JFrame f = new JFrame("Kruskal's Nonmetric MDS");
         f.setSize(new Dimension(1000, 1000));
