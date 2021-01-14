@@ -76,7 +76,7 @@ public class XMeansDemo extends ClusteringDemo {
         return "X-Means";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClusteringDemo demo = new XMeansDemo();
         JFrame f = new JFrame("X-Means");
         f.setSize(new Dimension(1000, 1000));

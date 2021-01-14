@@ -149,7 +149,7 @@ public class KPCADemo extends ProjectionDemo {
         return "Kernel Principal Component Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         KPCADemo demo = new KPCADemo();
         JFrame f = new JFrame("Kernel Principal Component Analysis");
         f.setSize(new Dimension(1000, 1000));

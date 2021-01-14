@@ -6,7 +6,7 @@ lazy val commonSettings = Seq(
   // skip javadoc and scaladoc for publishLocal
   publishArtifact in (Compile, packageDoc) := false,
   // always set scala version including Java only modules
-  scalaVersion := "2.12.12",
+  scalaVersion := "2.12.13",
 
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",

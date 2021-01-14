@@ -1492,7 +1492,7 @@ public class NeuralGasData {
         }
     }
 
-    public static void main(String[] argv) {
+    public static void main(String[] args) {
         String[] files = {
             "Rectangle.txt", "Circle.txt", "Ring.txt", "Complex1.txt",
             "Complex2.txt", "Complex3.txt", "HiLoDensity.txt", "Discrete.txt",

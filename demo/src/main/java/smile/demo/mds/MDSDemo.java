@@ -169,7 +169,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         return "Classical Multi-Dimensional Scaling";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         MDSDemo demo = new MDSDemo();
         JFrame f = new JFrame("Classical Multi-Dimensional Scaling");
         f.setSize(new Dimension(1000, 1000));

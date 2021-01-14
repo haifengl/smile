@@ -41,11 +41,17 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
     /** True if the covariance matrix is diagonal. */
     public final boolean diagonal;
 
+    /** The dimension. */
     private int dim;
+    /** The inverse of covariance matrix. */
     private Matrix sigmaInv;
+    /** The Cholesky decomposition of covariance matrix. */
     private Matrix sigmaL;
+    /** The determinant of covariance matrix. */
     private double sigmaDet;
+    /** The constant factor in PDF. */
     private double pdfConstant;
+    /** The number of parameters. */
     private final int length;
 
     /**

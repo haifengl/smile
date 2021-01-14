@@ -36,6 +36,7 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
 
     /** The probability of success. */
     public  final double p;
+    /** Shannon entropy. */
     private final double entropy;
     /**
      * The exponential distribution to generate Geometric distributed

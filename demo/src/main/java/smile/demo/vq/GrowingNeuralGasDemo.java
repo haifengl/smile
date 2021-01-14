@@ -88,7 +88,7 @@ public class GrowingNeuralGasDemo extends VQDemo {
         return "Growing Neural Gas";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         GrowingNeuralGasDemo demo = new GrowingNeuralGasDemo();
         JFrame f = new JFrame("Growing Neural Gas");
         f.setSize(new Dimension(1000, 1000));

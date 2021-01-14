@@ -112,7 +112,7 @@ public class ProbabilisticPCADemo extends ProjectionDemo {
         return "Probabilistic Principal Component Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ProbabilisticPCADemo demo = new ProbabilisticPCADemo();
         JFrame f = new JFrame("Probabilistic Principal Component Analysis");
         f.setSize(new Dimension(1000, 1000));
