@@ -164,7 +164,7 @@ public class UMAPDemo extends JPanel implements Runnable, ActionListener {
         return "UMAP";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         UMAPDemo demo = new UMAPDemo();
         JFrame f = new JFrame("UMAP");
         f.setSize(new Dimension(1000, 1000));

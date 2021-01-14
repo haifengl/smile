@@ -43,8 +43,11 @@ package smile.interpolation.variogram;
  * @author Haifeng Li
  */
 public class SphericalVariogram implements Variogram {
+    /** The range parameter. */
     private final double a;
+    /** The sill parameter. */
     private final double b;
+    /** The nugget effect parameter. */
     private final double c;
 
     /**

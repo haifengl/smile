@@ -91,7 +91,7 @@ public class DENCLUEDemo  extends ClusteringDemo {
         return "DENCLUE";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClusteringDemo demo = new DENCLUEDemo();
         JFrame f = new JFrame("DENCLUE");
         f.setSize(new Dimension(1000, 1000));

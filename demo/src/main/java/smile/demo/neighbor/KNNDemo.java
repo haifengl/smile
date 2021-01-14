@@ -279,7 +279,7 @@ public class KNNDemo extends JPanel implements Runnable, ActionListener {
         return "KNN";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         KNNDemo demo = new KNNDemo();
         JFrame f = new JFrame("KNN");
         f.setSize(new Dimension(1000, 1000));

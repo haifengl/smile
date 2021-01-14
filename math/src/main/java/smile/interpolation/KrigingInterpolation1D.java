@@ -31,9 +31,13 @@ import smile.math.matrix.Matrix;
  */
 public class KrigingInterpolation1D implements Interpolation {
 
+    /** The control points. */
     private final double[] x;
+    /** The linear weights. */
     private final double[] yvi;
+    /** The parameter of power variogram. */
     private final double alpha;
+    /** The parameter of power variogram. */
     private final double beta;
 
     /**
