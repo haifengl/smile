@@ -356,7 +356,7 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
                 variance[i] /= alpha;
             }
 
-            gaussian = new MultivariateGaussianDistribution(mean, new Matrix(variance));
+            gaussian = new MultivariateGaussianDistribution(mean, variance);
         } else {
             Matrix cov = new Matrix(d, d);
             for (int k = 0; k < n; k++) {
