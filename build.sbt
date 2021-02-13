@@ -66,7 +66,7 @@ lazy val javaSettings = commonSettings ++ Seq(
     ),
   libraryDependencies ++= Seq(
     "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
-    "junit" % "junit" % "4.13.1" % "test",
+    "junit" % "junit" % "4.13.2" % "test",
     "com.novocode" % "junit-interface" % "0.11" % "test" exclude("junit", "junit-dep")
   ),
   testOptions in Test := Seq(Tests.Argument(TestFrameworks.JUnit, "-a"))
