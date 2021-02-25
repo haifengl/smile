@@ -84,6 +84,10 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      */
     double[] w;
     /**
+     * True if the linear weights w includes the intercept.
+     */
+    boolean bias;
+    /**
      * The coefficients, their standard errors, t-scores, and p-values.
      */
     double[][] ttest;
@@ -160,6 +164,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         this.p = X.ncol();
         this.w = w;
         this.b = b;
+        this.bias = predictors[0].equals("Intercept");
 
         int n = X.nrow();
         fittedValues = new double[n];
@@ -217,11 +222,11 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
     }
 
     /**
-     * Returns the linear coefficients (without intercept).
-     * @return the linear coefficients.
+     * Returns the linear coefficients without intercept.
+     * @return the linear coefficients without intercept.
      */
     public double[] coefficients() {
-        return w;
+        return bias ? Arrays.copyOfRange(w, 1, w.length - 1) : w;
     }
 
     /**
@@ -229,7 +234,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * @return the intercept.
      */
     public double intercept() {
-        return b;
+        return bias ? w[0] : b;
     }
 
     /**
@@ -320,22 +325,31 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
 
     @Override
     public double predict(double[] x) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+        double y = b;
+        if (x.length == w.length) {
+            for (int i = 0; i < x.length; i++) {
+                y += x[i] * w[i];
+            }
+        } else if (bias && x.length == w.length - 1){
+            y = w[0];
+            for (int i = 0; i < x.length; i++) {
+                y += x[i] * w[i+1];
+            }
+        } else {
+            throw new IllegalArgumentException("Invalid vector size: " + x.length);
         }
 
-        return b + MathEx.dot(x, w);
+        return y;
     }
 
     @Override
     public double predict(Tuple x) {
-        boolean bias = b == 0.0;
-        return predict(formula.x(x).toArray(bias, CategoricalEncoder.DUMMY));
+        return predict(formula.x(x).toArray(false, CategoricalEncoder.DUMMY));
     }
 
     @Override
     public double[] predict(DataFrame df) {
-        if (b == 0.0) {
+        if (bias) {
             Matrix X = formula.matrix(df, true);
             return X.mv(w);
         } else {
@@ -352,7 +366,6 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
      * @param data the training data.
      */
     public void update(Tuple data) {
-        boolean bias = b == 0.0;
         update(formula.x(data).toArray(bias, CategoricalEncoder.DUMMY), formula.y(data));
     }
 
@@ -451,7 +464,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         builder.append("\nCoefficients:\n");
         if (ttest != null) {
             builder.append("                  Estimate Std. Error    t value   Pr(>|t|)\n");
-            if (b != 0.0) {
+            if (!bias) {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 
@@ -462,7 +475,7 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
             builder.append("---------------------------------------------------------------------\n");
             builder.append("Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1\n");
         } else {
-            if (b != 0.0) {
+            if (!bias) {
                 builder.append(String.format("Intercept       %10.4f%n", b));
             }
 

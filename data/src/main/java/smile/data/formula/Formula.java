@@ -426,16 +426,12 @@ public class Formula implements Serializable {
     }
 
     /**
-     * Returns the design matrix of predictors.
-     * All categorical variables will be dummy encoded.
-     * If the formula doesn't has an Intercept term, the bias
-     * column will be included. Otherwise, it is based on the
-     * setting of Intercept term.
-     *
-     * @param data The input data frame.
-     * @return the design matrix.
+     * Returns true if the formula has the bias term.
+     * We assume the formula has the bias term if it isn't
+     * explicitly specified.
+     * @return true if the formula has the bias term.
      */
-    public Matrix matrix(DataFrame data) {
+    private boolean hasBias() {
         boolean bias = true;
         Optional<Intercept> intercept = Arrays.stream(predictors)
                 .filter(term -> term instanceof Intercept)
@@ -446,7 +442,21 @@ public class Formula implements Serializable {
             bias = intercept.get().bias();
         }
 
-        return matrix(data, bias);
+        return bias;
+    }
+
+    /**
+     * Returns the design matrix of predictors.
+     * All categorical variables will be dummy encoded.
+     * If the formula doesn't has an Intercept term, the bias
+     * column will be included. Otherwise, it is based on the
+     * setting of Intercept term.
+     *
+     * @param data The input data frame.
+     * @return the design matrix.
+     */
+    public Matrix matrix(DataFrame data) {
+        return matrix(data, hasBias());
     }
 
     /**
