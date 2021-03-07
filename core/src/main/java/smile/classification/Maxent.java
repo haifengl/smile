@@ -155,7 +155,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
             y = labels.indexOf(y);
             // calculate gradient for incoming data
             double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
+            double err = y - MathEx.sigmoid(wx);
 
             // update the weights
             w[p] += eta * err;
@@ -536,7 +536,7 @@ public abstract class Maxent implements SoftClassifier<int[]>, OnlineClassifier<
 
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     double wx = dot(x[i], w);
-                    double err = y[i] - MathEx.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (int j : x[i]) {
                         gradient[j] -= err;
                     }

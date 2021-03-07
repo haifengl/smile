@@ -193,7 +193,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
 
             // calculate gradient for incoming data
             double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
+            double err = y - MathEx.sigmoid(wx);
 
             // update the weights
             w[p] += eta * err;
@@ -650,7 +650,7 @@ public abstract class LogisticRegression implements SoftClassifier<double[]>, On
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     double[] xi = x[i];
                     double wx = dot(xi, w);
-                    double err = y[i] - MathEx.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (int j = 0; j < p; j++) {
                         gradient[j] -= err * xi[j];
                     }
