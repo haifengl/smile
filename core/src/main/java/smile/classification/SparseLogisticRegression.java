@@ -143,7 +143,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
 
             // calculate gradient for incoming data
             double wx = dot(x, w);
-            double err = y - MathEx.logistic(wx);
+            double err = y - MathEx.sigmoid(wx);
 
             // update the weights
             w[p] += eta * err;
@@ -514,7 +514,7 @@ public abstract class SparseLogisticRegression implements SoftClassifier<SparseA
                 return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     SparseArray xi = x.get(i);
                     double wx = dot(xi, w);
-                    double err = y[i] - MathEx.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (SparseArray.Entry e : xi) {
                         gradient[e.i] -= err * e.x;
                     }

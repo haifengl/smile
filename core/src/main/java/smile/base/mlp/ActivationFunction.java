@@ -125,7 +125,7 @@ public interface ActivationFunction extends Serializable {
             @Override
             public void f(double[] x) {
                 for (int i = 0; i < x.length; i++) {
-                    x[i] = MathEx.logistic(x[i]);
+                    x[i] = MathEx.sigmoid(x[i]);
                 }
             }
 
@@ -155,7 +155,7 @@ public interface ActivationFunction extends Serializable {
             @Override
             public void f(double[] x) {
                 for (int i = 0; i < x.length; i++) {
-                    x[i] = MathEx.tanh(x[i]);
+                    x[i] = Math.tanh(x[i]);
                 }
             }
 
