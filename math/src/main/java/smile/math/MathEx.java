@@ -328,12 +328,12 @@ public class MathEx {
     /**
      * Logistic sigmoid function <code>1 / (1 + exp(-x))</code>.
      * @param x a real number.
-     * @return the logistic function.
+     * @return the sigmoid function.
      */
     public static double sigmoid(double x) {
-        // Instead of exp(-x), we employ tanh as it is stable, fast,
-        // and fairly accurate.
-        return 0.5 * (1.0 + Math.tanh(0.5 * x));
+        // clip x in [-36, 36] to prevent overflow/underflow.
+        x = Math.max(-36, Math.min(x, 36));
+        return 1.0 / (1.0 + exp(-x));
     }
 
     /**

@@ -106,7 +106,7 @@ public class BandMatrixTest {
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
 
         // Lower band matrix
@@ -119,7 +119,7 @@ public class BandMatrixTest {
         // solution vector
         assertEquals(choleskyx.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(x[i], choleskyx[i], 1E-7f);
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
     }
 
