@@ -32,6 +32,7 @@ import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.type.StructType;
 import smile.util.SparseArray;
+import smile.util.Strings;
 
 /**
  * Reads data from external storage systems.
@@ -39,6 +40,59 @@ import smile.util.SparseArray;
  * @author Haifeng Li
  */
 public interface Read {
+    /**
+     * Reads a data file. Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame data(String path) throws IOException, URISyntaxException, ParseException {
+        return data(path, null);
+    }
+
+    /**
+     * Reads a data file. Infers the data format by the file name extension.
+     * @param path the input file path.
+     * @param format the optional file format specification. For csv files,
+     *               it is such as <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+     *               For json files, it is the file mode (single-line or
+     *               multi-line). For avro files, it is the path to the schema
+     *               file.
+     * @throws IOException when fails to read the file.
+     * @throws ParseException when fails to parse the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame data(String path, String format) throws IOException, URISyntaxException, ParseException {
+        int dotIndex = path.lastIndexOf(".");
+        String ext = dotIndex < 0 ? "csv" : path.substring(dotIndex + 1);
+        switch (ext) {
+            case "dat":
+            case "txt":
+            case "csv": return csv(path, format);
+            case "arff": return arff(path);
+            case "json":
+                JSON.Mode mode = format == null ? JSON.Mode.SINGLE_LINE : JSON.Mode.valueOf(format);
+                return json(path, mode, null);
+            case "sas7bdat": return sas(path);
+            case "avro": return avro(path, format);
+            case "parquet": return parquet(path);
+            case "feather": return arrow(path);
+            default:
+                if (format != null) {
+                    if (format.equals("csv") || format.equals("csv?")) {
+                        return csv(path);
+                    } else if (format.startsWith("csv?")) {
+                        return csv(path, format.substring(4));
+                    }
+                }
+        }
+
+        throw new UnsupportedOperationException("Unsupported data format: " + ext);
+    }
+
     /**
      * Reads a CSV file.
      * @param path the input file path.
@@ -48,6 +102,47 @@ public interface Read {
      */
     static DataFrame csv(String path) throws IOException, URISyntaxException {
         return csv(path, CSVFormat.DEFAULT);
+    }
+
+    /**
+     * Reads a CSV file.
+     * @param path the input file path.
+     * @param format the format specification in key-value pairs such as
+     *               <code>delimiter=\t,header=true,comment=#,escape=\,quote="</code>.
+     * @throws IOException when fails to read the file.
+     * @throws URISyntaxException when the file path syntax is wrong.
+     * @return the data frame.
+     */
+    static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
+        CSVFormat csvFormat = CSVFormat.DEFAULT;
+        for (String token : format.split(",")) {
+            String[] kv = token.split("=");
+            if (kv.length != 2) {
+                throw new IllegalArgumentException("Invalid csv format specifier: " + token);
+            }
+            switch (kv[0]) {
+                case "delimiter":
+                    csvFormat = csvFormat.withDelimiter(Strings.unescape(kv[1]).charAt(0));
+                    break;
+                case "quote":
+                    csvFormat = csvFormat.withQuote(Strings.unescape(kv[1]).charAt(0));
+                    break;
+                case "escape":
+                    csvFormat = csvFormat.withEscape(Strings.unescape(kv[1]).charAt(0));
+                    break;
+                case "comment":
+                    csvFormat = csvFormat.withCommentMarker(Strings.unescape(kv[1]).charAt(0));
+                case "header":
+                    if (Boolean.parseBoolean(kv[1])) {
+                        csvFormat = csvFormat.withFirstRecordAsHeader();
+                    }
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown csv format specifier: " + kv[0]);
+            }
+        }
+
+        return csv(path, csvFormat);
     }
 
     /**
