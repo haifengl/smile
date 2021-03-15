@@ -42,6 +42,77 @@ public interface Strings {
     }
 
     /**
+     * Unescapes a string that contains standard Java escape sequences.
+     * @param s the string.
+     * @return the translated string.
+     */
+    static String unescape(String s) {
+        StringBuilder sb = new StringBuilder(s.length());
+
+        for (int i = 0; i < s.length(); i++) {
+            char ch = s.charAt(i);
+            if (ch == '\\') {
+                char nextChar = (i == s.length() - 1) ? '\\' : s.charAt(i + 1);
+                // Octal escape?
+                if (nextChar >= '0' && nextChar <= '7') {
+                    String code = String.valueOf(nextChar);
+                    i++;
+                    if ((i < s.length() - 1) && s.charAt(i + 1) >= '0' && s.charAt(i + 1) <= '7') {
+                        code += s.charAt(i + 1);
+                        i++;
+                        if ((i < s.length() - 1) && s.charAt(i + 1) >= '0' && s.charAt(i + 1) <= '7') {
+                            code += s.charAt(i + 1);
+                            i++;
+                        }
+                    }
+                    sb.append((char) Integer.parseInt(code, 8));
+                    continue;
+                }
+
+                switch (nextChar) {
+                    case '\\':
+                        ch = '\\';
+                        break;
+                    case 'b':
+                        ch = '\b';
+                        break;
+                    case 'f':
+                        ch = '\f';
+                        break;
+                    case 'n':
+                        ch = '\n';
+                        break;
+                    case 'r':
+                        ch = '\r';
+                        break;
+                    case 't':
+                        ch = '\t';
+                        break;
+                    case '\"':
+                        ch = '\"';
+                        break;
+                    case '\'':
+                        ch = '\'';
+                        break;
+                    // Hex Unicode: u????
+                    case 'u':
+                        if (i >= s.length() - 5) {
+                            ch = 'u';
+                            break;
+                        }
+                        int code = Integer.parseInt(s.substring(i+2, i+6), 16);
+                        sb.append(Character.toChars(code));
+                        i += 5;
+                        continue;
+                }
+                i++;
+            }
+            sb.append(ch);
+        }
+        return sb.toString();
+    }
+
+    /**
      * Returns the string representation of ordinal number with suffix.
      * @param i the ordinal number.
      * @return the string representation of ordinal number with suffix.
