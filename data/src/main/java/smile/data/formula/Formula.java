@@ -18,7 +18,10 @@
 package smile.data.formula;
 
 import java.io.Serializable;
+import java.text.Normalizer;
 import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -214,6 +217,79 @@ public class Formula implements Serializable {
      */
     public static Formula of(Term response, Term... predictors) {
         return new Formula(response, predictors);
+    }
+
+    /**
+     * Parses a formula string.
+     * @param s the string representation of formula.
+     * @return the formula.
+     */
+    public static Formula of(String s) {
+        String[] tokens = s.split("~");
+        if (tokens.length != 2) {
+            throw new IllegalArgumentException("Invalid formula: " + s);
+        }
+
+        String lhs = tokens[0].trim();
+        Term response = lhs.isEmpty() ? null : Terms.$(lhs);
+
+        String rhs = tokens[1].trim();
+        if (rhs.isEmpty()) {
+            if (response == null) {
+                throw new IllegalArgumentException("Invalid formula: " + s);
+            }
+            return lhs(response);
+        }
+
+        Pattern regex = Pattern.compile("\\)\\d*");
+        ArrayList<Term> predictors = new ArrayList<>();
+
+        if (!rhs.startsWith("+") && !rhs.startsWith("-")) {
+            rhs = "+ " + rhs; // simplify the loop
+        }
+
+        while (!rhs.isEmpty()) {
+            boolean delete = false;
+            if (rhs.startsWith("+")) {
+                rhs = rhs.substring(1).trim();
+            } else if (rhs.startsWith("-")) {
+                delete = true;
+                rhs = rhs.substring(1).trim();
+            } else {
+                throw new IllegalArgumentException("Invalid formula: " + s);
+            }
+
+            String item;
+            if (rhs.startsWith("(")) {
+                Matcher matcher = regex.matcher(rhs);
+                if (matcher.find()) {
+                    if (matcher.end() < rhs.length()) {
+                        item = rhs.substring(0, matcher.end());
+                        rhs = rhs.substring(matcher.end()).trim();
+                    } else {
+                        item = rhs;
+                        rhs = "";
+                    }
+                } else {
+                    throw new IllegalArgumentException("Invalid formula: " + s);
+                }
+            } else {
+                int end = rhs.indexOf(' ', 1);
+                if (end > 0) {
+                    item = rhs.substring(0, end);
+                    rhs = rhs.substring(end).trim();
+                } else {
+                    item = rhs;
+                    rhs = "";
+                }
+            }
+
+            Term term = Terms.$(item);
+            if (delete) term = Terms.delete(term);
+            predictors.add(term);
+        }
+
+        return new Formula(response, predictors.toArray(new Term[0]));
     }
 
     /**
