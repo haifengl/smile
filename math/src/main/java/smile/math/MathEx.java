@@ -1211,6 +1211,42 @@ public class MathEx {
     }
 
     /**
+     * Returns the mode of the array, which is the most frequent element.
+     * If there are multiple modes, one of them will be returned.
+     *
+     * @param a the array. The order of elements will be changed on output.
+     */
+    public static int mode(int[] a) {
+        Arrays.sort(a);
+
+        int mode = -1;
+        int count = 0;
+
+        int currentValue = a[0];
+        int currentCount = 1;
+
+        for (int i = 1; i < a.length; i++) {
+            if (a[i] != currentValue) {
+                if (currentCount > count) {
+                    mode = currentValue;
+                    count = currentCount;
+                }
+
+                currentValue = a[i];
+                currentCount = 1;
+            } else {
+                currentCount++;
+            }
+        }
+
+        if (currentCount > count) {
+            mode = currentValue;
+        }
+
+        return mode;
+    }
+
+    /**
      * Returns the minimum of 3 integer numbers.
      * @param a a number.
      * @param b a number.
