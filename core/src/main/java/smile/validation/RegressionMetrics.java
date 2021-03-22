@@ -18,6 +18,11 @@
 package smile.validation;
 
 import java.io.Serializable;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.regression.DataFrameRegression;
+import smile.regression.Regression;
+import smile.validation.metric.*;
 
 /** The regression validation metrics. */
 public class RegressionMetrics implements Serializable {
@@ -74,5 +79,100 @@ public class RegressionMetrics implements Serializable {
         sb.append(String.format("  MAD: %.4f,\n", mad));
         sb.append(String.format("  R2: %.2f%%\n}", 100 * r2));
         return sb.toString();
+    }
+
+    /**
+     * Computes the regression metrics.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
+     */
+    public static RegressionMetrics of(double fitTime, double scoreTime, double[] truth, double[] prediction) {
+        return new RegressionMetrics(
+                fitTime, scoreTime, truth.length,
+                RSS.of(truth, prediction),
+                MSE.of(truth, prediction),
+                RMSE.of(truth, prediction),
+                MAD.of(truth, prediction),
+                R2.of(truth, prediction));
+    }
+
+    /**
+     * Validates a model on a test data.
+     * @param model the model.
+     * @param testx the validation data.
+     * @param testy the responsible variable of validation data.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation metrics.
+     */
+    public static <T, M extends Regression<T>> RegressionMetrics of(M model, T[] testx, double[] testy) {
+        return of(Double.NaN, model, testx, testy);
+    }
+
+    /**
+     * Validates a model on a test data.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param model the model.
+     * @param testx the validation data.
+     * @param testy the responsible variable of validation data.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation metrics.
+     */
+    public static <T, M extends Regression<T>> RegressionMetrics of(double fitTime, M model, T[] testx, double[] testy) {
+        long start = System.nanoTime();
+        double[] prediction = model.predict(testx);
+        double scoreTime = (System.nanoTime() - start) / 1E6;
+
+        return new RegressionMetrics(
+                fitTime, scoreTime, testy.length,
+                RSS.of(testy, prediction),
+                MSE.of(testy, prediction),
+                RMSE.of(testy, prediction),
+                MAD.of(testy, prediction),
+                R2.of(testy, prediction));
+    }
+
+    /**
+     * Trains and validates a model on a train/validation split.
+     * @param model the model.
+     * @param formula the model formula.
+     * @param test the validation data.
+     * @param <M> the model type.
+     * @return the validation metrics.
+     */
+    public static <M extends DataFrameRegression> RegressionMetrics of(M model, Formula formula, DataFrame test) {
+        return of(Double.NaN, model, formula, test);
+    }
+
+    /**
+     * Trains and validates a model on a train/validation split.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param model the model.
+     * @param formula the model formula.
+     * @param test the validation data.
+     * @param <M> the model type.
+     * @return the validation metrics.
+     */
+    public static <M extends DataFrameRegression> RegressionMetrics of(double fitTime, M model, Formula formula, DataFrame test) {
+        double[] testy = formula.y(test).toDoubleArray();
+
+        long start = System.nanoTime();
+        int n = test.nrow();
+        double[] prediction = new double[n];
+        for (int i = 0; i < n; i++) {
+            prediction[i] = model.predict(test.get(i));
+        }
+        double scoreTime = (System.nanoTime() - start) / 1E6;
+
+        return new RegressionMetrics(
+                fitTime, scoreTime, testy.length,
+                RSS.of(testy, prediction),
+                MSE.of(testy, prediction),
+                RMSE.of(testy, prediction),
+                MAD.of(testy, prediction),
+                R2.of(testy, prediction));
     }
 }
