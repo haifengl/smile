@@ -74,6 +74,7 @@ buildInfoPackage := "smile.shell"
 buildInfoOptions += BuildInfoOption.BuildTime
 
 libraryDependencies ++= Seq(
+  "com.github.scopt" %% "scopt" % "4.0.1",
   "org.scala-lang" % "scala-compiler" % "2.13.5",
   "org.slf4j" % "slf4j-simple" % "1.7.30",
   "org.bytedeco" % "javacpp"   % "1.5.5"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",

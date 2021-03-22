@@ -23,6 +23,14 @@ package smile.shell
   */
 object Main {
   def main(args: Array[String]): Unit = {
+    if (args.length > 0) {
+      args(0) match {
+        case "train" => return Train(args.drop(1))
+        case "predict" => return Train(args.drop(1))
+        case "serve" => return Train(args.drop(1))
+      }
+    }
+
     try {
       val clazz = Class.forName("ammonite.Main$")
       AmmoniteREPL.main0(clazz, args)
