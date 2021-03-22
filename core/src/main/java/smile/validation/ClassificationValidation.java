@@ -18,7 +18,6 @@
 package smile.validation;
 
 import java.io.Serializable;
-import java.util.Arrays;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
@@ -29,8 +28,7 @@ import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.validation.metric.*;
-import smile.validation.metric.Error;
+import smile.validation.metric.ConfusionMatrix;
 
 /**
  * Classification model validation results.
@@ -58,70 +56,36 @@ public class ClassificationValidation<M> implements Serializable {
     /**
      * Constructor.
      * @param model the model.
-     * @param truth the ground truth.
-     * @param prediction the predictions.
      * @param fitTime the time in milliseconds of fitting the model.
      * @param scoreTime the time in milliseconds of scoring the validation data.
+     * @param truth the ground truth.
+     * @param prediction the predictions.
      */
-    public ClassificationValidation(M model, int[] truth, int[] prediction, double fitTime, double scoreTime) {
-        this(model, truth, prediction, null, fitTime, scoreTime);
+    public ClassificationValidation(M model, double fitTime, double scoreTime, int[] truth, int[] prediction) {
+        this.model = model;
+        this.truth = truth;
+        this.prediction = prediction;
+        this.posteriori = null;
+        this.confusion = ConfusionMatrix.of(truth, prediction);
+        this.metrics = ClassificationMetrics.of(fitTime, scoreTime, truth, prediction);
     }
 
     /**
-     * Constructor of soft classifier validation..
+     * Constructor of soft classifier validation.
      * @param model the model.
+     * @param fitTime the time in milliseconds of fitting the model.
+     * @param scoreTime the time in milliseconds of scoring the validation data.
      * @param truth the ground truth.
      * @param prediction the predictions.
      * @param posteriori the posteriori probabilities of predictions.
-     * @param fitTime the time in milliseconds of fitting the model.
-     * @param scoreTime the time in milliseconds of scoring the validation data.
      */
-    public ClassificationValidation(M model, int[] truth, int[] prediction, double[][] posteriori, double fitTime, double scoreTime) {
+    public ClassificationValidation(M model, double fitTime, double scoreTime, int[] truth, int[] prediction, double[][] posteriori) {
         this.model = model;
         this.truth = truth;
         this.prediction = prediction;
         this.posteriori = posteriori;
         this.confusion = ConfusionMatrix.of(truth, prediction);
-
-        int k = MathEx.unique(truth).length;
-        if (k == 2) {
-            if (posteriori == null) {
-                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                        Error.of(truth, prediction),
-                        Accuracy.of(truth, prediction),
-                        Sensitivity.of(truth, prediction),
-                        Specificity.of(truth, prediction),
-                        Precision.of(truth, prediction),
-                        FScore.F1.score(truth, prediction),
-                        MatthewsCorrelation.of(truth, prediction)
-                );
-            } else {
-                double[] probability = Arrays.stream(posteriori).mapToDouble(p -> p[1]).toArray();
-                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                        Error.of(truth, prediction),
-                        Accuracy.of(truth, prediction),
-                        Sensitivity.of(truth, prediction),
-                        Specificity.of(truth, prediction),
-                        Precision.of(truth, prediction),
-                        FScore.F1.score(truth, prediction),
-                        MatthewsCorrelation.of(truth, prediction),
-                        AUC.of(truth, probability),
-                        LogLoss.of(truth, probability)
-                );
-            }
-        } else {
-            if (posteriori == null) {
-                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                        Error.of(truth, prediction),
-                        Accuracy.of(truth, prediction));
-            } else {
-                metrics = new ClassificationMetrics(fitTime, scoreTime, truth.length,
-                        Error.of(truth, prediction),
-                        Accuracy.of(truth, prediction),
-                        CrossEntropy.of(truth, posteriori)
-                );
-            }
-        }
+        this.metrics = ClassificationMetrics.of(fitTime, scoreTime, truth, prediction, posteriori);
     }
 
     @Override
@@ -152,12 +116,12 @@ public class ClassificationValidation<M> implements Serializable {
             int[] prediction = ((SoftClassifier<T>) model).predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
+            return new ClassificationValidation<>(model, fitTime, scoreTime, testy, prediction, posteriori);
         } else {
             int[] prediction = model.predict(testx);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            return new ClassificationValidation<>(model, testy, prediction, fitTime, scoreTime);
+            return new ClassificationValidation<>(model, fitTime, scoreTime, testy, prediction);
         }
     }
 
@@ -205,24 +169,25 @@ public class ClassificationValidation<M> implements Serializable {
         M model = trainer.apply(formula, train);
         double fitTime = (System.nanoTime() - start) / 1E6;
 
-        start = System.nanoTime();
         int n = test.nrow();
         int[] prediction = new int[n];
         if (model instanceof SoftClassifier) {
             double[][] posteriori = new double[n][k];
+            start = System.nanoTime();
             for (int i = 0; i < n; i++) {
                 prediction[i] = ((SoftClassifier<Tuple>) model).predict(test.get(i), posteriori[i]);
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            return new ClassificationValidation<>(model, testy, prediction, posteriori, fitTime, scoreTime);
+            return new ClassificationValidation<>(model, fitTime, scoreTime, testy, prediction, posteriori);
         } else {
+            start = System.nanoTime();
             for (int i = 0; i < n; i++) {
                 prediction[i] = model.predict(test.get(i));
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
-            return new ClassificationValidation<>(model, testy, prediction, fitTime, scoreTime);
+            return new ClassificationValidation<>(model, fitTime, scoreTime, testy, prediction);
         }
     }
 
