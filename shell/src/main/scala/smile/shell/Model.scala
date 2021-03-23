@@ -17,25 +17,13 @@
 
 package smile.shell
 
-/** An object that runs Smile script or interactive shell.
-  *
-  * @author Haifeng Li
-  */
-object Main {
-  def main(args: Array[String]): Unit = {
-    if (args.length > 0) {
-      args(0) match {
-        case "train" => return Train(args.drop(1))
-        case "predict" => return Predict(args.drop(1))
-        case "serve" => return Train(args.drop(1))
-      }
-    }
+import smile.data.formula.Formula
 
-    try {
-      val clazz = Class.forName("ammonite.Main$")
-      AmmoniteREPL.main0(clazz, args)
-    } catch {
-      case _: ClassNotFoundException => ScalaREPL.main0(args)
-    }
-  }
-}
+/**
+  * The machine learning model.
+  * @param algorithm the algorithm name.
+  * @param formula the model formula.
+  * @param numClasses the number of classes. 0 for regression models.
+  * @param model the model.
+  */
+case class Model(algorithm: String, formula: Formula, numClasses: Int, model: AnyRef)
