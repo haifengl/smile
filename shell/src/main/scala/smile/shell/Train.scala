@@ -24,6 +24,7 @@ import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, Regression
 import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula._
 import smile.io.Read
+import smile.math.MathEx
 import smile.validation._
 
 /**
@@ -34,7 +35,7 @@ import smile.validation._
   * @param test the test data file path.
   * @param format the input data format.
   * @param model the model file path.
-  * @param numClasses the number of classes. 0 for regression.
+  * @param classification true if the problem type is classification.
   * @param kfold k-fold cross validation.
   * @param params the hyperparameter key-value pairs.
   */
@@ -44,7 +45,7 @@ case class TrainConfig(algorithm: String = "",
                        test: String = "",
                        format: String = "",
                        model: String = "",
-                       numClasses: Int = 0,
+                       classification: Boolean = true,
                        kfold: Int = 0,
                        params: Map[String, String] = Map())
 
@@ -78,32 +79,38 @@ object Train {
         head("Smile", "2.x"),
         opt[String]("algo")
           .required()
+          .valueName("<random.forest, gbt, adaboost, cart, logit, fld, lda, qda, rda, ols, lasso, elastic.net, ridge>")
           .action((x, c) => c.copy(algorithm = x))
           .text("The algorithm to train the model"),
         opt[String]("formula")
           .optional()
+          .valueName("<class ~ .>")
           .action((x, c) => c.copy(formula = x))
           .text("The model formula"),
         opt[String]("data")
           .required()
+          .valueName("<file>")
           .action((x, c) => c.copy(train = x))
           .text("The training data file"),
         opt[String]("test")
           .optional()
+          .valueName("<file>")
           .action((x, c) => c.copy(test = x))
           .text("The test data file"),
         opt[String]("format")
           .optional()
+          .valueName("<csv?header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
           .action((x, c) => c.copy(format = x))
           .text("The data file format/schema"),
         opt[String]("model")
           .required()
+          .valueName("<file>")
           .action((x, c) => c.copy(model = x))
           .text("The model file to save"),
-        opt[Int]("class")
+        opt[Unit]("regression")
           .optional()
-          .action((x, c) => c.copy(numClasses = x))
-          .text("The number of classes"),
+          .action((x, c) => c.copy(classification = false))
+          .text("To train a regression model"),
         opt[Int]("kfold")
           .optional()
           .action((x, c) => c.copy(kfold = x))
@@ -133,7 +140,7 @@ object Train {
 
     config.algorithm match {
       case "random.forest" =>
-        if (config.numClasses > 1) {
+        if (config.classification) {
           trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
             smile.classification.RandomForest.fit(formula, data, props)
           }
@@ -143,7 +150,7 @@ object Train {
           }
         }
       case "gbt" =>
-        if (config.numClasses > 1) {
+        if (config.classification) {
           trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
             smile.classification.GradientTreeBoost.fit(formula, data, props)
           }
@@ -153,7 +160,7 @@ object Train {
           }
         }
       case "cart" =>
-        if (config.numClasses > 1) {
+        if (config.classification) {
           trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
             DecisionTree.fit(formula, data, props)
           }
@@ -239,7 +246,8 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, config.numClasses, model)
+    val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
+    Model(config.algorithm, formula, numClasses, model)
   }
 
   /**
@@ -273,7 +281,8 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, config.numClasses, model)
+    val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
+    Model(config.algorithm, formula, numClasses, model)
   }
 
   /**
@@ -315,7 +324,8 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, config.numClasses, model)
+    val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
+    Model(config.algorithm, formula, numClasses, model)
   }
 
   /**
