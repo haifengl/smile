@@ -18,23 +18,24 @@
 package smile.shell
 
 import java.util.Properties
-import scala.jdk.CollectionConverters._
 import scopt.OParser
-import smile.classification._
-import smile.data.{CategoricalEncoder, DataFrame, Tuple}
+import smile.classification.{AdaBoost, Classifier, DataFrameClassifier, DecisionTree, FLD, LDA, LogisticRegression, QDA, RDA}
+import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
+import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula._
 import smile.io.Read
 import smile.validation._
 
 /**
-  * Training command options.
+  * Train command options.
   * @param algorithm the algorithm name.
   * @param formula the model formula.
   * @param train the training data file path.
   * @param test the test data file path.
   * @param format the input data format.
-  * @param kfold k-fold cross validation.
   * @param model the model file path.
+  * @param numClasses the number of classes. 0 for regression.
+  * @param kfold k-fold cross validation.
   * @param params the hyperparameter key-value pairs.
   */
 case class TrainConfig(algorithm: String = "",
@@ -42,17 +43,10 @@ case class TrainConfig(algorithm: String = "",
                        train: String = "",
                        test: String = "",
                        format: String = "",
-                       kfold: Int = 0,
                        model: String = "",
+                       numClasses: Int = 0,
+                       kfold: Int = 0,
                        params: Map[String, String] = Map())
-
-/**
-  * The machine learning model.
-  * @param algorithm the algorithm name.
-  * @param formula the model formula.
-  * @param model the model.
-  */
-case class Model(algorithm: String, formula: Formula, model: AnyRef)
 
 /**
   * Trains a classification model.
@@ -102,14 +96,18 @@ object Train {
           .optional()
           .action((x, c) => c.copy(format = x))
           .text("The data file format/schema"),
-        opt[Int]("kfold")
-          .optional()
-          .action((x, c) => c.copy(kfold = x))
-          .text("The k-fold cross validation"),
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
           .text("The model file to save"),
+        opt[Int]("class")
+          .optional()
+          .action((x, c) => c.copy(numClasses = x))
+          .text("The number of classes"),
+        opt[Int]("kfold")
+          .optional()
+          .action((x, c) => c.copy(kfold = x))
+          .text("The k-fold cross validation"),
         opt[Map[String, String]]("params")
           .valueName("k1=v1,k2=v2...")
           .action((x, c) => c.copy(params = x))
@@ -135,12 +133,34 @@ object Train {
 
     config.algorithm match {
       case "random.forest" =>
-        trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-          RandomForest.fit(formula, data, props)
+        if (config.numClasses > 1) {
+          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
+            smile.classification.RandomForest.fit(formula, data, props)
+          }
+        } else {
+          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+            smile.regression.RandomForest.fit(formula, data, props)
+          }
         }
       case "gbt" =>
-        trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-          GradientTreeBoost.fit(formula, data, props)
+        if (config.numClasses > 1) {
+          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
+            smile.classification.GradientTreeBoost.fit(formula, data, props)
+          }
+        } else {
+          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+            smile.regression.GradientTreeBoost.fit(formula, data, props)
+          }
+        }
+      case "cart" =>
+        if (config.numClasses > 1) {
+          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
+            DecisionTree.fit(formula, data, props)
+          }
+        } else {
+          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+            RegressionTree.fit(formula, data, props)
+          }
         }
       case "adaboost" =>
         trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
@@ -166,8 +186,24 @@ object Train {
         trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
           RDA.fit(x, y, props)
         }
+      case "ols" =>
+        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+          OLS.fit(formula, data, props)
+        }
+      case "lasso" =>
+        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+          LASSO.fit(formula, data, props)
+        }
+      case "elastic.net" =>
+        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+          ElasticNet.fit(formula, data, props)
+        }
+      case "ridge" =>
+        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
+          RidgeRegression.fit(formula, data, props)
+        }
       case algo =>
-        println("Unsupported algorithm: " + algo)
+        Console.err.println("Unsupported algorithm: " + algo)
         null
     }
   }
@@ -203,14 +239,50 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, model)
+    Model(config.algorithm, formula, config.numClasses, model)
+  }
+
+  /**
+    * Trains a data frame regression model.
+    * @param formula the model formula.
+    * @param data the training data.
+    * @param props the hyperparameters.
+    * @param test the optional validation data.
+    * @param config the training configuration.
+    * @return the model.
+    */
+  def trainDataFrameRegression(formula: Formula, data: DataFrame, props: Properties,
+                               test: Option[DataFrame], config: TrainConfig)
+                              (trainer: (Formula, DataFrame, Properties) => DataFrameRegression): Model = {
+    val start = System.nanoTime()
+    val model = trainer(formula, data, props)
+    val fitTime = (System.nanoTime() - start) / 1E6
+
+    if (config.kfold > 1) {
+      val metrics = cv.regression(config.kfold, formula, data) { (formula, data) =>
+        trainer(formula, data, props)
+      }
+      println(s"${config.kfold}-fold cross validation metrics: ${metrics}")
+    } else {
+      val metrics = RegressionMetrics.of(fitTime, model, formula, data)
+      println(s"Training metrics: ${metrics}")
+    }
+
+    if (test.isDefined) {
+      val metrics = RegressionMetrics.of(model, formula, test.get)
+      println(s"Validation metrics: ${metrics}")
+    }
+
+    Model(config.algorithm, formula, config.numClasses, model)
   }
 
   /**
     * Trains a classifier taking vector input.
     * @param formula the model formula.
-    * @param props the hyperparameters.
     * @param data the training data.
+    * @param props the hyperparameters.
+    * @param bias the flag to generate the bias term.
+    * @param encoder the categorical variable encoder.
     * @param test the optional validation data.
     * @param config the training configuration.
     * @return the model.
@@ -243,7 +315,7 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, model)
+    Model(config.algorithm, formula, config.numClasses, model)
   }
 
   /**

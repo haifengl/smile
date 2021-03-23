@@ -26,7 +26,7 @@ object Main {
     if (args.length > 0) {
       args(0) match {
         case "train" => return Train(args.drop(1))
-        case "predict" => return Train(args.drop(1))
+        case "predict" => return Predict(args.drop(1))
         case "serve" => return Train(args.drop(1))
       }
     }
