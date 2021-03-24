@@ -109,7 +109,7 @@ object Train {
           .text("The model file to save"),
         opt[Unit]("regression")
           .optional()
-          .action((x, c) => c.copy(classification = false))
+          .action((_, c) => c.copy(classification = false))
           .text("To train a regression model"),
         opt[Int]("kfold")
           .optional()
@@ -281,8 +281,7 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
-    Model(config.algorithm, formula, numClasses, model)
+    Model(config.algorithm, formula, 0, model)
   }
 
   /**
