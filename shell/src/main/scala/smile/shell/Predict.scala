@@ -22,15 +22,20 @@ import smile.classification._
 import smile.data.{CategoricalEncoder, DataFrame, Tuple}
 import smile.data.formula._
 import smile.io.Read
-import smile.regression.DataFrameRegression
+import smile.regression.{DataFrameRegression, LinearModel}
 import smile.util.Strings
 
 /**
   * Predict command options.
   * @param model the model file path.
   * @param data the data file path.
+  * @param format the input data format.
+  * @param probability the flag if output posteriori probabilities for soft classifiers.
   */
-case class PredictConfig(model: String = "", data: String = "", format: String = "")
+case class PredictConfig(model: String = "",
+                         data: String = "",
+                         format: String = "",
+                         probability: Boolean = false)
 
 /**
   * Batch predict on a file.
@@ -70,6 +75,10 @@ object Predict {
           .optional()
           .action((x, c) => c.copy(format = x))
           .text("The data file format/schema"),
+        opt[Unit]("probability")
+          .optional()
+          .action((_, c) => c.copy(probability = true))
+          .text("Output the posteriori probabilities for soft classifier"),
       )
     }
 
@@ -94,30 +103,32 @@ object Predict {
     model.algorithm match {
       case "random.forest" =>
         if (model.numClasses > 1)
-          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.RandomForest], model.numClasses)
+          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.RandomForest], model.numClasses, config.probability)
         else
           predictRegression(data, model.model.asInstanceOf[smile.regression.RandomForest])
       case "gbt" =>
         if (model.numClasses > 1)
-          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.GradientTreeBoost], model.numClasses)
+          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.GradientTreeBoost], model.numClasses, config.probability)
         else
           predictRegression(data, model.model.asInstanceOf[smile.regression.GradientTreeBoost])
       case "adaboost" =>
-        predictSoftClassifier(data, model.model.asInstanceOf[AdaBoost], model.numClasses)
+        predictSoftClassifier(data, model.model.asInstanceOf[AdaBoost], model.numClasses, config.probability)
       case "logit" =>
         predictSoftClassifier(data, model.formula, model.model.asInstanceOf[LogisticRegression],
-          model.numClasses, false, CategoricalEncoder.DUMMY)
+          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
       case "fld" =>
         predictClassifier(data, model.formula, model.model.asInstanceOf[FLD], false, CategoricalEncoder.DUMMY)
       case "lda" =>
         predictSoftClassifier(data, model.formula, model.model.asInstanceOf[LDA],
-          model.numClasses, false, CategoricalEncoder.DUMMY)
+          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
       case "qda" =>
         predictSoftClassifier(data, model.formula, model.model.asInstanceOf[QDA],
-          model.numClasses, false, CategoricalEncoder.DUMMY)
+          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
       case "rda" =>
         predictSoftClassifier(data, model.formula, model.model.asInstanceOf[RDA],
-          model.numClasses, false, CategoricalEncoder.DUMMY)
+          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
+      case "ols" | "lasso" | "elastic.net" | "ridge" =>
+        predictRegression(data, model.model.asInstanceOf[LinearModel])
       case algo =>
         println("Unsupported algorithm: " + algo)
     }
@@ -128,11 +139,17 @@ object Predict {
     * @param model the model.
     * @param data the data.
     */
-  def predictSoftClassifier(data: DataFrame, model: SoftClassifier[Tuple], numClasses: Int): Unit = {
-    val posteriori = Array.ofDim[Double](numClasses)
-    (0 until data.size).foreach { i =>
-      val y = model.predict(data(i), posteriori)
-      println(s"$y ${Strings.toString(posteriori)}")
+  def predictSoftClassifier(data: DataFrame, model: SoftClassifier[Tuple], numClasses: Int, probability: Boolean): Unit = {
+    if (probability) {
+      val posteriori = Array.ofDim[Double](numClasses)
+      (0 until data.size).foreach { i =>
+        val y = model.predict(data(i), posteriori)
+        println(s"$y ${Strings.toString(posteriori)}")
+      }
+    } else {
+      (0 until data.size).foreach { i =>
+        println(model.predict(data(i)))
+      }
     }
   }
 
@@ -146,11 +163,17 @@ object Predict {
     * @param encoder the categorical variable encoder.
     */
   def predictSoftClassifier(data: DataFrame, formula: Formula, model: SoftClassifier[Array[Double]],
-                            numClasses: Int, bias: Boolean, encoder: CategoricalEncoder): Unit = {
-    val posteriori = Array.ofDim[Double](numClasses)
-    formula.x(data).toArray(bias, encoder).foreach { x =>
-      val y = model.predict(x, posteriori)
-      println(s"$y ${Strings.toString(posteriori)}")
+                            numClasses: Int, probability: Boolean, bias: Boolean, encoder: CategoricalEncoder): Unit = {
+    if (probability) {
+      val posteriori = Array.ofDim[Double](numClasses)
+      formula.x(data).toArray(bias, encoder).foreach { x =>
+        val y = model.predict(x, posteriori)
+        println(s"$y ${Strings.toString(posteriori)}")
+      }
+    } else {
+      formula.x(data).toArray(bias, encoder).foreach { x =>
+        println(model.predict(x))
+      }
     }
   }
 
@@ -175,6 +198,6 @@ object Predict {
     * @param data the data.
     */
   def predictRegression(data: DataFrame, model: DataFrameRegression): Unit = {
-    model.predict(data).foreach(println(_))
+    model.predict(data).foreach(y => println(Strings.format(y)))
   }
 }
