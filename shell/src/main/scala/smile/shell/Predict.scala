@@ -38,7 +38,7 @@ case class PredictConfig(model: String = "",
                          probability: Boolean = false)
 
 /**
-  * Batch predict on a file.
+  * Batch prediction on a file.
   */
 object Predict {
   /**
@@ -55,6 +55,7 @@ object Predict {
   /**
     * Parses the prediction job arguments.
     * @param args the command line arguments.
+    * @return the configuration.
     */
   def parse(args: Array[String]): Option[PredictConfig] = {
     val builder = OParser.builder[PredictConfig]
@@ -66,11 +67,11 @@ object Predict {
         opt[String]("model")
           .required()
           .action((x, c) => c.copy(model = x))
-          .text("The model file to save"),
+          .text("The model file"),
         opt[String]("data")
           .required()
           .action((x, c) => c.copy(data = x))
-          .text("The training data file"),
+          .text("The data file"),
         opt[String]("format")
           .optional()
           .action((x, c) => c.copy(format = x))
@@ -89,7 +90,6 @@ object Predict {
   /**
     * Batch prediction.
     * @param config the prediction configuration.
-    * @return the model.
     */
   def predict(config: PredictConfig): Unit = {
     val data = Read.data(config.data, config.format)
