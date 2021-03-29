@@ -50,7 +50,7 @@ case class TrainConfig(algorithm: String = "",
                        params: Map[String, String] = Map())
 
 /**
-  * Trains a classification model.
+  * Trains a supervised learning model.
   */
 object Train {
   /**
@@ -69,6 +69,7 @@ object Train {
   /**
     * Parses the training job arguments.
     * @param args the command line arguments.
+    * @return the configuration.
     */
   def parse(args: Array[String]): Option[TrainConfig] = {
     val builder = OParser.builder[TrainConfig]
