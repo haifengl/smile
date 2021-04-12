@@ -219,7 +219,7 @@ package object math {
   /** Returns an n-by-n matrix of all ones. */
   def ones(n: Int) = new Matrix(n, n, 1.0)
   /** Returns an m-by-n matrix of all ones. */
-  def ones(m: Int, n: Int) = new Matrix(m, n)
+  def ones(m: Int, n: Int) = new Matrix(m, n, 1.0)
   /** Returns an n-by-n identity matrix. */
   def eye(n: Int): Matrix = Matrix.eye(n)
   /** Returns an m-by-n identity matrix. */
