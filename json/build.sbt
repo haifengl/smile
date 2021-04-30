@@ -7,6 +7,6 @@ scalacOptions in (Compile, doc) ++= Seq(
 target in Compile in doc := baseDirectory.value / "../doc/api/json"
 
 libraryDependencies ++= Seq(
-  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.2",
-  "org.specs2" %% "specs2-core" % "4.10.6" % "test"
+  "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
+  "org.specs2" %% "specs2-core" % "4.11.0" % "test"
 )
