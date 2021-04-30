@@ -20,6 +20,7 @@ package org.apache.spark.ml.classification
 import java.nio.file.Files
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.col
 import org.specs2.mutable._
 import org.specs2.specification.{AfterAll, BeforeAll}
 import smile.base.rbf.RBF
@@ -40,6 +41,7 @@ class SmileClassifierSpec extends Specification with BeforeAll with AfterAll{
       val data = spark.read
         .format("libsvm")
         .load(Paths.getTestData("libsvm/mushrooms.svm").normalize().toString)
+        .withColumn("label", col("label") - 1) // transform label from 1/2 to 0/1
       data.cache()
 
       val trainer = (x: Array[Array[Double]], y: Array[Int]) => {
