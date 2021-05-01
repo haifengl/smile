@@ -20,11 +20,13 @@ package smile.shell
 import java.util.Properties
 import scopt.OParser
 import smile.classification.{AdaBoost, Classifier, DataFrameClassifier, DecisionTree, FLD, LDA, LogisticRegression, QDA, RDA}
+import smile.data.`type`.StructType
 import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
 import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula._
 import smile.io.Read
 import smile.math.MathEx
+import smile.model._
 import smile.validation._
 
 /**
@@ -60,8 +62,19 @@ object Train {
   def apply(args: Array[String]): Unit = {
     parse(args) match {
       case Some(config) =>
-        val model = train(config)
-        if (model != null) smile.write(model, config.model)
+        val data = Read.data(config.train, config.format)
+        val test = if (config.test.isEmpty) None else Some(Read.data(config.test, config.format))
+
+        val formula = getFormula(config, data)
+        val props = getHyperparameters(config.algorithm, config.params)
+
+        if (config.classification) {
+          val model = ClassificationModel(config.algorithm, formula, data, props)
+          smile.write(model, config.model)
+        } else {
+          val model = RegressionModel(config.algorithm, formula, data, props)
+          smile.write(model, config.model)
+        }
       case _ => ()
     }
   }
@@ -128,95 +141,6 @@ object Train {
   }
 
   /**
-    * Trains the model.
-    * @param config the training configuration.
-    * @return the model.
-    */
-  def train(config: TrainConfig): Model = {
-    val data = Read.data(config.train, config.format)
-    val test = if (config.test.isEmpty) None else Some(Read.data(config.test, config.format))
-
-    val formula = getFormula(config, data)
-    val props = getHyperparameters(config.algorithm, config.params)
-
-    config.algorithm match {
-      case "random.forest" =>
-        if (config.classification) {
-          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-            smile.classification.RandomForest.fit(formula, data, props)
-          }
-        } else {
-          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-            smile.regression.RandomForest.fit(formula, data, props)
-          }
-        }
-      case "gbt" =>
-        if (config.classification) {
-          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-            smile.classification.GradientTreeBoost.fit(formula, data, props)
-          }
-        } else {
-          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-            smile.regression.GradientTreeBoost.fit(formula, data, props)
-          }
-        }
-      case "cart" =>
-        if (config.classification) {
-          trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-            DecisionTree.fit(formula, data, props)
-          }
-        } else {
-          trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-            RegressionTree.fit(formula, data, props)
-          }
-        }
-      case "adaboost" =>
-        trainDataFrameClassifier(formula, data, props, test, config) { (formula, data, props) =>
-          AdaBoost.fit(formula, data, props)
-        }
-      case "logit" =>
-        trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
-          LogisticRegression.fit(x, y, props)
-        }
-      case "fld" =>
-        trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
-          FLD.fit(x, y, props)
-        }
-      case "lda" =>
-        trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
-          LDA.fit(x, y, props)
-        }
-      case "qda" =>
-        trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
-          QDA.fit(x, y, props)
-        }
-      case "rda" =>
-        trainVectorClassifier(formula, data, props, false, CategoricalEncoder.DUMMY, test, config) { (x, y, props) =>
-          RDA.fit(x, y, props)
-        }
-      case "ols" =>
-        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-          OLS.fit(formula, data, props)
-        }
-      case "lasso" =>
-        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-          LASSO.fit(formula, data, props)
-        }
-      case "elastic.net" =>
-        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-          ElasticNet.fit(formula, data, props)
-        }
-      case "ridge" =>
-        trainDataFrameRegression(formula, data, props, test, config) { (formula, data, props) =>
-          RidgeRegression.fit(formula, data, props)
-        }
-      case algo =>
-        Console.err.println("Unsupported algorithm: " + algo)
-        null
-    }
-  }
-
-  /**
     * Trains a data frame classifier model.
     * @param formula the model formula.
     * @param data the training data.
@@ -227,7 +151,7 @@ object Train {
     */
   def trainDataFrameClassifier(formula: Formula, data: DataFrame, props: Properties,
                                test: Option[DataFrame], config: TrainConfig)
-                              (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier): Model = {
+                              (trainer: (Formula, DataFrame, Properties) => DataFrameClassifier): ClassificationModel = {
     val start = System.nanoTime()
     val model = trainer(formula, data, props)
     val fitTime = (System.nanoTime() - start) / 1E6
@@ -247,8 +171,11 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
+    val y = formula.response().variables()
+    val predictors = data.schema().fields().filter(field => !y.contains(field.name)).toList
+    val schema = new StructType(predictors: _*)
     val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
-    Model(config.algorithm, formula, numClasses, model)
+    null //ClassificationModel(config.algorithm, formula, schema, numClasses, model)
   }
 
   /**
@@ -262,7 +189,7 @@ object Train {
     */
   def trainDataFrameRegression(formula: Formula, data: DataFrame, props: Properties,
                                test: Option[DataFrame], config: TrainConfig)
-                              (trainer: (Formula, DataFrame, Properties) => DataFrameRegression): Model = {
+                              (trainer: (Formula, DataFrame, Properties) => DataFrameRegression): RegressionModel = {
     val start = System.nanoTime()
     val model = trainer(formula, data, props)
     val fitTime = (System.nanoTime() - start) / 1E6
@@ -282,7 +209,7 @@ object Train {
       println(s"Validation metrics: ${metrics}")
     }
 
-    Model(config.algorithm, formula, 0, model)
+    null //RegressionModel(config.algorithm, formula, null, model)
   }
 
   /**
@@ -299,7 +226,7 @@ object Train {
   def trainVectorClassifier(formula: Formula, data: DataFrame, props: Properties,
                             bias: Boolean, encoder: CategoricalEncoder,
                             test: Option[DataFrame], config: TrainConfig)
-                           (trainer: (Array[Array[Double]], Array[Int], Properties) => Classifier[Array[Double]]): Model = {
+                           (trainer: (Array[Array[Double]], Array[Int], Properties) => Classifier[Array[Double]]): ClassificationModel = {
     val x = formula.x(data).toArray(bias, encoder)
     val y = formula.y(data).toIntArray()
 
@@ -325,7 +252,7 @@ object Train {
     }
 
     val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
-    Model(config.algorithm, formula, numClasses, model)
+    null //ClassificationModel(config.algorithm, formula, numClasses, model)
   }
 
   /**

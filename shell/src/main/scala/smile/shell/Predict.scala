@@ -18,11 +18,8 @@
 package smile.shell
 
 import scopt.OParser
-import smile.classification._
-import smile.data.{CategoricalEncoder, DataFrame, Tuple}
-import smile.data.formula._
 import smile.io.Read
-import smile.regression.{DataFrameRegression, LinearModel}
+import smile.model._
 import smile.util.Strings
 
 /**
@@ -94,110 +91,22 @@ object Predict {
   def predict(config: PredictConfig): Unit = {
     val data = Read.data(config.data, config.format)
     val modelObj = smile.read(config.model)
-    if (!modelObj.isInstanceOf[Model]) {
+    if (modelObj.isInstanceOf[ClassificationModel]) {
+      val model = modelObj.asInstanceOf[ClassificationModel]
+      if (config.probability) {
+        val posteriori = Array.ofDim[Double](model.numClasses)
+        (0 until data.size()).foreach { i =>
+          val y = model(data)//, posteriori)
+          println(s"$y ${Strings.toString(posteriori)}")
+        }
+      } else {
+        model(data).foreach(y => println(y))
+      }
+    } else if (modelObj.isInstanceOf[RegressionModel]) {
+      val model = modelObj.asInstanceOf[RegressionModel]
+      model(data).foreach(y => println(Strings.format(y)))
+    } else {
       Console.err.println(s"{config.model} doesn't contain a valid model.")
-      return
     }
-
-    val model = modelObj.asInstanceOf[Model]
-    model.algorithm match {
-      case "random.forest" =>
-        if (model.numClasses > 1)
-          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.RandomForest], model.numClasses, config.probability)
-        else
-          predictRegression(data, model.model.asInstanceOf[smile.regression.RandomForest])
-      case "gbt" =>
-        if (model.numClasses > 1)
-          predictSoftClassifier(data, model.model.asInstanceOf[smile.classification.GradientTreeBoost], model.numClasses, config.probability)
-        else
-          predictRegression(data, model.model.asInstanceOf[smile.regression.GradientTreeBoost])
-      case "adaboost" =>
-        predictSoftClassifier(data, model.model.asInstanceOf[AdaBoost], model.numClasses, config.probability)
-      case "logit" =>
-        predictSoftClassifier(data, model.formula, model.model.asInstanceOf[LogisticRegression],
-          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
-      case "fld" =>
-        predictClassifier(data, model.formula, model.model.asInstanceOf[FLD], false, CategoricalEncoder.DUMMY)
-      case "lda" =>
-        predictSoftClassifier(data, model.formula, model.model.asInstanceOf[LDA],
-          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
-      case "qda" =>
-        predictSoftClassifier(data, model.formula, model.model.asInstanceOf[QDA],
-          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
-      case "rda" =>
-        predictSoftClassifier(data, model.formula, model.model.asInstanceOf[RDA],
-          model.numClasses, config.probability, false, CategoricalEncoder.DUMMY)
-      case "ols" | "lasso" | "elastic.net" | "ridge" =>
-        predictRegression(data, model.model.asInstanceOf[LinearModel])
-      case algo =>
-        println("Unsupported algorithm: " + algo)
-    }
-  }
-
-  /**
-    * Predicts with a soft classifier.
-    * @param model the model.
-    * @param data the data.
-    */
-  def predictSoftClassifier(data: DataFrame, model: SoftClassifier[Tuple], numClasses: Int, probability: Boolean): Unit = {
-    if (probability) {
-      val posteriori = Array.ofDim[Double](numClasses)
-      (0 until data.size).foreach { i =>
-        val y = model.predict(data(i), posteriori)
-        println(s"$y ${Strings.toString(posteriori)}")
-      }
-    } else {
-      (0 until data.size).foreach { i =>
-        println(model.predict(data(i)))
-      }
-    }
-  }
-
-  /**
-    * Predicts with a soft classifier taking vector input.
-    * @param data the data.
-    * @param model the model.
-    * @param formula the model formula.
-    * @param numClasses the number of classes.
-    * @param bias the flag to generate the bias term.
-    * @param encoder the categorical variable encoder.
-    */
-  def predictSoftClassifier(data: DataFrame, formula: Formula, model: SoftClassifier[Array[Double]],
-                            numClasses: Int, probability: Boolean, bias: Boolean, encoder: CategoricalEncoder): Unit = {
-    if (probability) {
-      val posteriori = Array.ofDim[Double](numClasses)
-      formula.x(data).toArray(bias, encoder).foreach { x =>
-        val y = model.predict(x, posteriori)
-        println(s"$y ${Strings.toString(posteriori)}")
-      }
-    } else {
-      formula.x(data).toArray(bias, encoder).foreach { x =>
-        println(model.predict(x))
-      }
-    }
-  }
-
-  /**
-    * Predicts with a classifier taking vector input.
-    * @param data the data.
-    * @param model the model.
-    * @param formula the model formula.
-    * @param bias the flag to generate the bias term.
-    * @param encoder the categorical variable encoder.
-    */
-  def predictClassifier(data: DataFrame, formula: Formula, model: Classifier[Array[Double]],
-                        bias: Boolean, encoder: CategoricalEncoder): Unit = {
-    formula.x(data).toArray(bias, encoder).foreach { x =>
-      println(model.predict(x))
-    }
-  }
-
-  /**
-    * Predicts with a regression model.
-    * @param model the model.
-    * @param data the data.
-    */
-  def predictRegression(data: DataFrame, model: DataFrameRegression): Unit = {
-    model.predict(data).foreach(y => println(Strings.format(y)))
   }
 }

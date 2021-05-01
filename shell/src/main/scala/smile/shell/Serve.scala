@@ -18,12 +18,15 @@
 package smile.shell
 
 import scopt.OParser
-import smile.classification._
-import smile.data.{CategoricalEncoder, DataFrame, Tuple}
-import smile.data.formula._
-import smile.io.Read
-import smile.regression.{DataFrameRegression, LinearModel}
-import smile.util.Strings
+import akka.actor.typed.ActorSystem
+import akka.actor.typed.scaladsl.Behaviors
+import akka.http.scaladsl.Http
+import akka.http.scaladsl.model._
+import akka.http.scaladsl.server.Directives._
+import akka.stream.scaladsl._
+import akka.util.ByteString
+import scala.util.Random
+import scala.io.StdIn
 
 /**
   * Serve command options.
@@ -73,6 +76,7 @@ object Serve {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
+    /*
     val modelObj = smile.read(config.model)
     if (!modelObj.isInstanceOf[Model]) {
       Console.err.println(s"{config.model} doesn't contain a valid model.")
@@ -80,5 +84,33 @@ object Serve {
     }
 
     val model = modelObj.asInstanceOf[Model]
+    */
+    val numbers = Source.fromIterator(() =>
+      Iterator.continually(Random.nextInt()))
+
+    implicit val system = ActorSystem(Behaviors.empty, "smile")
+    // needed for the future flatMap/onComplete in the end
+    implicit val executionContext = system.executionContext
+
+    val route =
+      path("predict") {
+        post {
+          complete(
+            HttpEntity(
+              ContentTypes.`text/plain(UTF-8)`,
+              // transform each number to a chunk of bytes
+              numbers.map(n => ByteString(s"$n\n"))
+            )
+          )
+        }
+      }
+
+    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
+
+    println(s"Smile online at http://localhost:8080/\nPress RETURN to stop...")
+    StdIn.readLine() // let it run until user presses return
+    bindingFuture
+      .flatMap(_.unbind()) // trigger unbinding from the port
+      .onComplete(_ => system.terminate()) // and shutdown when done
   }
 }
