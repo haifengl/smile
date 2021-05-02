@@ -105,7 +105,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, SoftClassifier<double[]>, Serializable {
+public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, Classifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**

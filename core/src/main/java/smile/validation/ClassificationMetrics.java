@@ -21,7 +21,6 @@ import java.io.Serializable;
 import java.util.Arrays;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
-import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -286,9 +285,9 @@ public class ClassificationMetrics implements Serializable {
     public static <T, M extends Classifier<T>> ClassificationMetrics of(double fitTime, M model, T[] testx, int[] testy) {
         int k = MathEx.unique(testy).length;
         long start = System.nanoTime();
-        if (model instanceof SoftClassifier) {
+        if (model.soft()) {
             double[][] posteriori = new double[testx.length][k];
-            int[] prediction = ((SoftClassifier<T>) model).predict(testx, posteriori);
+            int[] prediction = model.predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
             return ClassificationMetrics.of(fitTime, scoreTime, testy, prediction, posteriori);
@@ -329,10 +328,10 @@ public class ClassificationMetrics implements Serializable {
         long start = System.nanoTime();
         int n = test.nrow();
         int[] prediction = new int[n];
-        if (model instanceof SoftClassifier) {
+        if (model.soft()) {
             double[][] posteriori = new double[n][k];
             for (int i = 0; i < n; i++) {
-                prediction[i] = ((SoftClassifier<Tuple>) model).predict(test.get(i), posteriori[i]);
+                prediction[i] = model.predict(test.get(i), posteriori[i]);
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 

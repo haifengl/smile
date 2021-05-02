@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
-import smile.classification.SoftClassifier;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -99,9 +98,9 @@ public interface LOOCV {
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
-            if (model instanceof SoftClassifier) {
+            if (model.soft()) {
                 soft = true;
-                prediction[i] = ((SoftClassifier<T>) model).predict(x[i], posteriori[i]);
+                prediction[i] = model.predict(x[i], posteriori[i]);
             } else {
                 prediction[i] = model.predict(x[i]);
             }
@@ -184,9 +183,9 @@ public interface LOOCV {
             fitTime += System.nanoTime() - start;
 
             start = System.nanoTime();
-            if (model instanceof SoftClassifier) {
+            if (model.soft()) {
                 soft = true;
-                prediction[i] = ((SoftClassifier<Tuple>) model).predict(data.get(i), posteriori[i]);
+                prediction[i] = model.predict(data.get(i), posteriori[i]);
             } else {
                 prediction[i] = model.predict(data.get(i));
             }

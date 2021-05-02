@@ -30,7 +30,6 @@ import org.apache.spark.storage.StorageLevel
 import org.json4s.JsonDSL._
 import org.json4s.jackson.JsonMethods._
 import org.json4s.{DefaultFormats, JObject}
-import smile.classification.SoftClassifier
 
 /**
   * Params for SmileClassifier
@@ -168,14 +167,14 @@ class SmileClassificationModel(override val uid: String,
   override def predictRaw(features: Vector): Vector = {
     // The Spark API predictRaw function outputs a Vector with
     // "confidence scores" for each class.
-    val posteriori = Array.fill(numClasses)(0.0)
-    model match {
-      case classifier: SoftClassifier[Array[Double]] =>
-        classifier.predict(features.toArray, posteriori)
-      case _ =>
+    val posteriori = Array.ofDim[Double](numClasses)
+    if (model.soft()) {
+      model.predict(features.toArray, posteriori)
+    } else {
         // The "hard" confidence for the predicted class.
-        posteriori(model.predict(features.toArray)) = 1.0
+      posteriori(model.predict(features.toArray)) = 1.0
     }
+
     Vectors.dense(posteriori)
   }
 
