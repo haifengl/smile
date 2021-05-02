@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
-import smile.classification.SoftClassifier;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.data.DataFrame;
@@ -111,9 +110,9 @@ public class ClassificationValidation<M> implements Serializable {
         double fitTime = (System.nanoTime() - start) / 1E6;
 
         start = System.nanoTime();
-        if (model instanceof SoftClassifier) {
+        if (model.soft()) {
             double[][] posteriori = new double[testx.length][k];
-            int[] prediction = ((SoftClassifier<T>) model).predict(testx, posteriori);
+            int[] prediction = model.predict(testx, posteriori);
             double scoreTime = (System.nanoTime() - start) / 1E6;
 
             return new ClassificationValidation<>(model, fitTime, scoreTime, testy, prediction, posteriori);
@@ -171,11 +170,11 @@ public class ClassificationValidation<M> implements Serializable {
 
         int n = test.nrow();
         int[] prediction = new int[n];
-        if (model instanceof SoftClassifier) {
+        if (model.soft()) {
             double[][] posteriori = new double[n][k];
             start = System.nanoTime();
             for (int i = 0; i < n; i++) {
-                prediction[i] = ((SoftClassifier<Tuple>) model).predict(test.get(i), posteriori[i]);
+                prediction[i] = model.predict(test.get(i), posteriori[i]);
             }
             double scoreTime = (System.nanoTime() - start) / 1E6;
 

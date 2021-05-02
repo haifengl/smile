@@ -121,6 +121,16 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     }
 
     /**
+     * Returns true if this is a soft classifier that can estimate
+     * the posteriori probabilities of classification.
+     *
+     * @return true if soft classifier.
+     */
+    default boolean soft() {
+        return false;
+    }
+
+    /**
      * Predicts the class label of an instance and also calculate a posteriori
      * probabilities. Classifiers may NOT support this method since not all
      * classification algorithms are able to calculate such a posteriori
