@@ -135,6 +135,11 @@ public class NaiveBayes extends AbstractClassifier<double[]> {
         return predict(x, new double[k]);
     }
 
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     /**
      * Predict the class of an instance.
      * 

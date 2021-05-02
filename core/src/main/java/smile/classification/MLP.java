@@ -105,7 +105,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class MLP extends MultilayerPerceptron implements OnlineClassifier<double[]>, Classifier<double[]>, Serializable {
+public class MLP extends MultilayerPerceptron implements Classifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -203,6 +203,16 @@ public class MLP extends MultilayerPerceptron implements OnlineClassifier<double
         } else {
             return labels.valueOf(MathEx.whichMax(output.output()));
         }
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /** Updates the model with a single sample. RMSProp is not applied. */

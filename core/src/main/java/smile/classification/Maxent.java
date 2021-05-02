@@ -51,7 +51,7 @@ import smile.validation.ModelSelection;
  * 
  * @author Haifeng Li
  */
-public abstract class Maxent extends AbstractClassifier<int[]> implements OnlineClassifier<int[]> {
+public abstract class Maxent extends AbstractClassifier<int[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -744,6 +744,16 @@ public abstract class Maxent extends AbstractClassifier<int[]> implements Online
      */
     public int dimension() {
         return p;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**

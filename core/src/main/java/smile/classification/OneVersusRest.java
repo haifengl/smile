@@ -200,6 +200,11 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
     }
 
     @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
     public int predict(T x, double[] posteriori) {
         if (platt == null) {
             throw new UnsupportedOperationException("Platt scaling is not available");

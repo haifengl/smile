@@ -36,7 +36,7 @@ import smile.validation.ModelSelection;
  *
  * @author Haifeng Li
  */
-public abstract class SparseLogisticRegression extends AbstractClassifier<SparseArray> implements OnlineClassifier<SparseArray> {
+public abstract class SparseLogisticRegression extends AbstractClassifier<SparseArray> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -714,6 +714,16 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         }
 
         return dot;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**

@@ -372,6 +372,11 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
         return labels == null ? y : labels.valueOf(y);
     }
 
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     /**
      * Predicts the class label of an instance and also calculate a posteriori
      * probabilities. The posteriori estimation is based on sample distribution

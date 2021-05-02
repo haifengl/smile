@@ -334,7 +334,12 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             
         return labels.valueOf(MathEx.whichMax(y));
     }
-    
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     /**
      * Predicts the class label of an instance and also calculate a posteriori
      * probabilities. Not supported.
