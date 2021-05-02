@@ -95,16 +95,16 @@ object Predict {
       val model = modelObj.asInstanceOf[ClassificationModel]
       if (config.probability && model.classifier.soft()) {
         val posteriori = new java.util.ArrayList[Array[Double]]()
-        val y = model(data, posteriori)
+        val y = model.classifier.predict(data, posteriori)
         (0 until data.size()).foreach { i =>
           println(s"${y(i)} ${Strings.toString(posteriori.get(i))}")
         }
       } else {
-        model(data).foreach(y => println(y))
+        model.classifier.predict(data).foreach(y => println(y))
       }
     } else if (modelObj.isInstanceOf[RegressionModel]) {
       val model = modelObj.asInstanceOf[RegressionModel]
-      model(data).foreach(y => println(Strings.format(y)))
+      model.regression.predict(data).foreach(y => println(Strings.format(y)))
     } else {
       Console.err.println(s"{config.model} doesn't contain a valid model.")
     }
