@@ -22,25 +22,35 @@ package smile.regression;
  * predictive performance than could be obtained from any of the constituent
  * learning algorithms alone.
  *
+ * @param <T> the type of input object
+ *
  * @author Haifeng Li
  */
-public interface Ensemble {
+public class Ensemble<T> implements Regression<T> {
+    /** The base models. */
+    private Regression<T>[] models;
+
     /**
      * Returns an ensemble model.
      * @param models the base models.
-     * @param <T> the type of input object
      * @return the ensemble model.
      */
-    static <T> Regression<T> of(Regression<T>... models) {
-        return new Regression<T>() {
-            @Override
-            public double predict(T x) {
-                double y = 0;
-                for (Regression<T> model : models) {
-                    y += model.predict(x);
-                }
-                return y / models.length;
-            }
-        };
+    @SafeVarargs
+    public Ensemble(Regression<T>... models) {
+        this.models = models;
+    }
+
+    @Override
+    public boolean online() {
+        return false;
+    }
+
+    @Override
+    public double predict(T x) {
+        double y = 0;
+        for (Regression<T> model : models) {
+            y += model.predict(x);
+        }
+        return y / models.length;
     }
 }

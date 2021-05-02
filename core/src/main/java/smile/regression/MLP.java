@@ -33,7 +33,7 @@ import smile.base.mlp.*;
  *
  * @author Haifeng Li
  */
- public class MLP extends MultilayerPerceptron implements OnlineRegression<double[]> {
+ public class MLP extends MultilayerPerceptron implements Regression<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -64,6 +64,11 @@ import smile.base.mlp.*;
     public double predict(double[] x) {
         propagate(x);
         return output.output()[0];
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /** Updates the model with a single sample. RMSProp is not applied. */

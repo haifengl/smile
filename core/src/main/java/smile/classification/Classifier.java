@@ -204,7 +204,6 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
         }).toArray();
     }
 
-
     /**
      * Returns true if this is an online learner.
      *
@@ -225,8 +224,8 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * Online update the classifier with a new training instance.
      * In general, this method may be NOT multi-thread safe.
      *
-     * @param x training instance.
-     * @param y training label.
+     * @param x the training instance.
+     * @param y the training label.
      */
     default void update(T x, int y) {
         throw new UnsupportedOperationException("update a batch learner");
@@ -235,7 +234,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     /**
      * Updates the model with a mini-batch of new samples.
      * @param x the training instances.
-     * @param y the target values.
+     * @param y the training labels.
      */
     default void update(T[] x, int[] y) {
         if (x.length != y.length) {

@@ -55,7 +55,7 @@ import smile.stat.Hypothesis;
  *
  * @author Haifeng Li
  */
-public class LinearModel implements OnlineRegression<double[]>, DataFrameRegression {
+public class LinearModel implements DataFrameRegression {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LinearModel.class);
 
@@ -323,7 +323,11 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         return pvalue;
     }
 
-    @Override
+    /**
+     * Predicts the dependent variable of an instance.
+     * @param x an instance.
+     * @return the predicted value of dependent variable.
+     */
     public double predict(double[] x) {
         double y = b;
         if (x.length == w.length) {
@@ -382,12 +386,16 @@ public class LinearModel implements OnlineRegression<double[]>, DataFrameRegress
         }
     }
 
+    @Override
+    public boolean online() {
+        return V != null;
+    }
+
     /**
      * Growing window recursive least squares with lambda = 1.
      * RLS updates an ordinary least squares with samples that
      * arrive sequentially.
      */
-    @Override
     public void update(double[] x, double y) {
         update(x, y, 1.0);
     }

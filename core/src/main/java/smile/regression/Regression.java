@@ -18,7 +18,12 @@
 package smile.regression;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.ToDoubleFunction;
+
+import smile.data.Dataset;
+import smile.data.Instance;
 import smile.math.MathEx;
 
 /**
@@ -39,24 +44,89 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      */
     double predict(T x);
 
+    @Override
+    default double applyAsDouble(T x) {
+        return predict(x);
+    }
+
     /**
-     * Predicts the dependent variables of an array of instances.
+     * Predicts the dependent variable of an array of instances.
      *
      * @param x the instances.
      * @return the predicted values.
      */
     default double[] predict(T[] x) {
-        int n = x.length;
-        double[] y = new double[n];
-        for (int i = 0; i < n; i++) {
-            y[i] = predict(x[i]);
-        }
-        return y;
+        return Arrays.stream(x).mapToDouble(this::predict).toArray();
     }
 
-    @Override
-    default double applyAsDouble(T x) {
-        return predict(x);
+    /**
+     * Predicts the dependent variable of a list of instances.
+     *
+     * @param x the instances to be classified.
+     * @return the predicted class labels.
+     */
+    default double[] predict(List<T> x) {
+        return x.stream().mapToDouble(this::predict).toArray();
+    }
+
+    /**
+     * Predicts the dependent variable of a dataset.
+     *
+     * @param x the dataset to be classified.
+     * @return the predicted class labels.
+     */
+    default double[] predict(Dataset<T> x) {
+        return x.stream().mapToDouble(this::predict).toArray();
+    }
+
+    /**
+     * Returns true if this is an online learner.
+     *
+     * @return true if online learner.
+     */
+    default boolean online() {
+        try {
+            update(null, 0);
+        } catch (UnsupportedOperationException e) {
+            return !e.getMessage().equals("update a batch learner");
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Online update the classifier with a new training instance.
+     * In general, this method may be NOT multi-thread safe.
+     *
+     * @param x the training instance.
+     * @param y the response variable.
+     */
+    default void update(T x, double y) {
+        throw new UnsupportedOperationException("update a batch learner");
+    }
+
+    /**
+     * Updates the model with a mini-batch of new samples.
+     * @param x the training instances.
+     * @param y the response variables.
+     */
+    default void update(T[] x, double[] y) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
+        }
+
+        for (int i = 0; i < x.length; i++){
+            update(x[i], y[i]);
+        }
+    }
+
+    /**
+     * Updates the model with a mini-batch of new samples.
+     * @param batch the training instances.
+     */
+    default void update(Dataset<Instance<T>> batch) {
+        batch.stream().forEach(sample -> update(sample.x(), sample.y()));
     }
 
     /**

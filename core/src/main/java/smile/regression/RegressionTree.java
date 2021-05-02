@@ -77,7 +77,7 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class RegressionTree extends CART implements Regression<Tuple>, DataFrameRegression {
+public class RegressionTree extends CART implements DataFrameRegression {
     private static final long serialVersionUID = 2L;
 
     /** The dependent variable. */
