@@ -81,7 +81,7 @@ import java.util.Arrays;
  *
  * @author Haifeng Li
  */
-public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifier<int[]> {
+public class DiscreteNaiveBayes extends AbstractClassifier<int[]> implements OnlineClassifier<int[]> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DiscreteNaiveBayes.class);
 
@@ -197,10 +197,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * The log conditional probabilities for document classification.
      */
     private final double[][] logcondprob;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor of naive Bayes classifier for document classification.
@@ -230,6 +226,8 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, int k, int p, double sigma, IntSet labels) {
+        super(labels);
+
         if (k < 2) {
             throw new IllegalArgumentException("Invalid number of classes: " + k);
         }
@@ -246,7 +244,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         this.k = k;
         this.p = p;
         this.sigma = sigma;
-        this.labels = labels;
 
         fixedPriori = false;
         priori = new double[k];
@@ -284,6 +281,8 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
      * @param labels the class label encoder.
      */
     public DiscreteNaiveBayes(Model model, double[] priori, int p, double sigma, IntSet labels) {
+        super(labels);
+
         if (p <= 0) {
             throw new IllegalArgumentException("Invalid dimension: " + p);
         }
@@ -312,7 +311,6 @@ public class DiscreteNaiveBayes implements OnlineClassifier<int[]>, SoftClassifi
         this.k = priori.length;
         this.p = p;
         this.sigma = sigma;
-        this.labels = labels;
 
         this.priori = priori;
         fixedPriori = true;

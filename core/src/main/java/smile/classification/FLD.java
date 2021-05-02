@@ -65,7 +65,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class FLD implements Classifier<double[]>, Projection<double[]> {
+public class FLD extends AbstractClassifier<double[]> implements Projection<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -88,10 +88,6 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * Projected class mean vectors.
      */
     private final double[][] mu;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -111,10 +107,10 @@ public class FLD implements Classifier<double[]>, Projection<double[]> {
      * @param labels the class label encoder.
      */
     public FLD(double[] mean, double[][] mu, Matrix scaling, IntSet labels) {
+        super(labels);
         this.k = mu.length;
         this.p = mean.length;
         this.scaling = scaling;
-        this.labels = labels;
 
         int L = scaling.ncol();
         this.mean = new double[L];

@@ -49,7 +49,7 @@ import smile.util.IntSet;
  *
  * @author Haifeng Li
  */
-public class OneVersusRest<T> implements SoftClassifier<T> {
+public class OneVersusRest<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(OneVersusRest.class);
 
@@ -59,8 +59,6 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
     private final Classifier<T>[] classifiers;
     /** The probability estimation by Platt scaling. */
     private final PlattScaling[] platt;
-    /** The class label encoder. */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -78,10 +76,10 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param labels the class label encoder.
      */
     public OneVersusRest(Classifier<T>[] classifiers, PlattScaling[] platt, IntSet labels) {
+        super(labels);
         this.classifiers = classifiers;
         this.platt = platt;
         this. k = classifiers.length;
-        this.labels = labels;
     }
 
     /**
@@ -156,6 +154,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
      * @param trainer the lambda to train binary classifiers.
      * @return the model.
      */
+    /*
     @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
@@ -183,6 +182,7 @@ public class OneVersusRest<T> implements SoftClassifier<T> {
             }
         };
     }
+     */
 
     @Override
     public int predict(T x) {

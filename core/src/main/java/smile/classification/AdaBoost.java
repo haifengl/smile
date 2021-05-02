@@ -62,7 +62,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, TreeSHAP {
+public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(AdaBoost.class);
 
@@ -95,10 +95,6 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * importance measure.
      */
     private final double[] importance;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -126,13 +122,13 @@ public class AdaBoost implements SoftClassifier<Tuple>, DataFrameClassifier, Tre
      * @param labels the class label encoder.
      */
     public AdaBoost(Formula formula, int k, DecisionTree[] trees, double[] alpha, double[] error, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = k;
         this.trees = trees;
         this.alpha = alpha;
         this.error = error;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**

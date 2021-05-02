@@ -48,7 +48,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class QDA implements SoftClassifier<double[]> {
+public class QDA extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -81,10 +81,6 @@ public class QDA implements SoftClassifier<double[]> {
      * matrix is spherical.
      */
     private final Matrix[] scaling;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -106,13 +102,13 @@ public class QDA implements SoftClassifier<double[]> {
      * @param labels the class label encoder.
      */
     public QDA(double[] priori, double[][] mu, double[][] eigen, Matrix[] scaling, IntSet labels) {
+        super(labels);
         this.k = priori.length;
         this.p = mu[0].length;
         this.priori = priori;
         this.mu = mu;
         this.eigen = eigen;
         this.scaling = scaling;
-        this.labels = labels;
 
         logppriori = new double[k];
         for (int i = 0; i < k; i++) {

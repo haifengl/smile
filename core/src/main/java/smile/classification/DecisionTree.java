@@ -347,6 +347,25 @@ public class DecisionTree extends CART implements SoftClassifier<Tuple>, DataFra
     }
 
     @Override
+    public int numClasses() {
+        return labels.size();
+    }
+
+    @Override
+    public int[] labels() {
+        return labels.values;
+    }
+
+    @Override
+    public NominalScale scale() {
+        String[] values = new String[labels.size()];
+        for (int i = 0; i < labels.size(); i++) {
+            values[i] = String.valueOf(labels.valueOf(i));
+        }
+        return new NominalScale(values);
+    }
+
+    @Override
     public int predict(Tuple x) {
         DecisionNode leaf = (DecisionNode) root.predict(predictors(x));
         int y = leaf.output();
