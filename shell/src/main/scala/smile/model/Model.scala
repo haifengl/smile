@@ -22,27 +22,18 @@ import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
 import smile.classification.{AdaBoost, DataFrameClassifier, DecisionTree, FLD, LDA, LogisticRegression, QDA, RDA}
-import smile.math.MathEx
 import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
 
 /**
   * The machine learning model applicable on a data frame.
-  * @tparam T the model output type.
   */
-sealed trait DataFrameModel[T] {
+sealed trait DataFrameModel {
   /** The algorithm name. */
   val algorithm: String
   /** The schema of input data (without response variable). */
   val schema: StructType
   /** The model formula. */
   val formula: Formula
-
-  /**
-    * Applies the model on an input data.
-    * @param data the input data.
-    * @return the output of model.
-    */
-  def apply(data: DataFrame): T
 }
 
 /**
@@ -55,21 +46,7 @@ sealed trait DataFrameModel[T] {
 case class ClassificationModel(override val algorithm: String,
                                override val schema: StructType,
                                override val formula: Formula,
-                               classifier: DataFrameClassifier) extends DataFrameModel[Array[Int]] {
-  override def apply(data: DataFrame): Array[Int] = {
-    classifier.predict(data)
-  }
-
-  /**
-    * Applies the model on an input data.
-    * @param data the input data.
-    * @param posterior an empty Java list to store the posteriori probabilities on output.
-    * @return the output of model.
-    */
-  def apply(data: DataFrame, posterior: java.util.List[Array[Double]]): Array[Int] = {
-    classifier.predict(data, posterior)
-  }
-}
+                               classifier: DataFrameClassifier) extends DataFrameModel
 
 object ClassificationModel {
   /**
@@ -111,11 +88,7 @@ object ClassificationModel {
 case class RegressionModel(override val algorithm: String,
                            override val schema: StructType,
                            override val formula: Formula,
-                           regression: DataFrameRegression) extends DataFrameModel[Array[Double]] {
-  override def apply(data: DataFrame): Array[Double] = {
-    regression.predict(data)
-  }
-}
+                           regression: DataFrameRegression) extends DataFrameModel
 
 object RegressionModel {
   /**

@@ -17,6 +17,8 @@
 
 package smile.shell
 
+import scala.util.Random
+import scala.io.StdIn
 import scopt.OParser
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
@@ -25,8 +27,7 @@ import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl._
 import akka.util.ByteString
-import scala.util.Random
-import scala.io.StdIn
+import com.typesafe.config.ConfigFactory
 
 /**
   * Serve command options.
@@ -105,9 +106,11 @@ object Serve {
         }
       }
 
-    val bindingFuture = Http().newServerAt("localhost", 8080).bind(route)
+    val conf = ConfigFactory.load()
+    val port = conf.getInt("akka.http.server.default-http-port")
+    val bindingFuture = Http().newServerAt("localhost", port).bind(route)
 
-    println(s"Smile online at http://localhost:8080/\nPress RETURN to stop...")
+    println(s"Smile online at http://localhost:$port/\nPress RETURN to stop...")
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
