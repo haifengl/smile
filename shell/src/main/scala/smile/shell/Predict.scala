@@ -93,11 +93,11 @@ object Predict {
     val modelObj = smile.read(config.model)
     if (modelObj.isInstanceOf[ClassificationModel]) {
       val model = modelObj.asInstanceOf[ClassificationModel]
-      if (config.probability) {
-        val posteriori = Array.ofDim[Double](model.numClasses)
+      if (config.probability && model.classifier.soft()) {
+        val posteriori = new java.util.ArrayList[Array[Double]]()
+        val y = model(data, posteriori)
         (0 until data.size()).foreach { i =>
-          val y = model(data)//, posteriori)
-          println(s"$y ${Strings.toString(posteriori)}")
+          println(s"${y(i)} ${Strings.toString(posteriori.get(i))}")
         }
       } else {
         model(data).foreach(y => println(y))

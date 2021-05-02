@@ -41,7 +41,7 @@ sealed trait DataFrameModel[T] {
     * Applies the model on an input data.
     * @param data the input data.
     * @return the output of model.
-    *  */
+    */
   def apply(data: DataFrame): T
 }
 
@@ -50,16 +50,24 @@ sealed trait DataFrameModel[T] {
   * @param algorithm the algorithm name.
   * @param schema the schema of input data (without response variable).
   * @param formula the model formula.
-  * @param numClasses the number of classes. 0 for regression or transformation models.
-  * @param model the model.
+  * @param classifier the classification model.
   */
 case class ClassificationModel(override val algorithm: String,
                                override val schema: StructType,
                                override val formula: Formula,
-                               numClasses: Int,
-                               model: DataFrameClassifier) extends DataFrameModel[Array[Int]] {
+                               classifier: DataFrameClassifier) extends DataFrameModel[Array[Int]] {
   override def apply(data: DataFrame): Array[Int] = {
-    model.predict(data)
+    classifier.predict(data)
+  }
+
+  /**
+    * Applies the model on an input data.
+    * @param data the input data.
+    * @param posterior an empty Java list to store the posteriori probabilities on output.
+    * @return the output of model.
+    */
+  def apply(data: DataFrame, posterior: java.util.List[Array[Double]]): Array[Int] = {
+    classifier.predict(data, posterior)
   }
 }
 
@@ -89,8 +97,7 @@ object ClassificationModel {
     val y = formula.response().variables()
     val predictors = data.schema().fields().filter(field => !y.contains(field.name))
     val schema = new StructType(predictors: _*)
-    val numClasses = MathEx.unique(formula.y(data).toIntArray()).length
-    ClassificationModel(algorithm, schema, formula, numClasses, model)
+    ClassificationModel(algorithm, schema, formula, model)
   }
 }
 
@@ -99,14 +106,14 @@ object ClassificationModel {
   * @param algorithm the algorithm name.
   * @param schema the schema of input data (without response variable).
   * @param formula the model formula.
-  * @param model the model.
+  * @param regression the regression model.
   */
 case class RegressionModel(override val algorithm: String,
                            override val schema: StructType,
                            override val formula: Formula,
-                           model: DataFrameRegression) extends DataFrameModel[Array[Double]] {
+                           regression: DataFrameRegression) extends DataFrameModel[Array[Double]] {
   override def apply(data: DataFrame): Array[Double] = {
-    model.predict(data)
+    regression.predict(data)
   }
 }
 
