@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import smile.data.Dataset;
+import smile.data.Instance;
 import smile.data.measure.NominalScale;
 
 /**
@@ -127,6 +128,13 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @return true if soft classifier.
      */
     default boolean soft() {
+        try {
+            predict(null, new double[numClasses()]);
+        } catch (UnsupportedOperationException e) {
+            return !e.getMessage().equals("soft classification with a hard classifier");
+        } catch (Exception e) {
+            return true;
+        }
         return false;
     }
 
@@ -141,7 +149,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * @return the predicted class label
      */
     default int predict(T x, double[] posteriori) {
-        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException("soft classification with a hard classifier");
     }
 
     /**
@@ -194,5 +202,56 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
             posteriori.add(prob);
             return predict(xi, prob);
         }).toArray();
+    }
+
+
+    /**
+     * Returns true if this is an online learner.
+     *
+     * @return true if online learner.
+     */
+    default boolean online() {
+        try {
+            update(null, 0);
+        } catch (UnsupportedOperationException e) {
+            return !e.getMessage().equals("update a batch learner");
+        } catch (Exception e) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Online update the classifier with a new training instance.
+     * In general, this method may be NOT multi-thread safe.
+     *
+     * @param x training instance.
+     * @param y training label.
+     */
+    default void update(T x, int y) {
+        throw new UnsupportedOperationException("update a batch learner");
+    }
+
+    /**
+     * Updates the model with a mini-batch of new samples.
+     * @param x the training instances.
+     * @param y the target values.
+     */
+    default void update(T[] x, int[] y) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("Input vector x of size %d not equal to length %d of y", x.length, y.length));
+        }
+
+        for (int i = 0; i < x.length; i++){
+            update(x[i], y[i]);
+        }
+    }
+
+    /**
+     * Updates the model with a mini-batch of new samples.
+     * @param batch the training instances.
+     */
+    default void update(Dataset<Instance<T>> batch) {
+        batch.stream().forEach(sample -> update(sample.x(), sample.label()));
     }
 }

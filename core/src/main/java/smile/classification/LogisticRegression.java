@@ -78,7 +78,7 @@ import smile.validation.ModelSelection;
  * 
  * @author Haifeng Li
  */
-public abstract class LogisticRegression extends AbstractClassifier<double[]> implements OnlineClassifier<double[]> {
+public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -848,6 +848,16 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> im
         }
 
         return dot;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
     }
 
     /**

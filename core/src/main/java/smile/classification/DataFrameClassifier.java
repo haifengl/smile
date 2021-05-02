@@ -36,8 +36,8 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
     Formula formula();
 
     /**
-     * Returns the design matrix schema.
-     * @return the design matrix schema.
+     * Returns the predictor schema.
+     * @return the predictor schema.
      */
     StructType schema();
 

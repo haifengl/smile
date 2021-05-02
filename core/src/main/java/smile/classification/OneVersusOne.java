@@ -217,6 +217,11 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
         return labels.valueOf(MathEx.whichMax(count));
     }
 
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     /**
      * Prediction is based posteriori probability estimation.
      * The result may be different from predict(T x).

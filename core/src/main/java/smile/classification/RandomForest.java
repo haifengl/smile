@@ -590,7 +590,12 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
         
         return labels.valueOf(MathEx.whichMax(y));
     }
-    
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     @Override
     public int predict(Tuple x, double[] posteriori) {
         if (posteriori.length != k) {

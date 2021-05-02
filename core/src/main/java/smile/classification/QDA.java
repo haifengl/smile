@@ -227,6 +227,11 @@ public class QDA extends AbstractClassifier<double[]> {
     }
 
     @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
     public int predict(double[] x, double[] posteriori) {
         if (x.length != p) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));

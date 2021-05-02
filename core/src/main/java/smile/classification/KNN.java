@@ -200,6 +200,11 @@ public class KNN<T> extends AbstractClassifier<T> {
     }
 
     @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
     public int predict(T x, double[] posteriori) {
         Neighbor<T,T>[] neighbors = knn.knn(x, k);
         if (k == 1) {

@@ -516,6 +516,11 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
     }
 
     @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
     public int predict(Tuple x, double[] posteriori) {
         if (posteriori.length != k) {
             throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
