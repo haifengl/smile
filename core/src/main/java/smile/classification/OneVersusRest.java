@@ -166,26 +166,19 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
 
         StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
-            /** The class labels. */
-            final IntSet labels = ClassLabels.fit(y).labels;
-
             @Override
             public int numClasses() {
-                return labels.size();
+                return model.numClasses();
             }
 
             @Override
             public int[] labels() {
-                return labels.values;
+                return model.labels();
             }
 
             @Override
             public NominalScale scale() {
-                String[] values = new String[labels.size()];
-                for (int i = 0; i < labels.size(); i++) {
-                    values[i] = String.valueOf(labels.valueOf(i));
-                }
-                return new NominalScale(values);
+                return model.scale();
             }
 
             @Override

@@ -74,7 +74,7 @@ import smile.validation.metric.*;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements Regression<Tuple>, DataFrameRegression, TreeSHAP {
+public class RandomForest implements DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
 
     /**

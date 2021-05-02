@@ -42,6 +42,16 @@ public class Ensemble<T> implements Classifier<T> {
     }
 
     @Override
+    public boolean soft() {
+        return Arrays.stream(models).allMatch(model -> model.soft());
+    }
+
+    @Override
+    public boolean online() {
+        return false;
+    }
+
+    @Override
     public int predict(T x) {
         int[] labels = new int[models.length];
         for (int i = 0; i < models.length; i++) {
