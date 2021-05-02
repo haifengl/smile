@@ -24,7 +24,9 @@ import static java.lang.Math.max;
 
 import smile.data.DataFrame;
 import smile.data.Tuple;
+import smile.data.formula.Abs;
 import smile.data.formula.Formula;
+import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -169,18 +171,39 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
      * @param trainer the lambda to train binary classifiers.
      * @return the model.
      */
-    /*
     @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();
         OneVersusOne<Tuple> model = fit(x, y, 1, 0, (Tuple[] rows, int[] labels) -> {
             DataFrame df = DataFrame.of(Arrays.asList(rows));
-            return (Classifier<Tuple>) trainer.apply(formula, df);
+            return trainer.apply(formula, df);
         });
 
         StructType schema = formula.x(data.get(0)).schema();
         return new DataFrameClassifier() {
+            /** The class labels. */
+            final IntSet labels = ClassLabels.fit(y).labels;
+
+            @Override
+            public int numClasses() {
+                return labels.size();
+            }
+
+            @Override
+            public int[] labels() {
+                return labels.values;
+            }
+
+            @Override
+            public NominalScale scale() {
+                String[] values = new String[labels.size()];
+                for (int i = 0; i < labels.size(); i++) {
+                    values[i] = String.valueOf(labels.valueOf(i));
+                }
+                return new NominalScale(values);
+            }
+
             @Override
             public int predict(Tuple x) {
                 return model.predict(x);
@@ -197,7 +220,6 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
             }
         };
     }
-     */
 
     /** Prediction is based on voting. */
     @Override
