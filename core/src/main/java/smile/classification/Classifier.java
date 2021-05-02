@@ -18,8 +18,12 @@
 package smile.classification;
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.List;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
+import smile.data.Dataset;
+import smile.data.measure.NominalScale;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.
@@ -41,6 +45,24 @@ import java.util.function.ToIntFunction;
  */
 public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Serializable {
     /**
+     * Returns the number of classes.
+     * @return the number of classes.
+     */
+    int numClasses();
+
+    /**
+     * Returns the class labels.
+     * @return the class labels.
+     */
+    int[] labels();
+
+    /**
+     * Returns the nominal scale of the class labels.
+     * @return the nominal scale of the class labels.
+     */
+    NominalScale scale();
+
+    /**
      * Predicts the class label of an instance.
      *
      * @param x the instance to be classified.
@@ -49,28 +71,13 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     int predict(T x);
 
     /**
-     * The classification score function.
+     * The raw prediction score.
      *
      * @param x the instance to be classified.
-     * @return the prediction score.
+     * @return the raw prediction score.
      */
     default double score(T x) {
         throw new UnsupportedOperationException();
-    }
-
-    /**
-     * Predicts the class labels of an array of instances.
-     *
-     * @param x the instances to be classified.
-     * @return the predicted class labels.
-     */
-    default int[] predict(T[] x) {
-        int n = x.length;
-        int[] y = new int[n];
-        for (int i = 0; i < n; i++) {
-            y[i] = predict(x[i]);
-        }
-        return y;
     }
 
     @Override
@@ -81,5 +88,101 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     @Override
     default double applyAsDouble(T x) {
         return score(x);
+    }
+
+    /**
+     * Predicts the class labels of an array of instances.
+     *
+     * @param x the instances to be classified.
+     * @return the predicted class labels.
+     */
+    default int[] predict(T[] x) {
+        return Arrays.stream(x).mapToInt(this::predict).toArray();
+    }
+
+    /**
+     * Predicts the class labels of a list of instances.
+     *
+     * @param x the instances to be classified.
+     * @return the predicted class labels.
+     */
+    default int[] predict(List<T> x) {
+        return x.stream().mapToInt(this::predict).toArray();
+    }
+
+    /**
+     * Predicts the class labels of a dataset.
+     *
+     * @param x the dataset to be classified.
+     * @return the predicted class labels.
+     */
+    default int[] predict(Dataset<T> x) {
+        return x.stream().mapToInt(this::predict).toArray();
+    }
+
+    /**
+     * Predicts the class label of an instance and also calculate a posteriori
+     * probabilities. Classifiers may NOT support this method since not all
+     * classification algorithms are able to calculate such a posteriori
+     * probabilities.
+     *
+     * @param x an instance to be classified.
+     * @param posteriori a posteriori probabilities on output.
+     * @return the predicted class label
+     */
+    default int predict(T x, double[] posteriori) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Predicts the class labels of an array of instances.
+     *
+     * @param x the instances to be classified.
+     * @param posteriori a posteriori probabilities on output.
+     * @return the predicted class labels.
+     */
+    default int[] predict(T[] x, double[][] posteriori) {
+        int k = numClasses();
+        int n = x.length;
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            if (posteriori[i] == null) {
+                posteriori[i] = new double[k];
+            }
+            y[i] = predict(x[i], posteriori[i]);
+        }
+        return y;
+    }
+
+    /**
+     * Predicts the class labels of a list of instances.
+     *
+     * @param x the instances to be classified.
+     * @param posteriori an empty list to store a posteriori probabilities on output.
+     * @return the predicted class labels.
+     */
+    default int[] predict(List<T> x, List<double[]> posteriori) {
+        int k = numClasses();
+        return x.stream().mapToInt(xi -> {
+            double[] prob = new double[k];
+            posteriori.add(prob);
+            return predict(xi, prob);
+        }).toArray();
+    }
+
+    /**
+     * Predicts the class labels of a dataset.
+     *
+     * @param x the dataset to be classified.
+     * @param posteriori an empty list to store a posteriori probabilities on output.
+     * @return the predicted class labels.
+     */
+    default int[] predict(Dataset<T> x, List<double[]> posteriori) {
+        int k = numClasses();
+        return x.stream().mapToInt(xi -> {
+            double[] prob = new double[k];
+            posteriori.add(prob);
+            return predict(xi, prob);
+        }).toArray();
     }
 }

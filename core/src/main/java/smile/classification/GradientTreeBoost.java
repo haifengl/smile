@@ -108,7 +108,7 @@ import smile.util.Strings;
  * 
  * @author Haifeng Li
  */
-public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassifier, SHAP<Tuple> {
+public class GradientTreeBoost extends AbstractClassifier<Tuple> implements DataFrameClassifier, SHAP<Tuple> {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GradientTreeBoost.class);
 
@@ -143,10 +143,6 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * The shrinkage parameter in (0, 1] controls the learning rate of procedure.
      */
     private final double shrinkage;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor of binary class.
@@ -172,13 +168,13 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param labels     class labels
      */
     public GradientTreeBoost(Formula formula, RegressionTree[] trees, double b, double shrinkage, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = 2;
         this.trees = trees;
         this.b = b;
         this.shrinkage = shrinkage;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**
@@ -200,15 +196,15 @@ public class GradientTreeBoost implements SoftClassifier<Tuple>, DataFrameClassi
      * @param forest     forest of regression trees.
      * @param shrinkage  the shrinkage pparameter in (0, 1] controls the learning rate of procedure.
      * @param importance variable importance
-     * @param labels     class labels
+     * @param labels     the class label encoder.
      */
     public GradientTreeBoost(Formula formula, RegressionTree[][] forest, double shrinkage, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = forest.length;
         this.forest = forest;
         this.shrinkage = shrinkage;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**

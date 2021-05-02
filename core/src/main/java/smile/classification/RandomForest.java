@@ -75,7 +75,7 @@ import smile.validation.metric.Error;
  * 
  * @author Haifeng Li
  */
-public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier, TreeSHAP {
+public class RandomForest extends AbstractClassifier<Tuple> implements DataFrameClassifier, TreeSHAP {
     private static final long serialVersionUID = 2L;
     private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
@@ -133,11 +133,6 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
     private final double[] importance;
 
     /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
-
-    /**
      * Constructor.
      *
      * @param formula a symbolic description of the model to be fitted.
@@ -161,12 +156,12 @@ public class RandomForest implements SoftClassifier<Tuple>, DataFrameClassifier,
      * @param labels the class label encoder.
      */
     public RandomForest(Formula formula, int k, Model[] models, ClassificationMetrics metrics, double[] importance, IntSet labels) {
+        super(labels);
         this.formula = formula;
         this.k = k;
         this.models = models;
         this.metrics = metrics;
         this.importance = importance;
-        this.labels = labels;
     }
 
     /**

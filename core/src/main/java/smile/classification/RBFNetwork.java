@@ -87,7 +87,7 @@ import smile.util.IntSet;
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T> {
+public class RBFNetwork<T> extends AbstractClassifier<T> {
     private static final long serialVersionUID = 2L;
 
     /**
@@ -106,10 +106,6 @@ public class RBFNetwork<T> implements Classifier<T> {
      * True to fit a normalized RBF network.
      */
     private final boolean normalized;
-    /**
-     * The class label encoder.
-     */
-    private final IntSet labels;
 
     /**
      * Constructor.
@@ -131,11 +127,11 @@ public class RBFNetwork<T> implements Classifier<T> {
      * @param labels the class label encoder.
      */
     public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
+        super(labels);
         this.k = k;
         this.rbf = rbf;
         this.w = w;
         this.normalized = normalized;
-        this.labels = labels;
     }
 
     /**

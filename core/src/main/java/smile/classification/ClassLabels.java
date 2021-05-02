@@ -36,7 +36,7 @@ public class ClassLabels implements Serializable {
 
     /** The number of classes. */
     public final int k;
-    /** The class labels. If the class labels are already in [0, k), this is empty. */
+    /** The class labels. */
     public final IntSet labels;
     /** The sample class id in [0, k). */
     public final int[] y;
@@ -65,8 +65,8 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Returns the nominal scale for the class labels.
-     * @return the nominal scale for the class labels.
+     * Returns the nominal scale of the class labels.
+     * @return the nominal scale of the class labels.
      */
     public NominalScale scale() {
         String[] values = new String[labels.size()];

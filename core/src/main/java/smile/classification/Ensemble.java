@@ -18,6 +18,7 @@
 package smile.classification;
 
 import java.util.Arrays;
+import smile.data.measure.NominalScale;
 import smile.math.MathEx;
 
 /**
@@ -27,59 +28,58 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public interface Ensemble {
+public class Ensemble<T> implements Classifier<T> {
+    /** The base models. */
+    private Classifier<T>[] models;
+
     /**
-     * Returns an ensemble model.
+     * Constructor.
      * @param models the base models.
-     * @param <T> the type of input object
-     * @return the ensemble model.
      */
-    static <T> Classifier<T> of(Classifier<T>... models) {
-        return new Classifier<T>() {
-            @Override
-            public int predict(T x) {
-                int[] labels = new int[models.length];
-                for (int i = 0; i < models.length; i++) {
-                    labels[i] = models[i].predict(x);
-                }
-                return MathEx.mode(labels);
-            }
-        };
+    @SafeVarargs
+    public Ensemble(Classifier<T>... models) {
+        this.models = models;
     }
 
-    /**
-     * Returns an ensemble model.
-     * @param models the base models.
-     * @param <T> the type of input object
-     * @return the ensemble model.
-     */
-    static <T> SoftClassifier<T> of(SoftClassifier<T>... models) {
-        return new SoftClassifier<T>() {
-            @Override
-            public int predict(T x) {
-                int[] labels = new int[models.length];
-                for (int i = 0; i < models.length; i++) {
-                    labels[i] = models[i].predict(x);
-                }
-                return MathEx.mode(labels);
-            }
+    @Override
+    public int predict(T x) {
+        int[] labels = new int[models.length];
+        for (int i = 0; i < models.length; i++) {
+            labels[i] = models[i].predict(x);
+        }
+        return MathEx.mode(labels);
+    }
 
-            @Override
-            public int predict(T x, double[] posteriori) {
-                double[] p = new double[posteriori.length];
-                Arrays.fill(posteriori, 0.0);
-                for (SoftClassifier model : models) {
-                    model.predict(x, p);
-                    for (int i = 0; i < p.length; i++) {
-                        posteriori[i] += p[i];
-                    }
-                }
+    @Override
+    public int predict(T x, double[] posteriori) {
+        Arrays.fill(posteriori, 0.0);
+        double[] prob = new double[posteriori.length];
 
-                for (int i = 0; i < posteriori.length; i++) {
-                    posteriori[i] /= models.length;
-                }
-                return MathEx.whichMax(posteriori);
+        for (Classifier<T> model : models) {
+            model.predict(x, prob);
+            for (int i = 0; i < prob.length; i++) {
+                posteriori[i] += prob[i];
             }
-        };
+        }
+
+        for (int i = 0; i < posteriori.length; i++) {
+            posteriori[i] /= models.length;
+        }
+        return MathEx.whichMax(posteriori);
+    }
+
+    @Override
+    public int numClasses() {
+        return models[0].numClasses();
+    }
+
+    @Override
+    public int[] labels() {
+        return models[0].labels();
+    }
+
+    @Override
+    public NominalScale scale() {
+        return models[0].scale();
     }
 }

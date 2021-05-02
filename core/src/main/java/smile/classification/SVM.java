@@ -20,6 +20,8 @@ package smile.classification;
 import smile.base.svm.KernelMachine;
 import smile.base.svm.LinearKernelMachine;
 import smile.base.svm.LASVM;
+import smile.data.measure.NominalScale;
+import smile.util.IntSet;
 import smile.util.SparseArray;
 import smile.math.kernel.BinarySparseLinearKernel;
 import smile.math.kernel.LinearKernel;
@@ -96,6 +98,22 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
     }
 
     @Override
+    public int numClasses() {
+        return 2;
+    }
+
+    @Override
+    public int[] labels() {
+        return new int[]{-1, +1};
+    }
+
+    @Override
+    public NominalScale scale() {
+        String[] values = {"-1", "+1"};
+        return new NominalScale(values);
+    }
+
+    @Override
     public int predict(T x) {
         return score(x) > 0 ? +1 : -1;
     }
@@ -112,7 +130,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         LASVM<double[]> lasvm = new LASVM<>(new LinearKernel(), C, tol);
         KernelMachine<double[]> svm = lasvm.fit(x, y);
 
-        return new Classifier<double[]>() {
+        IntSet labels = new IntSet(new int[]{-1, +1});
+        return new AbstractClassifier<double[]>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.of(svm);
 
             @Override
@@ -135,7 +154,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         LASVM<int[]> lasvm = new LASVM<>(new BinarySparseLinearKernel(), C, tol);
         KernelMachine<int[]> svm = lasvm.fit(x, y);
 
-        return new Classifier<int[]>() {
+        IntSet labels = new IntSet(new int[]{-1, +1});
+        return new AbstractClassifier<int[]>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.binary(p, svm);
 
             @Override
@@ -158,7 +178,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         LASVM<SparseArray> lasvm = new LASVM<>(new SparseLinearKernel(), C, tol);
         KernelMachine<SparseArray> svm = lasvm.fit(x, y);
 
-        return new Classifier<SparseArray>() {
+        IntSet labels = new IntSet(new int[]{-1, +1});
+        return new AbstractClassifier<SparseArray>(labels) {
             final LinearKernelMachine model = LinearKernelMachine.sparse(p, svm);
 
             @Override
