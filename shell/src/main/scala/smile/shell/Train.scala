@@ -19,9 +19,9 @@ package smile.shell
 
 import java.util.Properties
 import scopt.OParser
-import smile.classification.{AdaBoost, Classifier, DataFrameClassifier, DecisionTree, FLD, LDA, LogisticRegression, QDA, RDA}
+import smile.classification.{Classifier, DataFrameClassifier}
 import smile.data.`type`.StructType
-import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
+import smile.regression.DataFrameRegression
 import smile.data.{CategoricalEncoder, DataFrame}
 import smile.data.formula._
 import smile.io.Read
@@ -70,10 +70,18 @@ object Train {
 
         if (config.classification) {
           val model = ClassificationModel(config.algorithm, formula, data, props)
+          if (test.isDefined) {
+            val metrics = ClassificationMetrics.of(model.classifier, formula, test.get)
+            println(s"Validation metrics: ${metrics}")
+          }
           smile.write(model, config.model)
         } else {
           val model = RegressionModel(config.algorithm, formula, data, props)
           smile.write(model, config.model)
+          if (test.isDefined) {
+            val metrics = RegressionMetrics.of(model.regression, formula, test.get)
+            println(s"Validation metrics: ${metrics}")
+          }
         }
       case _ => ()
     }
