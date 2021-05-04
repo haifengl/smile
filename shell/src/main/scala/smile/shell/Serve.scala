@@ -17,23 +17,48 @@
 
 package smile.shell
 
-import scala.util.Random
 import scala.io.StdIn
 import scopt.OParser
 import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.common._
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl._
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
+import spray.json.{DefaultJsonProtocol, JsObject, JsValue, RootJsonFormat, deserializationError}
+import smile.data.Tuple
+import smile.data.`type`.StructType
+import smile.model.DataFrameModel
+
+class SmileTupleJsonProtocol(schema: StructType) extends SprayJsonSupport with DefaultJsonProtocol {
+  implicit object SmileTupleFormat extends RootJsonFormat[Tuple] {
+    def write(row: Tuple): JsObject = {
+      JsObject()
+    }
+
+    def read(value: JsValue): Tuple = value match {
+      case JsObject(fields) =>
+        val row = new Array[AnyRef](schema.length)
+        for (i <- 0 until row.length) {
+          row(i) = fields.get(schema.field(i).name)
+        }
+        Tuple.of(row, schema)
+      case _ => deserializationError("JSON Object expected")
+    }
+  }
+}
 
 /**
   * Serve command options.
   * @param model the model file path.
+  * @param port HTTP server port number.
   */
-case class ServeConfig(model: String = "")
+case class ServeConfig(model: String = "",
+                       port: Int = -1)
 
 /**
   * Online prediction.
@@ -65,6 +90,10 @@ object Serve {
           .required()
           .action((x, c) => c.copy(model = x))
           .text("The model file"),
+        opt[Int]("port")
+          .optional()
+          .action((x, c) => c.copy(port = x))
+          .text("HTTP port number"),
       )
     }
 
@@ -77,17 +106,13 @@ object Serve {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    /*
     val modelObj = smile.read(config.model)
-    if (!modelObj.isInstanceOf[Model]) {
+    if (!modelObj.isInstanceOf[DataFrameModel]) {
       Console.err.println(s"{config.model} doesn't contain a valid model.")
       return
     }
 
-    val model = modelObj.asInstanceOf[Model]
-    */
-    val numbers = Source.fromIterator(() =>
-      Iterator.continually(Random.nextInt()))
+    val model = modelObj.asInstanceOf[DataFrameModel]
 
     implicit val system = ActorSystem(Behaviors.empty, "smile")
     // needed for the future flatMap/onComplete in the end
@@ -95,19 +120,30 @@ object Serve {
 
     val route =
       path("predict") {
-        post {
-          complete(
-            HttpEntity(
-              ContentTypes.`text/plain(UTF-8)`,
-              // transform each number to a chunk of bytes
-              numbers.map(n => ByteString(s"$n\n"))
-            )
-          )
+        extractRequestEntity { request =>
+          request.contentType.mediaType match {
+            case MediaTypes.`application/json` =>
+              import SprayJsonSupport._
+              implicit val jsonStreamingSupport = EntityStreamingSupport.json()
+              entity(asSourceOf[JsValue]) { jsValue =>
+                complete(jsValue)
+              }
+            case MediaTypes.`text/csv` | MediaTypes.`text/plain` =>
+              implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
+              implicit val csvStreamingSupport = EntityStreamingSupport.csv()
+              val lines = request.dataBytes.via(Framing.delimiter(
+                  ByteString("\n"), maximumFrameLength = 4096, allowTruncation = true))
+                  .map(_.utf8String)
+
+              complete(lines)
+            case _ =>
+              complete(s"Unsupported Content-Type: ${request.contentType}")
+          }
         }
       }
 
     val conf = ConfigFactory.load()
-    val port = conf.getInt("akka.http.server.default-http-port")
+    val port = if (config.port >= 0) config.port else conf.getInt("smile.http.server.default-http-port")
     val bindingFuture = Http().newServerAt("localhost", port).bind(route)
 
     println(s"Smile online at http://localhost:$port/\nPress RETURN to stop...")
