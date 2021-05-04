@@ -27,6 +27,7 @@ import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl._
+import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import spray.json.{DefaultJsonProtocol, JsObject, JsValue, RootJsonFormat, deserializationError}
@@ -119,22 +120,21 @@ object Serve {
     implicit val executionContext = system.executionContext
 
     val route =
-      path("predict") {
+      path("smile") {
         extractRequestEntity { request =>
           request.contentType.mediaType match {
             case MediaTypes.`application/json` =>
               import SprayJsonSupport._
               implicit val jsonStreamingSupport = EntityStreamingSupport.json()
-              entity(asSourceOf[JsValue]) { jsValue =>
-                complete(jsValue)
+              entity(asSourceOf[JsValue]) { json =>
+                complete(json)
               }
             case MediaTypes.`text/csv` | MediaTypes.`text/plain` =>
               implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
               implicit val csvStreamingSupport = EntityStreamingSupport.csv()
-              val lines = request.dataBytes.via(Framing.delimiter(
-                  ByteString("\n"), maximumFrameLength = 4096, allowTruncation = true))
-                  .map(_.utf8String)
-
+              val lines = request.dataBytes.via(CsvParsing.lineScanner())
+                .map(_.map(_.utf8String))
+                .map(_.mkString(","))
               complete(lines)
             case _ =>
               complete(s"Unsupported Content-Type: ${request.contentType}")
