@@ -24,5 +24,5 @@ import smile.data.`type`.StructType
   * @author Haifeng Li
   */
 package object data {
-  implicit def pimpSchema(schema: StructType): SchemaOps = new SchemaOps(schema)
+  implicit def pimpStructType(schema: StructType): StructTypeOps = new StructTypeOps(schema)
 }

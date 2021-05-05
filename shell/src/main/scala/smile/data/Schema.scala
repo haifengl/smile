@@ -20,7 +20,7 @@ package smile.data
 import spray.json._
 import smile.data.`type`.StructType
 
-final class SchemaOps(schema: StructType) {
+final class StructTypeOps(schema: StructType) {
   def json(value: JsValue): Option[Tuple] = {
     value match {
       case JsArray(elements) =>
@@ -29,26 +29,24 @@ final class SchemaOps(schema: StructType) {
 
         val row = new Array[AnyRef](schema.length)
         for (i <- 0 until schema.length) {
-          elements(i) match {
-            case JsBoolean(value) => row(i) = java.lang.Boolean.valueOf(value)
-            case JsNumber(value) => row(i) = value
-            case JsString(value) => row(i) = value
-            case _ => return None
+          try {
+            row(i) = schema.field(i).valueOf(elements(i).compactPrint)
+          } catch {
+            case _ : Throwable => return None
           }
         }
         Some(Tuple.of(row, schema))
 
       case JsObject(fields) =>
-        if (fields.size < schema.length)
-          return None
-
         val row = new Array[AnyRef](schema.length)
         for (i <- 0 until schema.length) {
-          fields.get(schema.field(i).name) match {
-            case Some(JsBoolean(value)) => row(i) = java.lang.Boolean.valueOf(value)
-            case Some(JsNumber(value)) => row(i) = value
-            case Some(JsString(value)) => row(i) = value
-            case _ => return None
+          val value = fields.get(schema.field(i).name)
+          if (value.isDefined) {
+              try {
+                row(i) = schema.field(i).valueOf(value.get.compactPrint)
+              } catch {
+                case _ : Throwable => return None
+              }
           }
         }
         Some(Tuple.of(row, schema))
@@ -63,8 +61,13 @@ final class SchemaOps(schema: StructType) {
 
     val row = new Array[AnyRef](schema.length)
     for (i <- 0 until schema.length) {
-      row(i) = schema.field(i).valueOf(line(i))
+      try {
+        row(i) = schema.field(i).valueOf(line(i))
+      } catch {
+        case _ : Throwable => return None
+      }
     }
+
     Some(Tuple.of(row, schema))
   }
 
@@ -77,8 +80,14 @@ final class SchemaOps(schema: StructType) {
       val field = schema.field(i)
       val value = line.get(field.name)
       if (value.isEmpty) return None
-      row(i) = field.valueOf(value.get)
+
+      try {
+        row(i) = field.valueOf(value.get)
+      } catch {
+        case _ : Throwable => return None
+      }
     }
+
     Some(Tuple.of(row, schema))
   }
 }
