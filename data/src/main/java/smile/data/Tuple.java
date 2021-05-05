@@ -242,7 +242,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default byte getByte(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).byteValue();
     }
 
     /**
@@ -254,7 +254,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default byte getByte(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).byteValue();
     }
 
     /**
@@ -266,7 +266,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default short getShort(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).shortValue();
     }
 
     /**
@@ -278,7 +278,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default short getShort(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).shortValue();
     }
 
     /**
@@ -290,7 +290,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default int getInt(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).intValue();
     }
 
     /**
@@ -302,7 +302,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default int getInt(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).intValue();
     }
 
     /**
@@ -314,7 +314,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default long getLong(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).longValue();
     }
 
     /**
@@ -326,7 +326,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default long getLong(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).longValue();
     }
 
     /**
@@ -339,7 +339,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default float getFloat(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).floatValue();
     }
 
     /**
@@ -352,7 +352,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default float getFloat(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).floatValue();
     }
 
     /**
@@ -364,7 +364,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default double getDouble(int i) {
-        return getAs(i);
+        return this.<Number>getAs(i).doubleValue();
     }
 
     /**
@@ -376,7 +376,7 @@ public interface Tuple extends Serializable {
      * @return the field value.
      */
     default double getDouble(String field) {
-        return getAs(field);
+        return this.<Number>getAs(field).doubleValue();
     }
 
     /**
