@@ -23,42 +23,27 @@ import akka.actor.typed.ActorSystem
 import akka.actor.typed.scaladsl.Behaviors
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.common._
-import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
+import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport._
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
 import akka.stream.scaladsl.Source
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
-import spray.json.{DefaultJsonProtocol, JsObject, JsValue, RootJsonFormat, deserializationError}
+import spray.json._
+import spray.json.DefaultJsonProtocol._
 import smile.data._
 import smile.data.`type`.StructType
-import smile.model.{ClassificationModel, DataFrameModel, RegressionModel}
-
-class SmileTupleJsonProtocol(schema: StructType) extends SprayJsonSupport with DefaultJsonProtocol {
-  implicit object SmileTupleFormat extends RootJsonFormat[Tuple] {
-    def write(row: Tuple): JsObject = {
-      JsObject()
-    }
-
-    def read(value: JsValue): Tuple = value match {
-      case JsObject(fields) =>
-        val row = new Array[AnyRef](schema.length)
-        for (i <- 0 until row.length) {
-          row(i) = fields.get(schema.field(i).name)
-        }
-        Tuple.of(row, schema)
-      case _ => deserializationError("JSON Object expected")
-    }
-  }
-}
+import smile.model.{ClassificationModel, RegressionModel}
 
 /**
   * Serve command options.
   * @param model the model file path.
+  * @param probability the flag if output posteriori probabilities for soft classifiers.
   * @param port HTTP server port number.
   */
 case class ServeConfig(model: String = "",
+                       probability: Boolean = false,
                        port: Int = -1)
 
 /**
@@ -97,6 +82,10 @@ object Serve {
           .optional()
           .action((x, c) => c.copy(port = x))
           .text("HTTP port number"),
+        opt[Unit]("probability")
+          .optional()
+          .action((_, c) => c.copy(probability = true))
+          .text("Output the posteriori probabilities for soft classifier"),
       )
     }
 
@@ -113,14 +102,27 @@ object Serve {
     val (schema, predictor) = model match {
       case model: ClassificationModel =>
         val schema = model.schema
-        val predict: Option[Tuple] => String =
-          x => x.map(model.classifier.predict(_).toString).getOrElse("Invalid instance")
+        val predict: Option[Tuple] => JsValue =
+          tuple => tuple.map { x =>
+            if (config.probability && model.classifier.soft()) {
+              val prob = Array.ofDim[Double](model.classifier.numClasses())
+              val y = model.classifier.predict(x, prob)
+              JsObject(
+                "class" -> y.toJson,
+                "probability" -> prob.toJson
+              )
+            } else {
+              JsNumber.apply(model.classifier.predict(x))
+            }
+          }.getOrElse(JsString("Invalid instance"))
         (schema, predict)
 
       case model: RegressionModel =>
         val schema = model.schema
-        val predict: Option[Tuple] => String =
-          x => x.map(model.regression.predict(_).toString).getOrElse("Invalid instance")
+        val predict: Option[Tuple] => JsValue =
+          tuple => tuple.map { x =>
+            JsNumber.apply(model.regression.predict(x))
+          }.getOrElse(JsString("Invalid instance"))
         (schema, predict)
 
       case _ =>
@@ -131,20 +133,19 @@ object Serve {
     implicit val system = ActorSystem(Behaviors.empty, "smile")
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
+    // Source rendering support trait
+    implicit val jsonStreamingSupport = EntityStreamingSupport.json()
 
     val route =
       path("smile" / "stream") {
-        parameters("format".?) { format =>
+        parameters("format".?, "probability".?) { case (format, probability) =>
+          val prob = probability.getOrElse("false").toBoolean
           format.getOrElse("json") match {
             case "json" =>
-              import SprayJsonSupport._
-              implicit val jsonStreamingSupport = EntityStreamingSupport.json()
               entity(asSourceOf[JsValue]) { json =>
                 complete(processJSON(schema, json)(predictor))
               }
             case csvFormat if csvFormat.startsWith("csv") =>
-              implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
-              implicit val csvStreamingSupport = EntityStreamingSupport.csv()
               extractDataBytes { bytes =>
                 complete(processCSV(schema, bytes, csvFormat)(predictor))
               }
