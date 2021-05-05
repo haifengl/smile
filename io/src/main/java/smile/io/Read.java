@@ -26,6 +26,8 @@ import java.nio.file.Path;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+
 import org.apache.commons.csv.CSVFormat;
 import smile.data.DataFrame;
 import smile.data.Dataset;
@@ -82,9 +84,9 @@ public interface Read {
             case "feather": return arrow(path);
             default:
                 if (format != null) {
-                    if (format.equals("csv") || format.equals("csv?")) {
+                    if (format.equals("csv")) {
                         return csv(path);
-                    } else if (format.startsWith("csv?")) {
+                    } else if (format.startsWith("csv,")) {
                         return csv(path, format.substring(4));
                     }
                 }
@@ -116,29 +118,29 @@ public interface Read {
     static DataFrame csv(String path, String format) throws IOException, URISyntaxException {
         CSVFormat csvFormat = CSVFormat.DEFAULT;
         for (String token : format.split(",")) {
-            String[] kv = token.split("=");
-            if (kv.length != 2) {
+            String[] option = token.split("=");
+            if (option.length != 2) {
                 throw new IllegalArgumentException("Invalid csv format specifier: " + token);
             }
-            switch (kv[0]) {
+            switch (option[0].toLowerCase(Locale.ROOT)) {
                 case "delimiter":
-                    csvFormat = csvFormat.withDelimiter(Strings.unescape(kv[1]).charAt(0));
+                    csvFormat = csvFormat.withDelimiter(Strings.unescape(option[1]).charAt(0));
                     break;
                 case "quote":
-                    csvFormat = csvFormat.withQuote(Strings.unescape(kv[1]).charAt(0));
+                    csvFormat = csvFormat.withQuote(Strings.unescape(option[1]).charAt(0));
                     break;
                 case "escape":
-                    csvFormat = csvFormat.withEscape(Strings.unescape(kv[1]).charAt(0));
+                    csvFormat = csvFormat.withEscape(Strings.unescape(option[1]).charAt(0));
                     break;
                 case "comment":
-                    csvFormat = csvFormat.withCommentMarker(Strings.unescape(kv[1]).charAt(0));
+                    csvFormat = csvFormat.withCommentMarker(Strings.unescape(option[1]).charAt(0));
                 case "header":
-                    if (Boolean.parseBoolean(kv[1])) {
+                    if (Boolean.parseBoolean(option[1])) {
                         csvFormat = csvFormat.withFirstRecordAsHeader();
                     }
                     break;
                 default:
-                    throw new IllegalArgumentException("Unknown csv format specifier: " + kv[0]);
+                    throw new IllegalArgumentException("Unknown csv format specifier: " + option[0]);
             }
         }
 

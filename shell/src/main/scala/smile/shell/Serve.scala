@@ -26,14 +26,14 @@ import akka.http.scaladsl.common._
 import akka.http.scaladsl.marshallers.sprayjson.SprayJsonSupport
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.server.Directives._
-import akka.stream.scaladsl._
+import akka.stream.scaladsl.Source
 import akka.stream.alpakka.csv.scaladsl.{CsvParsing, CsvToMap}
 import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import spray.json.{DefaultJsonProtocol, JsObject, JsValue, RootJsonFormat, deserializationError}
-import smile.data.Tuple
+import smile.data._
 import smile.data.`type`.StructType
-import smile.model.DataFrameModel
+import smile.model.{ClassificationModel, DataFrameModel, RegressionModel}
 
 class SmileTupleJsonProtocol(schema: StructType) extends SprayJsonSupport with DefaultJsonProtocol {
   implicit object SmileTupleFormat extends RootJsonFormat[Tuple] {
@@ -65,6 +65,8 @@ case class ServeConfig(model: String = "",
   * Online prediction.
   */
 object Serve {
+  val log = org.slf4j.LoggerFactory.getLogger("smile.shell.Serve")
+
   /**
     * Runs an online prediction HTTP server.
     * @param args the command line arguments.
@@ -107,37 +109,47 @@ object Serve {
     * @param config the serve configuration.
     */
   def serve(config: ServeConfig): Unit = {
-    val modelObj = smile.read(config.model)
-    if (!modelObj.isInstanceOf[DataFrameModel]) {
-      Console.err.println(s"{config.model} doesn't contain a valid model.")
-      return
-    }
+    val model = smile.read(config.model)
+    val (schema, predictor) = model match {
+      case model: ClassificationModel =>
+        val schema = model.schema
+        val predict: Option[Tuple] => String =
+          x => x.map(model.classifier.predict(_).toString).getOrElse("Invalid instance")
+        (schema, predict)
 
-    val model = modelObj.asInstanceOf[DataFrameModel]
+      case model: RegressionModel =>
+        val schema = model.schema
+        val predict: Option[Tuple] => String =
+          x => x.map(model.regression.predict(_).toString).getOrElse("Invalid instance")
+        (schema, predict)
+
+      case _ =>
+        Console.err.println(s"{config.model} doesn't contain a valid model.")
+        return
+    }
 
     implicit val system = ActorSystem(Behaviors.empty, "smile")
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
 
     val route =
-      path("smile") {
-        extractRequestEntity { request =>
-          request.contentType.mediaType match {
-            case MediaTypes.`application/json` =>
+      path("smile" / "stream") {
+        parameters("format".?) { format =>
+          format.getOrElse("json") match {
+            case "json" =>
               import SprayJsonSupport._
               implicit val jsonStreamingSupport = EntityStreamingSupport.json()
               entity(asSourceOf[JsValue]) { json =>
-                complete(json)
+                complete(processJSON(schema, json)(predictor))
               }
-            case MediaTypes.`text/csv` | MediaTypes.`text/plain` =>
+            case csvFormat if csvFormat.startsWith("csv") =>
               implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
               implicit val csvStreamingSupport = EntityStreamingSupport.csv()
-              val lines = request.dataBytes.via(CsvParsing.lineScanner())
-                .map(_.map(_.utf8String))
-                .map(_.mkString(","))
-              complete(lines)
+              extractDataBytes { bytes =>
+                complete(processCSV(schema, bytes, csvFormat)(predictor))
+              }
             case _ =>
-              complete(s"Unsupported Content-Type: ${request.contentType}")
+              complete(StatusCodes.UnsupportedMediaType)
           }
         }
       }
@@ -151,5 +163,51 @@ object Serve {
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port
       .onComplete(_ => system.terminate()) // and shutdown when done
+  }
+
+  def processJSON[T](schema: StructType, stream: Source[JsValue, Any])
+                    (processor: Option[Tuple] => T): Source[T, Any]  = {
+    stream.map(schema.json(_)).map(processor)
+  }
+
+  def getCsvFormatByte(format: String, param: Array[String]): Byte = {
+    if (param.length != 2 || param(1).length != 1) {
+      throw new IllegalArgumentException(s"Invalid CSV format specification: $format")
+    }
+    param(1).charAt(0).toByte
+  }
+
+  def processCSV[T](schema: StructType, bytes: Source[ByteString, Any], format: String)
+                   (processor: Option[Tuple] => T): Source[T, Any] = {
+    var delimiter = CsvParsing.Comma
+    var quote = CsvParsing.DoubleQuote
+    var escape = CsvParsing.Backslash
+    var header = false
+
+    format.split(",").foreach { token =>
+      val option = token.split("=", 2)
+      option(0) match {
+        case "delimiter" => delimiter = getCsvFormatByte(format, option)
+        case "quote" => quote = getCsvFormatByte(format, option)
+        case "escape" => escape = getCsvFormatByte(format, option)
+        case "header" => header = if (option.length == 1) true else option(1).toBoolean
+        case unknown => if (!unknown.equals("csv"))
+          log.warn(s"Unknown CSV format specification: $token")
+      }
+    }
+
+    implicit val marshaller = akka.http.scaladsl.marshalling.Marshaller.stringMarshaller(MediaTypes.`text/csv`)
+    implicit val csvStreamingSupport = EntityStreamingSupport.csv()
+    val lines = bytes.via(CsvParsing.lineScanner(delimiter, quote, escape))
+
+    if (header) {
+      lines.via(CsvToMap.toMapAsStrings())
+        .map(schema.csv(_))
+        .map(processor)
+    } else {
+      lines.map(_.map(_.utf8String))
+        .map(schema.csv(_))
+        .map(processor)
+    }
   }
 }

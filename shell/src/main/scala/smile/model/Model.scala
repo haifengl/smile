@@ -18,10 +18,10 @@
 package smile.model
 
 import java.util.Properties
-import smile.data.{CategoricalEncoder, DataFrame}
+import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.classification.{AdaBoost, DataFrameClassifier, DecisionTree, FLD, LDA, LogisticRegression, QDA, RDA}
+import smile.classification.{AdaBoost, DataFrameClassifier, DecisionTree}
 import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
 
 /**

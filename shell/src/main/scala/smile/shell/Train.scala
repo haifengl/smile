@@ -121,7 +121,7 @@ object Train {
           .text("The test data file"),
         opt[String]("format")
           .optional()
-          .valueName("<csv?header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
+          .valueName("<csv,header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
           .action((x, c) => c.copy(format = x))
           .text("The data file format/schema"),
         opt[String]("model")
