@@ -395,6 +395,8 @@ public class LinearModel implements DataFrameRegression {
      * Growing window recursive least squares with lambda = 1.
      * RLS updates an ordinary least squares with samples that
      * arrive sequentially.
+     * @param x training instance.
+     * @param y response variable.
      */
     public void update(double[] x, double y) {
         update(x, y, 1.0);
