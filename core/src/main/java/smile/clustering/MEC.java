@@ -151,7 +151,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         double[] px = new double[n];
 
         // Neighbors of each observation.
-        ArrayList<int[]> neighbors = new ArrayList<>();
+        int[][] neighbors = new int[n][];
 
         logger.info("Estimating the probabilities ...");
         IntStream stream = IntStream.range(0, n);
@@ -168,7 +168,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
 
             nns.range(data[i], radius, list);
             int[] neighborhood = new int[list.size()];
-            neighbors.add(neighborhood);
+            neighbors[i] = neighborhood;
 
             for (int j = 0; j < list.size(); j++) {
                 neighborhood[j] = list.get(j).index;
@@ -184,7 +184,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
         int[] dominantCluster = new int[n];
 
         IntStream.range(0, n).parallel().forEach(i -> {
-            for (int j : neighbors.get(i)) {
+            for (int j : neighbors[i]) {
                 size[i][y[j]]++;
             }
         });
@@ -209,8 +209,8 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                     double oldMutual = 0.0;
                     double newMutual = 0.0;
 
-                    for (int neighbor : neighbors.get(i)) {
-                        double nk = neighbors.get(neighbor).length;
+                    for (int neighbor : neighbors[i]) {
+                        double nk = neighbors[neighbor].length;
 
                         double r1 = (double) size[neighbor][y[i]] / nk;
                         double r2 = (double) size[neighbor][dominantCluster[i]] / nk;
@@ -232,7 +232,7 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
                     }
 
                     if (newMutual < oldMutual) {
-                        for (int neighbor : neighbors.get(i)) {
+                        for (int neighbor : neighbors[i]) {
                             --size[neighbor][y[i]];
                             ++size[neighbor][dominantCluster[i]];
                             int mi = dominantCluster[i];
@@ -302,12 +302,10 @@ public class MEC<T> extends PartitionClustering implements Comparable<MEC<T>> {
     }
 
     /** Calculates the entropy. */
-    private static double entropy(int k, ArrayList<int[]> neighbors, int[][] size, double[] px) {
-        int n = neighbors.size();
-
-        return IntStream.range(0, n).parallel().mapToDouble(i -> {
+    private static double entropy(int k, int[][] neighbors, int[][] size, double[] px) {
+        return IntStream.range(0, neighbors.length).parallel().mapToDouble(i -> {
             double conditionalEntropy = 0.0;
-            int ni = neighbors.get(i).length;
+            int ni = neighbors[i].length;
             int[] ci = size[i];
             for (int j = 0; j < k; j++) {
                 if (ci[j] > 0) {
