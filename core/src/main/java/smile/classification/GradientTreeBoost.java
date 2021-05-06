@@ -345,7 +345,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
         }
 
-        return new GradientTreeBoost(formula, trees, b, shrinkage, importance, codec.labels);
+        return new GradientTreeBoost(formula, trees, b, shrinkage, importance, codec.classes);
     }
 
     /**
@@ -407,7 +407,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             }
         }
 
-        return new GradientTreeBoost(formula, forest, shrinkage, importance, codec.labels);
+        return new GradientTreeBoost(formula, forest, shrinkage, importance, codec.classes);
     }
 
     /**
@@ -495,7 +495,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
                 y += shrinkage * tree.predict(xt);
             }
 
-            return labels.valueOf(y > 0 ? 1 : 0);
+            return classes.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -511,7 +511,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
                 }
             }
 
-            return labels.valueOf(y);
+            return classes.valueOf(y);
         }
     }
 
@@ -536,7 +536,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
             posteriori[0] = 1.0 / (1.0 + Math.exp(2 * y));
             posteriori[1] = 1.0 - posteriori[0];
 
-            return labels.valueOf(y > 0 ? 1 : 0);
+            return classes.valueOf(y > 0 ? 1 : 0);
         } else {
             double max = Double.NEGATIVE_INFINITY;
             int y = -1;
@@ -563,7 +563,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
                 posteriori[i] /= Z;
             }
 
-            return labels.valueOf(y);
+            return classes.valueOf(y);
         }
     }
 

@@ -103,14 +103,8 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
     }
 
     @Override
-    public int[] labels() {
+    public int[] classes() {
         return new int[]{-1, +1};
-    }
-
-    @Override
-    public NominalScale scale() {
-        String[] values = {"-1", "+1"};
-        return new NominalScale(values);
     }
 
     @Override

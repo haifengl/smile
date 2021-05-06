@@ -257,6 +257,6 @@ public class QDA extends AbstractClassifier<double[]> {
             posteriori[i] = logppriori[i] - 0.5 * f;
         }
 
-        return labels.valueOf(MathEx.softmax(posteriori));
+        return classes.valueOf(MathEx.softmax(posteriori));
     }
 }

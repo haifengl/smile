@@ -130,7 +130,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         @Override
         public int predict(int[] x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -142,12 +142,12 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
             posteriori[0] = 1.0 - f;
             posteriori[1] = f;
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
         public void update(int[] x, int y) {
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
             // calculate gradient for incoming data
             double wx = dot(x, w);
             double err = y - MathEx.sigmoid(wx);
@@ -209,12 +209,12 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             }
 
             MathEx.softmax(posteriori);
-            return labels.valueOf(MathEx.whichMax(posteriori));
+            return classes.valueOf(MathEx.whichMax(posteriori));
         }
 
         @Override
         public void update(int[] x, int y) {
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
             double[] prob = new double[k];
             for (int j = 0; j < k-1; j++) {
                 prob[j] = dot(x, w[j]);
@@ -360,7 +360,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         BinomialObjective objective = new BinomialObjective(x, codec.y, p, lambda);
         double[] w = new double[p + 1];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
-        Binomial model = new Binomial(w, L, lambda, codec.labels);
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -447,7 +447,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }

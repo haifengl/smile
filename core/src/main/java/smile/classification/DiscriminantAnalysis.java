@@ -53,7 +53,7 @@ class DiscriminantAnalysis {
         this.k = codec.k;
         this.ni = codec.ni;
         this.y = codec.y;
-        this.labels = codec.labels;
+        this.labels = codec.classes;
         this.priori = priori;
         this.mean = mean;
         this.mu = mu;
