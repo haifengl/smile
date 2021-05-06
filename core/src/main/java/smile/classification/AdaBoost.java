@@ -256,7 +256,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             }
         }
 
-        return new AdaBoost(formula, k, trees, alpha, error, importance, codec.labels);
+        return new AdaBoost(formula, k, trees, alpha, error, importance, codec.classes);
     }
 
     @Override
@@ -332,7 +332,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             y[trees[i].predict(xt)] += alpha[i];
         }
             
-        return labels.valueOf(MathEx.whichMax(y));
+        return classes.valueOf(MathEx.whichMax(y));
     }
 
     @Override
@@ -358,7 +358,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             posteriori[i] /= sum;
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
     
     /**

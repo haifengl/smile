@@ -138,8 +138,7 @@ object Serve {
 
     val route =
       path("smile" / "stream") {
-        parameters("format".?, "probability".?) { case (format, probability) =>
-          val prob = probability.getOrElse("false").toBoolean
+        parameters("format".?) { case format =>
           format.getOrElse("json") match {
             case "json" =>
               entity(asSourceOf[JsValue]) { json =>

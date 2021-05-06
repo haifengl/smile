@@ -32,14 +32,14 @@ public abstract class AbstractClassifier<T> implements Classifier<T> {
     /**
      * The class labels.
      */
-    protected final IntSet labels;
+    protected final IntSet classes;
 
     /**
      * Constructor.
-     * @param labels the class labels.
+     * @param classes the class labels.
      */
-    public AbstractClassifier(IntSet labels) {
-        this.labels = labels;
+    public AbstractClassifier(IntSet classes) {
+        this.classes = classes;
     }
 
     /**
@@ -47,7 +47,7 @@ public abstract class AbstractClassifier<T> implements Classifier<T> {
      * @param y the sample labels.
      */
     public AbstractClassifier(int[] y) {
-        this.labels = ClassLabels.fit(y).labels;
+        this.classes = ClassLabels.fit(y).classes;
     }
 
     /**
@@ -55,25 +55,16 @@ public abstract class AbstractClassifier<T> implements Classifier<T> {
      * @param y the sample labels.
      */
     public AbstractClassifier(BaseVector y) {
-        this.labels = ClassLabels.fit(y).labels;
+        this.classes = ClassLabels.fit(y).classes;
     }
 
     @Override
     public int numClasses() {
-        return labels.size();
+        return classes.size();
     }
 
     @Override
-    public int[] labels() {
-        return labels.values;
-    }
-
-    @Override
-    public NominalScale scale() {
-        String[] values = new String[labels.size()];
-        for (int i = 0; i < labels.size(); i++) {
-            values[i] = String.valueOf(labels.valueOf(i));
-        }
-        return new NominalScale(values);
+    public int[] classes() {
+        return classes.values;
     }
 }

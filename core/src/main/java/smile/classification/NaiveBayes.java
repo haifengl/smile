@@ -174,6 +174,6 @@ public class NaiveBayes extends AbstractClassifier<double[]> {
             posteriori[i] /= Z;
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

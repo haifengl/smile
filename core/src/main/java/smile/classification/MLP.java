@@ -115,7 +115,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     /**
      * The class label encoder.
      */
-    private final IntSet labels;
+    private final IntSet classes;
 
     /**
      * Constructor.
@@ -128,22 +128,22 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
         int outSize = output.getOutputSize();
         this.k = outSize == 1 ? 2 : outSize;
-        this.labels = IntSet.of(k);
+        this.classes = IntSet.of(k);
     }
 
     /**
      * Constructor.
      *
-     * @param labels the class label encoder.
+     * @param classes the class labels.
      * @param p the number of variables in input layer.
      * @param builders the builders of layers from bottom to top.
      */
-    public MLP(IntSet labels, int p, LayerBuilder... builders) {
+    public MLP(IntSet classes, int p, LayerBuilder... builders) {
         super(net(p, builders));
 
         int outSize = output.getOutputSize();
         this.k = outSize == 1 ? 2 : outSize;
-        this.labels = labels;
+        this.classes = classes;
     }
 
     /** Builds the layers. */
@@ -161,21 +161,12 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int numClasses() {
-        return labels.size();
+        return classes.size();
     }
 
     @Override
-    public int[] labels() {
-        return labels.values;
-    }
-
-    @Override
-    public NominalScale scale() {
-        String[] values = new String[labels.size()];
-        for (int i = 0; i < labels.size(); i++) {
-            values[i] = String.valueOf(labels.valueOf(i));
-        }
-        return new NominalScale(values);
+    public int[] classes() {
+        return classes.values;
     }
 
     @Override
@@ -190,7 +181,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
             System.arraycopy(output.output(), 0, posteriori, 0, n);
         }
 
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     @Override
@@ -199,9 +190,9 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
-            return labels.valueOf(output.output()[0] > 0.5 ? 1 : 0);
+            return classes.valueOf(output.output()[0] > 0.5 ? 1 : 0);
         } else {
-            return labels.valueOf(MathEx.whichMax(output.output()));
+            return classes.valueOf(MathEx.whichMax(output.output()));
         }
     }
 
@@ -219,7 +210,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     @Override
     public void update(double[] x, int y) {
         propagate(x);
-        setTarget(labels.indexOf(y));
+        setTarget(classes.indexOf(y));
         backpropagate(x, true);
         t++;
     }
@@ -229,7 +220,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {
             propagate(x[i]);
-            setTarget(labels.indexOf(y[i]));
+            setTarget(classes.indexOf(y[i]));
             backpropagate(x[i], false);
         }
 

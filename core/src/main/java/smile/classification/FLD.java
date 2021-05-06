@@ -351,7 +351,7 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 
     @Override

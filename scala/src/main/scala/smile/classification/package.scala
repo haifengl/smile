@@ -923,11 +923,11 @@ package object classification {
   def naiveBayes(x: Array[Array[Int]], y: Array[Int], model: DiscreteNaiveBayes.Model, priori: Array[Double] = null, sigma: Double = 1.0): DiscreteNaiveBayes = time("Naive Bayes") {
     val p = x(0).length
     val k = MathEx.max(y) + 1
-    val labels = ClassLabels.fit(y).labels
+    val classes = ClassLabels.fit(y).classes
     val naive = if (priori == null)
-      new DiscreteNaiveBayes(model, k, p, sigma, labels)
+      new DiscreteNaiveBayes(model, k, p, sigma, classes)
     else
-      new DiscreteNaiveBayes(model, priori, p, sigma, labels)
+      new DiscreteNaiveBayes(model, priori, p, sigma, classes)
     naive.update(x, y)
     naive
   }

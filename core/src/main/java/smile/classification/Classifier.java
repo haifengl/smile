@@ -55,13 +55,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * Returns the class labels.
      * @return the class labels.
      */
-    int[] labels();
-
-    /**
-     * Returns the nominal scale of the class labels.
-     * @return the nominal scale of the class labels.
-     */
-    NominalScale scale();
+    int[] classes();
 
     /**
      * Predicts the class label of an instance.

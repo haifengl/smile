@@ -157,7 +157,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         @Override
         public int predict(double[] x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -175,7 +175,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             posteriori[0] = 1.0 - f;
             posteriori[1] = f;
 
-            return labels.valueOf(f < 0.5 ? 0 : 1);
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
 
         @Override
@@ -184,7 +184,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
                 throw new IllegalArgumentException("Invalid input vector size: " + x.length);
             }
 
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             // calculate gradient for incoming data
             double wx = dot(x, w);
@@ -258,7 +258,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             }
 
             MathEx.softmax(posteriori);
-            return labels.valueOf(MathEx.whichMax(posteriori));
+            return classes.valueOf(MathEx.whichMax(posteriori));
         }
 
         @Override
@@ -267,7 +267,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
                 throw new IllegalArgumentException("Invalid input vector size: " + x.length);
             }
 
-            y = labels.indexOf(y);
+            y = classes.indexOf(y);
 
             double[] prob = new double[k];
             for (int j = 0; j < k-1; j++) {
@@ -387,7 +387,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         double[] w = new double[p + 1];
         double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
-        Binomial model = new Binomial(w, L, lambda, codec.labels);
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }
@@ -491,7 +491,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
             }
         }
 
-        Multinomial model = new Multinomial(W, L, lambda, codec.labels);
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
     }

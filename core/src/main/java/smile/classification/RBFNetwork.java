@@ -189,7 +189,7 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
         Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
-        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.labels);
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.classes);
     }
 
     /**
@@ -212,6 +212,6 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
         double[] sumw = new double[k];
         w.tv(f, sumw);
 
-        return labels.valueOf(MathEx.whichMax(sumw));
+        return classes.valueOf(MathEx.whichMax(sumw));
     }
 }

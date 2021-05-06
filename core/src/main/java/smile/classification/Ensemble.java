@@ -84,12 +84,7 @@ public class Ensemble<T> implements Classifier<T> {
     }
 
     @Override
-    public int[] labels() {
-        return models[0].labels();
-    }
-
-    @Override
-    public NominalScale scale() {
-        return models[0].scale();
+    public int[] classes() {
+        return models[0].classes();
     }
 }

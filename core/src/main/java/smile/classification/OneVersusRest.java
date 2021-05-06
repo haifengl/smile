@@ -172,13 +172,8 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
             }
 
             @Override
-            public int[] labels() {
-                return model.labels();
-            }
-
-            @Override
-            public NominalScale scale() {
-                return model.scale();
+            public int[] classes() {
+                return model.classes();
             }
 
             @Override
@@ -210,7 +205,7 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
             }
         }
 
-        return labels.valueOf(y);
+        return classes.valueOf(y);
     }
 
     @Override
@@ -229,6 +224,6 @@ public class OneVersusRest<T> extends AbstractClassifier<T> {
         }
 
         MathEx.unitize1(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

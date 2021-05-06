@@ -349,7 +349,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             throw new UnsupportedOperationException("TWCNB supports only batch learning");
         }
 
-        y = labels.indexOf(y);
+        y = classes.indexOf(y);
         switch (model) {
             case MULTINOMIAL:
             case CNB:
@@ -404,7 +404,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
             throw new UnsupportedOperationException("TWCNB supports only batch learning");
         }
 
-        y = labels.indexOf(y);
+        y = classes.indexOf(y);
         switch (model) {
             case MULTINOMIAL:
             case CNB:
@@ -461,7 +461,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         ntc[yi][j] += x[i][j];
                         nt[yi] += x[i][j];
@@ -531,7 +531,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         ntc[yi][j] += x[i][j] * 2;
                         nt[yi] += x[i][j] * 2;
@@ -549,7 +549,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (int j = 0; j < p; j++) {
                         if (x[i][j] > 0) {
                             ntc[yi][j]++;
@@ -588,7 +588,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         ntc[yi][e.i] += e.x;
                         nt[yi] += e.x;
@@ -658,7 +658,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         ntc[yi][e.i] += e.x * 2;
                         nt[yi] += e.x * 2;
@@ -676,7 +676,7 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
                         continue;
                     }
 
-                    int yi = labels.indexOf(y[i]);
+                    int yi = classes.indexOf(y[i]);
                     for (SparseArray.Entry e : x[i]) {
                         if (e.x > 0) {
                             ntc[yi][e.i]++;
@@ -931,6 +931,6 @@ public class DiscreteNaiveBayes extends AbstractClassifier<int[]> {
         }
 
         MathEx.softmax(posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 }

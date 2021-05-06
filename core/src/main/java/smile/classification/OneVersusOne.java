@@ -188,13 +188,8 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
             }
 
             @Override
-            public int[] labels() {
-                return model.labels();
-            }
-
-            @Override
-            public NominalScale scale() {
-                return model.scale();
+            public int[] classes() {
+                return model.classes();
             }
 
             @Override
@@ -229,7 +224,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
             }
         }
 
-        return labels.valueOf(MathEx.whichMax(count));
+        return classes.valueOf(MathEx.whichMax(count));
     }
 
     @Override
@@ -257,7 +252,7 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
         }
 
         coupling(r, posteriori);
-        return labels.valueOf(MathEx.whichMax(posteriori));
+        return classes.valueOf(MathEx.whichMax(posteriori));
     }
 
     /**
