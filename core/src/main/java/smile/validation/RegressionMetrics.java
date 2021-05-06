@@ -87,6 +87,7 @@ public class RegressionMetrics implements Serializable {
      * @param scoreTime the time in milliseconds of scoring the validation data.
      * @param truth the ground truth.
      * @param prediction the predictions.
+     * @return the validation metrics.
      */
     public static RegressionMetrics of(double fitTime, double scoreTime, double[] truth, double[] prediction) {
         return new RegressionMetrics(
