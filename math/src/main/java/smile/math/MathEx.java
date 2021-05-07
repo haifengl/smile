@@ -17,8 +17,8 @@
 
 package smile.math;
 
+import java.security.SecureRandom;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
@@ -123,35 +123,68 @@ public class MathEx {
      * Each thread will use different seed and unlikely generates
      * the correlated sequences with other threads.
      */
-    private static final Random seedRNG = new Random();
+    private static final SecureRandom seedRNG = new SecureRandom();
 
     /**
-     * Used seeds.
+     * The default seeds for thread-local RNGs for reproducible results.
      */
-    private static final HashSet<Long> seeds = new HashSet<>();
+    private static final long[] DEFAULT_SEEDS = {
+            -4106602711295138952L,  7872020634117869514L, -1722503517109829138L, -3386820675908254116L,
+            -1736715870046201019L,  3854590623768163340L,  4984519038350406438L,   831971085876758331L,
+             7131773007627236777L, -3609561992173376238L, -8759399602515137276L,  6192158663294695439L,
+            -5656470009161653116L, -7984826214821970800L, -9113192788977418232L, -8979910231410580019L,
+            -4619021025191354324L, -5082417586190057466L, -6554946940783144090L, -3610462176018822900L,
+             8959796931768911980L, -4251632352234989839L,  4922191169088134258L, -7282805902317830669L,
+             3869302430595840919L,  2517690626940415460L,  4056663221614950174L,  6429856319379397738L,
+             7298845553914383313L,  8179510284261677971L,  4282994537597585253L,  7300184601511783348L,
+             2596703774884172704L,  1089838915342514714L,  4323657609714862439L,   777826126579190548L,
+            -1902743089794461140L, -2460431043688989882L, -3261708534465890932L,  4007861469505443778L,
+             8067600139237526646L,  5717273542173905853L,  2938568334013652889L, -2972203304739218305L,
+             6544901794394958069L,  7013723936758841449L, -4215598453287525312L, -1454689091401951913L,
+            -5699280845313829011L, -9147984414924288540L,  5211986845656222459L, -1287642354429721659L,
+            -1509334943513011620L, -9000043616528857326L, -2902817511399216571L,  -742823064588229527L,
+            -4937222449957498789L,  -455679889440396397L, -6109470266907575296L,  5515435653880394376L,
+             5557224587324997029L,  8904139390487005840L,  6560726276686488510L,  6959949429287621625L,
+            -6055733513105375650L,  5762016937143172332L, -9186652929482643329L, -1105816448554330895L,
+            -8200377873547841359L,  9107473159863354619L,  3239950546973836199L, -8104429975176305012L,
+             3822949195131885242L, -5261390396129824777L,  9176101422921943895L, -5102541493993205418L,
+            -1254710019595692814L, -6668066200971989826L, -2118519708589929546L,  5428466612765068681L,
+            -6528627776941116598L, -5945449163896244174L, -3293290115918281076L,  6370347300411991230L,
+            -7043881693953271167L,  8078993941165238212L,  6894961504641498099L, -8798276497942360228L,
+             2276271091333773917L, -7184141741385833013L, -4787502691178107481L,  1255068205351917608L,
+            -8644146770023935609L,  5124094110137147339L,  4917075344795488880L,  3423242822219783102L,
+             1588924456880980404L,  8515495360312448868L, -5563691320675461929L, -2352238951654504517L,
+            -7416919543420127888L,   631412478604690114L,   689144891258712875L, -9001615284848119152L,
+            -6275065758899203088L,  8164387857252400515L, -4122060123604826739L, -2016541034210046261L,
+            -7178335877193796678L,  3354303106860129181L,  5731595363486898779L, -2874315602397298018L,
+             5386746429707619069L,  9036622191596156315L, -7950190733284789459L, -5741691593792426169L,
+            -8600462258998065159L,  5460142111961227035L,   276738899508534641L,  2358776514903881139L,
+             -837649704945720257L, -3608906204977108245L,  2960825464614526243L,  7339056324843827739L,
+            -5709958573878745135L, -5885403829221945248L,  6611935345917126768L,  2588814037559904539L
+    };
+
+    /**
+     * The index of next RNG seed.
+     */
+    private static int nextSeed = -1;
 
     /**
      * High quality random number generator.
      */
     private static final ThreadLocal<Random> random = new ThreadLocal<smile.math.Random>() {
-        protected synchronized Random initialValue() {
-            // For the first RNG, we use the default seed so that we can
-            // get repeatable results for random algorithms.
-            // Note that this may or may not be the main thread.
-            long seed = 19650218L;
-
-            // Make sure other threads not to use the same seed.
-            // This is very important for some algorithms such as random forest.
-            // Otherwise, all trees of random forest are same except the main thread one.
-            if (!seeds.isEmpty()) {
-                do {
-                    seed = probablePrime(19650218L, 256, seedRNG);
-                } while (seeds.contains(seed));
+        protected Random initialValue() {
+            synchronized(DEFAULT_SEEDS) {
+                // For the first RNG instance, we use the default seed of RNG algorithms.
+                if (nextSeed < 0) {
+                    nextSeed = 0;
+                    return new Random();
+                }
+                if (nextSeed < DEFAULT_SEEDS.length) {
+                    return new Random(DEFAULT_SEEDS[nextSeed++]);
+                } else {
+                    return new Random(generateSeed());
+                }
             }
-
-            logger.info(String.format("Set RNG seed %d for thread %s", seed, Thread.currentThread().getName()));
-            seeds.add(seed);
-            return new Random(seed);
         }
     };
 
@@ -358,7 +391,9 @@ public class MathEx {
      * Returns true if n is probably prime, false if it's definitely composite.
      * This implements Miller-Rabin primality test.
      * @param n an odd integer to be tested for primality
-     * @param k a parameter that determines the accuracy of the test
+     * @param k the number of rounds of primality test to perform.
+     *          With larger number of rounds, the test is more
+     *          accurate but also takes longer time.
      * @return true if n is probably prime, false if it's definitely composite.
      */
     public static boolean isProbablePrime(long n, int k) {
@@ -369,7 +404,9 @@ public class MathEx {
      * Returns true if n is probably prime, false if it's definitely composite.
      * This implements Miller-Rabin primality test.
      * @param n an odd integer to be tested for primality
-     * @param k a parameter that determines the accuracy of the test
+     * @param k the number of rounds of primality test to perform.
+     *          With larger number of rounds, the test is more
+     *          accurate but also takes longer time.
      * @param rng random number generator
      * @return true if n is probably prime, false if it's definitely composite.
      */
@@ -516,39 +553,53 @@ public class MathEx {
     }
 
     /**
-     * Initialize the random number generator with a seed.
-     * @param seed the RNG seed.
+     * Returns a random number to seed other random number generators.
+     * @return a random number to seed other random number generators.
      */
-    public static void setSeed(long seed) {
-        if (seeds.isEmpty()) {
-            seedRNG.setSeed(seed);
-            seeds.clear();
-        }
-
-        random.get().setSeed(seed);
-        seeds.add(seed);
-    }
-
-    /**
-     * Initialize the random generator with a random seed from a
-     * cryptographically strong random number generator.
-     */
-    public static void setSeed() {
-        java.security.SecureRandom sr = new java.security.SecureRandom();
-        byte[] bytes = sr.generateSeed(Long.BYTES);
+    public static long generateSeed() {
+        byte[] bytes = generateSeed(Long.BYTES);
         long seed = 0;
         for (int i = 0; i < Long.BYTES; i++) {
             seed <<= 8;
             seed |= (bytes[i] & 0xFF);
         }
+        return seed;
+    }
 
-        setSeed(seed);
+    /**
+     * Returns the given number of random bytes to seed other random number
+     * generators.
+     * @param numBytes the number of seed bytes to generate.
+     * @return the seed bytes.
+     */
+    public static byte[] generateSeed(int numBytes) {
+        synchronized(seedRNG) {
+            return seedRNG.generateSeed(numBytes);
+        }
+    }
+
+    /**
+     * Returns a stream of random numbers to be used as RNG seeds.
+     * @return a stream of random numbers to be used as RNG seeds.
+     */
+    public static LongStream seeds() {
+        return LongStream.generate(MathEx::generateSeed).sequential();
+    }
+
+    /**
+     * Initialize the random number generator with a seed.
+     * @param seed the RNG seed.
+     */
+    public static void setSeed(long seed) {
+        random.get().setSeed(seed);
     }
 
     /**
      * Returns a probably prime number greater than n.
      * @param n the returned value should be greater than n.
-     * @param k a parameter that determines the accuracy of the primality test.
+     * @param k the number of rounds of primality test to perform.
+     *          With larger number of rounds, the test is more
+     *          accurate but also takes longer time.
      * @return a probably prime number greater than n.
      */
     public static long probablePrime(long n, int k) {
@@ -558,7 +609,9 @@ public class MathEx {
     /**
      * Returns a probably prime number.
      * @param n the returned value should be greater than n.
-     * @param k a parameter that determines the accuracy of the primality test.
+     * @param k the number of rounds of primality test to perform.
+     *          With larger number of rounds, the test is more
+     *          accurate but also takes longer time.
      * @param rng the random number generator.
      * @return a probably prime number greater than n.
      */
@@ -570,17 +623,6 @@ public class MathEx {
         }
 
         return seed;
-    }
-
-    /**
-     * Returns a stream of prime numbers to be used as RNG seeds.
-     *
-     * @param n the returned value should be greater than n.
-     * @param k a parameter that determines the accuracy of the primality test.
-     * @return a stream of prime numbers to be used as RNG seeds.
-     */
-    public static LongStream seeds(long n, int k) {
-        return LongStream.generate(() -> probablePrime(n, k, seedRNG));
     }
 
     /**
