@@ -943,7 +943,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_8">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.parquet("data/parquet/userdata1.parquet")
+    smile> val df = read.parquet("data/userdata/userdata1.parquet")
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -963,7 +963,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_8">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var df = Read.parquet("data/parquet/userdata1.parquet")
+    jshell> var df = Read.parquet("data/userdata/userdata1.parquet")
     df ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -983,7 +983,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="tab-pane" id="kotlin_8">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> val df = read.parquet("data/parquet/userdata1.parquet")
+    >>> val df = read.parquet("data/userdata/userdata1.parquet")
     >>> df
     res100: smile.data.DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
@@ -1024,7 +1024,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_9">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    smile> val df = read.avro(Paths.getTestData("avro/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
+    smile> val df = read.avro(Paths.getTestData("userdata/userdata1.avro"), Paths.getTestData("avro/userdata.avsc"))
     df: DataFrame = [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1044,7 +1044,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_9">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), smile.util.Paths.getTestData("avro/userdata.avsc"))
+    jshell> var avrodf = Read.avro(smile.util.Paths.getTestData("userdata/userdata1.avro"), smile.util.Paths.getTestData("userdata/userdata.avsc"))
     avrodf ==> [registration_dttm: DateTime, id: Integer, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: String, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +-------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
     |  registration_dttm| id|first_name|last_name|               email|gender|    ip_address|              cc|             country| birthdate|   salary|               title|comments|
@@ -1064,7 +1064,7 @@ permalink: "{{ page.filePathStem }}.html"
             <div class="tab-pane" id="kotlin_9">
     <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-kotlin"><code>
-    >>> val avrodf = read.avro(smile.util.Paths.getTestData("avro/userdata1.avro"), smile.util.Paths.getTestData("avro/userdata.avsc"))
+    >>> val avrodf = read.avro(smile.util.Paths.getTestData("userdata/userdata1.avro"), smile.util.Paths.getTestData("userdata/userdata.avsc"))
     >>> avrodf
     res104: smile.data.DataFrame = [registration_dttm: String, id: long, first_name: String, last_name: String, email: String, gender: String, ip_address: String, cc: Long, country: String, birthdate: String, salary: Double, title: String, comments: String]
     +--------------------+---+----------+---------+--------------------+------+--------------+----------------+--------------------+----------+---------+--------------------+--------+
