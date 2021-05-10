@@ -17,21 +17,13 @@
 
 package smile.classification;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.Arrays;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.BreastCancer;
-import smile.data.Iris;
-import smile.data.PenDigits;
-import smile.data.USPS;
+import smile.data.*;
 import smile.math.MathEx;
-import smile.util.Paths;
 import smile.validation.*;
 import smile.validation.metric.Error;
 
@@ -112,22 +104,11 @@ public class FLDTest {
     }
 
     @Test
-    public void testColon() throws IOException {
+    public void testColon() {
         System.out.println("Colon");
 
-        BufferedReader reader = Paths.getTestDataReader("microarray/colon.txt");
-        int[] y = Arrays.stream(reader.readLine().split(" ")).mapToInt(s -> Integer.parseInt(s) > 0 ? 1 : 0).toArray();
-
-        double[][] x = new double[62][2000];
-        for (int i = 0; i < 2000; i++) {
-            String[] tokens = reader.readLine().split(" ");
-            for (int j = 0; j < 62; j++) {
-                x[j][i] = Double.parseDouble(tokens[j]);
-            }
-        }
-
         MathEx.setSeed(19650218); // to get repeatable results.
-        ClassificationValidations<FLD> result = CrossValidation.classification(5, x, y, FLD::fit);
+        ClassificationValidations<FLD> result = CrossValidation.classification(5, Colon.x, Colon.y, FLD::fit);
 
         System.out.println(result);
         assertEquals(0.8524, result.avg.accuracy, 1E-4);
