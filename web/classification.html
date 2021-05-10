@@ -334,7 +334,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane active" id="scala_5">
             <div class="code" style="text-align: left;">
     <pre class="prettyprint lang-scala"><code>
-    val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
+    val toy = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
     val x = toy.select(1, 2).toArray
     val y = toy.column(0).toIntArray
     show(plot(x, y, knn(x, y, 3)))
@@ -344,7 +344,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="java_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-java"><code>
-    var toy = Read.csv("data/classification/toy/toy-train.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var toy = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
     var x = toy.select(1, 2).toArray();
     var y = toy.column(0).toIntArray();
     KNN.fit(x, y, 3);
@@ -354,7 +354,7 @@ permalink: "{{ page.filePathStem }}.html"
         <div class="tab-pane" id="kotlin_5">
             <div class="code" style="text-align: left;">
           <pre class="prettyprint lang-kotlin"><code>
-    val toy = read.csv("data/classification/toy/toy-train.txt", delimiter='\t', header=false)
+    val toy = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
     val x = toy.select(1, 2).toArray()
     val y = toy.column(0).toIntArray()
     knn(x, y, 3)
