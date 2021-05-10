@@ -58,7 +58,7 @@ public class JSONTest {
     public void testBooks() throws Exception {
         System.out.println("books");
         JSON json = new JSON();
-        DataFrame df = json.read(Paths.getTestData("json/books1.json"));
+        DataFrame df = json.read(Paths.getTestData("kylo/books.json"));
 
         System.out.println(df);
         System.out.println(df.schema());
@@ -95,7 +95,7 @@ public class JSONTest {
     public void testBooksMultiLine() throws Exception {
         System.out.println("books multi-line");
         JSON json = new JSON().mode(JSON.Mode.MULTI_LINE);
-        DataFrame df = json.read(Paths.getTestData("json/books2.json"));
+        DataFrame df = json.read(Paths.getTestData("kylo/books_array.json"));
 
         System.out.println(df);
         System.out.println(df.schema());

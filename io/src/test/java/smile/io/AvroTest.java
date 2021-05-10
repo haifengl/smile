@@ -39,8 +39,8 @@ public class AvroTest {
 
     public AvroTest() {
         try {
-            Avro avro = new Avro(Paths.getTestData("userdata/userdata.avsc"));
-            df = avro.read(Paths.getTestData("userdata/userdata1.avro"));
+            Avro avro = new Avro(Paths.getTestData("kylo/userdata.avsc"));
+            df = avro.read(Paths.getTestData("kylo/userdata1.avro"));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
