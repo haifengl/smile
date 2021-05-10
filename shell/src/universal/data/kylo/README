@@ -1,9 +1,8 @@
-The userdata sample file is from Teradata Kylo project
-(https://github.com/Teradata/kylo/tree/master/samples/sample-data/csv).
+The data sample files from Teradata Kylo project
+(https://github.com/Teradata/kylo/tree/master/samples/sample-data/).
 Kylo is licensed under Apache 2.0. Contributed by Teradata Inc.
 
--> Number of rows in each file: 1000
--> Column details:
+Userdata column details:
 column#		column_name		hive_datatype
 =====================================================
 1		registration_dttm 	timestamp
