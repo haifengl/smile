@@ -226,7 +226,7 @@ public class CSVTest {
 
         CSVFormat format = CSVFormat.DEFAULT.withFirstRecordAsHeader();
         CSV csv = new CSV(format);
-        DataFrame df = csv.read(Paths.getTestData("userdata/userdata1.csv"));
+        DataFrame df = csv.read(Paths.getTestData("kylo/userdata1.csv"));
 
         System.out.println(df);
         System.out.println(df.schema());
