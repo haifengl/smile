@@ -67,12 +67,17 @@ public class KernelDensity implements Distribution {
         this.mean = MathEx.mean(x);
         this.variance = MathEx.var(x);
         this.sd = Math.sqrt(variance);
+        if (sd == 0.0) {
+            throw new IllegalArgumentException("Samples has no variance.");
+        }
 
         Arrays.sort(x);
 
         int n = x.length;
         double iqr = x[n*3/4] - x[n/4];
-        h = 1.06 * Math.min(sd, iqr/1.34) / Math.pow(x.length, 0.2);
+        // safeguard iqr == 0
+        double spread = iqr > 0 ? Math.min(sd, iqr/1.34) : sd;
+        h = 1.06 * spread * Math.pow(x.length, -0.2);
         gaussian = new GaussianDistribution(0, h);
     }
 
