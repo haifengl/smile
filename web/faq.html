@@ -98,11 +98,9 @@ permalink: "{{ page.filePathStem }}.html"
     <p class="answer">
         Most Smile algorithms take simple <code>double[]</code> as input. So you can use your favorite methods
         or library to import the data as long as the samples are in double arrays. Meanwhile, Smile provides
-        a couple of parsers for popular data formats, such as Weka's ARFF files, LibSVM's file format,
-        delimited text files, and binary sparse data. These classes are in the package <code>smile.data.parser</code>
-        and <code>smile.io</code> provides high level operators on top of these parsers. The package
-        <code>smile.data.parser.microarray</code> also provides several parsers for microarray gene expression datasets,
-        including GCT, PCL, RES, and TXT files.</p>
+        a couple of parsers in <code>smile.io</code> for popular data formats, such as CSV, Weka's ARFF files,
+        LibSVM's file format, delimited text files, SAS, Parquet, Avro, Arrow, JSON, and binary sparse data.
+    </p>
 
     <h2 class="question" id="pom">Cannot build Smile with maven</h2>
     <p class="answer">
