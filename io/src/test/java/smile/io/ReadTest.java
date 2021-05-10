@@ -97,7 +97,7 @@ public class ReadTest {
     @Test
     public void testReadDataCsvZip() throws Exception {
         System.out.println("csv zip");
-        DataFrame df = Read.data(Paths.getTestData("usps/zip.train").toString(), "csv?");
+        DataFrame df = Read.data(Paths.getTestData("usps/zip.train").toString(), "csv");
         System.out.println(df);
     }
 
