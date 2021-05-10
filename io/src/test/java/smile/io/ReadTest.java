@@ -67,8 +67,8 @@ public class ReadTest {
     public void testReadDataAvro() throws Exception {
         System.out.println("avro");
         DataFrame df = Read.data(
-                Paths.getTestData("avro/userdata1.avro").toString(),
-                Paths.getTestData("avro/userdata.avsc").toString()
+                Paths.getTestData("userdata/userdata1.avro").toString(),
+                Paths.getTestData("userdata/userdata.avsc").toString()
         );
         System.out.println(df);
     }
@@ -90,7 +90,7 @@ public class ReadTest {
     @Test
     public void testReadDataParquet() throws Exception {
         System.out.println("parquet");
-        DataFrame df = Read.data(Paths.getTestData("parquet/userdata1.parquet").toString());
+        DataFrame df = Read.data(Paths.getTestData("userdata/userdata1.parquet").toString());
         System.out.println(df);
     }
 
