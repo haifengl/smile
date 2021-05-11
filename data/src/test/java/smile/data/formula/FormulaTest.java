@@ -114,8 +114,8 @@ public class FormulaTest {
     }
 
     @Test
-    public void testAll() {
-        System.out.println("all");
+    public void testDot() {
+        System.out.println("dot operator");
         Formula formula = Formula.of("salary", dot(), log("age"), $("gender"));
         assertEquals("salary ~ . + log(age) + gender", formula.toString());
 

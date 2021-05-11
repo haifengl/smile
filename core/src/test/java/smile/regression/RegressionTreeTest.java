@@ -108,7 +108,7 @@ public class RegressionTreeTest {
     }
 
     @Test
-    public void test2dPlanes() {
+    public void test2DPlanes() {
         test("2dplanes", Planes.formula, Planes.data, 1.1164);
     }
 

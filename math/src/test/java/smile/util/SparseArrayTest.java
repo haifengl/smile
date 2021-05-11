@@ -45,11 +45,8 @@ public class SparseArrayTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of all methods, of class SparseArrayTest.
-     */
     @Test
-    public void testAll() {
+    public void test() {
         System.out.println("SparseArray");
         SparseArray a = new SparseArray();
         assertTrue(a.isEmpty());
