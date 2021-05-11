@@ -17,6 +17,8 @@
 
 package smile.regression;
 
+import java.util.function.BiFunction;
+import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
@@ -51,5 +53,37 @@ public interface DataFrameRegression extends Regression<Tuple> {
         // it is different from that of training data.
         formula().bind(data.schema());
         return data.stream().mapToDouble(this::predict).toArray();
+    }
+
+    /**
+     * Fits a vector regression model on data frame.
+     *
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @return the model.
+     */
+    static DataFrameRegression of(Formula formula, DataFrame data, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+        DataFrame X = formula.x(data);
+        StructType schema = X.schema();
+        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
+        double[] y = formula.y(data).toDoubleArray();
+        Regression<double[]> model = trainer.apply(x, y);
+
+        return new DataFrameRegression() {
+            @Override
+            public Formula formula() {
+                return formula;
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+
+            @Override
+            public double predict(Tuple x) {
+                return model.predict(formula.x(x).toArray());
+            }
+        };
     }
 }
