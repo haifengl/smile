@@ -22,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.MNIST;
 import smile.io.Read;
 import smile.math.MathEx;
 import smile.projection.PCA;
@@ -63,12 +64,9 @@ public class TSNETest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ');
-        double[][] mnist = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
-
-        PCA pca = PCA.fit(mnist);
+        PCA pca = PCA.fit(MNIST.x);
         pca.setProjection(50);
-        double[][] X = pca.project(mnist);
+        double[][] X = pca.project(MNIST.x);
 
         long start = System.currentTimeMillis();
         TSNE tsne = new TSNE(X, 2, 20, 200, 1000);
