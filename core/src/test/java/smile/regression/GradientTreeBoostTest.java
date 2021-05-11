@@ -107,54 +107,182 @@ public class GradientTreeBoostTest {
     }
 
     @Test
-    public void testLS() {
+    public void testCpuLS() {
         test(Loss.ls(), "CPU", CPU.formula, CPU.data, 60.5335);
+    }
+
+    @Test
+    public void testCpuLAD() {
+        test(Loss.lad(), "CPU", CPU.formula, CPU.data, 66.0549);
+    }
+
+    @Test
+    public void testCpuQuantile() {
+        test(Loss.quantile(0.5), "CPU", CPU.formula, CPU.data, 66.0549);
+    }
+
+    @Test
+    public void testCpuHuber() {
+        test(Loss.huber(0.9), "CPU", CPU.formula, CPU.data, 65.4128);
+    }
+
+    @Test
+    public void test2DPlanesLS() {
         test(Loss.ls(), "2dplanes", Planes.formula, Planes.data, 1.1016);
+    }
+
+    @Test
+    public void test2DPlanesLAD() {
+        test(Loss.lad(), "2dplanes", Planes.formula, Planes.data, 1.1347);
+    }
+
+    @Test
+    public void test2DPlanesQuantile() {
+        test(Loss.quantile(0.5), "2dplanes", Planes.formula, Planes.data, 1.1347);
+    }
+
+    @Test
+    public void test2DPlanesHuber() {
+        test(Loss.huber(0.9), "2dplanes", Planes.formula, Planes.data, 1.1080);
+    }
+
+    @Test
+    public void testAbaloneLS() {
         test(Loss.ls(), "abalone", Abalone.formula, Abalone.train, 2.2159);
+    }
+
+    @Test
+    public void testAbaloneLAD() {
+        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2958);
+    }
+
+    @Test
+    public void testAbaloneQuantile() {
+        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2958);
+    }
+
+    @Test
+    public void testAbaloneHuber() {
+        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2228);
+    }
+
+    @Test
+    public void testAileronsLS() {
         test(Loss.ls(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testAileronsLAD() {
+        test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testAileronsQuantile() {
+        test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testAileronsHuber() {
+        test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testBank32nhLS() {
         test(Loss.ls(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0845);
+    }
+
+    @Test
+    public void testBank32nhLAD() {
+        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
+    }
+
+    @Test
+    public void testBank32nhQuantile() {
+        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
+    }
+
+    @Test
+    public void testBank32nhHuber() {
+        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0853);
+    }
+
+    @Test
+    public void testAutoMPGLS() {
         test(Loss.ls(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0904);
+    }
+
+    @Test
+    public void testAutoMPGLAD() {
+        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+    }
+
+    @Test
+    public void testAutoMPGQuantile() {
+        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
+    }
+
+    @Test
+    public void testAutoMPGHuber() {
+        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1155);
+    }
+
+    @Test
+    public void testCalHousingLS() {
         test(Loss.ls(), "cal_housing", CalHousing.formula, CalHousing.data, 60581.4183);
+    }
+
+    @Test
+    public void testCalHousingLAD() {
+        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+    }
+
+    @Test
+    public void testCalHousingQuantile() {
+        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
+    }
+
+    @Test
+    public void testCalHousingHuber() {
+        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62090.2639);
+    }
+
+    @Test
+    public void testPuma8nhLS() {
         test(Loss.ls(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2482);
+    }
+
+    @Test
+    public void testPuma8nhLAD() {
+        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+    }
+
+    @Test
+    public void testPuma8nhQuantile() {
+        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+    }
+
+    @Test
+    public void testPuma8nhHuber() {
+        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2429);
+    }
+
+    @Test
+    public void testKin8nmLS() {
         test(Loss.ls(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1802);
     }
 
     @Test
-    public void testLAD() {
-        test(Loss.lad(), "CPU", CPU.formula, CPU.data, 66.0549);
-        test(Loss.lad(), "2dplanes", Planes.formula, Planes.data, 1.1347);
-        test(Loss.lad(), "abalone", Abalone.formula, Abalone.train, 2.2958);
-        test(Loss.lad(), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(Loss.lad(), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
-        test(Loss.lad(), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
-        test(Loss.lad(), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
-        test(Loss.lad(), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+    public void testKin8nmLAD() {
         test(Loss.lad(), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
     @Test
-    public void testQuantile() {
-        test(Loss.quantile(0.5), "CPU", CPU.formula, CPU.data, 66.0549);
-        test(Loss.quantile(0.5), "2dplanes", Planes.formula, Planes.data, 1.1347);
-        test(Loss.quantile(0.5), "abalone", Abalone.formula, Abalone.train, 2.2958);
-        test(Loss.quantile(0.5), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(Loss.quantile(0.5), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0909);
-        test(Loss.quantile(0.5), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.0979);
-        test(Loss.quantile(0.5), "cal_housing", CalHousing.formula, CalHousing.data, 66742.1902);
-        test(Loss.quantile(0.5), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2486);
+    public void testKin8nmQuantile() {
         test(Loss.quantile(0.5), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1814);
     }
 
     @Test
-    public void testHuber() {
-        test(Loss.huber(0.9), "CPU", CPU.formula, CPU.data, 65.4128);
-        test(Loss.huber(0.9), "2dplanes", Planes.formula, Planes.data, 1.1080);
-        test(Loss.huber(0.9), "abalone", Abalone.formula, Abalone.train, 2.2228);
-        test(Loss.huber(0.9), "ailerons", Ailerons.formula, Ailerons.data, 0.0002);
-        test(Loss.huber(0.9), "bank32nh", Bank32nh.formula, Bank32nh.data, 0.0853);
-        test(Loss.huber(0.9), "autoMPG", AutoMPG.formula, AutoMPG.data, 3.1155);
-        test(Loss.huber(0.9), "cal_housing", CalHousing.formula, CalHousing.data, 62090.2639);
-        test(Loss.huber(0.9), "puma8nh", Puma8NH.formula, Puma8NH.data, 3.2429);
+    public void testKin8nmHuber() {
         test(Loss.huber(0.9), "kin8nm", Kin8nm.formula, Kin8nm.data, 0.1795);
     }
 
