@@ -86,6 +86,17 @@ public class LogisticRegressionTest {
     }
 
     @Test
+    public void testLibrasMovement() {
+        System.out.println("Libras Movement");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<LogisticRegression> result = CrossValidation.classification(10, LibrasMovement.x, LibrasMovement.y, LogisticRegression::fit);
+
+        System.out.println(result);
+        assertEquals(0.7361, result.avg.accuracy, 1E-4);
+    }
+
+    @Test
     public void testBreastCancer() {
         System.out.println("Breast Cancer");
 

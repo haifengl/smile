@@ -144,15 +144,47 @@ public class RandomForestTest {
     }
 
     @Test
-    public void testAll() {
+    public void testCPU() {
         test("CPU", CPU.formula, CPU.data, 69.0170);
+    }
+
+    @Test
+    public void test2dPlanes() {
         test("2dplanes", Planes.formula, Planes.data, 1.3581);
+    }
+
+    @Test
+    public void testAbalone() {
         test("abalone", Abalone.formula, Abalone.train, 2.1889);
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.formula, Ailerons.data, 0.0002);
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.formula, Bank32nh.data, 0.0978);
+    }
+
+    @Test
+    public void testAutoMPG() {
         test("autoMPG", AutoMPG.formula, AutoMPG.data, 3.5588);
+    }
+
+    @Test
+    public void testCalHousing() {
         test("cal_housing", CalHousing.formula, CalHousing.data, 58605.0710);
+    }
+
+    @Test
+    public void testPuma8nh() {
         test("puma8nh", Puma8NH.formula, Puma8NH.data, 3.3145);
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.formula, Kin8nm.data, 0.1704);
     }
 
