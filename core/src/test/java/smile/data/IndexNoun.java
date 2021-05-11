@@ -28,7 +28,7 @@ public class IndexNoun {
     public static String[] words;
 
     static {
-        try (BufferedReader input = smile.util.Paths.getTestDataReader("neighbor/index.noun")) {
+        try (BufferedReader input = smile.util.Paths.getTestDataReader("text/index.noun")) {
             words = input.lines().filter(line -> !line.startsWith(" "))
                     .map(line -> line.split("\\s")[0].replace('_', ' '))
                     .toArray(String[]::new);

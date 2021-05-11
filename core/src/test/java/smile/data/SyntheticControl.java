@@ -32,7 +32,7 @@ public class SyntheticControl {
 
     static {
         try {
-            data = Read.csv(Paths.getTestData("uci/synthetic_control.data"), CSVFormat.DEFAULT.withDelimiter(' '));
+            data = Read.csv(Paths.getTestData("clustering/synthetic_control.data"), CSVFormat.DEFAULT.withDelimiter(' '));
             x = data.toArray(false, CategoricalEncoder.DUMMY);
         } catch (Exception ex) {
             System.err.println("Failed to load 'synthetic_control': " + ex);

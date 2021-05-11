@@ -18,22 +18,28 @@
 package smile.data;
 
 import org.apache.commons.csv.CSVFormat;
+import smile.data.formula.Formula;
 import smile.io.Read;
 import smile.util.Paths;
+
+import java.util.Arrays;
 
 /**
  *
  * @author Haifeng
  */
-public class Movement {
+public class LibrasMovement {
 
     public static DataFrame data;
+    public static Formula formula = Formula.lhs("V91");
     public static double[][] x;
+    public static int[] y;
 
     static {
         try {
-            data = Read.csv(Paths.getTestData("uci/movement_libras.data"), CSVFormat.DEFAULT);
-            x = data.toArray(false, CategoricalEncoder.DUMMY);
+            data = Read.csv(Paths.getTestData("classification/movement_libras.data"), CSVFormat.DEFAULT);
+            x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
+            y = Arrays.stream(formula.y(data).toIntArray()).map(yi -> yi - 1).toArray();
         } catch (Exception ex) {
             System.err.println("Failed to load 'movement_libras': " + ex);
             System.exit(-1);
