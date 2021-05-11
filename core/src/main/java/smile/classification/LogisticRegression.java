@@ -20,9 +20,6 @@ package smile.classification;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.IntStream;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
 import smile.math.BFGS;
@@ -297,32 +294,6 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
 
     /**
      * Fits binomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static Binomial binomial(Formula formula, DataFrame data) {
-        return binomial(formula, data, new Properties());
-    }
-
-    /**
-     * Fits binomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static Binomial binomial(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return binomial(x, y, prop);
-    }
-
-    /**
-     * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
      * @return the model.
@@ -390,32 +361,6 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         Binomial model = new Binomial(w, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static Multinomial multinomial(Formula formula, DataFrame data) {
-        return multinomial(formula, data, new Properties());
-    }
-
-    /**
-     * Fits multinomial logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static Multinomial multinomial(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return multinomial(x, y, prop);
     }
 
     /**
@@ -494,32 +439,6 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         Multinomial model = new Multinomial(W, L, lambda, codec.classes);
         model.setLearningRate(0.1 / x.length);
         return model;
-    }
-
-    /**
-     * Fits logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static LogisticRegression fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Fits logistic regression.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static LogisticRegression fit(Formula formula, DataFrame data, Properties prop) {
-        DataFrame X = formula.x(data);
-        double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
     }
 
     /**

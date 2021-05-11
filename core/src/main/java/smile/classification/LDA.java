@@ -18,9 +18,6 @@
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.util.IntSet;
@@ -125,31 +122,6 @@ public class LDA extends AbstractClassifier<double[]> {
         for (int i = 0; i < k; i++) {
             logppriori[i] = Math.log(priori[i]);
         }
-    }
-
-    /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model.
-     */
-    public static LDA fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learns linear discriminant analysis.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model.
-     */
-    public static LDA fit(Formula formula, DataFrame data, Properties prop) {
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, prop);
     }
 
     /**
