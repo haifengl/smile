@@ -45,11 +45,8 @@ public class DoubleArrayListTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of all methods, of class DoubleArrayListTest.
-     */
     @Test
-    public void testAll() {
+    public void test() {
         System.out.println("DoubleArrayList");
         DoubleArrayList a = new DoubleArrayList();
         assertTrue(a.isEmpty());
