@@ -11,7 +11,7 @@ lazy val commonSettings = Seq(
   organization := "com.github.haifengl",
   organizationName := "Haifeng Li",
   organizationHomepage := Some(url("http://haifengl.github.io/")),
-  version := "2.6.1",
+  version := "3.0.0",
 
   parallelExecution in Test := false,
   autoAPIMappings := true,
@@ -79,10 +79,10 @@ lazy val java8Settings = javaSettings ++ Seq(
   ),
 )
 
-lazy val java15Settings = javaSettings ++ Seq(
+lazy val java17Settings = javaSettings ++ Seq(
   javacOptions in (Compile, compile) ++= Seq(
-    "-source", "15",
-    "-target", "15",
+    "-source", "17",
+    "-target", "17",
     "--enable-preview",
     "-Xlint:preview"
   ),
