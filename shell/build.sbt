@@ -23,24 +23,13 @@ mappings in Universal := {
 
   // removing means filtering
   universalMappings filter {
-    case (file, name) => !name.startsWith("data/airline") &&
-                         !name.startsWith("data/arrow") &&
-                         !name.startsWith("data/avro") &&
-                         !name.startsWith("data/csv") &&
-                         !name.startsWith("data/json") &&
+    case (file, name) => !name.startsWith("data/kylo") &&
                          !name.startsWith("data/matrix") &&
-                         !name.startsWith("data/microarray") &&
-                         !name.startsWith("data/msrp") &&
-                         !name.startsWith("data/neighbor") &&
                          !name.startsWith("data/nlp") &&
-                         !name.startsWith("data/npr") &&
-                         !name.startsWith("data/parquet") &&
                          !name.startsWith("data/sas") &&
                          !name.startsWith("data/sqlite") &&
-                         !name.startsWith("data/text") &&
                          !name.startsWith("data/transaction") &&
-                         !name.startsWith("data/weka/regression") &&
-                         !name.startsWith("data/wireframe")
+                         !name.startsWith("data/wavefront")
   }
 }
 
