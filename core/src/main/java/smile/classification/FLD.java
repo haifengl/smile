@@ -18,15 +18,11 @@
 package smile.classification;
 
 import java.util.Properties;
-import smile.data.CategoricalEncoder;
-import smile.data.DataFrame;
-import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.projection.Projection;
 import smile.sort.QuickSort;
 import smile.util.IntSet;
-import smile.util.Strings;
 
 /**
  * Fisher's linear discriminant. Fisher defined the separation between two
@@ -120,33 +116,6 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
         for (int i = 0; i < k; i++) {
             scaling.tv(mu[i], this.mu[i]);
         }
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @return the model
-     */
-    public static FLD fit(Formula formula, DataFrame data) {
-        return fit(formula, data, new Properties());
-    }
-
-    /**
-     * Learn Fisher's linear discriminant.
-     *
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
-     * @return the model
-     */
-    public static FLD fit(Formula formula, DataFrame data, Properties prop) {
-        int L = Integer.parseInt(prop.getProperty("smile.fld.dimension", "-1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.fld.tolerance", "1E-4"));
-        double[][] x = formula.x(data).toArray(false, CategoricalEncoder.DUMMY);
-        int[] y = formula.y(data).toIntArray();
-        return fit(x, y, L, tol);
     }
 
     /**
