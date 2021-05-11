@@ -27,6 +27,7 @@ mappings in Universal := {
                          !name.startsWith("data/matrix") &&
                          !name.startsWith("data/nlp") &&
                          !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sparse") &&
                          !name.startsWith("data/sqlite") &&
                          !name.startsWith("data/transaction") &&
                          !name.startsWith("data/wavefront")
