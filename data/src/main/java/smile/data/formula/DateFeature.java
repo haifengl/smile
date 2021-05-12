@@ -28,10 +28,28 @@ public enum DateFeature {
      */
     YEAR,
     /**
+     *
+     */
+    QUARTER,
+    /**
      * The month represented by an integer from 1 to 12;
      * 1 is January, 2 is February, and so forth; thus 12 is December.
      */
     MONTH,
+    /**
+     * The count of weeks within the year. If the first week starts
+     * after the start of the year then the period before is week zero.
+     */
+    WEEK_OF_YEAR,
+    /**
+     * The count of weeks within the month. If the first week starts
+     * after the start of the month then the period before is week zero.
+     */
+    WEEK_OF_MONTH,
+    /**
+     * The day of year represented by an integer from 1 to 365, or 366 in a leap year.
+     */
+    DAY_OF_YEAR,
     /**
      * The day of month represented by an integer from 1 to 31 in the usual
      * manner.
@@ -47,15 +65,15 @@ public enum DateFeature {
      * from midnight to 1 a.m. is hour 0, and the hour from noon to 1 p.m.
      * is hour 12.
      */
-    HOURS,
+    HOUR,
     /**
      * The minutes represented by an integer from 0 to 59
      * in the usual manner.
      */
-    MINUTES,
+    MINUTE,
     /**
      * The seconds represented by an integer from 0 to 59
      * in the usual manner.
      */
-    SECONDS,
+    SECOND,
 }
