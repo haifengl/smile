@@ -206,9 +206,9 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * @return the model.
      */
     public static Classifier<double[]> fit(double[][] x, int[] y, Properties prop) {
-        MercerKernel<double[]> kernel = MercerKernel.of(prop);
-        double C = Double.parseDouble(prop.getProperty("svm.C", "1.0"));
-        double tol = Double.parseDouble(prop.getProperty("svm.tolerance", "1E-3"));
+        MercerKernel<double[]> kernel = MercerKernel.of(prop.getProperty("smile.svm.kernel", "linear"));
+        double C = Double.parseDouble(prop.getProperty("smile.svm.C", "1.0"));
+        double tol = Double.parseDouble(prop.getProperty("smile.svm.tolerance", "1E-3"));
 
         int[] classes = MathEx.unique(y);
         String trainer = prop.getProperty("svm", classes.length == 2 ? "binary" : "ovr").toLowerCase();

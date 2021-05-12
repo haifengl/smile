@@ -306,7 +306,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * @return the model.
      */
     public static GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties prop) {
-        MercerKernel<double[]> kernel = MercerKernel.of(prop);
+        MercerKernel<double[]> kernel = MercerKernel.of(prop.getProperty("smile.gaussian.process.kernel", "linear"));
         double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise", "1E-10"));
         boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize", "true"));
         double tol = Double.parseDouble(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
