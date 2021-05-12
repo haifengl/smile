@@ -19,9 +19,13 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Properties;
+import java.util.stream.Collectors;
+
 import smile.base.mlp.*;
-import smile.data.measure.NominalScale;
 import smile.math.MathEx;
+import smile.math.TimeFunction;
 import smile.util.IntSet;
 
 /**
@@ -226,6 +230,58 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
         update(x.length);
         t++;
+    }
+
+    /**
+     * Fits a MLP model.
+     * @param x the training dataset.
+     * @param y training labels.
+     * @param prop the hyper-parameters.
+     * @return the model.
+     */
+    public static MLP fit(double[][] x, int[] y, Properties prop) {
+        int p = x[0].length;
+        int k = MathEx.max(y) + 1;
+
+        String activation = prop.getProperty("smile.mlp.activation", "ReLU");
+        List<LayerBuilder> layers = Arrays.stream(prop.getProperty("smile.mlp.layers", "100").split(","))
+                .mapToInt(Integer::parseInt)
+                .mapToObj(nodes -> Layer.builder(activation, nodes))
+                .collect(Collectors.toList());
+        layers.add(Layer.mle(k == 2 ? 1 : k, OutputFunction.SIGMOID));
+        MLP model = new MLP(p, layers.toArray(new LayerBuilder[0]));
+
+        String learningRate = prop.getProperty("smile.mlp.learning_rate", "0.01");
+        model.setLearningRate(TimeFunction.of(learningRate));
+
+        String momentum = prop.getProperty("smile.mlp.momentum");
+        if (momentum != null) {
+            model.setMomentum(TimeFunction.of(momentum));
+        }
+
+        String rho = prop.getProperty("smile.mlp.RMSProp.rho");
+        if (rho != null) {
+            double epsilon = Double.parseDouble(prop.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
+            model.setRMSProp(Double.parseDouble(rho), epsilon);
+        }
+
+        int epochs = Integer.parseInt(prop.getProperty("smile.mlp.epochs", "100"));
+        int batch = Integer.parseInt(prop.getProperty("smile.mlp.mini_batch", "256"));
+        double[][] batchx = new double[batch][];
+        int[] batchy = new int[batch];
+        for (int epoch = 1; epoch <= epochs; epoch++) {
+            int[] permutation = MathEx.permutate(x.length);
+            for (int i = 0; i < x.length; i += batch) {
+                for (int j = 0; j < batch; j++) {
+                    int pi = permutation[(i+j) % x.length];
+                    batchx[j] = x[pi];
+                    batchy[j] = y[pi];
+                }
+                model.update(batchx, batchy);
+            }
+        }
+
+        return model;
     }
 
     /** Sets the target vector. */

@@ -20,6 +20,8 @@ package smile.base.mlp;
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Locale;
+
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 
@@ -346,58 +348,79 @@ public abstract class Layer implements Serializable {
     }
 
     /**
-     * Returns a hidden layer with linear activation function.
-     * @param n the number of neurons.
+     * Returns a hidden layer.
+     * @param activation the activation function.
+     * @param neurons the number of neurons.
      * @return the layer builder.
      */
-    public static HiddenLayerBuilder linear(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.linear());
+    public static HiddenLayerBuilder builder(String activation, int neurons) {
+        switch(activation.toLowerCase(Locale.ROOT)) {
+            case "relu":
+                return rectifier(neurons);
+            case "sigmoid":
+                return sigmoid(neurons);
+            case "tanh":
+                return tanh(neurons);
+            case "linear":
+                return linear(neurons);
+            default:
+                throw new IllegalArgumentException("Unsupported activation function: " + activation);
+        }
+    }
+
+    /**
+     * Returns a hidden layer with linear activation function.
+     * @param neurons the number of neurons.
+     * @return the layer builder.
+     */
+    public static HiddenLayerBuilder linear(int neurons) {
+        return new HiddenLayerBuilder(neurons, ActivationFunction.linear());
     }
 
     /**
      * Returns a hidden layer with rectified linear activation function.
-     * @param n the number of neurons.
+     * @param neurons the number of neurons.
      * @return the layer builder.
      */
-    public static HiddenLayerBuilder rectifier(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.rectifier());
+    public static HiddenLayerBuilder rectifier(int neurons) {
+        return new HiddenLayerBuilder(neurons, ActivationFunction.rectifier());
     }
 
     /**
      * Returns a hidden layer with sigmoid activation function.
-     * @param n the number of neurons.
+     * @param neurons the number of neurons.
      * @return the layer builder.
      */
-    public static HiddenLayerBuilder sigmoid(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.sigmoid());
+    public static HiddenLayerBuilder sigmoid(int neurons) {
+        return new HiddenLayerBuilder(neurons, ActivationFunction.sigmoid());
     }
 
     /**
      * Returns a hidden layer with hyperbolic tangent activation function.
-     * @param n the number of neurons.
+     * @param neurons the number of neurons.
      * @return the layer builder.
      */
-    public static HiddenLayerBuilder tanh(int n) {
-        return new HiddenLayerBuilder(n, ActivationFunction.tanh());
+    public static HiddenLayerBuilder tanh(int neurons) {
+        return new HiddenLayerBuilder(neurons, ActivationFunction.tanh());
     }
 
     /**
      * Returns an output layer with mean squared error cost function.
-     * @param n the number of neurons.
-     * @param f the output function.
+     * @param neurons the number of neurons.
+     * @param output the output function.
      * @return the layer builder.
      */
-    public static OutputLayerBuilder mse(int n, OutputFunction f) {
-        return new OutputLayerBuilder(n, f, Cost.MEAN_SQUARED_ERROR);
+    public static OutputLayerBuilder mse(int neurons, OutputFunction output) {
+        return new OutputLayerBuilder(neurons, output, Cost.MEAN_SQUARED_ERROR);
     }
 
     /**
      * Returns an output layer with (log-)likelihood cost function.
-     * @param n the number of neurons.
-     * @param f the output function.
+     * @param neurons the number of neurons.
+     * @param output the output function.
      * @return the layer builder.
      */
-    public static OutputLayerBuilder mle(int n, OutputFunction f) {
-        return new OutputLayerBuilder(n, f, Cost.LIKELIHOOD);
+    public static OutputLayerBuilder mle(int neurons, OutputFunction output) {
+        return new OutputLayerBuilder(neurons, output, Cost.LIKELIHOOD);
     }
 }

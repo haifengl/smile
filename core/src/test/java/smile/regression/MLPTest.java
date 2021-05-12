@@ -105,14 +105,42 @@ public class MLPTest {
     }
 
     @Test
-    public void testReLUSigmoid() {
+    public void testCPU() {
         test("CPU", CPU.x, CPU.y, 128.1032, Layer.rectifier(30), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void test2DPlanes() {
         test("2dplanes", Planes.x, Planes.y, 1.5173, Layer.rectifier(50), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testAbalone() {
         test("abalone", Abalone.x, Abalone.y, 2.5296, Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testAilerons() {
         test("ailerons", Ailerons.x, Ailerons.y, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testBank32nh() {
         test("bank32nh", Bank32nh.x, Bank32nh.y, 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testCalHousing() {
         test("cal_housing", CalHousing.x, CalHousing.y, 115643.9514, Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testPuma8nh() {
         test("puma8nh", Puma8NH.x, Puma8NH.y, 3.9609, Layer.rectifier(40), Layer.sigmoid(30));
+    }
+
+    @Test
+    public void testKin8nm() {
         test("kin8nm", Kin8nm.x, Kin8nm.y, 0.2638, Layer.rectifier(40), Layer.sigmoid(30));
     }
 }
