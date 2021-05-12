@@ -113,6 +113,11 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
         }
 
         @Override
+        public double score(SparseArray x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
         public int predict(SparseArray x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
             return classes.valueOf(f < 0.5 ? 0 : 1);
