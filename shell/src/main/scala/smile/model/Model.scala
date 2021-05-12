@@ -18,11 +18,13 @@
 package smile.model
 
 import java.util.Properties
+import smile.base.rbf.RBF
 import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
-import smile.classification.{AdaBoost, DataFrameClassifier, DecisionTree}
-import smile.regression.{DataFrameRegression, ElasticNet, LASSO, OLS, RegressionTree, RidgeRegression}
+import smile.classification._
+import smile.math.kernel.MercerKernel
+import smile.regression.{DataFrameRegression, ElasticNet, GaussianProcessRegression, LASSO, OLS, RegressionTree, RidgeRegression, SVR}
 
 /**
   * The machine learning model applicable on a data frame.
@@ -54,19 +56,35 @@ object ClassificationModel {
     * @param algorithm the algorithm name.
     * @param formula the model formula.
     * @param data the training data.
-    * @param props the hyperparameters.
+    * @param prop the hyperparameters.
     * @return the classification model.
     */
-  def apply(algorithm: String, formula: Formula, data: DataFrame, props: Properties): ClassificationModel = {
+  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): ClassificationModel = {
     val model: DataFrameClassifier = algorithm match {
       case "random.forest" =>
-        smile.classification.RandomForest.fit(formula, data, props)
+        smile.classification.RandomForest.fit(formula, data, prop)
       case "gbt" =>
-        smile.classification.GradientTreeBoost.fit(formula, data, props)
+        smile.classification.GradientTreeBoost.fit(formula, data, prop)
       case "cart" =>
-        DecisionTree.fit(formula, data, props)
+        DecisionTree.fit(formula, data, prop)
       case "adaboost" =>
-        AdaBoost.fit(formula, data, props)
+        AdaBoost.fit(formula, data, prop)
+      case "logit" =>
+        DataFrameClassifier.of(formula, data, (x, y) => LogisticRegression.fit(x, y, prop))
+      case "fld" =>
+        DataFrameClassifier.of(formula, data, (x, y) => FLD.fit(x, y, prop))
+      case "lda" =>
+        DataFrameClassifier.of(formula, data, (x, y) => LDA.fit(x, y, prop))
+      case "qda" =>
+        DataFrameClassifier.of(formula, data, (x, y) => QDA.fit(x, y, prop))
+      case "rda" =>
+        DataFrameClassifier.of(formula, data, (x, y) => RDA.fit(x, y, prop))
+      case "rbf" =>
+        val neurons = prop.getProperty("rbf.neurons", "30").toInt
+        val normalize = prop.getProperty("rbf.normalize", "false").toBoolean
+        DataFrameClassifier.of(formula, data, (x, y) => RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize))
+      case "svm" =>
+        DataFrameClassifier.of(formula, data, (x, y) => SVM.fit(x, y, prop));
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }
@@ -96,25 +114,33 @@ object RegressionModel {
     * @param algorithm the algorithm name.
     * @param formula the model formula.
     * @param data the training data.
-    * @param props the hyperparameters.
+    * @param prop the hyperparameters.
     * @return the regression model.
     */
-  def apply(algorithm: String, formula: Formula, data: DataFrame, props: Properties): RegressionModel = {
+  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): RegressionModel = {
     val model: DataFrameRegression = algorithm match {
       case "random.forest" =>
-        smile.regression.RandomForest.fit(formula, data, props)
+        smile.regression.RandomForest.fit(formula, data, prop)
       case "gbt" =>
-        smile.regression.GradientTreeBoost.fit(formula, data, props)
+        smile.regression.GradientTreeBoost.fit(formula, data, prop)
       case "cart" =>
-        RegressionTree.fit(formula, data, props)
+        RegressionTree.fit(formula, data, prop)
       case "ols" =>
-        OLS.fit(formula, data, props)
+        OLS.fit(formula, data, prop)
       case "lasso" =>
-        LASSO.fit(formula, data, props)
+        LASSO.fit(formula, data, prop)
       case "elastic.net" =>
-        ElasticNet.fit(formula, data, props)
+        ElasticNet.fit(formula, data, prop)
       case "ridge" =>
-        RidgeRegression.fit(formula, data, props)
+        RidgeRegression.fit(formula, data, prop)
+      case "gaussian.process" =>
+        DataFrameRegression.of(formula, data, (x, y) => GaussianProcessRegression.fit(x, y, prop))
+      case "rbf" =>
+        val neurons = prop.getProperty("rbf.neurons", "30").toInt
+        val normalize = prop.getProperty("rbf.normalize", "false").toBoolean
+        DataFrameRegression.of(formula, data, (x, y) => smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize))
+      case "svm" =>
+        DataFrameRegression.of(formula, data, (x, y) => SVR.fit(x, y, prop))
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }

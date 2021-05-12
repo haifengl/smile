@@ -190,21 +190,21 @@ object Train {
     * Trains a data frame regression model.
     * @param formula the model formula.
     * @param data the training data.
-    * @param props the hyperparameters.
+    * @param prop the hyperparameters.
     * @param test the optional validation data.
     * @param config the training configuration.
     * @return the model.
     */
-  def trainDataFrameRegression(formula: Formula, data: DataFrame, props: Properties,
+  def trainDataFrameRegression(formula: Formula, data: DataFrame, prop: Properties,
                                test: Option[DataFrame], config: TrainConfig)
                               (trainer: (Formula, DataFrame, Properties) => DataFrameRegression): RegressionModel = {
     val start = System.nanoTime()
-    val model = trainer(formula, data, props)
+    val model = trainer(formula, data, prop)
     val fitTime = (System.nanoTime() - start) / 1E6
 
     if (config.kfold > 1) {
       val metrics = cv.regression(config.kfold, formula, data) { (formula, data) =>
-        trainer(formula, data, props)
+        trainer(formula, data, prop)
       }
       println(s"${config.kfold}-fold cross validation metrics: ${metrics}")
     } else {
@@ -224,14 +224,14 @@ object Train {
     * Trains a classifier taking vector input.
     * @param formula the model formula.
     * @param data the training data.
-    * @param props the hyperparameters.
+    * @param prop the hyperparameters.
     * @param bias the flag to generate the bias term.
     * @param encoder the categorical variable encoder.
     * @param test the optional validation data.
     * @param config the training configuration.
     * @return the model.
     */
-  def trainVectorClassifier(formula: Formula, data: DataFrame, props: Properties,
+  def trainVectorClassifier(formula: Formula, data: DataFrame, prop: Properties,
                             bias: Boolean, encoder: CategoricalEncoder,
                             test: Option[DataFrame], config: TrainConfig)
                            (trainer: (Array[Array[Double]], Array[Int], Properties) => Classifier[Array[Double]]): ClassificationModel = {
@@ -239,12 +239,12 @@ object Train {
     val y = formula.y(data).toIntArray()
 
     val start = System.nanoTime()
-    val model = trainer(x, y, props)
+    val model = trainer(x, y, prop)
     val fitTime = (System.nanoTime() - start) / 1E6
 
     if (config.kfold > 1) {
       val metrics = cv.classification(config.kfold, x, y) { (x, y) =>
-        trainer(x, y, props)
+        trainer(x, y, prop)
       }
       println(s"${config.kfold}-fold cross validation metrics: ${metrics}")
     } else {
