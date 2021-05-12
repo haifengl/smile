@@ -23,7 +23,6 @@ import smile.data.DataFrame
 import smile.data.formula.Formula
 import smile.data.`type`.StructType
 import smile.classification._
-import smile.math.kernel.MercerKernel
 import smile.regression.{DataFrameRegression, ElasticNet, GaussianProcessRegression, LASSO, OLS, RegressionTree, RidgeRegression, SVR}
 
 /**
@@ -79,12 +78,12 @@ object ClassificationModel {
         DataFrameClassifier.of(formula, data, (x, y) => QDA.fit(x, y, prop))
       case "rda" =>
         DataFrameClassifier.of(formula, data, (x, y) => RDA.fit(x, y, prop))
-      case "rbf" =>
-        val neurons = prop.getProperty("rbf.neurons", "30").toInt
-        val normalize = prop.getProperty("rbf.normalize", "false").toBoolean
-        DataFrameClassifier.of(formula, data, (x, y) => RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize))
+      case "mlp" =>
+        DataFrameClassifier.of(formula, data, (x, y) => MLP.fit(x, y, prop));
       case "svm" =>
         DataFrameClassifier.of(formula, data, (x, y) => SVM.fit(x, y, prop));
+      case "rbf" =>
+        DataFrameClassifier.of(formula, data, (x, y) => RBFNetwork.fit(x, y, prop))
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }
@@ -135,12 +134,12 @@ object RegressionModel {
         RidgeRegression.fit(formula, data, prop)
       case "gaussian.process" =>
         DataFrameRegression.of(formula, data, (x, y) => GaussianProcessRegression.fit(x, y, prop))
-      case "rbf" =>
-        val neurons = prop.getProperty("rbf.neurons", "30").toInt
-        val normalize = prop.getProperty("rbf.normalize", "false").toBoolean
-        DataFrameRegression.of(formula, data, (x, y) => smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize))
+      case "mlp" =>
+        DataFrameRegression.of(formula, data, (x, y) => smile.regression.MLP.fit(x, y, prop));
       case "svm" =>
         DataFrameRegression.of(formula, data, (x, y) => SVR.fit(x, y, prop))
+      case "rbf" =>
+        DataFrameRegression.of(formula, data, (x, y) => smile.regression.RBFNetwork.fit(x, y, prop))
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }
