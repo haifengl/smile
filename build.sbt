@@ -104,7 +104,12 @@ lazy val scalaSettings = commonSettings ++ Seq(
   scalacOptions in (Compile, doc) ++= Seq(
     "-groups",
     "-implicits"
-  )
+  ),
+  libraryDependencies ++= Seq(
+    "org.slf4j" % "slf4j-simple" % "1.7.30" % "test",
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.3",
+    "org.specs2" %% "specs2-core" % "4.11.0" % "test"
+  ),
 )
 
 lazy val root = project.in(file("."))
