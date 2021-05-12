@@ -18,10 +18,12 @@
 package smile.math.kernel;
 
 import java.io.Serializable;
+import java.util.Properties;
 import java.util.function.ToDoubleBiFunction;
 import java.util.stream.IntStream;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
+import smile.util.SparseArray;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -179,4 +181,108 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      * @return the upper bound of hyperparameters.
      */
     double[] hi();
+
+    /**
+     * Returns a kernel instance.
+     * @param prop the hyper-parameters.
+     * @return the kernel.
+     */
+    static MercerKernel<double[]> of(Properties prop) {
+        double scale = Double.parseDouble(prop.getProperty("kernel.scale", "1.0"));
+        double offset = Double.parseDouble(prop.getProperty("kernel.offset", "0.0"));
+
+        String kernel = prop.getProperty("kernel", "Gaussian").toLowerCase();
+        switch (kernel) {
+            case "linear":
+                return new LinearKernel();
+            case "gaussian":
+                return new GaussianKernel(scale);
+            case "polynomial":
+                int degree = Integer.parseInt(prop.getProperty("kernel.degree", "2"));
+                return new PolynomialKernel(degree, scale, offset);
+            case "matern":
+                double nu = Double.parseDouble(prop.getProperty("matern.nu", "1.5"));
+                return new MaternKernel(scale, nu);
+            case "laplacian":
+                return new LaplacianKernel(scale);
+            case "hyperbolic":
+                return new HyperbolicTangentKernel(scale, offset);
+            case "spline":
+                return new ThinPlateSplineKernel(scale);
+            case "pearson":
+                String omega = prop.getProperty("pearson.omega");
+                if (omega == null) {
+                    throw new IllegalArgumentException("pearson.omega is not specified");
+                }
+                return new PearsonKernel(scale, Double.parseDouble(omega));
+            case "hellinger":
+                return new HellingerKernel();
+            default:
+                throw new IllegalArgumentException("Unsupported kernel: " + kernel);
+        }
+    }
+
+    /**
+     * Returns a sparse kernel instance.
+     * @param prop the hyper-parameters.
+     * @return the kernel.
+     */
+    static MercerKernel<SparseArray> sparse(Properties prop) {
+        double scale = Double.parseDouble(prop.getProperty("kernel.scale", "1.0"));
+        double offset = Double.parseDouble(prop.getProperty("kernel.offset", "0.0"));
+
+        String kernel = prop.getProperty("kernel", "Gaussian").toLowerCase();
+        switch (kernel) {
+            case "linear":
+                return new SparseLinearKernel();
+            case "gaussian":
+                return new SparseGaussianKernel(scale);
+            case "polynomial":
+                int degree = Integer.parseInt(prop.getProperty("kernel.degree", "2"));
+                return new SparsePolynomialKernel(degree, scale, offset);
+            case "matern":
+                double nu = Double.parseDouble(prop.getProperty("matern.nu", "1.5"));
+                return new SparseMaternKernel(scale, nu);
+            case "laplacian":
+                return new SparseLaplacianKernel(scale);
+            case "hyperbolic":
+                return new SparseHyperbolicTangentKernel(scale, offset);
+            case "spline":
+                return new SparseThinPlateSplineKernel(scale);
+            default:
+                throw new IllegalArgumentException("Unsupported kernel: " + kernel);
+        }
+    }
+
+    /**
+     * Returns a binary sparse kernel instance.
+     * @param prop the hyper-parameters.
+     * @return the kernel.
+     */
+    static MercerKernel<int[]> binary(Properties prop) {
+        double scale = Double.parseDouble(prop.getProperty("kernel.scale", "1.0"));
+        double offset = Double.parseDouble(prop.getProperty("kernel.offset", "0.0"));
+
+        String kernel = prop.getProperty("kernel", "Gaussian").toLowerCase();
+        switch (kernel) {
+            case "linear":
+                return new BinarySparseLinearKernel();
+            case "gaussian":
+                return new BinarySparseGaussianKernel(scale);
+            case "polynomial":
+                int degree = Integer.parseInt(prop.getProperty("kernel.degree", "2"));
+                return new BinarySparsePolynomialKernel(degree, scale, offset);
+            case "matern":
+                double nu = Double.parseDouble(prop.getProperty("matern.nu", "1.5"));
+                return new BinarySparseMaternKernel(scale, nu);
+            case "laplacian":
+                return new BinarySparseLaplacianKernel(scale);
+            case "hyperbolic":
+                return new BinarySparseHyperbolicTangentKernel(scale, offset);
+            case "spline":
+                return new BinarySparseThinPlateSplineKernel(scale);
+            default:
+                throw new IllegalArgumentException("Unsupported kernel: " + kernel);
+        }
+    }
 }
