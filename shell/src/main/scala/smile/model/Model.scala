@@ -63,7 +63,7 @@ object ClassificationModel {
     val model: DataFrameClassifier = algorithm match {
       case "random.forest" =>
         smile.classification.RandomForest.fit(formula, data, prop)
-      case "gbt" =>
+      case "gradient.boost" =>
         smile.classification.GradientTreeBoost.fit(formula, data, prop)
       case "cart" =>
         DecisionTree.fit(formula, data, prop)
@@ -121,7 +121,7 @@ object RegressionModel {
     val model: DataFrameRegression = algorithm match {
       case "random.forest" =>
         smile.regression.RandomForest.fit(formula, data, prop)
-      case "gbt" =>
+      case "gradient.boost" =>
         smile.regression.GradientTreeBoost.fit(formula, data, prop)
       case "cart" =>
         RegressionTree.fit(formula, data, prop)
