@@ -17,12 +17,10 @@
 
 package smile.regression;
 
+import java.util.Properties;
 import smile.base.svm.LinearKernelMachine;
+import smile.math.kernel.*;
 import smile.util.SparseArray;
-import smile.math.kernel.BinarySparseLinearKernel;
-import smile.math.kernel.LinearKernel;
-import smile.math.kernel.MercerKernel;
-import smile.math.kernel.SparseLinearKernel;
 
 /**
  * Epsilon support vector regression. Like SVMs for classification, the model produced
@@ -142,5 +140,25 @@ public class SVR {
     public static <T> KernelMachine<T> fit(T[] x, double[] y, MercerKernel<T> kernel, double eps, double C, double tol) {
         smile.base.svm.SVR<T> svr = new smile.base.svm.SVR<>(kernel, eps, C, tol);
         return svr.fit(x, y);
+    }
+
+    /**
+     * Fits a epsilon-SVR.
+     * @param x training samples.
+     * @param y response variable.
+     * @param prop the hyper-parameters.
+     * @return the model.
+     */
+    public static Regression<double[]> fit(double[][] x, double[] y, Properties prop) {
+        MercerKernel<double[]> kernel = MercerKernel.of(prop);
+        double eps = Double.parseDouble(prop.getProperty("svm.epsilon", "1.0"));
+        double C = Double.parseDouble(prop.getProperty("svm.C", "1.0"));
+        double tol = Double.parseDouble(prop.getProperty("svm.tolerance", "1E-3"));
+
+        if (kernel instanceof LinearKernel) {
+            return SVR.fit(x, y, eps, C, tol);
+        } else {
+            return SVR.fit(x, y, kernel, eps, C, tol);
+        }
     }
 }

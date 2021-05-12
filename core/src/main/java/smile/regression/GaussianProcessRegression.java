@@ -302,6 +302,22 @@ public class GaussianProcessRegression<T> implements Regression<T> {
      * Fits a regular Gaussian process model.
      * @param x the training dataset.
      * @param y the response variable.
+     * @param prop the hyper-parameters.
+     * @return the model.
+     */
+    public static GaussianProcessRegression<double[]> fit(double[][] x, double[] y, Properties prop) {
+        MercerKernel<double[]> kernel = MercerKernel.of(prop);
+        double noise = Double.parseDouble(prop.getProperty("smile.gaussian.process.noise", "1E-10"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.gaussian.process.normalize", "true"));
+        double tol = Double.parseDouble(prop.getProperty("smile.gaussian.process.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(prop.getProperty("smile.gaussian.process.max.iterations", "0"));
+        return fit(x, y, kernel, noise, normalize, tol, maxIter);
+    }
+
+    /**
+     * Fits a regular Gaussian process model.
+     * @param x the training dataset.
+     * @param y the response variable.
      * @param kernel the Mercer kernel.
      * @param prop the hyper-parameters.
      * @param <T> the data type of samples.
