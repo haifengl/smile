@@ -19,6 +19,7 @@ package smile.math;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -165,9 +166,9 @@ public interface TimeFunction extends Serializable {
             @Override
             public String toString() {
                 if (degree == 1.0) {
-                    return String.format("LinearDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f)", initLearningRate, decaySteps, endLearningRate);
+                    return String.format("LinearDecay(%f, %.0f, %f)", initLearningRate, decaySteps, endLearningRate);
                 } else {
-                    return String.format("PolynomialDecay(degree = %f, initial learning rate = %f, decay steps = %.0f, end learning rate = %f, cycle = %s)", degree, initLearningRate, decaySteps, endLearningRate, cycle);
+                    return String.format("PolynomialDecay(%f, %f, %.0f, %f, %s)", degree, initLearningRate, decaySteps, endLearningRate, cycle);
                 }
             }
         };
@@ -191,7 +192,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decaySteps = %.0f)", initLearningRate, decaySteps);
+                return String.format("InverseTimeDecay(%f, %.0f)", initLearningRate, decaySteps);
             }
         };
     }
@@ -233,7 +234,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("InverseTimeDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("InverseTimeDecay(%f, %.0f, %f, %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
     }
@@ -256,7 +257,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f)", initLearningRate, decaySteps);
+                return String.format("ExponentialDecay(%f, %.0f)", initLearningRate, decaySteps);
             }
         };
     }
@@ -280,7 +281,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, end learning rate = %f)", initLearningRate, decaySteps, endLearningRate);
+                return String.format("ExponentialDecay(%f, %.0f, %f)", initLearningRate, decaySteps, endLearningRate);
             }
         };
     }
@@ -309,7 +310,7 @@ public interface TimeFunction extends Serializable {
 
             @Override
             public String toString() {
-                return String.format("ExponentialDecay(initial learning rate = %f, decay steps = %.0f, decay rate = %f, staircase = %s)", initLearningRate, decaySteps, decayRate, staircase);
+                return String.format("ExponentialDecay(%f, %.0f, %f, %s)", initLearningRate, decaySteps, decayRate, staircase);
             }
         };
     }
@@ -317,18 +318,18 @@ public interface TimeFunction extends Serializable {
     /**
      * Parses a time function.
      *
-     * @param spec the function specification.
+     * @param time the time function representation.
      * @return the time function.
      */
-    static TimeFunction of(String spec) {
-        spec = spec.trim();
+    static TimeFunction of(String time) {
+        time = time.trim().toLowerCase(Locale.ROOT);
 
         String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
         String bool = "(true|false)";
 
         Pattern linear = Pattern.compile(
                 String.format("linear(?:decay)?\\((%s),\\s*(%s),\\s*(%s)\\)", number, number, number));
-        Matcher m = linear.matcher(spec);
+        Matcher m = linear.matcher(time);
         if (m.matches()) {
             double initLearningRate = Double.parseDouble(m.group(1));
             double decaySteps = Double.parseDouble(m.group(2));
@@ -338,7 +339,7 @@ public interface TimeFunction extends Serializable {
 
         Pattern polynominal = Pattern.compile(
                 String.format("polynomial(?:decay)?\\((%s),\\s*(%s),\\s*(%s),\\s*(%s)(,\\s*%s)?\\)", number, number, number, number, bool));
-        m = polynominal.matcher(spec);
+        m = polynominal.matcher(time);
         if (m.matches()) {
             double degree = Double.parseDouble(m.group(1));
             double initLearningRate = Double.parseDouble(m.group(2));
@@ -349,32 +350,40 @@ public interface TimeFunction extends Serializable {
         }
 
         Pattern inverse = Pattern.compile(
-                String.format("inverse(?:timedecay)?\\((%s),\\s*(%s),\\s*(%s)(,\\s*%s)?\\)", number, number, number, bool));
-        m = inverse.matcher(spec);
+                String.format("inverse(?:timedecay)?\\((%s),\\s*(%s)(?:,\\s*(%s))?(?:,\\s*%s)?\\)", number, number, number, bool));
+        m = inverse.matcher(time);
         if (m.matches()) {
             double initLearningRate = Double.parseDouble(m.group(1));
             double decaySteps = Double.parseDouble(m.group(2));
-            double endLearningRate = Double.parseDouble(m.group(3));
-            boolean staircase = m.group(4) == null ? false : m.group(5).equals("true");
-            return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
+            if (m.group(3) == null) {
+                return inverse(initLearningRate, decaySteps);
+            } else {
+                double endLearningRate = Double.parseDouble(m.group(3));
+                boolean staircase = m.group(4) == null ? false : m.group(4).equals("true");
+                return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
+            }
         }
 
         Pattern exp = Pattern.compile(
-                String.format("exp(?:onentialdecay)?\\((%s),\\s*(%s),\\s*(%s)(,\\s*%s)?\\)", number, number, number, bool));
-        m = exp.matcher(spec);
+                String.format("exp(?:onentialdecay)?\\((%s),\\s*(%s)(?:,\\s*(%s))?(?:,\\s*%s)?\\)", number, number, number, bool));
+        m = exp.matcher(time);
         if (m.matches()) {
             double initLearningRate = Double.parseDouble(m.group(1));
             double decaySteps = Double.parseDouble(m.group(2));
-            double endLearningRate = Double.parseDouble(m.group(3));
-            boolean staircase = m.group(4) == null ? false : m.group(5).equals("true");
-            return exp(initLearningRate, decaySteps, endLearningRate, staircase);
+            if (m.group(3) == null) {
+                return exp(initLearningRate, decaySteps);
+            } else {
+                double endLearningRate = Double.parseDouble(m.group(3));
+                boolean staircase = m.group(4) == null ? false : m.group(4).equals("true");
+                return exp(initLearningRate, decaySteps, endLearningRate, staircase);
+            }
         }
 
         try {
-            double alpha = Double.parseDouble(spec);
+            double alpha = Double.parseDouble(time);
             return constant(alpha);
         } catch (Exception ex) {
-            throw new IllegalArgumentException("Invalid time function: " + spec);
+            throw new IllegalArgumentException("Unknown time function: " + time);
         }
     }
 }

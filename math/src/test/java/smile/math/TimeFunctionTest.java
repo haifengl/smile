@@ -223,8 +223,8 @@ public class TimeFunctionTest {
         System.out.println("parse");
         TimeFunction.of("0.01");
         TimeFunction.of("linear(0.1, 9, 0.01)");
-        TimeFunction.of("polynomial(1, 0.1, 9, 0.01)");
-        TimeFunction.of("polynomial(1, 0.1, 9, 0.01, true)");
+        TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01)");
+        TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01, true)");
         TimeFunction.of("inverse(0.1, 10, 0.1)");
         TimeFunction.of("inverse(0.1, 10, 0.1, true)");
         TimeFunction.of("exp(0.1, 10, 0.9)");
@@ -238,8 +238,10 @@ public class TimeFunctionTest {
         TimeFunction.of(TimeFunction.linear(0.1, 9, 0.01).toString());
         TimeFunction.of(TimeFunction.polynomial(2, 0.1, 9, 0.01).toString());
         TimeFunction.of(TimeFunction.polynomial(2, 0.1, 9, 0.01, true).toString());
+        TimeFunction.of(TimeFunction.inverse(0.1, 10).toString());
         TimeFunction.of(TimeFunction.inverse(0.1, 10, 0.1).toString());
         TimeFunction.of(TimeFunction.inverse(0.1, 10, 0.1, true).toString());
+        TimeFunction.of(TimeFunction.exp(0.1, 10).toString());
         TimeFunction.of(TimeFunction.exp(0.1, 10, 0.9).toString());
         TimeFunction.of(TimeFunction.exp(0.1, 10, 0.9, false).toString());
     }
