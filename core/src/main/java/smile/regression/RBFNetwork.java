@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Properties;
 import smile.base.rbf.RBF;
 import smile.math.matrix.Matrix;
 import smile.math.rbf.RadialBasisFunction;
@@ -152,6 +153,19 @@ public class RBFNetwork<T> implements Regression<T> {
         double[] w = qr.solve(b);
 
         return new RBFNetwork<>(rbf, w, normalized);
+    }
+
+    /**
+     * Fits a RBF network.
+     * @param x training samples.
+     * @param y the response variable.
+     * @param prop the hyper-parameters.
+     * @return the model.
+     */
+    public static RBFNetwork<double[]> fit(double[][] x, double[] y, Properties prop) {
+        int neurons = Integer.parseInt(prop.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.rbf.normalize", "false"));
+        return fit(x, y, RBF.fit(x, neurons), normalize);
     }
 
     /**
