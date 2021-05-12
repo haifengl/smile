@@ -121,6 +121,11 @@ import smile.math.TimeFunction;
         String learningRate = prop.getProperty("smile.mlp.learning_rate", "0.01");
         model.setLearningRate(TimeFunction.of(learningRate));
 
+        String weightDecay = prop.getProperty("smile.mlp.weight_decay");
+        if (weightDecay != null) {
+            model.setWeightDecay(Double.parseDouble(weightDecay));
+        }
+
         String momentum = prop.getProperty("smile.mlp.momentum");
         if (momentum != null) {
             model.setMomentum(TimeFunction.of(momentum));
