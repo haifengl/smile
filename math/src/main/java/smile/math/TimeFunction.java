@@ -349,6 +349,15 @@ public interface TimeFunction extends Serializable {
             return polynomial(degree, initLearningRate, decaySteps, endLearningRate, cycle);
         }
 
+        if (time.startsWith("piecewise([") && time.endsWith("])")) {
+            String[] tokens = time.substring(11, time.length()-2).split("\\],\\s*\\[");
+            if (tokens.length == 2) {
+                int[] boundaries = Arrays.stream(tokens[0].split(",\\s*")).mapToInt(Integer::parseInt).toArray();
+                double[] values = Arrays.stream(tokens[1].split(",\\s*")).mapToDouble(Double::parseDouble).toArray();
+                return piecewise(boundaries, values);
+            }
+        }
+
         Pattern inverse = Pattern.compile(
                 String.format("inverse(?:timedecay)?\\((%s),\\s*(%s)(?:,\\s*(%s))?(?:,\\s*%s)?\\)", number, number, number, bool));
         m = inverse.matcher(time);
