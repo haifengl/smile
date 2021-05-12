@@ -150,10 +150,10 @@ public class SVR {
      * @return the model.
      */
     public static Regression<double[]> fit(double[][] x, double[] y, Properties prop) {
-        MercerKernel<double[]> kernel = MercerKernel.of(prop);
-        double eps = Double.parseDouble(prop.getProperty("svm.epsilon", "1.0"));
-        double C = Double.parseDouble(prop.getProperty("svm.C", "1.0"));
-        double tol = Double.parseDouble(prop.getProperty("svm.tolerance", "1E-3"));
+        MercerKernel<double[]> kernel = MercerKernel.of(prop.getProperty("smile.svm.kernel", "linear"));
+        double eps = Double.parseDouble(prop.getProperty("smile.svm.epsilon", "1.0"));
+        double C = Double.parseDouble(prop.getProperty("smile.svm.C", "1.0"));
+        double tol = Double.parseDouble(prop.getProperty("smile.svm.tolerance", "1E-3"));
 
         if (kernel instanceof LinearKernel) {
             return SVR.fit(x, y, eps, C, tol);

@@ -64,7 +64,7 @@ public class ThinPlateSpline implements IsotropicKernel {
 
     @Override
     public String toString() {
-        return String.format("ThinPlateSplineKernel(%.4f)", sigma);
+        return String.format("TpsKernel(%.4f)", sigma);
     }
 
     @Override
