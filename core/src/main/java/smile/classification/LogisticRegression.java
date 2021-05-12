@@ -152,6 +152,11 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
         }
 
         @Override
+        public double score(double[] x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
         public int predict(double[] x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
             return classes.valueOf(f < 0.5 ? 0 : 1);

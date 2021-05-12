@@ -128,6 +128,11 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
         }
 
         @Override
+        public double score(int[] x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
         public int predict(int[] x) {
             double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
             return classes.valueOf(f < 0.5 ? 0 : 1);
