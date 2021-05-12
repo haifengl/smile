@@ -173,13 +173,13 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
      * @return the model.
      */
     public static GradientTreeBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.gbt.trees", "500"));
-        Loss loss = Loss.valueOf(prop.getProperty("smile.gbt.loss", "LeastAbsoluteDeviation"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.gbt.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.gbt.max.nodes", "6"));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.gbt.node.size", "5"));
-        double shrinkage = Double.parseDouble(prop.getProperty("smile.gbt.shrinkage", "0.05"));
-        double subsample = Double.parseDouble(prop.getProperty("smile.gbt.sample.rate", "0.7"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.gradient.boost.trees", "500"));
+        Loss loss = Loss.valueOf(prop.getProperty("smile.gradient.boost.loss", "LeastAbsoluteDeviation"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.gradient.boost.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.gradient.boost.max.nodes", "6"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.gradient.boost.node.size", "5"));
+        double shrinkage = Double.parseDouble(prop.getProperty("smile.gradient.boost.shrinkage", "0.05"));
+        double subsample = Double.parseDouble(prop.getProperty("smile.gradient.boost.sample.rate", "0.7"));
         return fit(formula, data, loss, ntrees, maxDepth, maxNodes, nodeSize, shrinkage, subsample);
     }
 
