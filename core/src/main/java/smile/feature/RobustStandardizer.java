@@ -60,15 +60,17 @@ public class RobustStandardizer extends Standardizer {
         }
 
         StructType schema = data.schema();
-        double[] median = new double[schema.length()];
-        double[] iqr = new double[schema.length()];
+        int p = schema.length();
+        double[] median = new double[p];
+        double[] iqr = new double[p];
 
-        for (int i = 0; i < median.length; i++) {
+        int n = data.size();
+        for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
-                final int col = i;
-                final smile.sort.IQAgent agent = new smile.sort.IQAgent();
-                // IQAgent is stateful and thus should not be used with parallel stream
-                data.stream().sequential().forEach(t -> agent.add(t.getDouble(col)));
+                IQAgent agent = new IQAgent();
+                for (int j = 0; j < n; j++) {
+                    agent.add(data.getDouble(j, i));
+                }
                 median[i] = agent.quantile(0.5);
                 iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
             }

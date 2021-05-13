@@ -17,10 +17,9 @@
 
 package smile.feature;
 
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
+import smile.sort.IQAgent;
 
 /**
  * Scales all numeric variables into the range [0, 1].
@@ -69,9 +68,9 @@ public class WinsorScaler extends Scaler {
      * Fits the transformation parameters.
      * @param data The training data.
      * @param lower the lower limit in terms of percentiles of the original
-     *              distribution (say 5th percentile).
+     *              distribution (e.g. 5th percentile).
      * @param upper the upper limit in terms of percentiles of the original
-     *              distribution (say 95th percentile).
+     *              distribution (e.g. 95th percentile).
      * @return the model.
      */
     public static WinsorScaler fit(DataFrame data, double lower, double upper) {
@@ -92,15 +91,17 @@ public class WinsorScaler extends Scaler {
         }
 
         StructType schema = data.schema();
-        double[] lo = new double[schema.length()];
-        double[] hi = new double[schema.length()];
+        int p = schema.length();
+        double[] lo = new double[p];
+        double[] hi = new double[p];
 
-        for (int i = 0; i < lo.length; i++) {
+        int n = data.size();
+        for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
-                final int col = i;
-                final smile.sort.IQAgent agent = new smile.sort.IQAgent();
-                // IQAgent is stateful and thus should not be used with parallel stream
-                data.stream().sequential().forEach(t -> agent.add(t.getDouble(col)));
+                IQAgent agent = new IQAgent();
+                for (int j = 0; j < n; j++) {
+                    agent.add(data.getDouble(j, i));
+                }
                 lo[i] = agent.quantile(lower);
                 hi[i] = agent.quantile(upper);
             }
@@ -115,7 +116,7 @@ public class WinsorScaler extends Scaler {
      * @return the model.
      */
     public static WinsorScaler fit(double[][] data) {
-        return fit(DataFrame.of(data));
+        return fit(data, 0.05, 0.95);
     }
 
     /**
@@ -128,6 +129,27 @@ public class WinsorScaler extends Scaler {
      * @return the model.
      */
     public static WinsorScaler fit(double[][] data, double lower, double upper) {
-        return fit(DataFrame.of(data), lower, upper);
+        int p = data[0].length;
+        double[] lo = new double[p];
+        double[] hi = new double[p];
+
+        IQAgent[] agents = new IQAgent[p];
+        for (int i = 0; i < p; i++) {
+            agents[i] = new IQAgent();
+        }
+
+        for (double[] x : data) {
+            for (int i = 0; i < p; i++) {
+                agents[i].add(x[i]);
+            }
+        }
+
+        for (int i = 0; i < p; i++) {
+            IQAgent agent = agents[i];
+            lo[i] = agent.quantile(lower);
+            hi[i] = agent.quantile(upper);
+        }
+
+        return new WinsorScaler(lo, hi);
     }
 }

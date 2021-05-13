@@ -112,12 +112,12 @@ public class MLPTest {
 
     @Test
     public void test2DPlanes() {
-        test("2dplanes", Planes.x, Planes.y, Scaler.standardizer(Planes.y, true),1.5173, Layer.rectifier(50), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, null,1.5173, Layer.rectifier(50), Layer.sigmoid(30));
     }
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.x, Abalone.y, Scaler.standardizer(Abalone.y),2.5296, Layer.rectifier(40), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, null,2.5296, Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test

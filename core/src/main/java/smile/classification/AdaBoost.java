@@ -322,7 +322,12 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
             error = Arrays.copyOf(error, ntrees);
         }
     }
-    
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
     @Override
     public int predict(Tuple x) {
         Tuple xt = formula.x(x);
@@ -333,11 +338,6 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
         }
             
         return classes.valueOf(MathEx.whichMax(y));
-    }
-
-    @Override
-    public boolean soft() {
-        return true;
     }
 
     /**
