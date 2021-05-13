@@ -81,6 +81,7 @@ public class Standardizer implements FeatureTransform {
         if (schema.length() != mu.length) {
             throw new IllegalArgumentException("Schema and scaling factor size don't match");
         }
+        this.schema = schema;
     }
 
     @Override
@@ -103,18 +104,11 @@ public class Standardizer implements FeatureTransform {
         double[] mu = new double[p];
         double[] sd = new double[p];
 
-        int n = data.nrow();
         for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
-                double sum = 0.0;
-                double squaredSum = 0.0;
-                for (int j = 0; j < n; j++) {
-                    double x = data.getDouble(j, i);
-                    sum += x;
-                    squaredSum += x * x;
-                }
-                mu[i] = sum / n;
-                sd[i] = Math.sqrt(squaredSum / n - mu[i] * mu[i]);
+                double[] x = data.column(i).toDoubleArray();
+                mu[i] = MathEx.mean(x);
+                sd[i] = MathEx.sd(x);
             }
         }
 

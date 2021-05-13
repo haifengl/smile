@@ -73,7 +73,7 @@ public class Scaler implements FeatureTransform {
         for (int i = 0; i < lo.length; i++) {
             span[i] = hi[i] - lo[i];
             if (MathEx.isZero(span[i])) {
-                hi[i] = 1.0;
+                span[i] = 1.0;
             }
         }
     }
@@ -89,6 +89,7 @@ public class Scaler implements FeatureTransform {
         if (schema.length() != lo.length) {
             throw new IllegalArgumentException("Schema and scaling factor size don't match");
         }
+        this.schema = schema;
     }
 
     @Override
@@ -113,8 +114,9 @@ public class Scaler implements FeatureTransform {
 
         for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
-                lo[i] = data.doubleVector(i).stream().min().getAsDouble();
-                hi[i] = data.doubleVector(i).stream().max().getAsDouble();
+                double[] x = data.column(i).toDoubleArray();
+                lo[i] = MathEx.min(x);
+                hi[i] = MathEx.max(x);
             }
         }
 
