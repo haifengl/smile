@@ -107,17 +107,17 @@ public class MLPTest {
 
     @Test
     public void testCPU() {
-        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 128.1032, Layer.rectifier(30), Layer.sigmoid(30));
+        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 65.4472, Layer.rectifier(30), Layer.sigmoid(30));
     }
 
     @Test
     public void test2DPlanes() {
-        test("2dplanes", Planes.x, Planes.y, null,1.5173, Layer.rectifier(50), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, null, 1.5174, Layer.rectifier(50), Layer.sigmoid(30));
     }
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.x, Abalone.y, null,2.5296, Layer.rectifier(40), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, null, 2.5298, Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
@@ -127,17 +127,17 @@ public class MLPTest {
 
     @Test
     public void testBank32nh() {
-        test("bank32nh", Bank32nh.x, Bank32nh.y, Scaler.standardizer(Bank32nh.y), 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, null, 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
     }
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115643.9514, Layer.rectifier(40), Layer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115700.2463, Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
     public void testPuma8nh() {
-        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9609, Layer.rectifier(40), Layer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9605, Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
