@@ -76,6 +76,7 @@ import smile.validation.metric.*;
  */
 public class RandomForest implements DataFrameRegression, TreeSHAP {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(RandomForest.class);
 
     /**
      * The base model.
@@ -288,6 +289,12 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
                     MAD.of(truth, predict),
                     R2.of(truth, predict)
             );
+
+            if (noob != 0) {
+                logger.info("Regression tree OOB R2: {}", String.format("%.2f%%", 100*metrics.r2));
+            } else {
+                logger.error("Regression tree trained without OOB samples.");
+            }
 
             return new Model(tree, metrics);
         }).toArray(Model[]::new);
