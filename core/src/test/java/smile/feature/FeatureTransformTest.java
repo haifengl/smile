@@ -23,7 +23,11 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import smile.data.DataFrame;
+import smile.data.Colon;
 import smile.data.Segment;
+
+import java.util.Arrays;
+
 import static org.junit.Assert.*;
 
 /**
@@ -245,5 +249,55 @@ public class FeatureTransformTest {
         assertEquals( 0.000000, x[1][3], 1E-4);
         assertEquals( 0.476919, x[1][5], 1E-4);
         assertEquals( 0.459047, x[1][6], 1E-4);
+    }
+
+    @Test
+    public void testNormalizer() {
+        System.out.println("Normalizer");
+
+        double[][] x = Normalizer.L1.transform(Colon.x);
+        assertEquals(0.013340, x[0][0], 1E-4);
+        assertEquals(0.008492, x[0][1], 1E-4);
+        assertEquals(0.006621, x[0][2], 1E-4);
+        assertEquals(0.006313, x[0][3], 1E-4);
+        assertEquals(0.008204, x[0][5], 1E-4);
+        assertEquals(0.003370, x[0][6], 1E-4);
+
+        assertEquals(0.010351, x[1][0], 1E-4);
+        assertEquals(0.007589, x[1][1], 1E-4);
+        assertEquals(0.005516, x[1][2], 1E-4);
+        assertEquals(0.004199, x[1][3], 1E-4);
+        assertEquals(0.006291, x[1][5], 1E-4);
+        assertEquals(0.004347, x[1][6], 1E-4);
+
+        x = Normalizer.L2.transform(Colon.x);
+        assertEquals(0.303366, x[0][0], 1E-4);
+        assertEquals(0.193131, x[0][1], 1E-4);
+        assertEquals(0.150577, x[0][2], 1E-4);
+        assertEquals(0.143568, x[0][3], 1E-4);
+        assertEquals(0.186565, x[0][5], 1E-4);
+        assertEquals(0.076632, x[0][6], 1E-4);
+
+        assertEquals(0.256772, x[1][0], 1E-4);
+        assertEquals(0.188274, x[1][1], 1E-4);
+        assertEquals(0.136829, x[1][2], 1E-4);
+        assertEquals(0.104179, x[1][3], 1E-4);
+        assertEquals(0.156063, x[1][5], 1E-4);
+        assertEquals(0.107846, x[1][6], 1E-4);
+
+        x = Normalizer.Inf.transform(Colon.x);
+        assertEquals(1.000000, x[0][0], 1E-4);
+        assertEquals(0.636625, x[0][1], 1E-4);
+        assertEquals(0.496356, x[0][2], 1E-4);
+        assertEquals(0.473249, x[0][3], 1E-4);
+        assertEquals(0.614981, x[0][5], 1E-4);
+        assertEquals(0.252604, x[0][6], 1E-4);
+
+        assertEquals(1.000000, x[1][0], 1E-4);
+        assertEquals(0.733233, x[1][1], 1E-4);
+        assertEquals(0.532880, x[1][2], 1E-4);
+        assertEquals(0.405724, x[1][3], 1E-4);
+        assertEquals(0.607786, x[1][5], 1E-4);
+        assertEquals(0.420008, x[1][6], 1E-4);
     }
 }

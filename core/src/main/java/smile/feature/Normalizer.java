@@ -34,42 +34,69 @@ import smile.math.MathEx;
  *
  * @author Haifeng Li
  */
-public class Normalizer implements FeatureTransform {
-    private static final long serialVersionUID = 2L;
+public enum Normalizer implements FeatureTransform {
+    /**
+     * Normalize L1 vector norm.
+     */
+    L1 {
+        @Override
+        public double[] transform(double[] x) {
+            double scale = MathEx.norm1(x);
+            int p = x.length;
+            double[] y = new double[p];
+            if (MathEx.isZero(scale)) {
+                System.arraycopy(x, 0, y, 0, p);
+            } else {
+                for (int i = 0; i < p; i++) {
+                    y[i] = x[i] / scale;
+                }
+            }
+
+            return y;
+        }
+    },
 
     /**
-     * The types of data scaling.
+     * Normalize L2 vector norm.
      */
-    public enum Norm {
-        /**
-         * L1 vector norm.
-         */
-        L1,
-        /**
-         * L2 vector norm.
-         */
-        L2,
-        /**
-         * L-infinity vector norm. Maximum absolute value.
-         */
-        Inf
-    }
+    L2 {
+        @Override
+        public double[] transform(double[] x) {
+            double scale = MathEx.norm2(x);
+            int p = x.length;
+            double[] y = new double[p];
+            if (MathEx.isZero(scale)) {
+                System.arraycopy(x, 0, y, 0, p);
+            } else {
+                for (int i = 0; i < p; i++) {
+                    y[i] = x[i] / scale;
+                }
+            }
 
-    /** The type of norm .*/
-    private final Norm norm;
-
-    /** Default constructor with L2 norm. */
-    public Normalizer() {
-        this(Norm.L2);
-    }
+            return y;
+        }
+    },
 
     /**
-     * Constructor.
-     * @param norm The norm to use to normalize each non zero sample.
+     * Normalize L-infinity vector norm. Maximum absolute value.
      */
-    public Normalizer(Norm norm) {
-        this.norm = norm;
-    }
+    Inf {
+        @Override
+        public double[] transform(double[] x) {
+            double scale = MathEx.normInf(x);
+            int p = x.length;
+            double[] y = new double[p];
+            if (MathEx.isZero(scale)) {
+                System.arraycopy(x, 0, y, 0, p);
+            } else {
+                for (int i = 0; i < p; i++) {
+                    y[i] = x[i] / scale;
+                }
+            }
+
+            return y;
+        }
+    };
 
     @Override
     public Optional<StructType> schema() {
@@ -87,37 +114,6 @@ public class Normalizer implements FeatureTransform {
     }
 
     @Override
-    public double[] transform(double[] x) {
-        double scale;
-
-        switch (norm) {
-            case L1:
-                scale = MathEx.norm1(x);
-                break;
-            case L2:
-                scale = MathEx.norm2(x);
-                break;
-            case Inf:
-                scale = MathEx.normInf(x);
-                break;
-            default:
-                throw new IllegalStateException("Unknown type of norm: " + norm);
-        }
-
-        int p = x.length;
-        double[] y = new double[p];
-        if (MathEx.isZero(scale)) {
-            System.arraycopy(x, 0, y, 0, p);
-        } else {
-            for (int i = 0; i < p; i++) {
-                y[i] = x[i] / scale;
-            }
-        }
-
-        return y;
-    }
-
-    @Override
     public Tuple transform(Tuple x) {
         double[] y = transform(x.toArray(false, CategoricalEncoder.LEVEL));
         return Tuple.of(y, x.schema());
@@ -126,10 +122,5 @@ public class Normalizer implements FeatureTransform {
     @Override
     public DataFrame transform(DataFrame data) {
         return DataFrame.of(data.stream().map(this::transform));
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Normalizer(%s)", norm);
     }
 }
