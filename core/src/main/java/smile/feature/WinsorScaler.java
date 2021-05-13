@@ -39,6 +39,15 @@ public class WinsorScaler extends Scaler {
 
     /**
      * Constructor.
+     * @param lo the lower bound.
+     * @param hi the upper bound.
+     */
+    public WinsorScaler(double[] lo, double[] hi) {
+        super(lo, hi);
+    }
+
+    /**
+     * Constructor.
      * @param schema the schema of data.
      * @param lo the lower bound.
      * @param hi the upper bound.
@@ -120,12 +129,5 @@ public class WinsorScaler extends Scaler {
      */
     public static WinsorScaler fit(double[][] data, double lower, double upper) {
         return fit(DataFrame.of(data), lower, upper);
-    }
-
-    @Override
-    public String toString() {
-        return IntStream.range(0, lo.length)
-                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, lo[i], hi[i]))
-                .collect(Collectors.joining(",", "WinsorScaler(", ")"));
     }
 }

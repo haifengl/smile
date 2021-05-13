@@ -17,10 +17,9 @@
 
 package smile.feature;
 
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import smile.data.DataFrame;
 import smile.data.type.StructType;
+import smile.sort.IQAgent;
 
 /**
  * Robustly standardizes numeric feature by subtracting
@@ -30,6 +29,15 @@ import smile.data.type.StructType;
  */
 public class RobustStandardizer extends Standardizer {
     private static final long serialVersionUID = 2L;
+
+    /**
+     * Constructor.
+     * @param median median.
+     * @param iqr IQR.
+     */
+    public RobustStandardizer(double[] median, double[] iqr) {
+        super(median, iqr);
+    }
 
     /**
      * Constructor.
@@ -75,13 +83,27 @@ public class RobustStandardizer extends Standardizer {
      * @return the model.
      */
     public static RobustStandardizer fit(double[][] data) {
-        return fit(DataFrame.of(data));
-    }
+        int p = data[0].length;
+        double[] median = new double[p];
+        double[] iqr = new double[p];
 
-    @Override
-    public String toString() {
-        return IntStream.range(0, mu.length)
-                .mapToObj(i -> String.format("%s[%.4f, %.4f]", schema.field(i).name, mu[i], std[i]))
-                .collect(Collectors.joining(",", "RobustStandardizer(", ")"));
+        IQAgent[] agents = new IQAgent[p];
+        for (int i = 0; i < p; i++) {
+            agents[i] = new IQAgent();
+        }
+
+        for (double[] x : data) {
+            for (int i = 0; i < p; i++) {
+                agents[i].add(x[i]);
+            }
+        }
+
+        for (int i = 0; i < p; i++) {
+            IQAgent agent = agents[i];
+            median[i] = agent.quantile(0.5);
+            iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
+        }
+
+        return new RobustStandardizer(median, iqr);
     }
 }
