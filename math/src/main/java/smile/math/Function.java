@@ -34,6 +34,16 @@ public interface Function extends Serializable {
     double f(double x);
 
     /**
+     * Computes the value of the inverse function at x.
+     *
+     * @param x a real number.
+     * @return the inverse function value.
+     */
+    default double inv(double x) {
+        throw new UnsupportedOperationException();
+    }
+
+    /**
      * Computes the value of the function at x.
      * It delegates the computation to f().
      * This is simply for Scala convenience.
