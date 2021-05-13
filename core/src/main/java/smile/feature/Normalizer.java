@@ -41,18 +41,7 @@ public enum Normalizer implements FeatureTransform {
     L1 {
         @Override
         public double[] transform(double[] x) {
-            double scale = MathEx.norm1(x);
-            int p = x.length;
-            double[] y = new double[p];
-            if (MathEx.isZero(scale)) {
-                System.arraycopy(x, 0, y, 0, p);
-            } else {
-                for (int i = 0; i < p; i++) {
-                    y[i] = x[i] / scale;
-                }
-            }
-
-            return y;
+            return scale(x, MathEx.norm1(x));
         }
     },
 
@@ -62,18 +51,7 @@ public enum Normalizer implements FeatureTransform {
     L2 {
         @Override
         public double[] transform(double[] x) {
-            double scale = MathEx.norm2(x);
-            int p = x.length;
-            double[] y = new double[p];
-            if (MathEx.isZero(scale)) {
-                System.arraycopy(x, 0, y, 0, p);
-            } else {
-                for (int i = 0; i < p; i++) {
-                    y[i] = x[i] / scale;
-                }
-            }
-
-            return y;
+            return scale(x, MathEx.norm2(x));
         }
     },
 
@@ -83,18 +61,7 @@ public enum Normalizer implements FeatureTransform {
     Inf {
         @Override
         public double[] transform(double[] x) {
-            double scale = MathEx.normInf(x);
-            int p = x.length;
-            double[] y = new double[p];
-            if (MathEx.isZero(scale)) {
-                System.arraycopy(x, 0, y, 0, p);
-            } else {
-                for (int i = 0; i < p; i++) {
-                    y[i] = x[i] / scale;
-                }
-            }
-
-            return y;
+            return scale(x, MathEx.normInf(x));
         }
     };
 
@@ -106,6 +73,26 @@ public enum Normalizer implements FeatureTransform {
     @Override
     public double transform(double x, int i) {
         throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Normalizes a vector.
+     * @param x the vector.
+     * @param norm the norm of vector.
+     * @return a new vector of unit norm.
+     */
+    private static double[] scale(double[] x, double norm) {
+        int p = x.length;
+        double[] y = new double[p];
+        if (MathEx.isZero(norm)) {
+            System.arraycopy(x, 0, y, 0, p);
+        } else {
+            for (int i = 0; i < p; i++) {
+                y[i] = x[i] / norm;
+            }
+        }
+
+        return y;
     }
 
     @Override
