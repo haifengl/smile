@@ -133,8 +133,7 @@ public interface FeatureTransform extends Serializable {
         IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
             if (field.isNumeric()) {
-                final int col = i;
-                DoubleStream stream = data.stream().mapToDouble(t -> transform(t.getDouble(col), col));
+                DoubleStream stream = data.stream().mapToDouble(t -> transform(t.getDouble(i), i));
                 vectors[i] = DoubleVector.of(field, stream);
             } else {
                 vectors[i] = data.column(i);

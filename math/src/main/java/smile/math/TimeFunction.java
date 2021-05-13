@@ -111,9 +111,8 @@ public interface TimeFunction extends Serializable {
      * @return the linear learning rate function.
      */
     static TimeFunction linear(double initLearningRate, double decaySteps, double endLearningRate) {
-        return polynomial(1, initLearningRate, decaySteps, endLearningRate, false);
+        return polynomial(1.0, initLearningRate, decaySteps, endLearningRate, false);
     }
-
 
     /**
      * Returns the polynomial learning rate decay function that starts with

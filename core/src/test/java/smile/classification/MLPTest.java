@@ -205,9 +205,8 @@ public class MLPTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer scaler = Standardizer.fit(USPS.x);
-        double[][] x = scaler.transform(USPS.x);
-        double[][] testx = scaler.transform(USPS.testx);
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
         int p = x[0].length;
         int k = MathEx.max(USPS.y) + 1;
 
@@ -233,7 +232,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(110, error);
+        assertEquals(115, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -245,9 +244,8 @@ public class MLPTest {
 
         MathEx.setSeed(19650218); // to get repeatable results.
 
-        Standardizer scaler = Standardizer.fit(USPS.x);
-        double[][] x = scaler.transform(USPS.x);
-        double[][] testx = scaler.transform(USPS.testx);
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
         int p = x[0].length;
         int k = MathEx.max(USPS.y) + 1;
 
@@ -260,7 +258,7 @@ public class MLPTest {
 
         model.setLearningRate(
                 TimeFunction.piecewise(
-                        new int[]   {1000,  2000,  3000,  4000,  5000},
+                        new int[]   {2000,  4000,  6000,  8000,  10000},
                         new double[]{0.01, 0.009, 0.008, 0.007, 0.006, 0.005}
                 )
         );
@@ -291,6 +289,6 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(177, error);
+        assertEquals(133, error);
     }
 }
