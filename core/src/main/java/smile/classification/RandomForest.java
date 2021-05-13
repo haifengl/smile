@@ -418,9 +418,9 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
             }
 
             if (noob != 0) {
-                logger.info("Random forest tree OOB metrics: {}", metrics);
+                logger.info("Decision tree OOB accuracy: {}", String.format("%.2f%%", 100*metrics.accuracy));
             } else {
-                logger.error("Random forest has a tree trained without OOB samples.");
+                logger.error("Decision tree trained without OOB samples.");
             }
 
             return new Model(tree, metrics);
