@@ -21,10 +21,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.ToDoubleFunction;
-
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.math.MathEx;
 
 /**
  * Regression analysis includes any techniques for modeling and analyzing
@@ -127,5 +125,41 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      */
     default void update(Dataset<Instance<T>> batch) {
         batch.stream().forEach(sample -> update(sample.x(), sample.y()));
+    }
+
+    /**
+     * Return an ensemble of multiple base models to obtain better
+     * predictive performance.
+     *
+     * @param models the base models.
+     * @return the ensemble model.
+     */
+    @SafeVarargs
+    static <T> Regression<T> ensemble(Regression<T>... models) {
+        return new Regression<T>() {
+            /** The ensemble is an online learner only if all the base models are. */
+            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+
+            @Override
+            public boolean online() {
+                return online;
+            }
+
+            @Override
+            public double predict(T x) {
+                double y = 0;
+                for (Regression<T> model : models) {
+                    y += model.predict(x);
+                }
+                return y / models.length;
+            }
+
+            @Override
+            public void update(T x, double y) {
+                for (Regression<T> model : models) {
+                    model.update(x, y);
+                }
+            }
+        };
     }
 }

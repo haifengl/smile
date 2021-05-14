@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.function.BiFunction;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -83,6 +84,51 @@ public interface DataFrameRegression extends Regression<Tuple> {
             @Override
             public double predict(Tuple x) {
                 return model.predict(formula.x(x).toArray());
+            }
+        };
+    }
+
+    /**
+     * Return an ensemble of multiple base models to obtain better
+     * predictive performance.
+     *
+     * @param models the base models.
+     * @return the ensemble model.
+     */
+    static DataFrameRegression ensemble(DataFrameRegression... models) {
+        return new DataFrameRegression() {
+            /** The ensemble is an online learner only if all the base models are. */
+            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+
+            @Override
+            public boolean online() {
+                return online;
+            }
+
+            @Override
+            public Formula formula() {
+                return models[0].formula();
+            }
+
+            @Override
+            public StructType schema() {
+                return models[0].schema();
+            }
+
+            @Override
+            public double predict(Tuple x) {
+                double y = 0;
+                for (DataFrameRegression model : models) {
+                    y += model.predict(x);
+                }
+                return y / models.length;
+            }
+
+            @Override
+            public void update(Tuple x, double y) {
+                for (DataFrameRegression model : models) {
+                    model.update(x, y);
+                }
             }
         };
     }
