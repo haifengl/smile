@@ -53,17 +53,6 @@ public interface CrossValidation {
      * @return k-fold data splits.
      */
     static Bag[] of(int n, int k) {
-        return of(n, k, true);
-    }
-
-    /**
-     * Creates a k-fold cross validation.
-     * @param n the number of samples.
-     * @param k the number of rounds of cross validation.
-     * @param shuffle whether to shuffle samples before splitting.
-     * @return k-fold data splits.
-     */
-    static Bag[] of(int n, int k, boolean shuffle) {
         if (n < 0) {
             throw new IllegalArgumentException("Invalid sample size: " + n);
         }
@@ -73,11 +62,7 @@ public interface CrossValidation {
         }
 
         Bag[] bags = new Bag[k];
-
-        int[] index = IntStream.range(0, n).toArray();
-        if (shuffle){
-            MathEx.permutate(index);
-        }
+        int[] index = MathEx.permutate(n);
 
         int chunk = n / k;
         for (int i = 0; i < k; i++) {
