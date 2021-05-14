@@ -17,10 +17,9 @@
 
 package smile.validation;
 
-import org.junit.Test;
-import smile.math.MathEx;
 import java.util.Arrays;
-
+import smile.math.MathEx;
+import org.junit.Test;
 import static org.junit.Assert.assertFalse;
 
 /**
