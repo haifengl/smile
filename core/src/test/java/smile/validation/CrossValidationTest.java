@@ -106,12 +106,12 @@ public class CrossValidationTest {
         int n = 57;
         int k = 5;
 
-        int[] stratum = new int[n];
+        int[] label = new int[n];
         for (int i = 0; i < n; i++) {
-            stratum[i] = MathEx.randomInt(3);
+            label[i] = MathEx.randomInt(3);
         }
 
-        Bag[] bags = CrossValidation.stratify(stratum, k);
+        Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             for (int j = 0; j < n; j++) {
@@ -142,12 +142,12 @@ public class CrossValidationTest {
         int n = 57;
         int k = 5;
 
-        int[] stratum = new int[n];
+        int[] label = new int[n];
         for (int i = 0; i < n; i++) {
-            stratum[i] = MathEx.randomInt(3);
+            label[i] = MathEx.randomInt(3);
         }
 
-        Bag[] bags = CrossValidation.stratify(stratum, k);
+        Bag[] bags = CrossValidation.stratify(label, k);
         boolean[] hit = new boolean[n];
         for (int i = 0; i < k; i++) {
             int[] test = bags[i].oob;
