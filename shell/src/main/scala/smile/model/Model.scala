@@ -24,7 +24,7 @@ import smile.data.formula.Formula
 import smile.data.`type`.StructType
 import smile.classification._
 import smile.regression.{DataFrameRegression, ElasticNet, GaussianProcessRegression, LASSO, OLS, RegressionTree, RidgeRegression, SVR}
-import smile.validation.{ClassificationMetrics, CrossValidation}
+import smile.validation.{ClassificationMetrics, CrossValidation, RegressionMetrics}
 
 /**
   * The machine learning model applicable on a data frame.
@@ -143,11 +143,17 @@ object ClassificationModel {
   * @param schema the schema of input data (without response variable).
   * @param formula the model formula.
   * @param regression the regression model.
+  * @param train the training metrics.
+  * @param validation the cross-validation metrics.
+  * @param test the test metrics.
   */
 case class RegressionModel(override val algorithm: String,
                            override val schema: StructType,
                            override val formula: Formula,
-                           regression: DataFrameRegression) extends DataFrameModel
+                           regression: DataFrameRegression,
+                           train: RegressionMetrics,
+                           validation: Option[RegressionMetrics],
+                           test: Option[RegressionMetrics]) extends DataFrameModel
 
 object RegressionModel {
   /**
@@ -156,10 +162,50 @@ object RegressionModel {
     * @param formula the model formula.
     * @param data the training data.
     * @param prop the hyperparameters.
+    * @param kfold k-fold cross validation if kfold > 1.
+    * @param round the number of repeated cross validation.
+    * @param ensemble create the ensemble of cross validation models if true.
+    * @param test the test data.
     * @return the regression model.
     */
-  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): RegressionModel = {
-    val model: DataFrameRegression = algorithm match {
+  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties,
+            kfold: Int = 1, round: Int = 1, ensemble: Boolean = false,
+            test: Option[DataFrame] = None): RegressionModel = {
+    val start = System.nanoTime()
+    val (model, validationMetrics) = if (kfold < 2) {
+      val model = fit(algorithm, formula, data, prop)
+      (model, None)
+    } else {
+      val cv = CrossValidation.regression(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, prop))
+      val models = cv.rounds.asScala.map(round => round.model).toArray
+      val model = if (ensemble)
+        DataFrameRegression.ensemble(models: _*)
+      else
+        fit(algorithm, formula, data, prop)
+
+      (model, Some(cv.avg))
+    }
+
+    val fitTime = (System.nanoTime() - start) / 1E6
+    val trainMetrics = RegressionMetrics.of(fitTime, model, formula, data)
+    val testMetrics = test.map(RegressionMetrics.of(model, formula, _))
+
+    val y = formula.response().variables()
+    val predictors = data.schema().fields().filter(field => !y.contains(field.name))
+    val schema = new StructType(predictors: _*)
+    RegressionModel(algorithm, schema, formula, model, trainMetrics, validationMetrics, testMetrics)
+  }
+
+  /**
+    * Trains a regression model.
+    * @param algorithm the algorithm name.
+    * @param formula the model formula.
+    * @param data the training data.
+    * @param prop the hyperparameters.
+    * @return the regression model.
+    */
+  def fit(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): DataFrameRegression = {
+    algorithm match {
       case "random.forest" =>
         smile.regression.RandomForest.fit(formula, data, prop)
       case "gradient.boost" =>
@@ -185,10 +231,5 @@ object RegressionModel {
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }
-
-    val y = formula.response().variables()
-    val predictors = data.schema().fields().filter(field => !y.contains(field.name))
-    val schema = new StructType(predictors: _*)
-    RegressionModel(algorithm, schema, formula, model)
   }
 }

@@ -19,13 +19,9 @@ package smile.shell
 
 import java.util.Properties
 import scopt.OParser
-import smile.classification.{Classifier, DataFrameClassifier}
-import smile.data.`type`.StructType
-import smile.regression.DataFrameRegression
-import smile.data.{CategoricalEncoder, DataFrame}
+import smile.data.DataFrame
 import smile.data.formula._
 import smile.io.Read
-import smile.math.MathEx
 import smile.model._
 import smile.validation._
 
@@ -77,10 +73,12 @@ object Train {
           println(s"Training metrics: ${model.train}")
           model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
           model.test.map(metrics => println(s"Test metrics: ${metrics}"))
-
           smile.write(model, config.model)
         } else {
-          val model = RegressionModel(config.algorithm, formula, data, props)
+          val model = RegressionModel(config.algorithm, formula, data, props, config.kfold, config.round, config.ensemble, test)
+          println(s"Training metrics: ${model.train}")
+          model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
+          model.test.map(metrics => println(s"Test metrics: ${metrics}"))
           smile.write(model, config.model)
           if (test.isDefined) {
             val metrics = RegressionMetrics.of(model.regression, formula, test.get)
