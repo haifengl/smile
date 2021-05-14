@@ -22,7 +22,7 @@ import smile.math.MathEx;
 import smile.util.IntSet;
 
 /**
- * Random sampling Sampling is the selection of a subset of individuals
+ * Random sampling is the selection of a subset of individuals
  * from within a statistical population to estimate characteristics of
  * the whole population.
  *
@@ -53,16 +53,13 @@ public interface Sampling {
     }
 
     /**
-     * Stratified sampling. When the population embraces a number of
-     * distinct categories, the frame can be organized by these categories
-     * into separate strata. Each stratum is then sampled as an independent
-     * sub-population, out of which individual elements can be randomly selected.
+     * Returns the strata of samples as a two-dimensional
+     * array. Each row is the sample indices of stratum.
      *
      * @param category the strata labels.
-     * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
-     * @return the indices of selected samples.
+     * @return the strata
      */
-    static int[] strateified(int[] category, double subsample) {
+    static int[][] strata(int[] category) {
         int[] unique = MathEx.unique(category);
         int m = unique.length;
 
@@ -93,13 +90,32 @@ public interface Sampling {
             strata[j][pos[j]++] = i;
         }
 
+        return strata;
+    }
+
+    /**
+     * Stratified sampling. When the population embraces a number of
+     * distinct categories, the frame can be organized by these categories
+     * into separate strata. Each stratum is then sampled as an independent
+     * sub-population, out of which individual elements can be randomly selected.
+     *
+     * @param category the strata labels.
+     * @param subsample sampling rate. Draw samples with replacement if it is 1.0.
+     * @return the indices of selected samples.
+     */
+    static int[] stratify(int[] category, double subsample) {
+        int[][] strata = strata(category);
+
+        int n = category.length;
+        int m = strata.length;
+
         if (subsample == 1.0) {
             // draw with replacement.
             int[] samples = new int[n];
             int l = 0;
             for (int i = 0; i < m; i++) {
                 int[] stratum = strata[i];
-                int size = ni[i];
+                int size = strata[i].length;
                 for (int j = 0; j < size; j++) {
                     samples[l++] = stratum[MathEx.randomInt(size)];
                 }
@@ -109,15 +125,15 @@ public interface Sampling {
             // draw without replacement.
             int size = 0;
             for (int i = 0; i < m; i++) {
-                size += (int) Math.round(subsample * ni[i]);
+                size += (int) Math.round(subsample * strata[i].length);
             }
 
             int[] samples = new int[size];
             int l = 0;
             for (int i = 0; i < m; i++) {
-                int sub = (int) Math.round(subsample * ni[i]);
+                int sub = (int) Math.round(subsample * strata[i].length);
                 int[] stratum = strata[i];
-                int[] permutation = MathEx.permutate(ni[i]);
+                int[] permutation = MathEx.permutate(strata[i].length);
                 for (int j = 0; j < sub; j++) {
                     samples[l++] = stratum[permutation[j]];
                 }
