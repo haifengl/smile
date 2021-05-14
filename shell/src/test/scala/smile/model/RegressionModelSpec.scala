@@ -71,14 +71,13 @@ class RegressionModelSpec extends Specification {
       MathEx.setSeed(19650217)
       val prop = new Properties()
       prop.setProperty("smile.mlp.epochs", "30")
-      prop.setProperty("smile.mlp.layers", "50|30")
-      prop.setProperty("smile.mlp.activation", "sigmoid")
-      prop.setProperty("smile.mlp.learning_rate", "0.2")
+      prop.setProperty("smile.mlp.activation", "sigmoid(30)")
+      prop.setProperty("smile.mlp.learning_rate", "0.1")
       val model = RegressionModel("mlp", formula, train, prop, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.rmse must beCloseTo(0.926 +/- 0.01)
+      model.test.get.rmse must beCloseTo(0.9909 +/- 0.01)
     }
      */
   }

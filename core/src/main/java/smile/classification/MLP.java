@@ -21,6 +21,8 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import smile.base.mlp.*;
@@ -245,13 +247,21 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         int p = x[0].length;
         int k = MathEx.max(y) + 1;
 
-        String activation = prop.getProperty("smile.mlp.activation", "ReLU");
-        List<LayerBuilder> layers = Arrays.stream(prop.getProperty("smile.mlp.layers", "100").split("\\|"))
-                .mapToInt(Integer::parseInt)
-                .mapToObj(nodes -> Layer.builder(activation, nodes))
-                .collect(Collectors.toList());
-        layers.add(Layer.mle(k == 2 ? 1 : k, OutputFunction.SIGMOID));
-        MLP model = new MLP(p, layers.toArray(new LayerBuilder[0]));
+        Pattern regex = Pattern.compile("(\\w+)\\((\\d+)\\)");
+        String[] layers = prop.getProperty("smile.mlp.layers", "ReLU(100)").split("\\|");
+        LayerBuilder[] builders = new LayerBuilder[layers.length + 1];
+        for (int i = 0; i < layers.length; i++) {
+            Matcher m = regex.matcher(layers[i]);
+            if (m.matches()) {
+                String activation = m.group(1);
+                int nodes = Integer.parseInt(m.group(2));
+                builders[i] = Layer.builder(activation, nodes);
+            } else {
+                throw new IllegalArgumentException("Invalid layer: " + layers[i]);
+            }
+        }
+        builders[layers.length] = k == 2 ? Layer.mle(1, OutputFunction.SIGMOID) : Layer.mle(k, OutputFunction.SOFTMAX);
+        MLP model = new MLP(p, builders);
 
         String learningRate = prop.getProperty("smile.mlp.learning_rate", "0.01");
         model.setLearningRate(TimeFunction.of(learningRate));
