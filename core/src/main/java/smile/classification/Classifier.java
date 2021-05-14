@@ -25,6 +25,7 @@ import java.util.function.ToIntFunction;
 import smile.data.Dataset;
 import smile.data.Instance;
 import smile.data.measure.NominalScale;
+import smile.math.MathEx;
 
 /**
  * A classifier assigns an input object into one of a given number of categories.
@@ -246,5 +247,77 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      */
     default void update(Dataset<Instance<T>> batch) {
         batch.stream().forEach(sample -> update(sample.x(), sample.label()));
+    }
+
+    /**
+     * Return an ensemble of multiple base models to obtain better
+     * predictive performance.
+     *
+     * @param models the base models.
+     * @return the ensemble model.
+     */
+    @SafeVarargs
+    static <T> Classifier<T> ensemble(Classifier<T>... models) {
+        return new Classifier<T>() {
+            /** The ensemble is a soft classifier only if all the base models are. */
+            private boolean soft = Arrays.stream(models).allMatch(model -> model.soft());
+
+            /** The ensemble is an online learner only if all the base models are. */
+            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+
+            @Override
+            public boolean soft() {
+                return soft;
+            }
+
+            @Override
+            public boolean online() {
+                return online;
+            }
+
+            @Override
+            public int numClasses() {
+                return models[0].numClasses();
+            }
+
+            @Override
+            public int[] classes() {
+                return models[0].classes();
+            }
+
+            @Override
+            public int predict(T x) {
+                int[] labels = new int[models.length];
+                for (int i = 0; i < models.length; i++) {
+                    labels[i] = models[i].predict(x);
+                }
+                return MathEx.mode(labels);
+            }
+
+            @Override
+            public int predict(T x, double[] posteriori) {
+                Arrays.fill(posteriori, 0.0);
+                double[] prob = new double[posteriori.length];
+
+                for (Classifier<T> model : models) {
+                    model.predict(x, prob);
+                    for (int i = 0; i < prob.length; i++) {
+                        posteriori[i] += prob[i];
+                    }
+                }
+
+                for (int i = 0; i < posteriori.length; i++) {
+                    posteriori[i] /= models.length;
+                }
+                return MathEx.whichMax(posteriori);
+            }
+
+            @Override
+            public void update(T x, int y) {
+                for (Classifier<T> model : models) {
+                    model.update(x, y);
+                }
+            }
+        };
     }
 }

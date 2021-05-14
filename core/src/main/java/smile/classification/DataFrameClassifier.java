@@ -17,6 +17,7 @@
 
 package smile.classification;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
 import smile.data.CategoricalEncoder;
@@ -24,6 +25,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * Classification trait on DataFrame.
@@ -114,6 +116,87 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
             @Override
             public int predict(Tuple x) {
                 return model.predict(formula.x(x).toArray());
+            }
+        };
+    }
+
+    /**
+     * Return an ensemble of multiple base models to obtain better
+     * predictive performance.
+     *
+     * @param models the base models.
+     * @return the ensemble model.
+     */
+    static DataFrameClassifier ensemble(DataFrameClassifier... models) {
+        return new DataFrameClassifier() {
+            /** The ensemble is a soft classifier only if all the base models are. */
+            private boolean soft = Arrays.stream(models).allMatch(model -> model.soft());
+
+            /** The ensemble is an online learner only if all the base models are. */
+            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+
+            @Override
+            public boolean soft() {
+                return soft;
+            }
+
+            @Override
+            public boolean online() {
+                return online;
+            }
+
+            @Override
+            public int numClasses() {
+                return models[0].numClasses();
+            }
+
+            @Override
+            public int[] classes() {
+                return models[0].classes();
+            }
+
+            @Override
+            public Formula formula() {
+                return models[0].formula();
+            }
+
+            @Override
+            public StructType schema() {
+                return models[0].schema();
+            }
+
+            @Override
+            public int predict(Tuple x) {
+                int[] labels = new int[models.length];
+                for (int i = 0; i < models.length; i++) {
+                    labels[i] = models[i].predict(x);
+                }
+                return MathEx.mode(labels);
+            }
+
+            @Override
+            public int predict(Tuple x, double[] posteriori) {
+                Arrays.fill(posteriori, 0.0);
+                double[] prob = new double[posteriori.length];
+
+                for (DataFrameClassifier model : models) {
+                    model.predict(x, prob);
+                    for (int i = 0; i < prob.length; i++) {
+                        posteriori[i] += prob[i];
+                    }
+                }
+
+                for (int i = 0; i < posteriori.length; i++) {
+                    posteriori[i] /= models.length;
+                }
+                return MathEx.whichMax(posteriori);
+            }
+
+            @Override
+            public void update(Tuple x, int y) {
+                for (DataFrameClassifier model : models) {
+                    model.update(x, y);
+                }
             }
         };
     }
