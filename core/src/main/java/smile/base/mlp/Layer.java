@@ -21,6 +21,8 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
@@ -422,5 +424,39 @@ public abstract class Layer implements Serializable {
      */
     public static OutputLayerBuilder mle(int neurons, OutputFunction output) {
         return new OutputLayerBuilder(neurons, output, Cost.LIKELIHOOD);
+    }
+
+    /**
+     * Returns the layer builders given a string representation such as
+     * "ReLU(50)|Sigmoid(30)|...".
+     *
+     * @param k the number of classes. k < 2 for regression.
+     * @param spec the hidden layer specification.
+     * @return the layer builders.
+     */
+    public static LayerBuilder[] of(int k, String spec) {
+        Pattern regex = Pattern.compile("(\\w+)\\((\\d+)\\)");
+        String[] layers = spec.split("\\|");
+        LayerBuilder[] builders = new LayerBuilder[layers.length + 1];
+        for (int i = 0; i < layers.length; i++) {
+            Matcher m = regex.matcher(layers[i]);
+            if (m.matches()) {
+                String activation = m.group(1);
+                int nodes = Integer.parseInt(m.group(2));
+                builders[i] = Layer.builder(activation, nodes);
+            } else {
+                throw new IllegalArgumentException("Invalid layer: " + layers[i]);
+            }
+        }
+
+        if (k < 2) {
+            builders[layers.length] = Layer.mse(1, OutputFunction.LINEAR);
+        } else if (k == 2) {
+            builders[layers.length] = Layer.mle(1, OutputFunction.SIGMOID);
+        } else {
+            builders[layers.length] = Layer.mle(k, OutputFunction.SOFTMAX);
+        }
+
+        return builders;
     }
 }

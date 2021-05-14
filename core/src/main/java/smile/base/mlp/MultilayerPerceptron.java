@@ -17,12 +17,12 @@
 
 package smile.base.mlp;
 
-import smile.math.TimeFunction;
-
 import java.io.IOException;
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.Collectors;
+import smile.math.TimeFunction;
 
 /**
  * Fully connected multilayer perceptron neural network.
@@ -299,6 +299,34 @@ public abstract class MultilayerPerceptron implements Serializable {
         }
 
         output.update(m, eta, alpha, decay, rho, epsilon);
+    }
+
+    /**
+     * Sets MLP properties such as learning rate, weight decay, momentum,
+     * RMSProp, etc.
+     * @param prop the MLP properties.
+     */
+    public void setProperties(Properties prop) {
+        String learningRate = prop.getProperty("smile.mlp.learning_rate");
+        if (learningRate != null) {
+            setLearningRate(TimeFunction.of(learningRate));
+        }
+
+        String weightDecay = prop.getProperty("smile.mlp.weight_decay");
+        if (weightDecay != null) {
+            setWeightDecay(Double.parseDouble(weightDecay));
+        }
+
+        String momentum = prop.getProperty("smile.mlp.momentum");
+        if (momentum != null) {
+            setMomentum(TimeFunction.of(momentum));
+        }
+
+        String rho = prop.getProperty("smile.mlp.RMSProp.rho");
+        if (rho != null) {
+            double epsilon = Double.parseDouble(prop.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
+            setRMSProp(Double.parseDouble(rho), epsilon);
+        }
     }
 }
 

@@ -19,15 +19,10 @@ package smile.classification;
 
 import java.io.Serializable;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 import smile.base.mlp.*;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
 import smile.util.IntSet;
 import smile.util.Strings;
 
@@ -239,7 +234,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     /**
      * Fits a MLP model.
      * @param x the training dataset.
-     * @param y training labels.
+     * @param y the training labels.
      * @param prop the hyper-parameters.
      * @return the model.
      */
@@ -247,40 +242,9 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         int p = x[0].length;
         int k = MathEx.max(y) + 1;
 
-        Pattern regex = Pattern.compile("(\\w+)\\((\\d+)\\)");
-        String[] layers = prop.getProperty("smile.mlp.layers", "ReLU(100)").split("\\|");
-        LayerBuilder[] builders = new LayerBuilder[layers.length + 1];
-        for (int i = 0; i < layers.length; i++) {
-            Matcher m = regex.matcher(layers[i]);
-            if (m.matches()) {
-                String activation = m.group(1);
-                int nodes = Integer.parseInt(m.group(2));
-                builders[i] = Layer.builder(activation, nodes);
-            } else {
-                throw new IllegalArgumentException("Invalid layer: " + layers[i]);
-            }
-        }
-        builders[layers.length] = k == 2 ? Layer.mle(1, OutputFunction.SIGMOID) : Layer.mle(k, OutputFunction.SOFTMAX);
-        MLP model = new MLP(p, builders);
-
-        String learningRate = prop.getProperty("smile.mlp.learning_rate", "0.01");
-        model.setLearningRate(TimeFunction.of(learningRate));
-
-        String weightDecay = prop.getProperty("smile.mlp.weight_decay");
-        if (weightDecay != null) {
-            model.setWeightDecay(Double.parseDouble(weightDecay));
-        }
-
-        String momentum = prop.getProperty("smile.mlp.momentum");
-        if (momentum != null) {
-            model.setMomentum(TimeFunction.of(momentum));
-        }
-
-        String rho = prop.getProperty("smile.mlp.RMSProp.rho");
-        if (rho != null) {
-            double epsilon = Double.parseDouble(prop.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
-            model.setRMSProp(Double.parseDouble(rho), epsilon);
-        }
+        LayerBuilder[] layers = Layer.of(k, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
+        MLP model = new MLP(p, layers);
+        model.setProperties(prop);
 
         int epochs = Integer.parseInt(prop.getProperty("smile.mlp.epochs", "100"));
         int batch = Integer.parseInt(prop.getProperty("smile.mlp.mini_batch", "256"));
