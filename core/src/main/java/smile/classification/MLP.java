@@ -27,6 +27,7 @@ import smile.base.mlp.*;
 import smile.math.MathEx;
 import smile.math.TimeFunction;
 import smile.util.IntSet;
+import smile.util.Strings;
 
 /**
  * Fully connected multilayer perceptron neural network for classification.
@@ -111,6 +112,7 @@ import smile.util.IntSet;
  */
 public class MLP extends MultilayerPerceptron implements Classifier<double[]>, Serializable {
     private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(MLP.class);
 
     /**
      * The number of classes.
@@ -244,7 +246,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         int k = MathEx.max(y) + 1;
 
         String activation = prop.getProperty("smile.mlp.activation", "ReLU");
-        List<LayerBuilder> layers = Arrays.stream(prop.getProperty("smile.mlp.layers", "100").split(","))
+        List<LayerBuilder> layers = Arrays.stream(prop.getProperty("smile.mlp.layers", "100").split("\\|"))
                 .mapToInt(Integer::parseInt)
                 .mapToObj(nodes -> Layer.builder(activation, nodes))
                 .collect(Collectors.toList());
@@ -275,6 +277,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         for (int epoch = 1; epoch <= epochs; epoch++) {
+            logger.info("{} epoch", Strings.ordinal(epoch));
             int[] permutation = MathEx.permutate(x.length);
             for (int i = 0; i < x.length; i += batch) {
                 for (int j = 0; j < batch; j++) {
