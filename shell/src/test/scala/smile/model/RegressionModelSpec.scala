@@ -25,45 +25,46 @@ import smile.data.formula._
 import smile.math.MathEx
 import smile.util.Paths
 
-class ClassificationModelSpec extends Specification {
-  val train: DataFrame = read.arff(Paths.getTestData("weka/segment-challenge.arff"))
-  val test: DataFrame = read.arff(Paths.getTestData("weka/segment-test.arff"))
-  val formula: Formula = "class" ~ "."
+class RegressionModelSpec extends Specification {
+  val train: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = '\t')
+  val test: DataFrame = read.csv(Paths.getTestData("regression/prostate-train.csv").toString, delimiter = '\t')
+  val formula: Formula = "lpsa" ~ "."
 
-  "ClassificationModel" should {
+  "RegressionModel" should {
     "random.forest" in {
       MathEx.setSeed(19650217) // to get repeatable results.
       val prop = new Properties()
       prop.setProperty("smile.random.forest.ntrees", "100")
       prop.setProperty("smile.random.forest.max.nodes", "100")
-      val model = ClassificationModel("random.forest", formula, train, prop, test = Some(test))
+      val model = RegressionModel("random.forest", formula, train, prop, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.validation.isDefined must beFalse
-      model.test.get.error must beCloseTo(33 +/- 3)
+      model.test.get.r2 must beCloseTo(0.746 +/- 0.01)
     }
     "svm" in {
       MathEx.setSeed(19650217)
       val prop = new Properties()
-      prop.setProperty("smile.svm.kernel", "Gaussian(6.4)")
-      prop.setProperty("smile.svm.C", "100")
-      val model = ClassificationModel("svm", formula, train, prop, test = Some(test))
+      prop.setProperty("smile.svm.kernel", "Gaussian(6.0)")
+      prop.setProperty("smile.svm.C", "5")
+      prop.setProperty("smile.svm.epsilon", "0.5")
+      val model = RegressionModel("svm", formula, train, prop, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 93
+      model.test.get.r2 must beCloseTo(0.738 +/- 0.01)
     }
     "svm with ensemble" in {
       MathEx.setSeed(19650217)
       val prop = new Properties()
-      prop.setProperty("smile.svm.kernel", "Gaussian(6.4)")
-      prop.setProperty("smile.svm.C", "100")
-      val model = ClassificationModel("svm", formula, train, prop, kfold = 5, round = 3, ensemble = true, test = Some(test))
+      prop.setProperty("smile.svm.kernel", "Gaussian(6.0)")
+      prop.setProperty("smile.svm.C", "5")
+      prop.setProperty("smile.svm.epsilon", "0.5")
+      val model = RegressionModel("svm", formula, train, prop, kfold = 5, round = 3, ensemble = true, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 89
+      model.test.get.r2 must beCloseTo(0.697 +/- 0.01)
     }
     /*
     "mlp" in {
@@ -73,11 +74,11 @@ class ClassificationModelSpec extends Specification {
       prop.setProperty("smile.mlp.layers", "50|30")
       prop.setProperty("smile.mlp.activation", "sigmoid")
       prop.setProperty("smile.mlp.learning_rate", "0.2")
-      val model = ClassificationModel("mlp", formula, train, prop, test = Some(test))
+      val model = RegressionModel("mlp", formula, train, prop, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 89
+      model.test.get.rmse must beCloseTo(0.926 +/- 0.01)
     }
      */
   }
