@@ -283,7 +283,8 @@ public interface CrossValidation {
      * @return the validation results.
      */
     static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        return ClassificationValidation.of(of(x.length, k), x, y, trainer);
+        Bag[] bags = of(x.length, k);
+        return ClassificationValidation.of(bags, x, y, trainer);
     }
 
     /**
@@ -296,7 +297,53 @@ public interface CrossValidation {
      * @return the validation results.
      */
     static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        return ClassificationValidation.of(of(data.size(), k), formula, data, trainer);
+        Bag[] bags = of(data.size(), k);
+        return ClassificationValidation.of(bags, formula, data, trainer);
+    }
+
+    /**
+     * Repeated cross validation of classification.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param x the samples.
+     * @param y the sample labels.
+     * @param trainer the lambda to train a model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <T, M extends Classifier<T>> ClassificationValidations<M> classification(int round, int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> of(x.length, k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return ClassificationValidation.of(bags, x, y, trainer);
+    }
+
+    /**
+     * Repeated cross validation of classification.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <M extends DataFrameClassifier> ClassificationValidations<M> classification(int round, int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> of(data.size(), k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return ClassificationValidation.of(bags, formula, data, trainer);
     }
 
     /**
@@ -310,7 +357,8 @@ public interface CrossValidation {
      * @return the validation results.
      */
     static <T, M extends Classifier<T>> ClassificationValidations<M> stratify(int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
-        return ClassificationValidation.of(stratify(y, k), x, y, trainer);
+        Bag[] bags = stratify(y, k);
+        return ClassificationValidation.of(bags, x, y, trainer);
     }
 
     /**
@@ -324,11 +372,58 @@ public interface CrossValidation {
      */
     static <M extends DataFrameClassifier> ClassificationValidations<M> stratify(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
         int[] y = formula.y(data).toIntArray();
-        return ClassificationValidation.of(stratify(y, k), formula, data, trainer);
+        Bag[] bags = stratify(y, k);
+        return ClassificationValidation.of(bags, formula, data, trainer);
     }
 
     /**
-     * RCross validation of regression.
+     * Repeated stratified cross validation of classification.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param x the samples.
+     * @param y the sample labels.
+     * @param trainer the lambda to train a model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <T, M extends Classifier<T>> ClassificationValidations<M> stratify(int round, int k, T[] x, int[] y, BiFunction<T[], int[], M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> stratify(y, k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return ClassificationValidation.of(bags, x, y, trainer);
+    }
+
+    /**
+     * Repeated stratified cross validation of classification.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <M extends DataFrameClassifier> ClassificationValidations<M> stratify(int round, int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        int[] y = formula.y(data).toIntArray();
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> stratify(y, k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return ClassificationValidation.of(bags, formula, data, trainer);
+    }
+
+    /**
+     * Cross validation of regression.
      * @param k k-fold cross validation.
      * @param x the samples.
      * @param y the response variable.
@@ -338,7 +433,8 @@ public interface CrossValidation {
      * @return the validation results.
      */
     static <T, M extends Regression<T>> RegressionValidations<M> regression(int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
-        return RegressionValidation.of(of(x.length, k), x, y, trainer);
+        Bag[] bags = of(x.length, k);
+        return RegressionValidation.of(bags, x, y, trainer);
     }
 
     /**
@@ -351,6 +447,52 @@ public interface CrossValidation {
      * @return the validation results.
      */
     static <M extends DataFrameRegression> RegressionValidations<M> regression(int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
-        return RegressionValidation.of(of(data.size(), k), formula, data, trainer);
+        Bag[] bags = of(data.size(), k);
+        return RegressionValidation.of(bags, formula, data, trainer);
+    }
+
+    /**
+     * Repeated cross validation of regression.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param x the samples.
+     * @param y the response variable.
+     * @param trainer the lambda to train a model.
+     * @param <T> the data type of samples.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <T, M extends Regression<T>> RegressionValidations<M> regression(int round, int k, T[] x, double[] y, BiFunction<T[], double[], M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> of(x.length, k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return RegressionValidation.of(bags, x, y, trainer);
+    }
+
+    /**
+     * Repeated cross validation of regression.
+     * @param round the number of rounds of repeated cross validation.
+     * @param k k-fold cross validation.
+     * @param formula the model specification.
+     * @param data the training/validation data.
+     * @param trainer the lambda to train a model.
+     * @param <M> the model type.
+     * @return the validation results.
+     */
+    static <M extends DataFrameRegression> RegressionValidations<M> regression(int round, int k, Formula formula, DataFrame data, BiFunction<Formula, DataFrame, M> trainer) {
+        if (round < 1) {
+            throw new IllegalArgumentException("Invalid round: " + round);
+        }
+
+        Bag[] bags = IntStream.range(0, round)
+                .mapToObj(i -> of(data.size(), k))
+                .flatMap(Arrays::stream)
+                .toArray(Bag[]::new);
+        return RegressionValidation.of(bags, formula, data, trainer);
     }
 }
