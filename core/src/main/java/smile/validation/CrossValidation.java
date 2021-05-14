@@ -28,6 +28,7 @@ import smile.math.MathEx;
 import smile.regression.Regression;
 import smile.regression.DataFrameRegression;
 import smile.sort.QuickSort;
+import smile.stat.Sampling;
 import smile.util.IntSet;
 
 /**
@@ -113,41 +114,16 @@ public interface CrossValidation {
             throw new IllegalArgumentException("Invalid number of folds: " + k);
         }
 
-        int[] unique = MathEx.unique(category);
-        int m = unique.length;
+        int[][] strata = Sampling.strata(category);
 
-        Arrays.sort(unique);
-        IntSet encoder = new IntSet(unique);
-
-        int n = category.length;
-        int[] y = category;
-        if (unique[0] != 0 || unique[m-1] != m-1) {
-            y = new int[n];
-            for (int i = 0; i < n; i++) {
-                y[i] = encoder.indexOf(category[i]);
-            }
-        }
-
-        // # of samples in each strata
-        int[] ni = new int[m];
-        for (int i : y) ni[i]++;
-
-        int min = MathEx.min(ni);
+        int min = Arrays.stream(strata).mapToInt(stratum -> stratum.length).min().getAsInt();
         if (min < k) {
             org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CrossValidation.class);
             logger.warn("The least populated class has only {} members, which is less than k={}.", min, k);
         }
 
-        int[][] strata = new int[m][];
-        for (int i = 0; i < m; i++) {
-            strata[i] = new int[ni[i]];
-        }
-
-        int[] pos = new int[m];
-        for (int i = 0; i < n; i++) {
-            int j =  y[i];
-            strata[j][pos[j]++] = i;
-        }
+        int n = category.length;
+        int m = strata.length;
 
         // Shuffle every strata so that we can get different
         // splits in repeated cross validation.
@@ -157,7 +133,7 @@ public interface CrossValidation {
 
         int[] chunk = new int[m];
         for (int i = 0; i < m; i++) {
-            chunk[i] = Math.max(1, ni[i] / k);
+            chunk[i] = Math.max(1, strata[i].length / k);
         }
 
         Bag[] bags = new Bag[k];
@@ -168,7 +144,7 @@ public interface CrossValidation {
             int[] test = new int[n];
 
             for (int j = 0; j < m; j++) {
-                int size = ni[j];
+                int size = strata[j].length;
                 int start = chunk[j] * i;
                 int end = chunk[j] * (i + 1);
                 if (i == k - 1) end = size;
