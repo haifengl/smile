@@ -128,22 +128,7 @@ import smile.util.Strings;
     public static MLP fit(double[][] x, double[] y, Properties prop) {
         int p = x[0].length;
 
-        String scaling = prop.getProperty("smile.mlp.scaler", "standardizer");
-        Scaler scaler;
-        switch (scaling.toLowerCase(Locale.ROOT)) {
-            case "scaler":
-                scaler = Scaler.of(y);
-                break;
-            case "winsor":
-                scaler = Scaler.winsor(y);
-                break;
-            case "standardizer":
-                scaler = Scaler.standardizer(y, true);
-                break;
-            default:
-                throw new IllegalArgumentException("Invalid smile.mlp.scaler: " + scaling);
-        }
-
+        Scaler scaler = Scaler.of(prop.getProperty("smile.mlp.scaler"), y);
         LayerBuilder[] layers = Layer.of(0, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
         MLP model = new MLP(scaler, p, layers);
 

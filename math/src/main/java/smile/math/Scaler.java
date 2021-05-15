@@ -17,6 +17,9 @@
 
 package smile.math;
 
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import smile.sort.IQAgent;
 
 /**
@@ -73,7 +76,7 @@ public class Scaler implements Function {
      * @param data the training data.
      * @return the scaler.
      */
-    public static Scaler of(double[] data) {
+    public static Scaler minmax(double[] data) {
         return new Scaler(MathEx.min(data), MathEx.max(data), true);
     }
 
@@ -140,5 +143,44 @@ public class Scaler implements Function {
         } else {
             return new Scaler(MathEx.mean(data), MathEx.sd(data), false);
         }
+    }
+
+    /**
+     * Returns the scaler. If the parameter {@code scaler} is null or empty,
+     * return {@code null}.
+     *
+     * @param scaler the scaling algorithm.
+     * @param data the training data.
+     * @return the scaler.
+     */
+    public static Scaler of(String scaler, double[] data) {
+        if (scaler == null|| scaler.isEmpty()) return null;
+
+        scaler = scaler.trim().toLowerCase(Locale.ROOT);
+        if (scaler.equals("minmax")) {
+            return Scaler.minmax(data);
+        }
+
+        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
+        String bool = "(true|false)";
+
+        Pattern winsor = Pattern.compile(
+                String.format("winsor\\((%s),\\s*(%s)\\)", number, number));
+        Matcher m = winsor.matcher(scaler);
+        if (m.matches()) {
+            double lower = Double.parseDouble(m.group(1));
+            double upper = Double.parseDouble(m.group(2));
+            return Scaler.winsor(data, lower, upper);
+        }
+
+        Pattern standardizer = Pattern.compile(
+                String.format("standardizer\\(\\s*(%s)\\)", bool));
+        m = standardizer.matcher(scaler);
+        if (m.matches()) {
+            boolean robust = Boolean.parseBoolean(m.group(1));
+            return Scaler.standardizer(data, robust);
+        }
+
+        throw new IllegalArgumentException("Invalid scaler: " + scaler);
     }
 }
