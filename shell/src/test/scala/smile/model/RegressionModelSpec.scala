@@ -79,6 +79,6 @@ class RegressionModelSpec extends Specification {
       println(s"Test metrics: ${model.test}")
       model.test.get.rmse must beCloseTo(0.9909 +/- 0.01)
     }
-     */
+    */
   }
 }

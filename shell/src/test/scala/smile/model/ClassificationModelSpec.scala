@@ -78,6 +78,6 @@ class ClassificationModelSpec extends Specification {
       println(s"Test metrics: ${model.test}")
       model.test.get.error mustEqual 89
     }
-     */
+    */
   }
 }

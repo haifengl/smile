@@ -81,9 +81,15 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     protected double clipValue = 0.0;
     /**
-     * THe gradient clipping norm.
+     * The gradient clipping norm.
      */
     protected double clipNorm = 0.0;
+    /**
+     * Batch normalization standardizes the inputs to a layer for each mini-batch.
+     * This has the effect of stabilizing the learning process and dramatically
+     * reducing the number of training epochs required to train deep networks.
+     */
+    protected boolean batchNormalization = false;
     /**
      * The training iterations.
      */
@@ -223,6 +229,17 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
     /**
+     * Turn on/off batch normalization. Batch normalization standardizes
+     * the inputs to a layer for each mini-batch. This has the effect of
+     * stabilizing the learning process and dramatically reducing the
+     * number of training epochs required to train deep networks.
+     * @param batchNormalization the flag to turn on/off batch normalization.
+     */
+    public void setBatchNormalization(boolean batchNormalization) {
+        this.batchNormalization = batchNormalization;
+    }
+
+    /**
      * Returns the learning rate.
      * @return the learning rate.
      */
@@ -260,6 +277,14 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     public double getClipNorm() {
         return clipNorm;
+    }
+
+    /**
+     * Returns true if batch normalization is on.
+     * @return True if batch normalization is on.
+     */
+    public boolean getBatchNormalization() {
+        return batchNormalization;
     }
 
     /**
@@ -371,6 +396,21 @@ public abstract class MultilayerPerceptron implements Serializable {
         String momentum = prop.getProperty("smile.mlp.momentum");
         if (momentum != null) {
             setMomentum(TimeFunction.of(momentum));
+        }
+
+        String clipValue = prop.getProperty("smile.mlp.clip_value");
+        if (clipValue != null) {
+            setClipValue(Double.parseDouble(clipValue));
+        }
+
+        String clipNorm = prop.getProperty("smile.mlp.clip_norm");
+        if (clipNorm != null) {
+            setClipNorm(Double.parseDouble(clipNorm));
+        }
+
+        String batchNormalization = prop.getProperty("smile.mlp.batch_normalization");
+        if (batchNormalization != null) {
+            setBatchNormalization(Boolean.parseBoolean(batchNormalization));
         }
 
         String rho = prop.getProperty("smile.mlp.RMSProp.rho");
