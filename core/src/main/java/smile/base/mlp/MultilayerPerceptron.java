@@ -22,6 +22,7 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.stream.Collectors;
+import smile.math.MathEx;
 import smile.math.TimeFunction;
 
 /**
@@ -301,6 +302,31 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
     /**
+     * Gradient clipping prevents exploding gradients in very deep networks,
+     * usually in recurrent neural networks.
+     * @param gradient the gradient vector.
+     */
+    private void clipGradient(double[] gradient) {
+        if (clipNorm > 0.0) {
+            double norm = MathEx.norm(gradient);
+            if (norm > clipNorm) {
+                double scale = clipNorm / norm;
+                for (int j = 0; j < gradient.length; j++) {
+                    gradient[j] *= scale;
+                }
+            }
+        } else if (clipValue > 0.0) {
+            for (int j = 0; j < gradient.length; j++) {
+                if (gradient[j] > clipValue) {
+                    gradient[j] = clipValue;
+                } else if (gradient[j] < -clipValue) {
+                    gradient[j] = -clipValue;
+                }
+            }
+        }
+    }
+
+    /**
      * Propagates the errors back through the network.
      * @param x the input signal.
      * @param update the flag if update the weights directly.
@@ -310,9 +336,11 @@ public abstract class MultilayerPerceptron implements Serializable {
         output.computeOutputGradient(target.get(), 1.0);
 
         Layer upper = output;
+        clipGradient(upper.gradient());
         for (int i = net.length - 1; i >= 0; i--) {
             upper.backpropagate(net[i].gradient());
             upper = net[i];
+            clipGradient(upper.gradient());
         }
         // first hidden layer
         upper.backpropagate(null);

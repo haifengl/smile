@@ -266,7 +266,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         return model;
     }
 
-    /** Sets the target vector. */
+    /** Sets the network target vector. */
     private void setTarget(int y) {
         int n = output.getOutputSize();
 
