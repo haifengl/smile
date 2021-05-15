@@ -77,6 +77,14 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     protected double lambda = 0.0;
     /**
+     * The gradient clipping value.
+     */
+    protected double clipValue = 0.0;
+    /**
+     * THe gradient clipping norm.
+     */
+    protected double clipNorm = 0.0;
+    /**
      * The training iterations.
      */
     protected int t = 0;
@@ -187,10 +195,37 @@ public abstract class MultilayerPerceptron implements Serializable {
         this.lambda = lambda;
     }
 
-   /**
-    * Returns the learning rate.
-    * @return the learning rate.
-    */
+    /**
+     * Sets the gradient clipping value. If clip value is set, the gradient of
+     * each weight is clipped to be no higher than this value.
+     * @param clipValue the gradient clipping value.
+     */
+    public void setClipValue(double clipValue) {
+        if (clipValue < 0.0) {
+            throw new IllegalArgumentException("Invalid gradient clipping value: " + clipValue);
+        }
+
+        this.clipValue = clipValue;
+    }
+
+    /**
+     * Sets the gradient clipping norm. If clip norm is set, the gradient of
+     * each weight is individually clipped so that its norm is no higher than
+     * this value.
+     * @param clipNorm the gradient clipping norm.
+     */
+    public void setClipNorm(double clipNorm) {
+        if (clipNorm < 0.0) {
+            throw new IllegalArgumentException("Invalid gradient clipping norm: " + clipNorm);
+        }
+
+        this.clipNorm = clipNorm;
+    }
+
+    /**
+     * Returns the learning rate.
+     * @return the learning rate.
+     */
     public double getLearningRate() {
         return learningRate.apply(t);
     }
@@ -209,6 +244,22 @@ public abstract class MultilayerPerceptron implements Serializable {
      */
     public double getWeightDecay() {
         return lambda;
+    }
+
+    /**
+     * Returns the gradient clipping value.
+     * @return the gradient clipping value.
+     */
+    public double getClipValue() {
+        return clipValue;
+    }
+
+    /**
+     * Returns the gradient clipping norm.
+     * @return the gradient clipping norm.
+     */
+    public double getClipNorm() {
+        return clipNorm;
     }
 
     /**

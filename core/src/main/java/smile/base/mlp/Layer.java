@@ -123,42 +123,42 @@ public abstract class Layer implements Serializable {
      */
     private void init() {
         output = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
+            protected double[] initialValue() {
                 return new double[n];
             }
         };
         outputGradient = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
+            protected double[] initialValue() {
                 return new double[n];
             }
         };
         weightGradient = new ThreadLocal<Matrix>() {
-            protected synchronized Matrix initialValue() {
+            protected Matrix initialValue() {
                 return new Matrix(n, p);
             }
         };
         biasGradient = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
+            protected double[] initialValue() {
                 return new double[n];
             }
         };
         rmsWeightGradient = new ThreadLocal<Matrix>() {
-            protected synchronized Matrix initialValue() {
+            protected Matrix initialValue() {
                 return new Matrix(n, p);
             }
         };
         rmsBiasGradient = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
+            protected double[] initialValue() {
                 return new double[n];
             }
         };
         weightUpdate = new ThreadLocal<Matrix>() {
-            protected synchronized Matrix initialValue() {
+            protected Matrix initialValue() {
                 return new Matrix(n, p);
             }
         };
         biasUpdate = new ThreadLocal<double[]>() {
-            protected synchronized double[] initialValue() {
+            protected double[] initialValue() {
                 return new double[n];
             }
         };
