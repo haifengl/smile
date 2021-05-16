@@ -31,6 +31,12 @@ import smile.math.MathEx;
 public interface Strings {
     /** Decimal format for floating numbers. */
     DecimalFormat decimal = new DecimalFormat("#.####");
+    /** Boolean regular expression pattern. */
+    String integer = "[-+]?[0-9]+)?";
+    /** Boolean regular expression pattern. */
+    String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
+    /** Boolean regular expression pattern. */
+    String bool = "(true|false)";
 
     /**
      * Returns true if the string is null or empty.

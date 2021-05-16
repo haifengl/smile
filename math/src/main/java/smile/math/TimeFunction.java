@@ -22,6 +22,8 @@ import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import static smile.util.Strings.bool;
+import static smile.util.Strings.number;
 
 /**
  * A time-dependent function. When training a neural network model,
@@ -322,9 +324,6 @@ public interface TimeFunction extends Serializable {
      */
     static TimeFunction of(String time) {
         time = time.trim().toLowerCase(Locale.ROOT);
-
-        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
-        String bool = "(true|false)";
 
         Pattern linear = Pattern.compile(
                 String.format("linear(?:decay)?\\((%s),\\s*(%s),\\s*(%s)\\)", number, number, number));

@@ -21,6 +21,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import smile.sort.IQAgent;
+import static smile.util.Strings.bool;
+import static smile.util.Strings.number;
 
 /**
  * Affine transformation {@code y = (x - offset) / scale}.
@@ -160,9 +162,6 @@ public class Scaler implements Function {
         if (scaler.equals("minmax")) {
             return Scaler.minmax(data);
         }
-
-        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
-        String bool = "(true|false)";
 
         Pattern winsor = Pattern.compile(
                 String.format("winsor\\((%s),\\s*(%s)\\)", number, number));

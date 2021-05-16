@@ -19,7 +19,6 @@ package smile.math.kernel;
 
 import java.io.Serializable;
 import java.util.Locale;
-import java.util.Properties;
 import java.util.function.ToDoubleBiFunction;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -27,6 +26,8 @@ import java.util.stream.IntStream;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.SparseArray;
+import static smile.util.Strings.integer;
+import static smile.util.Strings.number;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -193,9 +194,6 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     static MercerKernel<double[]> of(String kernel) {
         kernel = kernel.trim().toLowerCase(Locale.ROOT);
 
-        String integer = "[-+]?[0-9]+";
-        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
-
         Pattern linear = Pattern.compile(
                 String.format("linear(?:kernel)?(?:\\(\\))?"));
         Matcher m = linear.matcher(kernel);
@@ -282,9 +280,6 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
     static MercerKernel<SparseArray> sparse(String kernel) {
         kernel = kernel.trim();
 
-        String integer = "[-+]?[0-9]+";
-        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
-
         Pattern linear = Pattern.compile(
                 String.format("linear(?:kernel)?(?:\\(\\))?"));
         Matcher m = linear.matcher(kernel);
@@ -354,9 +349,6 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
      */
     static MercerKernel<int[]> binary(String kernel) {
         kernel = kernel.trim();
-
-        String integer = "[-+]?[0-9]+";
-        String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
 
         Pattern linear = Pattern.compile(
                 String.format("linear(?:kernel)?(?:\\(\\))?"));
