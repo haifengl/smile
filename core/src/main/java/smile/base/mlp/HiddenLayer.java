@@ -41,11 +41,15 @@ public class HiddenLayer extends Layer {
 
     @Override
     public String toString() {
-        return String.format("%s(%d)", f.name(), n);
+        if (dropoutRate > 0.0) {
+            return String.format("%s(%d, %.2f)", f.name(), n, dropoutRate);
+        } else {
+            return String.format("%s(%d)", f.name(), n);
+        }
     }
 
     @Override
-    public void f(double[] x) {
+    public void transform(double[] x) {
         f.f(x);
     }
 

@@ -25,7 +25,6 @@ import smile.math.MathEx;
 import smile.math.kernel.MercerKernel;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.util.Strings;
 
 /**
  * Gaussian Process for Regression. A Gaussian process is a stochastic process
@@ -158,7 +157,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         @Override
         public String toString() {
             return String.format("GaussianProcessRegression.Prediction {\n  mean    = %s\n  std.dev = %s\n  cov     = %s\n}",
-                    Strings.toString(mu), Strings.toString(sd), cov.toString(true));
+                    Arrays.toString(mu), Arrays.toString(sd), cov.toString(true));
         }
     }
 
