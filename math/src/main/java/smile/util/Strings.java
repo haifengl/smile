@@ -19,8 +19,6 @@ package smile.util;
 
 import java.text.DecimalFormat;
 import java.util.Arrays;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import smile.math.MathEx;
 
 /**
@@ -30,13 +28,7 @@ import smile.math.MathEx;
  */
 public interface Strings {
     /** Decimal format for floating numbers. */
-    DecimalFormat decimal = new DecimalFormat("#.####");
-    /** Boolean regular expression pattern. */
-    String integer = "[-+]?[0-9]+)?";
-    /** Boolean regular expression pattern. */
-    String number = "[-+]?[0-9]*\\.?[0-9]+(?:[eE][-+]?[0-9]+)?";
-    /** Boolean regular expression pattern. */
-    String bool = "(true|false)";
+    DecimalFormat DECIMAL_FORMAT = new DecimalFormat("#.####");
 
     /**
      * Returns true if the string is null or empty.
@@ -209,7 +201,7 @@ public interface Strings {
 
         float ax = Math.abs(x);
         if (ax >= 1E-3f && ax < 1E7f) {
-            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
         }
 
         return String.format("%.4e", x);
@@ -237,41 +229,14 @@ public interface Strings {
 
         double ax = Math.abs(x);
         if (ax >= 1E-3 && ax < 1E7) {
-            return trailingZeros ? String.format("%.4f", x) : decimal.format(x);
+            return trailingZeros ? String.format("%.4f", x) : DECIMAL_FORMAT.format(x);
         }
 
         return String.format("%.4e", x);
     }
 
     /**
-     * Returns the string representation of array in format '[1, 2, 3]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(int[] a) {
-        return Arrays.stream(a).mapToObj(String::valueOf).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(float[] a) {
-        return IntStream.range(0, a.length).mapToObj(i -> format(a[i])).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Returns the string representation of array in format '[1.0, 2.0, 3.0]'.
-     * @param a the array.
-     * @return the string representation.
-     */
-    static String toString(double[] a) {
-        return Arrays.stream(a).mapToObj(Strings::format).collect(Collectors.joining(", ", "[", "]"));
-    }
-
-    /**
-     * Parses a double array in format '[1.0, 2.0, 3.0]'.
+     * Parses an integer array in format '[1, 2, 3]'.
      * Returns null if s is null or empty.
      * @param s the string.
      * @return the array.
@@ -279,7 +244,12 @@ public interface Strings {
     static int[] parseIntArray(String s) {
         if (isNullOrEmpty(s)) return null;
 
-        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        s = s.trim();
+        if (!s.startsWith("[") || !s.endsWith("]")) {
+            throw new IllegalArgumentException("Invalid string: " + s);
+        }
+
+        String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToInt(Integer::parseInt).toArray();
     }
 
@@ -292,7 +262,12 @@ public interface Strings {
     static double[] parseDoubleArray(String s) {
         if (isNullOrEmpty(s)) return null;
 
-        String[] tokens = s.trim().substring(1, s.length() - 1).split(",");
+        s = s.trim();
+        if (!s.startsWith("[") || !s.endsWith("]")) {
+            throw new IllegalArgumentException("Invalid string: " + s);
+        }
+
+        String[] tokens = s.substring(1, s.length() - 1).split(",");
         return Arrays.stream(tokens).map(String::trim).mapToDouble(Double::parseDouble).toArray();
     }
 }

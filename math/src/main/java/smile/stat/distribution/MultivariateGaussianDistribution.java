@@ -17,10 +17,10 @@
 
 package smile.stat.distribution;
 
+import java.util.Arrays;
 import smile.math.MathEx;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
-import smile.util.Strings;
 
 /**
  * Multivariate Gaussian distribution.
@@ -385,6 +385,6 @@ public class MultivariateGaussianDistribution implements MultivariateDistributio
 
     @Override
     public String toString() {
-        return String.format("MultivariateGaussian(mu = %s, sigma = %s)", Strings.toString(mu), sigma);
+        return String.format("MultivariateGaussian(mu = %s, sigma = %s)", Arrays.toString(mu), sigma);
     }
 }

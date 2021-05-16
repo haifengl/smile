@@ -17,14 +17,13 @@
 
 package smile.data.type;
 
-import smile.util.Strings;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.regex.Pattern;
+import smile.util.Regex;
+import smile.util.Strings;
 
 /**
  * The interface of data types.
@@ -69,21 +68,6 @@ public interface DataType extends Serializable {
         /** Struct type ID. */
         Struct
     }
-
-    /** Regex for boolean. */
-    Pattern BooleanPattern = Pattern.compile("(true|false)", Pattern.CASE_INSENSITIVE);
-    /** Regex for integer. */
-    Pattern IntPattern = Pattern.compile("[-+]?\\d{1,9}");
-    /** Regex for long. */
-    Pattern LongPattern = Pattern.compile("[-+]?\\d{1,19}");
-    /** Regex for double. */
-    Pattern DoublePattern = Pattern.compile("[-+]?[0-9]*\\.?[0-9]+([eE][-+]?[0-9]+)?");
-    /** Regex for date. */
-    Pattern DatePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))");
-    /** Regex for time. */
-    Pattern TimePattern = Pattern.compile("(([0-1][0-9])|(2[0-3])):([0-5][0-9])(:([0-5][0-9]))?");
-    /** Regex for datetime. */
-    Pattern DateTimePattern = Pattern.compile("\\d{4}(-|\\/)((0[1-9])|(1[0-2]))(-|\\/)((0[1-9])|([1-2][0-9])|(3[0-1]))(T|\\s)(([0-1][0-9])|(2[0-3])):([0-5][0-9]):([0-5][0-9])");
 
     /**
      * Returns the type name used in external catalogs.
@@ -283,13 +267,13 @@ public interface DataType extends Serializable {
      */
     static DataType infer(String s) {
         if (Strings.isNullOrEmpty(s)) return null;
-        if (DateTimePattern.matcher(s).matches()) return DataTypes.DateTimeType;
-        if (DatePattern.matcher(s).matches()) return DataTypes.DateType;
-        if (TimePattern.matcher(s).matches()) return DataTypes.TimeType;
-        if (IntPattern.matcher(s).matches()) return DataTypes.IntegerType;
-        if (LongPattern.matcher(s).matches()) return DataTypes.LongType;
-        if (DoublePattern.matcher(s).matches()) return DataTypes.DoubleType;
-        if (BooleanPattern.matcher(s).matches()) return DataTypes.BooleanType;
+        if (Regex.DATETIME.matcher(s).matches()) return DataTypes.DateTimeType;
+        if (Regex.DATE.matcher(s).matches()) return DataTypes.DateType;
+        if (Regex.TIME.matcher(s).matches()) return DataTypes.TimeType;
+        if (Regex.INTEGER.matcher(s).matches()) return DataTypes.IntegerType;
+        if (Regex.LONG.matcher(s).matches()) return DataTypes.LongType;
+        if (Regex.DOUBLE.matcher(s).matches()) return DataTypes.DoubleType;
+        if (Regex.BOOLEAN.matcher(s).matches()) return DataTypes.BooleanType;
         return DataTypes.StringType;
     }
 
