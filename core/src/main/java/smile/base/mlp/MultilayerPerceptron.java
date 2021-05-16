@@ -291,14 +291,15 @@ public abstract class MultilayerPerceptron implements Serializable {
     /**
      * Propagates the signals through the neural network.
      * @param x the input signal.
+     * @param train true if this is in training pass.
      */
-    protected void propagate(double[] x) {
+    protected void propagate(double[] x, boolean train) {
         double[] input = x;
         for (Layer layer : net) {
-            layer.propagate(input);
+            layer.propagate(input, train);
             input = layer.output();
         }
-        output.propagate(input);
+        output.propagate(input, train);
     }
 
     /**
@@ -339,6 +340,7 @@ public abstract class MultilayerPerceptron implements Serializable {
         clipGradient(upper.gradient());
         for (int i = net.length - 1; i >= 0; i--) {
             upper.backpropagate(net[i].gradient());
+            upper.backpopagateDropout(net[i].gradient());
             upper = net[i];
             clipGradient(upper.gradient());
         }

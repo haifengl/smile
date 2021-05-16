@@ -62,7 +62,7 @@ public interface FeatureTransform extends Serializable {
 
     /**
      * Transform a feature vector.
-     * @param x a feature vector.
+     * @param x the feature vector.
      * @return the transformed feature value.
      */
     default double[] transform(double[] x) {
@@ -71,6 +71,17 @@ public interface FeatureTransform extends Serializable {
             y[i] = transform(x[i], i);
         }
         return y;
+    }
+
+    /**
+     * Transform a feature vector.
+     * @param x the input feature vector.
+     * @param y the output feature vector.
+     */
+    default void transform(double[] x, double[] y) {
+        for (int i = 0; i < y.length; i++) {
+            y[i] = transform(x[i], i);
+        }
     }
 
     /**

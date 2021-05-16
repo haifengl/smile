@@ -174,7 +174,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int predict(double[] x, double[] posteriori) {
-        propagate(x);
+        propagate(x, false);
 
         int n = output.getOutputSize();
         if (n == 1 && k == 2) {
@@ -189,7 +189,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
 
     @Override
     public int predict(double[] x) {
-        propagate(x);
+        propagate(x, false);
         int n = output.getOutputSize();
 
         if (n == 1 && k == 2) {
@@ -212,7 +212,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     /** Updates the model with a single sample. RMSProp is not applied. */
     @Override
     public void update(double[] x, int y) {
-        propagate(x);
+        propagate(x, true);
         setTarget(classes.indexOf(y));
         backpropagate(x, true);
         t++;
@@ -222,7 +222,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
     @Override
     public void update(double[][] x, int[] y) {
         for (int i = 0; i < x.length; i++) {
-            propagate(x[i]);
+            propagate(x[i], true);
             setTarget(classes.indexOf(y[i]));
             backpropagate(x[i], false);
         }
