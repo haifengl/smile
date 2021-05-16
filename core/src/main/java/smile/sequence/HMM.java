@@ -22,7 +22,6 @@ import java.util.Arrays;
 import java.util.function.ToIntFunction;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.util.Strings;
 
 /**
  * First-order Hidden Markov Model. A hidden Markov model (HMM) is a
@@ -555,7 +554,7 @@ public class HMM implements Serializable {
         sb.append(String.format("HMM (%d states, %d emission symbols)%n", a.nrow(), b.ncol()));
 
         sb.append("Initial state probability: ");
-        sb.append(Strings.toString(pi));
+        sb.append(Arrays.toString(pi));
 
         sb.append("\nState transition probability:\n");
         sb.append(a.toString());

@@ -72,7 +72,7 @@ public class OutputLayer extends Layer {
     }
 
     @Override
-    public void f(double[] x) {
+    public void transform(double[] x) {
         f.f(x);
     }
 

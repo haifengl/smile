@@ -49,11 +49,10 @@ import smile.util.Strings;
     /**
      * Constructor.
      *
-     * @param p the number of variables in input layer.
-     * @param builders the builders of hidden layers from bottom to top.
+     * @param builders the builders of input and hidden layers from bottom to top.
      */
-    public MLP(int p, LayerBuilder... builders) {
-        super(net(p, builders));
+    public MLP(LayerBuilder... builders) {
+        super(net(builders));
         scaler = null;
     }
 
@@ -61,16 +60,16 @@ import smile.util.Strings;
      * Constructor.
      *
      * @param scaler the scaling function of output values.
-     * @param p the number of variables in input layer.
-     * @param builders the builders of hidden layers from bottom to top.
+     * @param builders the builders of input hidden layers from bottom to top.
      */
-    public MLP(Scaler scaler, int p, LayerBuilder... builders) {
-        super(net(p, builders));
+    public MLP(Scaler scaler, LayerBuilder... builders) {
+        super(net(builders));
         this.scaler = scaler;
     }
 
     /** Builds the layers. */
-    private static Layer[] net(int p, LayerBuilder... builders) {
+    private static Layer[] net(LayerBuilder... builders) {
+        int p = 0;
         int l = builders.length;
         Layer[] net = new Layer[l+1];
 
@@ -100,7 +99,7 @@ import smile.util.Strings;
     public void update(double[] x, double y) {
         propagate(x, true);
         setTarget(y);
-        backpropagate(x, true);
+        backpropagate(true);
         t++;
     }
 
@@ -110,7 +109,7 @@ import smile.util.Strings;
         for (int i = 0; i < x.length; i++) {
             propagate(x[i], true);
             setTarget(y[i]);
-            backpropagate(x[i], false);
+            backpropagate(false);
         }
 
         update(x.length);
@@ -137,8 +136,8 @@ import smile.util.Strings;
         int p = x[0].length;
 
         Scaler scaler = Scaler.of(prop.getProperty("smile.mlp.scaler"), y);
-        LayerBuilder[] layers = Layer.of(0, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
-        MLP model = new MLP(scaler, p, layers);
+        LayerBuilder[] layers = Layer.of(0, prop.getProperty("smile.mlp.layers", String.format("Input(%d)|ReLU(100)", p)));
+        MLP model = new MLP(scaler, layers);
         model.setProperties(prop);
 
         int epochs = Integer.parseInt(prop.getProperty("smile.mlp.epochs", "100"));

@@ -60,7 +60,7 @@ public class MLPTest {
         System.out.println("longley");
 
         int p = Longley.x[0].length;
-        MLP model = new MLP(p, Layer.rectifier(30), Layer.sigmoid(30));
+        MLP model = new MLP(Layer.input(p), Layer.rectifier(30), Layer.sigmoid(30));
         // small learning rate and weight decay to counter exploding gradient
         model.setLearningRate(TimeFunction.constant(0.01));
         model.setWeightDecay(0.1);
@@ -83,10 +83,10 @@ public class MLPTest {
 
         Standardizer standardizer = Standardizer.fit(x);
         x = standardizer.transform(x);
-        int p = x[0].length;
 
         RegressionValidations<MLP> result = CrossValidation.regression(10, x, y, (xi, yi) -> {
-            MLP model = new MLP(scaler, p, builders);
+            MLP model = new MLP(scaler, builders);
+            System.out.println(model);
             // small learning rate and weight decay to counter exploding gradient
             model.setLearningRate(TimeFunction.linear(0.01, 10000, 0.001));
             model.setWeightDecay(0.1);
@@ -107,41 +107,49 @@ public class MLPTest {
 
     @Test
     public void testCPU() {
-        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 65.4472, Layer.rectifier(30), Layer.sigmoid(30));
+        test("CPU", CPU.x, CPU.y, Scaler.standardizer(CPU.y, true), 65.4472,
+                Layer.input(CPU.x[0].length), Layer.rectifier(30), Layer.sigmoid(30));
     }
 
     @Test
     public void test2DPlanes() {
-        test("2dplanes", Planes.x, Planes.y, null, 1.5174, Layer.rectifier(50), Layer.sigmoid(30));
+        test("2dplanes", Planes.x, Planes.y, null, 1.5174,
+                Layer.input(Planes.x[0].length), Layer.rectifier(50), Layer.sigmoid(30));
     }
 
     @Test
     public void testAbalone() {
-        test("abalone", Abalone.x, Abalone.y, null, 2.5298, Layer.rectifier(40), Layer.sigmoid(30));
+        test("abalone", Abalone.x, Abalone.y, null, 2.5298,
+                Layer.input(Abalone.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
     public void testAilerons() {
-        test("ailerons", Ailerons.x, Ailerons.y, null, 0.0004, Layer.rectifier(80), Layer.sigmoid(30));
+        test("ailerons", Ailerons.x, Ailerons.y, null, 0.0004,
+                Layer.input(Ailerons.x[0].length), Layer.rectifier(80), Layer.sigmoid(30));
     }
 
     @Test
     public void testBank32nh() {
-        test("bank32nh", Bank32nh.x, Bank32nh.y, null, 0.1218, Layer.rectifier(65), Layer.sigmoid(30));
+        test("bank32nh", Bank32nh.x, Bank32nh.y, null, 0.1218,
+                Layer.input(Bank32nh.x[0].length), Layer.rectifier(65), Layer.sigmoid(30));
     }
 
     @Test
     public void testCalHousing() {
-        test("cal_housing", CalHousing.x, CalHousing.y, null, 115700.2463, Layer.rectifier(40), Layer.sigmoid(30));
+        test("cal_housing", CalHousing.x, CalHousing.y, null, 115700.2463,
+                Layer.input(CalHousing.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
     public void testPuma8nh() {
-        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9605, Layer.rectifier(40), Layer.sigmoid(30));
+        test("puma8nh", Puma8NH.x, Puma8NH.y, null, 3.9605,
+                Layer.input(Puma8NH.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 
     @Test
     public void testKin8nm() {
-        test("kin8nm", Kin8nm.x, Kin8nm.y, null, 0.2638, Layer.rectifier(40), Layer.sigmoid(30));
+        test("kin8nm", Kin8nm.x, Kin8nm.y, null, 0.2638,
+                Layer.input(Kin8nm.x[0].length), Layer.rectifier(40), Layer.sigmoid(30));
     }
 }

@@ -17,6 +17,7 @@
 
 package smile.shell
 
+import java.util.Arrays
 import scopt.OParser
 import smile.io.Read
 import smile.model._
@@ -97,7 +98,7 @@ object Predict {
         val posteriori = new java.util.ArrayList[Array[Double]]()
         val y = model.classifier.predict(data, posteriori)
         (0 until data.size()).foreach { i =>
-          println(s"${y(i)} ${Strings.toString(posteriori.get(i))}")
+          println(s"${y(i)} ${Arrays.toString(posteriori.get(i))}")
         }
       } else {
         model.classifier.predict(data).foreach(y => println(y))
