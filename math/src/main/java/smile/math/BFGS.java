@@ -22,7 +22,6 @@ import java.util.Arrays;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.sort.QuickSort;
-import smile.util.Strings;
 import static java.lang.Math.abs;
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -739,7 +738,7 @@ public class BFGS {
                 M = M.inverse();
             }
 
-            logger.debug("L-BFGS-B iteration {} moves from {} to {} where f(x) = {}", iter, Strings.toString(x_old), Strings.toString(x), f);
+            logger.debug("L-BFGS-B iteration {} moves from {} to {} where f(x) = {}", iter, Arrays.toString(x_old), Arrays.toString(x), f);
 
             if (abs(f_old - f) < TOLF) {
                 logger.info(String.format("L-BFGS-B converges on f(x) after %d iterations: %.5f", iter, f));

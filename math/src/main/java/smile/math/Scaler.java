@@ -21,8 +21,8 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import smile.sort.IQAgent;
-import static smile.util.Strings.bool;
-import static smile.util.Strings.number;
+import static smile.util.Regex.BOOLEAN_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Affine transformation {@code y = (x - offset) / scale}.
@@ -164,7 +164,7 @@ public class Scaler implements Function {
         }
 
         Pattern winsor = Pattern.compile(
-                String.format("winsor\\((%s),\\s*(%s)\\)", number, number));
+                String.format("winsor\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         Matcher m = winsor.matcher(scaler);
         if (m.matches()) {
             double lower = Double.parseDouble(m.group(1));
@@ -173,7 +173,7 @@ public class Scaler implements Function {
         }
 
         Pattern standardizer = Pattern.compile(
-                String.format("standardizer\\(\\s*(%s)\\)", bool));
+                String.format("standardizer\\(\\s*(%s)\\)", BOOLEAN_REGEX));
         m = standardizer.matcher(scaler);
         if (m.matches()) {
             boolean robust = Boolean.parseBoolean(m.group(1));

@@ -26,8 +26,8 @@ import java.util.stream.IntStream;
 import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 import smile.util.SparseArray;
-import static smile.util.Strings.integer;
-import static smile.util.Strings.number;
+import static smile.util.Regex.INTEGER_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Mercer kernel, also called covariance function in Gaussian process.
@@ -202,7 +202,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", integer, number, number));
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
         m = polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
@@ -212,7 +212,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", number));
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -220,7 +220,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -229,7 +229,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", number));
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -237,7 +237,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -246,7 +246,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", number));
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = tps.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -254,7 +254,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern pearson = Pattern.compile(
-                String.format("pearson(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("pearson(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = pearson.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -288,7 +288,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", integer, number, number));
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
         m = polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
@@ -298,7 +298,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", number));
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -306,7 +306,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -315,7 +315,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", number));
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -323,7 +323,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -332,7 +332,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", number));
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = tps.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -358,7 +358,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern polynomial = Pattern.compile(
-                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", integer, number, number));
+                String.format("polynomial(?:kernel)?\\((%s),\\s*(%s),\\s*(%s)\\)", INTEGER_REGEX, DOUBLE_REGEX, DOUBLE_REGEX));
         m = polynomial.matcher(kernel);
         if (m.matches()) {
             int degree = Integer.parseInt(m.group(1));
@@ -368,7 +368,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern gaussian = Pattern.compile(
-                String.format("gaussian(?:kernel)?\\((%s)\\)", number));
+                String.format("gaussian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = gaussian.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -376,7 +376,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern matern = Pattern.compile(
-                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("matern(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = matern.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
@@ -385,7 +385,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern laplacian = Pattern.compile(
-                String.format("laplacian(?:kernel)?\\((%s)\\)", number));
+                String.format("laplacian(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = laplacian.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -393,7 +393,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tanh = Pattern.compile(
-                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", number, number));
+                String.format("tanh(?:kernel)?\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
         m = tanh.matcher(kernel);
         if (m.matches()) {
             double scale = Double.parseDouble(m.group(1));
@@ -402,7 +402,7 @@ public interface MercerKernel<T> extends ToDoubleBiFunction<T, T>, Serializable 
         }
 
         Pattern tps = Pattern.compile(
-                String.format("tps(?:kernel)?\\((%s)\\)", number));
+                String.format("tps(?:kernel)?\\((%s)\\)", DOUBLE_REGEX));
         m = tps.matcher(kernel);
         if (m.matches()) {
             double sigma = Double.parseDouble(m.group(1));
