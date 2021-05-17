@@ -69,13 +69,13 @@ public class RDA extends QDA {
      * Learns regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RDA fit(double[][] x, int[] y, Properties prop) {
-        double alpha = Double.parseDouble(prop.getProperty("smile.rda.alpha", "0.9"));
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.rda.priori"));
-        double tol = Double.parseDouble(prop.getProperty("smile.rda.tolerance", "1E-4"));
+    public static RDA fit(double[][] x, int[] y, Properties params) {
+        double alpha = Double.parseDouble(params.getProperty("smile.rda.alpha", "0.9"));
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.rda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.rda.tolerance", "1E-4"));
         return fit(x, y, alpha, priori, tol);
     }
 

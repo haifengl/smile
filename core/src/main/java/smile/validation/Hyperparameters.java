@@ -284,31 +284,31 @@ public class Hyperparameters {
      */
     public Stream<Properties> random() {
         return Stream.generate(() -> {
-            Properties prop = new Properties();
+            Properties params = new Properties();
             parameters.forEach((name, values) -> {
                 if (values instanceof int[]) {
                     int[] a = (int[]) values;
                     int v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
-                    prop.setProperty(name, String.valueOf(v));
+                    params.setProperty(name, String.valueOf(v));
                 } else if (values instanceof double[]) {
                     double[] a = (double[]) values;
                     double v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
-                    prop.setProperty(name, String.valueOf(v));
+                    params.setProperty(name, String.valueOf(v));
                 } else if (values instanceof String[]) {
                     String[] a = (String[]) values;
                     String v = a.length == 1 ? a[0] : a[MathEx.randomInt(a.length)];
-                    prop.setProperty(name, v);
+                    params.setProperty(name, v);
                 } else if (values instanceof IntRange) {
                     IntRange range = (IntRange) values;
-                    prop.setProperty(name, String.valueOf(MathEx.randomInt(range.start, range.end)));
+                    params.setProperty(name, String.valueOf(MathEx.randomInt(range.start, range.end)));
                 } else if (values instanceof DoubleRange) {
                     DoubleRange range = (DoubleRange) values;
-                    prop.setProperty(name, String.valueOf(MathEx.random(range.start, range.end)));
+                    params.setProperty(name, String.valueOf(MathEx.random(range.start, range.end)));
                 } else {
                     throw new IllegalStateException("Unknown parameter type: " + values);
                 }
             });
-            return prop;
+            return params;
         });
     }
 
@@ -341,9 +341,9 @@ public class Hyperparameters {
         }
 
         return combinations.stream().map(list -> {
-            Properties prop = new Properties();
-            list.forEach(p -> prop.setProperty(p.name, p.value));
-            return prop;
+            Properties params = new Properties();
+            list.forEach(p -> params.setProperty(p.name, p.value));
+            return params;
         });
     }
 

@@ -259,13 +259,13 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Maxent fit(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
+    public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
         return fit(p, x, y, lambda, tol, maxIter);
     }
 
@@ -311,13 +311,13 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
+    public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
         return binomial(p, x, y, lambda, tol, maxIter);
     }
 
@@ -390,13 +390,13 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(int p, int[][] x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.maxent.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.maxent.max.iterations", "500"));
+    public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
         return multinomial(p, x, y, lambda, tol, maxIter);
     }
 

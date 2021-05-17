@@ -406,39 +406,39 @@ public abstract class MultilayerPerceptron implements Serializable {
     }
 
     /**
-     * Sets MLP properties such as learning rate, weight decay, momentum,
+     * Sets MLP hyper-parameters such as learning rate, weight decay, momentum,
      * RMSProp, etc.
-     * @param prop the MLP properties.
+     * @param params the MLP hyper-parameters.
      */
-    public void setProperties(Properties prop) {
-        String learningRate = prop.getProperty("smile.mlp.learning_rate");
+    public void setParameters(Properties params) {
+        String learningRate = params.getProperty("smile.mlp.learning_rate");
         if (learningRate != null) {
             setLearningRate(TimeFunction.of(learningRate));
         }
 
-        String weightDecay = prop.getProperty("smile.mlp.weight_decay");
+        String weightDecay = params.getProperty("smile.mlp.weight_decay");
         if (weightDecay != null) {
             setWeightDecay(Double.parseDouble(weightDecay));
         }
 
-        String momentum = prop.getProperty("smile.mlp.momentum");
+        String momentum = params.getProperty("smile.mlp.momentum");
         if (momentum != null) {
             setMomentum(TimeFunction.of(momentum));
         }
 
-        String clipValue = prop.getProperty("smile.mlp.clip_value");
+        String clipValue = params.getProperty("smile.mlp.clip_value");
         if (clipValue != null) {
             setClipValue(Double.parseDouble(clipValue));
         }
 
-        String clipNorm = prop.getProperty("smile.mlp.clip_norm");
+        String clipNorm = params.getProperty("smile.mlp.clip_norm");
         if (clipNorm != null) {
             setClipNorm(Double.parseDouble(clipNorm));
         }
 
-        String rho = prop.getProperty("smile.mlp.RMSProp.rho");
+        String rho = params.getProperty("smile.mlp.RMSProp.rho");
         if (rho != null) {
-            double epsilon = Double.parseDouble(prop.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
+            double epsilon = Double.parseDouble(params.getProperty("smile.mlp.RMSProp.epsilon", "1E-7"));
             setRMSProp(Double.parseDouble(rho), epsilon);
         }
     }

@@ -93,12 +93,12 @@ public class ICA implements Serializable {
      *             number of samples of mixed signals and the number of rows
      *             corresponding with the number of independent source signals.
      * @param p the number of independent components.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static ICA fit(double[][] data, int p, Properties prop) {
+    public static ICA fit(double[][] data, int p, Properties params) {
         DifferentiableFunction f;
-        String contrast = prop.getProperty("smile.ica.contrast", "LogCosh");
+        String contrast = params.getProperty("smile.ica.contrast", "LogCosh");
         switch (contrast) {
             case "LogCosh":
                 f = new LogCosh();
@@ -109,8 +109,8 @@ public class ICA implements Serializable {
             default:
                 throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
         }
-        double tol = Double.parseDouble(prop.getProperty("smile.ica.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.ica.max.iterations", "100"));
+        double tol = Double.parseDouble(params.getProperty("smile.ica.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.ica.max_iterations", "100"));
         return fit(data, p, f, tol, maxIter);
     }
 

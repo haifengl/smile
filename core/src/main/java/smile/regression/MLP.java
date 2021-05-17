@@ -18,12 +18,10 @@
 package smile.regression;
 
 import java.util.Arrays;
-import java.util.Locale;
 import java.util.Properties;
 import smile.base.mlp.*;
 import smile.math.Scaler;
 import smile.math.MathEx;
-import smile.math.TimeFunction;
 import smile.util.Strings;
 
 /**
@@ -141,7 +139,7 @@ import smile.util.Strings;
         Scaler scaler = Scaler.of(prop.getProperty("smile.mlp.scaler"), y);
         LayerBuilder[] layers = Layer.of(0, p, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
         MLP model = new MLP(scaler, layers);
-        model.setProperties(prop);
+        model.setParameters(prop);
 
         int epochs = Integer.parseInt(prop.getProperty("smile.mlp.epochs", "100"));
         int batch = Integer.parseInt(prop.getProperty("smile.mlp.mini_batch", "256"));

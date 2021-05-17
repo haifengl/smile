@@ -256,13 +256,13 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits binomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Binomial binomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Binomial binomial(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -327,13 +327,13 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits multinomial logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Multinomial multinomial(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logit.max.iterations", "500"));
+    public static Multinomial multinomial(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -405,13 +405,13 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * Fits logistic regression.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.logistic.lambda", "0.1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.logistic.max.iterations", "500"));
+    public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.max_iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 

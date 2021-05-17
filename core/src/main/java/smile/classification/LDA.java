@@ -138,12 +138,12 @@ public class LDA extends AbstractClassifier<double[]> {
      * Learns linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LDA fit(double[][] x, int[] y, Properties prop) {
-        double[] priori = Strings.parseDoubleArray(prop.getProperty("smile.lda.priori"));
-        double tol = Double.parseDouble(prop.getProperty("smile.lda.tolerance", "1E-4"));
+    public static LDA fit(double[][] x, int[] y, Properties params) {
+        double[] priori = Strings.parseDoubleArray(params.getProperty("smile.lda.priori"));
+        double tol = Double.parseDouble(params.getProperty("smile.lda.tolerance", "1E-4"));
         return fit(x, y, priori, tol);
     }
 
