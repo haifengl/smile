@@ -19,7 +19,10 @@ package smile.feature;
 
 import java.io.Serializable;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 
@@ -29,6 +32,9 @@ import smile.data.type.StructField;
 import smile.data.type.StructType;
 import smile.data.vector.BaseVector;
 import smile.data.vector.DoubleVector;
+
+import static smile.util.Regex.BOOLEAN_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Feature transformation. In general, learning algorithms benefit from
@@ -233,5 +239,57 @@ public interface FeatureTransform extends Serializable {
             }
         });
         return DataFrame.of(vectors);
+    }
+
+    /**
+     * Returns the feature transformer. If the parameter {@code transformer} is null or empty,
+     * return {@code null}.
+     *
+     * @param transformer the feature transformation algorithm.
+     * @param data the training data.
+     * @return the feature transformer.
+     */
+    static FeatureTransform of(String transformer, double[][] data) {
+        if (transformer == null|| transformer.isEmpty()) return null;
+
+        transformer = transformer.trim().toLowerCase(Locale.ROOT);
+        if (transformer.equals("l1")) {
+            return Normalizer.L1;
+        }
+
+        if (transformer.equals("l2")) {
+            return Normalizer.L2;
+        }
+
+        if (transformer.equals("linf")) {
+            return Normalizer.L_INF;
+        }
+
+        if (transformer.equals("minmax")) {
+            return Scaler.fit(data);
+        }
+
+        if (transformer.equals("maxabs")) {
+            return MaxAbsScaler.fit(data);
+        }
+
+        Pattern winsor = Pattern.compile(
+                String.format("winsor\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        Matcher m = winsor.matcher(transformer);
+        if (m.matches()) {
+            double lower = Double.parseDouble(m.group(1));
+            double upper = Double.parseDouble(m.group(2));
+            return WinsorScaler.fit(data, lower, upper);
+        }
+
+        Pattern standardizer = Pattern.compile(
+                String.format("standardizer\\(\\s*(%s)\\)", BOOLEAN_REGEX));
+        m = standardizer.matcher(transformer);
+        if (m.matches()) {
+            boolean robust = Boolean.parseBoolean(m.group(1));
+            return robust ? RobustStandardizer.fit(data) : Standardizer.fit(data);
+        }
+
+        throw new IllegalArgumentException("Unsupported feature transform: " + transformer);
     }
 }
