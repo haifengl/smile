@@ -17,6 +17,7 @@
 
 package smile.regression;
 
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.Properties;
 import smile.base.mlp.*;
@@ -52,15 +53,14 @@ import smile.util.Strings;
      * @param builders the builders of input and hidden layers from bottom to top.
      */
     public MLP(LayerBuilder... builders) {
-        super(net(builders));
-        scaler = null;
+        this(null, builders);
     }
 
     /**
      * Constructor.
      *
      * @param scaler the scaling function of output values.
-     * @param builders the builders of input hidden layers from bottom to top.
+     * @param builders the builders of input and hidden layers from bottom to top.
      */
     public MLP(Scaler scaler, LayerBuilder... builders) {
         super(net(builders));
@@ -71,14 +71,17 @@ import smile.util.Strings;
     private static Layer[] net(LayerBuilder... builders) {
         int p = 0;
         int l = builders.length;
-        Layer[] net = new Layer[l+1];
+        Layer[] net = new Layer[l];
 
         for (int i = 0; i < l; i++) {
             net[i] = builders[i].build(p);
             p = builders[i].neurons();
         }
 
-        net[l] = new OutputLayer(1, p, OutputFunction.LINEAR, Cost.MEAN_SQUARED_ERROR);
+        if (!(net[l-1] instanceof OutputLayer)) {
+            net = Arrays.copyOf(net, l + 1);
+            net[l] = new OutputLayer(1, p, OutputFunction.LINEAR, Cost.MEAN_SQUARED_ERROR);
+        }
         return net;
     }
 
