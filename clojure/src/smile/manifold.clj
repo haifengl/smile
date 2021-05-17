@@ -187,7 +187,7 @@
   distance metric. However, when Euclidean distances are used MDS is
   equivalent to PCA.
 
-  `proximity` is the nonnegative proximity matrix of dissimilarities. The
+  `proximity` is the non-negative proximity matrix of dissimilarities. The
   diagonal should be zero and all other elements should be positive and
   symmetric. For pairwise distances matrix, it should be just the plain
   distance, not squared.
@@ -217,7 +217,7 @@
   a perfect ordinal re-scaling of the data into distances is usually not
   possible. The relationship is typically found using isotonic regression.
 
-  `proximity` is the nonnegative proximity matrix of dissimilarities.
+  `proximity` is the non-negative proximity matrix of dissimilarities.
   The diagonal should be zero and all other elements should be positive
   and symmetric.
   `k` is the dimension of the projection.
@@ -257,7 +257,7 @@
   iterative algorithm such as gradient descent suggested by Sammon. Kohonen
   also provides a heuristic that is simple and works reasonably well.
 
-  `proximity the nonnegative proximity matrix of dissimilarities.
+  `proximity the non-negative proximity matrix of dissimilarities.
   The diagonal should be zero and all other elements should be positive
   and symmetric.
   `k` is the dimension of the projection.

@@ -417,7 +417,7 @@ public class BFGS {
      *      f(x+stp*s) - f(x) - ftol*stp*(gradf(x)'s).
      * }</pre>
      * If a step is obtained for which the modified function
-     * has a nonpositive function value and nonnegative derivative,
+     * has a nonpositive function value and non-negative derivative,
      * then the interval of uncertainty is chosen so that it
      * contains a minimizer of {@code f(x+stp*s)}.
      * <p>

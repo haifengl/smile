@@ -43,7 +43,7 @@ import static smile.util.Regex.DOUBLE_REGEX;
  * <p>
  * Positive definiteness in the context of kernel functions also implies that
  * a kernel matrix created using a particular kernel is positive semi-definite.
- * A matrix is positive semi-definite if its associated eigenvalues are nonnegative.
+ * A matrix is positive semi-definite if its associated eigenvalues are non-negative.
  * <p>
  * We can combine or modify existing kernel functions to make new one.
  * For example, the sum of two kernels is a kernel. The product of two kernels
