@@ -29,9 +29,6 @@ import java.io.IOException;
 public class InputLayer extends Layer {
     private static final long serialVersionUID = 2L;
 
-    /** The feature transformation such as standardization. */
-    private final FeatureTransform transformer;
-
     /**
      * Constructor.
      * @param p the number of input variables (not including bias value).
@@ -46,18 +43,7 @@ public class InputLayer extends Layer {
      * @param dropout the dropout rate.
      */
     public InputLayer(int p, double dropout) {
-        this(p, dropout, null);
-    }
-
-    /**
-     * Constructor.
-     * @param p the number of input variables (not including bias value).
-     * @param dropout the dropout rate.
-     * @param transformer the optional input feature transformation.
-     */
-    public InputLayer(int p, double dropout, FeatureTransform transformer) {
         super(p, dropout);
-        this.transformer = transformer;
     }
 
     /**
@@ -77,23 +63,16 @@ public class InputLayer extends Layer {
 
     @Override
     public String toString() {
-        String s = String.format("Input(%d", p);
         if (dropout > 0.0) {
-            s = String.format("%s, %.2f", s, dropout);
+            return String.format("Input(%d, %.2f)", n, dropout);
+        } else {
+            return String.format("Input(%d)", n);
         }
-        if (transformer != null) {
-            s = String.format("%s, %s", s, transformer.getClass().getSimpleName());
-        }
-        return s + ")";
     }
 
     @Override
     public void propagate(double[] x) {
-        if (transformer == null) {
-            System.arraycopy(x, 0, output.get(), 0, p);
-        } else {
-            transformer.transform(x, output.get());
-        }
+        System.arraycopy(x, 0, output.get(), 0, p);
     }
 
     @Override

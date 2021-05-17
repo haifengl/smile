@@ -453,21 +453,10 @@ public abstract class Layer implements Serializable {
      * @return the layer builder.
      */
     public static LayerBuilder input(int neurons, double dropout) {
-        return input(neurons, dropout, null);
-    }
-
-    /**
-     * Returns an input layer.
-     * @param neurons the number of neurons.
-     * @param dropout the dropout rate.
-     * @param transformer the optional input feature transformation.
-     * @return the layer builder.
-     */
-    public static LayerBuilder input(int neurons, double dropout, FeatureTransform transformer) {
         return new LayerBuilder(neurons, dropout) {
             @Override
             public InputLayer build(int p) {
-                return new InputLayer(neurons, dropout, transformer);
+                return new InputLayer(neurons, dropout);
             }
         };
     }
@@ -572,7 +561,7 @@ public abstract class Layer implements Serializable {
      * Returns the layer builders given a string representation such as
      * "Input(10, 0.2)|ReLU(50, 0.5)|Sigmoid(30, 0.5)|...".
      *
-     * @param k the number of classes. k < 2 for regression.
+     * @param k the number of classes. {@code k < 2} for regression.
      * @param p the number of input variables (not including bias value).
      * @param spec the hidden layer specification.
      * @return the layer builders.
