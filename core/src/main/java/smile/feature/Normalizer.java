@@ -58,7 +58,7 @@ public enum Normalizer implements FeatureTransform {
     /**
      * Normalize L-infinity vector norm. Maximum absolute value.
      */
-    Inf {
+    Linf {
         @Override
         public double[] transform(double[] x) {
             return scale(x, MathEx.normInf(x));
