@@ -19,6 +19,7 @@ package smile.base.mlp;
 
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -27,6 +28,7 @@ import java.util.regex.Pattern;
 import smile.feature.FeatureTransform;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
+import smile.util.Regex;
 
 /**
  * A layer in the neural network.
@@ -347,12 +349,14 @@ public abstract class Layer implements Serializable {
         Matrix weightGradient = this.weightGradient.get();
         double[] biasGradient = this.biasGradient.get();
 
+        // Instead of computing the average gradient explicitly,
+        // we scale down the learning rate by the number of samples.
         double eta = learningRate / m;
 
         if (rho > 0.0 && rho < 1.0) {
-            // gradient will be averaged and smoothed in RMSProp
+            // As gradient will be averaged and smoothed in RMSProp,
+            // we need to use the original learning rate.
             eta = learningRate;
-
             weightGradient.div(m);
             for (int i = 0; i < n; i++) {
                 biasGradient[i] /= m;
@@ -569,32 +573,42 @@ public abstract class Layer implements Serializable {
      * "Input(10, 0.2)|ReLU(50, 0.5)|Sigmoid(30, 0.5)|...".
      *
      * @param k the number of classes. k < 2 for regression.
+     * @param p the number of input variables (not including bias value).
      * @param spec the hidden layer specification.
      * @return the layer builders.
      */
-    public static LayerBuilder[] of(int k, String spec) {
-        Pattern regex = Pattern.compile("(\\w+)\\((\\d+)(,\\s*)?\\)");
+    public static LayerBuilder[] of(int k, int p, String spec) {
+        Pattern regex = Pattern.compile(String.format("(\\w+)\\((%s)(,\\s*(%s))?\\)", Regex.INTEGER_REGEX, Regex.DOUBLE_REGEX));
         String[] layers = spec.split("\\|");
-        LayerBuilder[] builders = new LayerBuilder[layers.length + 1];
+        ArrayList<LayerBuilder> builders = new ArrayList<LayerBuilder>();
         for (int i = 0; i < layers.length; i++) {
             Matcher m = regex.matcher(layers[i]);
             if (m.matches()) {
                 String activation = m.group(1);
-                int nodes = Integer.parseInt(m.group(2));
-                builders[i] = null;//Layer.builder(activation, nodes);
+                int neurons = Integer.parseInt(m.group(2));
+                double dropout = 0.0;
+                if (m.group(3) != null) {
+                    dropout = Double.parseDouble(m.group(4));
+                }
+
+                if (i == 0 && !activation.equalsIgnoreCase("input")) {
+                    builders.add(Layer.input(p, dropout));
+                }
+
+                builders.add(Layer.builder(activation, neurons, dropout));
             } else {
                 throw new IllegalArgumentException("Invalid layer: " + layers[i]);
             }
         }
 
         if (k < 2) {
-            builders[layers.length] = Layer.mse(1, OutputFunction.LINEAR);
+            builders.add(Layer.mse(1, OutputFunction.LINEAR));
         } else if (k == 2) {
-            builders[layers.length] = Layer.mle(1, OutputFunction.SIGMOID);
+            builders.add(Layer.mle(1, OutputFunction.SIGMOID));
         } else {
-            builders[layers.length] = Layer.mle(k, OutputFunction.SOFTMAX);
+            builders.add(Layer.mle(k, OutputFunction.SOFTMAX));
         }
 
-        return builders;
+        return builders.toArray(new LayerBuilder[0]);
     }
 }
