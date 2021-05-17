@@ -151,10 +151,10 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
      * @return the model.
      */
     public static AdaBoost fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.adaboost.trees", "500"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.adaboost.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.adaboost.max.nodes", "6"));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.adaboost.node.size", "1"));
+        int ntrees = Integer.parseInt(prop.getProperty("smile.ada.boost.trees", "500"));
+        int maxDepth = Integer.parseInt(prop.getProperty("smile.ada.boost.max.depth", "20"));
+        int maxNodes = Integer.parseInt(prop.getProperty("smile.ada.boost.max.nodes", "6"));
+        int nodeSize = Integer.parseInt(prop.getProperty("smile.ada.boost.node.size", "1"));
         return fit(formula, data, ntrees, maxDepth, maxNodes, nodeSize);
     }
 
