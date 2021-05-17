@@ -139,9 +139,8 @@ public class DENCLUE extends PartitionClustering {
 
         logger.info("Hill-climbing of density function for each observation");
         // Stream is lazy. Without calling toArray(), the computation won't be executed.
-        double[] density = IntStream.range(0, n).parallel()
-                .mapToDouble(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol))
-                .toArray();
+        IntStream.range(0, n).parallel()
+                .forEach(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol));
 
         if (Arrays.stream(attractors).flatMapToDouble(Arrays::stream).anyMatch(ai -> !Double.isFinite(ai))) {
             throw new IllegalStateException("Attractors contains NaN/infinity. sigma is likely too small.");

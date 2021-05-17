@@ -290,7 +290,7 @@ public abstract class MultilayerPerceptron implements Serializable {
         for (Layer layer : net) {
             layer.propagate(input);
             if (train) {
-                layer.propagateDropout();;
+                layer.propagateDropout();
             }
             input = layer.output();
         }

@@ -134,8 +134,8 @@ public abstract class InternalNode implements Node {
     }
 
     @Override
-    public int leafs() {
-        return trueChild.leafs() + falseChild.leafs();
+    public int leaves() {
+        return trueChild.leaves() + falseChild.leaves();
     }
 
     @Override

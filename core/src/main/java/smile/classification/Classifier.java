@@ -24,7 +24,6 @@ import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import smile.data.Dataset;
 import smile.data.Instance;
-import smile.data.measure.NominalScale;
 import smile.math.MathEx;
 
 /**
@@ -261,10 +260,10 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     static <T> Classifier<T> ensemble(Classifier<T>... models) {
         return new Classifier<T>() {
             /** The ensemble is a soft classifier only if all the base models are. */
-            private boolean soft = Arrays.stream(models).allMatch(model -> model.soft());
+            private final boolean soft = Arrays.stream(models).allMatch(Classifier::soft);
 
             /** The ensemble is an online learner only if all the base models are. */
-            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+            private final boolean online = Arrays.stream(models).allMatch(Classifier::online);
 
             @Override
             public boolean soft() {

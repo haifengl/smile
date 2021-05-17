@@ -313,17 +313,17 @@ public class BBDTree {
         if (node.lower != null) {
             // Build the new list of candidates
             int[] newCandidates = new int[k];
-            int newk = 0;
+            int k2 = 0;
 
             for (int i = 0; i < k; i++) {
                 if (!prune(node.center, node.radius, centroids, closest, candidates[i])) {
-                    newCandidates[newk++] = candidates[i];
+                    newCandidates[k2++] = candidates[i];
                 }
             }
 
             // Recurse if there's at least two
-            if (newk > 1) {
-                return filter(node.lower, centroids, newCandidates, newk, sum, size, y) + filter(node.upper, centroids, newCandidates, newk, sum, size, y);
+            if (k2 > 1) {
+                return filter(node.lower, centroids, newCandidates, k2, sum, size, y) + filter(node.upper, centroids, newCandidates, k2, sum, size, y);
             }
         }
 

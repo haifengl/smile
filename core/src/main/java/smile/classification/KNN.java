@@ -27,7 +27,6 @@ import smile.neighbor.KDTree;
 import smile.neighbor.KNNSearch;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.Neighbor;
-import smile.util.IntSet;
 
 /**
  * K-nearest neighbor classifier. The k-nearest neighbor algorithm (k-NN) is
