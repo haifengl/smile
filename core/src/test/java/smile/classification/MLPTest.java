@@ -210,10 +210,10 @@ public class MLPTest {
         int p = x[0].length;
         int k = MathEx.max(USPS.y) + 1;
 
-        MLP model = new MLP(Layer.input(p, 0.2),
-                Layer.rectifier(2*768, 0.5),
-                Layer.rectifier(2*192, 0.5),
-                Layer.rectifier(2*30, 0.5),
+        MLP model = new MLP(Layer.input(p),
+                Layer.rectifier(768),
+                Layer.rectifier(192),
+                Layer.rectifier(30),
                 Layer.mle(k, OutputFunction.SIGMOID)
         );
 
