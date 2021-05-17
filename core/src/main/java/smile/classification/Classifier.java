@@ -40,8 +40,8 @@ import smile.math.MathEx;
  * and a desired output value. The inferred function is called a classifier
  * if the output is discrete or a regression function if the output is
  * continuous.
- * 
- * @param <T> the type of input object
+ *
+ * @param <T> the type of model input object.
  * 
  * @author Haifeng Li
  */
@@ -254,6 +254,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
      * predictive performance.
      *
      * @param models the base models.
+     * @param <T> the type of model input object.
      * @return the ensemble model.
      */
     @SafeVarargs

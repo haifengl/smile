@@ -31,7 +31,9 @@ import smile.data.Instance;
  * expectation of the dependent variable given the independent variables.
  * Regression analysis is widely used for prediction and forecasting, where
  * its use has substantial overlap with the field of machine learning. 
- * 
+ *
+ * @param <T> the type of model input object.
+ *
  * @author Haifeng Li
  */
 public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
@@ -132,6 +134,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
      * predictive performance.
      *
      * @param models the base models.
+     * @param <T> the type of model input object.
      * @return the ensemble model.
      */
     @SafeVarargs
