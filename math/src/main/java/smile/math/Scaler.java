@@ -51,6 +51,7 @@ public class Scaler implements Function {
      * Constructor.
      * @param scale the scaling factor.
      * @param offset the offset.
+     * @param clip if true, clip the value in [0, 1].
      */
     public Scaler(double scale, double offset, boolean clip) {
         this.scale = MathEx.isZero(scale) ? 1.0 : scale;
@@ -180,6 +181,6 @@ public class Scaler implements Function {
             return Scaler.standardizer(data, robust);
         }
 
-        throw new IllegalArgumentException("Invalid scaler: " + scaler);
+        throw new IllegalArgumentException("Unsupported scaler: " + scaler);
     }
 }
