@@ -25,6 +25,7 @@ import smile.data.DataFrame;
 import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.data.type.StructType;
+import smile.feature.FeatureTransform;
 import smile.math.MathEx;
 
 /**
@@ -77,19 +78,34 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
             return predict(xi, prob);
         }).toArray();
     }
-
     /**
      * Fits a vector classifier on data frame.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param trainer the training lambda.
      * @return the model.
      */
     static DataFrameClassifier of(Formula formula, DataFrame data, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
+        return of(null, formula, data, trainer);
+    }
+
+    /**
+     * Fits a vector classifier on data frame.
+     *
+     * @param transformer the feature transformation (e.g. standardizer, minmax, winsor(0.01, 0.99), etc.)
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     * @param trainer the training lambda.
+     * @return the model.
+     */
+    static DataFrameClassifier of(String transformer, Formula formula, DataFrame data, BiFunction<double[][], int[], Classifier<double[]>> trainer) {
         DataFrame X = formula.x(data);
         StructType schema = X.schema();
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         int[] y = formula.y(data).toIntArray();
+
+        FeatureTransform preprocessor = FeatureTransform.of(transformer, x);
         Classifier<double[]> model = trainer.apply(x, y);
 
         return new DataFrameClassifier() {
@@ -113,9 +129,23 @@ public interface DataFrameClassifier extends Classifier<Tuple> {
                 return model.classes();
             }
 
+            /** Converts a tuple to array. */
+            private double[] toArray(Tuple t) {
+                double[] x = formula.x(t).toArray();
+                if (preprocessor != null) {
+                    preprocessor.transform(x, x);
+                }
+                return x;
+            }
+
             @Override
             public int predict(Tuple x) {
-                return model.predict(formula.x(x).toArray());
+                return model.predict(toArray(x));
+            }
+
+            @Override
+            public int predict(Tuple x, double[] posteriori) {
+                return model.predict(toArray(x), posteriori);
             }
         };
     }

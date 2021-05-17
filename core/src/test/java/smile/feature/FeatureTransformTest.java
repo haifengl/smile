@@ -26,8 +26,6 @@ import smile.data.DataFrame;
 import smile.data.Colon;
 import smile.data.Segment;
 
-import java.util.Arrays;
-
 import static org.junit.Assert.*;
 
 /**
@@ -285,7 +283,7 @@ public class FeatureTransformTest {
         assertEquals(0.156063, x[1][5], 1E-4);
         assertEquals(0.107846, x[1][6], 1E-4);
 
-        x = Normalizer.Inf.transform(Colon.x);
+        x = Normalizer.L_INF.transform(Colon.x);
         assertEquals(1.000000, x[0][0], 1E-4);
         assertEquals(0.636625, x[0][1], 1E-4);
         assertEquals(0.496356, x[0][2], 1E-4);
