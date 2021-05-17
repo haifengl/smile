@@ -85,6 +85,10 @@ public interface DataFrameRegression extends Regression<Tuple> {
         double[] y = formula.y(data).toDoubleArray();
 
         FeatureTransform preprocessor = FeatureTransform.of(transformer, x);
+        if (preprocessor != null) {
+            x = preprocessor.transform(x);
+        }
+
         Regression<double[]> model = trainer.apply(x, y);
 
         return new DataFrameRegression() {
