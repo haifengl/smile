@@ -334,7 +334,7 @@ public interface TimeFunction extends Serializable {
             return linear(initLearningRate, decaySteps, endLearningRate);
         }
 
-        Pattern polynomial = Pattern.compile(String.format("polynomial(?:decay)?\\((%s),\\s*(%s),\\s*(%s),\\s*(%s)(,\\s*%s)?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        Pattern polynomial = Pattern.compile(String.format("polynomial(?:decay)?\\((%s),\\s*(%s),\\s*(%s),\\s*(%s)(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
         m = polynomial.matcher(time);
         if (m.matches()) {
             double degree = Double.parseDouble(m.group(1));
@@ -354,7 +354,7 @@ public interface TimeFunction extends Serializable {
             }
         }
 
-        Pattern inverse = Pattern.compile(String.format("inverse(?:timedecay)?\\((%s),\\s*(%s)(?:,\\s*(%s))?(?:,\\s*%s)?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        Pattern inverse = Pattern.compile(String.format("inverse(?:timedecay)?\\((%s),\\s*(%s)(,\\s*(%s))?(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
         m = inverse.matcher(time);
         if (m.matches()) {
             double initLearningRate = Double.parseDouble(m.group(1));
@@ -362,13 +362,13 @@ public interface TimeFunction extends Serializable {
             if (m.group(3) == null) {
                 return inverse(initLearningRate, decaySteps);
             } else {
-                double endLearningRate = Double.parseDouble(m.group(3));
-                boolean staircase = m.group(4) == null ? false : m.group(4).equals("true");
+                double endLearningRate = Double.parseDouble(m.group(4));
+                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
                 return inverse(initLearningRate, decaySteps, endLearningRate, staircase);
             }
         }
 
-        Pattern exp = Pattern.compile(String.format("exp(?:onentialdecay)?\\((%s),\\s*(%s)(?:,\\s*(%s))?(?:,\\s*%s)?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
+        Pattern exp = Pattern.compile(String.format("exp(?:onentialdecay)?\\((%s),\\s*(%s)(,\\s*(%s))?(,\\s*(%s))?\\)", DOUBLE_REGEX, DOUBLE_REGEX, DOUBLE_REGEX, BOOLEAN_REGEX));
         m = exp.matcher(time);
         if (m.matches()) {
             double initLearningRate = Double.parseDouble(m.group(1));
@@ -376,8 +376,8 @@ public interface TimeFunction extends Serializable {
             if (m.group(3) == null) {
                 return exp(initLearningRate, decaySteps);
             } else {
-                double endLearningRate = Double.parseDouble(m.group(3));
-                boolean staircase = m.group(4) == null ? false : m.group(4).equals("true");
+                double endLearningRate = Double.parseDouble(m.group(4));
+                boolean staircase = m.group(5) == null ? false : m.group(6).equals("true");
                 return exp(initLearningRate, decaySteps, endLearningRate, staircase);
             }
         }
