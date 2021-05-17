@@ -221,15 +221,15 @@ public class TimeFunctionTest {
     @Test(expected = Test.None.class)
     public void testParse() {
         System.out.println("parse");
-        TimeFunction.of("0.01");
-        TimeFunction.of("piecewise([5, 10], [0.1, 0.01, 0.001])");
-        TimeFunction.of("linear(0.1, 9, 0.01)");
-        TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01)");
-        TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01, true)");
-        TimeFunction.of("inverse(0.1, 10, 0.1)");
-        TimeFunction.of("inverse(0.1, 10, 0.1, true)");
-        TimeFunction.of("exp(0.1, 10, 0.9)");
-        TimeFunction.of("exp(0.1, 10, 0.9, false)");
+        System.out.println(TimeFunction.of("0.01"));
+        System.out.println(TimeFunction.of("piecewise([5, 10], [0.1, 0.01, 0.001])"));
+        System.out.println(TimeFunction.of("linear(0.1, 9, 0.01)"));
+        System.out.println(TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01)"));
+        System.out.println(TimeFunction.of("polynomial(0.5, 0.1, 9, 0.01, true)"));
+        System.out.println(TimeFunction.of("inverse(0.1, 10, 0.1)"));
+        System.out.println(TimeFunction.of("inverse(0.1, 10, 0.1, true)"));
+        System.out.println(TimeFunction.of("exp(0.1, 10, 0.9)"));
+        System.out.println(TimeFunction.of("exp(0.1, 10, 0.9, false)"));
     }
 
     @Test(expected = Test.None.class)
