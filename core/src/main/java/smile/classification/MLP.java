@@ -230,6 +230,22 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         t++;
     }
 
+    /** Sets the network target vector. */
+    private void setTarget(int y) {
+        int n = output.getOutputSize();
+
+        double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
+        double f = 1.0 - t;
+
+        double[] target = this.target.get();
+        if (n == 1) {
+            target[0] = y == 1 ? t : f;
+        } else {
+            Arrays.fill(target, f);
+            target[y] = t;
+        }
+    }
+
     /**
      * Fits a MLP model.
      * @param x the training dataset.
@@ -241,7 +257,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         int p = x[0].length;
         int k = MathEx.max(y) + 1;
 
-        LayerBuilder[] layers = Layer.of(k, prop.getProperty("smile.mlp.layers", String.format("Input(%d)|ReLU(100)", p)));
+        LayerBuilder[] layers = Layer.of(k, p, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
         MLP model = new MLP(layers);
         model.setProperties(prop);
 
@@ -263,21 +279,5 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         }
 
         return model;
-    }
-
-    /** Sets the network target vector. */
-    private void setTarget(int y) {
-        int n = output.getOutputSize();
-
-        double t = output.cost() == Cost.LIKELIHOOD ? 1.0 : 0.9;
-        double f = 1.0 - t;
-
-        double[] target = this.target.get();
-        if (n == 1) {
-            target[0] = y == 1 ? t : f;
-        } else {
-            Arrays.fill(target, f);
-            target[y] = t;
-        }
     }
 }

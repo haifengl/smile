@@ -139,7 +139,7 @@ import smile.util.Strings;
         int p = x[0].length;
 
         Scaler scaler = Scaler.of(prop.getProperty("smile.mlp.scaler"), y);
-        LayerBuilder[] layers = Layer.of(0, prop.getProperty("smile.mlp.layers", String.format("Input(%d)|ReLU(100)", p)));
+        LayerBuilder[] layers = Layer.of(0, p, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
         MLP model = new MLP(scaler, layers);
         model.setProperties(prop);
 
