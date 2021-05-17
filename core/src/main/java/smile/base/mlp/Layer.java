@@ -25,7 +25,6 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import smile.feature.FeatureTransform;
 import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.util.Regex;
@@ -569,7 +568,7 @@ public abstract class Layer implements Serializable {
     public static LayerBuilder[] of(int k, int p, String spec) {
         Pattern regex = Pattern.compile(String.format("(\\w+)\\((%s)(,\\s*(%s))?\\)", Regex.INTEGER_REGEX, Regex.DOUBLE_REGEX));
         String[] layers = spec.split("\\|");
-        ArrayList<LayerBuilder> builders = new ArrayList<LayerBuilder>();
+        ArrayList<LayerBuilder> builders = new ArrayList<>();
         for (int i = 0; i < layers.length; i++) {
             Matcher m = regex.matcher(layers[i]);
             if (m.matches()) {
@@ -581,7 +580,7 @@ public abstract class Layer implements Serializable {
                 }
 
                 if (i == 0 && !activation.equalsIgnoreCase("input")) {
-                    builders.add(Layer.input(p, dropout));
+                    builders.add(Layer.input(p));
                 }
 
                 builders.add(Layer.builder(activation, neurons, dropout));

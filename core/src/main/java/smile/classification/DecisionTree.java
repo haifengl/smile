@@ -137,7 +137,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         DecisionNode node = (DecisionNode) leaf;
-        BaseVector xj = x.column(j);
+        BaseVector<?, ?, ?> xj = x.column(j);
         int[] falseCount = new int[k];
 
         Split split = null;
@@ -337,7 +337,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     public static DecisionTree fit(Formula formula, DataFrame data, SplitRule rule, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
         ClassLabels codec = ClassLabels.fit(y);
 
         DecisionTree tree = new DecisionTree(x, codec.y, y.field(), codec.k, rule, maxDepth, maxNodes, nodeSize, -1, null, null);

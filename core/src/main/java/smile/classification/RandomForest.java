@@ -292,7 +292,7 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         if (mtry > x.ncol()) {
             throw new IllegalArgumentException("Invalid number of variables to split on at a node of the tree: " + mtry);

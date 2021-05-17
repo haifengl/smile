@@ -17,8 +17,6 @@
 
 package smile.base.mlp;
 
-import smile.feature.FeatureTransform;
-
 import java.io.IOException;
 
 /**

@@ -266,7 +266,7 @@ public class GradientTreeBoost extends AbstractClassifier<Tuple> implements Data
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         int[][] order = CART.order(x);
         ClassLabels codec = ClassLabels.fit(y);

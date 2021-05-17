@@ -116,7 +116,7 @@ public class ClassLabels implements Serializable {
      * @param response the sample labels.
      * @return the class label mapping.
      */
-    public static ClassLabels fit(BaseVector response) {
+    public static ClassLabels fit(BaseVector<?, ?, ?> response) {
         int[] y = response.toIntArray();
 
         Measure measure = response.measure();

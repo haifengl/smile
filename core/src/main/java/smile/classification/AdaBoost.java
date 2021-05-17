@@ -177,7 +177,7 @@ public class AdaBoost extends AbstractClassifier<Tuple> implements DataFrameClas
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
 
         ClassLabels codec = ClassLabels.fit(y);
         int[][] order = CART.order(x);

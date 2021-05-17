@@ -24,9 +24,7 @@ import static java.lang.Math.max;
 
 import smile.data.DataFrame;
 import smile.data.Tuple;
-import smile.data.formula.Abs;
 import smile.data.formula.Formula;
-import smile.data.measure.NominalScale;
 import smile.data.type.StructType;
 import smile.math.MathEx;
 import smile.util.IntSet;
@@ -171,7 +169,6 @@ public class OneVersusOne<T> extends AbstractClassifier<T> {
      * @param trainer the lambda to train binary classifiers.
      * @return the model.
      */
-    @SuppressWarnings("unchecked")
     public static DataFrameClassifier fit(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         Tuple[] x = data.stream().toArray(Tuple[]::new);
         int[] y = formula.y(data).toIntArray();

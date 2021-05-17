@@ -224,6 +224,7 @@ public class LASVM<T> implements Serializable {
      * Returns the cached kernel value.
      * @param i the index of support vector.
      * @param j the index of support vector.
+     * @return the kernel value.
      */
     private double k(int i, int j) {
         double k = Double.NaN;
@@ -245,6 +246,7 @@ public class LASVM<T> implements Serializable {
      * @param v1 the first vector of working set.
      * @param v2 the second vector of working set.
      * @param epsgr the tolerance of convergence test.
+     * @return true if NOT pass convergence test.
      */
     private boolean smo(SupportVector<T> v1, SupportVector<T> v2, double epsgr) {
         // SMO working set selection
@@ -408,6 +410,7 @@ public class LASVM<T> implements Serializable {
     /**
      * Reprocess support vectors.
      * @param epsgr the tolerance of convergence test.
+     * @return true if NOT pass convergence test.
      */
     private boolean reprocess(double epsgr) {
         boolean status = smo(null, null, epsgr);
