@@ -2272,10 +2272,10 @@ public class Matrix extends DMatrix {
      * <p>
      * A stochastic matrix, probability matrix, or transition matrix is used to
      * describe the transitions of a Markov chain. A right stochastic matrix is
-     * a square matrix each of whose rows consists of nonnegative real numbers,
+     * a square matrix each of whose rows consists of non-negative real numbers,
      * with each row summing to 1. A left stochastic matrix is a square matrix
-     * whose columns consist of nonnegative real numbers whose sum is 1. A doubly
-     * stochastic matrix where all entries are nonnegative and all rows and all
+     * whose columns consist of non-negative real numbers whose sum is 1. A doubly
+     * stochastic matrix where all entries are non-negative and all rows and all
      * columns sum to 1. A stationary probability vector &pi; is defined as a
      * vector that does not change under application of the transition matrix;
      * that is, it is defined as a left eigenvector of the probability matrix,

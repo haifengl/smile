@@ -257,7 +257,7 @@ fun <T> umap(data: Array<T>, distance: Distance<T>, k: Int = 15, d: Int = 2, ite
  * distance metric. However, when Euclidean distances are used MDS is
  * equivalent to PCA.
  *
- * @param proximity the nonnegative proximity matrix of dissimilarities. The
+ * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and
  *                  symmetric. For pairwise distances matrix, it should be just the plain
  *                  distance, not squared.
@@ -286,7 +286,7 @@ fun mds(proximity: Array<DoubleArray>, k: Int, positive: Boolean = false): MDS {
  * distances is usually not possible. The relationship is typically found
  * using isotonic regression.
  *
- * @param proximity the nonnegative proximity matrix of dissimilarities. The
+ * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and symmetric.
  * @param k the dimension of the projection.
  * @param tol tolerance for stopping iterations.
@@ -325,7 +325,7 @@ fun isomds(proximity: Array<DoubleArray>, k: Int, tol: Double = 0.0001, maxIter:
  * iterative algorithm such as gradient descent suggested by Sammon. Kohonen
  * also provides a heuristic that is simple and works reasonably well.
  *
- * @param proximity the nonnegative proximity matrix of dissimilarities. The
+ * @param proximity the non-negative proximity matrix of dissimilarities. The
  *                  diagonal should be zero and all other elements should be positive and symmetric.
  * @param k         the dimension of the projection.
  * @param lambda    initial value of the step size constant in diagonal Newton method.

@@ -25,7 +25,7 @@ import smile.math.matrix.Matrix;
 
 /**
  * An interface to calculate a distance measure between two objects. A distance
- * function maps pairs of points into the nonnegative reals and has to satisfy
+ * function maps pairs of points into the non-negative reals and has to satisfy
  * <ul>
  * <li> non-negativity: {@code d(x, y) >= 0}
  * <li> isolation: {@code d(x, y) = 0} if and only if {@code x = y}
