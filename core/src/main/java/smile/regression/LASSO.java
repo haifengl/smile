@@ -93,13 +93,13 @@ public class LASSO {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda = Double.parseDouble(prop.getProperty("smile.lasso.lambda", "1"));
-        double tol = Double.parseDouble(prop.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.lasso.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.max_iterations", "1000"));
         return fit(formula, data, lambda, tol, maxIter);
     }
 

@@ -130,19 +130,19 @@ import smile.util.Strings;
      * Fits a MLP model.
      * @param x the training dataset.
      * @param y the response variable.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static MLP fit(double[][] x, double[] y, Properties prop) {
+    public static MLP fit(double[][] x, double[] y, Properties params) {
         int p = x[0].length;
 
-        Scaler scaler = Scaler.of(prop.getProperty("smile.mlp.scaler"), y);
-        LayerBuilder[] layers = Layer.of(0, p, prop.getProperty("smile.mlp.layers", "ReLU(100)"));
+        Scaler scaler = Scaler.of(params.getProperty("smile.mlp.scaler"), y);
+        LayerBuilder[] layers = Layer.of(0, p, params.getProperty("smile.mlp.layers", "ReLU(100)"));
         MLP model = new MLP(scaler, layers);
-        model.setParameters(prop);
+        model.setParameters(params);
 
-        int epochs = Integer.parseInt(prop.getProperty("smile.mlp.epochs", "100"));
-        int batch = Integer.parseInt(prop.getProperty("smile.mlp.mini_batch", "256"));
+        int epochs = Integer.parseInt(params.getProperty("smile.mlp.epochs", "100"));
+        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "256"));
         double[][] batchx = new double[batch][];
         double[] batchy = new double[batch];
         for (int epoch = 1; epoch <= epochs; epoch++) {

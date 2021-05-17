@@ -146,14 +146,14 @@ public class SVR {
      * Fits a epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Regression<double[]> fit(double[][] x, double[] y, Properties prop) {
-        MercerKernel<double[]> kernel = MercerKernel.of(prop.getProperty("smile.svm.kernel", "linear"));
-        double eps = Double.parseDouble(prop.getProperty("smile.svm.epsilon", "1.0"));
-        double C = Double.parseDouble(prop.getProperty("smile.svm.C", "1.0"));
-        double tol = Double.parseDouble(prop.getProperty("smile.svm.tolerance", "1E-3"));
+    public static Regression<double[]> fit(double[][] x, double[] y, Properties params) {
+        MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.svm.kernel", "linear"));
+        double eps = Double.parseDouble(params.getProperty("smile.svm.epsilon", "1.0"));
+        double C = Double.parseDouble(params.getProperty("smile.svm.C", "1.0"));
+        double tol = Double.parseDouble(params.getProperty("smile.svm.tolerance", "1E-3"));
 
         if (kernel instanceof LinearKernel) {
             return SVR.fit(x, y, eps, C, tol);
