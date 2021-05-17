@@ -94,6 +94,28 @@ public abstract class Layer implements Serializable {
     protected transient ThreadLocal<byte[]> mask;
 
     /**
+     * Constructor for input layer.
+     *
+     * @param n the number of neurons.
+     * @param dropout the dropout rate.
+     */
+    Layer(int n, double dropout) {
+        if (dropout < 0.0 || dropout >= 1.0) {
+            throw new IllegalArgumentException("Invalid dropout rate: " + dropout);
+        }
+
+        this.n = n;
+        this.p = n;
+        this.dropout = dropout;
+
+        output = ThreadLocal.withInitial(() -> new double[n]);
+
+        if (dropout > 0.0) {
+            mask = ThreadLocal.withInitial(() -> new byte[n]);
+        }
+    }
+
+    /**
      * Constructor. Randomly initialized weights and zero bias.
      *
      * @param n the number of neurons.
@@ -159,19 +181,16 @@ public abstract class Layer implements Serializable {
      */
     private void init() {
         output = ThreadLocal.withInitial(() -> new double[n]);
+        outputGradient = ThreadLocal.withInitial(() -> new double[n]);
+        weightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
+        biasGradient = ThreadLocal.withInitial(() -> new double[n]);
+        rmsWeightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
+        rmsBiasGradient = ThreadLocal.withInitial(() -> new double[n]);
+        weightUpdate = ThreadLocal.withInitial(() -> new Matrix(n, p));
+        biasUpdate = ThreadLocal.withInitial(() -> new double[n]);
 
         if (dropout > 0.0) {
             mask = ThreadLocal.withInitial(() -> new byte[n]);
-        }
-
-        if (!(this instanceof InputLayer)) {
-            outputGradient = ThreadLocal.withInitial(() -> new double[n]);
-            weightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
-            biasGradient = ThreadLocal.withInitial(() -> new double[n]);
-            rmsWeightGradient = ThreadLocal.withInitial(() -> new Matrix(n, p));
-            rmsBiasGradient = ThreadLocal.withInitial(() -> new double[n]);
-            weightUpdate = ThreadLocal.withInitial(() -> new Matrix(n, p));
-            biasUpdate = ThreadLocal.withInitial(() -> new double[n]);
         }
     }
 
