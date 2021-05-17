@@ -198,12 +198,12 @@ public class RBFNetwork<T> extends AbstractClassifier<T> {
      * Fits a RBF network.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties prop) {
-        int neurons = Integer.parseInt(prop.getProperty("smile.rbf.neurons", "30"));
-        boolean normalize = Boolean.parseBoolean(prop.getProperty("smile.rbf.normalize", "false"));
+    public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {
+        int neurons = Integer.parseInt(params.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.rbf.normalize", "false"));
         return RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize);
     }
 

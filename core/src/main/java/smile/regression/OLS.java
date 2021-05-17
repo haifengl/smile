@@ -96,13 +96,13 @@ public class OLS {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        String method = prop.getProperty("smile.ols.method", "qr");
-        boolean stderr = Boolean.parseBoolean(prop.getProperty("smile.ols.standard.error", "true"));
-        boolean recursive = Boolean.parseBoolean(prop.getProperty("smile.ols.recursive", "true"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        String method = params.getProperty("smile.ols.method", "qr");
+        boolean stderr = Boolean.parseBoolean(params.getProperty("smile.ols.standard_error", "true"));
+        boolean recursive = Boolean.parseBoolean(params.getProperty("smile.ols.recursive", "true"));
         return fit(formula, data, method, stderr, recursive);
     }
     

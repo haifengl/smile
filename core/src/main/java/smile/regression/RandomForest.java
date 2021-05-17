@@ -150,16 +150,16 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static RandomForest fit(Formula formula, DataFrame data, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.random.forest.trees", "500"));
-        int mtry = Integer.parseInt(prop.getProperty("smile.random.forest.mtry", "0"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.random.forest.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.random.forest.max.nodes", String.valueOf(data.size() / 5)));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.random.forest.node.size", "5"));
-        double subsample = Double.parseDouble(prop.getProperty("smile.random.forest.sample.rate", "1.0"));
+    public static RandomForest fit(Formula formula, DataFrame data, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.random_forest.trees", "500"));
+        int mtry = Integer.parseInt(params.getProperty("smile.random_forest.mtry", "0"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.random_forest.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.random_forest.max_nodes", String.valueOf(data.size() / 5)));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.random_forest.node_size", "5"));
+        double subsample = Double.parseDouble(params.getProperty("smile.random_forest.sampling_rate", "1.0"));
         return fit(formula, data, ntrees, mtry, maxDepth, maxNodes, nodeSize, subsample);
     }
 
