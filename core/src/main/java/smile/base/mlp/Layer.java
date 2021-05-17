@@ -47,13 +47,7 @@ public abstract class Layer implements Serializable {
      * The dropout rate. Dropout randomly sets input units to 0 with this rate
      * at each step during training time, which helps prevent overfitting.
      */
-    protected final double dropoutRate;
-    /**
-     * The dropout scaling factor.
-     * Inputs not set to 0 are scaled up by 1/(1 - rate) such that the sum
-     * over all inputs is unchanged.
-     */
-    protected final double dropoutScale;
+    protected final double dropout;
     /**
      * The affine transformation matrix.
      */
@@ -97,7 +91,7 @@ public abstract class Layer implements Serializable {
     /**
      * The dropout mask.
      */
-    protected transient ThreadLocal<byte[]> dropoutMask;
+    protected transient ThreadLocal<byte[]> mask;
 
     /**
      * Constructor. Randomly initialized weights and zero bias.
@@ -144,8 +138,7 @@ public abstract class Layer implements Serializable {
         this.p = weight.ncol();
         this.weight = weight;
         this.bias = bias;
-        this.dropoutRate = dropout;
-        this.dropoutScale = dropout > 0 ? 1.0 / (1.0 - dropout) : 1.0;
+        this.dropout = dropout;
 
         init();
     }
@@ -167,8 +160,8 @@ public abstract class Layer implements Serializable {
     private void init() {
         output = ThreadLocal.withInitial(() -> new double[n]);
 
-        if (dropoutRate > 0.0) {
-            dropoutMask = ThreadLocal.withInitial(() -> new byte[n]);
+        if (dropout > 0.0) {
+            mask = ThreadLocal.withInitial(() -> new byte[n]);
         }
 
         if (!(this instanceof InputLayer)) {
@@ -231,13 +224,14 @@ public abstract class Layer implements Serializable {
      * during training.
      */
     public void propagateDropout() {
-        if (dropoutRate > 0.0) {
+        if (dropout > 0.0) {
             double[] output = this.output.get();
-            byte[] mask = this.dropoutMask.get();
+            byte[] mask = this.mask.get();
+            double scale = 1.0 / (1.0 - dropout);
             for (int i = 0; i < n; i++) {
-                byte retain = (byte) (MathEx.random() < dropoutRate ? 0 : 1);
+                byte retain = (byte) (MathEx.random() < dropout ? 0 : 1);
                 mask[i] = retain;
-                output[i] *= retain * dropoutScale;
+                output[i] *= retain * scale;
             }
         }
     }
@@ -258,11 +252,12 @@ public abstract class Layer implements Serializable {
      * Propagates the errors back through the (implicit) dropout layer.
      */
     public void backpopagateDropout() {
-        if (dropoutRate > 0.0) {
+        if (dropout > 0.0) {
             double[] gradient = this.outputGradient.get();
-            byte[] mask = this.dropoutMask.get();
+            byte[] mask = this.mask.get();
+            double scale = 1.0 / (1.0 - dropout);
             for (int i = 0; i < n; i++) {
-                gradient[i] *= mask[i] * dropoutScale;
+                gradient[i] *= mask[i] * scale;
             }
         }
     }
