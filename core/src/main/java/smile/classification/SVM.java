@@ -202,16 +202,16 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
      * Fits a binary or multiclass SVM.
      * @param x training samples.
      * @param y training labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static Classifier<double[]> fit(double[][] x, int[] y, Properties prop) {
-        MercerKernel<double[]> kernel = MercerKernel.of(prop.getProperty("smile.svm.kernel", "linear"));
-        double C = Double.parseDouble(prop.getProperty("smile.svm.C", "1.0"));
-        double tol = Double.parseDouble(prop.getProperty("smile.svm.tolerance", "1E-3"));
+    public static Classifier<double[]> fit(double[][] x, int[] y, Properties params) {
+        MercerKernel<double[]> kernel = MercerKernel.of(params.getProperty("smile.svm.kernel", "linear"));
+        double C = Double.parseDouble(params.getProperty("smile.svm.C", "1.0"));
+        double tol = Double.parseDouble(params.getProperty("smile.svm.tolerance", "1E-3"));
 
         int[] classes = MathEx.unique(y);
-        String trainer = prop.getProperty("svm", classes.length == 2 ? "binary" : "ovr").toLowerCase();
+        String trainer = params.getProperty("svm", classes.length == 2 ? "binary" : "ovr").toLowerCase();
         switch (trainer) {
             case "ovr":
                 if (kernel instanceof LinearKernel) {

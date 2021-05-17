@@ -240,15 +240,15 @@ public class CRF implements Serializable {
      * Fits a CRF model.
      * @param sequences the training data.
      * @param labels the training sequence labels.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties prop) {
-        int ntrees = Integer.parseInt(prop.getProperty("smile.crf.trees", "100"));
-        int maxDepth = Integer.parseInt(prop.getProperty("smile.crf.max.depth", "20"));
-        int maxNodes = Integer.parseInt(prop.getProperty("smile.crf.max.nodes", "100"));
-        int nodeSize = Integer.parseInt(prop.getProperty("smile.crf.node.size", "5"));
-        double shrinkage = Double.parseDouble(prop.getProperty("smile.crf.shrinkage", "1.0"));
+    public static CRF fit(Tuple[][] sequences, int[][] labels, Properties params) {
+        int ntrees = Integer.parseInt(params.getProperty("smile.crf.trees", "100"));
+        int maxDepth = Integer.parseInt(params.getProperty("smile.crf.max_depth", "20"));
+        int maxNodes = Integer.parseInt(params.getProperty("smile.crf.max_nodes", "100"));
+        int nodeSize = Integer.parseInt(params.getProperty("smile.crf.node_size", "5"));
+        double shrinkage = Double.parseDouble(params.getProperty("smile.crf.shrinkage", "1.0"));
         return fit(sequences, labels, ntrees, maxDepth, maxNodes, nodeSize, shrinkage);
     }
 

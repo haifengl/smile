@@ -51,14 +51,14 @@ public class ElasticNet {
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
-     * @param prop the hyper-parameters.
+     * @param params the hyper-parameters.
      * @return the model.
      */
-    public static LinearModel fit(Formula formula, DataFrame data, Properties prop) {
-        double lambda1 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda1"));
-        double lambda2 = Double.parseDouble(prop.getProperty("smile.elastic.net.lambda2"));
-        double tol = Double.parseDouble(prop.getProperty("smile.elastic.net.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(prop.getProperty("smile.elastic.net.max.iterations", "1000"));
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda1 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda1"));
+        double lambda2 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda2"));
+        double tol = Double.parseDouble(params.getProperty("smile.elastic_net.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.max_iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 
