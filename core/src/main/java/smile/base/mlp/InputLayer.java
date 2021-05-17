@@ -35,7 +35,16 @@ public class InputLayer extends Layer {
      * @param p the number of input variables (not including bias value).
      */
     public InputLayer(int p) {
-        this(p, 0.0, null);
+        this(p, 0.0);
+    }
+
+    /**
+     * Constructor.
+     * @param p the number of input variables (not including bias value).
+     * @param dropout the dropout rate.
+     */
+    public InputLayer(int p, double dropout) {
+        this(p, dropout, null);
     }
 
     /**
@@ -52,8 +61,8 @@ public class InputLayer extends Layer {
     @Override
     public String toString() {
         String s = String.format("Input(%d", p);
-        if (dropoutRate > 0.0) {
-            s = String.format("%s, %.2f", s, dropoutRate);
+        if (dropout > 0.0) {
+            s = String.format("%s, %.2f", s, dropout);
         }
         if (transformer != null) {
             s = String.format("%s, %s", s, transformer.getClass().getSimpleName());

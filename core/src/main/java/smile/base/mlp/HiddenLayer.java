@@ -41,8 +41,8 @@ public class HiddenLayer extends Layer {
 
     @Override
     public String toString() {
-        if (dropoutRate > 0.0) {
-            return String.format("%s(%d, %.2f)", activation.name(), n, dropoutRate);
+        if (dropout > 0.0) {
+            return String.format("%s(%d, %.2f)", activation.name(), n, dropout);
         } else {
             return String.format("%s(%d)", activation.name(), n);
         }
