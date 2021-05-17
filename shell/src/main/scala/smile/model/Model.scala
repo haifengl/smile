@@ -59,7 +59,8 @@ case class ClassificationModel(override val algorithm: String,
 object ClassificationModel {
   /**
     * Trains a classification model.
-    * @param algorithm the algorithm name.
+    * @param algorithm the learning algorithm.
+    * @param transform the feature transform algorithm.
     * @param formula the model formula.
     * @param data the training data.
     * @param prop the hyperparameters.
@@ -69,20 +70,20 @@ object ClassificationModel {
     * @param test the test data.
     * @return the classification model.
     */
-  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties,
+  def apply(algorithm: String, transform: String, formula: Formula, data: DataFrame, prop: Properties,
             kfold: Int = 1, round: Int = 1, ensemble: Boolean = false,
             test: Option[DataFrame] = None): ClassificationModel = {
     val start = System.nanoTime()
     val (model, validationMetrics) = if (kfold < 2) {
-      val model = fit(algorithm, formula, data, prop)
+      val model = fit(algorithm, transform, formula, data, prop)
       (model, None)
     } else {
-      val cv = CrossValidation.stratify(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, prop))
+      val cv = CrossValidation.stratify(round, kfold, formula, data, (f, d) => fit(algorithm, transform, f, d, prop))
       val models = cv.rounds.asScala.map(round => round.model).toArray
       val model = if (ensemble)
         DataFrameClassifier.ensemble(models: _*)
       else
-        fit(algorithm, formula, data, prop)
+        fit(algorithm, transform, formula, data, prop)
 
       (model, Some(cv.avg))
     }
@@ -99,38 +100,39 @@ object ClassificationModel {
 
   /**
     * Trains a classification model.
-    * @param algorithm the algorithm name.
+    * @param algorithm the learning algorithm.
+    * @param transform the feature transform algorithm.
     * @param formula the model formula.
     * @param data the training data.
     * @param prop the hyperparameters.
     * @return the classification model.
     */
-  def fit(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): DataFrameClassifier = {
+  def fit(algorithm: String, transform: String, formula: Formula, data: DataFrame, prop: Properties): DataFrameClassifier = {
     algorithm match {
       case "random.forest" =>
         smile.classification.RandomForest.fit(formula, data, prop)
       case "gradient.boost" =>
         smile.classification.GradientTreeBoost.fit(formula, data, prop)
+      case "ada.boost" =>
+        AdaBoost.fit(formula, data, prop)
       case "cart" =>
         DecisionTree.fit(formula, data, prop)
-      case "adaboost" =>
-        AdaBoost.fit(formula, data, prop)
       case "logit" =>
-        DataFrameClassifier.of(formula, data, (x, y) => LogisticRegression.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => LogisticRegression.fit(x, y, prop))
       case "fld" =>
-        DataFrameClassifier.of(formula, data, (x, y) => FLD.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => FLD.fit(x, y, prop))
       case "lda" =>
-        DataFrameClassifier.of(formula, data, (x, y) => LDA.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => LDA.fit(x, y, prop))
       case "qda" =>
-        DataFrameClassifier.of(formula, data, (x, y) => QDA.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => QDA.fit(x, y, prop))
       case "rda" =>
-        DataFrameClassifier.of(formula, data, (x, y) => RDA.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => RDA.fit(x, y, prop))
       case "mlp" =>
-        DataFrameClassifier.of(formula, data, (x, y) => MLP.fit(x, y, prop));
+        DataFrameClassifier.of(transform, formula, data, (x, y) => MLP.fit(x, y, prop));
       case "svm" =>
-        DataFrameClassifier.of(formula, data, (x, y) => SVM.fit(x, y, prop));
+        DataFrameClassifier.of(transform, formula, data, (x, y) => SVM.fit(x, y, prop));
       case "rbf" =>
-        DataFrameClassifier.of(formula, data, (x, y) => RBFNetwork.fit(x, y, prop))
+        DataFrameClassifier.of(transform, formula, data, (x, y) => RBFNetwork.fit(x, y, prop))
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }
@@ -158,7 +160,8 @@ case class RegressionModel(override val algorithm: String,
 object RegressionModel {
   /**
     * Trains a regression model.
-    * @param algorithm the algorithm name.
+    * @param algorithm the learning algorithm.
+    * @param transform the feature transform algorithm.
     * @param formula the model formula.
     * @param data the training data.
     * @param prop the hyperparameters.
@@ -168,20 +171,20 @@ object RegressionModel {
     * @param test the test data.
     * @return the regression model.
     */
-  def apply(algorithm: String, formula: Formula, data: DataFrame, prop: Properties,
+  def apply(algorithm: String, transform: String, formula: Formula, data: DataFrame, prop: Properties,
             kfold: Int = 1, round: Int = 1, ensemble: Boolean = false,
             test: Option[DataFrame] = None): RegressionModel = {
     val start = System.nanoTime()
     val (model, validationMetrics) = if (kfold < 2) {
-      val model = fit(algorithm, formula, data, prop)
+      val model = fit(algorithm, transform, formula, data, prop)
       (model, None)
     } else {
-      val cv = CrossValidation.regression(round, kfold, formula, data, (f, d) => fit(algorithm, f, d, prop))
+      val cv = CrossValidation.regression(round, kfold, formula, data, (f, d) => fit(algorithm, transform, f, d, prop))
       val models = cv.rounds.asScala.map(round => round.model).toArray
       val model = if (ensemble)
         DataFrameRegression.ensemble(models: _*)
       else
-        fit(algorithm, formula, data, prop)
+        fit(algorithm, transform, formula, data, prop)
 
       (model, Some(cv.avg))
     }
@@ -198,13 +201,14 @@ object RegressionModel {
 
   /**
     * Trains a regression model.
-    * @param algorithm the algorithm name.
+    * @param algorithm the learning algorithm.
+    * @param transform the feature transform algorithm.
     * @param formula the model formula.
     * @param data the training data.
     * @param prop the hyperparameters.
     * @return the regression model.
     */
-  def fit(algorithm: String, formula: Formula, data: DataFrame, prop: Properties): DataFrameRegression = {
+  def fit(algorithm: String, transform: String, formula: Formula, data: DataFrame, prop: Properties): DataFrameRegression = {
     algorithm match {
       case "random.forest" =>
         smile.regression.RandomForest.fit(formula, data, prop)
@@ -221,13 +225,13 @@ object RegressionModel {
       case "ridge" =>
         RidgeRegression.fit(formula, data, prop)
       case "gaussian.process" =>
-        DataFrameRegression.of(formula, data, (x, y) => GaussianProcessRegression.fit(x, y, prop))
+        DataFrameRegression.of(transform, formula, data, (x, y) => GaussianProcessRegression.fit(x, y, prop))
       case "mlp" =>
-        DataFrameRegression.of(formula, data, (x, y) => smile.regression.MLP.fit(x, y, prop));
+        DataFrameRegression.of(transform, formula, data, (x, y) => smile.regression.MLP.fit(x, y, prop));
       case "svm" =>
-        DataFrameRegression.of(formula, data, (x, y) => SVR.fit(x, y, prop))
+        DataFrameRegression.of(transform, formula, data, (x, y) => SVR.fit(x, y, prop))
       case "rbf" =>
-        DataFrameRegression.of(formula, data, (x, y) => smile.regression.RBFNetwork.fit(x, y, prop))
+        DataFrameRegression.of(transform, formula, data, (x, y) => smile.regression.RBFNetwork.fit(x, y, prop))
       case _ =>
         throw new IllegalArgumentException("Unsupported algorithm: " + algorithm)
     }

@@ -42,9 +42,10 @@ import smile.validation._
 case class TrainConfig(algorithm: String = "",
                        formula: String = "",
                        train: String = "",
-                       test: String = "",
+                       test: Option[String] = None,
                        format: String = "",
                        model: String = "",
+                       transform: String = null,
                        classification: Boolean = true,
                        kfold: Int = 1,
                        round: Int = 1,
@@ -63,19 +64,19 @@ object Train {
     parse(args) match {
       case Some(config) =>
         val data = Read.data(config.train, config.format)
-        val test = if (config.test.isEmpty) None else Some(Read.data(config.test, config.format))
+        val test = config.test.map(Read.data(_, config.format))
 
         val formula = getFormula(config, data)
         val props = getHyperparameters(config.algorithm, config.params)
 
         if (config.classification) {
-          val model = ClassificationModel(config.algorithm, formula, data, props, config.kfold, config.round, config.ensemble, test)
+          val model = ClassificationModel(config.algorithm, config.transform, formula, data, props, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
           model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
           model.test.map(metrics => println(s"Test metrics: ${metrics}"))
           smile.write(model, config.model)
         } else {
-          val model = RegressionModel(config.algorithm, formula, data, props, config.kfold, config.round, config.ensemble, test)
+          val model = RegressionModel(config.algorithm, config.transform, formula, data, props, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
           model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
           model.test.map(metrics => println(s"Test metrics: ${metrics}"))
@@ -103,7 +104,7 @@ object Train {
         head("Smile", "2.x"),
         opt[String]("algo")
           .required()
-          .valueName("<random.forest, gbt, adaboost, cart, logit, fld, lda, qda, rda, ols, lasso, elastic.net, ridge>")
+          .valueName("<random.forest, gradient.boost, ada.boost, cart, logit, mlp, svm, rbf, gaussian.process, fld, lda, qda, rda, ols, lasso, elastic.net, ridge>")
           .action((x, c) => c.copy(algorithm = x))
           .text("The algorithm to train the model"),
         opt[String]("formula")
@@ -119,8 +120,13 @@ object Train {
         opt[String]("test")
           .optional()
           .valueName("<file>")
-          .action((x, c) => c.copy(test = x))
-          .text("The test data file"),
+          .action((x, c) => c.copy(test = Some(x)))
+          .text("The optional test data file"),
+        opt[String]("transform")
+          .optional()
+          .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+          .action((x, c) => c.copy(transform = x))
+          .text("The optional feature transformation"),
         opt[String]("format")
           .optional()
           .valueName("<csv,header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
