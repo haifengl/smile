@@ -174,10 +174,13 @@ public class Scaler implements Function {
         }
 
         Pattern standardizer = Pattern.compile(
-                String.format("standardizer\\(\\s*(%s)\\)", BOOLEAN_REGEX));
+                String.format("standardizer(\\(\\s*(%s)\\))?", BOOLEAN_REGEX));
         m = standardizer.matcher(scaler);
         if (m.matches()) {
-            boolean robust = Boolean.parseBoolean(m.group(1));
+            boolean robust = false;
+            if (m.group(1) != null) {
+                robust = Boolean.parseBoolean(m.group(2));
+            }
             return Scaler.standardizer(data, robust);
         }
 
