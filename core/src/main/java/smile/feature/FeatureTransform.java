@@ -283,10 +283,13 @@ public interface FeatureTransform extends Serializable {
         }
 
         Pattern standardizer = Pattern.compile(
-                String.format("standardizer\\(\\s*(%s)\\)", BOOLEAN_REGEX));
+                String.format("standardizer(\\(\\s*(%s)\\))?", BOOLEAN_REGEX));
         m = standardizer.matcher(transformer);
         if (m.matches()) {
-            boolean robust = Boolean.parseBoolean(m.group(1));
+            boolean robust = false;
+            if (m.group(1) != null) {
+                robust = Boolean.parseBoolean(m.group(2));
+            }
             return robust ? RobustStandardizer.fit(data) : Standardizer.fit(data);
         }
 
