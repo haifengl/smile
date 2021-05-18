@@ -99,7 +99,7 @@ public class LASSO {
     public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
         double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.max_iterations", "1000"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.iterations", "1000"));
         return fit(formula, data, lambda, tol, maxIter);
     }
 

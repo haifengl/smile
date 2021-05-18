@@ -137,7 +137,7 @@ public class GradientTreeBoost implements DataFrameRegression, TreeSHAP {
     private final double shrinkage;
 
     /**
-     * Constructor. Learns a gradient tree boosting for regression.
+     * Constructor. Fits a gradient tree boosting for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param trees forest of regression trees.

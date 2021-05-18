@@ -119,7 +119,7 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
     }
 
     /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @return the model
@@ -129,20 +129,20 @@ public class FLD extends AbstractClassifier<double[]> implements Projection<doub
     }
 
     /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @param params the hyper-parameters.
      * @return the model
      */
     public static FLD fit (double[][] x, int[] y, Properties params) {
-        int L = Integer.parseInt(params.getProperty("smile.fld.dimension", "-1"));
-        double tol = Double.parseDouble(params.getProperty("smile.fld.tolerance", "1E-4"));
+        int L = Integer.parseInt(params.getProperty("smile.fisher.dimension", "-1"));
+        double tol = Double.parseDouble(params.getProperty("smile.fisher.tolerance", "1E-4"));
         return fit(x, y, L, tol);
     }
 
     /**
-     * Learn Fisher's linear discriminant.
+     * Fits Fisher's linear discriminant.
      * @param x training samples.
      * @param y training labels.
      * @param L the dimensionality of mapped space.

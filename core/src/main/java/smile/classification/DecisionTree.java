@@ -240,7 +240,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /**
-     * Constructor. Learns a classification tree for AdaBoost and Random Forest.
+     * Constructor. Fits a classification tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param y the response variables.
      * @param response the metadata of response variable.
@@ -294,7 +294,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @return the model.
@@ -304,7 +304,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.split.rule</code>
@@ -325,7 +325,7 @@ public class DecisionTree extends CART implements Classifier<Tuple>, DataFrameCl
     }
 
     /**
-     * Learns a classification tree.
+     * Fits a classification tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param rule the splitting rule.

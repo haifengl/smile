@@ -315,9 +315,9 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the model.
      */
     public static Binomial binomial(double[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -386,9 +386,9 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @return the model.
      */
     public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -466,7 +466,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
     public static LogisticRegression fit(double[][] x, int[] y, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.max_iterations", "500"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 
@@ -478,7 +478,7 @@ public abstract class LogisticRegression extends AbstractClassifier<double[]> {
      * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
      *               weights which often has superior generalization performance,
      *               especially when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
+     * @param tol the tolerance to stop iterations.
      * @param maxIter the maximum number of iterations.
      * @return the model.
      */
