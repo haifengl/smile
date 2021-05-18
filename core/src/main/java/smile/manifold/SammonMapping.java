@@ -115,7 +115,7 @@ public class SammonMapping {
         double lambda = Double.parseDouble(params.getProperty("smile.sammon.lambda", "0.2"));
         double tol = Double.parseDouble(params.getProperty("smile.sammon.tolerance", "1E-4"));
         double stepTol = Double.parseDouble(params.getProperty("smile.sammon.step_tolerance", "1E-3"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.sammon.max_iterations", "100"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.sammon.iterations", "100"));
         return of(proximity, k, lambda, tol, stepTol, maxIter);
     }
 

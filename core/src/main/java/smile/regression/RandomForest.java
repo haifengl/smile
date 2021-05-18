@@ -135,7 +135,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -146,7 +146,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -164,7 +164,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -185,7 +185,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
     }
 
     /**
-     * Learns a random forest for regression.
+     * Fits a random forest for regression.
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.

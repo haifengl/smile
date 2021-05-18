@@ -317,7 +317,7 @@ public class GLM implements Serializable {
      */
     public static GLM fit(Formula formula, DataFrame data, Model model, Properties params) {
         double tol = Double.parseDouble(params.getProperty("smile.glm.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.glm.max_iterations", "50"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.glm.iterations", "50"));
         return fit(formula, data, model, tol, maxIter);
     }
 

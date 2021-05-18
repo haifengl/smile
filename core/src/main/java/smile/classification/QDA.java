@@ -119,7 +119,7 @@ public class QDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learn quadratic discriminant analysis.
+     * Fits quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @return the model.
@@ -129,7 +129,7 @@ public class QDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learns quadratic discriminant analysis.
+     * Fits quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param params the hyper-parameters.
@@ -142,7 +142,7 @@ public class QDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learn quadratic discriminant analysis.
+     * Fits quadratic discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param priori the priori probability of each class. If null, it will be

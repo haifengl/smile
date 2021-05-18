@@ -110,7 +110,7 @@ public class ICA implements Serializable {
                 throw new IllegalArgumentException("Unsupported contrast function: " + contrast);
         }
         double tol = Double.parseDouble(params.getProperty("smile.ica.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.ica.max_iterations", "100"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.ica.iterations", "100"));
         return fit(data, p, f, tol, maxIter);
     }
 

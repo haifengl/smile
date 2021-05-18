@@ -211,7 +211,7 @@ public class SVM<T> extends KernelMachine<T> implements Classifier<T> {
         double tol = Double.parseDouble(params.getProperty("smile.svm.tolerance", "1E-3"));
 
         int[] classes = MathEx.unique(y);
-        String trainer = params.getProperty("svm", classes.length == 2 ? "binary" : "ovr").toLowerCase();
+        String trainer = params.getProperty("smile.svm.strategy", classes.length == 2 ? "binary" : "ovr").toLowerCase();
         switch (trainer) {
             case "ovr":
                 if (kernel instanceof LinearKernel) {

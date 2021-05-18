@@ -18,6 +18,7 @@
 package smile.regression;
 
 import java.util.Arrays;
+import java.util.Properties;
 import java.util.function.BiFunction;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
@@ -62,34 +63,22 @@ public interface DataFrameRegression extends Regression<Tuple> {
      *
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
+     * @param params the hyper-parameters.
      * @param trainer the training lambda.
      * @return the model.
      */
-    static DataFrameRegression of(Formula formula, DataFrame data, BiFunction<double[][], double[], Regression<double[]>> trainer) {
-        return of(null, formula, data, trainer);
-    }
-
-    /**
-     * Fits a vector regression model on data frame.
-     *
-     * @param transformer the feature transformation (e.g. standardizer, minmax, winsor(0.01, 0.99), etc.)
-     * @param formula a symbolic description of the model to be fitted.
-     * @param data the data frame of the explanatory and response variables.
-     * @param trainer the training lambda.
-     * @return the model.
-     */
-    static DataFrameRegression of(String transformer, Formula formula, DataFrame data, BiFunction<double[][], double[], Regression<double[]>> trainer) {
+    static DataFrameRegression of(Formula formula, DataFrame data, Properties params, Trainer<double[]> trainer) {
         DataFrame X = formula.x(data);
         StructType schema = X.schema();
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
         double[] y = formula.y(data).toDoubleArray();
 
-        FeatureTransform preprocessor = FeatureTransform.of(transformer, x);
+        FeatureTransform preprocessor = FeatureTransform.of(params.getProperty("smile.feature.transform"), x);
         if (preprocessor != null) {
             x = preprocessor.transform(x);
         }
 
-        Regression<double[]> model = trainer.apply(x, y);
+        Regression<double[]> model = trainer.fit(x, y, params);
 
         return new DataFrameRegression() {
             @Override
