@@ -229,7 +229,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
-     * Constructor. Learns a regression tree for AdaBoost and Random Forest.
+     * Constructor. Fits a regression tree for AdaBoost and Random Forest.
      * @param x the data frame of the explanatory variable.
      * @param loss the loss function.
      * @param response the metadata of response variable.
@@ -274,7 +274,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @return the model.
@@ -284,7 +284,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * The hyper-parameters in <code>prop</code> include
      * <ul>
      * <li><code>smile.cart.node.size</code>
@@ -303,7 +303,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     }
 
     /**
-     * Learns a regression tree.
+     * Fits a regression tree.
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
      * @param maxDepth the maximum depth of the tree.

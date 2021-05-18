@@ -50,7 +50,7 @@ public class RobustStandardizer extends Standardizer {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
      * @return the model.
      */
@@ -80,7 +80,7 @@ public class RobustStandardizer extends Standardizer {
     }
 
     /**
-     * Learns transformation parameters from a dataset.
+     * Fits the transformation parameters.
      * @param data The training data.
      * @return the model.
      */

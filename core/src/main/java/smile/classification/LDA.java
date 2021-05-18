@@ -125,7 +125,7 @@ public class LDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @return the model.
@@ -135,7 +135,7 @@ public class LDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param params the hyper-parameters.
@@ -148,7 +148,7 @@ public class LDA extends AbstractClassifier<double[]> {
     }
 
     /**
-     * Learns linear discriminant analysis.
+     * Fits linear discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param priori the priori probability of each class. If null, it will be

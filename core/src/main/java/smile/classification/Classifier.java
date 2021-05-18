@@ -20,6 +20,7 @@ package smile.classification;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Properties;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToIntFunction;
 import smile.data.Dataset;
@@ -45,6 +46,21 @@ import smile.math.MathEx;
  * @author Haifeng Li
  */
 public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Serializable {
+    /**
+     * The classifier trainer.
+     * @param <T> the type of model input object.
+     */
+    interface Trainer<T> {
+        /**
+         * Fits a classification model.
+         * @param x the training samples.
+         * @param y the training labels.
+         * @param params the hyper-parameters.
+         * @return the model
+         */
+        Classifier<T> fit(T[] x, int[] y, Properties params);
+    }
+
     /**
      * Returns the number of classes.
      * @return the number of classes.

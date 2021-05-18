@@ -159,7 +159,7 @@ public abstract class MultilayerPerceptron implements Serializable {
         }
 
         if (rho != 0.0) {
-            s = String.format("%s, RMSProp = %f", s, lambda);
+            s = String.format("%s, RMSProp = %f", s, rho);
         }
 
         return s + ")";

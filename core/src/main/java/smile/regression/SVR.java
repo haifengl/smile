@@ -47,9 +47,10 @@ public class SVR {
      * Fits a linear epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param eps threshold parameter. There is no penalty associated with
-     *            samples which are predicted within distance epsilon from
-     *            the actual value. Decreasing epsilon forces closer fitting
+     * @param eps the parameter of epsilon-insensitive hinge loss.
+     *            There is no penalty associated with samples which are
+     *            predicted within distance epsilon from the actual value.
+     *            Decreasing epsilon forces closer fitting
      *            to the calibration/training data.
      * @param C the soft margin penalty parameter.
      * @param tol the tolerance of convergence test.
@@ -73,9 +74,10 @@ public class SVR {
      * Fits a linear epsilon-SVR of binary sparse data.
      * @param x training samples.
      * @param y response variable.
-     * @param eps threshold parameter. There is no penalty associated with
-     *            samples which are predicted within distance epsilon from
-     *            the actual value. Decreasing epsilon forces closer fitting
+     * @param eps the parameter of epsilon-insensitive hinge loss.
+     *            There is no penalty associated with samples which are
+     *            predicted within distance epsilon from the actual value.
+     *            Decreasing epsilon forces closer fitting
      *            to the calibration/training data.
      * @param p the dimension of input vector.
      * @param C the soft margin penalty parameter.
@@ -100,9 +102,10 @@ public class SVR {
      * Fits a linear epsilon-SVR of sparse data.
      * @param x training samples.
      * @param y response variable.
-     * @param eps threshold parameter. There is no penalty associated with
-     *            samples which are predicted within distance epsilon from
-     *            the actual value. Decreasing epsilon forces closer fitting
+     * @param eps the parameter of epsilon-insensitive hinge loss.
+     *            There is no penalty associated with samples which are
+     *            predicted within distance epsilon from the actual value.
+     *            Decreasing epsilon forces closer fitting
      *            to the calibration/training data.
      * @param p the dimension of input vector.
      * @param C the soft margin penalty parameter.
@@ -127,9 +130,10 @@ public class SVR {
      * Fits a epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
-     * @param eps threshold parameter. There is no penalty associated with
-     *            samples which are predicted within distance epsilon from
-     *            the actual value. Decreasing epsilon forces closer fitting
+     * @param eps the parameter of epsilon-insensitive hinge loss.
+     *            There is no penalty associated with samples which are
+     *            predicted within distance epsilon from the actual value.
+     *            Decreasing epsilon forces closer fitting
      *            to the calibration/training data.
      * @param kernel the kernel function.
      * @param C the soft margin penalty parameter.
