@@ -65,13 +65,13 @@ public class AUC implements ProbabilisticClassificationMetric {
         double pos = 0;
         double neg = 0;
 
-        for (int i = 0; i < truth.length; i++) {
-            if (truth[i] == 0) {
+        for (int label : truth) {
+            if (label == 0) {
                 neg++;
-            } else if (truth[i] == 1) {
+            } else if (label == 1) {
                 pos++;
             } else {
-                throw new IllegalArgumentException("AUC is only for binary classification. Invalid label: " + truth[i]);
+                throw new IllegalArgumentException("AUC is only for binary classification. Invalid label: " + label);
             }
         }
 

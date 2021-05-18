@@ -22,7 +22,6 @@ import java.util.function.BiFunction;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.regression.Regression;
@@ -164,7 +163,6 @@ public interface LOOCV {
      * @param trainer the lambda to train the model.
      * @return the validation results.
      */
-    @SuppressWarnings("unchecked")
     static ClassificationMetrics classification(Formula formula, DataFrame data, BiFunction<Formula, DataFrame, DataFrameClassifier> trainer) {
         int[] y = formula.y(data).toIntArray();
         int k = MathEx.unique(y).length;
