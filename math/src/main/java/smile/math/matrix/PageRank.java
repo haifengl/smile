@@ -1,24 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.math.matrix;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * PageRank is a link analysis algorithm and it assigns a numerical weighting
@@ -33,41 +33,47 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class PageRank {
-    private static final Logger logger = LoggerFactory.getLogger(PageRank.class);
-    /**
-     * Calculate the page rank vector.
-     * @param A the matrix supporting matrix vector multiplication operation.
-     * @return the page rank vector.
-     */
-    public static double[] pagerank(Matrix A) {
-        int n = A.nrows();
-        double[] v = new double[n];
-        Arrays.fill(v, 1.0 / n);
-        return pagerank(A, v);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PageRank.class);
+
+    /** Private constructor to prevent instance creation. */
+    private PageRank() {
+
     }
 
     /**
-     * Calculate the page rank vector.
+     * Calculates the page rank vector.
+     * @param A the matrix supporting matrix vector multiplication operation.
+     * @return the page rank vector.
+     */
+    public static double[] of(DMatrix A) {
+        int n = A.nrow();
+        double[] v = new double[n];
+        Arrays.fill(v, 1.0 / n);
+        return of(A, v);
+    }
+
+    /**
+     * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param v the teleportation vector.
      * @return the page rank vector.
      */
-    public static double[] pagerank(Matrix A, double[] v) {
-        return pagerank(A, v, 0.85, 1E-7, 57);
+    public static double[] of(DMatrix A, double[] v) {
+        return of(A, v, 0.85, 1E-7, 57);
     }
 
     /**
-     * Calculate the page rank vector.
+     * Calculates the page rank vector.
      * @param A the matrix supporting matrix vector multiplication operation.
      * @param v the teleportation vector.
      * @param damping the damper factor.
      * @param tol the desired convergence tolerance.
-     * @param maxIter the maximum number of iterations in case that the algorithm
-     * does not converge.
+     * @param maxIter the maximum number of iterations in case that the
+     *                algorithm does not converge.
      * @return the page rank vector.
      */
-    public static double[] pagerank(Matrix A, double[] v, double damping, double tol, int maxIter) {
-        if (A.nrows() != A.ncols()) {
+    public static double[] of(DMatrix A, double[] v, double damping, double tol, int maxIter) {
+        if (A.nrow() != A.ncol()) {
             throw new IllegalArgumentException("Matrix is not square.");
         }
 
@@ -79,15 +85,15 @@ public class PageRank {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        int n = A.nrows();
-        tol = smile.math.Math.max(tol, Math.EPSILON * n);
+        int n = A.nrow();
+        tol = Math.max(tol, MathEx.EPSILON * n);
 
         double[] z = new double[n];
         double[] p = Arrays.copyOf(v, n);
 
         for (int iter = 1; iter <= maxIter; iter++) {
-            A.ax(p, z);
-            double beta = 1.0 - damping * Math.norm1(z);
+            A.mv(p, z);
+            double beta = 1.0 - damping * MathEx.norm1(z);
 
             double delta = 0.0;
             for (int i = 0; i < n; i++) {

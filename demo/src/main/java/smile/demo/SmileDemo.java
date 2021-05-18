@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo;
 
@@ -37,7 +38,6 @@ import java.io.PrintStream;
 import javax.swing.JTextArea;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
-import javax.swing.UIManager.LookAndFeelInfo;
 import smile.demo.classification.FLDDemo;
 import smile.demo.classification.LDADemo;
 import smile.demo.classification.LogisticRegressionDemo;
@@ -54,12 +54,10 @@ import smile.demo.clustering.GMeansDemo;
 import smile.demo.clustering.HierarchicalClusteringDemo;
 import smile.demo.clustering.KMeansDemo;
 import smile.demo.clustering.MECDemo;
-import smile.demo.clustering.NeuralGasDemo;
 import smile.demo.clustering.SIBDemo;
-import smile.demo.clustering.SOMDemo;
 import smile.demo.clustering.SpectralClusteringDemo;
 import smile.demo.clustering.XMeansDemo;
-import smile.demo.manifold.TSNEDemo;
+import smile.demo.manifold.*;
 import smile.demo.plot.BarPlotDemo;
 import smile.demo.plot.BoxPlotDemo;
 import smile.demo.plot.ContourDemo;
@@ -77,13 +75,12 @@ import smile.demo.interpolation.Interpolation1Demo;
 import smile.demo.interpolation.Interpolation2Demo;
 import smile.demo.interpolation.LaplaceInterpolationDemo;
 import smile.demo.interpolation.ScatterDataInterpolationDemo;
-import smile.demo.manifold.IsoMapDemo;
-import smile.demo.manifold.LLEDemo;
-import smile.demo.manifold.LaplacianEigenmapDemo;
 import smile.demo.mds.IsotonicMDSDemo;
 import smile.demo.vq.BIRCHDemo;
+import smile.demo.vq.NeuralGasDemo;
 import smile.demo.vq.GrowingNeuralGasDemo;
 import smile.demo.vq.NeuralMapDemo;
+import smile.demo.vq.SOMDemo;
 import smile.demo.mds.MDSDemo;
 import smile.demo.mds.SammonMappingDemo;
 import smile.demo.neighbor.ApproximateStringSearchDemo;
@@ -94,7 +91,7 @@ import smile.demo.plot.Histogram3Demo;
 import smile.demo.projection.GHADemo;
 import smile.demo.projection.KPCADemo;
 import smile.demo.projection.PCADemo;
-import smile.demo.projection.PPCADemo;
+import smile.demo.projection.ProbabilisticPCADemo;
 import smile.demo.projection.RandomProjectionDemo;
 import smile.demo.stat.distribution.BernoulliDistributionDemo;
 import smile.demo.stat.distribution.BetaDistributionDemo;
@@ -205,7 +202,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new KPCADemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new PPCADemo());
+        algorithm = new DefaultMutableTreeNode(new ProbabilisticPCADemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new GHADemo());
@@ -242,6 +239,9 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new TSNEDemo());
+        category.add(algorithm);
+
+        algorithm = new DefaultMutableTreeNode(new UMAPDemo());
         category.add(algorithm);
 
         category = new DefaultMutableTreeNode("Classification");
@@ -292,12 +292,6 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         algorithm = new DefaultMutableTreeNode(new DeterministicAnnealingDemo());
         category.add(algorithm);
 
-        algorithm = new DefaultMutableTreeNode(new SOMDemo());
-        category.add(algorithm);
-
-        algorithm = new DefaultMutableTreeNode(new NeuralGasDemo());
-        category.add(algorithm);
-
         algorithm = new DefaultMutableTreeNode(new CLARANSDemo());
         category.add(algorithm);
 
@@ -319,7 +313,13 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
         category = new DefaultMutableTreeNode("Vector Quantization");
         top.add(category);
 
+        algorithm = new DefaultMutableTreeNode(new NeuralGasDemo());
+        category.add(algorithm);
+
         algorithm = new DefaultMutableTreeNode(new GrowingNeuralGasDemo());
+        category.add(algorithm);
+
+        algorithm = new DefaultMutableTreeNode(new SOMDemo());
         category.add(algorithm);
 
         algorithm = new DefaultMutableTreeNode(new NeuralMapDemo());
@@ -541,24 +541,14 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
      */
     public static void createAndShowGUI(boolean exitOnClose) {
         try {
-            for (LookAndFeelInfo info : UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
+            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         } catch (Exception ex) {
-            try {
-                // If Nimbus is not available, try system look and feel.
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            } catch (Exception e) {
-                System.err.println(e);
-            }
+            System.err.println(ex);
         }
 
         //Create and set up the window.
         JFrame frame = new JFrame("Smile Demo");
-        frame.setSize(new Dimension(1000, 1000));
+        frame.setSize(new Dimension(1600, 1200));
         frame.setLocationRelativeTo(null);
 
         if (exitOnClose)
@@ -577,12 +567,7 @@ public class SmileDemo extends JPanel implements TreeSelectionListener {
     public static void main(String[] args) {
         //Schedule a job for the event dispatch thread:
         //creating and showing this application's GUI.
-        javax.swing.SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                createAndShowGUI(true);
-            }
-        });
+        javax.swing.SwingUtilities.invokeLater(() -> createAndShowGUI(true));
     }
 }
 

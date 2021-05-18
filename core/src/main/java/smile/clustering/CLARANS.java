@@ -1,28 +1,26 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import java.util.function.ToDoubleBiFunction;
+import java.util.stream.IntStream;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.util.MulticoreExecutor;
 
 /**
  * Clustering Large Applications based upon RANdomized Search. CLARANS is an
@@ -53,73 +51,63 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class CLARANS <T> extends PartitionClustering<T> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(CLARANS.class);
+public class CLARANS<T> extends CentroidClustering<T, T> {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(CLARANS.class);
+    /**
+     * The lambda of distance measure.
+     */
+    private final Distance<T> distance;
 
     /**
-     * The total distortion.
+     * Constructor.
+     *
+     * @param distortion the total distortion.
+     * @param medoids    the medoids of each cluster.
+     * @param y          the cluster labels.
+     * @param distance   the lambda of distance measure.
      */
-    double distortion;
-    /**
-     * The distance measure for calculation of distortion.
-     */
-    private Distance<T> distance;
-    /**
-     * The number of local minima to search for.
-     */
-    private int numLocal;
-    /**
-     * The maximum number of neighbors examined during a search of local minima.
-     */
-    private int maxNeighbor;
-    /**
-     * The medoids of each cluster.
-     */
-    T[] medoids;
+    public CLARANS(double distortion, T[] medoids, int[] y, Distance<T> distance) {
+        super(distortion, medoids, y);
+        this.distance = distance;
+    }
+
+    @Override
+    protected double distance(T x, T y) {
+        return distance.d(x, y);
+    }
 
     /**
-     * Constructor. Clustering data into k clusters. The maximum number of
-     * random search is set to 0.02 * k * (n - k), where n is the number of
-     * data and k is the number clusters. The number of local searches is 
-     * max(8, numProcessors).
-     * 
-     * @param data the dataset for clustering.
-     * @param distance the distance/dissimilarity measure.
-     * @param k the number of clusters.
+     * Clustering data into k clusters. The maximum number of
+     * random search is set to 1.25% * k * (n - k), where n is the number of
+     * data and k is the number clusters.
+     *
+     * @param data     the observations.
+     * @param k        the number of clusters.
+     * @param distance the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
-    public CLARANS(T[] data, Distance<T> distance, int k) {
-        this(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
+    public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k) {
+        return fit(data, distance, k, (int) Math.round(0.0125 * k * (data.length - k)));
     }
-    
+
     /**
      * Constructor. Clustering data into k clusters.
-     * @param data the dataset for clustering.
-     * @param distance the distance/dissimilarity measure.
-     * @param k the number of clusters.
-     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
+     *
+     * @param data        the observations.
+     * @param k           the number of clusters.
+     * @param maxNeighbor the maximum number of neighbors examined during
+     *                    the random search of local minima.
+     * @param distance    the lambda of distance measure.
+     * @param <T> the data type.
+     * @return the model.
      */
-    public CLARANS(T[] data, Distance<T> distance, int k, int maxNeighbor) {
-        this(data, distance, k, maxNeighbor, Math.max(2, MulticoreExecutor.getThreadPoolSize()));        
-    }
-    
-    /**
-     * Constructor. Clustering data into k clusters.
-     * @param data the dataset for clustering.
-     * @param distance the distance/dissimilarity measure.
-     * @param k the number of clusters.
-     * @param maxNeighbor the maximum number of neighbors examined during a random search of local minima.
-     * @param numLocal the number of local minima to search for.
-     */
-    public CLARANS(T[] data, Distance<T> distance, int k, int maxNeighbor, int numLocal) {
+    public static <T> CLARANS<T> fit(T[] data, Distance<T> distance, int k, int maxNeighbor) {
         if (maxNeighbor <= 0) {
-            throw new IllegalArgumentException("Invalid maxNeighbor: " + maxNeighbor);
+            throw new IllegalArgumentException("Invalid maxNeighbors: " + maxNeighbor);
         }
-        
-        if (numLocal <= 0) {
-            throw new IllegalArgumentException("Invalid numLocal: " + numLocal);            
-        }
-        
+
         int n = data.length;
 
         if (k >= n) {
@@ -134,201 +122,100 @@ public class CLARANS <T> extends PartitionClustering<T> {
         if (k * (n - k) < minmax) {
             minmax = k * (n - k);
         }
-        
+
         if (maxNeighbor < minmax) {
             maxNeighbor = minmax;
         }
-        
-        this.k = k;
-        this.distance = distance;
-        this.numLocal = numLocal;
-        this.maxNeighbor = maxNeighbor;
-        
-        List<CLARANSTask> tasks = new ArrayList<>();
-        for (int i = 0; i < numLocal; i++) {
-            tasks.add(new CLARANSTask(data));
-        }
 
-        try {
-            MulticoreExecutor.run(tasks);
-        } catch (Exception e) {
-            logger.error("Failed to run CLARANS on multi-core", e);
-
-            for (CLARANSTask task : tasks) {
-                task.call();
-            }
-        }
-        
-        distortion = Double.POSITIVE_INFINITY;
-        for (CLARANSTask task : tasks) {
-            if (task.distortion < distortion) {
-                distortion = task.distortion;
-                medoids = task.medoids;
-                y = task.y;
-            }
-        }
-        
-        size = new int[k];
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-        }
-    }
-
-    /**
-     * Adapter for running one local of CLARANS in thread pool.
-     */
-    class CLARANSTask implements Callable<CLARANSTask> {
-        final T[] data;
-        
-        double distortion;
-        T[] medoids;
-        int[] y;
-
-        CLARANSTask(T[] data) {
-            this.data = data;
-        }
-
-        @Override
         @SuppressWarnings("unchecked")
-        public CLARANSTask call() {
-            int n = data.length;
-            medoids = (T[]) java.lang.reflect.Array.newInstance(data.getClass().getComponentType(), k);
-            T[] newMedoids = medoids.clone();
-            y = new int[n];
-            int[] newY = new int[n];
-            double[] d = new double[n];
-            double[] newD = new double[n];
-            
-            distortion = seed(distance, data, medoids, y, d);
+        T[] medoids = (T[]) java.lang.reflect.Array.newInstance(data.getClass().getComponentType(), k);
+        T[] newMedoids = medoids.clone();
+        int[] y = new int[n];
+        int[] newY = new int[n];
+        double[] newD = new double[n];
 
-            System.arraycopy(medoids, 0, newMedoids, 0, k);
-            System.arraycopy(y, 0, newY, 0, n);
-            System.arraycopy(d, 0, newD, 0, n);
-            
-            for (int neighborCount = 1; neighborCount <= maxNeighbor; neighborCount++) {
-                double randomNeighborDistortion = getRandomNeighbor(data, newMedoids, newY, newD);
-                if (randomNeighborDistortion < distortion) {
-                    neighborCount = 0;
-                    distortion = randomNeighborDistortion;
-                    System.arraycopy(newMedoids, 0, medoids, 0, k);
-                    System.arraycopy(newY, 0, y, 0, n);
-                    System.arraycopy(newD, 0, d, 0, n);
-                } else {
-                    System.arraycopy(medoids, 0, newMedoids, 0, k);
-                    System.arraycopy(y, 0, newY, 0, n);
-                    System.arraycopy(d, 0, newD, 0, n);
-                }
+        double[] d = seed(data, medoids, y, distance);
+        double distortion = MathEx.sum(d);
+
+        System.arraycopy(medoids, 0, newMedoids, 0, k);
+        System.arraycopy(y, 0, newY, 0, n);
+        System.arraycopy(d, 0, newD, 0, n);
+
+        for (int neighborCount = 1; neighborCount <= maxNeighbor; neighborCount++) {
+            double randomNeighborDistortion = getRandomNeighbor(data, newMedoids, newY, newD, distance);
+            if (randomNeighborDistortion < distortion) {
+                logger.info(String.format("Distortion reduces to %.4f after %3d random neighbors", distortion, neighborCount));
+                neighborCount = 0;
+                distortion = randomNeighborDistortion;
+                System.arraycopy(newMedoids, 0, medoids, 0, k);
+                System.arraycopy(newY, 0, y, 0, n);
+                System.arraycopy(newD, 0, d, 0, n);
+            } else {
+                System.arraycopy(medoids, 0, newMedoids, 0, k);
+                System.arraycopy(y, 0, newY, 0, n);
+                System.arraycopy(d, 0, newD, 0, n);
             }
-
-            return this;
         }
+
+        logger.info(String.format("Final distortion: %.4f", distortion));
+
+        return new CLARANS<>(distortion, medoids, y, distance);
     }
-    
+
     /**
-     * Generate a random neighbor which differs in only one medoid with current clusters.
+     * Picks a random neighbor which differs in only one medoid with current clusters.
      */
-    private double getRandomNeighbor(T[] data, T[] medoids, int[] y, double[] d) {
+    private static <T> double getRandomNeighbor(T[] data, T[] medoids, int[] y, double[] d, ToDoubleBiFunction<T, T> distance) {
         int n = data.length;
+        int k = medoids.length;
 
-        int index = Math.randomInt(k);
-        T medoid = null;
-        boolean dup;
-        do {
-            dup = false;
-            medoid = data[Math.randomInt(n)];
-            for (int i = 0; i < k; i++) {
-                if (medoid == medoids[i]) {
-                    dup = true;
-                    break;
-                }
-            }
-        } while (dup);
+        int cluster = MathEx.randomInt(k);
+        T medoid = getRandomMedoid(data, medoids);
+        medoids[cluster] = medoid;
 
-        medoids[index] = medoid;
-
-        for (int i = 0; i < n; i++) {
-            double dist = distance.d(data[i], medoid);
+        IntStream.range(0, n).parallel().forEach(i -> {
+            double dist = distance.applyAsDouble(data[i], medoid);
             if (d[i] > dist) {
-                y[i] = index;
+                y[i] = cluster;
                 d[i] = dist;
-            } else if (y[i] == index) {
+            } else if (y[i] == cluster) {
                 d[i] = dist;
-                y[i] = index;
                 for (int j = 0; j < k; j++) {
-                    if (j != index) {
-                        dist = distance.d(data[i], medoids[j]);
+                    if (j != cluster) {
+                        dist = distance.applyAsDouble(data[i], medoids[j]);
                         if (d[i] > dist) {
-                            y[i] = j;
                             d[i] = dist;
+                            y[i] = j;
                         }
                     }
                 }
             }
+        });
+
+        return MathEx.sum(d);
+    }
+
+    /**
+     * Picks a random observation as new medoid.
+     */
+    private static <T> T getRandomMedoid(T[] data, T[] medoids) {
+        int n = data.length;
+
+        T medoid = data[MathEx.randomInt(n)];
+        while (contains(medoids, medoid)) {
+            medoid = data[MathEx.randomInt(n)];
         }
 
-        return Math.sum(d);
-    }
-    
-    /**
-     * Returns the number of local minima to search for.
-     */
-    public int getNumLocalMinima() {
-        return numLocal;
+        return medoid;
     }
 
     /**
-     * Returns the maximum number of neighbors examined during a search of local minima.
+     * Returns true if the array contains the object.
      */
-    public int getMaxNeighbor() {
-        return maxNeighbor;
-    }
-
-    /**
-     * Returns the distortion.
-     */
-    public double distortion() {
-        return distortion;
-    }
-
-    /**
-     * Returns the medoids.
-     */
-    public T[] medoids() {
-        return medoids;
-    }
-
-    /**
-     * Cluster a new instance.
-     * @param x a new instance.
-     * @return the cluster label, which is the index of nearest medoid.
-     */
-    @Override
-    public int predict(T x) {
-        double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
-
-        for (int i = 0; i < k; i++) {
-            double dist = distance.d(x, medoids[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
-            }
+    private static <T> boolean contains(T[] medoids, T medoid) {
+        for (T m : medoids) {
+            if (m == medoid) return true;
         }
-
-        return bestCluster;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("CLARANS distortion: %.5f%n", distortion));
-        sb.append(String.format("Clusters of %d data points:%n", y.length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-        
-        return sb.toString();
+        return false;
     }
 }

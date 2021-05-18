@@ -1,23 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
-import smile.math.matrix.DenseMatrix;
+import smile.math.MathEx;
+import smile.math.TimeFunction;
 import smile.math.matrix.Matrix;
 
 /**
@@ -54,41 +56,44 @@ import smile.math.matrix.Matrix;
  *
  * @author Haifeng Li
  */
-public class GHA implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class GHA implements LinearProjection, Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of feature space.
      */
-    private int p;
+    private final int p;
     /**
      * The dimension of input space.
      */
-    private int n;
+    private final int n;
     /**
      * The learning rate;
      */
-    private double r;
+    private final TimeFunction r;
     /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
+    private final Matrix projection;
     /**
      * Workspace for W * x.
      */
-    private double[] y;
+    private final double[] y;
     /**
      * Workspace for W' * y.
      */
-    private double[] wy;
-
+    private final double[] wy;
+    /**
+     * The training iterations.
+     */
+    protected int t = 0;
     /**
      * Constructor.
      * @param n the dimension of input space.
      * @param p the dimension of feature space.
      * @param r the learning rate.
      */
-    public GHA(int n, int p, double r) {
+    public GHA(int n, int p, TimeFunction r) {
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
         }
@@ -103,10 +108,10 @@ public class GHA implements Projection<double[]>, Serializable {
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.zeros(p, n);
+        projection = new Matrix(p, n);
         for (int i = 0; i < p; i++) {
             for (int j = 0; j < n; j++) {
-                projection.set(i, j, 0.1 * Math.random());
+                projection.set(i, j, 0.1 * MathEx.random());
             }
         }
     }
@@ -116,14 +121,14 @@ public class GHA implements Projection<double[]>, Serializable {
      * @param w the initial projection matrix.
      * @param r the learning rate.
      */
-    public GHA(double[][] w, double r) {
+    public GHA(double[][] w, TimeFunction r) {
         this.p = w.length;
         this.n = w[0].length;
         this.r = r;
 
         y = new double[p];
         wy = new double[n];
-        projection = Matrix.newInstance(w);
+        projection = new Matrix(w);
     }
 
     /**
@@ -131,47 +136,9 @@ public class GHA implements Projection<double[]>, Serializable {
      * matrix are the first p eigenvectors of covariance matrix, ordered by decreasing
      * eigenvalues. The dimension reduced data can be obtained by y = W * x.
      */
-    public DenseMatrix getProjection() {
+    @Override
+    public Matrix projection() {
         return projection;
-    }
-
-    /**
-     * Returns the learning rate.
-     */
-    public double getLearningRate() {
-        return r;
-    }
-
-    /**
-     * Set the learning rate.
-     */
-    public GHA setLearningRate(double r) {
-        this.r = r;
-        return this;
-    }
-
-    @Override
-    public double[] project(double[] x) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] wx = new double[p];
-        projection.ax(x, wx);
-        return wx;
-    }
-
-    @Override
-    public double[][] project(double[][] x) {
-        if (x[0].length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
-        }
-
-        double[][] wx = new double[x.length][p];
-        for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], wx[i]);
-        }
-        return wx;
     }
 
     /**
@@ -179,12 +146,12 @@ public class GHA implements Projection<double[]>, Serializable {
      * @param x the centered learning sample whose E(x) = 0.
      * @return the approximation error for input sample.
      */
-    public double learn(double[] x) {
+    public double update(double[] x) {
         if (x.length != n) {
             throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
         }
 
-        projection.ax(x, y);
+        projection.mv(x, y);
 
         for (int j = 0; j < p; j++) {
             for (int i = 0; i < n; i++) {
@@ -192,7 +159,7 @@ public class GHA implements Projection<double[]>, Serializable {
                 for (int l = 0; l <= j; l++) {
                     delta -= projection.get(l, i) * y[l];
                 }
-                projection.add(j, i, r * y[j] * delta);
+                projection.add(j, i, r.apply(t) * y[j] * delta);
 
                 if (Double.isInfinite(projection.get(j, i))) {
                     throw new IllegalStateException("GHA lost convergence. Lower learning rate?");
@@ -200,8 +167,9 @@ public class GHA implements Projection<double[]>, Serializable {
             }
         }
 
-        projection.ax(x, y);
-        projection.atx(y, wy);
-        return Math.squaredDistance(x, wy);
+        t++;
+        projection.mv(x, y);
+        projection.tv(y, wy);
+        return MathEx.squaredDistance(x, wy);
     }
 }

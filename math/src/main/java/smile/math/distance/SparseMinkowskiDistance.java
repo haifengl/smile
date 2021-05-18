@@ -1,30 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.distance;
 
+import java.util.Arrays;
 import java.util.Iterator;
-import smile.math.SparseArray;
+import smile.util.SparseArray;
 
 /**
  * Minkowski distance of order p or L<sub>p</sub>-norm, is a generalization of
  * Euclidean distance that is actually L<sub>2</sub>-norm. You may also provide
- * a specified weight vector. For float or double arrays, missing values (i.e. NaN)
- * are also handled. Also support sparse arrays of which zeros are excluded
- * to save space.
+ * a specified weight vector.
  *
  * @author Haifeng Li
  */
@@ -34,35 +34,37 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
     /**
      * The order of Minkowski distance.
      */
-    private int p;
+    private final int p;
 
     /**
      * The weights used in weighted distance.
      */
-    private double[] weight = null;
+    private final double[] weight;
 
     /**
      * Constructor.
+     * @param p the order of Minkowski distance.
      */
     public SparseMinkowskiDistance(int p) {
-        if (p <= 0)
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
-
-        this.p = p;
+        this(p, null);
     }
 
     /**
      * Constructor.
-     *
+     * @param p the order of Minkowski distance.
      * @param weight the weight vector.
      */
     public SparseMinkowskiDistance(int p, double[] weight) {
-        if (p <= 0)
-            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = d", p));
+        if (p <= 0) {
+            throw new IllegalArgumentException(String.format("The order p has to be larger than 0: p = %d", p));
+        }
 
-        for (int i = 0; i < weight.length; i++) {
-            if (weight[i] < 0)
-                throw new IllegalArgumentException(String.format("Weight has to be nonnegative: %f", weight[i]));
+        if (weight != null) {
+            for (double w : weight) {
+                if (w < 0) {
+                    throw new IllegalArgumentException(String.format("Weight has to be non-negative: %f", w));
+                }
+            }
         }
 
         this.p = p;
@@ -71,16 +73,22 @@ public class SparseMinkowskiDistance implements Metric<SparseArray> {
 
     @Override
     public String toString() {
-        return String.format("Minkowski distance (p = %d)", p);
+        if (weight != null) {
+            return String.format("Weighted Minkowski Distance(p = %d, weight = %s)", p, Arrays.toString(weight));
+        } else {
+            return String.format("Minkowski Distance(p = %d)", p);
+        }
     }
 
     @Override
     public double d(SparseArray x, SparseArray y) {
-        if (x.isEmpty())
+        if (x.isEmpty()) {
             throw new IllegalArgumentException("List x is empty.");
+        }
 
-        if (y.isEmpty())
+        if (y.isEmpty()) {
             throw new IllegalArgumentException("List y is empty.");
+        }
 
         Iterator<SparseArray.Entry> iterX = x.iterator();
         Iterator<SparseArray.Entry> iterY = y.iterator();

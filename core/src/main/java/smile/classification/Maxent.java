@@ -1,30 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import java.util.Properties;
+import java.util.stream.IntStream;
+import smile.math.BFGS;
+import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
-import smile.util.MulticoreExecutor;
+import smile.util.IntSet;
+import smile.validation.ModelSelection;
 
 /**
  * Maximum Entropy Classifier. Maximum entropy is a technique for learning
@@ -40,7 +40,8 @@ import smile.util.MulticoreExecutor;
  * used in natural language processing.  Here, we provide an implementation
  * which assumes that binary features are stored in a sparse array, of which
  * entries are the indices of nonzero features.
- * 
+ *
+ * @see smile.glm.GLM
  * @see LogisticRegression
  * 
  * <h2>References</h2>
@@ -50,251 +51,416 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class Maxent implements SoftClassifier<int[]> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(Maxent.class);
+public abstract class Maxent extends AbstractClassifier<int[]> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    private int p;
+    int p;
 
     /**
      * The number of classes.
      */
-    private int k;
+    int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    private double L;
+    double L;
 
     /**
-     * The linear weights for binary logistic regression.
+     * Regularization factor.
      */
-    private double[] w;
+    double lambda;
 
     /**
-     * The linear weights for multi-class logistic regression.
+     * learning rate for stochastic gradient descent.
      */
-    private double[][] W;
+    double eta = 0.1;
 
     /**
-     * Trainer for maximum entropy classifier.
+     * Constructor.
+     * @param p the dimension of input data.
+     * @param L the log-likelihood of learned model.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param labels the class label encoder.
      */
-    public static class Trainer extends ClassifierTrainer<int[]> {
+    public Maxent(int p, double L, double lambda, IntSet labels) {
+        super(labels);
+        this.k = labels.size();
+        this.p = p;
+        this.L = L;
+        this.lambda = lambda;
+    }
 
+    /** Binomial maximum entropy classifier. The dependent variable is nominal of two levels. */
+    public static class Binomial extends Maxent {
         /**
-         * The dimension of feature space.
+         * The linear weights.
          */
-        private int p;
-        /**
-         * Regularization factor. &lambda; > 0 gives a "regularized" estimate
-         * of linear weights which often has superior generalization
-         * performance, especially when the dimensionality is high.
-         */
-        private double lambda = 0.0;
-        /**
-         * The tolerance for BFGS stopping iterations.
-         */
-        private double tol = 1E-5;
-        /**
-         * The maximum number of BFGS iterations.
-         */
-        private int maxIter = 500;
+        private final double[] w;
 
         /**
          * Constructor.
-         * @param p the dimension of feature space.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels the class label encoder.
          */
-        public Trainer(int p) {
-            if (p < 0) {
-                throw new IllegalArgumentException("Invalid dimension: " + p);
+        public Binomial(double[] w, double L, double lambda, IntSet labels) {
+            super(w.length - 1, L, lambda, labels);
+            this.w = w;
+        }
+
+        /**
+         * Returns an array of size (p+1) containing the linear weights
+         * of binary logistic regression, where p is the dimension of
+         * feature vectors. The last element is the weight of bias.
+         * @return the linear weights.
+         */
+        public double[] coefficients() {
+            return w;
+        }
+
+        @Override
+        public double score(int[] x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
+        public int predict(int[] x) {
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            return classes.valueOf(f < 0.5 ? 0 : 1);
+        }
+
+        @Override
+        public int predict(int[] x, double[] posteriori) {
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
             }
 
-            this.p = p;
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            posteriori[0] = 1.0 - f;
+            posteriori[1] = f;
+            return classes.valueOf(f < 0.5 ? 0 : 1);
         }
-        
-        /**
-         * Sets the regularization factor. &lambda; &gt; 0 gives a "regularized"
-         * estimate of linear weights which often has superior generalization
-         * performance, especially when the dimensionality is high.
-         * 
-         * @param lambda regularization factor.
-         */
-        public Trainer setRegularizationFactor(double lambda) {
-            this.lambda = lambda;
-            return this;
-        }
-        
-        /**
-         * Sets the tolerance for BFGS stopping iterations.
-         * 
-         * @param tol tolerance for stopping iterations.
-         */
-        public Trainer setTolerance(double tol) {
-            this.tol = tol;
-            return this;
-        }
-        
-        /**
-         * Sets the maximum number of BFGS stopping iterations.
-         * 
-         * @param maxIter maximum number of iterations.
-         */
-        public Trainer setMaxNumIteration(int maxIter) {
-            this.maxIter = maxIter;
-            return this;
-        }
-        
+
         @Override
-        public Maxent train(int[][] x, int[] y) {
-            return new Maxent(p, x, y, lambda, tol, maxIter);
+        public void update(int[] x, int y) {
+            y = classes.indexOf(y);
+            // calculate gradient for incoming data
+            double wx = dot(x, w);
+            double err = y - MathEx.sigmoid(wx);
+
+            // update the weights
+            w[p] += eta * err;
+            for (int j : x) {
+                w[j] += eta * err;
+            }
         }
     }
-    
-    /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
-     * @param p the dimension of feature space.
-     * @param x training samples. Each sample is represented by a set of sparse
-     * binary features. The features are stored in an integer array, of which
-     * are the indices of nonzero features.
-     * @param y training labels in [0, k), where k is the number of classes.
-     */
-    public Maxent(int p, int[][] x, int[] y) {
-        this(p, x, y, 0.1);
+
+    /** Multinomial maximum entropy classifier. The dependent variable is nominal with more than two levels. */
+    public static class Multinomial extends Maxent {
+        /**
+         * The linear weights.
+         */
+        private final double[][] w;
+
+        /**
+         * Constructor.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels the class label encoder.
+         */
+        public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
+            super(w[0].length - 1, L, lambda, labels);
+            this.w = w;
+        }
+
+        /**
+         * Returns a 2d-array of size (k-1) x (p+1), containing the linear weights
+         * of multi-class logistic regression, where k is the number of classes
+         * and p is the dimension of feature vectors. The last element of each
+         * row is the weight of bias.
+         * @return the linear weights.
+         */
+        public double[][] coefficients() {
+            return w;
+        }
+
+        @Override
+        public int predict(int[] x) {
+            return predict(x, new double[k]);
+        }
+
+        @Override
+        public int predict(int[] x, double[] posteriori) {
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+            }
+
+            posteriori[k-1] = 0.0;
+            for (int i = 0; i < k-1; i++) {
+                posteriori[i] = dot(x, w[i]);
+            }
+
+            MathEx.softmax(posteriori);
+            return classes.valueOf(MathEx.whichMax(posteriori));
+        }
+
+        @Override
+        public void update(int[] x, int y) {
+            y = classes.indexOf(y);
+            double[] prob = new double[k];
+            for (int j = 0; j < k-1; j++) {
+                prob[j] = dot(x, w[j]);
+            }
+
+            MathEx.softmax(prob);
+
+            // update the weights
+            for (int i = 0; i < k-1; i++) {
+                double[] wi = w[i];
+                double err = (y == i ? 1.0 : 0.0) - prob[i];
+                wi[p] += eta * err;
+                for (int j : x) {
+                    wi[j] += eta * err;
+                }
+            }
+        }
     }
 
     /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
+     * @return the model.
      */
-    public Maxent(int p, int[][] x, int[] y, double lambda) {
-        this(p, x, y, lambda, 1E-5, 500);
+    public static Maxent fit(int p, int[][] x, int[] y) {
+        return fit(p, x, y, new Properties());
     }
 
     /**
-     * Learn maximum entropy classifier from samples of binary sparse features.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
      * are the indices of nonzero features.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param tol tolerance for stopping iterations.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
+        return fit(p, x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
      * @param maxIter maximum number of iterations.
+     * @return the model.
      */
-    public Maxent(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Maxent fit(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+        ClassLabels codec = ClassLabels.fit(y);
+        if (codec.k == 2)
+            return binomial(p, x, y, lambda, tol, maxIter);
+        else
+            return multinomial(p, x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
+     */
+    public static Binomial binomial(int p, int[][] x, int[] y) {
+        return binomial(p, x, y, new Properties());
+    }
+
+    /**
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
+        return binomial(p, x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     * weights which often has superior generalization performance, especially
+     * when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter maximum number of iterations.
+     * @return the model.
+     */
+    public static Binomial binomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
         if (p < 0) {
-            throw new IllegalArgumentException("Invalid dimension: " + p);            
+            throw new IllegalArgumentException("Invalid dimension: " + p);
         }
-        
+
         if (lambda < 0) {
             throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
         }
 
         if (tol <= 0.0) {
-            throw new IllegalArgumentException("Invalid tolerance: " + tol);            
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
         }
-        
+
         if (maxIter <= 0) {
-            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
-        }
-        
-        this.p = p;
-        
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
         }
 
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        if (k != 2) {
+            throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        if (k == 2) {
-            BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
-
-            w = new double[p + 1];
-
-            L = 0.0;
-            try {
-                L = -Math.min(func, 5, w, tol, maxIter);
-            } catch (Exception ex) {
-                logger.error("Failed to minimize binary objective function of Maximum Entropy Classifier", ex);
-            }
-        } else {
-            MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, p, lambda);
-
-            w = new double[k * (p + 1)];
-
-            L = 0.0;
-            try {
-                L = -Math.min(func, 5, w, tol, maxIter);
-            } catch (Exception ex) {
-                logger.error("Failed to minimize multi-class objective function of Maximum Entropy Classifier", ex);
-            }
-
-            W = new double[k][p+1];
-            for (int i = 0, m = 0; i < k; i++) {
-                for (int j = 0; j <= p; j++, m++) {
-                    W[i][j] = w[m];
-                }
-            }
-
-            w = null;
-        }
+        BinomialObjective objective = new BinomialObjective(x, codec.y, p, lambda);
+        double[] w = new double[p + 1];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
+        model.setLearningRate(0.1 / x.length);
+        return model;
     }
 
     /**
-     * Returns the dimension of input space.
-     * @return the dimension of input space.
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @return the model.
      */
-    public int getDimension() {
-    	return p;
+    public static Multinomial multinomial(int p, int[][] x, int[] y) {
+        return multinomial(p, x, y, new Properties());
     }
-    
+
     /**
-     * Returns natural log(1+exp(x)) without overflow.
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param params the hyper-parameters.
+     * @return the model.
      */
-    private static double log1pe(double x) {
-        double y = 0.0;
-        if (x > 15) {
-            y = x;
-        } else {
-            y += Math.log1p(Math.exp(x));
+    public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
+        return multinomial(p, x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits maximum entropy classifier.
+     * @param p the dimension of feature space.
+     * @param x training samples. Each sample is represented by a set of sparse
+     * binary features. The features are stored in an integer array, of which
+     * are the indices of nonzero features.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     * weights which often has superior generalization performance, especially
+     * when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter maximum number of iterations.
+     * @return the model.
+     */
+    public static Multinomial multinomial(int p, int[][] x, int[] y, double lambda, double tol, int maxIter) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        return y;
+        if (p < 0) {
+            throw new IllegalArgumentException("Invalid dimension: " + p);
+        }
+
+        if (lambda < 0) {
+            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
+        }
+
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        if (k <= 2) {
+            throw new IllegalArgumentException("Fits multinomial model on binary class data.");
+        }
+
+        MultinomialObjective objective = new MultinomialObjective(x, codec.y, k, p, lambda);
+        double[] w = new double[(k - 1) * (p + 1)];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+
+        double[][] W = new double[k-1][p+1];
+        for (int i = 0, l = 0; i < k-1; i++) {
+            for (int j = 0; j <= p; j++, l++) {
+                W[i][j] = w[l];
+            }
+        }
+
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
+        model.setLearningRate(0.1 / x.length);
+        return model;
     }
 
     /**
      * Binary-class logistic regression objective function.
      */
-    static class BinaryObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class BinomialObjective implements DifferentiableMultivariateFunction {
 
         /**
          * Training instances.
@@ -305,238 +471,105 @@ public class Maxent implements SoftClassifier<int[]> {
          */
         int[] y;
         /**
+         * The dimension of feature space.
+         */
+        int p;
+        /**
          * Regularization factor.
          */
         double lambda;
+        /**
+         * The number of samples in a partition.
+         */
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
 
         /**
          * Constructor.
          */
-        BinaryObjectiveFunction(int[][] x, int[] y, double lambda) {
+        BinomialObjective(int[][] x, int[] y, int p, double lambda) {
             this.x = x;
             this.y = y;
+            this.p = p;
             this.lambda = lambda;
-        }
 
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-                return f;
-            }
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][p+1];
         }
         
         @Override
         public double f(double[] w) {
-            double f = 0.0;
-            int p = w.length - 1;
+            // Since BFGS try to minimize the objective function
+            // and we try to maximize the log-likelihood, we really
+            // return the negative log-likelihood here.
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double wx = dot(x[i], w);
+                return MathEx.log1pe(wx) - y[i] * wx;
+            }).sum();
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-            } else {
-                List<FTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    tasks.add(new FTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                tasks.add(new FTask(w, start, n));
-                
-                try {
-                    for (double fi : MulticoreExecutor.run(tasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        double wx = dot(x[i], w);
-                        f += log1pe(wx) - y[i] * wx;
-                    }
-                }
-            }
-
-            if (lambda != 0.0) {
+            if (lambda > 0.0) {
                 double wnorm = 0.0;
-                for (int i = 0; i < p; i++) {
-                    wnorm += w[i] * w[i];
-                }
-
+                for (int i = 0; i < p; i++) wnorm += w[i] * w[i];
                 f += 0.5 * lambda * wnorm;
             }
 
             return f;
-        }
-
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                int p = w.length - 1;
-                double[] g = new double[w.length + 1];
-                
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-
-                    double yi = y[i] - Math.logistic(wx);
-                    for (int j : x[i]) {
-                        g[j] -= yi * j;
-                    }
-                    g[p] -= yi;
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
         }
         
         @Override
-        public double f(double[] w, double[] g) {
-            double f = 0.0;
-            int p = w.length - 1;
-            Arrays.fill(g, 0.0);
+        public double g(double[] w, double[] g) {
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
+
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
                     double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-
-                    double yi = y[i] - Math.logistic(wx);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (int j : x[i]) {
-                        g[j] -= yi * j;
+                        gradient[j] -= err;
                     }
-                    g[p] -= yi;
-                }
-            } else {
-                List<GTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    tasks.add(new GTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                tasks.add(new GTask(w, start, n));
+                    gradient[p] -= err;
 
-                try {
-                    for (double[] gi : MulticoreExecutor.run(tasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        double wx = dot(x[i], w);
-                        f += log1pe(wx) - y[i] * wx;
+                    return MathEx.log1pe(wx) - y[i] * wx;
+                }).sum();
+            }).sum();
 
-                        double yi = y[i] - Math.logistic(wx);
-                        for (int j : x[i]) {
-                            g[j] -= yi * j;
-                        }
-                        g[p] -= yi;
-                    }
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
                 }
             }
 
-            if (lambda != 0.0) {
+            if (lambda > 0.0) {
                 double wnorm = 0.0;
                 for (int i = 0; i < p; i++) {
                     wnorm += w[i] * w[i];
+                    g[i] += lambda * w[i];
                 }
-
                 f += 0.5 * lambda * wnorm;
-
-                for (int j = 0; j < p; j++) {
-                    g[j] += lambda * w[j];
-                }
             }
 
             return f;
         }
-    }
-
-    /**
-     * Returns natural log without underflow.
-     */
-    private static double log(double x) {
-        double y = 0.0;
-        if (x < 1E-300) {
-            y = -690.7755;
-        } else {
-            y = Math.log(x);
-        }
-        return y;
     }
 
     /**
      * Multi-class logistic regression objective function.
      */
-    static class MultiClassObjectiveFunction implements DifferentiableMultivariateFunction {
+    static class MultinomialObjective implements DifferentiableMultivariateFunction {
 
         /**
          * Training instances.
@@ -558,262 +591,121 @@ public class Maxent implements SoftClassifier<int[]> {
          * Regularization factor.
          */
         double lambda;
+        /**
+         * The number of samples in a partition.
+         */
+        int partitionSize;
+        /**
+         * The number of partitions.
+         */
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+        /**
+         * The workspace to store posteriori probability for each data partition.
+         */
+        double[][] posterioris;
 
         /**
          * Constructor.
          */
-        MultiClassObjectiveFunction(int[][] x, int[] y, int k, int p, double lambda) {
+        MultinomialObjective(int[][] x, int[] y, int k, int p, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
             this.p = p;
             this.lambda = lambda;
-        }
 
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-                double[] prob = new double[k];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-                }
-                return f;
-            }
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][(k-1)*(p+1)];
+            posterioris = new double[partitions][k];
         }
         
         @Override
         public double f(double[] w) {
-            double f = 0.0;
-            double[] prob = new double[k];
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
+
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
                     }
 
-                    softmax(prob);
+                    MathEx.softmax(posteriori);
 
-                    f -= log(prob[y[i]]);
-                }
-            } else {
-                List<FTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) step = 100;
+                    return -MathEx.log(posteriori[y[i]]);
+                }).sum();
+            }).sum();
 
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    tasks.add(new FTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                tasks.add(new FTask(w, start, n));
-                
-                try {
-                    for (double fi : MulticoreExecutor.run(tasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < k; j++) {
-                            prob[j] = dot(x[i], w, j, p);
-                        }
-
-                        softmax(prob);
-
-                        f -= log(prob[y[i]]);
-                    }
-                }
-            }
-
-            if (lambda != 0.0) {
+            if (lambda > 0.0) {
                 double wnorm = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        wnorm += Math.sqr(w[i*(p+1) + j]);
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
                     }
                 }
-
                 f += 0.5 * lambda * wnorm;
             }
 
             return f;
         }
 
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(double[] w, int start, int end) {
-                this.w = w;
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                double[] prob = new double[k];
-                double[] g = new double[w.length+1];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                        int pos = j * (p + 1);
-                        for (int l : x[i]) {
-                            g[pos + l] -= yi;
-                        }
-                        g[pos + p] -= yi;
-                    }
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
-        }
-        
         @Override
-        public double f(double[] w, double[] g) {
-            double f = 0.0;
-            double[] prob = new double[k];
-            Arrays.fill(g, 0.0);
+        public double g(double[] w, double[] g) {
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n < 1000 || m < 2) {
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j, p);
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
+
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
                     }
 
-                    softmax(prob);
+                    MathEx.softmax(posteriori);
 
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
+                    for (int j = 0; j < k - 1; j++) {
+                        double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
 
                         int pos = j * (p + 1);
                         for (int l : x[i]) {
-                            g[pos + l] -= yi;
+                            gradient[pos + l] -= err;
                         }
-                        g[pos + p] -= yi;
+                        gradient[pos + p] -= err;
                     }
-                }
-            } else {
-                List<GTask> tasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) {
-                    step = 100;
-                }
-                
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    tasks.add(new GTask(w, start, end));
-                    start += step;
-                    end += step;
-                }
-                tasks.add(new GTask(w, start, n));
 
-                try {
-                    for (double[] gi : MulticoreExecutor.run(tasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
-                    }
-                } catch (Exception ex) {
-                    for (int i = 0; i < n; i++) {
-                        for (int j = 0; j < k; j++) {
-                            prob[j] = dot(x[i], w, j, p);
-                        }
+                    return -MathEx.log(posteriori[y[i]]);
+                }).sum();
+            }).sum();
 
-                        softmax(prob);
-
-                        f -= log(prob[y[i]]);
-
-                        double yi = 0.0;
-                        for (int j = 0; j < k; j++) {
-                            yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                            int pos = j * (p + 1);
-                            for (int l : x[i]) {
-                                g[pos + l] -= yi;
-                            }
-                            g[pos + p] -= yi;
-                        }
-                    }
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
                 }
             }
 
-
-            if (lambda != 0.0) {
+            if (lambda > 0.0) {
                 double wnorm = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        int pos = i * (p+1) + j;
-                        wnorm += w[pos] * w[pos];
-                        g[pos] += lambda * w[pos];
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
+                        g[pos + j] += lambda * wi;
                     }
                 }
 
@@ -821,29 +713,6 @@ public class Maxent implements SoftClassifier<int[]> {
             }
 
             return f;
-        }
-    }
-
-    /**
-     * Calculate softmax function without overflow.
-     */
-    private static void softmax(double[] prob) {
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < prob.length; i++) {
-            if (prob[i] > max) {
-                max = prob[i];
-            }
-        }
-
-        double Z = 0.0;
-        for (int i = 0; i < prob.length; i++) {
-            double p = Math.exp(prob[i] - max);
-            prob[i] = p;
-            Z += p;
-        }
-
-        for (int i = 0; i < prob.length; i++) {
-            prob[i] /= Z;
         }
     }
 
@@ -875,64 +744,60 @@ public class Maxent implements SoftClassifier<int[]> {
     }
 
     /**
+     * Returns the dimension of input space.
+     * @return the dimension of input space.
+     */
+    public int dimension() {
+        return p;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
+    }
+
+    /**
+     * Sets the learning rate of stochastic gradient descent.
+     * It is a good practice to adapt the learning rate for
+     * different data sizes. For example, it is typical to
+     * set the learning rate to eta/n, where eta is in [0.1, 0.3]
+     * and n is the size of the training data.
+     *
+     * @param rate the learning rate.
+     */
+    public void setLearningRate(double rate) {
+        if (rate <= 0.0) {
+            throw new IllegalArgumentException("Invalid learning rate: " + rate);
+        }
+        this.eta = rate;
+    }
+
+    /**
+     * Returns the learning rate of stochastic gradient descent.
+     * @return the learning rate of stochastic gradient descent.
+     */
+    public double getLearningRate() {
+        return eta;
+    }
+
+    /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
     public double loglikelihood() {
         return L;
     }
 
-    @Override
-    public int predict(int[] x) {
-        return predict(x, null);
-    }
-
-    @Override
-    public int predict(int[] x, double[] posteriori) {
-        if (posteriori != null && posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
-        }
-
-        if (w != null) {
-            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-
-            if (posteriori != null) {
-                posteriori[0] = 1.0 - f;
-                posteriori[1] = f;
-            }
-
-            if (f < 0.5) {
-                return 0;
-            } else {
-                return 1;
-            }
-        } else {
-            int label = -1;
-            double max = Double.NEGATIVE_INFINITY;
-            for (int i = 0; i < k; i++) {
-                double prob = dot(x, W[i]);
-                if (prob > max) {
-                    max = prob;
-                    label = i;
-                }
-
-                if (posteriori != null) {
-                    posteriori[i] = prob;
-                }
-            }
-
-            if (posteriori != null) {
-                double Z = 0.0;
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] = Math.exp(posteriori[i] - max);
-                    Z += posteriori[i];
-                }
-
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] /= Z;
-                }
-            }
-
-            return label;
-        }
+    /**
+     * Returns the AIC score.
+     * @return the AIC score.
+     */
+    public double AIC() {
+        return ModelSelection.AIC(L, (k-1)*(p+1));
     }
 }

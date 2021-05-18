@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math;
 
@@ -23,10 +24,37 @@ package smile.math;
  * @author Haifeng Li
  */
 public interface DifferentiableMultivariateFunction extends MultivariateFunction {
+    /** A number close to zero, between machine epsilon and its square root. */
+    double EPSILON = Double.parseDouble(System.getProperty("smile.gradient.epsilon", "1E-8"));
 
     /**
-     * Compute the value and gradient of the function at x.
+     * Computes the value and gradient at x. The default implementation
+     * uses finite differences to calculate the gradient. When possible,
+     * the subclass should compute the gradient analytically.
+     *
+     * @param x a real vector.
+     * @param gradient the output variable of gradient.
+     * @return the function value.
      */
-    public double f(double[] x, double[] gradient);
+    default double g(double[] x, double[] gradient) {
+        double fx = f(x);
 
+        int n = x.length;
+        double[] xh = new double[n];
+        for (int i = 0; i < n; i++) {
+            double xi = x[i];
+            double h = EPSILON * Math.abs(xi);
+            if (h == 0.0) {
+                h = EPSILON;
+            }
+            xh[i] = xi + h; // trick to reduce finite-precision error.
+            h = xh[i] - xi;
+
+            double fh = f(xh);
+            xh[i] = xi;
+            gradient[i] = (fh - fx) / h;
+        }
+
+        return fx;
+    }
 }

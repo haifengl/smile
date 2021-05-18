@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
 import org.junit.After;
@@ -21,10 +23,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.SparseDataset;
-import smile.data.parser.LibsvmParser;
-import smile.validation.AdjustedRandIndex;
-import smile.validation.RandIndex;
+
+import smile.data.Dataset;
+import smile.data.Instance;
+import smile.io.Read;
+import smile.math.MathEx;
+import smile.util.SparseArray;
+import smile.validation.metric.*;
 
 /**
  *
@@ -51,42 +56,47 @@ public class SIBTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of parse method, of class SIB.
-     */
     @Test
     public void testParseNG20() throws Exception {
         System.out.println("NG20");
-        LibsvmParser parser = new LibsvmParser();
-        try {
-            SparseDataset train = parser.parse("NG20 Train", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.dat"));
-            SparseDataset test = parser.parse("NG20 Test", smile.data.parser.IOUtils.getTestDataFile("libsvm/news20.t.dat"));
-            int[] y = train.toArray(new int[train.size()]);
-            int[] testy = test.toArray(new int[test.size()]);
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.dat"));
+        Dataset<Instance<SparseArray>> test = Read.libsvm(smile.util.Paths.getTestData("libsvm/news20.t.dat"));
+
+        SparseArray[] trainx = train.stream().map(Instance::x).toArray(SparseArray[]::new);
+        int[] y = train.stream().mapToInt(Instance::label).toArray();
+        int[] testy = test.stream().mapToInt(Instance::label).toArray();
             
-            SIB sib = new SIB(train, 20, 100, 8);
-            System.out.println(sib);
-            
-            AdjustedRandIndex ari = new AdjustedRandIndex();
-            RandIndex rand = new RandIndex();
-            double r = rand.measure(y, sib.getClusterLabel());
-            double r2 = ari.measure(y, sib.getClusterLabel());
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.85);
-            assertTrue(r2 > 0.2);
-            
-            int[] p = new int[test.size()];
-            for (int i = 0; i < test.size(); i++) {
-                p[i] = sib.predict(test.get(i).x);
-            }
-            
-            r = rand.measure(testy, p);
-            r2 = ari.measure(testy, p);
-            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.85);
-            assertTrue(r2 > 0.2);
-        } catch (Exception ex) {
-            System.err.println(ex);
+        SIB model = SIB.fit(trainx, 20);
+        System.out.println(model);
+
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8842, r, 1E-4);
+        assertEquals(0.2327, r2, 1E-4);
+
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
+
+        int[] p = new int[test.size()];
+        for (int i = 0; i < test.size(); i++) {
+            p[i] = model.predict(test.get(i).x());
         }
+            
+        r = RandIndex.of(testy, p);
+        r2 = AdjustedRandIndex.of(testy, p);
+        System.out.format("Testing rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.8782, r, 1E-4);
+        assertEquals(0.2287, r2, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

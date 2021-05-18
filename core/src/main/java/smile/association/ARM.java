@@ -1,212 +1,177 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.association;
 
-import java.io.PrintStream;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 import smile.association.TotalSupportTree.Node;
 
 /**
  * Association Rule Mining.
- * Let I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>} be a set of n
- * binary attributes called items. Let D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}
- * be a set of transactions called the database. Each transaction in D has a
- * unique transaction ID and contains a subset of the items in I.
- * An association rule is defined as an implication of the form X &rArr; Y
- * where X, Y &sube; I and X &cap; Y = &Oslash;. The item sets X and Y are called
- * antecedent (left-hand-side or LHS) and consequent (right-hand-side or RHS)
- * of the rule, respectively. The support supp(X) of an item set X is defined as
+ * Let <code>I = {i<sub>1</sub>, i<sub>2</sub>,..., i<sub>n</sub>}</code>
+ * be a set of n binary attributes called items. Let
+ * <code>D = {t<sub>1</sub>, t<sub>2</sub>,..., t<sub>m</sub>}</code>
+ * be a set of transactions called the database. Each transaction in
+ * <code>D</code> has an unique transaction ID and contains a subset of
+ * the items in <code>I</code>. An association rule is defined as an
+ * implication of the form <code>X &rArr; Y</code>
+ * where <code>X, Y &sube; I</code> and <code>X &cap; Y = &Oslash;</code>.
+ * The item sets <code>X</code> and <code>Y</code> are called antecedent
+ * (left-hand-side or LHS)
+ * and consequent (right-hand-side or RHS) of the rule, respectively.
+ * The support <code>supp(X)</code> of an item set X is defined as
  * the proportion of transactions in the database which contain the item set.
- * Note that the support of an association rule X &rArr; Y is supp(X &cup; Y).
- * The confidence of a rule is defined conf(X &rArr; Y) = supp(X &cup; Y) / supp(X).
- * Confidence can be interpreted as an estimate of the probability P(Y | X),
- * the probability of finding the RHS of the rule in transactions under the
- * condition that these transactions also contain the LHS.
- * Association rules are usually required to satisfy a user-specified minimum
- * support and a user-specified minimum confidence at the same time.
+ * Note that the support of an association rule <code>X &rArr; Y</code> is
+ * <code>supp(X &cup; Y)</code>. The confidence of a rule is defined
+ * <code>conf(X &rArr; Y) = supp(X &cup; Y) / supp(X)</code>.
+ * Confidence can be interpreted as an estimate of the probability
+ * <code>P(Y | X)</code>, the probability of finding the RHS of the
+ * rule in transactions under the condition that these transactions
+ * also contain the LHS. Association rules are usually required to
+ * satisfy a user-specified minimum support and a user-specified
+ * minimum confidence at the same time.
  * 
  * @author Haifeng Li
  */
-public class ARM {
+public class ARM implements Iterable<AssociationRule> {
 
     /**
-     * FP-growth algorithm object.
+     * The number transactions in the database.
      */
-    private FPGrowth fim;
+    private final int size;
+    /**
+     * The confidence threshold for association rules.
+     */
+    private final double confidence;
     /**
      * Compressed set enumeration tree.
      */
-    private TotalSupportTree ttree;
-
+    private final TotalSupportTree ttree;
     /**
-     * Constructor. This is for mining frequent item sets by scanning database twice.
-     * The user first scans the database to obtains the frequency of single items and calls
-     * this constructor. Then the user add item sets to the object by {@link #add(int[])} during the
-     * second scan of the database. In this way, we don't need load the whole database
-     * into the main memory.
-     * @param frequency the frequency of single items.
-     * @param minSupport the required minimum support of item sets in terms of frequency.
+     * The buffer to collect mining results.
      */
-    public ARM(int[] frequency, int minSupport) {
-        fim = new FPGrowth(frequency, minSupport);
-    }
+    private final Queue<AssociationRule> buffer = new LinkedList<>();
 
     /**
-     * Constructor. This is a one-step construction if the database
-     * is available in main memory.
-     * @param itemsets the item set dataset. Each row is a item set,
-     * which may have different length. The item identifiers have to be in [0, n),
-     * where n is the number of items. Item set should NOT contain duplicated
-     * items.
-     * @param minSupport the required minimum support of item sets in
-     * terms of percentage.
-     */
-    public ARM(int[][] itemsets, double minSupport) {
-        fim = new FPGrowth(itemsets, minSupport);
-    }
-
-    /**
-     * Constructor. This is a one-step construction if the database
-     * is available in main memory.
-     * @param itemsets the item set database. Each row is a item set, which
-     * may have different length. The item identifiers have to be in [0, n),
-     * where n is the number of items. Item set should NOT contain duplicated
-     * items. Note that it is reordered after the call.
-     * @param minSupport the required minimum support of item sets in
-     * terms of frequency.
-     */
-    public ARM(int[][] itemsets, int minSupport) {
-        fim = new FPGrowth(itemsets, minSupport);
-    }
-
-    /**
-     * Add an item set to the database.
-     * @param itemset an item set, which should NOT contain duplicated items.
-     * Note that it is reordered after the call.
-     */
-    public void add(int[] itemset) {
-        fim.add(itemset);
-    }
-
-    /**
-     * Mines the association rules. The discovered rules will be printed out
-     * to the provided stream.
-     * @param confidence the confidence threshold for association rules.
-     * @return the number of discovered association rules.
-     */
-    public long learn(double confidence, PrintStream out) {
-        long n = 0;
-        ttree = fim.buildTotalSupportTree();
-        for (int i = 0; i < ttree.root.children.length; i++) {
-            if (ttree.root.children[i] != null) {
-                int[] itemset = {ttree.root.children[i].id};
-                n += learn(out, null, itemset, i, ttree.root.children[i], confidence);
-            }
-        }
-        return n;
-    }
-
-    /**
-     * Mines the association rules. The discovered frequent rules will be returned in a list.
+     * Constructor.
      * @param confidence the confidence threshold for association rules.
      */
-    public List<AssociationRule> learn(double confidence) {
-        List<AssociationRule> list = new ArrayList<>();
-        ttree = fim.buildTotalSupportTree();
-        for (int i = 0; i < ttree.root.children.length; i++) {
-            if (ttree.root.children[i] != null) {
-                int[] itemset = {ttree.root.children[i].id};
-                learn(null, list, itemset, i, ttree.root.children[i], confidence);
+    ARM(double confidence, TotalSupportTree ttree) {
+        this.size = ttree.size();
+        this.confidence = confidence;
+        this.ttree = ttree;
+    }
+
+    @Override
+    public Iterator<AssociationRule> iterator() {
+        return new Iterator<AssociationRule>() {
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                if (buffer.isEmpty()) {
+                    TotalSupportTree.Node root = ttree.root();
+                    for (; i < root.children.length; i++) {
+                        Node child = root.children[i];
+                        if (root.children[i] != null) {
+                            int[] itemset = {child.id};
+                            generate(itemset, i, child);
+
+                            if (!buffer.isEmpty()) {
+                                i++; // we will miss i++ in for loop once break
+                                break;
+                            }
+                        }
+                    }
+                }
+
+                return !buffer.isEmpty();
             }
-        }
-        return list;
+
+            @Override
+            public AssociationRule next() {
+                return buffer.poll();
+            }
+        };
+    }
+
+    /**
+     * Mines the association rules.
+     * @param confidence the confidence threshold for association rules.
+     * @param tree the FP-tree.
+     * @return the stream of association rules.
+     */
+    public static Stream<AssociationRule> apply(double confidence, FPTree tree) {
+        TotalSupportTree ttree = new TotalSupportTree(tree);
+        ARM arm = new ARM(confidence, ttree);
+        return StreamSupport.stream(arm.spliterator(), false);
     }
 
     /**
      * Generates association rules from a T-tree.
-     * @param itemset the label for a T-tree node as generated sofar.
+     * @param itemset the label for a T-tree node as generated so far.
      * @param size the size of the current array level in the T-tree.
      * @param node the current node in the T-tree.
-     * @param confidence the confidence threshold for association rules.
      */
-    private long learn(PrintStream out, List<AssociationRule> list, int[] itemset, int size, Node node, double confidence) {
-        long n = 0;
+    private void generate(int[] itemset, int size, Node node) {
         if (node.children == null) {
-            return n;
+            return;
         }
 
         for (int i = 0; i < size; i++) {
             if (node.children[i] != null) {
                 int[] newItemset = FPGrowth.insert(itemset, node.children[i].id);
                 // Generate ARs for current large itemset
-                n += learn(out, list, newItemset, node.children[i].support, confidence);
+                generate(newItemset, node.children[i].support);
                 // Continue generation process
-                n += learn(out, list, newItemset, i, node.children[i], confidence);
+                generate(newItemset, i, node.children[i]);
             }
         }
-        
-        return n;
     }
 
     /**
      * Generates all association rules for a given item set.
      * @param itemset the given frequent item set.
      * @param support the associated support value for the item set.
-     * @param confidence the confidence threshold for association rules.
      */
-    private long learn(PrintStream out, List<AssociationRule> list, int[] itemset, int support, double confidence) {
-        long n = 0;
+    private void generate(int[] itemset, int support) {
         // Determine combinations
         int[][] combinations = getPowerSet(itemset);
 
         // Loop through combinations
-        for (int i = 0; i < combinations.length; i++) {
+        for (int[] combination : combinations) {
             // Find complement of combination in given itemSet
-            int[] complement = getComplement(combinations[i], itemset);
+            int[] complement = getComplement(combination, itemset);
             // If complement is not empty generate rule
             if (complement != null) {
-                double arc = getConfidence(combinations[i], support);
+                double antecedentSupport = ttree.getSupport(combination);
+                double arc = support / antecedentSupport;
                 if (arc >= confidence) {
-                    double supp = (double) support / fim.size();
-                    AssociationRule ar = new AssociationRule(combinations[i], complement, supp, arc);
-                    n++;
-
-                    if (out != null) {
-                        out.println(ar);
-                    }
-
-                    if (list != null) {
-                        list.add(ar);
-                    }
+                    double supp = (double) support / size;
+                    double consequentSupport = ttree.getSupport(complement);
+                    double lift = support / (antecedentSupport * consequentSupport / size);
+                    double leverage = supp - (antecedentSupport / size) * (consequentSupport / size);
+                    AssociationRule ar = new AssociationRule(combination, complement, supp, arc, lift, leverage);
+                    buffer.offer(ar);
                 }
             }
         }
-        
-        return n;
-    }
-
-    /**
-     * Returns the confidence for a rule given the antecedent item set and
-     * the support for the whole item set.
-     * @param antecedent the antecedent (LHS) of the AR.
-     * @param support the support for the whole item set.
-     */
-    private double getConfidence(int[] antecedent, double support) {
-        return support / ttree.getSupport(antecedent);
     }
 
     /**
@@ -220,14 +185,13 @@ public class ARM {
             return null;
         }
 
-        // Otherwsise define combination array and determine complement
+        // Otherwise define combination array and determine complement
         int[] complement = new int[size];
         int index = 0;
-        for (int i = 0; i < fullset.length; i++) {
-            int item = fullset[i];
+        for (int item : fullset) {
             boolean member = false;
-            for (int j = 0; j < subset.length; j++) {
-                if (item == subset[j]) {
+            for (int i : subset) {
+                if (item == i) {
                     member = true;
                     break;
                 }
@@ -256,7 +220,7 @@ public class ARM {
      * @param set the input item set.
      * @param inputIndex the index within the input set marking current
      * element under consideration (0 at start).
-     * @param sofar the current combination determined sofar during the
+     * @param sofar the current combination determined so far during the
      * recursion (null at start).
      * @param sets the power set to store all combinations when recursion ends.
      * @param outputIndex the current location in the output set.

@@ -1,24 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.hypothesis;
 
 import java.util.Arrays;
+import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
-import smile.math.Math;
 
 /**
  * The Kolmogorov-Smirnov test (K-S test) is a form of minimum distance
@@ -54,18 +55,35 @@ import smile.math.Math;
  */
 public class KSTest {
     /**
-     * Kolmogorov-Smirnov statistic
+     * The type of test.
      */
-    public double d;
+    public final String method;
 
     /**
-     * P-value
+     * Kolmogorov-Smirnov statistic.
      */
-    public double pvalue;
+    public final double d;
 
-    private KSTest(double d, double pvalue) {
+    /**
+     * P-value.
+     */
+    public final double pvalue;
+
+    /**
+     * Constructor.
+     * @param method the type of test.
+     * @param d the Kolmogorov-Smirnov statistic.
+     * @param pvalue the p-value.
+     */
+    public KSTest(String method, double d, double pvalue) {
+        this.method = method;
         this.d = d;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s Kolmogorov-Smirnov Test(d = %.4f, p-value = %G)", method, d, pvalue);
     }
 
     /**
@@ -124,12 +142,12 @@ public class KSTest {
         }
 
         if (q > 0.3) {
-            double f = -0.392699081698724155 * Math.sqr(1. - q);
+            double f = -0.392699081698724155 * MathEx.pow2(1. - q);
             double y = invxlogx(f);
             double t;
             do {
                 double logy = Math.log(y);
-                double ff = f / Math.sqr(1. + Math.pow(y, 4) + Math.pow(y, 12));
+                double ff = f / MathEx.pow2(1. + Math.pow(y, 4) + Math.pow(y, 12));
                 double u = (y * logy - ff) / (1. + logy);
                 t = u / Math.max(0.5, 1. - 0.5 * u / (y * (1. + logy)));
                 y -= t;
@@ -153,7 +171,7 @@ public class KSTest {
      * Inverse of the cumulative distribution function of Kolmogorov-Smirnov
      * distribution.
      */
-    static double invpks(double p) {
+    private static double invpks(double p) {
         return invqks(1.0 - p);
     }
 
@@ -188,6 +206,10 @@ public class KSTest {
      * the cumulative distribution function of x is significantly different from
      * the given distribution. The array x is modified by being sorted into
      * ascending order.
+     *
+     * @param x the sample values.
+     * @param dist the distribution.
+     * @return the test results.
      */
     public static KSTest test(double[] x, Distribution dist) {
         Arrays.sort(x);
@@ -211,7 +233,7 @@ public class KSTest {
         en = Math.sqrt(en);
         double p = qks((en + 0.12 + 0.11 / en) * d);
 
-        return new KSTest(d, p);
+        return new KSTest(dist.toString(), d, p);
     }
 
     /**
@@ -220,6 +242,10 @@ public class KSTest {
      * the cumulative distribution function of x is significantly different from
      * that of y. The arrays x and y are modified by being sorted into
      * ascending order.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static KSTest test(double[] x, double[] y) {
         Arrays.sort(x);
@@ -252,6 +278,6 @@ public class KSTest {
         double en = Math.sqrt(en1 * en2 / (en1 + en2));
         double p = qks((en + 0.12 + 0.11 / en) * d);
 
-        return new KSTest(d, p);
+        return new KSTest("Two Sample", d, p);
     }
 }

@@ -1,23 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
-import smile.stat.distribution.MultivariateGaussianDistribution;
-import smile.validation.RandIndex;
-import smile.validation.AdjustedRandIndex;
+import smile.data.GaussianMixture;
+import smile.math.MathEx;
+import smile.validation.metric.*;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -50,56 +52,32 @@ public class DENCLUETest {
     public void tearDown() {
     }
     
-    /**
-     * Test of learn method, of class DENCLUE.
-     */
     @Test
-    public void testToy() {
-        System.out.println("Toy");
+    public void testGaussianMixture() throws Exception {
+        System.out.println("Gaussian Mixture");
 
-        double[] mu1 = {1.0, 1.0, 1.0};
-        double[][] sigma1 = {{1.0, 0.0, 0.0}, {0.0, 1.0, 0.0}, {0.0, 0.0, 1.0}};
-        double[] mu2 = {-2.0, -2.0, -2.0};
-        double[][] sigma2 = {{1.0, 0.3, 0.8}, {0.3, 1.0, 0.5}, {0.8, 0.5, 1.0}};
-        double[] mu3 = {4.0, 2.0, 3.0};
-        double[][] sigma3 = {{1.0, 0.8, 0.3}, {0.8, 1.0, 0.5}, {0.3, 0.5, 1.0}};
-        double[] mu4 = {3.0, 5.0, 1.0};
-        double[][] sigma4 = {{1.0, 0.5, 0.5}, {0.5, 1.0, 0.5}, {0.5, 0.5, 1.0}};
-        double[][] data = new double[10000][];
-        int[] label = new int[10000];
+        double[][] x = GaussianMixture.x;
+        int[] y = GaussianMixture.y;
 
-        MultivariateGaussianDistribution g1 = new MultivariateGaussianDistribution(mu1, sigma1);
-        for (int i = 0; i < 2000; i++) {
-            data[i] = g1.rand();
-            label[i] = 0;
-        }
+        MathEx.setSeed(19650218); // to get repeatable results.
+        DENCLUE model = DENCLUE.fit(x, 0.85, 100);
+        System.out.println(model);
 
-        MultivariateGaussianDistribution g2 = new MultivariateGaussianDistribution(mu2, sigma2);
-        for (int i = 0; i < 3000; i++) {
-            data[2000 + i] = g2.rand();
-            label[i] = 1;
-        }
+        double r = RandIndex.of(y, model.y);
+        double r2 = AdjustedRandIndex.of(y, model.y);
+        System.out.println("The number of clusters: " + model.k);
+        System.out.format("Training rand index = %.2f%%, adjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
+        assertEquals(0.6080, r, 1E-4);
+        assertEquals(0.2460, r2, 1E-4);
 
-        MultivariateGaussianDistribution g3 = new MultivariateGaussianDistribution(mu3, sigma3);
-        for (int i = 0; i < 3000; i++) {
-            data[5000 + i] = g3.rand();
-            label[i] = 2;
-        }
+        System.out.format("MI = %.2f%n", MutualInformation.of(y, model.y));
+        System.out.format("NMI.joint = %.2f%%%n", 100 * NormalizedMutualInformation.joint(y, model.y));
+        System.out.format("NMI.max = %.2f%%%n", 100 * NormalizedMutualInformation.max(y, model.y));
+        System.out.format("NMI.min = %.2f%%%n", 100 * NormalizedMutualInformation.min(y, model.y));
+        System.out.format("NMI.sum = %.2f%%%n", 100 * NormalizedMutualInformation.sum(y, model.y));
+        System.out.format("NMI.sqrt = %.2f%%%n", 100 * NormalizedMutualInformation.sqrt(y, model.y));
 
-        MultivariateGaussianDistribution g4 = new MultivariateGaussianDistribution(mu4, sigma4);
-        for (int i = 0; i < 2000; i++) {
-            data[8000 + i] = g4.rand();
-            label[i] = 3;
-        }
-        
-        DENCLUE denclue = new DENCLUE(data, 0.8, 50);
-        AdjustedRandIndex ari = new AdjustedRandIndex();
-        RandIndex rand = new RandIndex();
-        double r = rand.measure(label, denclue.getClusterLabel());
-        double r2 = ari.measure(label, denclue.getClusterLabel());
-        System.out.println("The number of clusters: " + denclue.getNumClusters());
-        System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-        assertTrue(r > 0.54);
-        assertTrue(r2 > 0.2);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

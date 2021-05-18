@@ -1,48 +1,56 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.vq;
 
+import java.io.Serializable;
 import java.util.Arrays;
-
-import smile.clustering.ClusteringDistance;
-import smile.clustering.PartitionClustering;
-import smile.math.Math;
+import java.util.Comparator;
+import java.util.stream.IntStream;
+import smile.clustering.CentroidClustering;
+import smile.graph.AdjacencyMatrix;
+import smile.graph.Graph;
+import smile.graph.Graph.Edge;
+import smile.math.MathEx;
+import smile.sort.QuickSort;
+import smile.math.TimeFunction;
 
 /**
- * Neural Gas soft competitive learning algorithm. The Neural Gas is inspired
- * by the Self-Organizing Map for finding optimal data representations based on
- * feature vectors. The algorithm was coined "Neural Gas" because of the
- * dynamics of the feature vectors during the adaptation process, which
- * distribute themselves like a gas within the data space. Although it is mainly
- * applied where data compression or vector quantization is an issue,
- * it is also used for cluster analysis as a robustly converging alternative to
- * the k-means clustering. A prominent extension is the Growing Neural Gas.
+ * Neural Gas soft competitive learning algorithm. Neural Gas is inspired
+ * by the Self-Organizing Map (SOM) for finding optimal data representations
+ * based on feature vectors. The algorithm was coined "Neural Gas" because of
+ * the dynamics of the feature vectors during the adaptation process, which
+ * distribute themselves like a gas within the data space. Although it is
+ * mainly applied where data compression or vector quantization is an issue,
+ * it is also used for cluster analysis as a robustly converging alternative
+ * to k-means. A prominent extension is the Growing Neural Gas.
  * <p>
- * Compared to SOM, neural gas has no topology of a fixed dimensionality
- * (in fact, no topology at all). For each input signal during learning, the
- * neural gas algorithm sorts the neurons of the network according to the
- * distance of their reference vectors to the input signal. Based on this
- * "rank order", neurons are adapted based on the adaptation strength that are
- * decreased according to a fixed schedule.
+ * Compared to SOM, Neural Gas has no topology of a fixed dimensionality
+ * (in fact, no topology at all). For each input signal during learning,
+ * Neural Gas sorts the neurons of the network according to the distance
+ * of their reference vectors to the input signal. Based on this "rank order",
+ * neurons are adapted based on the adaptation strength that are decreased
+ * according to a fixed schedule.
  * <p>
- * The adaptation step of the Neural Gas can be interpreted as gradient descent
- * on a cost function. By adapting not only the closest feature vector but all
- * of them with a step size decreasing with increasing distance order,
- * compared to k-means clustering, a much more robust convergence of the
- * algorithm can be achieved.
+ * The adaptation step of the Neural Gas can be interpreted as gradient
+ * descent on a cost function. By adapting not only the closest feature
+ * vector but all of them with a step size decreasing with increasing
+ * distance order, compared to k-means, a much more robust convergence
+ * of the algorithm can be achieved.
  *
  * <h2>References</h2>
  * <ol>
@@ -53,224 +61,152 @@ import smile.math.Math;
  * 
  * @see smile.clustering.KMeans
  * @see GrowingNeuralGas
- * @see NeuralMap
+ * @see SOM
  * 
  * @author Haifeng Li
  */
-public class NeuralGas extends PartitionClustering<double[]> {
-    /**
-     * The total distortion.
-     */
-    double distortion;
-    /**
-     * The centroids of each cluster.
-     */
-    double[][] centroids;
+public class NeuralGas implements VectorQuantizer {
+    private static final long serialVersionUID = 2L;
 
     /**
-     * A class representing a node for all neural gas algorithms.
+     * Neural Gas Neuron.
      */
-    class Neuron implements Comparable<Neuron> {
-        /**
-         * Reference vector.
-         */
-        double[] w;
-        /**
-         * The distance between the node and an input signal.
-         */
-        double dist = Double.MAX_VALUE;
+    private static class Neuron implements Serializable {
+        /** The weight vector. */
+        public final double[] w;
+        /** The index of neuron. */
+        public final int i;
 
         /**
          * Constructor.
+         * @param i the index of neuron.
+         * @param w the weight vector.
          */
-        Neuron(double[] w) {
+        public Neuron(int i, double[] w) {
+            this.i = i;
             this.w = w;
         }
-
-        @Override
-        public int compareTo(Neuron o) {
-            return (int) Math.signum(dist - o.dist);
-        }
     }
 
     /**
-     * Constructor. Learn the Neural Gas with k neurons.
-     * @param k the number of units in the neural gas. It is also the number
-     * of clusters.
+     * The neurons.
      */
-    public NeuralGas(double[][] data, int k) {
-        this(data, k, Math.min(10, Math.max(1, k/2)), 0.01, 0.5, 0.005, 25);
-    }
-
+    private final Neuron[] neurons;
     /**
-     * Constructor. Learn the Neural Gas with k neurons.
-     * @param k the number of units in the neural gas.
-     * @param lambda_i the initial value of lambda. lambda_i and lambda_f are
-     * used to set the soft learning radius/rate, i.e. determining the number
-     * of neural units significantly changing their synaptic weights with
-     * each adaptation step.
-     * @param lambda_f The final value of lambda.
-     * @param eps_i the initial value of epsilon. epsilon_i and epsilon_f
-     * are the initial and final learning rate respectively.
-     * @param eps_f the final value of epsilon.
-     * @param steps the number of iterations. Note that for one iteration, we
-     * mean that the learning process goes through the whole dataset.
+     * The network of neurons.
      */
-    public NeuralGas(double[][] data, int k, double lambda_i, double lambda_f, double eps_i, double eps_f, int steps) {
-        if (k < 2) {
-            throw new IllegalArgumentException("Invalid number of clusters: " + k);
-        }
-
-        if (lambda_i <= 0.0) {
-            throw new IllegalArgumentException("Invalid initial value of lambda: " + lambda_i);            
-        }
-        
-        if (lambda_f <= 0.0) {
-            throw new IllegalArgumentException("Invalid final value of lambda: " + lambda_i);            
-        }
-        
-        if (lambda_f >= lambda_i) {
-            throw new IllegalArgumentException("lambda_f is NOT less than lambda_i.");                        
-        }
-        
-        if (eps_i <= 0.0 || eps_i > 1.0) {
-            throw new IllegalArgumentException("Invalid initial value of epsilon: " + eps_i);            
-        }
-        
-        if (eps_f <= 0.0 || eps_f > 1.0) {
-            throw new IllegalArgumentException("Invalid final value of epsilon: " + eps_i);            
-        }
-        
-        if (eps_f >= eps_i) {
-            throw new IllegalArgumentException("eps_f is NOT less than eps_i.");                        
-        }
-        
-        int n = data.length;
-        int d = data[0].length;
-        this.k = k;
-
-        // We use k-means++ seeding method to initialize neurons.
-        y = seed(data, k, ClusteringDistance.EUCLIDEAN);
-
-        size = new int[k];
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-        }
-
-        centroids = new double[k][d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[y[i]][j] += data[i][j];
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[i][j] /= size[i];
-            }
-        }
-
-        Neuron[] nodes = new Neuron[k];
-        for (int i = 0; i < k; i++) {
-            nodes[i] = new Neuron(centroids[i]);
-        }
-
-        for (int t = 0; t < steps; t++) {
-            double tf = (double) t / steps;
-            double lambda = lambda_i * Math.pow(lambda_f / lambda_i, tf);
-            double eps = eps_i * Math.pow(eps_f / eps_i, tf);
-
-            for (double[] signal : data) {
-                for (Neuron node : nodes) {
-                    node.dist = Math.squaredDistance(node.w, signal);
-                }
-
-                Arrays.sort(nodes);
-
-                for (int i = 0; i < k; i++) {
-                    double delta = eps * Math.exp(-i / lambda);
-                    if (delta > 0) {
-                        for (int j = 0; j < d; j++) {
-                            nodes[i].w[j] += delta * (signal[j] - nodes[i].w[j]);
-                        }
-                    }
-                }
-            }
-        }
-
-        distortion = 0.0;
-        for (int i = 0; i < n; i++) {
-            double nearest = Double.MAX_VALUE;
-            for (int j = 0; j < k; j++) {
-                double dist = Math.squaredDistance(data[i], centroids[j]);
-                if (nearest > dist) {
-                    y[i] = j;
-                    nearest = dist;
-                }
-            }
-            distortion += nearest;
-        }
-
-        Arrays.fill(size, 0);
-
-        for (int i = 0; i < data.length; i++) {
-            size[y[i]]++;
-        }
-    }
-
+    private final AdjacencyMatrix graph;
     /**
-     * Returns the distortion.
+     * The learning rate function.
      */
-    public double distortion() {
-        return distortion;
-    }
-
+    private final TimeFunction alpha;
     /**
-     * Returns the centroids/neurons.
+     * The neighborhood function.
      */
-    public double[][] centroids() {
-        return centroids;
+    private final TimeFunction theta;
+    /**
+     * The lifetime of connections.
+     */
+    private final TimeFunction lifetime;
+    /**
+     * The distance between a new observation to neurons.
+     */
+    private final double[] dist;
+    /**
+     * The threshold to update neuron if {@code alpha * theta > eps}.
+     */
+    private final double eps = 1E-7;
+    /**
+     * The current iteration.
+     */
+    private int t = 0;
+
+    /**
+     * Constructor.
+     * @param neurons the initial neurons.
+     * @param alpha the learning rate function.
+     * @param theta the neighborhood function.
+     * @param lifetime the neuron connection lifetime, usually the number of
+     *                 iterations for one or two epochs.
+     */
+    public NeuralGas(double[][] neurons, TimeFunction alpha, TimeFunction theta, TimeFunction lifetime) {
+        this.neurons = IntStream.range(0, neurons.length).mapToObj(i -> new Neuron(i, neurons[i].clone())).toArray(Neuron[]::new);
+        this.alpha = alpha;
+        this.theta = theta;
+        this.lifetime = lifetime;
+        this.graph = new AdjacencyMatrix(neurons.length);
+        this.dist = new double[neurons.length];
     }
 
     /**
-     * Returns the centroids/neurons.
+     * Selects random samples as initial neurons of Neural Gas.
+     * @param k the number of neurons.
+     * @param samples some samples to select initial weight vectors.
+     * @return the initial neurons.
+     */
+    public static double[][] seed(int k, double[][] samples) {
+        int n = samples.length;
+        int[] y = new int[n];
+        double[][] medoids = new double[k][];
+        CentroidClustering.seed(samples, medoids, y, MathEx::squaredDistance);
+
+        return medoids;
+    }
+
+    /**
+     * Returns the neurons.
+     * @return the neurons.
      */
     public double[][] neurons() {
-        return centroids;
+        Arrays.sort(neurons, Comparator.comparingInt(x -> x.i));
+        return Arrays.stream(neurons).map(neuron -> neuron.w).toArray(double[][]::new);
     }
 
     /**
-     * Cluster a new instance.
-     * @param x a new instance.
-     * @return the cluster label, which is the index of nearest centroid.
+     * Returns the network of neurons.
+     * @return the network of neurons.
      */
-    @Override
-    public int predict(double[] x) {
-        double minDist = Double.MAX_VALUE;
-        int bestCluster = 0;
-
-        for (int i = 0; i < k; i++) {
-            double dist = Math.squaredDistance(x, centroids[i]);
-            if (dist < minDist) {
-                minDist = dist;
-                bestCluster = i;
+    public Graph network() {
+        double lifetime = this.lifetime.apply(t);
+        for (int i = 0; i < neurons.length; i++) {
+            for (Edge e : graph.getEdges(i)) {
+                if (t - e.weight > lifetime) {
+                    graph.setWeight(e.v1, e.v2, 0);
+                }
             }
         }
 
-        return bestCluster;
+        return graph;
     }
 
     @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("Neural Gas distortion: %.5f%n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
+    public void update(double[] x) {
+        int k = neurons.length;
+        int d = x.length;
+
+        IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
+        QuickSort.sort(dist, neurons);
+
+        double alpha = this.alpha.apply(t);
+        double theta = this.theta.apply(t);
         for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
+            double delta = alpha * Math.exp(-i/theta);
+            if (delta > eps) {
+                double[] w = neurons[i].w;
+                for (int j = 0; j < d; j++) {
+                    w[j] += delta * (x[j] - w[j]);
+                }
+            }
         }
-        
-        return sb.toString();
+
+        graph.setWeight(neurons[0].i, neurons[1].i, t);
+
+        t = t + 1;
+    }
+
+    @Override
+    public double[] quantize(double[] x) {
+        IntStream.range(0, neurons.length).parallel().forEach(i -> dist[i] = MathEx.distance(neurons[i].w, x));
+        return neurons[MathEx.whichMin(dist)].w;
     }
 }

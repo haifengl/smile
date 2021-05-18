@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
@@ -22,14 +23,18 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import java.io.IOException;
+import smile.data.Dataset;
+import smile.data.Instance;
+import smile.data.Segment;
+import smile.data.USPS;
+import smile.feature.Standardizer;
+import smile.io.Read;
+import smile.math.MathEx;
 import smile.math.kernel.GaussianKernel;
-import smile.math.kernel.LinearKernel;
-import smile.math.kernel.PolynomialKernel;
+import smile.math.kernel.BinarySparseGaussianKernel;
+import smile.util.SparseArray;
+import smile.validation.metric.Error;
 
 /**
  *
@@ -57,187 +62,123 @@ public class SVMTest {
     }
 
     @Test
-    public void testLinear() {
-        SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0);
-        svm.learn(new double[] {3, 0, 0, 0}, 1);
-        svm.learn(new double[] {1, 0, 1, 0}, 1);
-        svm.learn(new double[] {0, 2, 0, 0}, 0);
-        svm.learn(new double[] {0, 1, 0, 0}, 0);
-        svm.learn(new double[] {0, 0, 1, 0}, 1);
-        svm.learn(new double[] {0, 0, 0, 3}, 0);
-        svm.finish();
-        int p = svm.predict(new double[] {0, 0, 0, 1}); // This line throws exception
-        System.out.println(p);
-    }
+    public void testSVMGuide1() throws IOException {
+        System.out.println("svmguide1");
 
-    /**
-     * Test of learn method, of class SVM.
-     */
-    @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            SVM<double[]> svm = new SVM<>(new LinearKernel(), 10.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            svm.learn(x, y);
-            svm.learn(x, y);
-            svm.finish();
-            
-            int error = 0;
-            for (int i = 0; i < x.length; i++) {
-                if (svm.predict(x[i]) != y[i]) {
-                    error++;
-                }
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
+        Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1.t"));
+
+        int n = train.size();
+        double[][] x = new double[n][4];
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            Instance<SparseArray> sample = train.get(i);
+            for (SparseArray.Entry e : sample.x()) {
+                x[i][e.i] = e.x;
             }
-            System.out.println("Linear ONE vs. ALL error = " + error);
-            assertTrue(error <= 10);
-
-            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            svm.learn(x, y);
-            svm.learn(x, y);
-            svm.finish();
-            svm.trainPlattScaling(x, y);
-
-            error = 0;
-            for (int i = 0; i < x.length; i++) {
-                if (svm.predict(x[i]) != y[i]) {
-                    error++;
-                }
-                double[] prob = new double[3];
-                int yp = svm.predict(x[i], prob);
-                //System.out.format("%d %d %.2f, %.2f %.2f\n", y[i], yp, prob[0], prob[1], prob[2]);
-            }
-            System.out.println("Gaussian ONE vs. ALL error = " + error);
-            assertTrue(error <= 5);
-
-            svm = new SVM<>(new GaussianKernel(1), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
-            svm.learn(x, y);
-            svm.learn(x, y);
-            svm.finish();
-            assertTrue(!svm.hasPlattScaling());
-            svm.trainPlattScaling(x, y);
-            assertTrue(svm.hasPlattScaling());
-
-            error = 0;
-            for (int i = 0; i < x.length; i++) {
-                if (svm.predict(x[i]) != y[i]) {
-                    error++;
-                }
-                double[] prob = new double[3];
-                int yp = svm.predict(x[i], prob);
-                //System.out.format("%d %d %.2f, %.2f %.2f\n", y[i], yp, prob[0], prob[1], prob[2]);
-            }
-            System.out.println("Gaussian ONE vs. ONE error = " + error);
-            assertTrue(error <= 5);
-
-            svm = new SVM<>(new PolynomialKernel(2), 1.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            svm.learn(x, y);
-            svm.learn(x, y);
-            svm.finish();
-            
-            error = 0;
-            for (int i = 0; i < x.length; i++) {
-                if (svm.predict(x[i]) != y[i]) {
-                    error++;
-                }
-            }
-            System.out.println("Polynomial ONE vs. ALL error = " + error);
-            assertTrue(error <= 5);
-        } catch (Exception ex) {
-            ex.printStackTrace();
+            y[i] = sample.label() > 0 ? +1 : -1;
         }
+
+        n = test.size();
+        double[][] testx = new double[n][4];
+        int[] testy = new int[n];
+        for (int i = 0; i < n; i++) {
+            Instance<SparseArray> sample = test.get(i);
+            for (SparseArray.Entry e : sample.x()) {
+                testx[i][e.i] = e.x;
+            }
+            testy[i] = sample.label() > 0 ? +1 : -1;
+        }
+
+        GaussianKernel kernel = new GaussianKernel(90);
+        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+
+        int[] prediction = model.predict(testx);
+        int error = Error.of(testy, prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
+        assertEquals(134, error);
     }
 
-    /**
-     * Test of learn method, of class SVM.
-     */
+    @Test
+    public void testAdult() throws IOException {
+        System.out.println("adult");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+
+        Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
+        Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
+
+        int n = train.size();
+        int[][] x = new int[n][];
+        int[] y = new int[n];
+        for (int i = 0; i < n; i++) {
+            Instance<SparseArray> sample = train.get(i);
+            x[i] = new int[sample.x().size()];
+            int j = 0;
+            for (SparseArray.Entry e : sample.x()) {
+                x[i][j++] = e.i + 1; // The file is not standard libsvm format as the index starts with 0.
+            }
+            y[i] = sample.label();
+        }
+
+        n = test.size();
+        int[][] testx = new int[n][];
+        int[] testy = new int[n];
+        for (int i = 0; i < n; i++) {
+            Instance<SparseArray> sample = test.get(i);
+            testx[i] = new int[sample.x().size()];
+            int j = 0;
+            for (SparseArray.Entry e : sample.x()) {
+                testx[i][j++] = e.i + 1;
+            }
+            testy[i] = sample.label();
+        }
+
+        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31.6);
+        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+
+        int[] prediction = model.predict(testx);
+        int error = Error.of(testy, prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
+        assertEquals(2451, error);
+    }
+
     @Test
     public void testSegment() {
         System.out.println("Segment");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(19);
-        try {
-            AttributeDataset train = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
-            AttributeDataset test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
 
-            System.out.println(train.size() + " " + test.size());
-            double[][] x = train.toArray(new double[0][]);
-            int[] y = train.toArray(new int[0]);
-            double[][] testx = test.toArray(new double[0][]);
-            int[] testy = test.toArray(new int[0]);
-            
-            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ALL);
-            svm.learn(x, y);
-            svm.finish();
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (svm.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        MathEx.setSeed(19650217); // to get repeatable results.
 
-            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error < 70);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        Standardizer scaler = Standardizer.fit(Segment.x);
+        double[][] x = scaler.transform(Segment.x);
+        double[][] testx = scaler.transform(Segment.testx);
+
+        GaussianKernel kernel = new GaussianKernel(6.4);
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3));
+
+        int[] prediction = model.predict(testx);
+        int error = Error.of(Segment.testy, prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
+        assertEquals(33, error);
     }
 
-    /**
-     * Test of learn method, of class SVM.
-     */
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            SVM<double[]> svm = new SVM<>(new GaussianKernel(8.0), 5.0, Math.max(y) + 1, SVM.Multiclass.ONE_VS_ONE);
-            svm.learn(x, y);
-            svm.finish();
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (svm.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error < 95);
-            
-            System.out.println("USPS one more epoch...");
-            for (int i = 0; i < x.length; i++) {
-                int j = Math.randomInt(x.length);
-                svm.learn(x[j], y[j]);
-            }
-            
-            svm.finish();
+        GaussianKernel kernel = new GaussianKernel(8.0);
+        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
 
-            error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (svm.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error < 95);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
+        int[] prediction = model.predict(USPS.testx);
+        int error = Error.of(USPS.testy, prediction);
+        System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
+        assertEquals(87, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

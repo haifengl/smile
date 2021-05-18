@@ -1,24 +1,28 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.sort;
 
 /**
- * Shell sort is a sorting algorithm that is a generalization of insertion
- * sort, with two observations:
+ * Shell sort is a generalization of insertion sort.
+ * For {@code n < 50}, roughly, Shell sort is competitive with the more complicated
+ * Quicksort on many machines. For {@code n > 50}, Quicksort is generally faster.
+ * <p>
+ * Shell sort is based on two observations:
  * <ul>
  * <li> insertion sort is efficient if the input is "almost sorted", and
  * <li> insertion sort is typically inefficient because it moves values
@@ -33,25 +37,18 @@ package smile.sort;
  * <p>
  * The original implementation performs O(n<sup>2</sup>) comparisons and
  * exchanges in the worst case. A minor change given in V. Pratt's book
- * improved the bound to O(n log<sub><small>2</small></sub> n). This is worse than the
- * optimal comparison sorts, which are O(n log n).
- * <p>
- * For n &lt; 50, roughly, Shell sort is competitive with the more complicated
- * Quicksort on many machines. For n &gt; 50, Quicksort is generally faster.
- * 
+ * improved the bound to O(n log<sub><small>2</small></sub> n). This is
+ * worse than the optimal comparison sorts, which are O(n log n).
+ *
  * @author Haifeng Li
  */
-public class ShellSort {
-    /** Utility classes should not have public constructors. */
-    private ShellSort() {
-
-    }
-
+public interface ShellSort {
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    public static void sort(int[] a) {
-        int n = a.length;
+    static void sort(int[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -62,25 +59,26 @@ public class ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                int v = a[i];
+                int v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    public static void sort(float[] a) {
-        int n = a.length;
+    static void sort(float[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -91,25 +89,26 @@ public class ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                float v = a[i];
+                float v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending numerical order.
+     * @param x the array.
      */
-    public static void sort(double[] a) {
-        int n = a.length;
+    static void sort(double[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -120,25 +119,27 @@ public class ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                double v = a[i];
+                double v = x[i];
                 int j = i;
-                while (a[j - inc] > v) {
-                    a[j] = a[j - inc];
+                while (x[j - inc] > v) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }
 
     /**
      * Sorts the specified array into ascending order.
+     * @param x the array.
+     * @param <T> the data type of array elements.
      */
-    public static <T extends Comparable<? super T>> void sort(T[] a) {
-        int n = a.length;
+    static <T extends Comparable<? super T>> void sort(T[] x) {
+        int n = x.length;
 
         int inc = 1;
         do {
@@ -149,16 +150,16 @@ public class ShellSort {
         do {
             inc /= 3;
             for (int i = inc; i < n; i++) {
-                T v = a[i];
+                T v = x[i];
                 int j = i;
-                while (a[j - inc].compareTo(v) > 0) {
-                    a[j] = a[j - inc];
+                while (x[j - inc].compareTo(v) > 0) {
+                    x[j] = x[j - inc];
                     j -= inc;
                     if (j < inc) {
                         break;
                     }
                 }
-                a[j] = v;
+                x[j] = v;
             }
         } while (inc > 1);
     }

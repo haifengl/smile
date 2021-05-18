@@ -1,23 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import java.util.Arrays;
-import smile.math.Math;
+import smile.classification.ClassLabels;
+import smile.math.MathEx;
 
 /**
  * The ratio of between-groups to within-groups sum of squares is a univariate
@@ -36,33 +37,30 @@ import smile.math.Math;
  * 
  * @author Haifeng Li
  */
-public class SumSquaresRatio  implements FeatureRanking {
-
+public class SumSquaresRatio implements FeatureRanking {
     @Override
     public double[] rank(double[][] x, int[] y) {
+        return of(x, y);
+    }
+
+    /**
+     * Univariate feature ranking. Note that this method actually does NOT rank
+     * the features. It just returns the metric values of each feature. The
+     * use can then rank and select features.
+     *
+     * @param x a n-by-p matrix of n instances with p features.
+     * @param y class labels.
+     * @return the sum of squares ratio of between-groups to within-groups.
+     */
+    public static double[] of(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + labels[i]+1);                 
-            }
-        }
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        y = codec.y;
 
-        int k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-        
         int n = x.length;
         int p = x[0].length;
         int[] nc = new int[k];
@@ -91,8 +89,8 @@ public class SumSquaresRatio  implements FeatureRanking {
         for (int i = 0; i < n; i++) {
             int yi = y[i];
             for (int j = 0; j < p; j++) {
-                bss[j] += Math.sqr(condmu[yi][j] - mu[j]);
-                wss[j] += Math.sqr(x[i][j] - condmu[yi][j]);
+                bss[j] += MathEx.pow2(condmu[yi][j] - mu[j]);
+                wss[j] += MathEx.pow2(x[i][j] - condmu[yi][j]);
             }
         }
 

@@ -1,0 +1,562 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="manifold-top" class="title">Manifold Learning</h1>
+
+    <p>Manifold learning finds a low-dimensional basis for describing
+        high-dimensional data. Manifold learning is a popular approach to nonlinear
+        dimensionality reduction. Algorithms for this task are based on the idea
+        that the dimensionality of many data sets is only artificially high; though
+        each data point consists of perhaps thousands of features, it may be
+        described as a function of only a few underlying parameters. That is, the
+        data points are actually samples from a low-dimensional manifold that is
+        embedded in a high-dimensional space. Manifold learning algorithms attempt
+        to uncover these parameters in order to find a low-dimensional representation
+        of the data.</p>
+
+    <p>Some prominent approaches are locally linear embedding
+        (LLE), Hessian LLE, Laplacian eigenmaps, and LTSA. These techniques
+        construct a low-dimensional data representation using a cost function
+        that retains local properties of the data, and can be viewed as defining
+        a graph-based kernel for Kernel PCA. More recently, techniques have been
+        proposed that, instead of defining a fixed kernel, try to learn the kernel
+        using semidefinite programming. The most prominent example of such a
+        technique is maximum variance unfolding (MVU). The central idea of MVU
+        is to exactly preserve all pairwise distances between nearest neighbors
+        (in the inner product space), while maximizing the distances between points
+        that are not nearest neighbors.</p>
+
+    <p>An alternative approach to neighborhood preservation is through the
+        minimization of a cost function that measures differences between
+        distances in the input and output spaces. Important examples of such
+        techniques include classical multidimensional scaling (which is identical
+        to PCA), Isomap (which uses geodesic distances in the data space), diffusion
+        maps (which uses diffusion distances in the data space), t-SNE (which
+        minimizes the divergence between distributions over pairs of points),
+        and curvilinear component analysis.</p>
+
+    <h2 id="isomap">Isomap</h2>
+
+    <p>Isometric feature mapping (isomap) is a widely used low-dimensional embedding methods,
+        where geodesic distances on a weighted graph are incorporated with the
+        classical multidimensional scaling. Isomap is used for computing a
+        quasi-isometric, low-dimensional embedding of a set of high-dimensional
+        data points. Isomap is highly efficient and generally applicable to a broad
+        range of data sources and dimensionalities.</p>
+
+    <p>To be specific, the classical MDS performs low-dimensional embedding based
+        on the pairwise distance between data points, which is generally measured
+        using straight-line Euclidean distance. Isomap is distinguished by
+        its use of the geodesic distance induced by a neighborhood graph
+        embedded in the classical scaling. This is done to incorporate manifold
+        structure in the resulting embedding. Isomap defines the geodesic distance
+        to be the sum of edge weights along the shortest path between two nodes.
+        The top <code>n</code> eigenvectors of the geodesic distance matrix, represent the
+        coordinates in the new <code>n</code>-dimensional Euclidean space.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def isomap(data: Array[Array[Double]], k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class IsoMap {
+        public static IsoMap of(double[][] data, int k, int d, boolean conformal);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun isomap(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, CIsomap: Boolean = true): IsoMap
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The connectivity of each data point in the neighborhood graph is defined
+        as its nearest <code>k</code> Euclidean neighbors in the high-dimensional space. This
+        step is vulnerable to "short-circuit errors" if <code>k</code> is too large with
+        respect to the manifold structure or if noise in the data moves the
+        points slightly off the manifold. Even a single short-circuit error
+        can alter many entries in the geodesic distance matrix, which in turn
+        can lead to a drastically different (and incorrect) low-dimensional
+        embedding. Conversely, if <code>k</code> is too small, the neighborhood graph may
+        become too sparse to approximate geodesic paths accurately.</p>
+
+    <p>When the optional parameter <code>CIsomap</code> is true, the method
+        performs C-Isomap that involves magnifying the regions
+        of high density and shrink the regions of low density of data points
+        in the manifold. Edge weights that are maximized in Multi-Dimensional
+        Scaling(MDS) are modified, with everything else remaining unaffected.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/swissroll.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Swiss Roll</div>
+    </div>
+
+    <p>In the below example, we apply Isomap to the famous
+        <a href="http://people.cs.uchicago.edu/~dinoj/manifold/swissroll.html">swiss roll data</a> as shown above.
+        This data set was created to test out various dimensionality reduction algorithms.
+        The idea was to create several points in 2d, and then map them to 3d with some smooth
+        function, and then to see what the algorithm would find when it mapped the points back to 2d.
+        The data contains 20,000 samples. Because it is computational intensive to calculate
+        the shortest path for all samples, the example uses only the first 2,000 samples.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val swissroll = read.csv("data/manifold/swissroll.txt", header=false, delimiter='\t').toArray
+    plot(swissroll, '.', BLUE)
+
+    val map = isomap(swissroll.slice(0, 2000), 7)
+    val vertices = map.coordinates
+    val edges = map.graph.getEdges.asScala.map(edge => Array(edge.v1, edge.v2)).toArray
+
+    wireframe(vertices, edges).window()
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var swissroll = Read.csv("data/manifold/swissroll.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    ScatterPlot.of(swissroll, '.', Color.BLUE).canvas().window();
+
+    var map = IsoMap.of(Arrays.copyOf(swissroll, 2000), 7);
+    var vertices = map.coordinates;
+    var edges = map.graph.getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new);
+
+    Wireframe.of(vertices, edges).canvas().window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In this example, we use <code>k = 7</code> for neighborhood graph. In the mapped
+        2d space, we also plot the connections between neighbor neighbors.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/isomap.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Isomap</div>
+    </div>
+
+    <p>Note that Isomap produces strange holes like in a slice of Swiss cheese :).
+        This issue can be solved by adding to Isomap a vector quantization step.</p>
+
+    <h2 id="lle">LLE</h2>
+
+    <p>Locally Linear Embedding (LLE) has several advantages over Isomap, including
+        faster optimization when implemented to take advantage of sparse matrix
+        algorithms, and better results with many problems. LLE also begins by
+        finding a set of the nearest neighbors of each point. It then computes
+        a set of weights for each point that best describe the point as a linear
+        combination of its neighbors. Finally, it uses an eigenvector-based
+        optimization technique to find the low-dimensional embedding of points,
+        such that each point is still described with the same linear combination
+        of its neighbors. LLE tends to handle non-uniform sample densities poorly
+        because there is no fixed unit to prevent the weights from drifting as
+        various regions differ in sample densities.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def lle(data: Array[Array[Double]], k: Int, d: Int = 2): LLE
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LLE {
+        public static LLE of(double[][] data, int k, int d);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lle(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2): LLE
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The LLE using 8 neighbors on the swiss roll data is as follows.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val map = lle(swissroll.slice(0, 2000), 8)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var map = LLE.of(Arrays.copyOf(swissroll, 2000), 8);
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/lle.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">LLE</div>
+    </div>
+
+    <h2 id="laplacian">Laplacian Eigenmap</h2>
+
+    <p>Using the notion of the Laplacian of the nearest
+        neighbor adjacency graph, Laplacian Eigenmap computes a low dimensional
+        representation of the dataset that optimally preserves local neighborhood
+        information in a certain sense. The representation map generated by the
+        algorithm may be viewed as a discrete approximation to a continuous map
+        that naturally arises from the geometry of the manifold.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def laplacian(data: Array[Array[Double]], k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LaplacianEigenmap {
+        public static LaplacianEigenmap of(double[][] data, int k, int d, double t);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun laplacian(data: Array&lt;DoubleArray&gt;, k: Int, d: Int = 2, t: Double = -1): LaplacianEigenmap
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>t</code> is the smooth/width parameter of heat kernel
+        <code>e<sup>-||x-y||<sup>2</sup>/t</sup></code>.
+        Non-positive <code>t</code> means discrete weights.</p>
+
+    <p>The locality preserving character of the Laplacian Eigenmap algorithm makes
+        it relatively insensitive to outliers and noise. It is also not prone to
+        "short circuiting" as only the local distances are used.</p>
+
+    <p>The Laplacian Eigenmap on the swiss roll data is as follows.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val map = laplacian(swissroll.slice(0, 1000), 10, 2, 25.0)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var map = LaplacianEigenmap.of(Arrays.copyOf(swissroll, 1000), 10, 2, 25.0);
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/laplacian.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Laplacian Eigenmap</div>
+    </div>
+
+    <h2 id="t-sne">t-SNE</h2>
+
+    <p>The t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
+        dimensionality reduction technique that is particularly well suited
+        for embedding high-dimensional data into a space of two or three
+        dimensions, which can then be visualized in a scatter plot. Specifically,
+        it models each high-dimensional object by a two- or three-dimensional
+        point in such a way that similar objects are modeled by nearby points
+        and dissimilar objects are modeled by distant points.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def tsne(X: Array[Array[Double]],
+             d: Int = 2,
+             perplexity: Double = 20.0,
+             eta: Double = 200.0,
+             iterations: Int = 1000): TSNE
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    public class TSNE {
+        public TSNE(double[][] X, int d, double perplexity, double eta, int iterations);
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun tsne(X: Array&lt;DoubleArray&gt;,
+             d: Int = 2,
+             perplexity: Double = 20.0,
+             eta: Double = 200.0,
+             iterations: Int = 1000): TSNE
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>X</code> is input data, <code>perplexity</code> is the perplexity
+        of the conditional distribution, <code>eta</code> the learning rate, and <code>iterations</code> is
+        the number of iterations. If <code>X</code> is a square matrix, it is assumed
+        to be the distance/dissimilarity matrix.</p>
+
+    <p>The t-SNE on the MNIST data is as follows. Note that the input data is preprocessed
+        using PCA to reduce the dimensionality to 50 before t-SNE is performed.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/mnist/mnist2500_X.txt", header=false, delimiter=' ').toArray
+    val y = read.csv("data/mnist/mnist2500_labels.txt", header=false, delimiter=' ').column(0).toIntArray
+    val pc = pca(x)
+    pc.setProjection(50)
+    val x50 = pc.project(x)
+    val sne = tsne(x50, 3, 20, 200, 1000)
+    show(plot(sne.coordinates, y, 'o'))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var format = CSVFormat.DEFAULT.withDelimiter(' ');
+    var mnist = Read.csv(Paths.getTestData("mnist/mnist2500_X.txt"), format).toArray();
+    var labels = Read.csv(Paths.getTestData("mnist/mnist2500_labels.txt"), format).column(0).toIntArray();
+
+    var pca = PCA.fit(mnist);
+    pca.setProjection(50);
+    var X = pca.project(mnist);
+
+    var perplexity = 20;
+    var tsne = new TSNE(X, 2, perplexity, 200, 1000);
+
+    var canvas = ScatterPlot.of(tsne.coordinates, labels, '@', Palette).canvas();
+    canvas.setTitle("t-SNE of MNIST");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/tsne.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">t-SNE</div>
+    </div>
+
+    <h2 id="umap">UMAP</h2>
+
+    <p>Uniform Manifold Approximation and Projection can be used for
+        visualization similarly to t-SNE, but also for general non-linear
+        dimension reduction. The algorithm is founded on three assumptions
+        about the data:</p>
+ 
+    <ul>
+      <li>The data is uniformly distributed on a Riemannian manifold;</li>
+      <li>The Riemannian metric is locally constant (or can be approximated as such);</li>
+      <li>The manifold is locally connected.</li>
+    </ul>
+ 
+    <p>From these assumptions it is possible to model the manifold with a fuzzy
+        topological structure. The embedding is found by searching for a low
+        dimensional projection of the data that has the closest possible
+        equivalent fuzzy topological structure.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def umap(data: Array[Array[Double]],
+             k: Int = 15,
+             d: Int = 2,
+             iterations: Int = 0,
+             learningRate: Double = 1.0,
+             minDist: Double = 0.1,
+             spread: Double = 1.0,
+             negativeSamples: Int = 5,
+             repulsionStrength: Double = 1.0): UMAP
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    public class UAMP {
+        public of(double[][] data,
+                  int k,
+                  int d,
+                  int iterations,
+                  double learningRate,
+                  double minDist,
+                  double spread,
+                  int negativeSamples,
+                  double repulsionStrength);
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun umap(data: Array&lt;DoubleArray&gt;,
+             k: Int = 15,
+             d: Int = 2,
+             iterations: Int = 0,
+             learningRate: Double = 1.0,
+             minDist: Double = 0.1,
+             spread: Double = 1.0,
+             negativeSamples: Int = 5,
+             repulsionStrength: Double = 1.0): UMAP
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>data</code> is the input data, <code>k</code> is of
+        k-nearest neighbors. Larger values result in more global views
+        of the manifold, while smaller values result in more local data
+        being preserved. <code>d</code> is the target embedding dimensions.
+        <code>iterations</code> is the number of iterations to optimize the
+        low-dimensional representation. Larger values result in more
+        accurate embedding. Muse be greater than 10. Choose wise value
+        based on the size of the input data, e.g, 200 for large
+        data (1000+ samples), 500 for small.
+        <code>learningRate</code> is the initial learning rate for the
+        embedding optimization.
+        <code>minDist</code> is the desired separation between close points
+        in the embedding space. Smaller values will result in a more
+        clustered/clumped embedding where nearby points on the manifold are
+        drawn closer together, while larger values will result on a more even
+        disperse of points. The value should be set no-greater than
+        and relative to the spread value, which determines the scale
+        at which embedded points will be spread out.
+        <code>spread</code> is the effective scale of embedded points.
+        In combination with <code>minDist</code>, this determines how
+        clustered/clumped the embedded points are.
+        <code>negativeSamples</code> is the number of negative samples to
+        select per positive sample in the optimization process. Increasing
+        this value will result in greater repulsive force being applied,
+        greater optimization cost, but slightly more accuracy.
+        <code>repulsionStrength</code>plied to negative samples in low
+        dimensional embedding optimization. Values higher than one will result
+        in greater weight being given to negative samples.</p>
+
+    <p>UMAP on the MNIST data is as follows.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val map = umap(x)
+    val canvas = plot(map.coordinates, map.index.map(i =&gt; y(i)), 'o')
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var map = UMAP.of(mnist)
+    var y = Arrays.stream(map.index).map(i -&gt; labels[i]).toArray()
+    ScatterPlot.of(map.coordinates, y, '@').canvas().window()
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/umap.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">UMAP</div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="mds.html" title="Previous Section: Multi-Dimensional Scaling"><span>Multi-Dimensional Scaling</span></a>
+        <a class="btn-next-text" href="linear-algebra.html" title="Next Section: Linear Algebra"><span>Linear Algebra</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

@@ -1,31 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
-import smile.data.AttributeDataset;
+import java.util.Properties;
+import java.util.stream.IntStream;
+import smile.math.MathEx;
 import smile.math.DifferentiableMultivariateFunction;
-import smile.util.MulticoreExecutor;
+import smile.math.BFGS;
+import smile.util.IntSet;
+import smile.validation.ModelSelection;
 
 /**
  * Logistic regression. Logistic regression (logit model) is a generalized
@@ -68,195 +67,273 @@ import smile.util.MulticoreExecutor;
  * Logistic regression estimation also obeys the maximum entropy principle, and
  * thus logistic regression is sometimes called "maximum entropy modeling",
  * and the resulting classifier the "maximum entropy classifier".
- * 
- * @see NeuralNetwork
+ *
+ * @see smile.glm.GLM
+ * @see MLP
  * @see Maxent
  * @see LDA
  * 
  * @author Haifeng Li
  */
-public class LogisticRegression implements SoftClassifier<double[]>, OnlineClassifier<double[]> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(LogisticRegression.class);
+public abstract class LogisticRegression extends AbstractClassifier<double[]> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The dimension of input space.
      */
-    private int p;
+    int p;
 
     /**
      * The number of classes.
      */
-    private int k;
+    int k;
 
     /**
      * The log-likelihood of learned model.
      */
-    private double L;
+    double L;
 
-    /**
-     * The linear weights for binary logistic regression.
-     */
-    private double[] w;
-
-    /**
-     * The linear weights for multi-class logistic regression.
-     */
-    private double[][] W;
-    
     /**
      * Regularization factor.
      */
-    private double lambda;
-    
+    double lambda;
+
     /**
      * learning rate for stochastic gradient descent.
      */
-    private double eta = 5e-5;
+    double eta = 0.1;
 
     /**
-     * Trainer for logistic regression.
+     * Constructor.
+     * @param p the dimension of input data.
+     * @param L the log-likelihood of learned model.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param labels the class label encoder.
      */
-    public static class Trainer extends ClassifierTrainer<double[]> {
+    public LogisticRegression(int p, double L, double lambda, IntSet labels) {
+        super(labels);
+        this.k = labels.size();
+        this.p = p;
+        this.L = L;
+        this.lambda = lambda;
+    }
 
+    /** Binomial logistic regression. The dependent variable is nominal of two levels. */
+    public static class Binomial extends LogisticRegression {
         /**
-         * Regularization factor. &lambda; > 0 gives a "regularized" estimate
-         * of linear weights which often has superior generalization
-         * performance, especially when the dimensionality is high.
+         * The linear weights.
          */
-        private double lambda = 0.0;
-        /**
-         * The tolerance for BFGS stopping iterations.
-         */
-        private double tol = 1E-5;
-        /**
-         * The maximum number of BFGS iterations.
-         */
-        private int maxIter = 500;
+        private final double[] w;
 
         /**
          * Constructor.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels the class label encoder.
          */
-        public Trainer() {
-
-        }
-        
-        /**
-         * Sets the regularization factor. &lambda; &gt; 0 gives a "regularized"
-         * estimate of linear weights which often has superior generalization
-         * performance, especially when the dimensionality is high.
-         * 
-         * @param lambda regularization factor.
-         */
-        public Trainer setRegularizationFactor(double lambda) {
-            this.lambda = lambda;
-            return this;
-        }
-        
-        /**
-         * Sets the tolerance for BFGS stopping iterations.
-         * 
-         * @param tol the tolerance for stopping iterations.
-         */
-        public Trainer setTolerance(double tol) {
-            if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invalid tolerance: " + tol);
-            }
-
-            this.tol = tol;
-            return this;
+        public Binomial(double[] w, double L, double lambda, IntSet labels) {
+            super(w.length - 1, L, lambda, labels);
+            this.w = w;
         }
 
         /**
-         * Sets the maximum number of iterations.
-         * 
-         * @param maxIter the maximum number of iterations.
+         * Returns an array of size (p+1) containing the linear weights
+         * of binary logistic regression, where p is the dimension of
+         * feature vectors. The last element is the weight of bias.
+         * @return the linear weights.
          */
-        public Trainer setMaxNumIteration(int maxIter) {
-            if (maxIter <= 0) {
-                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-            }
-
-            this.maxIter = maxIter;
-            return this;
+        public double[] coefficients() {
+            return w;
         }
-        
+
         @Override
-        public LogisticRegression train(double[][] x, int[] y) {
-            return new LogisticRegression(x, y, lambda, tol, maxIter);
+        public double score(double[] x) {
+            return 1.0 / (1.0 + Math.exp(-dot(x, w)));
+        }
+
+        @Override
+        public int predict(double[] x) {
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+            return classes.valueOf(f < 0.5 ? 0 : 1);
+        }
+
+        @Override
+        public int predict(double[] x, double[] posteriori) {
+            if (x.length != p) {
+                throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+            }
+
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+            }
+
+            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
+
+            posteriori[0] = 1.0 - f;
+            posteriori[1] = f;
+
+            return classes.valueOf(f < 0.5 ? 0 : 1);
+        }
+
+        @Override
+        public void update(double[] x, int y) {
+            if (x.length != p) {
+                throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+            }
+
+            y = classes.indexOf(y);
+
+            // calculate gradient for incoming data
+            double wx = dot(x, w);
+            double err = y - MathEx.sigmoid(wx);
+
+            // update the weights
+            w[p] += eta * err;
+            for (int j = 0; j < p; j++) {
+                w[j] += eta * err * x[j];
+            }
+
+            // add regularization part
+            if (lambda > 0.0) {
+                for (int j = 0; j < p; j++) {
+                    w[j] -= eta * lambda * w[j];
+                }
+            }
         }
     }
-    
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     */
-    public LogisticRegression(AttributeDataset data) {
-        this(data.x(), data.labels());
+
+    /** Multinomial logistic regression. The dependent variable is nominal with more than two levels. */
+    public static class Multinomial extends LogisticRegression {
+        /**
+         * The linear weights.
+         */
+        private final double[][] w;
+
+        /**
+         * Constructor.
+         * @param w the weights.
+         * @param L the log-likelihood of learned model.
+         * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+         *               weights which often has superior generalization performance,
+         *               especially when the dimensionality is high.
+         * @param labels the class label encoder.
+         */
+        public Multinomial(double[][] w, double L, double lambda, IntSet labels) {
+            super(w[0].length - 1, L, lambda, labels);
+            this.w = w;
+        }
+
+        /**
+         * Returns a 2d-array of size (k-1) x (p+1), containing the linear weights
+         * of multi-class logistic regression, where k is the number of classes
+         * and p is the dimension of feature vectors. The last element of each
+         * row is the weight of bias.
+         * @return the linear weights.
+         */
+        public double[][] coefficients() {
+            return w;
+        }
+
+        @Override
+        public int predict(double[] x) {
+            return predict(x, new double[k]);
+        }
+
+        @Override
+        public int predict(double[] x, double[] posteriori) {
+            if (x.length != p) {
+                throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
+            }
+
+            if (posteriori.length != k) {
+                throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
+            }
+
+            posteriori[k-1] = 0.0;
+            for (int i = 0; i < k-1; i++) {
+                posteriori[i] = dot(x, w[i]);
+            }
+
+            MathEx.softmax(posteriori);
+            return classes.valueOf(MathEx.whichMax(posteriori));
+        }
+
+        @Override
+        public void update(double[] x, int y) {
+            if (x.length != p) {
+                throw new IllegalArgumentException("Invalid input vector size: " + x.length);
+            }
+
+            y = classes.indexOf(y);
+
+            double[] prob = new double[k];
+            for (int j = 0; j < k-1; j++) {
+                prob[j] = dot(x, w[j]);
+            }
+
+            MathEx.softmax(prob);
+
+            // update the weights
+            for (int i = 0; i < k-1; i++) {
+                double[] wi = w[i];
+                double err = (y == i ? 1.0 : 0.0) - prob[i];
+                wi[p] += eta * err;
+                for (int j = 0; j < p; j++) {
+                    wi[j] += eta * err * x[j];
+                }
+
+                // add regularization part
+                if (lambda > 0.0) {
+                    for (int j = 0; j < p; j++) {
+                        wi[j] -= eta * lambda * wi[j];
+                    }
+                }
+            }
+        }
     }
 
     /**
-     * Constructor. No regularization.
+     * Fits binomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @return the model.
+     */
+    public static Binomial binomial(double[][] x, int[] y) {
+        return binomial(x, y, new Properties());
+    }
+
+    /**
+     * Fits binomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static Binomial binomial(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
+        return binomial(x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits binomial logistic regression.
      * 
      * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     */
-    public LogisticRegression(double[][] x, int[] y) {
-        this(x, y, 0.0);
-    }
-
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(AttributeDataset data,  double lambda) {
-        this(data.x(), data.labels(), lambda);
-    }
-
-    /**
-     * Constructor.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     */
-    public LogisticRegression(double[][] x, int[] y, double lambda) {
-        this(x, y, lambda, 1E-5, 500);
-    }
-
-    /**
-     * Constructor. No regularization.
-     * 
-     * @param data labels in [0, k) where k is the number of classes and training samples.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
+     * @param y training labels.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
      * @param tol the tolerance for stopping iterations.
      * @param maxIter the maximum number of iterations.
+     * @return the model.
      */
-    public LogisticRegression(AttributeDataset data,  double lambda, double tol, int maxIter) {
-        this(data.x(), data.labels(), lambda, tol, maxIter);
-    }
-
-    /**
-     * Constructor.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param lambda &lambda; &gt; 0 gives a "regularized" estimate of linear
-     * weights which often has superior generalization performance, especially
-     * when the dimensionality is high.
-     * @param tol the tolerance for stopping iterations.
-     * @param maxIter the maximum number of iterations.
-     */
-    public LogisticRegression(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+    public static Binomial binomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
@@ -264,7 +341,6 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
         }
-        this.lambda = lambda;
 
         if (tol <= 0.0) {
             throw new IllegalArgumentException("Invalid tolerance: " + tol);            
@@ -273,81 +349,151 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
         if (maxIter <= 0) {
             throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);            
         }
-        
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
+
+        int p = x[0].length;
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        y = codec.y;
+
+        if (k != 2) {
+            throw new IllegalArgumentException("Fits binomial model on multi-class data.");
         }
 
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
+        BinomialObjective objective = new BinomialObjective(x, y, lambda);
+        double[] w = new double[p + 1];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
 
-        p = x[0].length;
-        if (k == 2) {
-            BinaryObjectiveFunction func = new BinaryObjectiveFunction(x, y, lambda);
-
-            w = new double[p + 1];
-
-            L = 0.0;
-            try {
-                L = -Math.min(func, 5, w, tol, maxIter);
-            } catch (Exception ex) {
-                // If L-BFGS doesn't work, let's try BFGS.
-                L = -Math.min(func, w, tol, maxIter);
-            }
-        } else {
-            MultiClassObjectiveFunction func = new MultiClassObjectiveFunction(x, y, k, lambda);
-
-            w = new double[k * (p + 1)];
-
-            L = 0.0;
-            try {
-                L = -Math.min(func, 5, w, tol, maxIter);
-            } catch (Exception ex) {
-                // If L-BFGS doesn't work, let's try BFGS.
-                L = -Math.min(func, w, tol, maxIter);
-            }
-
-            W = new double[k][p+1];
-            for (int i = 0, m = 0; i < k; i++) {
-                for (int j = 0; j <= p; j++, m++) {
-                    W[i][j] = w[m];
-                }
-            }
-            w = null;
-        }
+        Binomial model = new Binomial(w, L, lambda, codec.classes);
+        model.setLearningRate(0.1 / x.length);
+        return model;
     }
 
     /**
-     * Returns natural log(1+exp(x)) without overflow.
+     * Fits multinomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @return the model.
      */
-    private static double log1pe(double x) {
-        double y = 0.0;
-        if (x > 15) {
-            y = x;
-        } else {
-            y += Math.log1p(Math.exp(x));
+    public static Multinomial multinomial(double[][] x, int[] y) {
+        return multinomial(x, y, new Properties());
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static Multinomial multinomial(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
+        return multinomial(x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits multinomial logistic regression.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance for stopping iterations.
+     * @param maxIter the maximum number of iterations.
+     * @return the model.
+     */
+    public static Multinomial multinomial(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+        if (x.length != y.length) {
+            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        return y;
+        if (lambda < 0.0) {
+            throw new IllegalArgumentException("Invalid regularization factor: " + lambda);
+        }
+
+        if (tol <= 0.0) {
+            throw new IllegalArgumentException("Invalid tolerance: " + tol);
+        }
+
+        if (maxIter <= 0) {
+            throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
+        }
+
+        int p = x[0].length;
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
+        y = codec.y;
+
+        if (k <= 2) {
+            throw new IllegalArgumentException("Fits multinomial model on binary class data.");
+        }
+
+        MultinomialObjective objective = new MultinomialObjective(x, y, k, lambda);
+        double[] w = new double[(k - 1) * (p + 1)];
+        double L = -BFGS.minimize(objective, 5, w, tol, maxIter);
+
+        double[][] W = new double[k-1][p+1];
+        for (int i = 0, l = 0; i < k-1; i++) {
+            for (int j = 0; j <= p; j++, l++) {
+                W[i][j] = w[l];
+            }
+        }
+
+        Multinomial model = new Multinomial(W, L, lambda, codec.classes);
+        model.setLearningRate(0.1 / x.length);
+        return model;
+    }
+
+    /**
+     * Fits logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @return the model.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y) {
+        return fit(x, y, new Properties());
+    }
+
+    /**
+     * Fits logistic regression.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
+        return fit(x, y, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits logistic regression.
+     *
+     * @param x training samples.
+     * @param y training labels.
+     * @param lambda {@code lambda > 0} gives a "regularized" estimate of linear
+     *               weights which often has superior generalization performance,
+     *               especially when the dimensionality is high.
+     * @param tol the tolerance to stop iterations.
+     * @param maxIter the maximum number of iterations.
+     * @return the model.
+     */
+    public static LogisticRegression fit(double[][] x, int[] y, double lambda, double tol, int maxIter) {
+        ClassLabels codec = ClassLabels.fit(y);
+        if (codec.k == 2)
+            return binomial(x, y, lambda, tol, maxIter);
+        else
+            return multinomial(x, y, lambda, tol, maxIter);
     }
 
     /**
      * Binary-class logistic regression objective function.
      */
-    static class BinaryObjectiveFunction implements DifferentiableMultivariateFunction {
-
+    static class BinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -357,245 +503,106 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
          */
         int[] y;
         /**
+         * The dimension of feature space.
+         */
+        int p;
+        /**
          * Regularization factor.
          */
         double lambda;
         /**
-         * Parallel computing of objective function.
+         * The number of samples in a partition.
          */
-        List<FTask> ftasks = null;
+        int partitionSize;
         /**
-         * Parallel computing of objective function and gradient.
+         * The number of partitions.
          */
-        List<GTask> gtasks = null;
-        
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+
         /**
          * Constructor.
          */
-        BinaryObjectiveFunction(double[][] x, int[] y, double lambda) {
+        BinomialObjective(double[][] x, int[] y, double lambda) {
             this.x = x;
             this.y = y;
             this.lambda = lambda;
+            this.p = x[0].length;
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n >= 1000 && m >= 2) {
-                ftasks = new ArrayList<>(m + 1);
-                gtasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) {
-                    step = 100;
-                }
-
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    ftasks.add(new FTask(start, end));
-                    gtasks.add(new GTask(start, end));
-                    start += step;
-                    end += step;
-                }
-                ftasks.add(new FTask(start, n));
-                gtasks.add(new GTask(start, n));
-            }
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][p+1];
         }
 
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(int start, int end) {
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-                return f;
-            }
-        }
-        
         @Override
         public double f(double[] w) {
-            double f = Double.NaN;
-            int p = w.length - 1;
+            // Since BFGS try to minimize the objective function
+            // and we try to maximize the log-likelihood, we really
+            // return the negative log-likelihood here.
+            double f = IntStream.range(0, x.length).parallel().mapToDouble(i -> {
+                double wx = dot(x[i], w);
+                return MathEx.log1pe(wx) - y[i] * wx;
+            }).sum();
 
-            if (ftasks != null) {
-                for (FTask task : ftasks) {
-                    task.w = w;
-                }
-                
-                try {
-                    f = 0.0;
-                    for (double fi : MulticoreExecutor.run(ftasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    logger.error("Failed to train Logistic Regression on multi-core", ex);
-                    f = Double.NaN;
-                }
-            }
-
-            if (Double.isNaN(f)) {
-                f = 0.0;
-                int n = x.length;
-                for (int i = 0; i < n; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                }
-            }
-            
-            if (lambda != 0.0) {
-                double w2 = 0.0;
-                for (int i = 0; i < p; i++) {
-                    w2 += w[i] * w[i];
-                }
-
-                f += 0.5 * lambda * w2;
+            if (lambda > 0.0) {
+                double wnorm = 0.0;
+                for (int i = 0; i < p; i++) wnorm += w[i] * w[i];
+                f += 0.5 * lambda * wnorm;
             }
 
             return f;
         }
 
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(int start, int end) {
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                int p = w.length - 1;
-                double[] g = new double[w.length + 1];
-                
-                for (int i = start; i < end; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-                    
-                    double yi = y[i] - Math.logistic(wx);
-                    for (int j = 0; j < p; j++) {
-                        g[j] -= yi * x[i][j];
-                    }
-                    g[p] -= yi;
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
-        }
-        
         @Override
-        public double f(double[] w, double[] g) {
-            double f = Double.NaN;
-            int p = w.length - 1;
-            Arrays.fill(g, 0.0);
+        public double g(double[] w, double[] g) {
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] gradient = gradients[r];
+                Arrays.fill(gradient, 0.0);
 
-            if (gtasks != null) {
-                for (GTask task : gtasks) {
-                    task.w = w;
-                }
-                
-                try {
-                    f = 0.0;
-                    for (double[] gi : MulticoreExecutor.run(gtasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
-                    }
-                } catch (Exception ex) {
-                    logger.error("Failed to train Logistic Regression on multi-core", ex);
-                    f = Double.NaN;
-                }
-            }
+                int begin = r * partitionSize;
+                int end = (r + 1) * partitionSize;
+                if (end > x.length) end = x.length;
 
-            if (Double.isNaN(f)) {
-                f = 0.0;
-                int n = x.length;
-                for (int i = 0; i < n; i++) {
-                    double wx = dot(x[i], w);
-                    f += log1pe(wx) - y[i] * wx;
-
-                    double yi = y[i] - Math.logistic(wx);
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    double[] xi = x[i];
+                    double wx = dot(xi, w);
+                    double err = y[i] - MathEx.sigmoid(wx);
                     for (int j = 0; j < p; j++) {
-                        g[j] -= yi * x[i][j];
+                        gradient[j] -= err * xi[j];
                     }
-                    g[p] -= yi;
+                    gradient[p] -= err;
+
+                    return MathEx.log1pe(wx) - y[i] * wx;
+                }).sum();
+            }).sum();
+
+            Arrays.fill(g, 0.0);
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
                 }
             }
 
-            if (lambda != 0.0) {
-                double w2 = 0.0;
+            if (lambda > 0.0) {
+                double wnorm = 0.0;
                 for (int i = 0; i < p; i++) {
-                    w2 += w[i] * w[i];
+                    wnorm += w[i] * w[i];
+                    g[i] += lambda * w[i];
                 }
-
-                f += 0.5 * lambda * w2;
-
-                for (int j = 0; j < p; j++) {
-                    g[j] += lambda * w[j];
-                }
+                f += 0.5 * lambda * wnorm;
             }
 
             return f;
         }
-    }
-
-    /**
-     * Returns natural log without underflow.
-     */
-    private static double log(double x) {
-        double y = 0.0;
-        if (x < 1E-300) {
-            y = -690.7755;
-        } else {
-            y = Math.log(x);
-        }
-        return y;
     }
 
     /**
      * Multi-class logistic regression objective function.
      */
-    static class MultiClassObjectiveFunction implements DifferentiableMultivariateFunction {
-
+    static class MultinomialObjective implements DifferentiableMultivariateFunction {
         /**
          * Training instances.
          */
@@ -609,343 +616,134 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
          */
         int k;
         /**
+         * The dimension of feature space.
+         */
+        int p;
+        /**
          * Regularization factor.
          */
         double lambda;
         /**
-         * Parallel computing of objective function.
+         * The number of samples in a partition.
          */
-        List<FTask> ftasks = null;
+        int partitionSize;
         /**
-         * Parallel computing of objective function and gradient.
+         * The number of partitions.
          */
-        List<GTask> gtasks = null;
+        int partitions;
+        /**
+         * The workspace to store gradient for each data partition.
+         */
+        double[][] gradients;
+        /**
+         * The workspace to store posteriori probability for each data partition.
+         */
+        double[][] posterioris;
 
         /**
          * Constructor.
          */
-        MultiClassObjectiveFunction(double[][] x, int[] y, int k, double lambda) {
+        MultinomialObjective(double[][] x, int[] y, int k, double lambda) {
             this.x = x;
             this.y = y;
             this.k = k;
             this.lambda = lambda;
+            this.p = x[0].length;
 
-            int n = x.length;
-            int m = MulticoreExecutor.getThreadPoolSize();
-            if (n >= 1000 && m >= 2) {
-                ftasks = new ArrayList<>(m + 1);
-                gtasks = new ArrayList<>(m + 1);
-                int step = n / m;
-                if (step < 100) {
-                    step = 100;
-                }
-
-                int start = 0;
-                int end = step;
-                for (int i = 0; i < m - 1; i++) {
-                    ftasks.add(new FTask(start, end));
-                    gtasks.add(new GTask(start, end));
-                    start += step;
-                    end += step;
-                }
-                ftasks.add(new FTask(start, n));
-                gtasks.add(new GTask(start, n));
-            }
+            partitionSize = Integer.parseInt(System.getProperty("smile.data.partition.size", "1000"));
+            partitions = x.length / partitionSize + (x.length % partitionSize == 0 ? 0 : 1);
+            gradients = new double[partitions][(k-1)*(p+1)];
+            posterioris = new double[partitions][k];
         }
 
-        /**
-         * Task to calculate the objective function.
-         */
-        class FTask implements Callable<Double> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            FTask(int start, int end) {
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public Double call() {
-                double f = 0.0;
-
-                int p = x[0].length;
-                double[] prob = new double[k];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j * (p + 1));
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-                }
-                return f;
-            }
-        }
-        
         @Override
         public double f(double[] w) {
-            double f = Double.NaN;
-            int p = x[0].length;
-            double[] prob = new double[k];
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                double[] posteriori = posterioris[r];
 
-            if (ftasks != null) {
-                for (FTask task : ftasks) {
-                    task.w = w;
-                }
-                
-                try {
-                    f = 0.0;
-                    for (double fi : MulticoreExecutor.run(ftasks)) {
-                        f += fi;
-                    }
-                } catch (Exception ex) {
-                    logger.error("Failed to train Logistic Regression on multi-core", ex);
-                    f = Double.NaN;
-                }
-            }
+                int begin = r * partitionSize;
+                int end = (r+1) * partitionSize;
+                if (end > x.length) end = x.length;
 
-            if (Double.isNaN(f)) {
-                f = 0.0;
-                int n = x.length;
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j * (p + 1));
+                return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                    posteriori[k - 1] = 0.0;
+                    for (int j = 0; j < k - 1; j++) {
+                        posteriori[j] = dot(x[i], w, j, p);
                     }
 
-                    softmax(prob);
+                    MathEx.softmax(posteriori);
 
-                    f -= log(prob[y[i]]);
-                }
-            }
+                    return -MathEx.log(posteriori[y[i]]);
+                }).sum();
+            }).sum();
 
-            if (lambda != 0.0) {
-                double w2 = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        w2 += Math.sqr(w[i*(p+1) + j]);
+            if (lambda > 0.0) {
+                double wnorm = 0.0;
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
                     }
                 }
-
-                f += 0.5 * lambda * w2;
+                f += 0.5 * lambda * wnorm;
             }
 
             return f;
         }
 
-        /**
-         * Task to calculate the objective function and gradient.
-         */
-        class GTask implements Callable<double[]> {
-
-            /**
-             * The parameter vector.
-             */
-            double[] w;
-            /**
-             * The start index of data portion for this task.
-             */
-            int start;
-            /**
-             * The end index of data portion for this task.
-             */
-            int end;
-
-            GTask(int start, int end) {
-                this.start = start;
-                this.end = end;
-            }
-
-            @Override
-            public double[] call() {
-                double f = 0.0;
-                double[] g = new double[w.length+1];
-
-                int p = x[0].length;
-                double[] prob = new double[k];
-
-                for (int i = start; i < end; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j * (p + 1));
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                        for (int l = 0, pos = j * (p + 1); l < p; l++) {
-                            g[pos + l] -= yi * x[i][l];
-                        }
-                        g[j * (p + 1) + p] -= yi;
-                    }
-                }
-                
-                g[w.length] = f;
-                return g;
-            }
-        }
-        
         @Override
-        public double f(double[] w, double[] g) {
-            double f = Double.NaN;
-            int p = x[0].length;
-            double[] prob = new double[k];            
+        public double g(double[] w, double[] g) {
+            double f = IntStream.range(0, partitions).parallel().mapToDouble(r -> {
+                        double[] posteriori = posterioris[r];
+                        double[] gradient = gradients[r];
+                        Arrays.fill(gradient, 0.0);
+
+                        int begin = r * partitionSize;
+                        int end = (r+1) * partitionSize;
+                        if (end > x.length) end = x.length;
+
+                        return IntStream.range(begin, end).sequential().mapToDouble(i -> {
+                            posteriori[k - 1] = 0.0;
+                            for (int j = 0; j < k - 1; j++) {
+                                posteriori[j] = dot(x[i], w, j, p);
+                            }
+
+                            MathEx.softmax(posteriori);
+
+                            for (int j = 0; j < k - 1; j++) {
+                                double err = (y[i] == j ? 1.0 : 0.0) - posteriori[j];
+
+                                int pos = j * (p + 1);
+                                for (int l = 0; l < p; l++) {
+                                    gradient[pos + l] -= err * x[i][l];
+                                }
+                                gradient[pos + p] -= err;
+                            }
+
+                            return -MathEx.log(posteriori[y[i]]);
+                        }).sum();
+            }).sum();
+
             Arrays.fill(g, 0.0);
-
-            if (gtasks != null) {
-                for (GTask task : gtasks) {
-                    task.w = w;
-                }
-                
-                try {
-                    f = 0.0;
-                    for (double[] gi : MulticoreExecutor.run(gtasks)) {
-                        f += gi[w.length];
-                        for (int i = 0; i < w.length; i++) {
-                            g[i] += gi[i];
-                        }
-                    }
-                } catch (Exception ex) {
-                    logger.error("Failed to train Logistic Regression on multi-core", ex);
-                    f = Double.NaN;
+            for (double[] gradient : gradients) {
+                for (int i = 0; i < g.length; i++) {
+                    g[i] += gradient[i];
                 }
             }
 
-            if (Double.isNaN(f)) {
-                f = 0.0;
-                int n = x.length;
-                for (int i = 0; i < n; i++) {
-                    for (int j = 0; j < k; j++) {
-                        prob[j] = dot(x[i], w, j * (p + 1));
-                    }
-
-                    softmax(prob);
-
-                    f -= log(prob[y[i]]);
-
-                    double yi = 0.0;
-                    for (int j = 0; j < k; j++) {
-                        yi = (y[i] == j ? 1.0 : 0.0) - prob[j];
-
-                        for (int l = 0, pos = j * (p + 1); l < p; l++) {
-                            g[pos + l] -= yi * x[i][l];
-                        }
-                        g[j * (p + 1) + p] -= yi;
+            if (lambda > 0.0) {
+                double wnorm = 0.0;
+                for (int i = 0; i < k-1; i++) {
+                    for (int j = 0, pos = i * (p+1); j < p; j++) {
+                        double wi = w[pos + j];
+                        wnorm += wi * wi;
+                        g[pos + j] += lambda * wi;
                     }
                 }
-            }
-
-            if (lambda != 0.0) {
-                double w2 = 0.0;
-                for (int i = 0; i < k; i++) {
-                    for (int j = 0; j < p; j++) {
-                        int pos = i * (p+1) + j;
-                        w2 += w[pos] * w[pos];
-                        g[pos] += lambda * w[pos];
-                    }
-                }
-
-                f += 0.5 * lambda * w2;
+                f += 0.5 * lambda * wnorm;
             }
 
             return f;
-        }
-    }
-
-	@Override
-	public void learn(double[] x, int y) {
-        if (y < 0 || y >= k) {
-            throw new IllegalArgumentException("Invalid label");
-        }
-
-        if (x.length != p) {
-            throw new IllegalArgumentException("Invalid input vector size: " + x.length);
-        }
-
-        if (k == 2) {
-            // calculate gradient for incoming data
-            double wx = dot(x, w);
-            double res = y - Math.logistic(wx);
-
-            // update the weights
-            for (int j = 0; j <= p; j++) {
-                double gj = j < p ? eta * res * x[j] : eta * res;
-                w[j] += gj;
-
-                // add regularization part
-                if (lambda != 0.0) {
-                    w[j] -= 2 * lambda * eta * w[j];
-                }
-            }
-        } else {
-            double[] prob = new double[k];
-            for (int j = 0; j < k; j++) {
-                prob[j] = dot(x, W[j]);
-            }
-
-            softmax(prob);
-
-            // update the weights
-            for (int j = 0; j < k; j++) {
-                for (int l = 0; l <= p; l++) {
-                    double yi = (y == j ? 1.0 : 0.0) - prob[j];
-                    double gjl = l < p ? eta * yi * x[l] : eta * yi;
-                    W[j][l] += gjl;
-
-                    // add regularization part
-                    if (lambda != 0.0) {
-                        W[j][l] -= 2 * lambda * eta * W[j][l];
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Tune the fixed learning rate for stochastic gradient descent
-     * @param eta usually quite small to avoid oscillation, default is 5e-5
-     */
-    public void setLearningRate(double eta) {
-        this.eta = eta;
-	}
-
-    /**
-     * Calculate softmax function without overflow.
-     */
-    private static void softmax(double[] prob) {
-        double max = Double.NEGATIVE_INFINITY;
-        for (int i = 0; i < prob.length; i++) {
-            if (prob[i] > max) {
-                max = prob[i];
-            }
-        }
-
-        double Z = 0.0;
-        for (int i = 0; i < prob.length; i++) {
-            double p = Math.exp(prob[i] - max);
-            prob[i] = p;
-            Z += p;
-        }
-
-        for (int i = 0; i < prob.length; i++) {
-            prob[i] /= Z;
         }
     }
 
@@ -953,93 +751,76 @@ public class LogisticRegression implements SoftClassifier<double[]>, OnlineClass
      * Returns the dot product between weight vector and x (augmented with 1).
      */
     private static double dot(double[] x, double[] w) {
-        int i = 0;
-        double dot = 0.0;
+        double dot = w[x.length];
 
-        for (; i < x.length; i++) {
+        for (int i = 0; i < x.length; i++) {
             dot += x[i] * w[i];
         }
 
-        return dot + w[i];
+        return dot;
     }
 
     /**
      * Returns the dot product between weight vector and x (augmented with 1).
      */
-    private static double dot(double[] x, double[] w, int pos) {
-        int i = 0;
-        double dot = 0.0;
-        
-        for (; i < x.length; i++) {
+    private static double dot(double[] x, double[] w, int j, int p) {
+        int pos = j * (p + 1);
+        double dot = w[pos + p];
+
+        for (int i = 0; i < p; i++) {
             dot += x[i] * w[pos+i];
         }
 
-        return dot + w[pos+i];
+        return dot;
+    }
+
+    @Override
+    public boolean soft() {
+        return true;
+    }
+
+    @Override
+    public boolean online() {
+        return true;
+    }
+
+    /**
+     * Sets the learning rate of stochastic gradient descent.
+     * It is a good practice to adapt the learning rate for
+     * different data sizes. For example, it is typical to
+     * set the learning rate to eta/n, where eta is in [0.1, 0.3]
+     * and n is the size of the training data.
+     *
+     * @param rate the learning rate.
+     */
+    public void setLearningRate(double rate) {
+        if (rate <= 0.0) {
+            throw new IllegalArgumentException("Invalid learning rate: " + rate);
+        }
+        this.eta = rate;
+    }
+
+    /**
+     * Returns the learning rate of stochastic gradient descent.
+     * @return the learning rate of stochastic gradient descent.
+     */
+    public double getLearningRate() {
+        return eta;
     }
 
     /**
      * Returns the log-likelihood of model.
+     * @return the log-likelihood of model.
      */
     public double loglikelihood() {
         return L;
     }
 
-    @Override
-    public int predict(double[] x) {
-        return predict(x, null);
-    }
-
-    @Override
-    public int predict(double[] x, double[] posteriori) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        if (posteriori != null && posteriori.length != k) {
-            throw new IllegalArgumentException(String.format("Invalid posteriori vector size: %d, expected: %d", posteriori.length, k));
-        }
-
-        if (k == 2) {
-            double f = 1.0 / (1.0 + Math.exp(-dot(x, w)));
-
-            if (posteriori != null) {
-                posteriori[0] = 1.0 - f;
-                posteriori[1] = f;
-            }
-
-            if (f < 0.5) {
-                return 0;
-            } else {
-                return 1;
-            }
-        } else {
-            int label = -1;
-            double max = Double.NEGATIVE_INFINITY;
-            for (int i = 0; i < k; i++) {
-                double prob = dot(x, W[i]);
-                if (prob > max) {
-                    max = prob;
-                    label = i;
-                }
-
-                if (posteriori != null) {
-                    posteriori[i] = prob;
-                }
-            }
-
-            if (posteriori != null) {
-                double Z = 0.0;
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] = Math.exp(posteriori[i] - max);
-                    Z += posteriori[i];
-                }
-
-                for (int i = 0; i < k; i++) {
-                    posteriori[i] /= Z;
-                }
-            }
-            
-            return label;
-        }
+    /**
+     * Returns the AIC score.
+     * @return the AIC score.
+     */
+    public double AIC() {
+        return ModelSelection.AIC(L, (k-1)*(p+1));
     }
 }

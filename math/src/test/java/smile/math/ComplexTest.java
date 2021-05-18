@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math;
 
@@ -50,24 +51,43 @@ public class ComplexTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of toString method, of class Complex.
-     */
     @Test
-    public void testAll() {
+    public void test() {
         System.out.println("Complex");
         System.out.println("a = " + a);
         System.out.println("b = " + b);
-        assertEquals(a.re(), 5.0, 1E-15);
-        assertEquals(a.im(), 6.0, 1E-15);
+        assertEquals(a.re, 5.0, 1E-15);
+        assertEquals(a.im, 6.0, 1E-15);
         assertEquals(a.abs(), 7.810249675906654, 1E-15);
-        assertTrue(a.plus(b).equals(new Complex(2.0, 10.0)));
-        assertTrue(a.minus(b).equals(new Complex(8.0, 2.0)));
-        assertTrue(a.times(b).equals(new Complex(-39.0, 2.0)));
-        assertTrue(a.div(b).equals(new Complex(0.36, -1.52)));
+        assertEquals(a.add(b), Complex.of(2.0, 10.0));
+        assertEquals(a.sub(b), Complex.of(8.0, 2.0));
+        assertEquals(a.mul(b), Complex.of(-39.0, 2.0));
+        assertEquals(a.div(b), Complex.of(0.36, -1.52));
         System.out.println("a / b = " + a.div(b));
-        assertTrue(a.div(b).times(b).equals(new Complex(5.0, 6.0)));
-        assertTrue(a.conjugate().equals(new Complex(5.0, -6.0)));
-        assertTrue(a.tan().equals(new Complex(-6.685231390243073E-6, 1.00001031089812)));
+        assertEquals(a.div(b).mul(b), Complex.of(5.0, 6.0));
+        assertEquals(a.conjugate(), Complex.of(5.0, -6.0));
+        assertEquals(a.tan(), Complex.of(-6.685231390243073E-6, 1.00001031089812));
+    }
+
+    /**
+     * Test of Complex.Array.
+     */
+    @Test
+    public void testArray() {
+        System.out.println("Complex.Array");
+        Complex.Array array = Complex.Array.of(a, b);
+        System.out.println("a = " + a);
+        System.out.println("b = " + b);
+        assertEquals(a.re, array.get(0).re, 1E-15);
+        assertEquals(a.im, array.get(0).im, 1E-15);
+        assertEquals(b.re, array.get(1).re, 1E-15);
+        assertEquals(b.im, array.get(1).im, 1E-15);
+
+        Complex c = Complex.of(3.0);
+        array.set(1, c);
+        assertEquals(a.re, array.get(0).re, 1E-15);
+        assertEquals(a.im, array.get(0).im, 1E-15);
+        assertEquals(c.re, array.get(1).re, 1E-15);
+        assertEquals(c.im, array.get(1).im, 1E-15);
     }
 }

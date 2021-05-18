@@ -1,0 +1,790 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="quickstart-top" class="title">Quick Start</h1>
+
+    <p>Smile is a fast and comprehensive machine learning system.
+        With advanced data structures and algorithms, Smile delivers the state-of-art performance.
+        Smile is self contained and requires only Java standard library.
+        Since v1.4, Smile may optionally leverage native BLAS/LAPACK library too.
+        It also provides high-level operators in Scala and an interactive shell.
+        In practice, data scientists usually build models with high-level tools such as R, Matlab,
+        SAS, etc. However, developers have to spend a lot of time and energy to incorporate these
+        models in the production system that are often implemented in general purpose programming
+        languages such as Java and Scala. With Smile, data scientists and developers can work
+        in the same environment to build machine learning applications quickly!</p>
+
+    <h2 id="download">Download</h2>
+
+    <p>Get Smile from the <a href="https://github.com/haifengl/smile/releases">releases page</a> of
+        the project website. The universal tarball
+        is also available and can be used on Mac, Linux and Windows.</p>
+
+    <p>If you would like to build Smile from source, please first install Java 8, Scala 2.13
+        and SBT 1.0+. Then clone the repo and build the package:</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ git clone https://github.com/haifengl/smile.git
+    $ cd smile
+    $ sbt package
+    </code></pre>
+
+    <p>To build with Scala 2.12, run</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ sbt ++2.12.10 scala/package
+    </code></pre>
+
+    <p>To test the latest code, run the following</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ git pull
+    $ ./smile.sh
+    </code></pre>
+
+    <p>which will build the system and enter the shell.</p>
+
+    <p>Smile runs on both Windows and UNIX-like systems (e.g. Linux, Mac OS).
+        All you need is to have <code>Java 8</code> installed on your system <code>PATH</code>,
+        or the <code>JAVA_HOME</code> environment variable pointing to a Java installation.</p>
+
+    <h2 id="shell">Shell</h2>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <p>Smile comes with an interactive shell for Scala. In the home directory of Smile, type</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/smile
+    </code></pre>
+
+            <p>to enter the shell, which is based on Scala REPL.
+                If you prefer <a href="http://ammonite.io">Ammonite REPL</a>,
+                copy its jar to Smile's <code>lib</code> directory. Smile Shell
+                will switch to Ammonite once restarted.
+                In the shell, you can run any valid Scala expressions.
+                In the simplest case, you can use it as a calculator.
+                Besides, all high-level Smile operators are predefined
+                in the shell. By default, the shell uses up to 75% memory.
+                If you need more memory to handle large data, use the option
+                <code>-J-Xmx</code> or <code>-XX:MaxRAMPercentage</code>.
+                For example,</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ ./bin/smile -J-Xmx30G
+    </code></pre>
+
+            <p>You can also modify the configuration file <code>./conf/smile.ini</code>
+                for the memory and other JVM settings.</p>
+
+            <h3 id="basics">Basics</h3>
+
+            <p>When the shell starts, we should see something like the following:</p>
+    <pre class="prettyprint lang-scala"><code>
+                                                       ..::''''::..
+                                                     .;''        ``;.
+     ....                                           ::    ::  ::    ::
+   ,;' .;:                ()  ..:                  ::     ::  ::     ::
+   ::.      ..:,:;.,:;.    .   ::   .::::.         :: .:' ::  :: `:. ::
+    '''::,   ::  ::  ::  `::   ::  ;:   .::        ::  :          :  ::
+  ,:';  ::;  ::  ::  ::   ::   ::  ::,::''.         :: `:.      .:' ::
+  `:,,,,;;' ,;; ,;;, ;;, ,;;, ,;;, `:,,,,:'          `;..``::::''..;'
+                                                       ``::,,,,::''
+
+  Welcome to Smile Shell; enter 'help&lt;RETURN&gt;' for list of supported commands.
+  Type "exit&lt;RETURN&gt;" to leave the Smile Shell
+  Version 2.1.0, Scala 2.13.1, SBT 1.2.8, Built at 2019-11-20 20:04:41.868
+===============================================================================
+smile&gt;
+    </code></pre>
+            <p>The <strong>smile&gt;</strong> line is the prompt that the shell is waiting for you to enter expressions.
+                To get help information of Smile high-level operators,
+                type <code>help</code>. You can also get detailed information on
+                each operator by typing <code>help("command")</code>, e.g.
+                <code>help("svm")</code>. To exit the shell, type <code>exit</code>.</p>
+
+            <p>In the shell, type <code>demo</code> to bring up the demo window,
+                which shows off various Smile's machine learning capabilities.</p>
+
+            <p>You can also type <code>benchmark()</code> to see Smile's performance
+                on a couple of test data. You can run a particular benchmark by
+                <code>bencharm("test name")</code>, where test name could be "airline",
+                "usps", etc.</p>
+
+            <p>On startup, the shell analyzes the classpath and creates a database of every visible package and path.
+                This is available via tab-completion analogous to the path-completion available in most shells.
+                If you type a partial path, tab will complete as far as it can and show you your options
+                if there is more than one.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; smile.classification.r
+    randomForest   rbfnet   rda
+    </code></pre>
+
+            <h3 id="third-party-libraries">Third Party Libraries</h3>
+
+            <p>It is also possible to use third party libraries from Maven Central.
+                For example,</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`com.google.guava:guava:18.0`, com.google.common.collect._
+    </code></pre>
+
+            <p>If the library is not available in local ivy cache, Smile Shell will download
+                it automatically. Note that the format <code>org:library:version</code> is similar
+                with the library dependency in SBT. For Scala library, it is recommended to use
+                the format <code>org::library:version</code>, which will choose the library in the
+                same Scala major version (e.g. 2.13 vs 2.12).</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; import $ivy.`org.scalaz::scalaz-core:7.2.7`, scalaz._, Scalaz._
+    </code></pre>
+
+            <p>Beyond the default resolvers, we can add third-party or our own repositories:</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; interp.repositories() ++= Seq(coursier.ivy.IvyRepository.fromPattern(
+      "https://ambiata-oss.s3-ap-southeast-2.amazonaws.com/" +:
+      coursier.ivy.Pattern.default
+    ))
+    </code></pre>
+
+            <h3 id="calculator">Calculator</h3>
+
+            <p>We can run any valid Scala expressions in the shell. In the
+                simplest case, you can use it as a calculator.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; "Hello, World"
+    res0: String = Hello, World
+
+    smile&gt; 2
+    res1: Int = 2
+
+    smile&gt; 2+3
+    res2: Int = 5
+    </code></pre>
+
+            <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val x = 2 + 3
+    x: Int = 5
+
+    smile&gt; print(x)
+    5
+
+    smile&gt; val y = 2 * (x + 1)
+    z: Int = 12
+    </code></pre>
+
+            <p>Functions can be defined too. As Scala is a functional language, functions are
+                first class citizen, just like other values.</p>
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; def sq(x: Double) = x * x
+    sq: (x: Double)Double
+
+    smile&gt; sq(y)
+    res4: Double = 441.0
+    </code></pre>
+            <p>Scala is a powerful and complicated language that fuses object-oriented programming and functional programming.
+                Although you don't need to know all the bells and whistles of Scala to use Smile, we strongly recommend you to
+                learn some <a href="http://www.scala-lang.org/documentation/">basics</a>.</p>
+
+            <h3 id="script">Script</h3>
+
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.sc</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    val data = read.arff(Paths.getTestData("weka/iris.arff"))
+    println(data)
+
+    val formula = "class" ~
+    val rf = smile.classification.randomForest(formula, data)
+    println(s"OOB error = %.2f%%" format 100 * rf.error)
+    </code></pre>
+
+            <p>It can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/smile examples/iris.sc
+    </code></pre>
+
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>"class" ~ </code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <p>Smile provides an integration with JShell, which is available from Java 9+.
+                In the home directory of Smile, type</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/jshell.sh
+    </code></pre>
+
+            <p>to enter the JShell with Smile libraries in the class path.
+                In the shell, you can run any valid Java expressions.
+                In the simplest case, you can use it as a calculator.
+                If you need more memory to handle large data, use the
+                option <code>-R-Xmx</code>. For example,</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ ./bin/jshell.sh -R-Xmx30G
+    </code></pre>
+
+            <h3 id="basics_java">Basics</h3>
+
+            <p>When the shell starts, we should see something like the following:</p>
+            <pre class="prettyprint lang-java"><code>
+    |  Welcome to JShell -- Version 11.0.6
+    |  For an introduction type: /help intro
+
+    jshell>
+    </code></pre>
+            <p>To exit the shell, type <code>/exit</code>.</p>
+
+            <p>In the shell, run the below code to bring up the demo window,
+                which shows off various Smile's machine learning capabilities.</p>
+            <pre class="prettyprint lang-java"><code>
+    javax.swing.SwingUtilities.invokeLater(() -> smile.demo.SmileDemo.createAndShowGUI(false))
+    </code></pre>
+
+            <p>Similar to Smile Shell, we pre-import Smile's definitions in JShell.</p>
+
+            <h3 id="calculator_java">Calculator</h3>
+
+            <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    jshell> "Hello, World"
+    $2 ==> "Hello, World"
+
+    jshell> 2
+    $3 ==> 2
+
+    jshell> 2+3
+    $4 ==> 5
+    </code></pre>
+
+            <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-java"><code>
+    jshell> var x = 2 + 3
+    x ==> 5
+
+    jshell> var y = 2 * (x + 1)
+    y ==> 12
+    </code></pre>
+
+            <h3 id="script_java">Script</h3>
+
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.jsh</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-java"><code>
+    import smile.classification.RandomForest;
+    import smile.data.formula.Formula;
+    import smile.io.Read;
+    import smile.util.Paths;
+
+    var data = Read.arff(Paths.getTestData("weka/iris.arff"));
+    System.out.println(data);
+
+    var formula = Formula.lhs("class");
+    var rf = RandomForest.fit(formula, data);
+    System.out.format("OOB error = %.2f%%%n", 100 * rf.error());
+    </code></pre>
+
+            <p>It can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/jshell.sh examples/iris.jsh
+    </code></pre>
+
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>Formula.lhs("class")</code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <p>Smile provides an integration with Kotlin REPL.
+                In the home directory of Smile, type</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/kotlin.sh
+    </code></pre>
+
+            <p>to enter the Kotlin REPL with Smile libraries in the class path.
+                In the shell, you can run any valid Kotlin expressions.
+                In the simplest case, you can use it as a calculator.
+                If you need more memory to handle large data, use the
+                option <code>-J-Xmx</code>. For example,</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ ./bin/kotlin.sh -J-Xmx30G
+    </code></pre>
+
+            <h3 id="basics_java">Basics</h3>
+
+            <p>When the shell starts, we should see something like the following:</p>
+            <pre class="prettyprint lang-kotlin"><code>
+    Welcome to Kotlin version 1.3.70 (JRE 1.8.0_241-b07)
+    Type :help for help, :quit for quit
+    >>>
+    </code></pre>
+            <p>To exit the REPL, type <code>:quit</code>. Different from
+            Smile Shell, we don't pre-import any Smile's definitions in Kotlin REPL.</p>
+
+            <h3 id="calculator_java">Calculator</h3>
+
+            <p>With local variable type inference, it is easy to use JShell as a calculator.</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> "Hello, World"
+    res0: kotlin.String = Hello, World
+    >>> 2
+    res1: kotlin.Int = 2
+    >>> 2+3
+    res2: kotlin.Int = 5
+    </code></pre>
+
+            <p>We can also define variables and reuse them.</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> var x = 2 + 3
+    >>> var y = 2 * (x + 1)
+    >>> y
+    res13: kotlin.Int = 12
+    </code></pre>
+
+            <h3 id="script_java">Script</h3>
+
+            <p>We may also run Smile code in a script. The script
+                <code>examples/iris.kts</code> containing the following Smile code</p>
+
+    <pre class="prettyprint lang-kotlin"><code>
+    import smile.*
+    import smile.classification.*
+    import smile.data.formula.Formula
+    import smile.util.Paths
+
+    val data = read.arff(Paths.getTestData("weka/iris.arff"))
+    println(data)
+
+    val formula = Formula.lhs("class")
+    val rf = randomForest(formula, data)
+    println("OOB error = ${rf.error()}")
+    </code></pre>
+
+            <p>It can be run directly from the shell:</p>
+
+    <pre class="prettyprint lang-sh"><code>
+    $ bin/kotlin.sh examples/iris.kts
+    </code></pre>
+
+            <p>In this example, we use Fisher's Iris data in the <code>data</code> directory
+                (including many open data for research purpose). The data
+                is in Weka's ARFF format. The function <code>Read.arff</code> returns an object of
+                <code>DataFrame</code>. The formula <code>Formula.lhs("class")</code> defines that
+                the column "class" will be used as the class label while the rest columns
+                are predictors. Finally, we train a random forest
+                with default parameters and print out its OOB (out of bag) error. We can apply
+                the model on new data samples with the method <code>predict</code>.</p>
+        </div>
+    </div>
+
+    <h2 id="notebook">Notebooks</h2>
+
+    <p>You can also use Smile in your favorite Notebook.
+        We recommend JupyterLab and provide <code>jupyterlab.sh</code>
+        to setup the conda environment of Jupyter Lab for Smile with
+        kernels for Scala, Kotlin and Clojure. When you run
+        <code>jupyterlab.sh</code> first time, it will set up the environment
+        automatically. You can update the environment with the option
+        <code>--update</code> later when needed. You may install BeakerX
+        with <code>--install-beakerx</code> for other JVM kernels.
+        However, it may break the default Scala kernel (Almond).</p>
+
+    <p>In Scala notebooks, it is helpful to add the following
+        code to the notebook. We provides many notebook examples in
+        the <code>notebooks</code> directory.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import $ivy.`com.github.haifengl::smile-scala:2.6.0`
+
+    import scala.language.postfixOps
+    import org.apache.commons.csv.CSVFormat
+    import smile._
+    import smile.util._
+    import smile.math._
+    import smile.math.MathEx.{log2, logistic, factorial, lfactorial, choose, lchoose, random, randomInt, permutate, c, cbind, rbind, sum, mean, median, q1, q3, `var` => variance, sd, mad, min, max, whichMin, whichMax, unique, dot, distance, pdist, KullbackLeiblerDivergence => kld, JensenShannonDivergence => jsd, cov, cor, spearman, kendall, norm, norm1, norm2, normInf, standardize, normalize, scale, unitize, unitize1, unitize2, root}
+    import smile.math.distance._
+    import smile.math.kernel._
+    import smile.math.matrix._
+    import smile.math.matrix.Matrix._
+    import smile.math.rbf._
+    import smile.stat.distribution._
+    import smile.data._
+    import smile.data.formula._
+    import smile.data.measure._
+    import smile.data.`type`._
+    import smile.json._
+    import smile.interpolation._
+    import smile.validation._
+    import smile.association._
+    import smile.base.cart.SplitRule
+    import smile.base.mlp._
+    import smile.base.rbf.RBF
+    import smile.classification._
+    import smile.regression.{ols, ridge, lasso, svr, gpr}
+    import smile.feature._
+    import smile.clustering._
+    import smile.vq._
+    import smile.manifold._
+    import smile.mds._
+    import smile.sequence._
+    import smile.projection._
+    import smile.nlp._
+    import smile.wavelet._
+    </code></pre>
+
+    <p>To plot data with Swing based functions in Notebook, run the below code first.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import smile.plot.swing._
+    import smile.plot.show
+    import smile.plot.Render._
+    </code></pre>
+
+    <p>To use Vega based plot functions in Notebook, run the below code instead.</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    import smile.plot.vega._
+    import smile.plot.show
+    import smile.plot.Render._
+    </code></pre>
+
+    <h2 id="tutorial">A Gentle Example</h2>
+
+    <p>This example shows how to use Smile for predictive modeling
+        from Java and Scala code. First, let's load the data.
+        Smile provides a couple of parsers for popular data formats,
+        such as Parquet, Avro, Arrow, SAS7BDAT, Weka's ARFF files, LibSVM's
+        file format, delimited text files, JSON, and binary sparse data.
+        These classes are in the package <code>smile.io</code>. In the
+        following example, we use the ARFF parser to load the weather dataset:</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.io.*;
+    var weather = Read.arff("data/weka/weather.nominal.arff");
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    import smile.io._
+    val weather = read.arff("data/weka/weather.nominal.arff")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Most Smile data parsers return a <a href="api/java/smile/data/DataFrame.html">DataFrame</a>
+        object, which is immutable and contain a fixed number of named columns.
+        We can also parse plain delimited text files and the parser automatically
+        infer the schema. In the below, we load the USPS zip code handwriting
+        dataset in a white space delimitered text file.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import org.apache.commons.csv.CSVFormat;
+
+    var format = CSVFormat.DEFAULT.withDelimiter(' ');
+    var zipTrain = Read.csv("data/usps/zip.train", format);
+    var zipTest = Read.csv("data/usps/zip.test", format);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val zipTrain = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    val zipTest = read.csv("data/usps/zip.test", delimiter = ' ', header = false)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Because this data doesn't have a header line, the parser will assign
+        V1, V2, ... as the column names. In particular, the first column
+        (V1) is the class label. </p>
+
+    <p>Smile implements a variety of classification and regression algorithms.
+        In what follows, we train a random forest model on the USPS data.
+        Random forest is an ensemble classifier that consists of many decision
+        trees and outputs the majority vote of individual trees.
+        The method combines bagging idea and the random selection of features.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.classification.*;
+    import smile.data.formula.Formula;
+
+    var formula = Formula.lhs("V1");
+    
+    var prop = new java.util.Properties();
+    prop.setProperty("smile.random.forest.trees", "200");
+    var forest = RandomForest.fit(formula, zipTrain, prop);
+    System.out.format("OOB error rate = %.2f%%%n", (100.0 * forest.error()));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val formula: Formula = "V1" ~
+
+    val forest = randomForest(formula, zipTrain, ntrees = 200)
+    println("OOB error rate = %.2f%%" format (100.0 * forest.error()))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the example, we firstly define a <code>Formula</code> object, which
+        specifies the model in a symbolic way. The left-hand-side (LHS) of
+        formula is the response variable, and the right-hand-side (RHS) is
+        a list of terms as independent variables. When the RHS is not specified,
+        the rest of columns in the data frame are used by default. In the
+        simpliest case, the terms (both of LHS and of RHS) are column 
+        names. But they can be functions (e.g. log) and transformations
+        (e.g. interaction and factor crossing) too. The functions/transformations
+        are symbolic and thus lazy.</p>
+
+    <p>With random forest, we may estimate the model accuracy with out-of-bag
+        (OOB) samples. This is useful especially when we don't have a separate
+         test dataset.</p>
+
+    <p>Now let's a support vector machine (SVM) on the USPS data. As SVM
+        is a kernel learning machine, it can be applied on any type of data
+        as long as we can define a Mercer kernel on the data. Therefore,
+        SVM class doesn't take a DataFrame as input but a generic array.
+        We can leverage the formula object to extract the training samples
+        and labels.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = formula.x(zipTrain).toArray();
+    var y = formula.y(zipTrain).toIntArray();
+    var testx = formula.x(zipTest).toArray();
+    var testy = formula.y(zipTest).toIntArray();
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = formula.x(zipTrain).toArray
+    val y = formula.y(zipTrain).toIntArray
+    val testx = formula.x(zipTest).toArray
+    val testy = formula.y(zipTest).toIntArray
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The SVM employs a Gaussian kernel and one-to-one strategy
+        as this is a multi-class problem. We also evaluate the model
+        on the test data with <code>Validation</code> class, which
+        provides a variety of model validation methods such as
+        cross validation, bootstrap, etc.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.math.kernel.GaussianKernel;
+    import smile.validation.*;
+
+    var kernel = new GaussianKernel(8.0);
+    var svm = OneVersusOne.fit(x, y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+    var pred = Validation.test(svm, testx);
+    System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+    System.out.format("Confusion Matrix: %s%n", ConfusionMatrix.of(testy, pred));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val kernel = new GaussianKernel(8.0)
+    val svm = test(x, y, testx, testy) { (x, y) =>
+      ovo(x, y) { (x, y) =>
+        SVM.fit(x, y, kernel, 5, 1E-3)
+      }
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Lastly, we will train a 5-layer deep learning model. Deep learning
+        requires the features properly scaled/standardized. In this example,
+        we employs the class <code>Standardizer</code> to transforms features
+        to 0 mean and unit variance. A alternative is to subtract the median
+        and divide by the IQR, which is implemented <code>RobustStandardizer</code>.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.base.mlp.Layer;
+    import smile.base.mlp.OutputFunction;
+    import smile.feature.Standardizer;
+    import smile.math.MathEx;
+
+    var scaler = Standardizer.fit(x);
+    var scaledX = scaler.transform(x);
+    var scaledTestX = scaler.transform(testx);
+    
+    var net = new MLP(256,
+      Layer.sigmoid(768),
+      Layer.sigmoid(192),
+      Layer.sigmoid(30),
+      Layer.mle(10, OutputFunction.SIGMOID)
+    );
+    net.setLearningRate(0.1);
+    net.setMomentum(0.0);
+    
+    for (int epoch = 0; epoch < 10; epoch++) {
+      System.out.format("----- epoch %d -----%n", epoch);
+      for (int i : MathEx.permutate(x.length)) {
+        net.update(scaledX[i], y[i]);
+      }
+      var prediction = Validation.test(net, scaledTestX);
+      System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, prediction)));
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val scaler = Standardizer.fit(x)
+    val scaledX = scaler.transform(x)
+    val scaledTestX = scaler.transform(testx)
+    
+    val net = new MLP(256,
+      Layer.sigmoid(768),
+      Layer.sigmoid(192),
+      Layer.sigmoid(30),
+      Layer.mle(10, OutputFunction.SIGMOID)
+    )
+    net.setLearningRate(0.1)
+    net.setMomentum(0.0)
+    
+    (0 until 10).foreach(epoch => {
+      println("----- epoch %d -----" format epoch)
+      MathEx.permutate(x.length).foreach(i =>
+        net.update(scaledX(i), y(i))
+      )
+      val prediction = Validation.test(net, scaledTestX)
+      println("Accuracy = %.2f%%" format (100.0 * Accuracy.of(testy, prediction)))
+    })
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>To use the trained model, we can apply the method <code>predict</code>
+        on a new sample. Besides just returning class label, many methods
+        (e.g. neural networks) can also output the posteriori probabilities
+        of each class.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var posteriori = new double[10];
+    forest.predict(zipTest.get(0), posteriori);
+    svm.predict(testx[0]);
+    net.predict(scaledTestX[0], posteriori);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val posteriori = new Array[Double](10)
+    forest.predict(zipTest.get(0), posteriori)
+    svm.predict(testx(0))
+    net.predict(scaledTestX(0), posteriori)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="btnv">
+        <a class="btn-next-text" href="overview.html" title="Next Section: What's Machine Learning"><span>What's Machine Learning</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

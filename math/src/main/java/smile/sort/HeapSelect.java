@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.sort;
 
@@ -30,7 +31,11 @@ public class HeapSelect<T extends Comparable<? super T>> {
     /**
      * The heap size.
      */
-    private int k;
+    private final int k;
+    /**
+     * The heap array.
+     */
+    private final T[] heap;
     /**
      * The number of objects that have been added into heap.
      */
@@ -39,10 +44,16 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * True if the heap is fully sorted.
      */
     private boolean sorted;
+
     /**
-     * The heap array.
+     * Constructor.
+     * @param clazz the data type of elements.
+     * @param k the size of heap.
      */
-    private T[] heap;
+    @SuppressWarnings("unchecked")
+    public HeapSelect(Class<?> clazz, int k) {
+        this((T[]) java.lang.reflect.Array.newInstance(clazz, k));
+    }
 
     /**
      * Constructor.
@@ -56,7 +67,34 @@ public class HeapSelect<T extends Comparable<? super T>> {
     }
 
     /**
+     * Returns the number of objects that have been added into heap.
+     * @return the number of objects that have been added into heap.
+     */
+    public int size() {
+        return n;
+    }
+
+    /**
+     * Returns the array back the heap.
+     * @return the array back the heap.
+     */
+    public T[] toArray() {
+        return heap;
+    }
+
+    /**
+     * Returns the array back the heap.
+     * @param a the array to copy into.
+     * @return the array back the heap.
+     */
+    public T[] toArray(T[] a) {
+        System.arraycopy(heap, 0, a, 0, k);
+        return a;
+    }
+
+    /**
      * Assimilate a new value from the stream.
+     * @param datum a new value.
      */
     public void add(T datum) {
         sorted = false;
@@ -69,7 +107,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
             n++;
             if (datum.compareTo(heap[0]) < 0) {
                 heap[0] = datum;
-                SortUtils.siftDown(heap, 0, k-1);
+                Sort.siftDown(heap, 0, k-1);
             }
         }
     }
@@ -84,11 +122,12 @@ public class HeapSelect<T extends Comparable<? super T>> {
             throw new IllegalStateException();
         }
 
-        SortUtils.siftDown(heap, 0, k-1);
+        Sort.siftDown(heap, 0, k-1);
     }
 
     /**
      * Returns the k-<i>th</i> smallest value seen so far.
+     * @return the k-<i>th</i> smallest value.
      */
     public T peek() {
         return heap[0];
@@ -98,6 +137,9 @@ public class HeapSelect<T extends Comparable<? super T>> {
      * Returns the i-<i>th</i> smallest value seen so far. i = 0 returns the smallest
      * value seen, i = 1 the second largest, ..., i = k-1 the last position
      * tracked. Also, i must be less than the number of previous assimilated.
+     *
+     * @param i the ordinal index of smallest values.
+     * @return the i-<i>th</i> smallest value.
      */
     public T get(int i) {
         if (i > Math.min(k, n) - 1) {
@@ -132,7 +174,7 @@ public class HeapSelect<T extends Comparable<? super T>> {
     private static <T extends Comparable<? super T>> void heapify(T[] arr) {
         int n = arr.length;
         for (int i = n / 2 - 1; i >= 0; i--)
-            SortUtils.siftDown(arr, i, n - 1);
+            Sort.siftDown(arr, i, n - 1);
     }
 
     /**

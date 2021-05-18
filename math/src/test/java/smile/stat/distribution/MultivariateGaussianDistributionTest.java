@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
 import org.junit.After;
@@ -20,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+import smile.math.matrix.Matrix;
 import static org.junit.Assert.*;
 
 /**
@@ -80,49 +84,39 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testMultivariateGaussianDistribution() {
         System.out.println("MultivariateGaussianDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        double[][] data = new double[1000][];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = instance.rand();
-        }
-        MultivariateGaussianDistribution est = new MultivariateGaussianDistribution(data, true);
+        double[][] data = instance.rand(2000);
+        MultivariateGaussianDistribution est = MultivariateGaussianDistribution.fit(data, true);
+        assertArrayEquals(mu, est.mean(), 5E-2);
         for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1.5E-1);
-        }
-        for (int i = 0; i < mu.length; i++) {
-            assertEquals(sigma[0][i], est.cov()[i][i], 1.5E-1);
+            assertEquals(sigma[0][i], est.sigma.get(i, i), 5E-2);
             for (int j = 0; j < mu.length; j++) {
                 if (i != j) {
-                    assertEquals(0, est.cov()[i][j], 1E-10);
+                    assertEquals(0, est.sigma.get(i, j), 1E-10);
                 }
             }
         }
 
-        instance = new MultivariateGaussianDistribution(mu, sigma);
-        data = new double[1000][];
-        for (int i = 0; i < data.length; i++) {
-            data[i] = instance.rand();
-        }
-        est = new MultivariateGaussianDistribution(data);
-        for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1E-1);
-        }
+        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        data = instance.rand(2000);
+        est = MultivariateGaussianDistribution.fit(data);
+        assertArrayEquals(mu, est.mean(), 5E-2);
+
         for (int i = 0; i < mu.length; i++) {
             for (int j = 0; j < mu.length; j++) {
-                assertEquals(sigma[i][j], est.cov()[i][j], 1E-1);
+                assertEquals(sigma[i][j], est.sigma.get(i, j), 5E-2);
             }
         }
 
-        est = new MultivariateGaussianDistribution(data, true);
-        for (int i = 0; i < mu.length; i++) {
-            assertEquals(mu[i], est.mean()[i], 1E-1);
-        }
+        est = MultivariateGaussianDistribution.fit(data, true);
+        assertArrayEquals(mu, est.mean(), 5E-2);
         for (int i = 0; i < mu.length; i++) {
             for (int j = 0; j < mu.length; j++) {
                 if (i == j) {
-                    assertEquals(sigma[i][j], est.cov()[i][j], 1E-1);
+                    assertEquals(sigma[i][j], est.sigma.get(i, j), 5E-2);
                 } else {
-                    assertEquals(0.0, est.cov()[i][j], 1E-10);
+                    assertEquals(0.0, est.sigma.get(i, j), 1E-10);
                 }
             }
         }
@@ -132,32 +126,32 @@ public class MultivariateGaussianDistributionTest {
      * Test of isDiagonal method, of class MultivariateGaussian.
      */
     @Test
-    public void testIsDiagonal() {
-        System.out.println("isDiagonal");
+    public void testDiagonal() {
+        System.out.println("diagonal");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, 1.0);
-        assertEquals(true, instance.isDiagonal());
+        assertTrue(instance.diagonal);
 
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        assertEquals(true, instance.isDiagonal());
+        assertTrue(instance.diagonal);
 
-        instance = new MultivariateGaussianDistribution(mu, sigma);
-        assertEquals(false, instance.isDiagonal());
+        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        assertFalse(instance.diagonal);
     }
 
     /**
-     * Test of npara method, of class MultivariateGaussian.
+     * Test of length method, of class MultivariateGaussian.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, 1.0);
-        assertEquals(4, instance.npara());
+        assertEquals(4, instance.length());
 
         instance = new MultivariateGaussianDistribution(mu, sigma[0]);
-        assertEquals(6, instance.npara());
+        assertEquals(6, instance.length());
 
-        instance = new MultivariateGaussianDistribution(mu, sigma);
-        assertEquals(9, instance.npara());
+        instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
+        assertEquals(9, instance.length());
     }
 
     /**
@@ -166,7 +160,7 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testEntropy() {
         System.out.println("entropy");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
         assertEquals(2.954971, instance.entropy(), 1E-6);
     }
 
@@ -176,7 +170,7 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testPdf() {
         System.out.println("pdf");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
         for (int i = 0; i < x.length; i++) {
             assertEquals(pdf[i], instance.p(x[i]), 1E-4);
         }
@@ -188,9 +182,9 @@ public class MultivariateGaussianDistributionTest {
     @Test
     public void testCdf() {
         System.out.println("cdf");
-        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, sigma);
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(mu, new Matrix(sigma));
         for (int i = 0; i < x.length; i++) {
-            assertEquals(cdf[i], instance.cdf(x[i]), 5E-3);
+            assertEquals(cdf[i], instance.cdf(x[i]), 1E-2);
         }
     }
 
@@ -210,10 +204,9 @@ public class MultivariateGaussianDistributionTest {
         double[] M = {-0.683477474844462,  1.480296478403701,  1.008431991316523,  0.448404211078558};
         double[] X = {0.713919336274493, 0.584408785741822, 0.263119200077829, 0.732513610871908};
 
-        MultivariateGaussianDistribution mvn = new MultivariateGaussianDistribution(M, S);
+        MultivariateGaussianDistribution instance = new MultivariateGaussianDistribution(M, new Matrix(S));
 
-        //According to R, the result should be 0.0904191282120575
-        double tol = 0.001;
-        assertEquals(0.0904191282120575, mvn.cdf(X), 1E-3);
+        // The expected value is based on R
+        assertEquals(0.0904191282120575, instance.cdf(X), 1E-3);
     }
 }

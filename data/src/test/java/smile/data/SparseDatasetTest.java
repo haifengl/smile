@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.data;
 
 import org.junit.After;
@@ -20,6 +22,10 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
+import smile.util.SparseArray;
 import smile.math.matrix.SparseMatrix;
 import static org.junit.Assert.*;
 
@@ -35,27 +41,20 @@ public class SparseDatasetTest {
         {0.4000, 0.5000, 0.3000},
         {0.0000, 0.3000, 0.8000}
     };
-    double[] b = {0.5, 0.5, 0.5};
 
     public SparseDatasetTest() {
-        SparseDataset lil = new SparseDataset("Test Sparse Dataset");
-        int[] index = {0, 2, 1};
-        for (int i = 0; i < A.length; i++) {
-            for (int j = 0; j < A[i].length; j++) {
-                if (A[i][index[j]] != 0) {
-                    lil.set(i, index[j], Math.random());
-                }
+        List<SparseArray> rows = new ArrayList<>();
+        for (double[] a : A) {
+            SparseArray row = new SparseArray();
+            for (int j = 0; j < a.length; j++) {
+                row.append(j, a[j]);
             }
+
+            rows.add(row);
         }
-        
-        for (int i = 0; i < A.length; i++) {
-            for (int j = 0; j < A[i].length; j++) {
-                if (A[i][index[j]] != 0) {
-                    lil.set(i, index[j], A[i][index[j]]);
-                }
-            }
-        }
-        sm = lil.toSparseMatrix();
+
+        SparseDataset lil = SparseDataset.of(rows);
+        sm = lil.toMatrix();
     }
 
     @BeforeClass
@@ -74,36 +73,24 @@ public class SparseDatasetTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of nrows method, of class SparseMatrix.
-     */
     @Test
     public void testNrows() {
-        System.out.println("nrows");
-        assertEquals(3, sm.nrows());
+        System.out.println("nrow");
+        assertEquals(3, sm.nrow());
     }
 
-    /**
-     * Test of ncols method, of class SparseMatrix.
-     */
     @Test
     public void testNcols() {
-        System.out.println("ncols");
-        assertEquals(3, sm.ncols());
+        System.out.println("ncol");
+        assertEquals(3, sm.ncol());
     }
 
-    /**
-     * Test of size method, of class SparseMatrix.
-     */
     @Test
-    public void testNvals() {
-        System.out.println("nvals");
+    public void testLength() {
+        System.out.println("length");
         assertEquals(7, sm.size());
     }
 
-    /**
-     * Test of get method, of class SparseMatrix.
-     */
     @Test
     public void testGet() {
         System.out.println("get");
@@ -113,5 +100,27 @@ public class SparseDatasetTest {
         assertEquals(0.0, sm.get(2, 0), 1E-7);
         assertEquals(0.0, sm.get(0, 2), 1E-7);
         assertEquals(0.4, sm.get(0, 1), 1E-7);
+    }
+
+    @Test
+    public void testParse() throws Exception {
+        System.out.println("from");
+        SparseDataset data = SparseDataset.from(smile.util.Paths.getTestData("sparse/kos.txt"), 1);
+        assertEquals(3430, data.size());
+        assertEquals(6906, data.ncol());
+        assertEquals(353160, data.nz());
+        assertEquals(2.0, data.get(0, 60), 1E-7);
+        assertEquals(1.0, data.get(1, 1062), 1E-7);
+        assertEquals(0.0, data.get(1, 1063), 1E-7);
+        assertEquals(1.0, data.get(3429, 6821), 1E-7);
+
+        SparseMatrix sm = data.toMatrix();
+        assertEquals(3430, sm.nrow());
+        assertEquals(6906, sm.ncol());
+        assertEquals(353160, sm.size());
+        assertEquals(2.0, sm.get(0, 60), 1E-7);
+        assertEquals(1.0, sm.get(1, 1062), 1E-7);
+        assertEquals(0.0, sm.get(1, 1063), 1E-7);
+        assertEquals(1.0, sm.get(3429, 6821), 1E-7);
     }
 }

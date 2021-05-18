@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
 
@@ -21,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -54,23 +57,22 @@ public class PoissonDistributionTest {
     @Test
     public void testPoissonDistribution() {
         System.out.println("PoissonDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         PoissonDistribution instance = new PoissonDistribution(5.5);
-        int[] data = new int[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = (int) instance.rand();
-        PoissonDistribution est = new PoissonDistribution(data);
-        assertEquals(5.5, est.getLambda(), 1.5E-1);
+        int[] data = instance.randi(1000);
+        PoissonDistribution est = PoissonDistribution.fit(data);
+        assertEquals(5.52, est.lambda, 1E-2);
     }
 
     /**
-     * Test of npara method, of class Poisson.
+     * Test of length method, of class Poisson.
      */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         PoissonDistribution instance = new PoissonDistribution(3.5);
         instance.rand();
-        assertEquals(1, instance.npara());
+        assertEquals(1, instance.length());
     }
 
     /**
@@ -85,14 +87,14 @@ public class PoissonDistributionTest {
     }
 
     /**
-     * Test of var method, of class Poisson.
+     * Test of variance method, of class Poisson.
      */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         PoissonDistribution instance = new PoissonDistribution(3.5);
         instance.rand();
-        assertEquals(3.5, instance.var(), 1E-7);
+        assertEquals(3.5, instance.variance(), 1E-7);
     }
 
     /**

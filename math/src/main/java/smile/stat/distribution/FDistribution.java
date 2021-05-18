@@ -1,44 +1,47 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
-import smile.math.Math;
 
 /**
  * F-distribution arises in the testing of whether two observed samples have
  * the same variance. A random variate of the F-distribution arises as the
- * ratio of two chi-squared variates:
- * <pre>
- * U<sub>1</sub> / d<sub>1</sub>
- * -------
- * U<sub>2</sub> / d<sub>2</sub>
- * </pre>
- * where U1 and U2 have chi-square distributions with d1 and d2 degrees of
- * freedom respectively, and U1 and U2 are independent.
+ * ratio of two chi-squared variates.
  *
  * @author Haifeng Li
  */
 public class FDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private int nu1;
-    private int nu2;
-    private double fac;
+    /**
+     * The degrees of freedom of chi-square distribution in numerator.
+     */
+    public final int nu1;
+
+    /**
+     * The degrees of freedom chi-square distribution in denominator.
+     */
+    public final int nu2;
+
+    /** The constant part in the pdf function. */
+    private final double fac;
 
     /**
      * Constructor.
@@ -60,22 +63,8 @@ public class FDistribution extends AbstractDistribution {
                 - Gamma.lgamma(0.5 * nu1) - Gamma.lgamma(0.5 * nu2);
     }
 
-    /**
-     * Returns the parameter nu1, the degrees of freedom of chi-square distribution in numerator.
-     */
-    public int getNu1() {
-        return nu1;
-    }
-
-    /**
-     * Returns the parameter nu2, the degrees of freedom chi-square distribution in denominator.
-     */
-    public int getNu2() {
-        return nu2;
-    }
-
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -85,13 +74,8 @@ public class FDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return 2.0 * nu2 * nu2 * (nu1 + nu2 - 2) / (nu1 * (nu2 - 2) * (nu2 - 2) * (nu2 - 4));
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var());
     }
 
     /**
@@ -104,7 +88,7 @@ public class FDistribution extends AbstractDistribution {
 
     @Override
     public String toString() {
-        return String.format("F-distribution(%.4f, %.4f)", nu1, nu2);
+        return String.format("F-distribution(%d, %d)", nu1, nu2);
     }
 
     @Override

@@ -1,0 +1,1869 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="visualization-top" class="title">Declarative Data Visualization</h1>
+
+    <p>In previous section, we show how to visualize data in imperative way.
+       Smile also support data visualization in declarative approach.
+       With <code>smile.plot.vega</code> package (in the artifact
+       <code>smile-scala</code>), we can create a specification
+       that describes visualizations as mappings from data to properties
+       of graphical marks (e.g., points or bars). The specification is
+       based on <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
+       The Vega-Lite compiler automatically produces visualization components
+       including axes, legends, and scales. It then determines properties of
+       these components based on a set of carefully designed rules.</p>
+       
+    <p>This approach allows specifications to be succinct and expressive,
+        but also provide user control. As Vega-Lite is designed for analysis,
+        it supports data transformations such as aggregation, binning,
+        filtering, sorting, and visual transformations including stacking
+        and faceting. Moreover, Vega-Lite specifications can be composed
+        into layered and multi-view displays, and made interactive with
+        selections.</p>
+
+    <p>Vega-Lite website provides detailed
+        <a href="https://vega.github.io/vega-lite/docs/">documentation</a>
+        on the specification. In the below, we will show how to create
+        a variety of charts through examples.</p>
+
+    <h2 id="bar" class="title">Bar Charts</h2>
+
+    <h3 id="simple_bar" class="title">Simple Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val bar = VegaLite.view().
+  mark("bar").
+  heightStep(17).
+  x(field = "a", `type` = "ordinal", axis = JsObject("labelAngel" -> JsInt(0))).
+  y(field = "b", `type` = "quantitative").
+  data(jsan"""
+      [
+        {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+        {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+        {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+      ]"""
+  ).
+  description("A simple bar chart with embedded data.")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_1"></div>
+    <script type="text/javascript">
+      var spec = {
+        "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A simple bar chart with embedded data.",
+  "data": {
+    "values": [
+      {"a": "A", "b": 28}, {"a": "B", "b": 55}, {"a": "C", "b": 43},
+      {"a": "D", "b": 91}, {"a": "E", "b": 81}, {"a": "F", "b": 53},
+      {"a": "G", "b": 19}, {"a": "H", "b": 87}, {"a": "I", "b": 52}
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "a", "type": "ordinal", "axis": {"labelAngle": 0}},
+    "y": {"field": "b", "type": "quantitative"}
+  }
+      };
+      vegaEmbed('#vis_1', spec);
+    </script>
+
+    <h3 id="aggregate_bar" class="title">Aggregate Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val aggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
+  mark("bar").
+  heightStep(17).
+  x(field = "people", `type` = "quantitative", aggregate = "sum", title = "population").
+  y(field = "age", `type` = "ordinal").
+  transform(json"""{"filter": "datum.year == 2000"}""").
+  description("A bar chart showing the US population distribution of age groups in 2000.")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_2"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A bar chart showing the US population distribution of age groups in 2000.",
+  "height": {"step": 17},
+  "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "transform": [{"filter": "datum.year == 2000"}],
+  "mark": "bar",
+  "encoding": {
+    "y": {
+      "field": "age", "type": "ordinal"
+    },
+    "x": {
+      "aggregate": "sum", "field": "people", "type": "quantitative",
+      "axis": {"title": "population"}
+    }
+  }
+};
+      vegaEmbed('#vis_2', spec);
+    </script>
+
+    <h3 id="sorted_aggregate_bar" class="title">Aggregate Bar Chart (Sorted)</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val sortedAggregateBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
+  mark("bar").
+  heightStep(17).
+  x(field = "people", `type` = "quantitative", aggregate = "sum", title = "population").
+  y(field = "age", `type` = "ordinal", sort = Some("-x")).
+  transform(json"""{"filter": "datum.year == 2000"}""").
+  description("A bar chart that sorts the y-values by the x-values.")
+
+show(sortedAggregateBar)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_3"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A bar chart that sorts the y-values by the x-values.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "transform": [{"filter": "datum.year == 2000"}],
+  "height": {"step": 17},
+  "mark": "bar",
+  "encoding": {
+    "y": {
+      "field": "age",
+      "type": "ordinal",
+      "sort": "-x"
+    },
+    "x": {
+      "aggregate": "sum",
+      "field": "people",
+      "type": "quantitative",
+      "axis": {"title": "population"}
+    }
+  }
+};
+      vegaEmbed('#vis_3', spec);
+    </script>
+
+    <h3 id="grouped_bar" class="title">Grouped Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val groupedBar = VegaLite.facet("https://vega.github.io/vega-lite/examples/data/population.json").
+  column(field = "age", `type` = "ordinal", spacing = Some(10)).
+  mark("bar").
+  widthStep(12).
+  x(field = "gender", `type` = "nominal", title = null).
+  y(field = "people", `type` = "quantitative", aggregate = "sum", axis = json"""{"title": "population", "grid": false}""").
+  color(field = "gender", `type` = "nominal", scale = json"""{"range": ["#675193", "#ca8861"]}""").
+  transform(
+      json"""{"filter": "datum.year == 2000"}""",
+      json"""{"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}"""
+  ).
+  config(json"""{"view": {"stroke": "transparent"}, "axis": {"domainWidth": 1}}""")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_4"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "transform": [
+    {"filter": "datum.year == 2000"},
+    {"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}
+  ],
+  "width": {"step": 12},
+  "mark": "bar",
+  "encoding": {
+    "column": {
+      "field": "age", "type": "ordinal", "spacing": 10
+    },
+    "y": {
+      "aggregate": "sum", "field": "people", "type": "quantitative",
+      "axis": {"title": "population", "grid": false}
+    },
+    "x": {
+      "field": "gender", "type": "nominal",
+      "axis": {"title": ""}
+    },
+    "color": {
+      "field": "gender", "type": "nominal",
+      "scale": {"range": ["#675193", "#ca8861"]}
+    }
+  },
+  "config": {
+    "view": {"stroke": "transparent"},
+    "axis": {"domainWidth": 1}
+  }
+};
+      vegaEmbed('#vis_4', spec);
+    </script>
+
+    <h3 id="stacked_bar" class="title">Stacked Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val stackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
+  mark("bar").
+  x(field = "date", `type` = "ordinal", timeUnit = "month", title = "Month of the year").
+  y(field = null, aggregate = "count", `type` = "quantitative").
+  color(field = "weather", `type` = "nominal",
+      scale = json"""{
+        "domain": ["sun", "fog", "drizzle", "rain", "snow"],
+        "range": ["#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd"]
+      }""",
+      legend = JsObject("title" -> JsString("Weather type"))
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_5"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"},
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "timeUnit": "month",
+      "field": "date",
+      "type": "ordinal",
+      "axis": {"title": "Month of the year"}
+    },
+    "y": {
+      "aggregate": "count",
+      "type": "quantitative"
+    },
+    "color": {
+      "field": "weather",
+      "type": "nominal",
+      "scale": {
+        "domain": ["sun", "fog", "drizzle", "rain", "snow"],
+        "range": ["#e7ba52", "#c7c7c7", "#aec7e8", "#1f77b4", "#9467bd"]
+      },
+      "legend": {"title": "Weather type"}
+    }
+  }
+};
+      vegaEmbed('#vis_5', spec);
+    </script>
+
+    <h3 id="stacked_round_bar" class="title">Stacked Bar Chart with Rounded Corners</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val stackedRoundedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-weather.csv").
+  mark(JsObject("type" -> "bar", "cornerRadiusTopLeft" -> 3, "cornerRadiusTopRight" -> 3)).
+  x(field = "date", `type` = "ordinal", timeUnit = "month").
+  y(field = null, aggregate = "count", `type` = "quantitative").
+  color(field = "weather", `type` = "nominal")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_6"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"},
+  "mark": {"type": "bar", "cornerRadiusTopLeft": 3, "cornerRadiusTopRight": 3},
+  "encoding": {
+    "x": {"timeUnit": "month", "field": "date", "type": "ordinal"},
+    "y": {"aggregate": "count", "type": "quantitative"},
+    "color": {"field": "weather", "type": "nominal"}
+  }
+};
+      vegaEmbed('#vis_6', spec);
+    </script>
+
+    <h3 id="horizontal_stacked_bar" class="title">Horizontal Stacked Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val horizontalStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/barley.json").
+  mark("bar").
+  x(field = "yield", `type` = "quantitative", aggregate = "sum").
+  y(field = "variety", `type` = "nominal").
+  color(field = "site", `type` = "nominal")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_7"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/barley.json"},
+  "mark": "bar",
+  "encoding": {
+    "x": {"aggregate": "sum", "field": "yield", "type": "quantitative"},
+    "y": {"field": "variety", "type": "nominal"},
+    "color": {"field": "site", "type": "nominal"}
+  }
+};
+      vegaEmbed('#vis_7', spec);
+    </script>
+
+    <h3 id="layered_bar" class="title">Layered Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val layeredBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
+  mark("bar").
+  widthStep(17).
+  x(field = "age", `type` = "ordinal").
+  y(field = "people", `type` = "quantitative", aggregate = "sum", title = "population", stack = JsNull).
+  color(field = "gender", `type` = "nominal", scale = json"""{"range": ["#675193", "#ca8861"]}""").
+  opacity(0.7).
+  transform(
+      json"""{"filter": "datum.year == 2000"}""",
+      json"""{"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_8"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A bar chart showing the US population distribution of age groups and gender in 2000.",
+  "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "transform": [
+    {"filter": "datum.year == 2000"},
+    {"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}
+  ],
+  "width": {"step": 17},
+  "mark": "bar",
+  "encoding": {
+    "x": {"field": "age", "type": "ordinal"},
+    "y": {
+      "aggregate": "sum", "field": "people", "type": "quantitative",
+      "axis": {"title": "population"},
+      "stack": null
+    },
+    "color": {
+      "field": "gender", "type": "nominal",
+      "scale": {"range": ["#675193", "#ca8861"]}
+    },
+    "opacity": {"value": 0.7}
+  }
+};
+      vegaEmbed('#vis_8', spec);
+    </script>
+
+    <h3 id="normalized_stacked_bar" class="title">Normalized (Percentage) Stacked Bar Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val normalizedStackedBar = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
+  mark("bar").
+  widthStep(17).
+  x(field = "age", `type` = "ordinal").
+  y(field = "people", `type` = "quantitative", aggregate = "sum", title = "population", stack = "normalize").
+  color(field = "gender", `type` = "nominal", scale = json"""{"range": ["#675193", "#ca8861"]}""").
+  transform(
+      json"""{"filter": "datum.year == 2000"}""",
+      json"""{"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_9"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": { "url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "transform": [
+    {"filter": "datum.year == 2000"},
+    {"calculate": "datum.sex == 2 ? 'Female' : 'Male'", "as": "gender"}
+  ],
+  "mark": "bar",
+  "width": {"step": 17},
+  "encoding": {
+    "y": {
+      "aggregate": "sum", "field": "people", "type": "quantitative",
+      "axis": {"title": "population"},
+      "stack":  "normalize"
+    },
+    "x": {"field": "age", "type": "ordinal"},
+    "color": {
+      "field": "gender", "type": "nominal",
+      "scale": {"range": ["#675193", "#ca8861"]}
+    }
+  }
+};
+      vegaEmbed('#vis_9', spec);
+    </script>
+
+    <h3 id="gantt_chart" class="title">Gantt Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val gantt = VegaLite.view().
+  mark("bar").
+  y(field = "task", `type` = "ordinal").
+  x(field = "start", `type` = "quantitative").
+  x2(field = "end").
+  data(jsan"""
+      [
+        {"task": "A", "start": 1, "end": 3},
+        {"task": "B", "start": 3, "end": 8},
+        {"task": "C", "start": 8, "end": 10}
+      ]"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_10"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A simple bar chart with ranged data (aka Gantt Chart).",
+  "data": {
+    "values": [
+      {"task": "A", "start": 1, "end": 3},
+      {"task": "B", "start": 3, "end": 8},
+      {"task": "C", "start": 8, "end": 10}
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "y": {"field": "task", "type": "ordinal"},
+    "x": {"field": "start", "type": "quantitative"},
+    "x2": {"field": "end"}
+  }
+};
+      vegaEmbed('#vis_10', spec);
+    </script>
+
+    <h3 id="color_bar" class="title">A Bar Chart Encoding Color Names in the Data</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val colorBar = VegaLite.view().
+  mark("bar").
+  x(field = "color", `type` = "nominal").
+  y(field = "b", `type` = "quantitative").
+  color(field = "color", `type` = "nominal", scale = JsNull).
+  data(jsan"""
+      [
+        {"color": "red", "b": 28},
+        {"color": "green", "b": 55},
+        {"color": "blue", "b": 43}
+      ]"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_11"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A bar chart that directly encodes color names in the data.",
+  "data": {
+    "values": [
+      {
+        "color": "red",
+        "b": 28
+      },
+      {
+        "color": "green",
+        "b": 55
+      },
+      {
+        "color": "blue",
+        "b": 43
+      }
+    ]
+  },
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "field": "color",
+      "type": "nominal"
+    },
+    "y": {
+      "field": "b",
+      "type": "quantitative"
+    },
+    "color": {
+      "field": "color",
+      "type": "nominal",
+      "scale": null
+    }
+  }
+};
+      vegaEmbed('#vis_11', spec);
+    </script>
+
+    <h2 id="histogram_density" class="title">Histograms and Density Plots</h2>
+
+    <h3 id="histogram" class="title">Histogram</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val histogram = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
+  mark("bar").
+  x(field = "IMDB_Rating", `type` = "quantitative", bin = Left(true)).
+  y(field = null, `type` = "quantitative", aggregate = "count")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_12"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
+  "mark": "bar",
+  "encoding": {
+    "x": {
+      "bin": true,
+      "field": "IMDB_Rating",
+      "type": "quantitative"
+    },
+    "y": {
+      "aggregate": "count",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vis_12', spec);
+    </script>
+
+    <h3 id="relative_frequency_histogram" class="title">Relative Frequency Histogram</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val freqHistogram = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
+  mark(JsObject("type" -> "bar", "tooltip" -> true)).
+  x(field = "bin_Horsepwoer", `type` = "quantitative", bin = Right(json"""{"binned":true}"""), title = "Horsepower").
+  x2(field = "bin_Horsepwoer_end").
+  y(field = "PercentOfTotal", `type` = "quantitative", title = "Relative Frequency", axis = json"""{"format": ".1~%"}""").
+  transform(jsan"""[
+      {
+        "bin": true, "field": "Horsepower", "as": "bin_Horsepwoer"
+      },
+      {
+        "aggregate": [{"op": "count", "as": "Count"}],
+        "groupby": ["bin_Horsepwoer", "bin_Horsepwoer_end"]
+      },
+      {
+        "joinaggregate": [{"op": "sum", "field": "Count", "as": "TotalCount"}]
+      },
+      {
+        "calculate": "datum.Count/datum.TotalCount", "as": "PercentOfTotal"
+      }
+    ]"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_13"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "Relative frequency histogram. The data is binned with first transform. The number of values per bin and the total number are calculated in the second and third transform to calculate the relative frequency in the last transformation step.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
+  "transform": [{
+      "bin": true, "field": "Horsepower", "as": "bin_Horsepwoer"
+    }, {
+      "aggregate": [{"op": "count", "as": "Count"}],
+      "groupby": ["bin_Horsepwoer", "bin_Horsepwoer_end"]
+    }, {
+      "joinaggregate": [{"op": "sum", "field": "Count", "as": "TotalCount"}]
+    }, {
+      "calculate": "datum.Count/datum.TotalCount", "as": "PercentOfTotal"
+    }
+  ],
+  "mark": {"type": "bar", "tooltip": true},
+  "encoding": {
+    "x": {
+      "title": "Horsepower",
+      "field": "bin_Horsepwoer",
+      "type": "quantitative",
+      "bin": {"binned": true}
+    },
+    "x2": {"field": "bin_Horsepwoer_end"},
+    "y": {
+      "title": "Relative Frequency",
+      "field": "PercentOfTotal",
+      "type": "quantitative",
+      "axis": {
+        "format": ".1~%"
+        }
+    }
+  }
+};
+      vegaEmbed('#vis_13', spec);
+    </script>
+
+    <h3 id="2d_histogram_heatmap" class="title">2D Histogram Heatmap</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val histHeatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
+  mark("rect").
+  x(field = "IMDB_Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":60}"""), title = "IMDB Rating").
+  y(field = "Rotten_Tomatoes_Rating", `type` = "quantitative", bin = Right(json"""{"maxbins":40}""")).
+  color(field = null, `type` = "quantitative", aggregate = "count").
+  width(300).
+  height(200).
+  transform(json"""{
+    "filter": {
+      "and": [
+        {"field": "IMDB_Rating", "valid": true},
+        {"field": "Rotten_Tomatoes_Rating", "valid": true}
+      ]}}"""
+  ).
+  config(JsObject("view" -> json"""{"stroke": "transparent"}"""))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_14"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
+  "transform": [{
+    "filter": {"and": [
+      {"field": "IMDB_Rating", "valid": true},
+      {"field": "Rotten_Tomatoes_Rating", "valid": true}
+    ]}
+  }],
+  "mark": "rect",
+  "width": 300,
+  "height": 200,
+  "encoding": {
+    "x": {
+      "bin": {"maxbins":60},
+      "field": "IMDB_Rating",
+      "type": "quantitative"
+    },
+    "y": {
+      "bin": {"maxbins": 40},
+      "field": "Rotten_Tomatoes_Rating",
+      "type": "quantitative"
+    },
+    "color": {
+      "aggregate": "count",
+      "type": "quantitative"
+    }
+  },
+  "config": {
+    "view": {
+      "stroke": "transparent"
+    }
+  }
+};
+      vegaEmbed('#vis_14', spec);
+    </script>
+
+    <h3 id="density_plot" class="title">Density Plot</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val density = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
+  mark("area").
+  x(field = "value", `type` = "quantitative", title = "IMDB Rating").
+  y(field = "density", `type` = "quantitative").
+  width(400).
+  height(100).
+  transform(json"""
+    {
+      "density": "IMDB_Rating",
+      "bandwidth": 0.3
+    }"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_15"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
+  "width": 400,
+  "height": 100,
+  "transform":[
+    {
+      "density": "IMDB_Rating",
+      "bandwidth": 0.3
+    }
+  ],
+  "mark": "area",
+  "encoding": {
+    "x": {
+      "field": "value",
+      "title": "IMDB Rating",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "density",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vis_15', spec);
+    </script>
+
+    <h3 id="cumulative_frequency_distribution" class="title">Cumulative Frequency Distribution</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val cdf = VegaLite("https://vega.github.io/vega-lite/examples/data/movies.json").
+  mark("area").
+  x(field = "IMDB_Rating", `type` = "quantitative").
+  y(field = "cumulative_count", `type` = "quantitative").
+  transform(json"""
+    {
+      "sort": [{"field": "IMDB_Rating"}],
+      "window": [{"op": "count", "field": "count", "as": "cumulative_count"}],
+      "frame": [null, 0]
+    }"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_16"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/movies.json"},
+  "transform": [{
+    "sort": [{"field": "IMDB_Rating"}],
+    "window": [{"op": "count", "field": "count", "as": "cumulative_count"}],
+    "frame": [null, 0]
+  }],
+  "mark": "area",
+  "encoding": {
+    "x": {
+      "field": "IMDB_Rating",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "cumulative_count",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vis_16', spec);
+    </script>
+
+    <h2 id="scatterplots" class="title">Scatterplots</h2>
+
+    <h3 id="scatterplot" class="title">Scatterplot</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val scatter = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
+  mark("point").
+  x(field = "Horsepower", `type` = "quantitative").
+  y(field = "Miles_per_Gallon", `type` = "quantitative").
+  color(field = "Origin", `type` = "nominal").
+  shape(field = "Origin", `type` = "nominal")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_17"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A scatterplot showing horsepower and miles per gallons.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
+  "mark": "point",
+  "encoding": {
+    "x": {"field": "Horsepower", "type": "quantitative"},
+    "y": {"field": "Miles_per_Gallon", "type": "quantitative"},
+    "color": {"field": "Origin", "type": "nominal"},
+    "shape": {"field": "Origin", "type": "nominal"}
+  }
+};
+      vegaEmbed('#vis_17', spec);
+    </script>
+
+    <h3 id="bubble_plot" class="title">Bubble Plot</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val bubble = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
+  mark("point").
+  x(field = "Horsepower", `type` = "quantitative").
+  y(field = "Miles_per_Gallon", `type` = "quantitative").
+  size(field = "Acceleration", `type` = "quantitative")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_18"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A bubbleplot showing horsepower on x, miles per gallons on y, and binned acceleration on size.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
+  "mark": "point",
+  "encoding": {
+    "x": {"field": "Horsepower", "type": "quantitative"},
+    "y": {"field": "Miles_per_Gallon", "type": "quantitative"},
+    "size": {"field": "Acceleration", "type": "quantitative"}
+  }
+};
+      vegaEmbed('#vis_18', spec);
+    </script>
+
+    <h3 id="natural_disasters" class="title">Natural Disasters</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val disaster = VegaLite("https://vega.github.io/vega-lite/examples/data/disasters.csv").
+  mark(JsObject(
+    "type" -> "circle",
+    "opacity" -> 0.8,
+    "stroke" -> "black",
+    "strokeWidth" -> 1
+  )).
+  width(600).
+  height(400).
+  x(field = "Year", `type` = "ordinal", axis = json"""{"labelAngle": 0}""").
+  y(field = "Entity", `type` = "nominal", title = null).
+  size(field = "Deaths", `type` = "quantitative",
+      legend = json"""{"title": "Annual Global Deaths", "clipHeight": 30}""",
+      scale = json"""{"range": [0, 5000]}"""
+  ).
+  color(field = "Entity", `type` = "nominal", legend = JsNull).
+  transform(json"""{"filter": "datum.Entity !== 'All natural disasters'"}""")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_19"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {
+    "url": "https://vega.github.io/vega-lite/examples/data/disasters.csv"
+  },
+  "width": 600,
+  "height": 400,
+  "transform": [
+    {"filter": "datum.Entity !== 'All natural disasters'"}
+  ],
+  "mark": {
+    "type": "circle",
+    "opacity": 0.8,
+    "stroke": "black",
+    "strokeWidth": 1
+  },
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "ordinal",
+      "axis": {"labelAngle": 0}
+    },
+    "y": {"field": "Entity", "type": "nominal", "axis": {"title": ""}},
+    "size": {
+      "field": "Deaths",
+      "type": "quantitative",
+      "legend": {"title": "Annual Global Deaths", "clipHeight": 30},
+      "scale": {"range": [0, 5000]}
+    },
+    "color": {"field": "Entity", "type": "nominal", "legend": null}
+  }
+};
+      vegaEmbed('#vis_19', spec);
+    </script>
+
+    <h3 id="text_plot" class="title">Text Plot</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val textPlot = VegaLite("https://vega.github.io/vega-lite/examples/data/cars.json").
+  mark("text").
+  x(field = "Horsepower", `type` = "quantitative").
+  y(field = "Miles_per_Gallon", `type` = "quantitative").
+  color(field = "Brand", `type` = "nominal").
+  text(field = "Brand", `type` = "nominal").
+  transform(json"""
+    {
+      "calculate": "split(datum.Name, ' ')[0]",
+      "as": "Brand"
+    }"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_20"></div>
+    <script type="text/javascript">
+      var spec = {
+  "transform": [{
+    "as": "Brand",
+    "calculate": "split(datum.Name, ' ')[0]"
+  }],
+  "data": {
+    "url": "https://vega.github.io/vega-lite/examples/data/cars.json"
+  },
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "encoding": {
+    "color": {
+      "field": "Brand",
+      "type": "nominal"
+    },
+    "x": {
+      "field": "Horsepower",
+      "type": "quantitative"
+    },
+    "y": {
+      "field": "Miles_per_Gallon",
+      "type": "quantitative"
+    },
+    "text": {
+      "field": "Brand",
+      "type": "nominal"
+    }
+  },
+  "config": {
+    "view": {
+      "continuousWidth": 400,
+      "continuousHeight": 400
+    }
+  },
+  "mark": "text"
+};
+      vegaEmbed('#vis_20', spec);
+    </script>
+
+    <h2 id="line_area_charts" class="title">Line & Area Charts</h2>
+
+    <h3 id="line_chart" class="title">Line Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val line = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
+  mark("line").
+  x(field = "date", `type` = "temporal").
+  y(field = "price", `type` = "quantitative").
+  transform(json"""{"filter": "datum.symbol==='GOOG'"}""")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_21"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "Google's stock price over time.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
+  "transform": [{"filter": "datum.symbol==='GOOG'"}],
+  "mark": "line",
+  "encoding": {
+    "x": {"field": "date", "type": "temporal"},
+    "y": {"field": "price", "type": "quantitative"}
+  }
+};
+      vegaEmbed('#vis_21', spec);
+    </script>
+
+    <h3 id="line_point_chart" class="title">Line Chart with Point Markers</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_22">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val pointLine = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
+  mark(JsObject("type" -> "line", "point" -> true)).
+  x(field = "date", `type` = "temporal", timeUnit = "year").
+  y(field = "price", `type` = "quantitative", aggregate = "mean").
+  color(field = "symbol", `type` = "nominal")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_22"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "Stock prices of 5 Tech Companies over Time.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
+  "mark": {
+    "type": "line",
+    "point": true
+  },
+  "encoding": {
+    "x": {"timeUnit": "year", "field": "date", "type": "temporal"},
+    "y": {"aggregate":"mean", "field": "price", "type": "quantitative"},
+    "color": {"field": "symbol", "type": "nominal"}
+  }
+};
+      vegaEmbed('#vis_22', spec);
+    </script>
+
+    <h3 id="confidence_interval" class="title">Line Chart with Confidence Interval Band</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val confidenceInterval = VegaLite.layer(
+    "https://vega.github.io/vega-lite/examples/data/cars.json",
+    "json",
+    VegaLite.view().
+      mark(JsObject("type" -> "errorband", "extent" -> "ci")).
+      y(field = "Miles_per_Gallon", `type` = "quantitative", title = "Mean of Miles per Gallon (95% CIs)"),
+    VegaLite.view().
+      mark("line").
+      y(field = "Miles_per_Gallon", `type` = "quantitative", aggregate = "mean")
+  ).x(field = "Year", `type` = "temporal", timeUnit = "year")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_23"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/cars.json"},
+  "encoding": {
+    "x": {
+      "field": "Year",
+      "type": "temporal",
+      "timeUnit": "year"
+    }
+  },
+  "layer": [
+    {
+      "mark": {"type": "errorband", "extent": "ci"},
+      "encoding": {
+        "y": {
+          "field": "Miles_per_Gallon",
+          "type": "quantitative",
+          "title": "Mean of Miles per Gallon (95% CIs)"
+        }
+      }
+    },
+    {
+      "mark": "line",
+      "encoding": {
+        "y": {
+          "aggregate": "mean",
+          "field": "Miles_per_Gallon",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+};
+      vegaEmbed('#vis_23', spec);
+    </script>
+
+    <h3 id="rolling_averages" class="title">Rolling Averages over Raw Values</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val rollingAverages = VegaLite.layer(
+    "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv",
+    "csv",
+    VegaLite.view().
+      mark(JsObject("type" -> "point", "opacity" -> 0.3)).
+      x(field = "date", `type` = "temporal", title = "Date").
+      y(field = "temp_max", `type` = "quantitative", title = "Max Temperature"),
+    VegaLite.view().
+      mark(JsObject("color" -> "red", "size" -> 3, "type" -> "line")).
+      x(field = "date", `type` = "temporal").
+      y(field = "rolling_mean", `type` = "quantitative"),
+  ).
+  width(400).
+  height(300).
+  transform(json"""
+    {
+      "frame": [-15, 15],
+      "window": [
+        {
+          "field": "temp_max",
+          "op": "mean",
+          "as": "rolling_mean"
+        }
+      ]
+    }"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_24"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "Plot showing a 30 day rolling average with raw values in the background.",
+  "width": 400,
+  "height": 300,
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/seattle-weather.csv"},
+  "transform": [{
+      "frame": [-15, 15],
+      "window": [
+        {
+          "field": "temp_max",
+          "op": "mean",
+          "as": "rolling_mean"
+        }
+      ]
+    }
+  ],
+  "layer": [
+    {
+      "mark": {"type": "point", "opacity": 0.3},
+      "encoding": {
+        "x": {
+          "title": "Date",
+          "field": "date",
+          "type": "temporal"
+        },
+        "y": {
+          "title": "Max Temperature",
+          "field": "temp_max",
+          "type": "quantitative"
+        }
+      }
+    },
+    {
+      "mark": {
+        "color": "red",
+        "size": 3,
+        "type": "line"
+      },
+      "encoding": {
+        "x": {
+          "field": "date",
+          "type": "temporal"
+        },
+        "y": {
+          "field": "rolling_mean",
+          "type": "quantitative"
+        }
+      }
+    }
+  ]
+};
+      vegaEmbed('#vis_24', spec);
+    </script>
+
+    <h3 id="area_chart" class="title">Area Chart with Overlaying Lines and Point Markers</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_25">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val area = VegaLite("https://vega.github.io/vega-lite/examples/data/stocks.csv").
+  mark(JsObject("type" -> "area", "line" -> true, "point" -> true)).
+  x(field = "date", `type` = "temporal").
+  y(field = "price", `type` = "quantitative").
+  transform(json"""{"filter": "datum.symbol==='GOOG'"}""")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_25"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "Google's stock price over time.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/stocks.csv"},
+  "transform": [{"filter": "datum.symbol==='GOOG'"}],
+  "mark": {"type": "area", "line": true, "point": true},
+  "encoding": {
+    "x": {"field": "date", "type": "temporal"},
+    "y": {"field": "price", "type": "quantitative"}
+  }
+};
+      vegaEmbed('#vis_25', spec);
+    </script>
+
+    <h2 id="advanced_charts" class="title">Advanced Charts</h2>
+
+    <h3 id="weather_heatmap" class="title">Annual Weather Heatmap</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_26">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val heatmap = VegaLite("https://vega.github.io/vega-lite/examples/data/seattle-temps.csv").
+  mark("rect").
+  x(field = "date", `type` = "ordinal", timeUnit = "date", title = "Day", axis = json"""{"labelAngle": 0, "format": "%e"}""").
+  y(field = "date", `type` = "ordinal", timeUnit = "month", title = "Month").
+  color(field = "temp", `type` = "quantitative", aggregate = "max", legend = json"""{"title": null}""").
+  config(json"""
+    {
+      "view": {
+          "strokeWidth": 0,
+          "step": 13
+      },
+      "axis": {
+          "domain": false
+      }
+    }"""
+  ).
+  title("2010 Daily Max Temperature (F) in Seattle, WA")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_26"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "data": {
+      "url": "https://vega.github.io/vega-lite/examples/data/seattle-temps.csv"
+  },
+  "title": "2010 Daily Max Temperature (F) in Seattle, WA",
+  "config": {
+      "view": {
+          "strokeWidth": 0,
+          "step": 13
+      },
+      "axis": {
+          "domain": false
+      }
+  },
+  "mark": "rect",
+  "encoding": {
+      "x": {
+          "field": "date",
+          "timeUnit": "date",
+          "type": "ordinal",
+          "title": "Day",
+          "axis": {
+              "labelAngle": 0,
+              "format": "%e"
+          }
+      },
+      "y": {
+          "field": "date",
+          "timeUnit": "month",
+          "type": "ordinal",
+          "title": "Month"
+      },
+      "color": {
+          "field": "temp",
+          "aggregate": "max",
+          "type": "quantitative",
+          "legend": {
+              "title": null
+          }
+      }
+  }
+}
+;
+      vegaEmbed('#vis_26', spec);
+    </script>
+
+    <h3 id="donut_chart" class="title">Donut Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_28" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_28">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val donut = VegaLite(jsan"""
+    [
+      {"category": 1, "value": 4},
+      {"category": 2, "value": 6},
+      {"category": 3, "value": 10},
+      {"category": 4, "value": 3},
+      {"category": 5, "value": 7},
+      {"category": 6, "value": 8}
+    ]"""
+  ).
+  mark(JsObject("type" -> "arc", "innerRadius" -> 50)).
+  view(JsObject("stroke" -> JsNull)).
+  theta(field = "value", `type` = "quantitative").
+  color(field = "category", `type` = "nominal")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_28"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A simple donut chart with embedded data.",
+  "data": {
+    "values": [
+      {"category": 1, "value": 4},
+      {"category": 2, "value": 6},
+      {"category": 3, "value": 10},
+      {"category": 4, "value": 3},
+      {"category": 5, "value": 7},
+      {"category": 6, "value": 8}
+    ]
+  },
+  "mark": {"type": "arc", "innerRadius": 50},
+  "encoding": {
+    "theta": {"field": "value", "type": "quantitative"},
+    "color": {"field": "category", "type": "nominal"}
+  },
+  "view": {"stroke": null}
+};
+      vegaEmbed('#vis_28', spec);
+    </script>
+
+    <h3 id="radial_chart" class="title">Radial Chart</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_27" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_27">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val radial = VegaLite.layer(
+    jsan"""[12, 23, 47, 6, 52, 19]""",
+    VegaLite.view().
+      mark(JsObject("type" -> "arc", "innerRadius" -> 20, "stroke" -> "#fff")),
+
+    VegaLite.view().mark(JsObject("type" -> "text", "radiusOffset" -> 10)).
+      text(field = "data", `type` = "quantitative")
+  ).
+  mark(JsObject("type" -> "arc", "innerRadius" -> 50)).
+  view(JsObject("stroke" -> JsNull)).
+  theta(field = "data", `type` = "quantitative", stack = true).
+  radius(field = "data", `type` = "quantitative", scale = json"""{"type": "sqrt", "zero": true, "range": [20, 100]}""").
+  color(field = "data", `type` = "nominal", legend = JsNull)
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_27"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A simple radial chart with embedded data.",
+  "data": {
+    "values": [12, 23, 47, 6, 52, 19]
+  },
+  "layer": [{
+    "mark": {"type": "arc", "innerRadius": 20, "stroke": "#fff"}
+  },{
+    "mark": {"type": "text", "radiusOffset": 10},
+    "encoding": {
+      "text": {"field": "data", "type": "quantitative"}
+    }
+  }],
+  "encoding": {
+    "theta": {"field": "data", "type": "quantitative", "stack": true},
+    "radius": {"field": "data", "type": "quantitative", "scale": {"type": "sqrt", "zero": true, "range": [20, 100]}},
+    "color": {"field": "data", "type": "nominal", "legend": null}
+  },
+  "view": {"stroke": null}
+};
+      vegaEmbed('#vis_27', spec);
+    </script>
+
+    <h3 id="boxplot" class="title">Box Plot</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_29" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_29">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val boxplot = VegaLite("https://vega.github.io/vega-lite/examples/data/population.json").
+  mark(JsObject("type" -> "boxplot", "extent" -> "min-max")).
+  view(JsObject("stroke" -> JsNull)).
+  x(field = "age", `type` = "ordinal").
+  y(field = "people", `type` = "quantitative", title = "population")
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_29"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "description": "A vertical 2D box plot showing median, min, and max in the US population distribution of age groups in 2000.",
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/population.json"},
+  "mark": {
+    "type": "boxplot",
+    "extent": "min-max"
+  },
+  "encoding": {
+    "x": {"field": "age", "type": "ordinal"},
+    "y": {
+      "field": "people",
+      "type": "quantitative",
+      "axis": {"title": "population"}
+    }
+  }
+};
+      vegaEmbed('#vis_29', spec);
+    </script>
+
+    <h3 id="vertical_concatenation" class="title">Vertical Concatenation</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_30" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_30">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+show(VegaLite.vconcat(bar, aggregateBar, groupedBar))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_30"></div>
+    <script type="text/javascript">
+      var spec = {
+  "vconcat": [{
+    "data": {
+      "values": [{
+        "a": "A",
+        "b": 28
+      }, {
+        "a": "B",
+        "b": 55
+      }, {
+        "a": "C",
+        "b": 43
+      }, {
+        "a": "D",
+        "b": 91
+      }, {
+        "a": "E",
+        "b": 81
+      }, {
+        "a": "F",
+        "b": 53
+      }, {
+        "a": "G",
+        "b": 19
+      }, {
+        "a": "H",
+        "b": 87
+      }, {
+        "a": "I",
+        "b": 52
+      }]
+    },
+    "description": "A simple bar chart with embedded data.",
+    "encoding": {
+      "x": {
+        "field": "a",
+        "axis": {
+          "labelAngel": 0
+        },
+        "type": "ordinal"
+      },
+      "y": {
+        "field": "b",
+        "type": "quantitative"
+      }
+    },
+    "mark": "bar",
+    "height": {
+      "step": 17
+    }
+  }, {
+    "transform": [{
+      "filter": "datum.year == 2000"
+    }],
+    "data": {
+      "url": "https://vega.github.io/vega-lite/examples/data/population.json"
+    },
+    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+    "description": "A bar chart showing the US population distribution of age groups in 2000.",
+    "encoding": {
+      "x": {
+        "field": "people",
+        "type": "quantitative",
+        "title": "population",
+        "aggregate": "sum"
+      },
+      "y": {
+        "field": "age",
+        "type": "ordinal"
+      }
+    },
+    "config": {
+      "view": {
+        "continuousWidth": 400,
+        "continuousHeight": 400
+      }
+    },
+    "mark": "bar",
+    "height": {
+      "step": 17
+    }
+  }, {
+    "transform": [{
+      "filter": "datum.year == 2000"
+    }, {
+      "as": "gender",
+      "calculate": "datum.sex == 2 ? 'Female' : 'Male'"
+    }],
+    "data": {
+      "url": "https://vega.github.io/vega-lite/examples/data/population.json"
+    },
+    "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+    "width": {
+      "step": 12
+    },
+    "encoding": {
+      "color": {
+        "field": "gender",
+        "scale": {
+          "range": ["#675193", "#ca8861"]
+        },
+        "type": "nominal"
+      },
+      "column": {
+        "spacing": 10,
+        "field": "age",
+        "center": false,
+        "type": "ordinal",
+        "align": "all"
+      },
+      "x": {
+        "field": "gender",
+        "type": "nominal",
+        "title": null
+      },
+      "y": {
+        "field": "people",
+        "axis": {
+          "grid": false,
+          "title": "population"
+        },
+        "type": "quantitative",
+        "aggregate": "sum"
+      }
+    },
+    "config": {
+      "view": {
+        "stroke": "transparent"
+      },
+      "axis": {
+        "domainWidth": 1
+      }
+    },
+    "mark": "bar"
+  }],
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "config": {
+    "view": {
+      "continuousWidth": 400,
+      "continuousHeight": 400
+    }
+  }
+};
+      vegaEmbed('#vis_30', spec);
+    </script>
+
+    <h3 id="SPLOM" class="title">Scatterplot Matrix (SPLOM)</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_31" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_31">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val iris = read.arff("data/weka/iris.arff")
+show(VegaLite.splom(iris, "class"))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_31"></div>
+    <script type="text/javascript">
+      var spec = {
+  "data": {"url": "https://vega.github.io/vega-lite/examples/data/iris.json"},
+  "repeat": {
+    "row": ["petalWidth", "petalLength", "sepalWidth", "sepalLength"],
+    "column": ["sepalLength", "sepalWidth", "petalLength", "petalWidth"]
+  },
+  "spec": {
+
+    "width": 150,
+    "height": 150,
+    "mark": "point",
+    "encoding": {
+      "x": {
+        "field": {"repeat": "column"},
+        "type": "quantitative",
+        "scale": {"zero": false}
+      },
+      "y": {
+        "field": {"repeat": "row"},
+        "type": "quantitative",
+        "scale": {"zero": false}
+      },
+      "color": {"field": "species", "type": "nominal"}
+    }
+  }
+};
+      vegaEmbed('#vis_31', spec);
+    </script>
+
+    <h3 id="geo_choropleth" class="title">Choropleth of Unemployment Rate per County</h3>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_32" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_32">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+val geo = VegaLite(
+    "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+    JsObject("type" -> "topojson", "feature" -> "counties")
+  ).
+  mark("geoshape").
+  color(field = "rate", `type` = "quantitative").
+  projection(json"""{"type": "albersUsa"}""").
+  width(500).
+  height(300).
+  transform(json"""
+    {
+      "lookup": "id",
+      "from": {
+        "data": {
+          "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv"
+        },
+        "key": "id",
+        "fields": ["rate"]
+      }
+    }"""
+  )
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="vis_32"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "width": 500,
+  "height": 300,
+  "data": {
+    "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+    "format": {
+      "type": "topojson",
+      "feature": "counties"
+    }
+  },
+  "transform": [{
+    "lookup": "id",
+    "from": {
+      "data": {
+        "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv"
+      },
+      "key": "id",
+      "fields": ["rate"]
+    }
+  }],
+  "projection": {
+    "type": "albersUsa"
+  },
+  "mark": "geoshape",
+  "encoding": {
+    "color": {
+      "field": "rate",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vis_32', spec);
+    </script>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="visualization.html" title="Previous Section: Visualization"><span>Visualization</span></a>
+        <a class="btn-next-text" href="classification.html" title="Next Section: Classification"><span>Classification</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

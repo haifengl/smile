@@ -1,32 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.regression;
-
-import smile.math.kernel.PolynomialKernel;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
-import smile.validation.CrossValidation;
+import smile.data.*;
+import smile.math.kernel.GaussianKernel;
+import smile.math.MathEx;
+import smile.validation.*;
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -53,42 +53,69 @@ public class SVRTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class SVR.
-     */
+    @Test
+    public void testLongley() throws Exception {
+        System.out.println("longley");
+
+        RegressionMetrics metrics = LOOCV.regression(Longley.x, Longley.y, (x, y) -> SVR.fit(x, y, 2.0, 10.0, 1E-3));
+
+        System.out.println("LOOCV RMSE = " + metrics.rmse);
+        assertEquals(1.6140, metrics.rmse, 1E-4);
+
+        Regression<double[]> model = SVR.fit(Longley.x, Longley.y, 2.0, 10.0, 1E-3);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
+    }
+
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
-            double[] datay = data.toArray(new double[data.size()]);
-            double[][] datax = data.toArray(new double[data.size()][]);
-            Math.standardize(datax);
 
-            int n = datax.length;
-            int k = 10;
+        double[][] x = MathEx.clone(CPU.x);
+        MathEx.standardize(x);
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+        MathEx.setSeed(19650218); // to get repeatable results.
+        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, x, CPU.y,
+                (xi, yi) -> SVR.fit(xi, yi,40.0, 10.0, 1E-3));
 
-                SVR<double[]> svr = new SVR<>(trainx, trainy, new PolynomialKernel(3, 1.0, 1.0), 0.1, 1.0);
+        System.out.println(result);
+        assertEquals(47.1872, result.avg.rmse, 1E-4);
+    }
 
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - svr.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
+    @Test
+    public void tesProstate() {
+        System.out.println("Prostate");
 
-            System.out.println("10-CV RMSE = " + Math.sqrt(rss / n));
-         } catch (Exception ex) {
-             System.err.println(ex);
-         }
+        GaussianKernel kernel = new GaussianKernel(6.0);
+
+        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(Prostate.x, Prostate.y,
+                Prostate.testx, Prostate.testy, (x, y) -> SVR.fit(x, y, kernel, 0.5, 5, 1E-3));
+
+        System.out.println(result);
+        assertEquals(0.9112183360712871, result.metrics.rmse, 1E-4);
+    }
+
+    @Test
+    public void tesAbalone() {
+        System.out.println("Abalone");
+        GaussianKernel kernel = new GaussianKernel(5.0);
+        RegressionValidation<Regression<double[]>> result = RegressionValidation.of(Abalone.x, Abalone.y, Abalone.testx, Abalone.testy,
+                (x, y) -> SVR.fit(x, y, kernel, 1.5, 100, 1E-3));
+
+        System.out.println(result);
+        assertEquals(2.1092, result.metrics.rmse, 1E-4);
+    }
+
+    @Test
+    public void tesDiabetes() {
+        System.out.println("Diabetes");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        GaussianKernel kernel = new GaussianKernel(5.0);
+        RegressionValidations<Regression<double[]>> result = CrossValidation.regression(10, Diabetes.x, Diabetes.y,
+                (x, y) -> SVR.fit(x, y, kernel, 50, 1000, 1E-3));
+
+        System.out.println(result);
+        assertEquals(61.5148, result.avg.rmse, 1E-4);
     }
 }

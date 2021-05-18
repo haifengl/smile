@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
 
@@ -21,6 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+
 import static org.junit.Assert.*;
 
 /**
@@ -48,35 +51,25 @@ public class BetaDistributionTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of constructor, of class BetaDistribution.
-     */
     @Test
     public void testBetaDistribution() {
         System.out.println("BetaDistribution");
+        MathEx.setSeed(19650218); // to get repeatable results.
         BetaDistribution instance = new BetaDistribution(3, 2.1);
-        double[] data = new double[1000];
-        for (int i = 0; i < data.length; i++)
-            data[i] = instance.rand();
-        BetaDistribution est = new BetaDistribution(data);
-        assertEquals(3, est.getAlpha(), 5E-1);
-        assertEquals(2.1, est.getBeta(), 5E-1);
+        double[] data = instance.rand(1000);
+        BetaDistribution est = BetaDistribution.fit(data);
+        assertEquals(3.31, est.alpha(), 1E-2);
+        assertEquals(2.31, est.beta(), 1E-2);
     }
 
-    /**
-     * Test of npara method, of class Beta.
-     */
     @Test
-    public void testNpara() {
-        System.out.println("npara");
+    public void testLength() {
+        System.out.println("length");
         BetaDistribution instance = new BetaDistribution(2, 5);
         instance.rand();
-        assertEquals(2, instance.npara());
+        assertEquals(2, instance.length());
     }
 
-    /**
-     * Test of mean method, of class Beta.
-     */
     @Test
     public void testMean() {
         System.out.println("mean");
@@ -85,20 +78,14 @@ public class BetaDistributionTest {
         assertEquals(0.2857143, instance.mean(), 1E-7);
     }
 
-    /**
-     * Test of var method, of class Beta.
-     */
     @Test
-    public void testVar() {
-        System.out.println("var");
+    public void testVariance() {
+        System.out.println("variance");
         BetaDistribution instance = new BetaDistribution(2, 5);
         instance.rand();
-        assertEquals(0.0255102, instance.var(), 1E-7);
+        assertEquals(0.0255102, instance.variance(), 1E-7);
     }
 
-    /**
-     * Test of sd method, of class Beta.
-     */
     @Test
     public void testSd() {
         System.out.println("sd");
@@ -107,9 +94,6 @@ public class BetaDistributionTest {
         assertEquals(0.1597191, instance.sd(), 1E-7);
     }
 
-    /**
-     * Test of entropy method, of class Beta.
-     */
     @Test
     public void testEntropy() {
         System.out.println("entropy");
@@ -118,9 +102,6 @@ public class BetaDistributionTest {
         assertEquals(-0.4845307, instance.entropy(), 1E-7);
     }
 
-    /**
-     * Test of p method, of class Beta.
-     */
     @Test
     public void testP() {
         System.out.println("p");
@@ -137,9 +118,6 @@ public class BetaDistributionTest {
         assertEquals(0.0, instance.p(1.5), 1E-4);
     }
 
-    /**
-     * Test of logP method, of class Beta.
-     */
     @Test
     public void testLogP() {
         System.out.println("logP");
@@ -156,9 +134,6 @@ public class BetaDistributionTest {
         assertTrue(Double.isInfinite(instance.logp(1.5)));
     }
 
-    /**
-     * Test of cdf method, of class Beta.
-     */
     @Test
     public void testCdf() {
         System.out.println("cdf");
@@ -175,9 +150,6 @@ public class BetaDistributionTest {
         assertEquals(1.0, instance.cdf(1.5), 1E-5);
     }
 
-    /**
-     * Test of quantile method, of class Beta.
-     */
     @Test
     public void testQuantile() {
         System.out.println("quantile");

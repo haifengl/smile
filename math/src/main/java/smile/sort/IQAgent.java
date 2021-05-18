@@ -1,38 +1,47 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.sort;
 
 import java.util.Arrays;
 
 /**
- * This class provide a robust and extremely fast algorithm to estimate arbitary
- * quantile values from a continuing stream of data values. Basically, the data
- * values fly by in a stream. We look at each value only once and do a
- * constant-time process on it. From time to time, we can use this class to
- * report any arbitary p-quantile value of the data that we have seen thus far.
- * 
+ * Incremental quantile estimation. This class provide a robust and extremely
+ * fast algorithm to estimate arbitrary quantile values from a continuing
+ * stream of data values. Basically, the data values fly by in a stream.
+ * We look at each value only once and do a constant-time process on it.
+ * From time to time, we can use this class to report any arbitrary
+ * p-quantile value of the data that we have seen thus far.
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> John M. Chambers, David A. James, Diane Lambert and Scott Vander Wiel. Monitoring Networked Applications With Incremental Quantile Estimation. Statistical Sciencec21(4):463–475, 2006.</li>
+ * </ol>
+ *
  * @author Haifeng Li
  */
 public class IQAgent {
 
-    private int nbuf;
-    private int nq,  nt,  nd;
-    private double[] pval;
-    private double[] dbuf;
+    private final int nbuf;
+    private final int nq;
+    private int nt;
+    private int nd;
+    private final double[] pval;
+    private final double[] dbuf;
     private double[] qile;
     private double q0,  qm;
 
@@ -46,7 +55,7 @@ public class IQAgent {
     /**
      * Constructor.
      * @param nbuf batch size. You may use 10000 if you expected
-     * &gt; 10<sup>6</sup> data values. Otherwise, 1000 should be fine.
+     * {@code > 1,000,000} data values. Otherwise, 1000 should be fine.
      */
     public IQAgent(int nbuf) {
         this.nbuf = nbuf;
@@ -73,6 +82,7 @@ public class IQAgent {
 
     /**
      * Assimilate a new value from the stream.
+     * @param datum a new value.
      */
     public void add(double datum) {
         dbuf[nd++] = datum;
@@ -145,6 +155,9 @@ public class IQAgent {
     /**
      * Returns the estimated p-quantile for the data seen so far. For example,
      * p = 0.5 for median.
+     *
+     * @param p the percentile.
+     * @return the quantile.
      */
     public double quantile(double p) {
         if (nd > 0) {

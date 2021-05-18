@@ -1,65 +1,80 @@
 name := "smile-shell"
 
-// Parent project disables Scala as most libraries are in Java.
-// Enable it as this is a Scala project.
-crossPaths := true
-
-autoScalaLibrary := true
-
 mainClass in Compile := Some("smile.shell.Main")
+// workaround the class loader failure with reflection
+Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
 
 // native packager
 enablePlugins(JavaAppPackaging)
-
 maintainer := "Haifeng Li <haifeng.hli@gmail.com>"
-
 packageName := "smile"
+packageSummary := "Statistical Machine Intelligence and Learning Engine"
+packageDescription :=
+  """
+    |Smile is a fast and comprehensive machine learning, NLP, linear algebra,
+    |graph, interpolation, and visualization system in Java and Scala.
+    |With advanced data structures and algorithms, Smile delivers
+    |state-of-art performance. Smile is well documented and please check out
+    |the project website for programming guides and more information.
+    |""".stripMargin
 
-packageSummary := "Smile"
+// Filter data files in universal
+mappings in Universal := {
+  // universalMappings: Seq[(File,String)]
+  val universalMappings = (mappings in Universal).value
 
-packageDescription := "Statistical Machine Intelligence and Learning Engine"
+  // removing means filtering
+  universalMappings filter {
+    case (file, name) => !name.startsWith("data/kylo") &&
+                         !name.startsWith("data/matrix") &&
+                         !name.startsWith("data/nlp") &&
+                         !name.startsWith("data/sas") &&
+                         !name.startsWith("data/sparse") &&
+                         !name.startsWith("data/sqlite") &&
+                         !name.startsWith("data/transaction") &&
+                         !name.startsWith("data/wavefront")
+  }
+}
+
+// dealing with long classpaths
+scriptClasspath := Seq("*")
 
 executableScriptName := "smile"
-
 bashScriptConfigLocation := Some("${app_home}/../conf/smile.ini")
+batScriptConfigLocation := Some("%APP_HOME%\\conf\\smile.ini")
 
-bashScriptExtraDefines += """addJava "-Dsmile.home=${app_home}/..""""
+bashScriptExtraDefines ++= Seq(
+  """addJava "-Dsmile.home=${app_home}/.."""",
+  """addJava "-Dscala.usejavacp=true"""", // for Scala REPL
+  """addJava "-Dscala.repl.autoruncode=${app_home}/predef.sc"""",
+  """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
+)
 
-bashScriptExtraDefines += """addJava "-Dscala.repl.autoruncode=${app_home}/init.scala""""
-
-bashScriptExtraDefines += """addJava "-Dconfig.file=${app_home}/../conf/smile.conf""""
-
-batScriptExtraDefines  += """set _JAVA_OPTS=!_JAVA_OPTS! -Dsmile.home=%SMILE_HOME% -Dscala.repl.autoruncode=%SMILE_HOME%\\bin\\init.scala -Dconfig.file=%SMILE_HOME%\\..\\conf\\smile.conf"""
-
-batScriptExtraDefines  += """set PATH=!PATH!;%~dp0"""
-
-// native packager Docker plugin
-enablePlugins(DockerPlugin)
-
-import com.typesafe.sbt.packager.docker._
-
-dockerBaseImage := "frolvlad/alpine-oraclejdk8"
-
-packageName in Docker := "haifengl/smile"
-
-dockerUpdateLatest := true
-
-dockerCommands := dockerCommands.value.flatMap{
-  case cmd@Cmd("FROM",_) => List(cmd, Cmd("RUN", "apk update && apk add bash"))
-  case other => List(other)
-}
+batScriptExtraDefines ++= Seq(
+  """call :add_java -Dsmile.home=%APP_HOME%""",
+  """call :add_java -Dscala.usejavacp=true""",
+  """call :add_java -Dscala.repl.autoruncode=%APP_HOME%\bin\predef.sc""",
+  """call :add_java -Dconfig.file=%APP_HOME%\conf\smile.conf""",
+  """call :add_java -Djava.library.path=%APP_HOME%\bin""",
+  """set PATH=!PATH!;%~dp0"""
+)
 
 // BuildInfo
 enablePlugins(BuildInfoPlugin)
-
 buildInfoKeys := Seq[BuildInfoKey](name, version, scalaVersion, sbtVersion)
-
 buildInfoPackage := "smile.shell"
-
 buildInfoOptions += BuildInfoOption.BuildTime
 
-libraryDependencies += "org.scala-lang" % "scala-compiler" % "2.12.8"
-
-libraryDependencies += "com.lihaoyi" % "ammonite" % "1.6.7" cross CrossVersion.full
-
-libraryDependencies += "org.slf4j" % "slf4j-simple" % "1.7.26"
+libraryDependencies ++= Seq(
+  "com.github.scopt" %% "scopt" % "4.0.1",
+  "org.scala-lang" % "scala-compiler" % "2.13.5",
+  "org.slf4j" % "slf4j-simple" % "1.7.30",
+  "com.typesafe.akka" %% "akka-actor-typed" % "2.6.14",
+  "com.typesafe.akka" %% "akka-stream" % "2.6.14",
+  "com.typesafe.akka" %% "akka-http" % "10.2.4",
+  "com.typesafe.akka" %% "akka-http-spray-json" % "10.2.4",
+  "com.lightbend.akka" %% "akka-stream-alpakka-csv" % "2.0.2",
+  "org.bytedeco" % "javacpp"   % "1.5.5"        classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "openblas"  % "0.3.13-1.5.5" classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64",
+  "org.bytedeco" % "arpack-ng" % "3.8.0-1.5.5"  classifier "macosx-x86_64" classifier "windows-x86_64" classifier "linux-x86_64"
+)

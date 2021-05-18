@@ -1,23 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.distance;
 
-import smile.math.Math;
-import smile.math.matrix.DenseMatrix;
+import smile.math.blas.UPLO;
 import smile.math.matrix.Matrix;
 
 /**
@@ -33,36 +33,42 @@ import smile.math.matrix.Matrix;
 public class MahalanobisDistance implements Metric<double[]> {
     private static final long serialVersionUID = 1L;
 
-    private DenseMatrix sigma;
-    private DenseMatrix sigmaInv;
+    /** The covariance matrix. */
+    private final Matrix sigma;
+    /** The inverse of covariance matrix. */
+    private final Matrix sigmaInv;
 
     /**
-     * Constructor with given covariance matrix.
+     * Constructor.
+     * @param cov the covariance matrix.
      */
     public MahalanobisDistance(double[][] cov) {
-        sigma = Matrix.newInstance(cov);
+        sigma = new Matrix(cov);
+        sigma.uplo(UPLO.LOWER);
         sigmaInv = sigma.inverse();
     }
 
     @Override
     public String toString() {
-        return "Mahalanobis distance";
+        return String.format("Mahalanobis Distance(%s)", sigma);
     }
 
     @Override
     public double d(double[] x, double[] y) {
-        if (x.length != sigma.nrows())
-            throw new IllegalArgumentException(String.format("Array x[%d] has different dimension with Sigma[%d][%d].", x.length, sigma.nrows(), sigma.ncols()));
+        if (x.length != sigma.nrow()) {
+            throw new IllegalArgumentException(String.format("Array x[%d] has different dimension with Sigma[%d][%d].", x.length, sigma.nrow(), sigma.ncol()));
+        }
 
-        if (y.length != sigma.nrows())
-            throw new IllegalArgumentException(String.format("Array y[%d] has different dimension with Sigma[%d][%d].", y.length, sigma.nrows(), sigma.ncols()));
+        if (y.length != sigma.nrow()) {
+            throw new IllegalArgumentException(String.format("Array y[%d] has different dimension with Sigma[%d][%d].", y.length, sigma.nrow(), sigma.ncol()));
+        }
 
         int n = x.length;
         double[] z = new double[n];
         for (int i = 0; i < n; i++)
             z[i] = x[i] - y[i];
 
-        double dist = sigmaInv.xax(z);
+        double dist = sigmaInv.xAx(z);
         return Math.sqrt(dist);
     }
 }

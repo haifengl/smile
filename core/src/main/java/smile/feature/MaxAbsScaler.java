@@ -1,23 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.math.Math;
-import smile.data.Attribute;
+import smile.data.DataFrame;
+import smile.data.type.StructType;
+import smile.math.MathEx;
+
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Scales each feature by its maximum absolute value. This class scales and
@@ -27,7 +33,13 @@ import smile.data.Attribute;
  *
  * @author Haifeng Li
  */
-public class MaxAbsScaler extends FeatureTransform {
+public class MaxAbsScaler implements FeatureTransform {
+    private static final long serialVersionUID = 2L;
+
+    /**
+     * The schema of data.
+     */
+    protected StructType schema;
     /**
      * Scaling factor.
      */
@@ -35,75 +47,102 @@ public class MaxAbsScaler extends FeatureTransform {
 
     /**
      * Constructor.
+     * @param scale the scaling factor.
      */
-    public MaxAbsScaler() {
-
-    }
-
-    /**
-     * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
-     */
-    public MaxAbsScaler(boolean copy) {
-        super(copy);
-    }
-
-    @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        int n = data.length;
-        int p = data[0].length;
-        scale = new double[p];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                if (attributes[j].getType() == Attribute.Type.NUMERIC) {
-                    double abs = Math.abs(data[i][j]);
-                    if (scale[j] < abs) {
-                        scale[j] = abs;
-                    }
-                }
-            }
-        }
+    public MaxAbsScaler(double[] scale) {
+        this.scale = scale;
 
         for (int i = 0; i < scale.length; i++) {
-            if (Math.isZero(scale[i])) {
+            if (MathEx.isZero(scale[i])) {
                 scale[i] = 1.0;
             }
         }
     }
 
     /**
-     * Scales each feature by its maximum absolute value.
-     * @param x a vector to be scaled. The vector will be modified on output.
-     * @return the input vector.
+     * Constructor.
+     * @param schema the schema of data.
+     * @param scale the scaling factor.
      */
+    public MaxAbsScaler(StructType schema, double[] scale) {
+        this(scale);
+        if (schema.length() != scale.length) {
+            throw new IllegalArgumentException("Schema and scaling factor size don't match");
+        }
+        this.schema = schema;
+    }
+
     @Override
-    public double[] transform(double[] x) {
-        if (x.length != scale.length) {
-            throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, scale.length));
+    public Optional<StructType> schema() {
+        return Optional.ofNullable(schema);
+    }
+
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static MaxAbsScaler fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
         }
 
-        double[] y = copy ? new double[x.length] : x;
-        for (int i = 0; i < x.length; i++) {
-            y[i] = x[i] / scale[i];
+        StructType schema = data.schema();
+        int p = schema.length();
+        double[] scale = new double[p];
+
+        int n = data.size();
+        for (int j = 0; j < p; j++) {
+            if (schema.field(j).isNumeric()) {
+                double max = 0.0;
+                for (int i = 0; i < n; i++) {
+                    max = Math.max(max, Math.abs(data.getDouble(i, j)));
+                }
+                scale[j] = max;
+            }
         }
 
-        return y;
+        return new MaxAbsScaler(schema, scale);
+    }
+
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static MaxAbsScaler fit(double[][] data) {
+        int p = data[0].length;
+        double[] scale = new double[p];
+
+        for (int i = 0; i < data.length; i++) {
+            for (int j = 0; j < p; j++) {
+                scale[j] = Math.max(scale[j], Math.abs(data[i][j]));
+            }
+        }
+
+        return new MaxAbsScaler(scale);
+    }
+
+    @Override
+    public double transform(double x, int i) {
+        return x / scale[i];
+    }
+
+    @Override
+    public double invert(double x, int i) {
+        return x * scale[i];
+    }
+
+    /** Returns the string representation of i-th column scaling factor. */
+    private String toString(int i) {
+        String field = schema == null ? String.format("V%d", i+1) : schema.field(i).name;
+        return String.format("%s[%.4f]", field, scale[i]);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("MaxAbsScaler(");
-        if (scale != null) {
-            if (scale.length > 0) {
-                sb.append(String.format("%.4f", scale[0]));
-            }
-
-            for (int i = 1; i < scale.length; i++) {
-                sb.append(String.format(", %.4f", scale[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        return IntStream.range(0, scale.length)
+                .mapToObj(this::toString)
+                .collect(Collectors.joining(",", "MaxAbsScaler(", ")"));
     }
 }

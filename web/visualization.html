@@ -1,0 +1,1048 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="visualization-top" class="title">Data Visualization</h1>
+
+    <p>A picture is worth a thousand words. In machine learning, we usually handle
+        high-dimensional data, which is impossible to draw on display directly. But
+        a variety of statistical plots are tremendously valuable for us to grasp
+        the characteristics of many data points. Smile provides data visualization tools
+        such as plots and maps for researchers to understand information more easily and quickly.</p>
+
+    <h2 id="scatter" class="title">Scatter Plot</h2>
+
+    <p>A scatter plot displays data as a collection of points. The points can be color-coded,
+        which is very useful for classification tasks.
+        The user can use <code>plot</code> functions to draw scatter plot easily.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def plot(x: Array[Array[Double]], mark: Char = '*', color: Color = Color.BLACK): Canvas
+
+    def plot(x: Array[Array[Double]], y: Array[String], mark: Char): Canvas
+
+    def plot(x: Array[Array[Double]], y: Array[Int], mark: Char): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class ScatterPlot {
+        public static ScatterPlot of(double[][] points, char mark, Color color);
+
+        public static ScatterPlot of(double[][] x, String[] y, char mark);
+
+        public static ScatterPlot of(double[][] x, int[] y, char mark);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The legends are as follows.</p>
+    <ul>
+        <li> <code>.</code> : dot
+        <li> <code>+</code> : +
+        <li> <code>-</code> : -
+        <li> <code>|</code> : |
+        <li> <code>*</code> : star
+        <li> <code>x</code> : x
+        <li> <code>o</code> : circle
+        <li> <code>O</code> : large circle
+        <li> <code>@</code> : solid circle
+        <li> <code>#</code> : large solid circle
+        <li> <code>s</code> : square
+        <li> <code>S</code> : large square
+        <li> <code>q</code> : solid square
+        <li> <code>Q</code> : large solid square
+    </ul>
+    <p>For any other char, the data point will be drawn as a dot.</p>
+
+    <p>The functions return a Canvas, which can be used to control the plot
+        programmatically. The user can also use the popup context menu by right
+        mouse click to print, change the title, axis labels, and font, etc. To
+        display the canvas on desktop, call <code>show(canvas)</code>, which
+        will render the plot properly with an implicit renderer engine.</p>
+
+    <p>For both 2D and 3D plot, the user can zoom in/out by mouse wheel. For 2D plot,
+        the user can shift the coordinates by moving mouse after double click. The
+        user can also select an area by mouse for detailed view. For 3D plot, the user
+        can rotate the view by dragging mouse.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val iris = read.arff("data/weka/iris.arff")
+    val canvas = plot(iris, "sepallength", "sepalwidth", "class", '*')
+    canvas.setAxisLabels("sepallength", "sepalwidth")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import java.awt.Color;
+    import smile.io.*;
+    import smile.plot.swing.*;
+    import smile.stat.distribution.*;
+    import smile.math.matrix.*;
+
+    var iris = Read.arff("data/weka/iris.arff");
+    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "class", '*').canvas();
+    canvas.setAxisLabels("sepallength", "sepalwidth");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In this example, we plot the first two columns of Iris data. We use the class
+        label for legend and color coding.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris2d.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 2D Scatter Plot</div>
+    </div>
+
+    <p>It is also easy to draw a 3D plot.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val canvas = plot(iris, "sepallength", "sepalwidth", "petallength", "class", '*')
+    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var canvas = ScatterPlot.of(iris, "sepallength", "sepalwidth", "petallength", "class", '*').canvas();
+    canvas.setAxisLabels("sepallength", "sepalwidth", "petallength");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris3d.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris 3D Scatter Plot</div>
+    </div>
+
+    <p>However, the Iris data has four attributes. So even 3D plot is not sufficient to see the
+        whole picture. A general practice is plot all the attribute pairs. For example,</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(plot(iris, "class", '*'))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var canvas = PlotGrid.of(iris, "class", '*');
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Iris Plot of All Attribute Pairs</div>
+    </div>
+
+    <h2 id="line" class="title">Line Chart</h2>
+
+    <p>A line chart connects points by straight lines.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def line(data: Array[Array[Double]], style: Line.Style = Line.Style.SOLID, color: Color = Color.BLACK, mark: Char = ' ', label: String = null): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LinePlot {
+        public static LinePlot of(double[][] data, Line.Style style, Color color);
+
+        public static LinePlot of(double[] y, Line.Style style, Color color);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Let's draw a heart with it!</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val heart = -314 to 314 map { i =>
+      val t = i / 100.0
+      val x = 16 * pow(sin(t), 3)
+      val y = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t)
+      Array(x, y)
+    }
+    show(line(heart.toArray, color = RED))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import static java.lang.Math.*;
+    double[][] heart = new double[200][2];
+    for (int i = 0; i < 200; i++) {
+        double t = PI * (i - 100) / 100;
+        heart[i][0] = 16 * pow(sin(t), 3);
+        heart[i][1] = 13 * cos(t) - 5 * cos(2*t) - 2 * cos(3*t) - cos(4*t);
+    }
+    var canvas = LinePlot.of(heart, Color.RED);
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heart.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="box" class="title">Box Plot</h2>
+
+    <p>The box plot is a standardized way of displaying the distribution of data
+        based on the five number summary: minimum, first quartile, median,
+        third quartile, and maximum.</p>
+
+    <p>Box plots can be useful to display differences between populations without
+        making any assumptions of the underlying statistical distribution: they are
+        non-parametric. The spacings between the different parts of the box help
+        indicate the degree of dispersion (spread) and skewness in the data, and
+        identify outliers.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def boxplot(data: Array[Double]*): Canvas
+
+    def boxplot(data: Array[Array[Double]], labels: Array[String]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class BoxPlot {
+        public BoxPlot(double[][] data, String[] labels);
+
+        public static BoxPlot of(double[]... data);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that the parameter <code>data</code> is a matrix of which each row to
+        create a box plot.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val groups = (iris("sepallength").toDoubleArray zip iris("class").toStringArray).groupBy(_._2)
+    val labels = groups.keys.toArray
+    val data = groups.values.map { a => a.map(_._1) }.toArray
+    val canvas = boxplot(data, labels)
+    canvas.setAxisLabels("", "sepallength")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    String[] labels = ((smile.data.measure.NominalScale) iris.schema().field("class").measure).levels();
+    double[][] data = new double[labels.length][];
+    for (int i = 0; i < data.length; i++) {
+        var label = labels[i];
+        data[i] = iris.stream().
+              filter(row -> row.getString("class").equals(label)).
+              mapToDouble(row -> row.getFloat("sepallength")).
+              toArray();
+    }
+    var canvas = new BoxPlot(data, labels).canvas();
+    canvas.setAxisLabels("", "sepallength");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/iris-boxplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="historgram" class="title">Histogram</h2>
+
+    <p>A histogram is a graphical representation of the distribution of numerical data.
+        The range of values is divided into a series of consecutive, non-overlapping intervals/bins.
+        The bins must be adjacent, and are usually equal size.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def hist(data: Array[Double], k: Int = 10, prob: Boolean = false, color: Color = Color.BLUE): Canvas
+
+    def hist(data: Array[Double], breaks: Array[Double], prob: Boolean, color: Color): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Histogram {
+        public static BarPlot of(double[] data);
+        public static BarPlot of(double[] data, int k, boolean prob);
+        public static BarPlot of(double[] data, int k, boolean prob, Color color);
+        public static BarPlot of(double[] data, double[] breaks, boolean prob);
+        public static BarPlot of(double[] data, double[] breaks, boolean prob, Color color);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>k</code> is the number of bins (10 by default), or you can
+        also specify an array of the breakpoints between bins.</p>
+
+    <p>Let's apply the histogram to an interesting data: the wisdom of crowds.
+        The original experiment took place about a hundred years ago at a county fair in England.
+        The fair had a guess the weight of the ox contest. Francis Galton calculated the average
+        of all guesses, which is right to within one pound.</p>
+
+    <p>Recently, NPR Planet Money ran the experiment again. NPR posted a couple of pictures of a cow
+        (named Penelope) and asked people to guess her weight. They got over 17,000 responses. The average
+        of guesses was 1,287 pounds, which is pretty close to Penelope's weight 1,355 pounds. </p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val cow = read.csv("data/npr/cow.txt", header=false)("V1").toDoubleArray
+    val canvas = hist(cow, 50)
+    canvas.setAxisLabels("Weight", "Probability")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var cow = Read.csv("data/npr/cow.txt").column("V1").toDoubleArray();
+    var canvas = Histogram.of(cow, 50, true).canvas();
+    canvas.setAxisLabels("Weight", "Probability");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/penelope.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>The histogram gives a rough sense of the distribution of crowd guess, which has a long tail.
+        Filter out the weights over 3500 pounds, the histogram shows more details.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val canvas = hist(cow.filter(_ <= 3500), 50)
+    canvas.setAxisLabels("Weight", "Probability")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var canvas = Histogram.of(Arrays.stream(cow).filter(w -> w <= 3500).toArray(), 50, true).canvas();
+    canvas.setAxisLabels("Weight", "Probability");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/penelope3500.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Smile also supports histograms that display the distribution of 2-dimensional data.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def hist3(data: Array[Array[Double]], xbins: Int = 10, ybins: Int = 10, prob: Boolean = false, palette: Array[Color] = Palette.jet(16)): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Histogram3D {
+        public static Histogram3D of(double[][] data);
+        public static Histogram3D of(double[][] data, int nbins, Color[] palette);
+        public static Histogram3D of(double[][] data, int nbins, boolean prob);
+        public static Histogram3D of(double[][] data, int nbins, boolean prob, Color[] palette);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Here we generate a data set from a 2-dimensional Gaussian distribution.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val gauss = new MultivariateGaussianDistribution(Array(0.0, 0.0), Matrix.of(Array(Array(1.0, 0.6), Array(0.6, 2.0))))
+    val data = (0 until 10000) map { i: Int => gauss.rand }
+    show(hist3(data.toArray, 50, 50))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    double[] mu = {0.0, 0.0};
+    double[][] v = { {1.0, 0.6}, {0.6, 2.0} };
+    var gauss = new MultivariateGaussianDistribution(mu, Matrix.of(v));
+    var data = Stream.generate(gauss::rand).limit(10000).toArray(double[][]::new);
+    Histogram3D.of(data, 50, false).canvas().window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The corresponding histogram looks like</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/histogram3d.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="qq" class="title">Q-Q Plot</h2>
+
+    <p>A Q–Q plot ("Q" stands for quantile) is a probability plot for comparing two probability distributions
+        by plotting their quantiles against each other. A point (x, y) on the plot corresponds to one of
+        the quantiles of the second distribution (y-coordinate) plotted against the same quantile of
+        the first distribution (x-coordinate).</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def qqplot(x: Array[Double]): Canvas
+
+    def qqplot(x: Array[Double], d: Distribution): Canvas
+    def qqplot(x: Array[Double], y: Array[Double]): Canvas
+
+    def qqplot(x: Array[Int], d: DiscreteDistribution): Canvas
+    def qqplot(x: Array[Int], y: Array[Int]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class QQPlot {
+        public static QQPlot of(double[] x);
+        public static QQPlot of(double[] x, Distribution d);
+        public static QQPlot of(double[] x, double[] y);
+        public static QQPlot of(int[] x, DiscreteDistribution d);
+        public static QQPlot of(int[] x, int[] y);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Smile supports the Q-Q plot of samples to a given distribution and also of two sample sets.
+        The second distribution/samples is optional. If missing, we assume it the standard Gaussian distribution.</p>
+
+    <p>In what follows, we generate a random sample set from standard Gaussian distribution and draw its Q-Q plot.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val gauss = new GaussianDistribution(0.0, 1.0)
+    val data = (0 until 1000) map { i: Int => gauss.rand }
+    show(qqplot(data.toArray))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var gauss = new GaussianDistribution(0.0, 1.0);
+    var data = DoubleStream.generate(gauss::rand).limit(1000).toArray();
+    QQPlot.of(data).canvas().window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In fact, this is also a good visual way to verify the quality of our random number generator.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/qqplot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="heatmap" class="title">Heatmap</h2>
+
+    <p>A heat map is a graphical representation of data where the values in a matrix are represented as colors.
+        In cluster analysis, researchers often employs the heat map by permuting the rows and the columns
+        of a matrix to place similar values near each other according to the clustering.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def heatmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
+
+    def heatmap(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
+
+    def heatmap(rowLabels: Array[String], columnLabels: Array[String], z: Array[Array[Double]], palette: Array[Color]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Heatmap {
+        public static Heatmap of(double[][] z);
+        public static Heatmap of(double[][] z, int k);
+        public static Heatmap of(double[] x, double[] y, double[][] z);
+        public static Heatmap of(double[] x, double[] y, double[][] z, int k);
+        public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z);
+        public static Heatmap of(String[] rowLabels, String[] columnLabels, double[][] z, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>z</code> is the matrix to display and the optional parameters <code>x</code> and <code>y</code>
+        are the coordinates of data matrix cells, which must be in ascending order. Alternatively, one can also
+        provide labels as the coordinates, which is a common practice in cluster analysis.</p>
+
+    <p>In what follows, we display the heat map of a matrix. We starts with a small <code>4 x 4</code> matrix and
+        enlarge it with bicubic interpolation. We also use the helper class <code>Palette</code> to generate the color
+        scheme. This class provides many other color schemes.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    // the matrix to display
+    val z = Array(
+      Array(1.0, 2.0, 4.0, 1.0),
+      Array(6.0, 3.0, 5.0, 2.0),
+      Array(4.0, 2.0, 1.0, 5.0),
+      Array(5.0, 4.0, 2.0, 3.0)
+    )
+
+    // make the matrix larger with bicubic interpolation
+    val x = Array(0.0, 1.0, 2.0, 3.0)
+    val y = Array(0.0, 1.0, 2.0, 3.0)
+    val bicubic = new BicubicInterpolation(x, y, z)
+    val Z = Array.ofDim[Double](101, 101)
+    for (i <- 0 to 100) {
+      for (j <- 0 to 100)
+        Z(i)(j) = bicubic.interpolate(i * 0.03, j * 0.03)
+    }
+
+    show(heatmap(Z, Palette.jet(256)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    // the matrix to display
+    double[][] z = {
+      {1.0, 2.0, 4.0, 1.0},
+      {6.0, 3.0, 5.0, 2.0},
+      {4.0, 2.0, 1.0, 5.0},
+      {5.0, 4.0, 2.0, 3.0}
+    };
+
+    // make the matrix larger with bicubic interpolation
+    double[] x = {0.0, 1.0, 2.0, 3.0};
+    double[] y = {0.0, 1.0, 2.0, 3.0};
+    var bicubic = new BicubicInterpolation(x, y, z);
+    var Z = new double[101][101];
+    for (int i = 0; i <= 100; i++) {
+      for (int j = 0; j <= 100; j++)
+        Z[i][j] = bicubic.interpolate(i * 0.03, j * 0.03);
+    }
+
+    Heatmap.of(Z, Palette.jet(256)).canvas().window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/heatmap.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>A special case of heat map is to draw the sparsity pattern of a matrix.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def spy(matrix: SparseMatrix, k: Int = 1): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SparseMatrixPlot {
+        public static SparseMatrixPlot of(SparseMatrix sparse);
+
+        public static SparseMatrixPlot of(SparseMatrix sparse, int k);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The structure of sparse matrix is critical in solving linear systems.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"))
+    val canvas = spy(sparse)
+    canvas.setTitle("mesh2em5")
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var sparse = SparseMatrix.text(java.nio.file.Paths.get("data/matrix/mesh2em5.txt"));
+    var canvas = SparseMatrixPlot.of(sparse).canvas();
+    canvas.setTitle("mesh2em5");
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mesh2em5.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <p>Another variant is the hex map where hexagon cells replace rectangle cells.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def hexmap(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_20">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Hexmap {
+        public static Hexmap of(double[][] z);
+        public static Hexmap of(double[][] z, int k);
+        public static Hexmap of(double[][] z, Color[] palette);
+    }          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In machine learning, the hex map is often used to visualize self-organized map (SOM).
+        An SOM is a type of artificial neural network that is trained using unsupervised learning to
+        produce a low-dimensional (typically two-dimensional), discretized representation of
+        the input space of the training samples. An SOM consists of components called nodes or neurons.
+        Associated with each node are a weight vector of the same dimension as the input data vectors,
+        and a position in the map space. The U-Matrix value of a particular node is the average distance
+        between the node's weight vector and that of its closest neighbors. In practice, researchers
+        often use the hex map to visualize the U-Matrix.</p>
+
+    <p>In the following example, we train and visualize a SOM on the USPS training data set with <code>30 x 30</code>
+        nodes.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val zip = read.csv("data/usps/zip.train", delimiter = ' ', header = false)
+    val x = zip.drop(0).toArray
+    val lattice = SOM.lattice(30, 30, x)
+    val som = new SOM(lattice,
+                TimeFunction.constant(0.1),
+                Neighborhood.Gaussian(1, x.length * 10 / 4))
+
+    for (i <- 0 until 10) {
+        MathEx.permutate(x.length).foreach { j =>
+            som.update(x(j))
+        }
+    }
+
+    show(hexmap(som.umatrix, Palette.heat(256)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_21">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var zip = Read.csv("data/usps/zip.train", CSVFormat.DEFAULT.withDelimiter(' '));
+    var x = zip.drop(0).toArray();
+    var lattice = SOM.lattice(30, 30, x);
+    var som = new SOM(lattice,
+                TimeFunction.constant(0.1),
+                Neighborhood.Gaussian(1, x.length * 10 / 4));
+
+    for (int i = 0; i < 10; i++) {
+        for (int j : MathEx.permutate(x.length)) {
+            som.update(x[j]);
+        }
+    }
+
+    Hexmap.of(som.umatrix(), Palette.heat(256)).canvas().window()
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the hex map, areas of low neighbour distance indicate groups of nodes that are similar.
+        Areas with large distances indicate the nodes are much more dissimilar, and indicate
+        natural boundaries between node clusters.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hexmap.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="contour" class="title">Contour</h2>
+
+    <p>A contour plot represents a 3-dimensional surface by plotting constant <code>z</code> slices, called contours,
+        on a 2-dimensional format. That is, given a value for <code>z</code>, lines are drawn for connecting the
+        <code>(x, y)</code> coordinates where that z value occurs.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_22" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_22">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def contour(z: Array[Array[Double]]): Canvas
+    def contour(z: Array[Array[Double]], levels: Array[Double]): Canvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]]): Canvas
+    def contour(x: Array[Double], y: Array[Double], z: Array[Array[Double]], levels: Array[Double]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_22">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Contour {
+        public static Contour of(double[][] z);
+        public static Contour of(double[][] z, int numLevels);
+        public static Contour of(double[] x, double[] y, double[][] z);
+        public static Contour of(double[] x, double[] y, double[][] z, int numLevels);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Similar to <code>heatmap</code>, the parameters <code>x</code> and <code>y</code>
+        are the coordinates of data matrix cells, which must be in ascending order.
+        The slice values can be automatically determined from the data, or provided through
+        the parameter <code>levels</code>.</p>
+
+    <p>Contours are often jointly used with the heat map. In the following example, we add the contour lines to
+        the previous heat map exampl.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_23" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val canvas = heatmap(Z, Palette.jet(256))
+    canvas.add(Contour.of(Z))
+    show(canvas)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_23">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var canvas = Heatmap.of(Z, 256).canvas();
+    canvas.add(Contour.of(Z));
+    canvas.window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>This example also shows how to mix multiple plots together. Besides using the plot functions directly,
+        one can also construct plots with Java classes and add them to existing a plot canvas.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/contour.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="surface" class="title">Surface</h2>
+
+    <p>Besides heat map and contour, we can also visualize a matrix with the three-dimensional shaded surface.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_24" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def surface(z: Array[Array[Double]], palette: Array[Color] = Palette.jet(16)): Canvas
+
+    def surface(x: Array[Double], y: Array[Double], z: Array[Array[Double]], palette: Array[Color]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_24">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Surface {
+        public static Surface of(double[][] z);
+        public static Surface of(double[][] z, Color[] palette);
+        public static Surface of(double[] x, double[] y, double[][] z);
+        public static Surface of(double[] x, double[] y, double[][] z, Color[] palette);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The usage is similar with <code>heatmap</code> and <code>contour</code> functions.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_25" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_25" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_25">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    show(surface(Z, Palette.jet(256, 1.0f)))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_25">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    Surface.of(Z, Palette.jet(256, 1.0f)).canvas().window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The surface of same example data is shown as</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/surface.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <h2 id="wireframe" class="title">Wireframe</h2>
+
+    <p>The wireframe model is a visual presentation of a three-dimensional physical object.
+        A wireframe model consists of two tables,
+        the vertex table and the edge table. Each entry of the vertex table records a vertex and its coordinate values,
+        while each entry of the edge table has two components giving the two incident vertices of that edge.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_26" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_26" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_26">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def wireframe(vertices: Array[Array[Double]], edges: Array[Array[Int]]): Canvas
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_26">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Wireframe {
+        public static Wireframe of(double[][] vertices, int[][] edges);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>vertices</code> is an <code>n x 2</code> or <code>n x 3</code> array which are coordinates of
+        <code>n</code> vertices, and <code>edges</code> is an <code>m x 2</code> array of which each row is the
+        vertex indices of two end points of each edge.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_27" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_27">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val (vertices, edges) = read.wavefront("data/wavefront/teapot.obj")
+    show(wireframe(vertices, edges))
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The above code draws the wireframe of a teapot.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/teapot.png" class="enlarge" style="width: 480px;" />
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="data.html" title="Previous Section: Data"><span>Data</span></a>
+        <a class="btn-next-text" href="vegalite.html" title="Next Section: Declarative Visualization"><span>Declarative Visualization</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

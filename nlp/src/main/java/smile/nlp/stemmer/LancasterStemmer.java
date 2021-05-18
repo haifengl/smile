@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.nlp.stemmer;
 
@@ -21,8 +22,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The Paice/Husk Lancaster stemming algorithm. The stemmer is a conflation
@@ -30,47 +29,42 @@ import org.slf4j.LoggerFactory;
  * easily implemented, is known to be very strong and aggressive. The stemmer
  * utilizes a single table of rules, each of which may specify
  * the removal or replacement of an ending. For details, see
- * <p>
- * Paice, Another stemmer, SIGIR Forum, 24(3), 56-61, 1990.
- * <p>
- * http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> Paice, Another stemmer, SIGIR Forum, 24(3), 56-61, 1990. </li>
+ * <li> http://www.comp.lancs.ac.uk/computing/research/stemming/Links/paice.htm </li>
+ * </ol>
  *
  * @author Haifeng Li
  */
 public class LancasterStemmer implements Stemmer {
-    private static final Logger logger = LoggerFactory.getLogger(LancasterStemmer.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LancasterStemmer.class);
 
     /**
      * Array of rules
      */
-    private ArrayList<String> rules = new ArrayList<>();
+    private final ArrayList<String> rules = new ArrayList<>();
     /**
      * ruleIndex is set up to provide faster access to relevant rules.
      */
-    private int[] index = new int[26];
+    private final int[] index = new int[26];
     /**
      * Strip prefix if true.
      */
-    private boolean stripPrefix;
+    private final boolean stripPrefix;
 
-    private void readRules(InputStream is) {
-        /**
-         * Load rules from Lancaster_rules.txt
-         */
+    /** Loads the rules. */
+    private void readRules(InputStream is) throws IOException {
+        // Load rules from Lancaster_rules.txt
         try (BufferedReader input = new BufferedReader(new InputStreamReader(is))) {
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                String rule = line.trim();
-                if (!rule.isEmpty()) {
-                    int j = rule.indexOf(' ');
-                    if (j != -1) {
-                        rule = rule.substring(0, j);
-                    }
-                    rules.add(rule);
+            input.lines().map(String::trim).filter(line -> !line.isEmpty()).forEach(rule -> {
+                int j = rule.indexOf(' ');
+                if (j != -1) {
+                    rule = rule.substring(0, j);
                 }
-            }
-        } catch (IOException ex) {
-            logger.error("Failed to load /smile/nlp/stemmer/Lancaster_rules.txt", ex);
+                rules.add(rule);
+            });
         }
 
         // Now assign the number of the first rule that starts with each letter
@@ -100,15 +94,20 @@ public class LancasterStemmer implements Stemmer {
      */
     public LancasterStemmer(boolean stripPrefix) {
         this.stripPrefix = stripPrefix;
-        readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"));
+        try {
+            readRules(LancasterStemmer.class.getResourceAsStream("/smile/nlp/stemmer/Lancaster_rules.txt"));
+        } catch (IOException ex) {
+            logger.error("Failed to load /smile/nlp/stemmer/Lancaster_rules.txt", ex);
+        }
     }
 
 
     /**
      * Constructor with customized rules. By default, the stemmer will not strip prefix from words.
      * @param customizedRules an input stream to read customized rules.
+     * @throws IOException when fails to read the rule file.
      */
-    public LancasterStemmer(InputStream customizedRules) {
+    public LancasterStemmer(InputStream customizedRules) throws IOException {
         this(customizedRules, false);
     }
 
@@ -118,8 +117,9 @@ public class LancasterStemmer implements Stemmer {
      * @param customizedRules an input stream to read customized rules.
      * @param stripPrefix true if the stemmer will strip prefix such as kilo,
      * micro, milli, intra, ultra, mega, nano, pico, pseudo.
+     * @throws IOException when fails to read the rule file.
      */
-    public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) {
+    public LancasterStemmer(InputStream customizedRules, boolean stripPrefix) throws IOException {
         this.stripPrefix = stripPrefix;
         readRules(customizedRules);
     }
@@ -132,52 +132,42 @@ public class LancasterStemmer implements Stemmer {
         if ((i < last) && (!(vowel(word.charAt(i), 'a')))) {
             i++;
         }
+
         if (i != 0) {
             while ((i < last) && (!(vowel(word.charAt(i), word.charAt(i - 1))))) {
                 i++;
             }
         }
-        if (i < last) {
-            return i;
-        }
-        return last;
+
+        return Math.min(i, last);
     }
 
     /**
      * Strips suffix off word
      */
     private String stripSuffixes(String word) {
-        //integer variables 1 is positive, 0 undecided, -1 negative equiverlent of pun vars positive undecided negative
-        int ruleok = 0;
+        // 1 is positive, 0 undecided, -1 negative equivalent of pun vars positive undecided negative
+        int ruleok;
         int Continue = 0;
 
-        //integer varables
-
-        int pll = 0;		//position of last letter
-        int xl;				//counter for nuber of chars to be replaced and length of stemmed word if rule was aplied
-        int pfv;			//poition of first vowel
-        int prt;			//pointer into rule table
-        int ir;				//index of rule
-        int iw;				//index of word
+        int pll = 0; //position of last letter
+        int xl;  //counter for nuber of chars to be replaced and length of stemmed word if rule was aplied
+        int pfv; //poition of first vowel
+        int prt; //pointer into rule table
+        int ir;  //index of rule
+        int iw;  //index of word
 
         //char variables
 
-        char ll;			// last letter
+        char ll; // last letter
 
-        //String variables eqiverlent of tenchar variables
+        String rule; //variable holding the current rule
+        String stem; // string holding the word as it is being stemmed this is returned as a stemmed word.
 
-        String rule = "";		//varlable holding the current rule
-        String stem = "";  		// string holding the word as it is being stemmed this is returned as a stemmed word.
-
-        //boolean varable
-
-        boolean intact = true; 		//intact if the word has not yet been stemmed to determin a requirement of some stemming rules
+        boolean intact = true; //intact if the word has not yet been stemmed to determin a requirement of some stemming rules
 
         //set stem = to word
         stem = cleanup(word.toLowerCase());
-
-        // set the position of pll to the last letter in the string
-        pll = 0;
 
         //move through the word to find the position of the last letter before a non letter char
         while ((pll + 1 < stem.length()) && ((stem.charAt(pll + 1) >= 'a') && (stem.charAt(pll + 1) <= 'z'))) {
@@ -272,7 +262,7 @@ public class LancasterStemmer implements Stemmer {
                                 // ...minimal stem is 2 letters
                                 ruleok = -1;
                             } else {
-                                //ruleok=1; as ruleok must alread be positive to reach this stage
+                                //ruleok=1; as ruleok must already be positive to reach this stage
                             }
                         } //if word start swith consonant...
                         else if ((xl < 2) | (xl < pfv)) {
@@ -280,7 +270,7 @@ public class LancasterStemmer implements Stemmer {
                             // ...minimal stem is 3 letters...
                             // ...including one or more vowel
                         } else {
-                            //ruleok=1; as ruleok must alread be positive to reach this stage
+                            //ruleok=1; as ruleok must already be positive to reach this stage
                         }
                     }
                     // if using the rule passes the assertion tests
@@ -291,13 +281,14 @@ public class LancasterStemmer implements Stemmer {
                         // ... given by the numeral.
                         pll = pll + 48 - ((int) (rule.charAt(ir)));
                         ir++;
-                        stem = stem.substring(0, (pll + 1));
+                        StringBuilder sb = new StringBuilder(stem.substring(0, (pll + 1)));
                         // append any letters following numeral to the word
                         while ((ir < rule.length()) && (('a' <= rule.charAt(ir)) && (rule.charAt(ir) <= 'z'))) {
-                            stem += rule.charAt(ir);
+                            sb.append(rule.charAt(ir));
                             ir++;
                             pll++;
                         }
+                        stem = sb.toString();
                         //if rule ends with '.' then terminate
                         if ((rule.charAt(ir)) == '.') {
                             Continue = -1;
@@ -310,7 +301,7 @@ public class LancasterStemmer implements Stemmer {
                         prt = prt + 1;
                         // move to next rule in RULETABLE
                         if (prt >= rules.size()) {
-                            Continue = -1;                        	
+                            Continue = -1;
                         } else {
                             rule = rules.get(prt);
                             if (rule.charAt(0) != ll) {
@@ -369,10 +360,9 @@ public class LancasterStemmer implements Stemmer {
         String[] prefixes = {"kilo", "micro", "milli", "intra", "ultra", "mega",
             "nano", "pico", "pseudo"};
 
-        int last = prefixes.length;
-        for (int i = 0; i < last; i++) {
-            if ((word.startsWith(prefixes[i])) && (word.length() > prefixes[i].length())) {
-                word = word.substring(prefixes[i].length());
+        for (String prefix : prefixes) {
+            if ((word.startsWith(prefix)) && (word.length() > prefix.length())) {
+                word = word.substring(prefix.length());
                 return word;
             }
         }
@@ -385,13 +375,13 @@ public class LancasterStemmer implements Stemmer {
      */
     private String cleanup(String word) {
         int last = word.length();
-        String temp = "";
+        StringBuilder sb = new StringBuilder();
         for (int i = 0; i < last; i++) {
             if ((word.charAt(i) >= 'a') & (word.charAt(i) <= 'z')) {
-                temp += word.charAt(i);
+                sb.append(word.charAt(i));
             }
         }
-        return temp;
+        return sb.toString();
     }
 
     @Override

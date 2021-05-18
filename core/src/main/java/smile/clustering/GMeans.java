@@ -1,25 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.sort.QuickSort;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -41,83 +41,107 @@ import smile.stat.distribution.GaussianDistribution;
  * 
  * @author Haifeng Li
  */
-public class GMeans extends KMeans {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(GMeans.class);
+public class GMeans extends CentroidClustering<double[], double[]> {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(GMeans.class);
 
     /**
-     * Constructor. Clustering data with the number of clusters being
-     * automatically determined by G-Means algorithm.
-     * @param data the input data of which each row is a sample.
-     * @param kmax the maximum number of clusters.
+     * Constructor.
+     * @param distortion the total distortion.
+     * @param centroids the centroids of each cluster.
+     * @param y the cluster labels.
      */
-    public GMeans(double[][] data, int kmax) {
+    public GMeans(double distortion, double[][] centroids, int[] y) {
+        super(distortion, centroids, y);
+    }
+
+    @Override
+    protected double distance(double[] x, double[] y) {
+        return MathEx.squaredDistance(x, y);
+    }
+
+    /**
+     * Clustering data with the number of clusters
+     * determined by G-Means algorithm automatically.
+     * @param data the input data of which each row is an observation.
+     * @param kmax the maximum number of clusters.
+     * @return the model.
+     */
+    public static GMeans fit(double[][] data, int kmax) {
+        return fit(data, kmax, 100, 1E-4);
+    }
+
+    /**
+     * Clustering data with the number of clusters
+     * determined by G-Means algorithm automatically.
+     * @param data the input data of which each row is an observation.
+     * @param kmax the maximum number of clusters.
+     * @param maxIter the maximum number of iterations for k-means.
+     * @param tol the tolerance of k-means convergence test.
+     * @return the model.
+     */
+    public static GMeans fit(double[][] data, int kmax, int maxIter, double tol) {
         if (kmax < 2) {
             throw new IllegalArgumentException("Invalid parameter kmax = " + kmax);
         }
 
         int n = data.length;
         int d = data[0].length;
+        int k = 1;
 
-        k = 1;
-        size = new int[k];
+        int[] size = new int[kmax];
         size[0] = n;
-        y = new int[n];
-        centroids = new double[k][d];
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < d; j++) {
-                centroids[0][j] += data[i][j];
-            }
-        }
 
-        for (int j = 0; j < d; j++) {
-            centroids[0][j] /= n;
-        }
+        int[] y = new int[n];
+        double[][] sum = new double[kmax][d];
 
-        distortion = 0.0;
-        for (int i = 0; i < n; i++) {
-            distortion += Math.squaredDistance(data[i], centroids[0]);
-        }
-        logger.info(String.format("G-Means distortion with %d clusters: %.5f", k, distortion));
+        double[] mean = MathEx.colMeans(data);
+        double[][] centroids = {mean};
+
+        double distortion = Arrays.stream(data).parallel().mapToDouble(x -> MathEx.squaredDistance(x, mean)).sum();
 
         BBDTree bbd = new BBDTree(data);
+        KMeans[] kmeans = new KMeans[kmax];
+        ArrayList<double[]> centers = new ArrayList<>();
+
         while (k < kmax) {
-            ArrayList<double[]> centers = new ArrayList<>();
+            centers.clear();
             double[] score = new double[k];
-            KMeans[] kmeans = new KMeans[k];
-            
+
             for (int i = 0; i < k; i++) {
-                // don't split too small cluster. anyway likelihood estimation
-                // not accurate in this case.
-                if (size[i] < 25) {
-                    logger.info("Cluster {} too small to split: {} samples", i, size[i]);
+                int ni = size[i];
+                // don't split too small cluster.
+                if (ni < 25) {
+                    logger.info("Cluster {} too small to split: {} observations", i, ni);
+                    score[i] = 0.0;
+                    kmeans[i] = null;
                     continue;
                 }
                 
-                double[][] subset = new double[size[i]][];
+                double[][] subset = new double[ni][];
                 for (int j = 0, l = 0; j < n; j++) {
                     if (y[j] == i) {
                         subset[l++] = data[j];
                     }
                 }
 
-                kmeans[i] = new KMeans(subset, 2, 100, 4);
+                kmeans[i] = KMeans.fit(subset, 2, maxIter, tol);
                 
                 double[] v = new double[d];
                 for (int j = 0; j < d; j++) {
                     v[j] = kmeans[i].centroids[0][j] - kmeans[i].centroids[1][j];
                 }
-                double vp = Math.dot(v, v);
-                double[] x = new double[size[i]];
+                double vp = MathEx.dot(v, v);
+                double[] x = new double[ni];
                 for (int j = 0; j < x.length; j++) {
-                    x[j] = Math.dot(subset[j], v) / vp;
+                    x[j] = MathEx.dot(subset[j], v) / vp;
                 }
                 
                 // normalize to mean 0 and variance 1.
-                Math.standardize(x);
+                MathEx.standardize(x);
 
                 score[i] = AndersonDarling(x);
-                logger.info(String.format("Cluster %3d\tAnderson-Darling adjusted test statistic: %3.4f", i, score[i]));
+                logger.info(String.format("Cluster %d Anderson-Darling adjusted test statistic: %7.4f", i, score[i]));
             }
 
             int[] index = QuickSort.sort(score);
@@ -126,7 +150,7 @@ public class GMeans extends KMeans {
                     centers.add(centroids[index[i]]);
                 }
             }
-            
+
             int m = centers.size();
             for (int i = k; --i >= 0;) {
                 if (score[i] > 1.8692) {
@@ -142,50 +166,39 @@ public class GMeans extends KMeans {
 
             // no more split.
             if (centers.size() == k) {
+                logger.info("No more split. Finish with {} clusters", k);
                 break;
             }
 
             k = centers.size();
-            double[][] sums = new double[k][d];
-            size = new int[k];
-            centroids = new double[k][];
-            for (int i = 0; i < k; i++) {
-                centroids[i] = centers.get(i);
+            centroids = centers.toArray(new double[k][]);
+
+            double diff = Double.MAX_VALUE;
+            for (int iter = 1; iter <= maxIter && diff > tol; iter++) {
+                double wcss = bbd.clustering(centroids, sum, size, y);
+
+                diff = distortion - wcss;
+                distortion = wcss;
             }
 
-            distortion = Double.MAX_VALUE;
-            for (int iter = 0; iter < 100; iter++) {
-                double newDistortion = bbd.clustering(centroids, sums, size, y);
-                for (int i = 0; i < k; i++) {
-                    if (size[i] > 0) {
-                        for (int j = 0; j < d; j++) {
-                            centroids[i][j] = sums[i][j] / size[i];
-                        }
-                    }
-                }
-
-                if (distortion <= newDistortion) {
-                    break;
-                } else {
-                    distortion = newDistortion;
-                }
-            }
-            
-            logger.info(String.format("G-Means distortion with %d clusters: %.5f%n", k, distortion));
+            logger.info(String.format("Distortion with %d clusters: %.5f%n", k, distortion));
         }
+
+        return new GMeans(distortion, centroids, y);
     }
     
     /**
      * Calculates the Anderson-Darling statistic for one-dimensional normality test.
      *
-     * @param x the samples to test if drawn from a Gaussian distribution.
+     * @param x the observations to test if drawn from a Gaussian distribution.
      */
     private static double AndersonDarling(double[] x) {
         int n = x.length;
+        GaussianDistribution gaussian = GaussianDistribution.getInstance();
         Arrays.sort(x);
 
         for (int i = 0; i < n; i++) {
-            x[i] = GaussianDistribution.getInstance().cdf(x[i]);
+            x[i] = gaussian.cdf(x[i]);
             // in case overflow when taking log later.
             if (x[i] == 0) x[i] = 0.0000001;
             if (x[i] == 1) x[i] = 0.9999999;
@@ -200,19 +213,5 @@ public class GMeans extends KMeans {
         A *= (1 + 4.0/n - 25.0/(n*n));
 
         return A;
-    }
-    
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("G-Means distortion: %.5f%n", distortion));
-        sb.append(String.format("Clusters of %d data points of dimension %d:%n", y.length, centroids[0].length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-        
-        return sb.toString();
     }
 }

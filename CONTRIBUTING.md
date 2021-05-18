@@ -51,7 +51,7 @@ license under all of Your relevant intellectual property rights
 (including copyright, patent, and any other rights), to use, copy,
 prepare derivative works of, distribute and publicly perform and
 display the Contributions on any licensing terms, including without limitation:
-(a) open source licenses like the Apache license; and (b) binary,
+(a) open source licenses like the GNU Lesser General Public License; and (b) binary,
 proprietary, or commercial licenses. Except for the licenses granted herein,
 You reserve all right, title, and interest in and to the Contribution.
 

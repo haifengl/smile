@@ -1,0 +1,1279 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="clustering-top" class="title">Clustering</h1>
+
+    <p>Clustering is the assignment of a set of observations
+        into subsets (called clusters) so that observations in the same cluster are
+        similar in some sense. Clustering is a method of unsupervised learning,
+        and a common technique for statistical data analysis used in many fields.</p>
+
+    <p>Hierarchical algorithms find successive clusters using previously
+        established clusters. These algorithms usually are either agglomerative
+        ("bottom-up") or divisive ("top-down"). Agglomerative algorithms begin
+        with each element as a separate cluster and merge them into successively
+        larger clusters. Divisive algorithms begin with the whole set and proceed
+        to divide it into successively smaller clusters.</p>
+
+    <p>Partitional algorithms typically determine all clusters at once, but can
+        also be used as divisive algorithms in the hierarchical clustering.
+        Many partitional clustering algorithms require the specification of
+        the number of clusters to produce in the input data set, prior to
+        execution of the algorithm. Barring knowledge of the proper value
+        beforehand, the appropriate value must be determined, a problem on
+        its own for which a number of techniques have been developed.</p>
+
+    <p>Density-based clustering algorithms are devised to discover
+        arbitrary-shaped clusters. In this approach, a cluster is regarded as
+        a region in which the density of data objects exceeds a threshold.</p>
+
+    <p>Subspace clustering methods look for clusters that can only be seen in
+        a particular projection (subspace, manifold) of the data. These methods
+        thus can ignore irrelevant attributes. The general problem is also known
+        as Correlation clustering while the special case of axis-parallel subspaces
+        is also known as two-way clustering, co-clustering or biclustering in
+        bioinformatics: in these methods not only the objects are clustered but
+        also the features of the objects, i.e., if the data is represented in
+        a data matrix, the rows and columns are clustered simultaneously. They
+        usually do not however work with arbitrary feature combinations as in general
+        subspace methods.</p>
+
+    <h2 id="hierarchical">Agglomerative Hierarchical Clustering</h2>
+
+    <p>Agglomerative hierarchical clustering
+        seeks to build a hierarchy of clusters in a bottom up approach: each
+        observation starts in its own cluster, and pairs of clusters are merged as
+        one moves up the hierarchy. The results of hierarchical clustering are
+        usually presented in a dendrogram.</p>
+
+    <p>In general, the merges are determined in a greedy manner. In order to decide
+        which clusters should be combined, a measure of dissimilarity between sets
+        of observations is required. In most methods of hierarchical clustering,
+        this is achieved by use of an appropriate metric, and a linkage criteria
+        which specifies the dissimilarity of sets as a function of the pairwise
+        distances of observations in the sets. Hierarchical clustering has the
+        distinct advantage that any valid measure of distance can be used.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def hclust(data: Array[Array[Double]], method: String): HierarchicalClustering
+
+    def hclust[T](data: Array[T], distance: Distance[T], method: String): HierarchicalClustering
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class HierarchicalClustering {
+        public static HierarchicalClustering fit(Linkage linkage);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun hclust(data: Array&lt;DoubleArray&gt;, method: String): HierarchicalClustering
+
+    fun &lt;T&gt; hclust(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, method: String): HierarchicalClustering
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The parameter <code>method</code> specifies the agglomeration method to
+        merge clusters. This should be one of "single", "complete",
+        "upgma"/"average", "upgmc"/"centroid", "wpgma", "wpgmc"/"median",
+        and "ward".</p>
+
+    <p>The single linkage defines the distance between groups as the distance
+        between the closest pair of objects, one from each group.
+        A drawback of this method is the so-called chaining phenomenon: clusters
+        may be forced together due to single elements being close to each other,
+        even though many of the elements in each cluster may be very distant to
+        each other.</p>
+
+    <p>Single linkage clustering is essentially the same as Kruskal's algorithm
+        for minimum spanning trees. However, in single linkage clustering, the
+        order in which clusters are formed is important, while for minimum spanning
+        trees what matters is the set of pairs of points that form distances chosen
+        by the algorithm.</p>
+
+    <p>The complete linkage is the opposite of single linkage. Distance between
+        groups is now defined as the distance between the most distant pair of
+        objects, one from each group.</p>
+
+    <p>UPGMA (Unweighted Pair Group Method with Arithmetic mean, also known as average linkage)
+        defines the distance between two clusters as the mean distance between all possible
+        pairs of nodes in the two clusters.</p>
+
+    <p>In bioinformatics, UPGMA is used for the creation of phenetic trees
+        (phenograms). UPGMA assumes a constant rate of evolution (molecular
+        clock hypothesis), and is not a well-regarded method for inferring
+        relationships unless this assumption has been tested and justified
+        for the data set being used.</p>
+
+    <p>UPGMC (Unweighted Pair Group Method using Centroids, also known as centroid linkage)
+        defines the distance between two clusters as the Euclidean distance between their
+        centroids, as calculated by arithmetic mean. Only valid for Euclidean
+        distance based proximity matrix.</p>
+
+    <p>WPGMA (Weighted Pair Group Method with Arithmetic mean) down-weights the
+        largest group by giving equal weights to the two branches of the dendrogram
+        that are about to fuse.</p>
+
+    <p>Note that the terms weighted and unweighted refer to the final result,
+        not the math by which it is achieved. Thus the simple averaging in WPGMA
+        produces a weighted result, and the proportional averaging in UPGMA produces
+        an unweighted result.</p>
+
+    <p>WPGMC (Weighted Pair Group Method using Centroids, also known as median linkage)
+        defines the distance between two clusters as the Euclidean distance between their
+        weighted centroids. Only valid for Euclidean distance based proximity matrix.</p>
+
+    <p>Ward's linkage. Ward's linkage follows the analysis of variance approach
+        The dissimilarity between two clusters is computed as the
+        increase in the "error sum of squares" (ESS) after fusing two clusters
+        into a single cluster. Ward's Method seeks to choose the successive
+        clustering steps so as to minimize the increase in ESS at each step.
+        Note that it is only valid for Euclidean distance based proximity matrix.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Mixture of Six Gaussians</div>
+    </div>
+
+    <p>To visualize the clustering results, we apply hierarchical clustering
+        to 2d data in the following. The data is generated from six Gaussian
+        distributions, each 300 samples.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val clusters = hclust(x, "complete")
+    show(dendrogram(clusters))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.clustering.*;
+    import smile.clustering.linkage.*;
+
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = HierarchicalClustering.fit(CompleteLinkage.of(x));
+    Dendrogram.plot(clusters.getTree(), clusters.getHeight()).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The clustering results can be visualized by a hendroagram, which
+        is a tree diagram to illustrate the arrangement
+        of the clusters produced by hierarchical clustering.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hclust-dendrogram.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Dendrogram</div>
+    </div>
+
+    <p>If a hard partition is need, we can cut a hierarchical clustering tree
+        into several groups by specifying the desired number or the cut height.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val y = clusters.partition(6)
+    show(plot(x, y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var y = clusters.partition(6);
+    ScatterPlot.plot(x, y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The partitioning of six clusters is shown as</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/hclust-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Hierarchical Clustering</div>
+    </div>
+
+    <h2 id="k-means">K-Means</h2>
+
+    <p>K-Means clustering partitions <code>n</code> observations into <code>k</code> clusters in which
+        each observation belongs to the cluster with the nearest mean.
+        Although finding an exact solution to the K-Means problem for arbitrary
+        input is NP-hard, the standard approach to finding an approximate solution
+        (often called Lloyd's algorithm or the K-Means algorithm) is used widely
+        and frequently finds reasonable solutions quickly.</p>
+
+    <p>K-Means is a hard clustering method, i.e. each sample is assigned to
+        a specific cluster. In contrast, soft clustering, e.g. the
+        Expectation-Maximization algorithm for Gaussian mixtures, assign samples
+        to different clusters with different probabilities.</p>
+
+    <p>The K-Means algorithm has at least two major theoretic shortcomings:</p>
+    <ul>
+        <li>First, it has been shown that the worst case running time of the
+            algorithm is super-polynomial in the input size.</li>
+
+        <li>Second, the approximation found can be arbitrarily bad with respect
+            to the objective function compared to the optimal learn.</li>
+    </ul>
+
+    <p>In Smile, we use K-Means++ which addresses the second of these
+        obstacles by specifying a procedure to initialize the cluster centers before
+        proceeding with the standard K-Means optimization iterations. With the
+        K-Means++ initialization, the algorithm is guaranteed to find a solution
+        that is O(log k) competitive to the optimal K-Means solution.</p>
+
+    <p>We also use K-D trees to speed up each K-Means step as described in the filter
+        algorithm by Kanungo, et al.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def kmeans(data: Array[Array[Double]], k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class KMeans {
+        public static KMeans fit(double[][] data, int k, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun kmeans(data: Array&lt;DoubleArray&gt;, k: Int, maxIter: Int = 100, tol: Double = 1E-4, runs: Int = 10): KMeans
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The parameter <code>maxIter</code> specifies the maximum number of iterations.
+        If the output of K-Means is used to initialize other algorithms, a small number (says 20)
+        is usually sufficient. In practice, we often run the K-Means multiple times
+        and choose the best one. To do that, set the parameter <code>runs &gt; 1</code>
+        (e.g. 10 ~ 20).</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = kmeans(x, 6, runs = 20)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 6));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>K-Means works very well on Gaussian mixtures.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">K-Means on Gaussian Mixture</div>
+    </div>
+
+    <p>If the clusters are elongated, however, the results may be far from optimal.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/gaussian/elongate.txt", header=false, delimiter='\t').toArray
+    val clusters = kmeans(x, 2, runs = 20)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/elongate.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var clusters = PartitionClustering.run(20, () -> KMeans.fit(x, 2));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/kmeans-elongate.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">K-Means on 2 Elongate Clusters</div>
+    </div>
+
+    <p>In K-Means, the number of clusters <code>K</code> has to be supplied by the user.
+        However, the appropriate number of clusters is often unknown in practice.
+        Several approaches (e.g. X-Means, G-Means, deterministic annealing, etc.)
+        have been proposed to handle this challenge.</p>
+
+    <h2 id="x-means">X-Means</h2>
+
+    <p>X-Means clustering algorithm is an extended K-Means which tries to
+        automatically determine the number of clusters based on BIC scores.
+        Starting with only one cluster, the X-Means algorithm goes into action
+        after each run of K-Means, making local decisions about which subset of the
+        current centroids should split themselves in order to better fit the data.
+        The splitting decision is done by computing the Bayesian Information
+        Criterion (BIC).</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def xmeans(data: Array[Array[Double]], k: Int = 100): XMeans
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class XMeans {
+        public static XMeans fit(double[][] data, int kmax, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun xmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): XMeans
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = xmeans(x, 50)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = XMeans.fit(x, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/xmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">X-Means</div>
+    </div>
+
+    <h2 id="g-means">G-Means</h2>
+
+    <p>G-Means clustering algorithm is another extended K-Means which tries to
+        automatically determine the number of clusters by normality test.
+        The G-Means algorithm is based on a statistical test for the hypothesis
+        that a subset of data follows a Gaussian distribution. G-Means runs
+        K-Means with increasing k in a hierarchical fashion until the test accepts
+        the hypothesis that the data assigned to each K-Means center are Gaussian.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def gmeans(data: Array[Array[Double]], k: Int = 100): GMeans
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GMeans {
+        public static GMeans fit(double[][] data, int kmax, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun gmeans(data: Array&lt;DoubleArray&gt;, k: Int = 100): GMeans
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>k</code> is the maximum number of clusters</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/gmeans-six.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">G-Means</div>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = gmeans(x, 50)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = GMeans.fit(x, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Neither X-Means nor G-Means works well on the elongate data. Both report only
+        one cluster.</p>
+
+    <h2 id="deterministic-annealing">Deterministic Annealing Clustering</h2>
+
+    <p>The observation of annealing processes in physical chemistry motivated
+        the use of similar concepts to avoid local minima of the optimization cost.
+        Certain chemical systems can be driven to their low-energy states
+        by annealing, which is a gradual reduction of temperature,
+        spending a long time at the vicinity of the phase transition points.
+        In the corresponding probabilistic framework, a Gibbs distribution
+        is defined over the set of all possible configurations which assigns
+        higher probability to configurations of lower energy. This distribution
+        is parameterized by the temperature, and as the temperature is lowered
+        it becomes more discriminating (concentrating most of the probability
+        in a smaller subset of low-energy configurations). At the limit of
+        low temperature it assigns nonzero probability only to global minimum
+        configurations.</p>
+
+    <p>A known technique for nonconvex optimization that
+        capitalizes on this physical analogy is simulated annealing based on
+        the Metropolis algorithm. A sequence of random
+        moves is generated and the random decision to accept a move depends
+        on the cost of the resulting configuration relative to that of the
+        current state. However, one must be very careful with the annealing
+        schedule, i.e., the rate at which the temperature is lowered.
+        In theory, the global minimum can be achieved if the schedule obeys
+        <code>T &prop; 1 / log n</code>, where <code>n</code> is the number
+        of the current iteration. Such schedules are not realistic in many applications.
+        It was shown that perturbations of infinite variance (e.g., the Cauchy distribution)
+        provide better ability to escape from minima and allow, in principle,
+        the use of faster schedules.</p>
+
+    <p>Deterministic annealing tries to enjoy the best of both worlds.
+        On the one hand it is deterministic, meaning that we do not want
+        to be wandering randomly on the energy surface while making
+        incremental progress on the average, as is the case for simulated annealing.
+        On the other hand, it is still an annealing method and aims at the global
+        minimum, instead of getting greedily attracted to a nearby local minimum.
+        One can view deterministic annealing as replacing stochastic simulations by the use of expectation.
+        An effective energy function, which is parameterized by a (pseudo) temperature,
+        is derived through expectation and is deterministically optimized at successively
+        reduced temperatures.</p>
+
+    <p>Deterministic annealing clustering is based on principles of information theory
+        and probability theory, and it consists of minimizing the clustering cost
+        at prescribed levels of randomness.
+        The method provides soft clustering solutions at different scales,
+        where the scale is directly related to the temperature parameter.
+        For each temperature value, the algorithm iterates between the calculation
+        of all posteriori probabilities and the update of the centroids vectors,
+        until convergence is reached.
+        There are "phase transitions" in the design process, where phases
+        correspond to the number of effective clusters in the solution,
+        which grows via splits as the temperature is lowered.
+        The annealing starts with a high temperature.
+        Here, all centroids vectors converge to the center of the pattern
+        distribution (independent of their initial positions). Below a critical
+        temperature the vectors start to split. Further decreasing the temperature
+        leads to more splittings until all centroids vectors are separate. The
+        annealing can therefore avoid (if it is sufficiently slow) the convergence
+        to local minima. If a limitation on the number of clusters is imposed,
+        then at zero temperature a hard clustering solution is obtained.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def dac(data: Array[Array[Double]], k: Int, alpha: Double): DeterministicAnnealing
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DeterministicAnnealing {
+        public static DeterministicAnnealing fit(double[][] data, int Kmax, double alpha, int maxIter, double tol, double splitTol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun dac(data: Array&lt;DoubleArray&gt;, k: Int, alpha: Double): DeterministicAnnealing
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>k</code> is the maximum number of clusters, and <code>alpha</code>
+        is the annealing control parameter in (0, 1). The temperature <code>T</code>
+        is decreasing as <code>T<sub>i+1</sub> = alpha * T<sub>i</sub></code>.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> dac(x, 12, 0.9)
+    res58: DeterministicAnnealing = Cluster distortion: 17904.72351
+    Cluster size of 300 data points:
+    Cluster    1    157 (52.3%)
+    Cluster    2     42 (14.0%)
+    Cluster    3      3 ( 1.0%)
+    Cluster    4      2 ( 0.7%)
+    Cluster    5      3 ( 1.0%)
+    Cluster    6      0 ( 0.0%)
+    Cluster    7      0 ( 0.0%)
+    Cluster    8      0 ( 0.0%)
+    Cluster    9     84 (28.0%)
+    Cluster   10      2 ( 0.7%)
+    Cluster   11      2 ( 0.7%)
+    Cluster   12      5 ( 1.7%)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> DeterministicAnnealing.fit(x, 12, 0.9, 100, 1E-4, 1E-2)
+    $126 ==> Cluster distortion: 2862.52100
+    Cluster size of 1800 data points:
+    Cluster    1    297 (16.5%)
+    Cluster    2    105 ( 5.8%)
+    Cluster    3    159 ( 8.8%)
+    Cluster    4    137 ( 7.6%)
+    Cluster    5    139 ( 7.7%)
+    Cluster    6     21 ( 1.2%)
+    Cluster    7    292 (16.2%)
+    Cluster    8    149 ( 8.3%)
+    Cluster    9    140 ( 7.8%)
+    Cluster   10     59 ( 3.3%)
+    Cluster   11    143 ( 7.9%)
+    Cluster   12    159 ( 8.8%)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that we set <code>k = 12</code> in the example although we know there are 6 clusters.
+        It is because we maintain two codevectors/centroids for each cluster for sake of split.
+        The algorithm correctly figures out that half of them are ghost clusters without samples.
+        In the output summary, the first column is the cluster id, the second column is the size
+        of clusters, and the third column is the percentage of samples.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/deterministic-annealing.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Deterministic Annealing</div>
+    </div>
+
+    <p>Although deterministic annealing is physical and mathematical sound, the results may
+        not reveal the correct structure of data as shown in the above.</p>
+
+    <h2 id="sib">Sequential Information Bottleneck</h2>
+
+    <p>The Sequential Information Bottleneck (SIB) algorithm clusters co-occurrence
+        data such as text documents vs words. SIB is guaranteed to converge to a local
+        maximum of the information. Moreover, the time and space complexity are
+        significantly improved in contrast to the agglomerative IB algorithm.</p>
+
+    <p>In analogy to K-Means, SIB's update formulas are essentially same as the
+        EM algorithm for estimating finite Gaussian mixture model by replacing
+        regular Euclidean distance with Kullback-Leibler divergence, which is
+        clearly a better dissimilarity measure for co-occurrence data. However,
+        the common batch updating rule (assigning all instances to nearest centroids
+        and then updating centroids) of K-Means won't work in SIB, which has
+        to work in a sequential way (reassigning (if better) each instance then
+        immediately update related centroids). It might be because K-L divergence
+        is very sensitive and the centroids may be significantly changed in each
+        iteration in batch updating rule.</p>
+
+    <p>Note that this implementation has a little difference from the original
+        paper, in which a weighted Jensen-Shannon divergence is employed as a
+        criterion to assign a randomly-picked sample to a different cluster.
+        However, this doesn't work well in some cases as we experienced probably
+        because the weighted JS divergence gives too much weight to clusters which
+        is much larger than a single sample. In this implementation, we instead
+        use the regular/unweighted Jensen-Shannon divergence.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def sib(data: Array[SparseArray], k: Int, maxIter: Int = 100, runs: Int = 1): SIB
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SIB {
+        public static SIB fit(SparseArray[] data, int k, int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun sib(data: Array&lt;SparseArray&gt;, k: Int, maxIter: Int = 100, runs: Int = 1): SIB
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The news data in <code>data/libsvm/news20.dat</code> is a very sparse data
+        of dimension 62061. The data contains 15935 samples. The below example
+        clusters it into 20 clusters.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val data = read.libsvm("data/libsvm/news20.dat")
+    val sparse = (0 until data.size).map(i => data(i).x).toArray
+    val clusters = sib(sparse, 20, 100)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var data = Read.libsvm("data/libsvm/news20.dat");
+    var sparse = data.stream().map(i -> i.x()).toArray(SparseArray[]::new);
+    var clusters = SIB.fit(sparse, 20, 100);
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="clarans">CLARANS</h2>
+
+    <p>The K-Medoids algorithm is an adaptation of the k-means algorithm.
+        Rather than calculate the mean of the items in each cluster,
+        a representative item, or medoid, is chosen for each cluster
+        at each iteration. The K-Medoids algorithm attempts
+        to minimize the distance between points labeled to be in a cluster and
+        the medoid of that cluster. So a medoid is a most centrally
+        located point in the cluster. K-Medoids works with an arbitrary
+        matrix of distances between data points instead of L<sub>2</sub>.
+        It is also more robust to noise and outliers as compared to K-Means.</p>
+
+    <p>The most common realisation of K-Medoids clustering is the Partitioning
+        Around Medoids (PAM) algorithm. PAM uses a greedy search which may not
+        find the optimum solution, but it is faster than exhaustive search.</p>
+
+    <p>CLARANS (Clustering Large Applications based upon RANdomized Search) is a more
+        efficient medoid-based clustering algorithm. In CLARANS, the process of finding
+        <code>k</code> medoids from <code>n</code> objects is viewed abstractly
+        as searching through a certain graph. In the graph, a node is represented
+        by a set of <code>k</code> objects as selected medoids. Two
+        nodes are neighbors if their sets differ by only one object. In each iteration,
+        CLARANS considers a set of randomly chosen neighbor nodes as candidate
+        of new medoids. We will move to the neighbor node if the neighbor
+        is a better choice for medoids. Otherwise, a local optima is discovered. The
+        entire process is repeated multiple time to find better.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def clarans[T](data: Array[T], distance: Distance[T], k: Int, maxNeighbor: Int, numLocal: Int): CLARANS[T]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class CLARANS {
+        public static CLARANS&lt;T&gt; fit(T[] data, int k, int maxNeighbor, Distance&lt;T&gt; distance);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; clarans(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, maxNeighbor: Int, numLocal: Int): CLARANS&lt;T&gt;
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The parameter <code>maxNeighbor</code> specifies the maximum number of
+        neighbors examined. The higher the value of maxNeighbor, the closer is
+        CLARANS to PAM, and the longer is each search of a local minima. But
+        the quality of such a local minima is higher and fewer local minima
+        needs to be obtained.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val clusters = clarans(x, new EuclideanDistance(), 6, 10, 20)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var clusters = PartitionClustering.run(20, () -> CLARANS.fit(x, new EuclideanDistance(), 6, 10));
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/clarans.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">CLARANS</div>
+    </div>
+
+    <p>The above clustering partition is achieved with <code>maxNeighbor = 10</code>
+        and <code>numLocal = 20</code>.</p>
+
+    <h2 id="dbscan">DBSCAN</h2>
+
+    <p> DBSCAN (Density-Based Spatial Clustering of Applications with Noise)
+        finds a number of clusters starting from the estimated density
+        distribution of corresponding nodes.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    // DBSCAN with a customized data structure for neighborhood search
+    def dbscan[T](data: Array[T], nns: RNNSearch[T, T], minPts: Int, radius: Double): DBSCAN[T]
+
+    def dbscan[T](data: Array[T], distance: Metric[T], minPts: Int, radius: Double): DBSCAN[T]
+
+    // DBSCAN with Euclidean distance
+    def dbscan(data: Array[Array[Double]], minPts: Int, radius: Double): DBSCAN[Array[Double]]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DBSCAN {
+        public static DBSCAN&lt;double[]&gt; fit(double[][] data, int minPts, double radius);
+        public static DBSCAN&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int minPts, double radius);
+        public static DBSCAN&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int minPts, double radius);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    // DBSCAN with a customized data structure for neighborhood search
+    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
+
+    fun &lt;T&gt; dbscan(data: Array&lt;T&gt;, distance: Metric&lt;T&gt;, minPts: Int, radius: Double): DBSCAN&lt;T&gt;
+
+    // DBSCAN with Euclidean distance
+    fun dbscan(data: Array&lt;DoubleArray&gt;, minPts: Int, radius: Double): DBSCAN&lt;DoubleArray&gt;
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>DBSCAN requires two parameters: <code>radius</code> (i.e. neighborhood radius) and the
+        number of minimum points required to form a cluster (<code>minPts</code>). It starts
+        with an arbitrary starting point that has not been visited. This point's
+        neighborhood is retrieved, and if it contains sufficient number of points,
+        a cluster is started. Otherwise, the point is labeled as noise. Note that
+        this point might later be found in a sufficiently sized radius-environment
+        of a different point and hence be made part of a cluster.</p>
+
+    <p>If a point is found to be part of a cluster, its neighborhood is also
+        part of that cluster. Hence, all points that are found within the
+        neighborhood are added, as is their own neighborhood. This process
+        continues until the cluster is completely found. Then, a new unvisited point
+        is retrieved and processed, leading to the discovery of a further cluster
+        of noise.</p>
+
+    <p>DBSCAN visits each point of the database, possibly multiple times (e.g.,
+        as candidates to different clusters). For practical considerations, however,
+        the time complexity is mostly governed by the number of nearest neighbor
+        queries. DBSCAN executes exactly one such query for each point, and if
+        an indexing structure is used that executes such a neighborhood query
+        in <code>O(log n)</code>, an overall runtime complexity of <code>O(n log n)</code> is obtained.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/chameleon/t4.8k.txt", header=false, delimiter=' ').toArray
+    val clusters = dbscan(x, 20, 10)
+    plot(x, clusters.y, '.', Palette.COLORS)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/chameleon/t4.8k.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = DBSCAN.fit(x, 20, 10);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The chameleon is a set of complicated spatial data of
+        arbitrary cluster shapes. With appropriate parameters, DBSCAN
+        can discover the correct clusters and also identify outliers.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/dbscan.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">DBSCAN</div>
+    </div>
+
+    <p>DBSCAN has many advantages such as</p>
+
+     <ul>
+         <li>DBSCAN does not need to know the number of clusters in the data
+             a priori, as opposed to K-Means.</li>
+
+         <li>DBSCAN can find arbitrarily shaped clusters. It can even find clusters
+             completely surrounded by (but not connected to) a different cluster.
+             Due to the <code>MinPts</code> parameter, the so-called single-link effect
+             (different clusters being connected by a thin line of points) is reduced.</li>
+
+         <li>DBSCAN has a notion of noise. Outliers are labeled as <code>Clustering.OUTLIER</code>,
+             which is <code>Integer.MAX_VALUE</code>.</li>
+
+         <li>DBSCAN requires just two parameters and is mostly insensitive to the
+             ordering of the points in the database. (Only points sitting on the
+             edge of two different clusters might swap cluster membership if the
+             ordering of the points is changed, and the cluster assignment is unique
+             only up to isomorphism.)</li>
+     </ul>
+
+    <p>On the other hand, DBSCAN has the disadvantages of</p>
+
+    <ul>
+        <li>In high dimensional space, the data are sparse everywhere
+            because of the curse of dimensionality. Therefore, DBSCAN doesn't
+            work well on high-dimensional data in general.
+
+        <li>DBSCAN does not respond well to data sets with varying densities.
+    </ul>
+
+    <h2 id="denclue">DENCLUE</h2>
+
+    <p>DENCLUE (DENsity CLUstering) employs a cluster model based on
+        kernel density estimation. A cluster is defined by a local maximum of the
+        estimated density function. Data points going to the same local maximum
+        are put into the same cluster.
+        DENCLUE works efficiently for high-dimensional data sets and allows arbitrary
+        noise levels while still guaranteeing to find the clustering.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def denclue(data: Array[Array[Double]], sigma: Double, m: Int): DENCLUE
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class DENCLUE {
+        public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun denclue(data: Array&lt;DoubleArray&gt;, sigma: Double, m: Int): DENCLUE
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The parameter <code>sigma</code> is the smooth parameter in the Gaussian kernel.
+        The user can choose <code>sigma</code> such that number of density attractors
+        is constant for a long interval of <code>sigma</code>.
+        The parameter <code>m</code> is the number of selected samples used in the iteration.
+        This number should be much smaller than the number of data points
+        to speed up the algorithm. It should also be large enough to capture
+        the sufficient information of underlying distribution.</p>
+
+    <p>Clearly, DENCLUE doesn't work on data with uniform distribution. In high
+        dimensional space, the data always look like uniformly distributed because
+        of the curse of dimensionality. Therefore, DENCLUDE doesn't work well on
+        high-dimensional data in general.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_20" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_20" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_20">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val clusters = denclue(x, 1.0, 50)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_20">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = DENCLUE.fit(x, 1.0, 50);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>DENCLUE doesn't directly label some data as outliers. However, it may report
+        very small clusters, which could be regarded as outliers.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/denclue.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">DENCLUE</div>
+    </div>
+
+    <h2 id="spectral-clustering">Spectral Clustering</h2>
+
+    <p>Given a set of data points, the similarity matrix may
+        be defined as a matrix <code>S</code> where <code>S<sub>ij</sub></code>
+        represents a measure of the
+        similarity between points. Spectral clustering techniques make use of the
+        spectrum of the similarity matrix of the data to perform dimensionality
+        reduction for clustering in fewer dimensions. Then the clustering will
+        be performed in the dimension-reduce space, in which clusters of non-convex
+        shape may become tight. There are some intriguing similarities between
+        spectral clustering methods and kernel PCA, which has been empirically
+        observed to perform clustering.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_21" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_21" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_21" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def specc(W: Array[Array[Double]], k: Int): SpectralClustering
+
+    def specc(data: Array[Array[Double]], k: Int, sigma: Double): SpectralClustering
+
+    // Nystrom approximation
+    def specc(data: Array[Array[Double]], k: Int, l: Int, sigma: Double): SpectralClustering
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_21">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SpectralClustering {
+        public static SpectralClustering fit(DenseMatrix W, int k, int maxIter, double tol);
+        public static SpectralClustering fit(double[][] data, int k, double sigma, int maxIter, double tol);
+        // Nystrom approximation
+        public static SpectralClustering fit(double[][] data, int k, int l, double sigma, int maxIter, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_21">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun specc(W: Array&lt;DoubleArray&gt;, k: Int): SpectralClustering
+
+    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, sigma: Double): SpectralClustering
+
+    // Nystrom approximation
+    fun specc(data: Array&lt;DoubleArray&gt;, k: Int, l: Int, sigma: Double): SpectralClustering
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>W</code> is the adjacency matrix of graph. The user may also
+        provides the raw input <code>data</code> and the smooth/width parameter <code>sigma</code>
+        of Gaussian kernel, which is a somewhat sensitive parameter. To search for the best setting,
+        one may pick the value that gives the tightest clusters (smallest
+        distortion, reported by the method <code>distortion</code>) in feature space.
+        Spectral clustering is memory intensive because of the adjacency matrix.
+        For large data, one may use Nystrom approximation by selecting some
+        random samples. The parameter <code>l</code> specifies the number of
+        random samples.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_22" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_22" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_22">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/nonconvex/sincos.txt", header=false, delimiter='\t').toArray
+    val clusters = specc(x, 2, 0.2)
+    show(plot(x, clusters.y, 'o', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_22">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/nonconvex/sincos.txt", CSVFormat.DEFAULT.withDelimiter('\t')).toArray();
+    var clusters = SpectralClustering.fit(x, 2, 0.2);
+    ScatterPlot.plot(x, clusters.y, 'o', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For this nonconvex data, spectral clustering works very well with appropriate smooth parameter.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/spectral-clustering.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">Spectral Clustering</div>
+    </div>
+
+    <h2 id="mec">Minimum Entropy Clustering</h2>
+
+    <p>In this algorithm, the clustering criterion is based on the conditional entropy
+        <code>H(C | x)</code>, where <code>C</code> is the cluster label and
+        <code>x</code> is an observation. According to Fano's
+        inequality, we can estimate <code>C</code> with a low probability of error only if the
+        conditional entropy <code>H(C | x)</code> is small.
+        Minimum Entropy Clustering (MEC) also generalizes the criterion
+        by replacing Shannon's entropy with Havrda-Charvat's structural
+        <code>&alpha;</code>-entropy. Interestingly, the minimum entropy criterion based
+        on structural <code>&alpha;</code>-entropy is equal to the probability error of the
+        nearest neighbor method when <code>&alpha;</code>= 2. To estimate
+        <code>p(C | x)</code>, MEC employs
+        Parzen density estimation, a nonparametric approach.</p>
+
+    <p>This method performs
+        very well especially when the exact number of clusters is unknown.
+        The method can also correctly reveal the structure of data and effectively
+        identify outliers simultaneously.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_23" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_23" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_23" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def mec[T](data: Array[T], distance: Distance[T], k: Int, radius: Double): MEC[T]
+    def mec[T](data: Array[T], nns: RNNSearch[T, T], k: Int, radius: Double, y: Array[Int]): MEC[T]
+    def mec(data: Array[Array[Double]], k: Int, radius: Double): MEC[Array[Double]]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_23">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class MEC {
+        public static MEC&lt;T&gt; fit(T[] data, Distance&lt;T&gt; distance, int k, double radius);
+        public static MEC&lt;T&gt; fit(T[] data, RNNSearch&lt;T, T&gt; nns, int k, double radius, int[] y, double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_23">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun mec&lt;T&gt;(data: Array&lt;T&gt;, distance: Distance&lt;T&gt;, k: Int, radius: Double): MEC&lt;T&gt;
+    fun mec&lt;T&gt;(data: Array&lt;T&gt;, nns: RNNSearch&lt;T, T&gt;, k: Int, radius: Double, y: Array[Int]): MEC&lt;T&gt;
+    fun mec(data: Array&lt;DoubleArray&gt;, k: Int, radius: Double): MEC&lt;DoubleArray&gt;
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>MEC is an iterative algorithm starting with an initial partition given by
+        any other clustering methods, e.g. K-Means, CLARNAS, hierarchical clustering,
+        etc. Note that a random initialization is NOT appropriate.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_24" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_24" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_24">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val x = read.csv("data/clustering/gaussian/six.txt", header=false, delimiter=' ').toArray
+    val clusters = mec(x, 20, 2.0)
+    show(plot(x, clusters.y, '.', Palette.COLORS))
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_24">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var x = Read.csv("data/clustering/gaussian/six.txt", CSVFormat.DEFAULT.withDelimiter(' ')).toArray();
+    var clusters = MEC.fit(x, new EuclideanDistance(), 20, 2.0);
+    ScatterPlot.plot(x, clusters.y, '.', Palette.COLORS).window();
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that we use <code>k = 20</code> for this data and the algorithm still successfully
+        finds the correct structure of data. In practice, we rarely know the right number of
+        clusters in advance. With MEC, one may starts with a large <code>k</code> and the algorithm
+        often can automatically remove unnecessary clusters and reach a lower entropy state.</p>
+
+    <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/mec.png" class="enlarge" style="width: 480px;" />
+        <div class="caption" style="min-width: 480px;">MEC</div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="missing-value-imputation.html" title="Previous Section: Missing Value Imputation"><span>Missing Value Imputation</span></a>
+        <a class="btn-next-text" href="vector-quantization.html" title="Next Section: Vector Quantization"><span>Vector Quantization</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

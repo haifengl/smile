@@ -1,86 +1,87 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.data.Attribute;
-import smile.data.NominalAttribute;
+import smile.data.DataFrame;
+import smile.data.measure.NominalScale;
+import smile.data.type.StructField;
+import smile.data.Tuple;
+import smile.data.type.StructType;
 
 /**
  * Encode categorical integer features using sparse one-hot scheme.
  * All variables should be nominal attributes and will be converted to binary
  * dummy variables in a compact representation in which only indices of nonzero
- * elements are stored in an integer array. In Maximum Entropy Classifier, 
+ * elements are stored in an integer array. In Maximum Entropy Classifier,
  * the data are expected to store in this format.
- * 
+ *
  * @author Haifeng Li
  */
 public class SparseOneHotEncoder {
     /**
      * The variable attributes.
      */
-    private NominalAttribute[] attributes;
+    private final StructType schema;
     /**
      * Starting index for each nominal attribute.
      */
-    private int[] base;
+    private final int[] base;
 
     /**
      * Constructor.
-     * @param attributes the variable attributes. All of them have to be
-     *                   nominal attributes.
+     * @param schema the variable attributes. All of them have to be
+     *               nominal attributes.
      */
-    public SparseOneHotEncoder(Attribute[] attributes) {
-        int p = attributes.length;
-        this.attributes = new NominalAttribute[p];
-        base = new int[p];
-        for (int i = 0; i < p; i++) {
-            Attribute attribute = attributes[i];
-            if (attribute instanceof NominalAttribute) {
-                NominalAttribute nominal = (NominalAttribute) attribute;
-                this.attributes[i] = nominal;
-                if (i < p-1) {
-                    base[i+1] = base[i] + nominal.size();
-                }
-            } else {
-                throw new IllegalArgumentException("Non-nominal attribute: " + attribute);
+    public SparseOneHotEncoder(StructType schema) {
+        this.schema = schema;
+        base = new int[schema.length()];
+        for (int i = 0; i < base.length; i++) {
+            StructField field = schema.field(i);
+            if (!(field.measure instanceof NominalScale)) {
+                throw new IllegalArgumentException("Non-nominal attribute: " + field);
+            }
+
+            if (i < base.length-1) {
+                base[i+1] = base[i] + ((NominalScale) field.measure).size();
             }
         }
     }
-    
+
     /**
      * Generates the compact representation of sparse binary features for given object.
      * @param x an object of interest.
      * @return an integer array of nonzero binary features.
      */
-    public int[] feature(double[] x) {
-        if (x.length != attributes.length) {
-            throw new IllegalArgumentException(String.format("Invalid feature vector size %d, expected %d", x.length, attributes.length));
-        }
-        
-        int[] features = new int[attributes.length];
+    public int[] apply(Tuple x) {
+        int[] features = new int[schema.length()];
         for (int i = 0; i < features.length; i++) {
-            int f = (int) x[i];
-            if (Math.floor(x[i]) != x[i] || f < 0 || f >= attributes[i].size()) {
-                throw new IllegalArgumentException(String.format("Invalid value of attribute %s: %d", attributes[i].toString(), f));
-            }
-            
-            features[i] = f + base[i];
+            features[i] = x.getInt(i) + base[i];
         }
-        
+
         return features;
-    }    
+    }
+
+    /**
+     * Generates the compact representation of sparse binary features for a data frame.
+     * @param data a data frame.
+     * @return the binary feature vectors.
+     */
+    public int[][] apply(DataFrame data) {
+        return data.stream().map(this::apply).toArray(int[][]::new);
+    }
 }

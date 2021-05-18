@@ -1,30 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
+import smile.math.MathEx;
 import smile.math.special.Erf;
-import smile.math.Math;
 
 /**
  * A log-normal distribution is a probability distribution of a random variable
- * whose logarithm is normally distributed. The log-normal distribution is the single-tailed probability distribution
- * of any random variable whose logarithm is normally distributed. If X is a
- * random variable with a normal distribution, then Y = exp(X) has a log-normal
- * distribution; likewise, if Y is log-normally distributed, then log(Y) is
- * normally distributed.
+ * whose logarithm is normally distributed. The log-normal distribution is the
+ * single-tailed probability distribution of any random variable whose logarithm
+ * is normally distributed. If X is a random variable with a normal distribution,
+ * then Y = exp(X) has a log-normal distribution; likewise, if Y is log-normally
+ * distributed, then log(Y) is normally distributed.
  * A variable might be modeled as log-normal if it can be thought of as
  * the multiplicative product of many independent random variables each of
  * which is positive.
@@ -32,17 +34,25 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class LogNormalDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double mu;
-    private double sigma;
-    private double mean;
-    private double var;
-    private double entropy;
+    /** The mean of normal distribution. */
+    public final double mu;
+    /** The standard deviation of normal distribution. */
+    public final double sigma;
+    /** The mean. */
+    public final double mean;
+    /** The variance. */
+    private final double variance;
+    /** Shannon entropy. */
+    private final double entropy;
+    /** The corresponding Gaussian distribution. */
     private GaussianDistribution gaussian;
 
     /**
      * Constructor.
+     * @param mu the mean of normal distribution.
+     * @param sigma the standard deviation of normal distribution.
      */
     public LogNormalDistribution(double mu, double sigma) {
         if (sigma <= 0.0) {
@@ -52,14 +62,16 @@ public class LogNormalDistribution extends AbstractDistribution {
         this.sigma = sigma;
 
         mean = Math.exp(mu + sigma * sigma / 2);
-        var = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
+        variance = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
         entropy = 0.5 + 0.5 * Math.log(2 * Math.PI * sigma * sigma) + mu;
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
-    public LogNormalDistribution(double[] data) {
+    public static LogNormalDistribution fit(double[] data) {
         double[] x = new double[data.length];
         for (int i = 0; i < x.length; i++) {
             if (data[i] <= 0.0) {
@@ -69,30 +81,13 @@ public class LogNormalDistribution extends AbstractDistribution {
             x[i] = Math.log(data[i]);
         }
 
-        this.mu = Math.mean(x);
-        this.sigma = Math.sd(x);
-
-        mean = Math.exp(mu + sigma * sigma / 2);
-        var = (Math.exp(mu * mu) - 1) * Math.exp(2 * mu + sigma * sigma);
-        entropy = 0.5 + 0.5 * Math.log(2 * Math.PI * sigma * sigma) + mu;
-    }
-
-    /**
-     * Returns the parameter mu, which is the mean of normal distribution log(X).
-     */
-    public double getMu() {
-        return mu;
-    }
-
-    /**
-     * Returns the parameter sigma, which is the standard deviation of normal distribution log(X).
-     */
-    public double getSigma() {
-        return sigma;
+        double mu = MathEx.mean(x);
+        double sigma = MathEx.sd(x);
+        return new LogNormalDistribution(mu, sigma);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -102,13 +97,8 @@ public class LogNormalDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
-        return var;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var);
+    public double variance() {
+        return variance;
     }
 
     @Override

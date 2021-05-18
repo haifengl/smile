@@ -1,22 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.math.Math;
+import smile.classification.ClassLabels;
+import smile.math.MathEx;
 
 /**
  * The signal-to-noise (S2N) metric ratio is a univariate feature ranking metric,
@@ -35,11 +37,30 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class SignalNoiseRatio implements FeatureRanking {
-
     @Override
     public double[] rank(double[][] x, int[] y) {
+        return of(x, y);
+    }
+
+    /**
+     * Univariate feature ranking. Note that this method actually does NOT rank
+     * the features. It just returns the metric values of each feature. The
+     * use can then rank and select features.
+     *
+     * @param x a n-by-p matrix of n instances with p features.
+     * @param y class labels.
+     * @return the signal noise ratio for each feature.
+     */
+    public static double[] of(double[][] x, int[] y) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
+        }
+
+        ClassLabels codec = ClassLabels.fit(y);
+        y = codec.y;
+
+        if (codec.k != 2) {
+            throw new IllegalArgumentException("SignalNoiseRatio is applicable only to binary class.");
         }
 
         int n1 = 0;
@@ -63,10 +84,10 @@ public class SignalNoiseRatio implements FeatureRanking {
             }
         }
 
-        double[] mu1 = Math.colMeans(x1);
-        double[] mu2 = Math.colMeans(x2);
-        double[] sd1 = Math.colSds(x1);
-        double[] sd2 = Math.colSds(x2);
+        double[] mu1 = MathEx.colMeans(x1);
+        double[] mu2 = MathEx.colMeans(x2);
+        double[] sd1 = MathEx.colSds(x1);
+        double[] sd2 = MathEx.colSds(x2);
 
         int p = mu1.length;
         double[] s2n = new double[p];

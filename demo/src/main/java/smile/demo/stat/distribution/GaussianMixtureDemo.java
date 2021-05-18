@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.stat.distribution;
 
@@ -22,10 +23,11 @@ import java.awt.GridLayout;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.QQPlot;
+import smile.math.MathEx;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.ExponentialFamilyMixture;
 import smile.stat.distribution.GaussianDistribution;
 import smile.stat.distribution.GaussianMixture;
@@ -50,24 +52,24 @@ public class GaussianMixtureDemo extends JPanel {
             17.0, 21.0, 21.0, 15.0, 14.0
         };
 
-        ExponentialFamilyMixture mixture = new GaussianMixture(data);
+        ExponentialFamilyMixture mixture = GaussianMixture.fit(data);
 
-        PlotCanvas canvas = Histogram.plot(data, 24);
+        Canvas canvas = Histogram.of(data, 24, true).canvas();
         canvas.setTitle("Gaussian Mixture with Singular Component");
-        add(canvas);
+        add(canvas.panel());
 
-        double width = (Math.max(data) - Math.min(data)) / 24;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 24;
         double[][] p = new double[50][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = i*0.5;
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
-        canvas = QQPlot.plot(data, mixture);
+        canvas = QQPlot.of(data, mixture).canvas();
         canvas.setTitle("Q-Q Plot");
-        add(canvas);
+        add(canvas.panel());
 
         // Gaussian mixture of five components.
         data = new double[3000];
@@ -92,24 +94,24 @@ public class GaussianMixtureDemo extends JPanel {
         for (int i = 2500; i < 3000; i++)
             data[i] = g5.rand();
 
-        mixture = new GaussianMixture(data, 5);
+        mixture = GaussianMixture.fit(5, data);
 
-        canvas = Histogram.plot(data, 50);
+        canvas = Histogram.of(data, 50, true).canvas();
         canvas.setTitle("Gaussian Mixture of Five Components");
-        add(canvas);
+        add(canvas.panel());
 
-        width = (Math.max(data) - Math.min(data)) / 50;
+        width = (MathEx.max(data) - MathEx.min(data)) / 50;
         p = new double[220][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
-        canvas = QQPlot.plot(data, mixture);
+        canvas = QQPlot.of(data, mixture).canvas();
         canvas.setTitle("Q-Q Plot");
-        add(canvas);
+        add(canvas.panel());
     }
     
     @Override
@@ -119,6 +121,7 @@ public class GaussianMixtureDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Gaussian Mixture");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new GaussianMixtureDemo());

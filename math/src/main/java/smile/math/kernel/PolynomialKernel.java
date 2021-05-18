@@ -1,39 +1,38 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.kernel;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
- * The polynomial kernel. k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>,
+ * The polynomial kernel.
+ * <p>
+ *     k(u, v) = (&gamma; u<sup>T</sup>v - &lambda;)<sup>d</sup>
+ * <p>
  * where &gamma; is the scale of the used inner product, &lambda; the offset of
  * the used inner product, and <i>d</i> the order of the polynomial kernel.
  * 
  * @author Haifeng Li
  */
-public class PolynomialKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
-
-    private int degree;
-    private double scale;
-    private double offset;
-
+public class PolynomialKernel extends Polynomial implements MercerKernel<double[]> {
     /**
-     * Constructor with scale 1 and bias 0.
+     * Constructor with scale 1 and offset 0.
+     * @param degree The degree of polynomial.
      */
     public PolynomialKernel(int degree) {
         this(degree, 1.0, 0.0);
@@ -41,32 +40,53 @@ public class PolynomialKernel implements MercerKernel<double[]> {
 
     /**
      * Constructor.
+     * @param degree The degree of polynomial.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
      */
     public PolynomialKernel(int degree, double scale, double offset) {
-        if (degree <= 0) {
-            throw new IllegalArgumentException("Non-positive polynomial degree.");
-        }
-
-        if (offset < 0.0) {
-            throw new IllegalArgumentException("Negative offset: the kernel does not satisfy Mercer's condition.");
-        }
-        
-        this.degree = degree;
-        this.scale = scale;
-        this.offset = offset;
+        this(degree, scale, offset, new double[]{1E-2, 1E-5}, new double[]{1E2, 1E5});
     }
 
-    @Override
-    public String toString() {
-        return String.format("Polynomial Kernel (scale = %.4f, offset = %.4f)", scale, offset);
+    /**
+     * Constructor.
+     * @param degree The degree of polynomial. The degree is fixed during hyperparameter tuning.
+     * @param scale The scale parameter.
+     * @param offset The offset parameter.
+     * @param lo The lower bound of scale and offset for hyperparameter tuning.
+     * @param hi The upper bound of scale and offset for hyperparameter tuning.
+     */
+    public PolynomialKernel(int degree, double scale, double offset, double[] lo, double[] hi) {
+        super(degree, scale, offset, lo, hi);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length)
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        return k(MathEx.dot(x, y));
+    }
 
-        double dot = Math.dot(x, y);
-        return Math.pow(scale * dot + offset, degree);
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        return kg(MathEx.dot(x, y));
+    }
+
+    @Override
+    public PolynomialKernel of(double[] params) {
+        return new PolynomialKernel(degree, params[0], params[1], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { scale, offset };
+    }
+
+    @Override
+    public double[] lo() {
+        return lo;
+    }
+
+    @Override
+    public double[] hi() {
+        return hi;
     }
 }

@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.nlp;
 
@@ -27,9 +28,12 @@ import java.util.LinkedList;
  * the tree defines the key with which it is associated. All the descendants
  * of a node have a common prefix of the string associated with that node,
  * and the root is associated with the empty string. Values are normally
- * not associated with every node, only with leaves and some inner node
- * s that correspond to keys of interest.
- *  
+ * not associated with every node, only with leaves and some inner nodes
+ * that correspond to keys of interest.
+ *
+ * @param <K> the data type of key.
+ * @param <V> the data type of value.
+ *
  * @author Haifeng Li
  */
 public class Trie<K, V> {
@@ -40,39 +44,59 @@ public class Trie<K, V> {
      * node will contains a lot of children. A plain list
      * will be slow for search.
      */
-    private HashMap<K, Node> root;
+    private final HashMap<K, Node> root;
     /**
      * The number of entries.
      */
     private int size;
 
+    /** The nodes in the trie. */
     public class Node {
 
-        private K key;
+        private final K key;
         private V value;
-        private LinkedList<Node> children;
+        private final LinkedList<Node> children;
 
+        /**
+         * Constructor.
+         * @param key the key.
+         */
         public Node(K key) {
             this.key = key;
             this.value = null;
             this.children = new LinkedList<>();
         }
-        
+
+        /**
+         * Returns the key.
+         * @return the key.
+         */
         public K getKey() {
             return key;
         }
-        
+
+        /**
+         * Returns the value.
+         * @return the value.
+         */
         public V getValue() {
             return value;
         }
 
+        /**
+         * Returns the value matching the key sequence.
+         * @param key the key sequence.
+         * @param index the index of current element in the key sequence.
+         * @return the value.
+         */
         public V getChild(K[] key, int index) {
             if (index >= key.length) {
                 return value;
             }
 
+            K k = key[index];
             for (Node child : children) {
-                if (child.key.equals(key[index])) {
+                if (child.key.equals(k)) {
                     return child.getChild(key, index + 1);
                 }
             }
@@ -80,6 +104,11 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Returns the child with the key.
+         * @param key the key.
+         * @return the child.
+         */
         public Node getChild(K key) {
             for (Node child : children) {
                 if (child.key.equals(key)) {
@@ -90,6 +119,12 @@ public class Trie<K, V> {
             return null;
         }
 
+        /**
+         * Adds a child.
+         * @param key the key sequence.
+         * @param value the value.
+         * @param index the index of current element in the key sequence.
+         */
         public void addChild(K[] key, V value, int index) {
             if (index >= key.length) {
                 if (this.value == null) {

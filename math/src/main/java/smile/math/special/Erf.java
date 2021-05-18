@@ -1,33 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.special;
 
-import smile.math.Math;
+import static java.lang.Math.*;
 
 /**
- * The error function (also called the Gauss error function) is a special
- * function of sigmoid shape which occurs in probability, statistics, materials
- * science, and partial differential equations. It is defined as:
+ * The error function. The error function (or the Gauss error function)
+ * is a special function of sigmoid shape which occurs in probability,
+ * statistics, materials science, and partial differential equations.
+ * It is defined as:
  * <p>
- * erf(x) = <i><big>&#8747;</big><sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t<sup>2</sup></sup>dt</i>
+ *     erf(x) = <i>&#8747;<sub><small>0</small></sub><sup><small>x</small></sup> e<sup>-t^2</sup>dt</i>
  * <p>
- * The complementary error function, denoted erfc, is defined as erfc(x) = 1 - erf(x).
- * The error function and complementary error function are special cases of the
- * incomplete gamma function.
+ * The complementary error function, denoted erfc, is defined as
+ * <code>erfc(x) = 1 - erf(x)</code>. The error function and complementary
+ * error function are special cases of the incomplete gamma function.
  * 
  * @author Haifeng Li
  */
@@ -49,6 +51,8 @@ public class Erf {
 
     /**
      * The Gauss error function.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erf(double x) {
         if (x >= 0.) {
@@ -60,6 +64,8 @@ public class Erf {
 
     /**
      * The complementary error function.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erfc(double x) {
         if (x >= 0.) {
@@ -72,11 +78,13 @@ public class Erf {
     /**
      * The complementary error function with fractional error everywhere less
      * than 1.2 &times; 10<sup>-7</sup>. This concise routine is faster than erfc.
+     * @param x a real number.
+     * @return the function value.
      */
     public static double erfcc(double x) {
-        double z = Math.abs(x);
+        double z = abs(x);
         double t = 2.0 / (2.0 + z);
-        double ans = t * Math.exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
+        double ans = t * exp(-z * z - 1.26551223 + t * (1.00002368 + t * (0.37409196 + t * (0.09678418 +
                 t * (-0.18628806 + t * (0.27886807 + t * (-1.13520398 + t * (1.48851587 +
                 t * (-0.82215223 + t * 0.17087277)))))))));
 
@@ -86,7 +94,7 @@ public class Erf {
     private static double erfccheb(double z) {
         double t, ty, tmp, d = 0., dd = 0.;
         if (z < 0.) {
-            throw new IllegalArgumentException("erfccheb requires nonnegative argument");
+            throw new IllegalArgumentException("erfccheb requires non-negative argument");
         }
         t = 2. / (2. + z);
         ty = 4. * t - 2.;
@@ -95,11 +103,13 @@ public class Erf {
             d = ty * d - dd + cof[j];
             dd = tmp;
         }
-        return t * Math.exp(-z * z + 0.5 * (cof[0] + ty * d) - dd);
+        return t * exp(-z * z + 0.5 * (cof[0] + ty * d) - dd);
     }
 
     /**
      * The inverse complementary error function.
+     * @param p a real number.
+     * @return the function value.
      */
     public static double inverfc(double p) {
         double x, err, t, pp;
@@ -110,17 +120,19 @@ public class Erf {
             return 100.;
         }
         pp = (p < 1.0) ? p : 2. - p;
-        t = Math.sqrt(-2. * Math.log(pp / 2.));
+        t = sqrt(-2. * log(pp / 2.));
         x = -0.70711 * ((2.30753 + t * 0.27061) / (1. + t * (0.99229 + t * 0.04481)) - t);
         for (int j = 0; j < 2; j++) {
             err = erfc(x) - pp;
-            x += err / (1.12837916709551257 * Math.exp(-x * x) - x * err);
+            x += err / (1.12837916709551257 * exp(-x * x) - x * err);
         }
         return (p < 1.0 ? x : -x);
     }
 
     /**
      * The inverse error function.
+     * @param p a real number.
+     * @return the function value.
      */
     public static double inverf(double p) {
         return inverfc(1. - p);

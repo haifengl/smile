@@ -1,23 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
-import java.util.List;
-import java.util.ArrayList;
-import smile.math.Math;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import smile.math.MathEx;
 
 /**
  * The finite mixture of discrete distributions.
@@ -25,39 +27,51 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class DiscreteMixture extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * A component in the mixture distribution is defined by a distribution
      * and its weight in the mixture.
      */
     public static class Component {
+        /**
+         * The priori probability of component.
+         */
+        public final double priori;
 
         /**
          * The distribution of component.
          */
-        public DiscreteDistribution distribution;
+        public final DiscreteDistribution distribution;
+
         /**
-         * The priori probability of component.
+         * Constructor.
+         * @param priori the priori probability of component.
+         * @param distribution the distribution of component.
          */
-        public double priori;
+        public Component(double priori, DiscreteDistribution distribution) {
+            this.priori = priori;
+            this.distribution = distribution;
+        }
     }
-    List<Component> components;
+
+    /** The components of finite mixture model. */
+    public final Component[] components;
 
     /**
      * Constructor.
-     * @param mixture a list of discrete distributions.
+     * @param components a list of discrete distributions.
      */
-    public DiscreteMixture(List<Component> mixture) {
-        components = new ArrayList<>();
-        components.addAll(mixture);
+    public DiscreteMixture(Component... components) {
+        if (components.length == 0) {
+            throw new IllegalStateException("Empty mixture!");
+        }
+
+        this.components = components;
 
         double sum = 0.0;
-        for (Component component : mixture) {
+        for (Component component : components) {
             sum += component.priori;
-            if (component.distribution instanceof DiscreteDistribution == false) {
-                throw new IllegalArgumentException("Component " + component + " is not a discrete distribution.");
-            }
         }
 
         if (Math.abs(sum - 1.0) > 1E-3) {
@@ -65,12 +79,44 @@ public class DiscreteMixture extends DiscreteDistribution {
         }
     }
 
-    @Override
-    public double mean() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
+    /**
+     * Returns the posteriori probabilities.
+     * @param x an integer value.
+     * @return the posteriori probabilities.
+     */
+    public double[] posteriori(int x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
         }
 
+        double p = MathEx.sum(prob);
+        for (int i = 0; i < k; i++) {
+            prob[i] /= p;
+        }
+        return prob;
+    }
+
+    /**
+     * Returns the index of component with maximum a posteriori probability.
+     * @param x an integer value.
+     * @return the index of component with maximum a posteriori probability.
+     */
+    public int map(int x) {
+        int k = components.length;
+        double[] prob = new double[k];
+        for (int i = 0; i < k; i++) {
+            Component c = components[i];
+            prob[i] = c.priori * c.distribution.p(x);
+        }
+
+        return MathEx.whichMax(prob);
+    }
+
+    @Override
+    public double mean() {
         double mu = 0.0;
 
         for (Component c : components) {
@@ -81,23 +127,14 @@ public class DiscreteMixture extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
+    public double variance() {
         double variance = 0.0;
 
         for (Component c : components) {
-            variance += c.priori * c.priori * c.distribution.var();
+            variance += c.priori * c.priori * c.distribution.variance();
         }
 
         return variance;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var());
     }
 
     /**
@@ -110,10 +147,6 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double p(int x) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
         double p = 0.0;
 
         for (Component c : components) {
@@ -125,19 +158,11 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double logp(int x) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
         return Math.log(p(x));
     }
 
     @Override
     public double cdf(double x) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
         double p = 0.0;
 
         for (Component c : components) {
@@ -149,11 +174,7 @@ public class DiscreteMixture extends DiscreteDistribution {
 
     @Override
     public double rand() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
-        double r = Math.random();
+        double r = MathEx.random();
 
         double p = 0.0;
         for (Component g : components) {
@@ -164,15 +185,11 @@ public class DiscreteMixture extends DiscreteDistribution {
         }
 
         // we should not arrive here.
-        return components.get(components.size() - 1).distribution.rand();
+        throw new IllegalStateException();
     }
 
     @Override
     public double quantile(double p) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
         if (p < 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid p: " + p);
         }
@@ -201,34 +218,29 @@ public class DiscreteMixture extends DiscreteDistribution {
     }
 
     @Override
-    public int npara() {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
+    public int length() {
+        int length = 0;
+        for (Component component : components) {
+            length += component.distribution.length();
         }
 
-        int f = 0;
-        for (int i = 0; i < components.size(); i++) {
-            f += components.get(i).distribution.npara();
-        }
-
-        return f;
+        return length;
     }
 
     /**
      * Returns the number of components in the mixture.
+     * @return the number of components in the mixture.
      */
     public int size() {
-        return components.size();
+        return components.length;
     }
 
     /**
-     * BIC score of the mixture for given data.
+     * Returns the BIC score.
+     * @param data the data to calculate likelihood.
+     * @return the BIC score.
      */
     public double bic(double[] data) {
-        if (components.isEmpty()) {
-            throw new IllegalStateException("Mixture is empty!");
-        }
-
         int n = data.length;
 
         double logLikelihood = 0.0;
@@ -239,30 +251,13 @@ public class DiscreteMixture extends DiscreteDistribution {
             }
         }
 
-        return logLikelihood - 0.5 * npara() * Math.log(n);
-    }
-
-    /**
-     * Returns the list of components in the mixture.
-     */
-    public List<Component> getComponents() {
-        return components;
+        return logLikelihood - 0.5 * length() * Math.log(n);
     }
 
     @Override
     public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("Mixture[");
-        builder.append(components.size());
-        builder.append("]:{");
-        for (Component c : components) {
-            builder.append(" (");
-            builder.append(c.distribution);
-            builder.append(':');
-            builder.append(String.format("%.4f", c.priori));
-            builder.append(')');
-        }
-        builder.append("}");
-        return builder.toString();
+        return Arrays.stream(components)
+                .map(component -> String.format("%.2f x %s", component.priori, component.distribution))
+                .collect(Collectors.joining(" + ", String.format("Mixture(%d)[", components.length), "]"));
     }
 }

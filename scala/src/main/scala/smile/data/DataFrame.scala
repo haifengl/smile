@@ -1,89 +1,59 @@
-/*******************************************************************************
- * (C) Copyright 2015 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.data
 
-import scala.language.dynamics
-import scala.language.implicitConversions
-import scala.collection.JavaConverters._
+import java.util.Optional
+import java.util.stream.IntStream
+
+import smile.data.measure.CategoricalMeasure
+import smile.json._
 
 /**
-  * Immutable data frame.
-  * @param data underlying attribute dataset.
+  * Pimped data frame with Scala style methods.
+ *
+  * @param data a data frame.
   */
-case class DataFrame(data: AttributeDataset) extends Dynamic {
-  type Row = data.Row
-  lazy val rows = data.data().asScala.map(_.asInstanceOf[Row])
+case class DataFrameOps(data: DataFrame) {
+  /** Selects a new DataFrame with given column indices. */
+  def select(range: Range): DataFrame = data.select(range.toArray: _*)
 
-  /** Returns the attribute list. */
-  def attributes = data.attributes()
-  /** Returns the response variable. */
-  def response = data.response()
-  /** Returns the response attribute. */
-  def responseAttribute = data.responseAttribute()
+  /** Returns a new DataFrame without given column indices. */
+  def drop(range: Range): DataFrame = data.drop(range.toArray: _*)
 
-  /** Returns the size of data frame. */
-  def size: Int = data.size
+  /** Returns a new data frame with row indexing. */
+  def of(range: Range): DataFrame = data.of(range.toArray: _*)
+
   /** Finds the first row satisfying a predicate. */
-  def find(p: (Row) => Boolean): Option[Row] = rows.find(p)
+  def find(p: Tuple => Boolean): Optional[Tuple] = data.stream().filter(t => p(t)).findAny()
   /** Tests if a predicate holds for at least one row of data frame. */
-  def exists(p: (Row) => Boolean): Boolean = rows.exists(p)
+  def exists(p: Tuple => Boolean): Boolean = data.stream.anyMatch(t => p(t))
   /** Tests if a predicate holds for all rows of data frame. */
-  def forall(p: (Row) => Boolean): Boolean = rows.forall(p)
+  def forall(p: Tuple => Boolean): Boolean = data.stream.allMatch(t => p(t))
   /** Applies a function for its side-effect to every row. */
-  def foreach[U](p: (Row) => U): Unit = rows.foreach(p)
-  /** Tests if the data frame is empty. */
-  def isEmpty: Boolean = rows.isEmpty
+  def foreach[U](p: Tuple => U): Unit = data.stream.forEach(t => p(t))
 
   /** Builds a new data collection by applying a function to all rows. */
-  def map[U](p: (Row) => U): Traversable[U] = rows.map(p)
-  /** Builds a new data frame by applying a function to all rows. */
-  def map(attributes: Array[Attribute])(p: (Row) => Array[Double]): DataFrame = {
-    val newData = new AttributeDataset(data.name, attributes)
-    rows.foreach { row =>
-      val newRow = newData.add(p(row))
-      newRow.name = row.name
-      newRow.description = row.description
-      newRow.weight = row.weight
-      newRow.timestamp = row.timestamp
-    }
-    DataFrame(newData)
-  }
-
-  /** Builds a new data frame by applying a function to all rows. */
-  def map(attributes: Array[Attribute], response: Attribute)(p: (Row) => (Array[Double], Double)): DataFrame = {
-    val newData = new AttributeDataset(data.name, attributes, response)
-    rows.foreach { row =>
-      val (x, y) = p(row)
-      val newRow = newData.add(x, y)
-      newRow.name = row.name
-      newRow.description = row.description
-      newRow.weight = row.weight
-      newRow.timestamp = row.timestamp
-    }
-    DataFrame(newData)
-  }
+  def map[U](p: Tuple => U): Iterable[U] = (0 until data.size).map(i => p(data(i)))
 
   /** Selects all rows which satisfy a predicate. */
-  def filter(p: (Row) => Boolean): DataFrame = {
-    val dataset = new AttributeDataset(data.name, data.attributes, data.response)
-    rows.foreach { row =>
-      if (p(row)) dataset.add(row)
-    }
-    DataFrame(dataset)
+  def filter(p: Tuple => Boolean): DataFrame = {
+    val index = IntStream.range(0, data.size).filter(i => p(data(i))).toArray
+    data.of(index: _*)
   }
 
   /** Partitions this DataFrame in two according to a predicate.
@@ -94,13 +64,13 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     *           that don't. The relative order of the elements in the resulting DataFramess
     *           is the same as in the original DataFrame.
     */
-  def partition(p: (Row) => Boolean): (DataFrame, DataFrame) = {
-    val l = new AttributeDataset(data.name, data.attributes, data.response)
-    val r = new AttributeDataset(data.name, data.attributes, data.response)
-    rows.foreach { row =>
-      if (p(row)) l.add(row) else r.add(row)
+  def partition(p: Tuple => Boolean): (DataFrame, DataFrame) = {
+    val l = new scala.collection.mutable.ArrayBuffer[Int]
+    val r = new scala.collection.mutable.ArrayBuffer[Int]
+    IntStream.range(0, data.size).forEach { i =>
+      if (p(data(i))) l :+ i else r :+ i
     }
-    (l, r)
+    (data.of(l.toArray: _*), data.of(r.toArray: _*))
   }
 
   /** Partitions the DataFrame into a map of DataFrames according to
@@ -110,93 +80,50 @@ case class DataFrame(data: AttributeDataset) extends Dynamic {
     * @tparam K the type of keys returned by the discriminator function.
     * @return A map from keys to DataFrames
     */
-  def groupBy[K](f: (Row) => K): scala.collection.immutable.Map[K, DataFrame] = {
-    val groups = rows.groupBy(f)
-    groups.mapValues { rows =>
-      val group = new AttributeDataset(data.name, data.attributes, data.response)
-      group.description = data.description
-      rows.foreach { row => group.add(row) }
-      DataFrame(group)
-    }
+  def groupBy[K](f: Tuple => K): scala.collection.immutable.Map[K, DataFrame] = {
+    val groups = (0 until data.size).groupBy(i => f(data(i)))
+    groups.view.mapValues(index => data.of(index: _*)).toMap
   }
 
-  /** Partitions the DataFrame into a map of DataFrames according to
-    * the value of a column.
-    *
-    * @param col the column for grouping.
-    * @return A map from keys to DataFrames
-    */
-  def groupBy(col: String): scala.collection.immutable.Map[Double, DataFrame] = {
-    val i = colnames.indexOf(col)
-    val f = (row: Row) => row.x(i)
-    groupBy(f)
+  /** Converts the tuple to a JSON array. */
+  def toJSON: JsArray = {
+    JsArray(
+      (0 until data.size).map(i => data(i).toJSON): _*
+    )
+  }
+}
+
+/**
+  * Pimped tuple with additional methods.
+  * @param t a tuple.
+  */
+case class TupleOps(t: Tuple) {
+  /** Converts the tuple to a JSON object. */
+  def toJSON: JsObject = {
+    JsObject((0 until t.length()).map(valueOf): _*)
   }
 
-  /** Partitions the DataFrame into a map of DataFrames according to
-    * the value of a pair of columns.
-    *
-    * @param c1 the first column for grouping.
-    * @param c2 the second column for grouping.
-    * @return A map from keys to DataFrames
-    */
-  def groupBy(c1: String, c2: String): scala.collection.immutable.Map[(Double, Double), DataFrame] = {
-    val i = colnames.indexOf(c1)
-    val j = colnames.indexOf(c2)
-    val f = (row: Row) => (row.x(i), row.x(j))
-    groupBy(f)
+  /** Returns the name value pair of a field. */
+  private def valueOf(i: Int): (String, JsValue) = {
+    val schema = t.schema()
+    val field = schema.field(i)
+
+    val value =
+      if (field.measure != null && field.measure.isInstanceOf[CategoricalMeasure])
+        if (t.isNullAt(i)) JsNull else JsString(t.getString(i))
+      else
+        t.get(i) match {
+        case null => JsNull
+        case x: java.lang.Boolean => JsBoolean(x)
+        case x: java.lang.Byte => JsInt(x: Byte)
+        case x: java.lang.Short => JsInt(x: Short)
+        case x: java.lang.Integer => JsInt(x)
+        case x: java.lang.Long => JsLong(x)
+        case x: java.lang.Float => JsDouble(x: Float)
+        case x: java.lang.Double => JsDouble(x)
+        case _ => JsString(t.getString(i))
+      }
+
+    (field.name, value)
   }
-
-  /** Partitions the DataFrame into a map of DataFrames according to
-    * the value of a pair of columns.
-    *
-    * @param c1 the first column for grouping.
-    * @param c2 the second column for grouping.
-    * @return A map from keys to DataFrames
-    */
-  def groupBy(c1: String, c2: String, c3: String): scala.collection.immutable.Map[(Double, Double, Double), DataFrame] = {
-    val i = colnames.indexOf(c1)
-    val j = colnames.indexOf(c2)
-    val k = colnames.indexOf(c3)
-    val f = (row: Row) => (row.x(i), row.x(j), row.x(k))
-    groupBy(f)
-  }
-
-  /** Returns the row names. */
-  val rownames: Array[String] = map(_.name).toArray
-
-  /** Returns the columns names. */
-  val colnames: Array[String] = data.attributes().map(_.getName)
-
-  /** Returns the columns names. */
-  def names: Array[String] = colnames
-
-  /** Returns a row. */
-  def apply(row: Int): Datum[Array[Double]] = data.get(row)
-
-  /** Returns a new data frame of given row range. */
-  def apply(from: Int, to: Int): DataFrame = DataFrame(data.range(from, to))
-
-  /** Returns a column. */
-  def apply(col: String): AttributeVector = data.column(col)
-
-  /** Returns a new data frame of selected columns. */
-  def apply(cols: String*): DataFrame = DataFrame(data.columns(cols: _*))
-
-  /** Returns a new data frame without given columns. */
-  def remove(cols: String*): DataFrame = DataFrame(data.remove(cols: _*))
-
-  /** Returns a column. */
-  def applyDynamic(col: String): AttributeVector = apply(col)
-
-  /** Returns a column. */
-  def selectDynamic(col: String): AttributeVector = apply(col)
-
-  /** Unzip the data. If the data contains a response variable, it won't be copied. */
-  def unzip: Array[Array[Double]] = data.x
-
-  /** Split the data into x and y of Int */
-  def unzipInt: (Array[Array[Double]], Array[Int]) = (data.x, data.labels)
-
-  /** Split the data into x and y of Double */
-  def unzipDouble: (Array[Array[Double]], Array[Double]) = (data.x, data.y)
 }

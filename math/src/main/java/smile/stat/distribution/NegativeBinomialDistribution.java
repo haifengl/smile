@@ -1,23 +1,27 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
-import smile.math.special.Beta;
-import smile.math.special.Gamma;
-import smile.math.Math;
+import static smile.math.MathEx.factorial;
+import static smile.math.MathEx.lfactorial;
+import static smile.math.special.Beta.regularizedIncompleteBetaFunction;
+import static smile.math.special.Gamma.gamma;
+import static smile.math.special.Gamma.lgamma;
 
 /**
  * Negative binomial distribution arises as the probability distribution of
@@ -49,16 +53,16 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class NegativeBinomialDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of failures until the experiment is stopped.
      */
-    private double r;
+    public final double r;
     /**
-     * Success probability in each experiment.
+     * The success probability in each experiment.
      */
-    private double p;
+    public final double p;
 
     /**
      * Constructor.
@@ -79,7 +83,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -89,7 +93,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return r * (1 - p) / (p * p);
     }
 
@@ -108,11 +112,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
 
     @Override
     public String toString() {
-        if (r == (int) r) {
-            return String.format("Negative Binomial(%d, %.4f)", r, p);
-        } else {
-            return String.format("Negative Binomial(%.4f, %.4f)", r, p);
-        }
+        return String.format("Negative Binomial(%f, %.4f)", r, p);
     }
 
     @Override
@@ -125,7 +125,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return 0.0;
         } else {
-            return Gamma.gamma(r + k) / (Math.factorial(k) * Gamma.gamma(r)) * Math.pow(p, r) * Math.pow(1 - p, k);
+            return gamma(r + k) / (factorial(k) * gamma(r)) * Math.pow(p, r) * Math.pow(1 - p, k);
         }
     }
 
@@ -134,7 +134,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Gamma.lgamma(r + k) - Math.logFactorial(k) - Gamma.lgamma(r) + r * Math.log(p) + k * Math.log(1 - p);
+            return lgamma(r + k) - lfactorial(k) - lgamma(r) + r * Math.log(p) + k * Math.log(1 - p);
         }
     }
 
@@ -143,7 +143,7 @@ public class NegativeBinomialDistribution extends DiscreteDistribution {
         if (k < 0) {
             return 0.0;
         } else {
-            return Beta.regularizedIncompleteBetaFunction(r, k + 1, p);
+            return regularizedIncompleteBetaFunction(r, k + 1, p);
         }
     }
 

@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.neighbor;
 
 import java.awt.BorderLayout;
@@ -23,7 +25,6 @@ import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Hashtable;
-
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -31,8 +32,7 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JSlider;
 
-import smile.plot.PlotCanvas;
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.distance.EuclideanDistance;
 import smile.neighbor.CoverTree;
 import smile.neighbor.KDTree;
@@ -40,7 +40,8 @@ import smile.neighbor.LSH;
 import smile.neighbor.LinearSearch;
 import smile.neighbor.MPLSH;
 import smile.neighbor.Neighbor;
-import smile.plot.BarPlot;
+import smile.plot.swing.BarPlot;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -67,7 +68,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
 
         Hashtable<Integer, JLabel> logNLabelTable = new Hashtable<>();
         for (int i = 3; i <= 7; i++) {
-            logNLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            logNLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         logNSlider = new JSlider(3, 7, logN);
@@ -77,9 +78,9 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         logNSlider.setPaintLabels(true);
 
         Hashtable<Integer, JLabel> dimensionLabelTable = new Hashtable<>();
-        dimensionLabelTable.put(new Integer(2), new JLabel(String.valueOf(2)));
+        dimensionLabelTable.put(2, new JLabel(String.valueOf(2)));
         for (int i = 20; i <= 120; i += 20) {
-            dimensionLabelTable.put(new Integer(i), new JLabel(String.valueOf(i)));
+            dimensionLabelTable.put(i, new JLabel(String.valueOf(i)));
         }
 
         dimensionSlider = new JSlider(2, 128, dimension);
@@ -119,11 +120,11 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         for (int i = 0; i < n; i++) {
             data[i] = new double[dimension];
             for (int j = 0; j < dimension; j++) {
-                data[i][j] = Math.random();
+                data[i][j] = MathEx.random();
             }
         }
 
-        int[] perm = Math.permutate(n);
+        int[] perm = MathEx.permutate(n);
 
         System.out.println("Building searching data structure...");
         long time = System.currentTimeMillis();
@@ -163,7 +164,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         int coverSearch = (int) (System.currentTimeMillis() - time);
 
         time = System.currentTimeMillis();
-        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.ceil(Math.log2(dimension)), 4 * radius, 1017881);
+        LSH<double[]> lsh = new LSH<>(dimension, 5, (int) Math.ceil(MathEx.log2(dimension)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             lsh.put(data[i], data[i]);
         }
@@ -181,7 +182,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         System.out.format("The recall of LSH is %.1f%%\n", lshRecall * 100);
 
         time = System.currentTimeMillis();
-        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 5, (int) Math.ceil(Math.log2(n)), 4 * radius, 1017881);
+        MPLSH<double[]> mplsh = new MPLSH<>(dimension, 5, (int) Math.ceil(MathEx.log2(n)), 4 * radius, 1017881);
         for (int i = 0; i < n; i++) {
             mplsh.put(data[i], data[i]);
         }
@@ -189,7 +190,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         for (int i = 0; i < train.length; i++) {
             train[i] = data[perm[i]];
         }
-        mplsh.learn(kdtree, train, 1.5 * radius);
+        mplsh.fit(kdtree, train, 1.5 * radius);
         int mplshBuild = (int) (System.currentTimeMillis() - time);
 
         double mplshRecall = 0.0;
@@ -205,14 +206,16 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
 
         canvas.removeAll();
         double[] buildTime = {naiveBuild, kdtreeBuild, coverBuild, lshBuild, mplshBuild};
-        PlotCanvas build = BarPlot.plot(buildTime, label);
+        Canvas build = BarPlot.of(buildTime).canvas();
         build.setTitle("Build Time");
-        canvas.add(build);
+        build.setAxisLabels(label);
+        canvas.add(build.panel());
 
         double[] searchTime = {naiveSearch, kdtreeSearch, coverSearch, lshSearch, mplshSearch};
-        PlotCanvas search = BarPlot.plot(searchTime, label);
+        Canvas search = BarPlot.of(searchTime).canvas();
         search.setTitle("Search Time");
-        canvas.add(search);
+        search.setAxisLabels(label);
+        canvas.add(search.panel());
         validate();
 
         startButton.setEnabled(true);
@@ -233,7 +236,7 @@ public class NearestNeighborDemo extends JPanel implements Runnable, ActionListe
         return "Nearest Neighbor";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         NearestNeighborDemo demo = new NearestNeighborDemo();
         JFrame f = new JFrame("Nearest Neighbor");
         f.setSize(new Dimension(1000, 1000));

@@ -1,29 +1,28 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.manifold;
 
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
-import smile.math.matrix.Matrix;
+import smile.data.SwissRoll;
 
 import static org.junit.Assert.*;
 
@@ -33,17 +32,7 @@ import static org.junit.Assert.*;
  */
 public class LaplacianEigenmapTest {
 
-    AttributeDataset swissroll;
-
     public LaplacianEigenmapTest() {
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setDelimiter("\t");
-
-        try {
-            swissroll = parser.parse("Swissroll", smile.data.parser.IOUtils.getTestDataFile("manifold/swissroll.txt"));
-        } catch (Exception e) {
-            System.err.println(e);
-        }
     }
 
     @BeforeClass
@@ -62,12 +51,9 @@ public class LaplacianEigenmapTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class LaplacianEigenmap.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
+    public void test() throws Exception {
+        System.out.println("Laplacian Eigenmap");
 
         double[][] points = {
                 { 0.0150,  0.0125},
@@ -1072,16 +1058,14 @@ public class LaplacianEigenmapTest {
                 {-0.0432, -0.0103}
         };
 
-        double[][] dat = swissroll.toArray(new double[swissroll.size()][]);
         double[][] data = new double[1000][];
-        System.arraycopy(dat, 0, data, 0, data.length);
+        System.arraycopy(SwissRoll.data, 0, data, 0, data.length);
 
-        LaplacianEigenmap laplacianEigenmap = new LaplacianEigenmap(data, 2, 7);
+        LaplacianEigenmap laplacianEigenmap = LaplacianEigenmap.of(data, 7);
 
-        double[][] coords = laplacianEigenmap.getCoordinates();
         for (int i = 0; i < points.length; i++) {
             for (int j = 0; j < points[0].length; j++) {
-                assertEquals(Math.abs(points[i][j]), Math.abs(coords[i][j]), 1E-4);
+                assertEquals(Math.abs(points[i][j]), Math.abs(laplacianEigenmap.coordinates[i][j]), 1E-4);
             }
         }
     }

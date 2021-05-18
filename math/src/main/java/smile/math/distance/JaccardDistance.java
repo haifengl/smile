@@ -1,32 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.distance;
 
-import java.util.Set;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * The Jaccard index, also known as the Jaccard similarity coefficient is a
  * statistic used for comparing the similarity and diversity of sample sets.
- *
+ * <p>
  * The Jaccard coefficient measures similarity between sample sets, and is
  * defined as the size of the intersection divided by the size of the union
  * of the sample sets.
- *
+ * <p>
  * The Jaccard distance, which measures dissimilarity between sample sets,
  * is complementary to the Jaccard coefficient and is obtained by subtracting
  * the Jaccard coefficient from 1, or, equivalently, by dividing the difference
@@ -46,30 +49,27 @@ public class JaccardDistance<T> implements Distance<T[]> {
 
     @Override
     public String toString() {
-        return "Jaccard distance";
+        return "Jaccard Distance";
     }
 
     @Override
     public double d(T[] a, T[] b) {
-        Set<T> union = new HashSet<>();
+        Set<T> union = new HashSet<>(Arrays.asList(b));
+        Collections.addAll(union, a);
+
         Set<T> intersection = new HashSet<>();
-
-        for (int i = 0; i < b.length; i++)
-            union.add(b[i]);
-
-        for (int i = 0; i < a.length; i++)
-            intersection.add(a[i]);
-
+        Collections.addAll(intersection, a);
         intersection.retainAll(union);
-
-        for (int i = 0; i < a.length; i++)
-            union.add(a[i]);
 
         return 1.0 - (double) intersection.size() / union.size();
     }
 
     /**
      * Returns the Jaccard distance between sets.
+     * @param a a vector.
+     * @param b a vector.
+     * @param <T> the data type of set elements.
+     * @return the distance.
      */
     public static <T> double d(Set<T> a, Set<T> b) {
         Set<T> union = new HashSet<>(a);

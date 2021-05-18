@@ -1,29 +1,33 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.regression;
 
 import java.util.Arrays;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import java.util.Properties;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.data.type.StructType;
+import smile.math.MathEx;
+import smile.math.blas.Transpose;
+import smile.math.matrix.DMatrix;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
 import smile.math.matrix.BiconjugateGradient;
 import smile.math.matrix.Preconditioner;
-import smile.math.special.Beta;
 
 /**
  * Lasso (least absolute shrinkage and selection operator) regression.
@@ -64,248 +68,103 @@ import smile.math.special.Beta;
  * 
  * @author Haifeng Li
  */
-public class LASSO  implements Regression<double[]> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(LASSO.class);
+public class LASSO {
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(LASSO.class);
 
     /**
-     * The dimensionality.
+     * Fits a L1-regularized least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @return the model.
      */
-    private int p;
-    /**
-     * The shrinkage/regularization parameter.
-     */
-    private double lambda;
-    /**
-     * The intercept.
-     */
-    private double b;
-    /**
-     * The linear coefficients.
-     */
-    private double[] w;
-    /**
-     * The mean of response variable.
-     */
-    private double ym;
-    /**
-     * The center of input vector. The input vector should be centered
-     * before prediction.
-     */
-    private double[] center;
-    /**
-     * Scaling factor of input vector.
-     */
-    private double[] scale;
-    /**
-     * The residuals, that is response minus fitted values.
-     */
-    private double[] residuals;
-    /**
-     * Residual sum of squares.
-     */
-    private double RSS;
-    /**
-     * Residual standard error.
-     */
-    private double error;
-    /**
-     * The degree-of-freedom of residual standard error.
-     */
-    private int df;
-    /**
-     * R<sup>2</sup>. R<sup>2</sup> is a statistic that will give some information
-     * about the goodness of fit of a model. In regression, the R<sup>2</sup>
-     * coefficient of determination is a statistical measure of how well
-     * the regression line approximates the real data points. An R<sup>2</sup>
-     * of 1.0 indicates that the regression line perfectly fits the data.
-     * <p>
-     * In the case of ordinary least-squares regression, R<sup>2</sup>
-     * increases as we increase the number of variables in the model
-     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
-     * one possible use of R<sup>2</sup>, where one might try to include
-     * more variables in the model until "there is no more improvement".
-     * This leads to the alternative approach of looking at the
-     * adjusted R<sup>2</sup>.
-     */
-    private double RSquared;
-    /**
-     * Adjusted R<sup>2</sup>. The adjusted R<sup>2</sup> has almost same
-     * explanation as R<sup>2</sup> but it penalizes the statistic as
-     * extra variables are included in the model.
-     */
-    private double adjustedRSquared;
-    /**
-     * The F-statistic of the goodness-of-fit of the model.
-     */
-    private double F;
-    /**
-     * The p-value of the goodness-of-fit test of the model.
-     */
-    private double pvalue;
-
-    /**
-     * Trainer for LASSO regression.
-     */
-    public static class Trainer extends RegressionTrainer<double[]> {
-
-        /**
-         * The shrinkage/regularization parameter.
-         */
-        private double lambda;
-        /**
-         * The tolerance for stopping iterations (relative target duality gap).
-         */
-        private double tol = 1E-3;
-        /**
-         * The maximum number of IPM (Newton) iterations.
-         */
-        private int maxIter = 1000;
-
-        /**
-         * Constructor.
-         * 
-         * @param lambda the number of trees.
-         */
-        public Trainer(double lambda) {
-            if (lambda < 0.0) {
-                throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
-            }
-
-            this.lambda = lambda;
-        }
-
-        /**
-         * Sets the tolerance for stopping iterations (relative target duality gap).
-         * 
-         * @param tol the tolerance for stopping iterations.
-         */
-        public Trainer setTolerance(double tol) {
-            if (tol <= 0.0) {
-                throw new IllegalArgumentException("Invalid tolerance: " + tol);
-            }
-
-            this.tol = tol;
-            return this;
-        }
-
-        /**
-         * Sets the maximum number of iterations.
-         * 
-         * @param maxIter the maximum number of iterations.
-         */
-        public Trainer setMaxNumIteration(int maxIter) {
-            if (maxIter <= 0) {
-                throw new IllegalArgumentException("Invalid maximum number of iterations: " + maxIter);
-            }
-
-            this.maxIter = maxIter;
-            return this;
-        }
-        
-        @Override
-        public LASSO train(double[][] x, double[] y) {
-            return new LASSO(x, y, lambda, tol, maxIter);
-        }
-
-        public LASSO train(Matrix x, double[] y) {
-            return new LASSO(x, y, lambda, tol, maxIter);
-        }
+    public static LinearModel fit(Formula formula, DataFrame data) {
+        return fit(formula, data, new Properties());
     }
 
     /**
-     * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables.
-     *          NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
+     * Fits a L1-regularized least squares model. The hyper-parameters in <code>prop</code> include
+     * <ul>
+     * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
+     *               Choosing an appropriate value of lambda is important, and also difficult.
+     * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
+     * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * </ul>
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, Properties params) {
+        double lambda = Double.parseDouble(params.getProperty("smile.lasso.lambda", "1"));
+        double tol = Double.parseDouble(params.getProperty("smile.lasso.tolerance", "1E-4"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.lasso.iterations", "1000"));
+        return fit(formula, data, lambda, tol, maxIter);
+    }
+
+    /**
+     * Fits a L1-regularized least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
+     * @return the model.
      */
-    public LASSO(double[][] x, double[] y, double lambda) {
-        this(x, y, lambda, 1E-4, 1000);
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda) {
+        return fit(formula, data, lambda, 1E-4, 1000);
     }
 
     /**
-     * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables.
-     *          NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
+     * Fits a L1-regularized least squares model.
+     * @param formula a symbolic description of the model to be fitted.
+     * @param data the data frame of the explanatory and response variables.
+     *             NO NEED to include a constant column of 1s for bias.
+     * @param lambda the shrinkage/regularization parameter.
+     * @param tol the tolerance to stop iterations (relative target duality gap).
+     * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
+     */
+    public static LinearModel fit(Formula formula, DataFrame data, double lambda, double tol, int maxIter) {
+        formula = formula.expand(data.schema());
+        StructType schema = formula.bind(data.schema());
+
+        Matrix X = formula.matrix(data, false);
+        double[] y = formula.y(data).toDoubleArray();
+
+        double[] center = X.colMeans();
+        double[] scale = X.colSds();
+
+        for (int j = 0; j < scale.length; j++) {
+            if (MathEx.isZero(scale[j])) {
+                throw new IllegalArgumentException(String.format("The column '%s' is constant", X.colName(j)));
+            }
+        }
+
+        Matrix scaledX = X.scale(center, scale);
+
+        double[] w = train(scaledX, y, lambda, tol, maxIter);
+
+        int p = w.length;
+        for (int j = 0; j < p; j++) {
+            w[j] /= scale[j];
+        }
+
+        double b = MathEx.mean(y) - MathEx.dot(w, center);
+        return new LinearModel(formula, schema, X, y, w, b);
+    }
+
+    /**
+     * Fits the LASSO model.
+     * @param x the design matrix.
+     * @param y the responsible variable.
      * @param lambda the shrinkage/regularization parameter.
      * @param tol the tolerance for stopping iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
+     * @return the model.
      */
-    public LASSO(double[][] x, double[] y, double lambda, double tol, int maxIter) {
-        this.lambda = lambda;
-        int n = x.length;
-        int p = x[0].length;
-
-        center = Math.colMeans(x);
-        DenseMatrix X = Matrix.zeros(n, p);
-
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < p; j++) {
-                X.set(i, j, x[i][j] - center[j]);
-            }
-        }
-
-        scale = new double[p];
-        for (int j = 0; j < p; j++) {
-            for (int i = 0; i < n; i++) {
-                scale[j] += Math.sqr(X.get(i, j));
-            }
-            scale[j] = Math.sqrt(scale[j] / n);
-        }
-
-        for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
-                for (int i = 0; i < n; i++) {
-                    X.div(i, j, scale[j]);
-                }
-            }
-        }
-
-        train(X, y, lambda, tol, maxIter);
-
-        for (int j = 0; j < p; j++) {
-            if (!Math.isZero(scale[j])) {
-                w[j] /= scale[j];
-            }
-        }
-
-        b = ym - Math.dot(w, center);
-        fitness(Matrix.newInstance(x), y);
-    }
-
-    /**
-     * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables. The variables should be
-     *          centered and standardized. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
-     * @param lambda the shrinkage/regularization parameter.
-     */
-    public LASSO(Matrix x, double[] y, double lambda) {
-        this(x, y, lambda, 1E-4, 1000);
-    }
-    
-    /**
-     * Constructor. Learn the L1-regularized least squares model.
-     * @param x a matrix containing the explanatory variables. The variables should be
-     *          centered and standardized. NO NEED to include a constant column of 1s for bias.
-     * @param y the response values.
-     * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
-     * @param maxIter the maximum number of IPM (Newton) iterations.
-     */
-    public LASSO(Matrix x, double[] y, double lambda, double tol, int maxIter) {
-        train(x, y, lambda, tol, maxIter);
-        fitness(x, y);
-    }
-
-    private void train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
-        if (x.nrows() != y.length) {
-            throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.nrows(), y.length));
-        }
-
-        if (lambda <= 0.0) {
+    static double[] train(Matrix x, double[] y, double lambda, double tol, int maxIter) {
+        if (lambda < 0.0) {
             throw new IllegalArgumentException("Invalid shrinkage/regularization parameter lambda = " + lambda);
         }
 
@@ -329,22 +188,20 @@ public class LASSO  implements Regression<double[]> {
         final double eta = 1E-3;  // tolerance for PCG termination
 
         int pitr = 0;
-        int n = x.nrows();
-        p = x.ncols();
+        int n = x.nrow();
+        int p = x.ncol();
 
         double[] Y = new double[n];
-        ym = Math.mean(y);
+        double ym = MathEx.mean(y);
         for (int i = 0; i < n; i++) {
             Y[i] = y[i] - ym;
         }
 
         double t = Math.min(Math.max(1.0, 1.0 / lambda), 2 * p / 1e-3);
-        double pobj = 0.0; // primal objective function value
         double dobj = Double.NEGATIVE_INFINITY; // dual objective function value
         double s = Double.POSITIVE_INFINITY;
 
-        w = new double[p];
-        b = ym;
+        double[] w = new double[p];
         double[] u = new double[p];
         double[] z = new double[n];
         double[][] f = new double[2][p];
@@ -383,20 +240,20 @@ public class LASSO  implements Regression<double[]> {
         double[] prb = new double[p];
         double[] prs = new double[p];
 
-        PCGMatrix pcg = new PCGMatrix(x, d1, d2, prb, prs);
+        PCG pcg = new PCG(x, d1, d2, prb, prs);
 
         // MAIN LOOP
         int ntiter = 0;
         for (; ntiter <= maxIter; ntiter++) {
-            x.ax(w, z);
+            x.mv(w, z);
             for (int i = 0; i < n; i++) {
                 z[i] -= Y[i];
                 nu[i] = 2 * z[i];
             }
 
             // CALCULATE DUALITY GAP
-            x.atx(nu, xnu);
-            double maxXnu = Math.normInf(xnu);
+            x.tv(nu, xnu);
+            double maxXnu = MathEx.normInf(xnu);
             if (maxXnu > lambda) {
                 double lnu = lambda / maxXnu;
                 for (int i = 0; i < n; i++) {
@@ -404,8 +261,9 @@ public class LASSO  implements Regression<double[]> {
                 }
             }
 
-            pobj = Math.dot(z, z) + lambda * Math.norm1(w);
-            dobj = Math.max(-0.25 * Math.dot(nu, nu) - Math.dot(nu, Y), dobj);
+            // primal objective function value
+            double pobj = MathEx.dot(z, z) + lambda * MathEx.norm1(w);
+            dobj = Math.max(-0.25 * MathEx.dot(nu, nu) - MathEx.dot(nu, Y), dobj);
             if (ntiter % 10 == 0) {
                 logger.info(String.format("LASSO: primal and dual objective function value after %3d iterations: %.5g\t%.5g%n", ntiter, pobj, dobj));
             }
@@ -433,7 +291,7 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // calculate gradient
-            x.atx(z, gradphi[0]);
+            x.tv(z, gradphi[0]);
             for (int i = 0; i < p; i++) {
                 gradphi[0][i] = 2 * gradphi[0][i] - (q1[i] - q2[i]) / t;
                 gradphi[1][i] = lambda - (q1[i] + q2[i]) / t;
@@ -448,14 +306,14 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // set pcg tolerance (relative)
-            double normg = Math.norm(grad);
+            double normg = MathEx.norm(grad);
             double pcgtol = Math.min(0.1, eta * gap / Math.min(1.0, normg));
             if (ntiter != 0 && pitr == 0) {
                 pcgtol = pcgtol * 0.1;
             }
 
             // preconditioned conjugate gradient
-            double error = BiconjugateGradient.solve(pcg, pcg, grad, dxu, pcgtol, 1, pcgmaxi);
+            double error = BiconjugateGradient.solve(pcg, grad, dxu, pcg, pcgtol, 1, pcgmaxi);
             if (error > pcgtol) {
                 pitr = pcgmaxi;
             }
@@ -466,9 +324,9 @@ public class LASSO  implements Regression<double[]> {
             }
 
             // BACKTRACKING LINE SEARCH
-            double phi = Math.dot(z, z) + lambda * Math.sum(u) - sumlogneg(f) / t;
+            double phi = MathEx.dot(z, z) + lambda * MathEx.sum(u) - sumlogneg(f) / t;
             s = 1.0;
-            double gdx = Math.dot(grad, dxu);
+            double gdx = MathEx.dot(grad, dxu);
 
             int lsiter = 0;
             for (; lsiter < MAX_LS_ITER; lsiter++) {
@@ -479,13 +337,13 @@ public class LASSO  implements Regression<double[]> {
                     newf[1][i] = -neww[i] - newu[i];
                 }
 
-                if (Math.max(newf) < 0.0) {
-                    x.ax(neww, newz);
+                if (MathEx.max(newf) < 0.0) {
+                    x.mv(neww, newz);
                     for (int i = 0; i < n; i++) {
                         newz[i] -= Y[i];
                     }
 
-                    double newphi = Math.dot(newz, newz) + lambda * Math.sum(newu) - sumlogneg(newf) / t;
+                    double newphi = MathEx.dot(newz, newz) + lambda * MathEx.sum(newu) - sumlogneg(newf) / t;
                     if (newphi - phi <= ALPHA * s * gdx) {
                         break;
                     }
@@ -507,103 +365,91 @@ public class LASSO  implements Regression<double[]> {
         if (ntiter == maxIter) {
             logger.error("LASSO: Too many iterations.");
         }
-    }
 
-    private void fitness(Matrix x, double[] y) {
-        int n = y.length;
-        double[] yhat = new double[n];
-        x.ax(w, yhat);
-
-        double TSS = 0.0;
-        RSS = 0.0;
-        double ybar = Math.mean(y);
-        residuals = new double[n];
-        for (int i = 0; i < n; i++) {
-            double r = y[i] - yhat[i] - b;
-            residuals[i] = r;
-            RSS += Math.sqr(r);
-            TSS += Math.sqr(y[i] - ybar);
-        }
-
-        error = Math.sqrt(RSS / (n - p - 1));
-        df = n - p - 1;
-
-        RSquared = 1.0 - RSS / TSS;
-        adjustedRSquared = 1.0 - ((1 - RSquared) * (n-1) / (n-p-1));
-
-        F = (TSS - RSS) * (n - p - 1) / (RSS * p);
-        int df1 = p;
-        int df2 = n - p - 1;
-
-        if (df2 > 0)
-            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df2, 0.5 * df1, df2 / (df2 + df1 * F));
-        else
-            pvalue = Double.NaN;
+        return w;
     }
 
     /**
      * Returns sum(log(-f)).
-     * @param f a matrix.
+     * @param f the matrix.
      * @return sum(log(-f))
      */
-    private double sumlogneg(double[][] f) {
-        int m = f.length;
-        int n = f[0].length;
-
+    private static double sumlogneg(double[][] f) {
         double sum = 0.0;
-        for (int i = 0; i < m; i++) {
-            for (int j = 0; j < n; j++) {
-                sum += Math.log(-f[i][j]);
+        for (double[] row : f) {
+            for (double x : row) {
+                sum += Math.log(-x);
             }
         }
 
         return sum;
     }
 
-    class PCGMatrix implements Matrix, Preconditioner {
-
+    /**
+     * Preconditioned conjugate gradients matrix.
+     */
+    static class PCG extends DMatrix implements Preconditioner {
+        /** The design matrix. */
         Matrix A;
+        /** A' * A */
         Matrix AtA;
+        /** The number of columns of A. */
+        int p;
+        /** The right bottom of Hessian matrix. */
         double[] d1;
+        /** The last row/column of Hessian matrix. */
         double[] d2;
+        /** The vector used in preconditioner. */
         double[] prb;
+        /** The vector used in preconditioner. */
         double[] prs;
+        /** A * x */
         double[] ax;
+        /** A' * A * x. */
         double[] atax;
 
-        PCGMatrix(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
+        /**
+         * Constructor.
+         * @param A
+         * @param d1
+         * @param d2
+         * @param prb
+         * @param prs
+         */
+        PCG(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;
             this.d1 = d1;
             this.d2 = d2;
             this.prb = prb;
             this.prs = prs;
 
-            int n = A.nrows();
+            int n = A.nrow();
+            p = A.ncol();
             ax = new double[n];
             atax = new double[p];
 
-            if ((A.ncols() < 10000) && (A instanceof DenseMatrix)) {
+            if (A.ncol() < 10000) {
                 AtA = A.ata();
             }
         }
 
         @Override
-        public boolean isSymmetric() {
-            return true;
-        }
-
-        @Override
-        public int nrows() {
+        public int nrow() {
             return 2 * p;
         }
 
         @Override
-        public int ncols() {
+        public int ncol() {
             return 2 * p;
         }
 
         @Override
-        public double[] ax(double[] x, double[] y) {
+        public long size() {
+            return A.size();
+        }
+
+        @Override
+        public void mv(double[] x, double[] y) {
             // COMPUTE AX (PCG)
             // 
             // y = hessphi * x,
@@ -611,29 +457,26 @@ public class LASSO  implements Regression<double[]> {
             // where hessphi = [A'*A*2+D1 , D2;
             //                  D2        , D1];
             if (AtA != null) {
-                AtA.ax(x, atax);
+                AtA.mv(x, atax);
             } else {
-                A.ax(x, ax);
-                A.atx(ax, atax);
+                A.mv(x, ax);
+                A.tv(ax, atax);
             }
 
             for (int i = 0; i < p; i++) {
                 y[i]     = 2 * atax[i] + d1[i] * x[i] + d2[i] * x[i + p];
                 y[i + p] =               d2[i] * x[i] + d1[i] * x[i + p];
             }
-
-            return y;
         }
 
         @Override
-        public double[] atx(double[] x, double[] y) {
-            return ax(x, y);
+        public void tv(double[] x, double[] y) {
+            mv(x, y);
         }
 
         @Override
-        public void asolve(double[] b, double[] x) {
+        public void solve(double[] b, double[] x) {
             // COMPUTE P^{-1}X (PCG)
-            //
             // y = P^{-1} * x
             for (int i = 0; i < p; i++) {
                 x[i]   = ( d1[i] * b[i] -  d2[i] * b[i+p]) / prs[i];
@@ -642,170 +485,29 @@ public class LASSO  implements Regression<double[]> {
         }
 
         @Override
-        public Matrix transpose() {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
-        public Matrix aat() {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public void mv(double[] work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
+        }
+
+
+        @Override
+        public void tv(double[] work, int inputOffset, int outputOffset) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
-        public Matrix ata() {
-            throw new UnsupportedOperationException("Not supported yet.");
+        public DMatrix set(int i, int j, double x) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
         public double get(int i, int j) {
-            throw new UnsupportedOperationException("Not supported yet.");
+            throw new UnsupportedOperationException();
         }
-
-        @Override
-        public double apply(int i, int j) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] axpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-
-        @Override
-        public double[] atxpy(double[] x, double[] y, double b) {
-            throw new UnsupportedOperationException("Not supported yet.");
-        }
-    }
-
-    /**
-     * Returns the linear coefficients.
-     */
-    public double[] coefficients() {
-        return w;
-    }
-
-    /**
-     * Returns the intercept.
-     */
-    public double intercept() {
-        return b;
-    }
-
-    /**
-     * Returns the shrinkage parameter.
-     */
-    public double shrinkage() {
-        return lambda;
-    }
-
-    @Override
-    public double predict(double[] x) {
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        return Math.dot(x, w) + b;
-    }
-
-    /**
-     * Returns the residuals, that is response minus fitted values.
-     */
-    public double[] residuals() {
-        return residuals;
-    }
-
-    /**
-     * Returns the residual sum of squares.
-     */
-    public double RSS() {
-        return RSS;
-    }
-
-    /**
-     * Returns the residual standard error.
-     */
-    public double error() {
-        return error;
-    }
-
-    /**
-     * Returns the degree-of-freedom of residual standard error.
-     */
-    public int df() {
-        return df;
-    }
-
-    /**
-     * Returns R<sup>2</sup> statistic. In regression, the R<sup>2</sup>
-     * coefficient of determination is a statistical measure of how well
-     * the regression line approximates the real data points. An R<sup>2</sup>
-     * of 1.0 indicates that the regression line perfectly fits the data.
-     * <p>
-     * In the case of ordinary least-squares regression, R<sup>2</sup>
-     * increases as we increase the number of variables in the model
-     * (R<sup>2</sup> will not decrease). This illustrates a drawback to
-     * one possible use of R<sup>2</sup>, where one might try to include more
-     * variables in the model until "there is no more improvement". This leads
-     * to the alternative approach of looking at the adjusted R<sup>2</sup>.
-     */
-    public double RSquared() {
-        return RSquared;
-    }
-
-    /**
-     * Returns adjusted R<sup>2</sup> statistic. The adjusted R<sup>2</sup>
-     * has almost same explanation as R<sup>2</sup> but it penalizes the
-     * statistic as extra variables are included in the model.
-     */
-    public double adjustedRSquared() {
-        return adjustedRSquared;
-    }
-
-    /**
-     * Returns the F-statistic of goodness-of-fit.
-     */
-    public double ftest() {
-        return F;
-    }
-
-    /**
-     * Returns the p-value of goodness-of-fit test.
-     */
-    public double pvalue() {
-        return pvalue;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder builder = new StringBuilder();
-        builder.append("LASSO:\n");
-
-        double[] r = residuals.clone();
-        builder.append("\nResiduals:\n");
-        builder.append("\t       Min\t        1Q\t    Median\t        3Q\t       Max\n");
-        builder.append(String.format("\t%10.4f\t%10.4f\t%10.4f\t%10.4f\t%10.4f%n", Math.min(r), Math.q1(r), Math.median(r), Math.q3(r), Math.max(r)));
-
-        builder.append("\nCoefficients:\n");
-        builder.append("            Estimate\n");
-        builder.append(String.format("Intercept%11.4f%n", b));
-        for (int i = 0; i < p; i++) {
-            builder.append(String.format("Var %d\t %11.4f%n", i+1, w[i]));
-        }
-
-        builder.append(String.format("\nResidual standard error: %.4f on %d degrees of freedom%n", error, df));
-        builder.append(String.format("Multiple R-squared: %.4f,    Adjusted R-squared: %.4f%n", RSquared, adjustedRSquared));
-        builder.append(String.format("F-statistic: %.4f on %d and %d DF,  p-value: %.4g%n", F, p, df, pvalue));
-
-        return builder.toString();
     }
 }

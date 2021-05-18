@@ -1,0 +1,57 @@
+#!/bin/bash
+
+# Install coursier
+curl -L -o coursier https://git.io/coursier-cli
+chmod +x coursier
+
+# Install almond for Scala 2.13
+SCALA_VERSION=2.13.5 ALMOND_VERSION=0.11.2
+./coursier bootstrap \
+  -r jitpack \
+  -i user -I user:sh.almond:scala-kernel-api_$SCALA_VERSION:$ALMOND_VERSION \
+  sh.almond:scala-kernel_$SCALA_VERSION:$ALMOND_VERSION \
+  --sources --default=true \
+  -o almond-scala-2.13
+./almond-scala-2.13 --install --id scala213 --display-name "Scala (2.13)" \
+  --command "java -XX:MaxRAMPercentage=80.0 -jar almond-scala-2.13 --id scala213 --display-name 'Scala (2.13)'" \
+  --copy-launcher \
+  --metabrowse
+rm -f almond-scala-2.13
+
+# Clean up the directory. Keep only the notebooks and data.
+rm -f coursier
+
+# Install required Jupyter/JupyterLab extensions
+jupyter labextension install @jupyterlab/plotly-extension
+
+# Set indentation to two spaces
+JUPYTER_CONFIG_DIR=$(jupyter --config-dir)
+# Classic notebook
+mkdir -p $JUPYTER_CONFIG_DIR/nbconfig/
+cat > $JUPYTER_CONFIG_DIR/nbconfig/notebook.json <<- EOF
+{
+  "CodeCell": {
+    "cm_config": {
+      "indentUnit": 2
+    }
+  }
+}
+EOF
+# JupyterLab notebook
+mkdir -p $JUPYTER_CONFIG_DIR/lab/user-settings/@jupyterlab/notebook-extension/
+cat > $JUPYTER_CONFIG_DIR/lab/user-settings/@jupyterlab/notebook-extension/tracker.jupyterlab-settings <<- EOF
+{
+    "codeCellConfig": {
+      "tabSize": 2
+    }
+}
+EOF
+# JupyterLab editor
+mkdir -p $JUPYTER_CONFIG_DIR/lab/user-settings/@jupyterlab/fileeditor-extension/
+cat > $JUPYTER_CONFIG_DIR/lab/user-settings/@jupyterlab/fileeditor-extension/plugin.jupyterlab-settings <<- EOF
+{
+    "editorConfig": {
+      "tabSize": 2,
+    }
+}
+EOF

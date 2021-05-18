@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.stat.distribution;
 
@@ -27,9 +28,9 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.plot.PlotCanvas;
-import smile.math.Math;
-import smile.plot.Surface;
+import smile.plot.swing.Canvas;
+import smile.math.MathEx;
+import smile.plot.swing.Surface;
 import smile.stat.distribution.MultivariateGaussianDistribution;
 
 /**
@@ -39,7 +40,7 @@ import smile.stat.distribution.MultivariateGaussianDistribution;
 @SuppressWarnings("serial")
 public class MultivariateGaussianDistributionDemo extends JPanel implements ChangeListener {
     private JPanel optionPane;
-    private PlotCanvas pdf;
+    private Canvas pdf;
     private JSlider sigma1Slider;
     private JSlider sigma2Slider;
     private double[] mu = {0.0, 0.0};
@@ -53,7 +54,7 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 30; i+=10) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i/10.0)));
+            labelTable.put(i, new JLabel(String.valueOf(i/10.0)));
         }
 
         sigma1Slider = new JSlider(0, 30, (int) (sigma[0]*10));
@@ -92,16 +93,16 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
             }
         }
 
-        pdf = Surface.plot(z);
+        pdf = new Surface(z).canvas();
         pdf.setTitle("Multivariate Gaussian");
-        add(pdf, BorderLayout.CENTER);
+        add(pdf.panel(), BorderLayout.CENTER);
     }
 
     @Override
     public void stateChanged(ChangeEvent e) {
         if (e.getSource() == sigma1Slider || e.getSource() == sigma2Slider) {
-            sigma[0] = Math.sqr(sigma1Slider.getValue() / 10.0);
-            sigma[1] = Math.sqr(sigma2Slider.getValue() / 10.0);
+            sigma[0] = MathEx.pow2(sigma1Slider.getValue() / 10.0);
+            sigma[1] = MathEx.pow2(sigma2Slider.getValue() / 10.0);
             if (sigma[0] == 0) sigma[0] = 0.01;
             if (sigma[1] == 0) sigma[1] = 0.01;
 
@@ -116,7 +117,10 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
                 }
             }
 
-            pdf.repaint();
+            pdf = new Surface(z).canvas();
+            pdf.setTitle("Multivariate Gaussian");
+            add(pdf.panel(), BorderLayout.CENTER);
+            repaint();
         }
     }
 
@@ -127,6 +131,7 @@ public class MultivariateGaussianDistributionDemo extends JPanel implements Chan
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("MultivariateGaussian Distribution");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new MultivariateGaussianDistributionDemo());

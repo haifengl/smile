@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.random;
 
@@ -24,36 +25,37 @@ package smile.math.random;
  * for random number generators and has a period of 2<sup>144</sup>. It is
  * completely portable (gives bit identical results on all machines with at
  * least 24-bit mantissas in the floating point representation).
- * 
+ *
  * @author Haifeng Li
  */
 public class UniversalGenerator implements RandomNumberGenerator {
 
     /**
-     * Default seed.  <CODE>DEFAULT_RANDOM_SEED=54217137</CODE>
+     * Default seed.
      */
-    private static final int DEFAULT_RANDOM_SEED = 54217137;
+    private static final int DEFAULT_SEED = 54217137;
     /**
-     * The 46,009,220nd prime number,
-     * The largest prime less than 9*10<SUP>8</SUP>.  Used as a modulus
-     * because this version of <TT>random()</TT> needs a seed between 0
-     * and 9*10<SUP>8</SUP> and <CODE>BIG_PRIME</CODE> isn't commensurate
-     * with any regular period.
-     * <CODE>BIG_PRIME = 899999963</CODE>
+     * The 46,009,220nd prime number, the largest prime less than {@code 9E8}.
+     * It may be used as a modulus for RNGs because this RNG needs a seed between 0
+     * and {@code 9E8} and BIG_PRIME isn't commensurate with any regular period.
      */
-    static final int BIG_PRIME = 899999963;
-    private double c, cd, cm, u[];
+    private static final int BIG_PRIME = 899999963;
+    private double c;
+    private double cd;
+    private double cm;
+    private double[] u;
     private int i97, j97;
 
     /**
      * Initialize Random with default seed.
      */
     public UniversalGenerator() {
-        setSeed(DEFAULT_RANDOM_SEED);
+        setSeed(DEFAULT_SEED);
     }
 
     /**
      * Initialize Random with a specified integer seed
+     * @param seed the seed of random numbers.
      */
     public UniversalGenerator(int seed) {
         setSeed(seed);
@@ -61,6 +63,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
     /**
      * Initialize Random with a specified long seed
+     * @param seed the seed of random numbers.
      */
     public UniversalGenerator(long seed) {
         setSeed(seed);
@@ -143,7 +146,7 @@ public class UniversalGenerator implements RandomNumberGenerator {
 
         return uni;
     }
-    
+
     @Override
     public void nextDoubles(double[] d) {
         int n = d.length;
@@ -178,23 +181,23 @@ public class UniversalGenerator implements RandomNumberGenerator {
     public int next(int numbits) {
         return nextInt() >>> (32 - numbits);
     }
-    
+
     @Override
     public int nextInt() {
-        return (int) Math.floor(Integer.MAX_VALUE * (2 * nextDouble() - 1.0));        
+        return (int) Math.floor(Integer.MAX_VALUE * (2 * nextDouble() - 1.0));
     }
-    
+
     @Override
     public int nextInt(int n) {
         if (n <= 0) {
             throw new IllegalArgumentException("n must be positive");
         }
-        
+
         return (int) (nextDouble() * n);
     }
-    
+
     @Override
     public long nextLong() {
-        return (long) Math.floor(Long.MAX_VALUE * (2 * nextDouble() - 1.0));        
+        return (long) Math.floor(Long.MAX_VALUE * (2 * nextDouble() - 1.0));
     }
 }

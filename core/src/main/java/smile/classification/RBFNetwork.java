@@ -1,30 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
-import java.util.Arrays;
-import smile.math.Math;
-import smile.math.distance.Metric;
+import smile.base.rbf.RBF;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
-import smile.math.rbf.GaussianRadialBasis;
 import smile.math.rbf.RadialBasisFunction;
-import smile.util.SmileUtils;
+import smile.util.IntSet;
+
+import java.util.Properties;
 
 /**
  * Radial basis function networks. A radial basis function network is an
@@ -52,7 +51,7 @@ import smile.util.SmileUtils;
  * called thin plate splines. The advantage of the thin plate splines is that
  * their conditioning is invariant under scalings. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
- * or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+ * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a
  * given function, the quality of approximation may strongly depend on this
  * parameter. In particular, increasing r<sub><small>0</small></sub> has the
@@ -76,7 +75,6 @@ import smile.util.SmileUtils;
  * network when the training data size is relatively small. On the other hand,
  * RBF network gives better generalization performance than SVM on large
  * training data.
- * <p>
  * 
  * <h2>References</h2>
  * <ol>
@@ -87,228 +85,96 @@ import smile.util.SmileUtils;
  * 
  * @see RadialBasisFunction
  * @see SVM
- * @see NeuralNetwork
+ * @see MLP
  * 
  * @author Haifeng Li
  */
-public class RBFNetwork<T> implements Classifier<T> {
-    private static final long serialVersionUID = 1L;
+public class RBFNetwork<T> extends AbstractClassifier<T> {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The number of classes.
      */
-    private int k;
-    /**
-     * The centers of RBF functions.
-     */
-    private T[] centers;
+    private final int k;
     /**
      * The linear weights.
      */
-    private DenseMatrix w;
-    /**
-     * The distance metric functor.
-     */
-    private Metric<T> distance;
+    private final Matrix w;
     /**
      * The radial basis function.
      */
-    private RadialBasisFunction[] rbf;
+    private final RBF<T>[] rbf;
     /**
      * True to fit a normalized RBF network.
      */
-    private boolean normalized;
+    private final boolean normalized;
 
     /**
-     * Trainer for RBF networks.
-     */
-    public static class Trainer<T> extends ClassifierTrainer<T> {
-        /**
-         * The number of radial basis functions.
-         */
-        private int m = 10;
-        /**
-         * The distance metric functor.
-         */
-        private Metric<T> distance;
-        /**
-         * The radial basis functions.
-         */
-        private RadialBasisFunction[] rbf;
-        /**
-         * True to fit a normalized RBF network.
-         */
-        private boolean normalized = false;
-
-        /**
-         * Constructor.
-         * 
-         * @param distance the distance metric functor.
-         */
-        public Trainer(Metric<T> distance) {
-            this.distance = distance;
-        }
-        
-        /**
-         * Sets the radial basis function.
-         * @param rbf the radial basis function.
-         * @param m the number of basis functions.
-         */
-        public Trainer<T> setRBF(RadialBasisFunction rbf, int m) {
-            this.m = m;
-            this.rbf = rep(rbf, m);
-            return this;
-        }
-        
-        /**
-         * Sets the radial basis functions.
-         * @param rbf the radial basis functions.
-         */
-        public Trainer<T> setRBF(RadialBasisFunction[] rbf) {
-            this.m = rbf.length;
-            this.rbf = rbf;
-            return this;
-        }
-        
-        /**
-         * Sets true to learn normalized RBF network.
-         * @param normalized true to learn normalized RBF network.
-         */
-        public Trainer<T> setNormalized(boolean normalized) {
-            this.normalized = normalized;
-            return this;
-        }
-        
-        @Override
-        public RBFNetwork<T> train(T[] x, int[] y) {         
-            @SuppressWarnings("unchecked")
-            T[] centers = (T[]) java.lang.reflect.Array.newInstance(x.getClass().getComponentType(), m);
-            GaussianRadialBasis gaussian = SmileUtils.learnGaussianRadialBasis(x, centers, distance);
-            
-            if (rbf == null) {
-                return new RBFNetwork<>(x, y, distance, gaussian, centers, normalized);
-            } else {
-                return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
-            }
-        }
-        
-        /**
-         * Learns a RBF network with given centers.
-         * 
-         * @param x training samples.
-         * @param y training labels in [0, k), where k is the number of classes.
-         * @param centers the centers of RBF functions.
-         * @return a trained RBF network
-         */
-        public RBFNetwork<T> train(T[] x, int[] y, T[] centers) {
-            return new RBFNetwork<>(x, y, distance, rbf, centers, normalized);
-        }
-    }
-    
-    /**
-     * Constructor. Learn a regular RBF network without normalization.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
-     * @param rbf the radial basis function.
-     * @param centers the centers of RBF functions.
-     */
-    public RBFNetwork(T[] x, int[] y, Metric<T> distance, RadialBasisFunction rbf, T[] centers) {
-        this(x, y, distance, rbf, centers, false);
-    }
-
-    /**
-     * Constructor. Learn a regular RBF network without normalization.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
-     * @param rbf the radial basis function.
-     * @param centers the centers of RBF functions.
-     */
-    public RBFNetwork(T[] x, int[] y, Metric<T> distance, RadialBasisFunction[] rbf, T[] centers) {
-        this(x, y, distance, rbf, centers, false);
-    }
-
-    /**
-     * Constructor. Learn a RBF network.
-     * 
-     * @param x training samples.
-     * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
+     * Constructor.
+     * @param k the number of classes.
      * @param rbf the radial basis functions.
-     * @param centers the centers of RBF functions.
-     * @param normalized true for the normalized RBF network.
+     * @param w the weights of RBFs.
+     * @param normalized True if this is a normalized RBF network.
      */
-    public RBFNetwork(T[] x, int[] y, Metric<T> distance, RadialBasisFunction rbf, T[] centers, boolean normalized) {
-        this(x, y, distance, rep(rbf, centers.length), centers, normalized);
+    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized) {
+        this(k, rbf, w, normalized, IntSet.of(k));
     }
-    
+
     /**
-     * Returns an array of radial basis functions initialized with given values.
-     * @param rbf the initial value of array.
-     * @param k the size of array.
-     * @return an array of radial basis functions initialized with given values
+     * Constructor.
+     * @param k the number of classes.
+     * @param rbf the radial basis functions.
+     * @param w the weights of RBFs.
+     * @param normalized True if this is a normalized RBF network.
+     * @param labels the class label encoder.
      */
-    private static RadialBasisFunction[] rep(RadialBasisFunction rbf, int k) {
-        RadialBasisFunction[] arr = new RadialBasisFunction[k];
-        Arrays.fill(arr, rbf);
-        return arr;
+    public RBFNetwork(int k, RBF<T>[] rbf, Matrix w, boolean normalized, IntSet labels) {
+        super(labels);
+        this.k = k;
+        this.rbf = rbf;
+        this.w = w;
+        this.normalized = normalized;
     }
-    
+
     /**
-     * Constructor. Learn a RBF network.
+     * Fits a RBF network.
+     *
+     * @param x training samples.
+     * @param y training labels in [0, k), where k is the number of classes.
+     * @param rbf the radial basis functions.
+     * @param <T> the data type.
+     * @return the model.
+     */
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf) {
+        return fit(x, y, rbf, false);
+    }
+
+    /**
+     * Fits a RBF network.
      * 
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
-     * @param distance the distance metric functor.
      * @param rbf the radial basis functions.
-     * @param centers the centers of RBF functions.
      * @param normalized true for the normalized RBF network.
+     * @param <T> the data type.
+     * @return the model.
      */
-    public RBFNetwork(T[] x, int[] y, Metric<T> distance, RadialBasisFunction[] rbf, T[] centers, boolean normalized) {
+    public static <T> RBFNetwork<T> fit(T[] x, int[] y, RBF<T>[] rbf, boolean normalized) {
         if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("The sizes of X and Y don't match: %d != %d", x.length, y.length));
         }
 
-        if (rbf.length != centers.length) {
-            throw new IllegalArgumentException(String.format("The sizes of RBF functions and centers don't match: %d != %d", rbf.length, centers.length));
-        }
-
-        // class label set.
-        int[] labels = Math.unique(y);
-        Arrays.sort(labels);
-        
-        for (int i = 0; i < labels.length; i++) {
-            if (labels[i] < 0) {
-                throw new IllegalArgumentException("Negative class label: " + labels[i]); 
-            }
-            
-            if (i > 0 && labels[i] - labels[i-1] > 1) {
-                throw new IllegalArgumentException("Missing class: " + (labels[i-1]+1));
-            }
-        }
-
-        k = labels.length;
-        if (k < 2) {
-            throw new IllegalArgumentException("Only one class.");            
-        }
-
-        this.centers = centers;
-        this.distance = distance;
-        this.rbf = rbf;
-        this.normalized = normalized;
-        
+        ClassLabels codec = ClassLabels.fit(y);
+        int k = codec.k;
         int n = x.length;
         int m = rbf.length;
 
-        DenseMatrix G = Matrix.zeros(n, m+1);
-        DenseMatrix b = Matrix.zeros(n, k);
+        Matrix G = new Matrix(n, m+1);
+        Matrix b = new Matrix(n, k);
         for (int i = 0; i < n; i++) {
             double sum = 0.0;
             for (int j = 0; j < m; j++) {
-                double r = rbf[j].f(distance.d(x[i], centers[j]));
+                double r = rbf[j].f(x[i]);
                 G.set(i, j, r);
                 sum += r;
             }
@@ -316,56 +182,51 @@ public class RBFNetwork<T> implements Classifier<T> {
             G.set(i, m, 1);
 
             if (normalized) {
-                b.set(i, y[i], sum);
+                b.set(i, codec.y[i], sum);
             } else {
-                b.set(i, y[i], 1);
+                b.set(i, codec.y[i], 1);
             }
         }
 
-        QR qr = G.qr();
+        Matrix.QR qr = G.qr(true);
         qr.solve(b);
 
-        // Copy the result from b to w
-        w = Matrix.zeros(m+1, k);
-        for (int j = 0; j < w.ncols(); j++) {
-            for (int i = 0; i < w.nrows(); i++) {
-                w.set(i, j, b.get(i, j));
-            }
-        }
+        return new RBFNetwork<>(k, rbf, b.submatrix(0, 0, m, k-1), normalized, codec.classes);
+    }
+
+    /**
+     * Fits a RBF network.
+     * @param x training samples.
+     * @param y training labels.
+     * @param params the hyper-parameters.
+     * @return the model.
+     */
+    public static RBFNetwork<double[]> fit(double[][] x, int[] y, Properties params) {
+        int neurons = Integer.parseInt(params.getProperty("smile.rbf.neurons", "30"));
+        boolean normalize = Boolean.parseBoolean(params.getProperty("smile.rbf.normalize", "false"));
+        return RBFNetwork.fit(x, y, RBF.fit(x, neurons), normalize);
+    }
+
+    /**
+     * Returns true if the model is  normalized.
+     * @return true if the model is  normalized.
+     */
+    public boolean isNormalized() {
+        return normalized;
     }
 
     @Override
     public int predict(T x) {
+        int m = rbf.length;
+        double[] f = new double[m+1];
+        f[m] = 1.0;
+        for (int i = 0; i < m; i++) {
+            f[i] = rbf[i].f(x);
+        }
+
         double[] sumw = new double[k];
+        w.tv(f, sumw);
 
-        double sum = 0.0;
-        for (int i = 0; i < rbf.length; i++) {
-            double f = rbf[i].f(distance.d(x, centers[i]));
-            sum += f;
-            for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(i, j) * f;
-            }
-        }
-
-        if (normalized) {
-            for (int j = 0; j < k; j++) {
-                sumw[j] = (sumw[j] + w.get(centers.length, j)) / sum;
-            }
-        } else {
-            for (int j = 0; j < k; j++) {
-                sumw[j] += w.get(centers.length, j);
-            }
-        }
-
-        double max = Double.NEGATIVE_INFINITY;
-        int y = 0;
-        for (int j = 0; j < k; j++) {
-            if (max < sumw[j]) {
-                max = sumw[j];
-                y = j;
-            }
-        }
-
-        return y;
+        return classes.valueOf(MathEx.whichMax(sumw));
     }
 }

@@ -1,33 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.manifold;
 
+import java.io.Serializable;
 import java.util.Arrays;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
+import java.util.stream.IntStream;
+import smile.math.MathEx;
 import smile.stat.distribution.GaussianDistribution;
-import smile.util.MulticoreExecutor;
 
 /**
- * The t-distributed stochastic neighbor embedding (t-SNE) is a nonlinear
+ * The t-distributed stochastic neighbor embedding. The t-SNE is a nonlinear
  * dimensionality reduction technique that is particularly well suited
  * for embedding high-dimensional data into a space of two or three
  * dimensions, which can then be visualized in a scatter plot. Specifically,
@@ -48,41 +45,71 @@ import smile.util.MulticoreExecutor;
  *
  * <h2>References</h2>
  * <ol>
- * <li>L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms. Journal of Machine Learning Research 15(Oct):3221-3245, 2014. </li>
- * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing Non-Metric Similarities in Multiple Maps. Machine Learning 87(1):33-55, 2012. </li>
- * <li>L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving Local Structure. In Proceedings of the Twelfth International Conference on Artificial Intelligence & Statistics (AI-STATS), JMLR W&CP 5:384-391, 2009. </li>
- * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional Data Using t-SNE. Journal of Machine Learning Research 9(Nov):2579-2605, 2008. </li>
+ * <li>L.J.P. van der Maaten. Accelerating t-SNE using Tree-Based Algorithms.
+ *     Journal of Machine Learning Research 15(Oct):3221-3245, 2014. </li>
+ * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing Non-Metric
+ *     Similarities in Multiple Maps. Machine Learning 87(1):33-55, 2012. </li>
+ * <li>L.J.P. van der Maaten. Learning a Parametric Embedding by Preserving
+ *     Local Structure. In Proceedings of the Twelfth International Conference
+ *     on Artificial Intelligence &amp; Statistics (AI-STATS),
+ *     JMLR W&amp;CP 5:384-391, 2009. </li>
+ * <li>L.J.P. van der Maaten and G.E. Hinton. Visualizing High-Dimensional
+ *     Data Using t-SNE. Journal of Machine Learning Research
+ *     9(Nov):2579-2605, 2008. </li>
  * </ol>
+ *
+ * @see UMAP
  *
  * @author Haifeng Li
  */
-public class TSNE {
-    private static final Logger logger = LoggerFactory.getLogger(TSNE.class);
+public class TSNE implements Serializable {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(TSNE.class);
 
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
 
-    private double eta             = 500;
-    private double momentum        = 0.5;
-    private double finalMomentum   = 0.8;
-    private int momentumSwitchIter = 250;
-    private double minGain         = .01;
-    private int    totalIter       =   1; // total iterations
+    /**
+     * The learning rate.
+     */
+    private final double eta;
+    /**
+     * The number of iterations so far.
+     */
+    private int totalIter = 1;
+    /**
+     * The momentum factor.
+     */
+    private double momentum              = 0.5;
+    /**
+     * The momentum in later stage.
+     */
+    private final double finalMomentum   = 0.8;
+    /**
+     * The number of iterations at which switch the momentum to
+     * finalMomentum.
+     */
+    private final int momentumSwitchIter = 250;
+    /**
+     * The floor of gain.
+     */
+    private final double minGain         = .01;
 
-    private double[][] D;
-
-    private double[][] dY;
-    private double[][] gains; // adjust learning rate for each point
-
-    private double[][] P;
-    private double[][] Q;
-    private double     Qsum;
+    /** The gain matrix. */
+    private final double[][] gains; // adjust learning rate for each point
+    /** The probability matrix of the distances in the input space. */
+    private final double[][] P;
+    /** The probability matrix of the distances in the feature space. */
+    private final double[][] Q;
+    /** The sum of Q matrix. */
+    private double Qsum;
 
     /** Constructor. Train t-SNE for 1000 iterations, perplexity = 20 and learning rate = 200.
      *
-     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
+     * @param X the input data. If X is a square matrix, it is assumed to be
+     *          the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      */
     public TSNE(double[][] X, int d) {
@@ -91,7 +118,8 @@ public class TSNE {
 
     /** Constructor. Train t-SNE for given number of iterations.
      *
-     * @param X input data. If X is a square matrix, it is assumed to be the squared distance/dissimilarity matrix.
+     * @param X the input data. If X is a square matrix, it is assumed to be
+     *         the squared distance/dissimilarity matrix.
      * @param d the dimension of embedding space.
      * @param perplexity the perplexity of the conditional distribution.
      * @param eta the learning rate.
@@ -101,16 +129,16 @@ public class TSNE {
         this.eta = eta;
         int n = X.length;
 
+        double[][] D;
         if (X.length == X[0].length) {
             D = X;
         } else {
             D = new double[n][n];
-            Math.pdist(X, D, true, false);
+            MathEx.pdist(X, D, MathEx::squaredDistance);
         }
 
         coordinates = new double[n][d];
         double[][] Y = coordinates;
-        dY = new double[n][d];
         gains = new double[n][d]; // adjust learning rate for each point
 
         // Initialize Y randomly by N(0, 0.0001)
@@ -141,44 +169,36 @@ public class TSNE {
             }
         }
 
-        learn(iterations);
+        update(iterations);
     }
 
-    /** Continue to learn additional iterations. */
-    public void learn(int iterations) {
+    /**
+     * Performs additional iterations.
+     * @param iterations the number of iterations.
+     */
+    public void update(int iterations) {
         double[][] Y = coordinates;
         int n = Y.length;
         int d = Y[0].length;
-
-        int nprocs = MulticoreExecutor.getThreadPoolSize();
-        int chunk = n / nprocs;
-        List<SNETask> tasks = new ArrayList<>();
-        for (int i = 0; i < nprocs; i++) {
-            int start = i * chunk;
-            int end = i == nprocs-1 ? n : (i+1) * chunk;
-            SNETask task = new SNETask(start, end);
-            tasks.add(task);
-        }
+        double[][] dY = new double[n][d];
+        double[][] dC = new double[n][d];
 
         for (int iter = 1; iter <= iterations; iter++, totalIter++) {
-            Math.pdist(Y, Q, true, false);
-            Qsum = 0.0;
-            for (int i = 0; i < n; i++) {
-                double[] Qi = Q[i];
-                for (int j = 0; j < i; j++) {
-                    double q = 1.0 / (1.0 + Qi[j]);
-                    Qi[j] = q;
-                    Q[j][i] = q;
-                    Qsum += q;
-                }
-            }
-            Qsum *= 2.0;
+            Qsum = computeQ(Y, Q);
 
-            try {
-                MulticoreExecutor.run(tasks);
-            } catch (Exception e) {
-                logger.error("t-SNE iteration task fails: {}", e);
-            }
+            IntStream.range(0, n).parallel().forEach(i -> sne(i, dY[i], dC[i]));
+
+            // gradient update with momentum and gains
+            IntStream.range(0, n).parallel().forEach(i -> {
+                double[] Yi = Y[i];
+                double[] dYi = dY[i];
+                double[] dCi = dC[i];
+                double[] g = gains[i];
+                for (int k = 0; k < d; k++) {
+                    dYi[k] = momentum * dYi[k] - eta * g[k] * dCi[k];
+                    Yi[k] += dYi[k];
+                }
+            });
 
             if (totalIter == momentumSwitchIter) {
                 momentum = finalMomentum;
@@ -191,86 +211,62 @@ public class TSNE {
             }
 
             // Compute current value of cost function
-            if (iter % 50 == 0)   {
-                double C = 0.0;
-                for (int i = 0; i < n; i++) {
+            if (iter % 100 == 0)   {
+                double C = IntStream.range(0, n).parallel().mapToDouble(i -> {
                     double[] Pi = P[i];
                     double[] Qi = Q[i];
+                    double Ci = 0.0;
                     for (int j = 0; j < i; j++) {
                         double p = Pi[j];
                         double q = Qi[j] / Qsum;
                         if (Double.isNaN(q) || q < 1E-16) q = 1E-16;
-                        C += p * Math.log2(p / q);
+                        Ci += p * MathEx.log2(p / q);
                     }
-                }
+                    return Ci;
+                }).sum();
                 logger.info("Error after {} iterations: {}", totalIter, 2 * C);
             }
         }
 
         // Make solution zero-mean
-        double[] colMeans = Math.colMeans(Y);
-        for (int i = 0; i < n; i++) {
+        double[] colMeans = MathEx.colMeans(Y);
+        IntStream.range(0, n).parallel().forEach(i -> {
             double[] Yi = Y[i];
             for (int j = 0; j < d; j++) {
                 Yi[j] -= colMeans[j];
             }
-        }
+        });
     }
 
-    private class SNETask implements Callable<Void> {
-        int start, end;
-        double[] dC;
+    /** Computes the gradients and updates the coordinates. */
+    private void sne(int i, double[] dY, double[] dC) {
+        double[][] Y = coordinates;
+        int n = Y.length;
+        int d = Y[0].length;
 
+        // Compute gradient
+        // dereference before the loop for better performance
+        double[] Yi = Y[i];
+        double[] Pi = P[i];
+        double[] Qi = Q[i];
+        double[] g = gains[i];
 
-        SNETask(int start, int end) {
-            this.start = start;
-            this.end = end;
-            this.dC = new double[coordinates[0].length];
-        }
-
-        @Override
-        public Void call() {
-            for (int i = start; i < end; i++) {
-                compute(i);
-            }
-
-            return null;
-        }
-
-        private void compute(int i) {
-            double[][] Y = coordinates;
-            int n = Y.length;
-            int d = Y[0].length;
-            Arrays.fill(dC, 0.0);
-
-            // Compute gradient
-            // dereference before the loop for better performance
-            double[] Yi = Y[i];
-            double[] Pi = P[i];
-            double[] Qi = Q[i];
-            double[] dYi = dY[i];
-            double[] g = gains[i];
-            for (int j = 0; j < n; j++) {
-                if (i != j) {
-                    double[] Yj = Y[j];
-                    double q = Qi[j];
-                    double z = (Pi[j] - (q / Qsum)) * q;
-                    for (int k = 0; k < d; k++) {
-                        dC[k] += 4.0 * (Yi[k] - Yj[k]) * z;
-                    }
+        Arrays.fill(dC, 0.0);
+        for (int j = 0; j < n; j++) {
+            if (i != j) {
+                double[] Yj = Y[j];
+                double q = Qi[j];
+                double z = (Pi[j] - (q / Qsum)) * q;
+                for (int k = 0; k < d; k++) {
+                    dC[k] += 4.0 * (Yi[k] - Yj[k]) * z;
                 }
             }
+        }
 
-            // Perform the update
-            for (int k = 0; k < d; k++) {
-                // Update gains
-                g[k] = (Math.signum(dC[k]) != Math.signum(dYi[k])) ? (g[k] + .2) : (g[k] * .8);
-                if (g[k] < minGain) g[k] = minGain;
-
-                // gradient update with momentum and gains
-                Yi[k] += dYi[k];
-                dYi[k] = momentum * dYi[k] - eta * g[k] * dC[k];
-            }
+        // Update gains
+        for (int k = 0; k < d; k++) {
+            g[k] = (Math.signum(dC[k]) != Math.signum(dY[k])) ? (g[k] + .2) : (g[k] * .8);
+            if (g[k] < minGain) g[k] = minGain;
         }
     }
 
@@ -278,56 +274,10 @@ public class TSNE {
     private double[][] expd(double[][] D, double perplexity, double tol) {
         int n          = D.length;
         double[][] P   = new double[n][n];
-        double[] DiSum = Math.rowSums(D);
+        double[] DiSum = MathEx.rowSums(D);
 
-        int nprocs = MulticoreExecutor.getThreadPoolSize();
-        int chunk = n / nprocs;
-        List<PerplexityTask> tasks = new ArrayList<>();
-        for (int i = 0; i < nprocs; i++) {
-            int start = i * chunk;
-            int end = i == nprocs-1 ? n : (i+1) * chunk;
-            PerplexityTask task = new PerplexityTask(start, end, D, P, DiSum, perplexity, tol);
-            tasks.add(task);
-        }
-
-        try {
-            MulticoreExecutor.run(tasks);
-        } catch (Exception e) {
-            logger.error("t-SNE Gaussian kernel width search task fails: {}", e);
-        }
-
-        return P;
-    }
-
-    private class PerplexityTask implements Callable<Void> {
-        int start, end;
-        double[][] D;
-        double[][] P;
-        double[] DiSum;
-        double perplexity;
-        double tol;
-
-        PerplexityTask(int start, int end, double[][] D, double[][] P, double[] DiSum, double perplexity, double tol) {
-            this.start = start;
-            this.end = end;
-            this.D = D;
-            this.P = P;
-            this.DiSum = DiSum;
-            this.perplexity = perplexity;
-            this.tol = tol;
-        }
-
-        @Override
-        public Void call() {
-            for (int i = start; i < end; i++) {
-                compute(i);
-            }
-            return null;
-        }
-
-        private void compute(int i) {
-            int n       = D.length;
-            double logU = Math.log2(perplexity);
+        IntStream.range(0, n).parallel().forEach(i -> {
+            double logU = MathEx.log2(perplexity);
 
             double[] Pi = P[i];
             double[] Di = D[i];
@@ -355,7 +305,7 @@ public class TSNE {
                 Pi[i] = 0.0;
                 Pisum -= 1.0;
 
-                H = Math.log2(Pisum) + H / Pisum;
+                H = MathEx.log2(Pisum) + H / Pisum;
                 Hdiff = H - logU;
 
                 if (Math.abs(Hdiff) > tol) {
@@ -378,13 +328,27 @@ public class TSNE {
 
                 logger.debug("Hdiff = {}, beta[{}] = {}, H = {}, logU = {}", Hdiff, i, beta, H, logU);
             }
-        }
+        });
+
+        return P;
     }
 
     /**
-     * Returns the coordinates of projected data.
+     * Compute the Q matrix.
      */
-    public double[][] getCoordinates() {
-        return coordinates;
+    private double computeQ(double[][] x, double[][] Q) {
+        int n = x.length;
+
+        return IntStream.range(0, n).parallel().mapToDouble(i -> {
+            double[] xi = x[i];
+            double[] Qi = Q[i];
+            double sum = 0.0;
+            for (int j = 0; j < n; j++) {
+                double q = 1.0 / (1.0 + MathEx.squaredDistance(xi, x[j]));
+                Qi[j] = q;
+                sum += q;
+            }
+            return sum;
+        }).sum();
     }
 }

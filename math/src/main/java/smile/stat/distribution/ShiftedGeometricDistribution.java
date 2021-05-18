@@ -1,44 +1,48 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
- * The "shifted" geometric distribution is a discrete probability distribution of the
- * number of failures before the first success, supported on the set
- * {0, 1, 2, 3, &hellip;}.
+ * The "shifted" geometric distribution is a discrete probability distribution
+ * of the number of failures before the first success, supported on the set
+ * <code>{0, 1, 2, 3, &hellip;}</code>.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
- * Pr(X = k) = (1 - p)<sup>k</sup> p.
-
+ *     Pr(X = k) = (1 - p)<sup>k</sup> p
+ *
  * @see GeometricDistribution
  *
  * @author Haifeng Li
  */
 public class ShiftedGeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double p;
-    private double entropy;
+    /** The probability of success. */
+    public  final double p;
+    /** Shannon entropy. */
+    private final double entropy;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.
      */
-    ExponentialDistribution expDist;
+    private ExponentialDistribution expDist;
 
     /**
      * Constructor.
@@ -50,13 +54,15 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
         }
 
         this.p = p;
-        entropy = (-p * Math.log2(p) - (1 - p) * Math.log2(1 - p)) / p;
+        entropy = (-p * MathEx.log2(p) - (1 - p) * MathEx.log2(1 - p)) / p;
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
-    public ShiftedGeometricDistribution(int[] data) {
+    public static ShiftedGeometricDistribution fit(int[] data) {
         double sum = 0.0;
         for (int x : data) {
             if (x < 0) {
@@ -66,19 +72,12 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
             sum += x + 1;
         }
 
-        p = data.length / sum;
-        entropy = (-p * Math.log2(p) - (1 - p) * Math.log2(1 - p)) / p;
-    }
-
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
+        double p = data.length / sum;
+        return new ShiftedGeometricDistribution(p);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -88,7 +87,7 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return (1 - p) / (p * p);
     }
 
@@ -184,10 +183,6 @@ public class ShiftedGeometricDistribution extends DiscreteDistribution implement
 
         mean /= alpha;
 
-        DiscreteMixture.Component c = new DiscreteMixture.Component();
-        c.priori = alpha;
-        c.distribution = new GeometricDistribution(1 / (1 + mean));
-
-        return c;
+        return new DiscreteMixture.Component(alpha, new GeometricDistribution(1 / (1 + mean)));
     }
 }

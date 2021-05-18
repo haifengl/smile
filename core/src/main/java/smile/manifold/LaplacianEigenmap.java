@@ -1,37 +1,34 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.manifold;
 
+import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import smile.data.SparseDataset;
 import smile.graph.AdjacencyList;
-import smile.graph.Graph;
 import smile.graph.Graph.Edge;
-import smile.math.Math;
-import smile.math.SparseArray;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
+import smile.math.matrix.ARPACK;
+import smile.math.matrix.Matrix;
 import smile.math.matrix.SparseMatrix;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
-import smile.neighbor.Neighbor;
+import smile.util.SparseArray;
 
 /**
  * Laplacian Eigenmap. Using the notion of the Laplacian of the nearest
@@ -47,6 +44,7 @@ import smile.neighbor.Neighbor;
  *
  * @see IsoMap
  * @see LLE
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -55,131 +53,148 @@ import smile.neighbor.Neighbor;
  * 
  * @author Haifeng Li
  */
-public class LaplacianEigenmap {
-    private static final Logger logger = LoggerFactory.getLogger(LaplacianEigenmap.class);
+public class LaplacianEigenmap implements Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * The width of heat kernel.
      */
-    private double t;
+    public final double width;
     /**
      * The original sample index.
      */
-    private int[] index;
+    public final int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
     /**
      * Nearest neighbor graph.
      */
-    private Graph graph;
+    public final AdjacencyList graph;
 
     /**
-     * Constructor. Learn Laplacian Eigenmaps with discrete weights.
-     * @param data the dataset.
-     * @param d the dimension of the manifold.
-     * @param k k-nearest neighbor.
+     * Constructor with discrete weights.
+     * @param index the original sample index.
+     * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
      */
-    public LaplacianEigenmap(double[][] data, int d, int k) {
-        this(data, d, k, -1);
+    public LaplacianEigenmap(int[] index, double[][] coordinates, AdjacencyList graph) {
+        this(-1, index, coordinates, graph);
     }
 
     /**
-     * Constructor. Learn Laplacian Eigenmap with Gaussian kernel.
-     * @param data the dataset.
+     * Constructor with Gaussian kernel.
+     * @param width the width of heat kernel.
+     * @param index the original sample index.
+     * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
+     */
+    public LaplacianEigenmap(double width, int[] index, double[][] coordinates, AdjacencyList graph) {
+        this.width = width;
+        this.index = index;
+        this.coordinates = coordinates;
+        this.graph = graph;
+    }
+
+    /**
+     * Laplacian Eigenmaps with discrete weights.
+     * @param data the input data.
+     * @param k k-nearest neighbor.
+     * @return the model.
+     */
+    public static LaplacianEigenmap of(double[][] data, int k) {
+        return of(data, k, 2, -1);
+    }
+
+    /**
+     * Laplacian Eigenmap with Gaussian kernel.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
-     * @param t the smooth/width parameter of heat kernel e<sup>-||x-y||<sup>2</sup> / t</sup>.
-     * Non-positive value means discrete weights.
+     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
+     *          Non-positive value means discrete weights.
+     * @return the model.
      */
-    public LaplacianEigenmap(double[][] data, int d, int k, double t) {
-        this.t = t;
-        
-        int n = data.length;
-        KNNSearch<double[], double[]> knn = null;
-        if (data[0].length < 10) {
-            knn = new KDTree<>(data, data);
-        } else {
-            knn = new CoverTree<>(data, new EuclideanDistance());
-        }
+    public static LaplacianEigenmap of(double[][] data, int k, int d, double t) {
+        return of(data, new EuclideanDistance(), k, d, t);
+    }
 
-        graph = new AdjacencyList(n);
-        for (int i = 0; i < n; i++) {
-            Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
-            for (int j = 0; j < k; j++) {
-                graph.setWeight(i, neighbors[j].index, neighbors[j].distance);
-            }
-        }
+    /**
+     * Laplacian Eigenmaps with discrete weights.
+     * @param data the input data.
+     * @param distance the distance function.
+     * @param k k-nearest neighbor.
+     * @param <T> the data type of points.
+     * @return the model.
+     */
+    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k) {
+        return of(data, distance, k, 2, -1);
+    }
 
-        // Use largest connected component.
-        int[][] cc = graph.bfs();
-        if (cc.length == 1) {
-            index = new int[n];
-            for (int i = 0; i < n; i++) {
-                index[i] = i;
-            }
-        } else {
-            n = 0;
-            int component = 0;
-            for (int i = 0; i < cc.length; i++) {
-                if (cc[i].length > n) {
-                    component = i;
-                    n = cc[i].length;
-                }
-            }
+    /**
+     * Laplacian Eigenmap with Gaussian kernel.
+     * @param data the input data.
+     * @param distance the distance function.
+     * @param k k-nearest neighbor.
+     * @param d the dimension of the manifold.
+     * @param t the smooth/width parameter of heat kernel exp(-||x-y||<sup>2</sup> / t).
+     *          Non-positive value means discrete weights.
+     * @param <T> the data type of points.
+     * @return the model.
+     */
+    public static <T> LaplacianEigenmap of(T[] data, Distance<T> distance, int k, int d, double t) {
+        // Use largest connected component of nearest neighbor graph.
+        AdjacencyList graph = NearestNeighborGraph.of(data, distance, k, false, null);
+        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
-            logger.info("Laplacian Eigenmap: {} connected components, largest one has {} samples.", cc.length, n);
+        int[] index = nng.index;
+        int n = index.length;
+        graph = nng.graph;
 
-            index = cc[component];
-            graph = graph.subgraph(index);
-        }
-
-        SparseDataset W = new SparseDataset(n);
         double[] D = new double[n];
         double gamma = -1.0 / t;
 
+        ArrayList<SparseArray> W = new ArrayList<>(n);
         for (int i = 0; i < n; i++) {
+            SparseArray row = new SparseArray();
             Collection<Edge> edges = graph.getEdges(i);
             for (Edge edge : edges) {
                 int j = edge.v2;
-                if (i == j) {
-                    j = edge.v1;
-                }
+                if (i == j) j = edge.v1;
 
-                double w = t <= 0 ? 1.0 : Math.exp(gamma * Math.sqr(edge.weight));
-                W.set(i, j, w);
+                double w = t <= 0 ? 1.0 : Math.exp(gamma * edge.weight * edge.weight);
+                row.set(j, w);
                 D[i] += w;
             }
-
             D[i] = 1 / Math.sqrt(D[i]);
+            W.add(i, row);
         }
 
         for (int i = 0; i < n; i++) {
-            SparseArray edges = W.get(i).x;
-            for (SparseArray.Entry edge : edges) {
-                int j = edge.i;
-                double s = D[i] * edge.x * D[j];
-                W.set(i, j, s);
+            SparseArray row = W.get(i);
+            for (SparseArray.Entry e : row) {
+                e.update(-D[i] * e.x * D[e.i]);
             }
-            W.set(i, i, 0.0);
+            row.set(i, 1.0);
         }
 
-        SparseMatrix L = W.toSparseMatrix();
-        L.setSymmetric(true);
+        // Here L is actually I - D^(-1/2) * W * D^(-1/2)
+        SparseMatrix L = SparseDataset.of(W, n).toMatrix();
 
-        // ARPACK may not find all needed eigen values for k = d + 1.
-        // Set it to 10 * (d + 1) as a hack to NCV parameter of DSAUPD.
-        // Our Lanczos class has no such issue.
-        EVD eigen = L.eigen(Math.min(10*(d + 1), n - 1));
+        // ARPACK may not find all needed eigenvalues for k = d + 1.
+        // Hack it with 10 * (d + 1).
+        Matrix.EVD eigen = ARPACK.syev(L, ARPACK.SymmOption.SM, Math.min(10*(d+1), n-1));
 
-        DenseMatrix V = eigen.getEigenVectors();
-        coordinates = new double[n][d];
-        for (int j = 0; j < d; j++) {
+        Matrix V = eigen.Vr;
+        double[][] coordinates = new double[n][d];
+        for (int j = d; --j >= 0; ) {
             double norm = 0.0;
+            int c = V.ncol() - j - 2;
             for (int i = 0; i < n; i++) {
-                coordinates[i][j] = V.get(i, j + 1) * D[i];
-                norm += coordinates[i][j] * coordinates[i][j];
+                double xi = V.get(i, c) * D[i];
+                coordinates[i][j] = xi;
+                norm += xi * xi;
             }
 
             norm = Math.sqrt(norm);
@@ -187,35 +202,7 @@ public class LaplacianEigenmap {
                 coordinates[i][j] /= norm;
             }
         }
-    }
 
-    /**
-     * Returns the original sample index. Because Laplacian Eigenmap is applied to the largest
-     * connected component of k-nearest neighbor graph, we record the the original
-     * indices of samples in the largest component.
-     */
-    public int[] getIndex() {
-        return index;
-    }
-
-    /**
-     * Returns the coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
-    }
-
-    /**
-     * Returns the nearest neighbor graph.
-     */
-    public Graph getNearestNeighborGraph() {
-        return graph;
-    }
-
-    /**
-     * Returns the width of heat kernel.
-     */
-    public double getHeatKernelWidth() {
-        return t;
+        return new LaplacianEigenmap(t, index, coordinates, graph);
     }
 }

@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.feature;
 
 import org.junit.After;
@@ -20,11 +22,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.data.DataFrame;
+import smile.data.Date;
+import smile.data.formula.Formula;
+import smile.data.formula.DateFeature;
+import smile.data.measure.NominalScale;
+import smile.data.type.DataTypes;
+import smile.data.type.StructType;
 import static org.junit.Assert.*;
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.DateAttribute;
-import smile.data.parser.ArffParser;
+import static smile.data.formula.Terms.date;
 
 /**
  *
@@ -55,57 +61,43 @@ public class DateFeatureTest {
      * Test of attributes method, of class DateFeature.
      */
     @Test
-    public void testAttributes() {
-        System.out.println("attributes");
-        try {
-            ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/date.arff"));
-            
-            DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};
-            DateFeature df = new DateFeature(features);
-            Attribute[] attributes = df.attributes();
-            assertEquals(features.length, attributes.length);
-            for (int i = 0; i < attributes.length; i++) {
-                System.out.println(attributes[i]);
-                if (i == 1 || i == 3) {
-                    assertEquals(Attribute.Type.NOMINAL, attributes[i].getType());
-                } else {
-                    assertEquals(Attribute.Type.NUMERIC, attributes[i].getType());
-                }
-            }
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
-    }
+    public void testDateFeatures() {
+        System.out.println("date");
 
-    /**
-     * Test of feature method, of class DateFeature.
-     */
-    @Test
-    public void testFeature() {
-        System.out.println("feature");
         double[][] result = {
-            {2001.0, 3.0, 3.0, 2.0, 12.0, 12.0, 12.0},
-            {2001.0, 4.0, 3.0, 4.0, 12.0, 59.0, 55.0},
+                {2001.0, 4.0, 3.0, 2.0, 12.0, 12.0, 12.0},
+                {2001.0, 5.0, 3.0, 4.0, 12.0, 59.0, 55.0},
         };
 
-        try {
-            ArffParser parser = new ArffParser();
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/date.arff"));
-            double[][] x = data.toArray(new double[data.size()][]);
-            
-            DateFeature.Type[] features = {DateFeature.Type.YEAR, DateFeature.Type.MONTH, DateFeature.Type.DAY_OF_MONTH, DateFeature.Type.DAY_OF_WEEK, DateFeature.Type.HOURS, DateFeature.Type.MINUTES, DateFeature.Type.SECONDS};
-            DateFeature df = new DateFeature(features);
-            Attribute[] attributes = df.attributes();
-            assertEquals(features.length, attributes.length);
-            for (int i = 0; i < x.length; i++) {
-                double[] y = df.feature(((DateAttribute)data.attributes()[0]).toDate(x[i][0]));
-                for (int j = 0; j < y.length; j++) {
-                    assertEquals(result[i][j], y[j], 1E-7);
-                }
+        Formula formula = Formula.rhs(date("timestamp",
+                DateFeature.YEAR, DateFeature.MONTH, DateFeature.DAY_OF_MONTH,
+                DateFeature.DAY_OF_WEEK, DateFeature.HOUR, DateFeature.MINUTE,
+                DateFeature.SECOND));
+        DataFrame output = formula.frame(Date.data);
+        assertEquals(output.ncol(), 7);
+
+        StructType schema = output.schema();
+        System.out.println(schema);
+        System.out.println(output);
+
+        for (int i = 0; i < output.ncol(); i++) {
+            assertEquals(DataTypes.IntegerType, schema.field(i).type);
+            if (i == 1 || i == 3) {
+                assertTrue(schema.field(i).measure instanceof NominalScale);
+            } else {
+                assertNull(schema.field(i).measure);
             }
-        } catch (Exception ex) {
-            System.err.println(ex);
         }
+
+        for (int i = 0; i < output.nrow(); i++) {
+            for (int j = 0; j < output.ncol(); j++) {
+                assertEquals(result[i][j], output.getDouble(i, j), 1E-7);
+            }
+        }
+
+        assertEquals("APRIL", output.getScale(0, 1));
+        assertEquals("MAY", output.getScale(1, 1));
+        assertEquals("TUESDAY", output.getScale(0, 3));
+        assertEquals("THURSDAY", output.getScale(1, 3));
     }
 }

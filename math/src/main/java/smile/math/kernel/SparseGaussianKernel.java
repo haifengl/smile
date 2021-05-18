@@ -1,59 +1,83 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.kernel;
 
-import smile.math.SparseArray;
-import smile.math.Math;
+import smile.math.MathEx;
+import smile.util.SparseArray;
 
 /**
- * The Gaussian Mercer Kernel. k(u, v) = e<sup>-||u-v||<sup>2</sup> / (2 * &sigma;<sup>2</sup>)</sup>,
- * where &sigma; &gt; 0 is the scale parameter of the kernel.
+ * Gaussian kernel, also referred as RBF kernel or squared exponential kernel.
+ * <p>
+ *     k(u, v) = exp(-||u-v||<sup>2</sup> / 2&sigma;<sup>2</sup>)
+ * <p>
+ * where &sigma; {@code > 0} is the scale parameter of the kernel.
  * <p>
  * The Gaussian kernel is a good choice for a great deal of applications,
  * although sometimes it is remarked as being over used.
 
  * @author Haifeng Li
  */
-public class SparseGaussianKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
-    /**
-     * The width of the kernel.
-     */
-    private double gamma;
-    
+public class SparseGaussianKernel extends Gaussian implements MercerKernel<SparseArray> {
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Gaussian kernel.
+     * @param sigma The length scale of kernel.
      */
     public SparseGaussianKernel(double sigma) {
-        if (sigma <= 0)
-            throw new IllegalArgumentException("sigma is not positive.");
-
-        this.gamma = 0.5 / (sigma * sigma);
+        this(sigma, 1E-05, 1E5);
     }
 
-    @Override
-    public String toString() {
-        return String.format("Sparse Gaussian Kernel (\u02E0 = %.4f)", Math.sqrt(0.5/gamma));
+    /**
+     * Constructor.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
+     */
+    public SparseGaussianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * Math.squaredDistance(x, y));
+        return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
+    public SparseGaussianKernel of(double[] params) {
+        return new SparseGaussianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

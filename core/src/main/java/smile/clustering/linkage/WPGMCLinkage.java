@@ -1,20 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.clustering.linkage;
+
+import smile.math.distance.Distance;
 
 /**
  * Weighted Pair Group Method using Centroids (also known as median linkage).
@@ -26,14 +29,55 @@ package smile.clustering.linkage;
 public class WPGMCLinkage extends Linkage {
     /**
      * Constructor.
-     * @param proximity  the proximity matrix to store the distance measure of
-     * dissimilarity. To save space, we only need the lower half of matrix.
+     * @param proximity the proximity matrix. Only the lower half will
+     *                  be referred.
      */
     public WPGMCLinkage(double[][] proximity) {
-        init(proximity);
-        for (int i = 0; i < this.proximity.length; i++) {
-            this.proximity[i] *= this.proximity[i];
+        super(proximity);
+        init();
+    }
+
+    /**
+     * Constructor. Initialize the linkage with the lower triangular proximity matrix.
+     * @param size the data size.
+     * @param proximity the column-wise linearized proximity matrix that stores
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
+     */
+    public WPGMCLinkage(int size, float[] proximity) {
+        super(size, proximity);
+        init();
+    }
+
+    /** Initialize proximity. */
+    private void init() {
+        for (int i = 0; i < proximity.length; i++) {
+            proximity[i] *= proximity[i];
         }
+    }
+
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @return the linkage.
+     */
+    public static WPGMCLinkage of(double[][] data) {
+        return new WPGMCLinkage(data.length, proximity(data));
+    }
+
+    /**
+     * Computes the proximity and the linkage.
+     *
+     * @param data the data points.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the linkage.
+     */
+    public static <T> WPGMCLinkage of(T[] data, Distance<T> distance) {
+        return new WPGMCLinkage(data.length, proximity(data, distance));
     }
 
     @Override

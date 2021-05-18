@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.distance;
 
@@ -59,9 +60,10 @@ public class CorrelationDistanceTest {
         double[] z = {4.0, 2.0, 3.0, 1.0};
         double[] w = {-2.1968219, -0.9559913, -0.0431738,  1.0567679,  0.3853515};
         double[] v = {-1.7781325, -0.6659839,  0.9526148, -0.9460919, -0.3925300};
-        assertEquals(0.0, CorrelationDistance.pearson(x, x), 1E-5);
-        assertEquals(2.0, CorrelationDistance.pearson(x, y), 1E-5);
-        assertEquals(0.2, CorrelationDistance.pearson(y, z), 1E-5);
-        assertEquals(0.5313153, CorrelationDistance.pearson(w, v), 1E-7);
+        CorrelationDistance cor = new CorrelationDistance();
+        assertEquals(0.0, cor.d(x, x), 1E-5);
+        assertEquals(2.0, cor.d(x, y), 1E-5);
+        assertEquals(0.2, cor.d(y, z), 1E-5);
+        assertEquals(0.5313153, cor.d(w, v), 1E-7);
     }
 }

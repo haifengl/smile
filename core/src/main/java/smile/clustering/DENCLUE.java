@@ -1,33 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.Callable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import smile.math.Math;
-import smile.util.MulticoreExecutor;
+import java.util.stream.IntStream;
+import smile.math.MathEx;
 
 /**
  * DENsity CLUstering. The DENCLUE algorithm employs a cluster model based on
  * kernel density estimation. A cluster is defined by a local maximum of the
- * estimated density function. Data points going to the same local maximum
+ * estimated density function. Observations going to the same local maximum
  * are put into the same cluster.
  * <p>
  * Clearly, DENCLUE doesn't work on data with uniform distribution. In high
@@ -43,319 +40,202 @@ import smile.util.MulticoreExecutor;
  * 
  * @author Haifeng Li
  */
-public class DENCLUE extends PartitionClustering<double[]> {
-    private static final long serialVersionUID = 1L;
-    private static final Logger logger = LoggerFactory.getLogger(DENCLUE.class);
+public class DENCLUE extends PartitionClustering {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(DENCLUE.class);
 
     /**
-     * The epsilon of finishing density attractor searching.
+     * The tolerance of hill-climbing procedure.
      */
-    private double eps = 1E-7;
+    private final double tol;
     /**
-     * The smooth parameter in the Gaussian kernel. The user can
-     * choose sigma such that number of density attractors is constant for a
-     * long interval of sigma.
+     * The smooth parameter in the Gaussian kernel.
      */
-    private double sigma;
+    private final double sigma;
     /**
-     * The smooth parameter in the Gaussian kernel. It is -0.5 / (sigma * sigma).
+     * The density attractor of each observation.
      */
-    private double gamma;
-    /**
-     * The density attractor of each cluster.
-     */
-    private double[][] attractors;
+    public final double[][] attractors;
     /**
      * The radius of density attractor.
      */
-    private double[] radius;
+    private final double[] radius;
     /**
-     * The samples decided by NeuralGas used in the iterations of hill climbing.
+     * The samples decided by k-means used in the iterations of hill climbing.
      */
-    private double[][] samples;
+    private final double[][] samples;
 
     /**
-     * Constructor. Clustering data.
-     * @param data the dataset for clustering.
+     * Constructor.
+     * @param k the number of clusters.
+     * @param attractors the density attractor of each observation.
+     * @param radius the radius of density attractor.
+     * @param samples the samples in the iterations of hill climbing.
      * @param sigma the smooth parameter in the Gaussian kernel. The user can
-     * choose sigma such that number of density attractors is constant for a
-     * long interval of sigma.
-     * @param m the number of selected samples used in the iteration.
-     * This number should be much smaller than the number of data points
-     * to speed up the algorithm. It should also be large enough to capture
-     * the sufficient information of underlying distribution.
+     *              choose sigma such that number of density attractors is
+     *              constant for a long interval of sigma.
+     * @param y the cluster labels.
+     * @param tol the tolerance of hill-climbing procedure.
      */
-    public DENCLUE(double[][] data, double sigma, int m) {
+    public DENCLUE(int k, double[][] attractors, double[] radius, double[][] samples, double sigma, int[] y, double tol) {
+        super(k, y);
+        this.attractors = attractors;
+        this.radius = radius;
+        this.samples = samples;
+        this.sigma = sigma;
+        this.tol = tol;
+    }
+
+    /**
+     * Clustering data.
+     * @param data the input data of which each row is an observation.
+     * @param sigma the smooth parameter in the Gaussian kernel. The user can
+     *              choose sigma such that number of density attractors is
+     *              constant for a long interval of sigma.
+     * @param m the number of selected samples used in the iteration.
+     *          This number should be much smaller than the number of
+     *          observations to speed up the algorithm. It should also be
+     *          large enough to capture the sufficient information of
+     *          underlying distribution.
+     * @return the model.
+     */
+    public static DENCLUE fit(double[][] data, double sigma, int m) {
+        int n = data.length;
+        return fit(data, sigma, m, 1E-2, Math.max(10, n/200));
+    }
+
+    /**
+     * Clustering data.
+     * @param data the input data of which each row is an observation.
+     * @param sigma the smooth parameter in the Gaussian kernel. The user can
+     *              choose sigma such that number of density attractors is
+     *              constant for a long interval of sigma.
+     * @param m the number of selected samples used in the iteration.
+     *          This number should be much smaller than the number of
+     *          observations to speed up the algorithm. It should also be
+     *          large enough to capture the sufficient information of
+     *          underlying distribution.
+     * @param tol the tolerance of hill-climbing procedure.
+     * @param minPts the minimum number of neighbors for a core attractor.
+     * @return the model.
+     */
+    public static DENCLUE fit(double[][] data, double sigma, int m, double tol, int minPts) {
         if (sigma <= 0.0) {
             throw new IllegalArgumentException("Invalid standard deviation of Gaussian kernel: " + sigma);
         }
         
-        if (m <= 0) {
+        if (m <= 0 || m > data.length) {
             throw new IllegalArgumentException("Invalid number of selected samples: " + m);
         }
-        
-        if (m < 10) {
-            throw new IllegalArgumentException("The number of selected samples is too small: " + m);
-        }
-        
-        this.sigma = sigma;
-        this.gamma = -0.5 / (sigma * sigma);
-        
-        KMeans kmeans = new KMeans(data, m);
-        samples = kmeans.centroids();
+
+        logger.info("Select {} samples by k-means", m);
+        KMeans kmeans = KMeans.fit(data, m);
+        double[][] samples = kmeans.centroids;
 
         int n = data.length;
         int d = data[0].length;
+        double[][] attractors = new double[n][d];
+        double[][] steps = new double[n][2];
 
-        attractors = new double[n][];
-        for (int i = 0; i < n; i++) {
-            attractors[i] = data[i].clone();
+        logger.info("Hill-climbing of density function for each observation");
+        // Stream is lazy. Without calling toArray(), the computation won't be executed.
+        IntStream.range(0, n).parallel()
+                .forEach(i -> climb(data[i], attractors[i], steps[i], samples, sigma, tol));
+
+        if (Arrays.stream(attractors).flatMapToDouble(Arrays::stream).anyMatch(ai -> !Double.isFinite(ai))) {
+            throw new IllegalStateException("Attractors contains NaN/infinity. sigma is likely too small.");
+        }
+
+        double[] radius = Arrays.stream(steps).mapToDouble(step -> step[0] + step[1]).toArray();
+        double r = MathEx.mean(radius);
+
+        if (!Double.isFinite(r)) {
+            throw new IllegalStateException("The average of last steps of hill-climbing is NaN/infinity. sigma is likely too small.");
+        }
+
+        logger.info("Clustering attractors with DBSCAN (radius = {})", r);
+        DBSCAN<double[]> dbscan = DBSCAN.fit(attractors, minPts, r);
+
+        return new DENCLUE(dbscan.k, attractors, radius, samples, sigma, dbscan.y, tol);
+    }
+
+    /**
+     * Classifies a new observation.
+     * @param x a new observation.
+     * @return the cluster label. Note that it may be {@link #OUTLIER}.
+     */
+    public int predict(double[] x) {
+        int d = attractors[0].length;
+        if (x.length != d) {
+            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, d));
         }
 
         double[] attractor = new double[d];
-        double[] prob = new double[n];
-        radius = new double[n];
+        double[] step = new double[2];
+        climb(x, attractor, step, samples, sigma, tol);
 
-        int np = MulticoreExecutor.getThreadPoolSize();
-        List<DENCLUEThread> tasks = null;
-        if (n >= 1000 && np >= 2) {
-            tasks = new ArrayList<>(np + 1);
-            int step = n / np;
-            if (step < 100) {
-                step = 100;
-            }
-
-            int start = 0;
-            int end = step;
-            for (int i = 0; i < np-1; i++) {
-                tasks.add(new DENCLUEThread(prob, start, end));
-                start += step;
-                end += step;
-            }
-            
-            tasks.add(new DENCLUEThread(prob, start, n));
-            
-            try {
-                MulticoreExecutor.run(tasks);
-            } catch (Exception ex) {
-                logger.error("Failed to run DENCLUE on multi-core", ex);
-                for (DENCLUEThread task : tasks) {
-                    task.call();
-                }
-            }
-        } else {
-
-            for (int i = 0; i < n; i++) {
-                double diff = 1.0;
-                while (diff > eps) {
-                    double weight = 0.0;
-                    for (int j = 0; j < m; j++) {
-                        double w = Math.exp(gamma * Math.squaredDistance(attractors[i], samples[j]));
-                        weight += w;
-                        for (int l = 0; l < d; l++) {
-                            attractor[l] += w * samples[j][l];
-                        }
-                    }
-
-                    for (int l = 0; l < d; l++) {
-                        attractor[l] /= weight;
-                    }
-
-                    weight /= m;
-                    diff = weight - prob[i];
-                    prob[i] = weight;
-
-                    if (diff > 1E-5) {
-                        radius[i] = 2 * Math.distance(attractors[i], attractor);
-                    }
-
-                    System.arraycopy(attractor, 0, attractors[i], 0, d);
-                    Arrays.fill(attractor, 0.0);
-                }
-            }
-        }
-
-        y = new int[n];
-        ArrayList<double[]> cluster = new ArrayList<>();
-        ArrayList<Double> probability = new ArrayList<>();
-        ArrayList<Double> step = new ArrayList<>();
-
-        y[0] = 0;
-        cluster.add(attractors[0]);
-        probability.add(prob[0]);
-        step.add(radius[0]);
-
-        boolean newcluster = true;
-        for (int i = 1; i < n; i++) {
-            newcluster = true;
-            for (int j = 0; j < cluster.size(); j++) {
-                if (Math.distance(attractors[i], cluster.get(j)) < radius[i] + step.get(j)) {
-                    y[i] = j;
-                    newcluster = false;
-                    if (prob[i] > probability.get(j)) {
-                        cluster.set(j, attractors[i]);
-                        probability.set(j, prob[i]);
-                        step.set(j, radius[i]);
-                    }
-                    break;
-                }
-            }
-
-            if (newcluster) {
-                y[i] = cluster.size();
-                cluster.add(attractors[i]);
-                probability.add(prob[i]);
-                step.add(radius[i]);
-            }
-        }
-
-        size = new int[cluster.size()];
-        for (int i = 0; i < n; i++) {
-            size[y[i]]++;
-        }
-
-        k = cluster.size();
-        attractors = new double[k][];
-        for (int i = 0; i < k; i++) {
-            attractors[i] = cluster.get(i);
-        }
-    }
-
-    /**
-     * Returns the smooth (standard deviation) parameter in the Gaussian kernel.
-     * @return the smooth (standard deviation) parameter in the Gaussian kernel.
-     */
-    public double getSigma() {
-    	return sigma;
-    }
-    
-    /**
-     * Adapter for running DENCLUE algorithm in thread pool.
-     */
-    class DENCLUEThread implements Callable<DENCLUEThread> {
-
-        /**
-         * The start index of data portion for this task.
-         */
-        final int start;
-        /**
-         * The end index of data portion for this task.
-         */
-        final int end;
-        double[] attractor;
-        double[] prob;
-
-        DENCLUEThread(double[] prob, int start, int end) {
-            this.prob = prob;
-            this.start = start;
-            this.end = end;
-            attractor = new double[samples[0].length];
-        }
-
-        @Override
-        public DENCLUEThread call() {
-            int m = samples.length;
-            int d = samples[0].length;
-            for (int i = start; i < end; i++) {
-                double diff = 1.0;
-                while (diff > eps) {
-                    double weight = 0.0;
-                    for (int j = 0; j < m; j++) {
-                        double w = Math.exp(gamma * Math.squaredDistance(attractors[i], samples[j]));
-                        weight += w;
-                        for (int l = 0; l < d; l++) {
-                            attractor[l] += w * samples[j][l];
-                        }
-                    }
-
-                    for (int l = 0; l < d; l++) {
-                        attractor[l] /= weight;
-                    }
-
-                    weight /= m;
-                    diff = weight - prob[i];
-                    prob[i] = weight;
-
-                    if (diff > 1E-5) {
-                        radius[i] = 2 * Math.distance(attractors[i], attractor);
-                    }
-
-                    System.arraycopy(attractor, 0, attractors[i], 0, d);
-                    Arrays.fill(attractor, 0.0);
-                }
-            }
-            
-            return this;
-        }
-    }
-
-    /**
-     * Returns the density attractors of cluster.
-     */
-    public double[][] getDensityAttractors() {
-        return attractors;
-    }
-
-    @Override
-    public int predict(double[] x) {
-        int p = attractors[0].length;
-        if (x.length != p) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, p));
-        }
-
-        double prob = 0.0;
-        double diff = 1.0;
-
-        double step = 0.0;
-        double[] z = x.clone();
-        double[] attractor = new double[p];
-        while (diff > eps) {
-            double weight = 0.0;
-            for (int i = 0; i < samples.length; i++) {
-                double w = Math.exp(gamma * Math.squaredDistance(samples[i], z));
-                weight += w;
-                for (int j = 0; j < p; j++) {
-                    attractor[j] += w * samples[i][j];
-                }
-            }
-
-            for (int j = 0; j < p; j++) {
-                attractor[j] /= weight;
-            }
-
-            weight /= k;
-            diff = weight - prob;
-            prob = weight;
-
-            if (diff > 1E-5) {
-                step = 2 * Math.distance(attractor, z);
-            }
-
-            for (int j = 0; j < p; j++) {
-                z[j] = attractor[j];
-                attractor[j] = 0;
-            }
-        }
-
-        for (int i = 0; i < k; i++) {
-            if (Math.distance(attractors[i], z) < radius[i] + step) {
-                return i;
+        double r = step[0] + step[1];
+        for (int i = 0; i < attractors.length; i++) {
+            if (MathEx.distance(attractors[i], attractor) < radius[i] + r) {
+                return y[i];
             }
         }
 
         return OUTLIER;
     }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
+    /**
+     * The hill-climbing is started for each observation, which assigns the
+     * observation to a local maxima (attractor).
+     * @param x the observation to start with.
+     * @param attractor the local maxima on output.
+     * @param step the last k step sizes.
+     * @param samples the samples used in kernel density estimation.
+     * @param sigma the bandwidth of Gaussian kernel.
+     * @param tol the tolerance of convergence test.
+     * @return the local density of attractor.
+     */
+    private static double climb(double[] x, double[] attractor, double[] step, double[][] samples, double sigma, double tol) {
+        int m = samples.length;
+        int d = x.length;
+        int k = step.length;
 
-        sb.append(String.format("DENCLUE clusters of %d data points:%n", y.length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
+        double p = 1.0;
+        double h = Math.pow(2 * Math.PI * sigma, d/2.0);
+        double gamma = -0.5 / (sigma * sigma);
+
+        // Don't overwrite the origin observation
+        x = x.clone();
+        double[] w = new double[m];
+
+        double diff = Double.MAX_VALUE;
+        for (int iter = 0; iter < k || diff > tol; iter++) {
+            for (int i = 0; i < m; i++) {
+                w[i] = Math.exp(gamma * MathEx.squaredDistance(x, samples[i]));
+            }
+
+            Arrays.fill(attractor, 0.0);
+            for (int i = 0; i < m; i++) {
+                double wi = w[i];
+                double[] xi = samples[i];
+                for (int j = 0; j < d; j++) {
+                    attractor[j] += wi * xi[j];
+                }
+            }
+
+            double W = MathEx.sum(w);
+            for (int j = 0; j < d; j++) {
+                attractor[j] /= W;
+            }
+
+            double prob = W / (m * h);
+            diff = Math.abs(prob - p) / p;
+            p = prob;
+
+            step[iter % k] = MathEx.distance(attractor, x);
+            System.arraycopy(attractor, 0, x, 0, d);
         }
 
-        return sb.toString();
+        return p;
     }
 }

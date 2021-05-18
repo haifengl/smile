@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.hypothesis;
 
@@ -22,7 +23,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import static org.junit.Assert.*;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  *
@@ -145,7 +146,7 @@ public class TTestTest {
             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096};
 
-        TTest result = TTest.pairedTest(y, z);
+        TTest result = TTest.testPaired(y, z);
         assertEquals(17, result.df, 1E-10);
         assertEquals(-0.1502, result.t, 1E-4);
         assertEquals(0.8824, result.pvalue, 1E-4);
@@ -161,7 +162,7 @@ public class TTestTest {
         double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1};
         double[] y  = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8};
 
-        TTest result = TTest.test(Math.cor(x,y), x.length-2);
+        TTest result = TTest.test(MathEx.cor(x,y), x.length-2);
         assertEquals(7, result.df, 1E-10);
         assertEquals(1.8411, result.t, 1E-4);
         assertEquals(0.1082, result.pvalue, 1E-4);

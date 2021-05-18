@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.nlp.relevance;
 
@@ -65,7 +66,7 @@ public class TFIDF implements RelevanceRanker {
     /**
      * The smoothing parameter in maximum tf normalization.
      */
-    private double a = 0.4;
+    private final double a;
 
     /**
      * Constructor.
@@ -83,11 +84,12 @@ public class TFIDF implements RelevanceRanker {
     }
 
     /**
-     * Returns a relevance score between a term and a document based on a corpus.
+     * Returns the relevance score between a term and a document based on a corpus.
      * @param tf the frequency of searching term in the document to rank.
      * @param maxtf the maximum frequency over all terms in the document.
      * @param N the number of documents in the corpus.
      * @param n the number of documents containing the given term in the corpus;
+     * @return the relevance score.
      */
     public double rank(int tf, int maxtf, long N, long n) {
         if (tf == 0) return 0.0;
@@ -99,7 +101,7 @@ public class TFIDF implements RelevanceRanker {
     public double rank(Corpus corpus, TextTerms doc, String term, int tf, int n) {
         if (tf == 0) return 0.0;
 
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         return rank(tf, maxtf, N, n);
@@ -107,7 +109,7 @@ public class TFIDF implements RelevanceRanker {
 
     @Override
     public double rank(Corpus corpus, TextTerms doc, String[] terms, int[] tf, int n) {
-        int N = corpus.getNumDocuments();
+        int N = corpus.ndoc();
         int maxtf = doc.maxtf();
 
         double r = 0.0;

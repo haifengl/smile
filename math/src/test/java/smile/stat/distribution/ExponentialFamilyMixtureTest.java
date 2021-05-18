@@ -1,29 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.MathEx;
+import static org.junit.Assert.*;
 
 /**
  *
@@ -57,6 +57,7 @@ public class ExponentialFamilyMixtureTest {
     @Test
     public void testEM() {
         System.out.println("EM");
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         // Mixture of Gaussian, Exponential, and Gamma.
         double[] data = new double[2000];
@@ -73,23 +74,15 @@ public class ExponentialFamilyMixtureTest {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        List<Mixture.Component> m = new ArrayList<>();
-        Mixture.Component c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new GaussianDistribution(0.0, 1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new ExponentialDistribution(1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.5;
-        c.distribution = new GammaDistribution(1.0, 2.0);
-        m.add(c);
-
-        ExponentialFamilyMixture mixture = new ExponentialFamilyMixture(m, data);
+        ExponentialFamilyMixture mixture = ExponentialFamilyMixture.fit(data,
+                new Mixture.Component(0.25, new GaussianDistribution(0.0, 1.0)),
+                new Mixture.Component(0.25, new ExponentialDistribution(1.0)),
+                new Mixture.Component(0.5, new GammaDistribution(1.0, 2.0))
+                );
         System.out.println(mixture);
+
+        assertEquals(0.30, mixture.components[0].priori, 1E-2);
+        assertEquals(0.13, mixture.components[1].priori, 1E-2);
+        assertEquals(0.57, mixture.components[2].priori, 1E-2);
     }
 }

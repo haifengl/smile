@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.math.matrix;
 
 import org.junit.After;
@@ -51,10 +53,9 @@ public class BiconjugateGradientTest {
     public void setUp() {
         System.out.println("setUp");
 
-        DenseMatrix a = Matrix.newInstance(A);
-        LU lu = a.lu();
-        x = b.clone();
-        lu.solve(x);
+        Matrix a = new Matrix(A);
+        Matrix.LU lu = a.lu();
+        x = lu.solve(b);
     }
 
     @After
@@ -68,33 +69,27 @@ public class BiconjugateGradientTest {
     public void testSolveMatrix() {
         System.out.println("naive matrix");
 
-        DenseMatrix naive = Matrix.newInstance(A);
+        Matrix naive = new Matrix(A);
         double[] result = new double[3];
         BiconjugateGradient.solve(naive, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
+            assertEquals(x[i], result[i], 1E-7);
         }
     }
 
-    /**
-     * Test of solve method on SparseMatrix.
-     */
     @Test
     public void testSolveSparseMatrix() {
-        System.out.println("naive matrix");
-        int[] rowIndex = {0, 1, 0, 1, 2, 1, 2};
-        int[] colIndex = {0, 2, 5, 7};
-        double[] val = {0.9, 0.4, 0.4, 0.5, 0.3, 0.3, 0.8};
-        SparseMatrix sparse = new SparseMatrix(3, 3, val, rowIndex, colIndex);
+        System.out.println("sparse matrix");
+        SparseMatrix sparse = new SparseMatrix(A, 1E-8);
 
         double[] result = new double[3];
         BiconjugateGradient.solve(sparse, b, result);
 
         assertEquals(result.length, x.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
+            assertEquals(x[i], result[i], 1E-7);
         }
     }
 }

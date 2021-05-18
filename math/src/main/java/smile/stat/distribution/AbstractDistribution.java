@@ -1,61 +1,70 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
- * This is the base class of univariate distributions. Both rejection
+ * The base class of univariate distributions. Both rejection
  * and inverse transform sampling methods are implemented to provide some
  * general approaches to generate random samples based on probability density
- * function or quantile function. Besides, a quantile function is also provided
- * based on bisection searching. Likelihood and log likelihood functions are
- * also implemented here.
+ * function or quantile function. Besides, a quantile function is also
+ * provided based on bisection searching. Likelihood and log likelihood
+ * functions are also implemented here.
  *
  * @author Haifeng Li
  */
 public abstract class AbstractDistribution implements Distribution {
     /**
-     * Use the rejection technique to draw a sample from the given distribution.
-     * WARNING : this simulation technique can take a very long time.
-     * Rejection sampling is also commonly called the acceptance-rejection
-     * method or "accept-reject algorithm".
+     * Use the rejection technique to draw a sample from the given
+     * distribution. <em>WARNING</em>: this simulation technique can
+     * take a very long time. Rejection sampling is also commonly
+     * called the acceptance-rejection method or "accept-reject algorithm".
      * It generates sampling values from an arbitrary probability distribution
      * function f(x) by using an instrumental distribution g(x), under the
-     * only restriction that f(x) < M g(x) where M > 1 is an appropriate
-     * bound on f(x) / g(x).
+     * only restriction that {@code f(x) < M g(x)} where
+     * {@code M > 1} is an appropriate bound on
+     * {@code f(x) / g(x)}.
      * <p>
-     * Rejection sampling is usually used in cases where the form of f(x)
-     * makes sampling difficult. Instead of sampling directly from the
-     * distribution f(x), we use an envelope distribution M g(x) where
-     * sampling is easier. These samples from M g(x) are probabilistically
+     * Rejection sampling is usually used in cases where the form of
+     * <code>f(x)</code> makes sampling difficult. Instead of sampling
+     * directly from the distribution <code>f(x)</code>, we use an envelope
+     * distribution <code>M g(x)</code> where sampling is easier. These
+     * samples from <code>M g(x)</code> are probabilistically
      * accepted or rejected.
      * <p>
      * This method relates to the general field of Monte Carlo techniques,
      * including Markov chain Monte Carlo algorithms that also use a proxy
-     * distribution to achieve simulation from the target distribution f(x).
-     * It forms the basis for algorithms such as the Metropolis algorithm.
+     * distribution to achieve simulation from the target distribution
+     * <code>f(x)</code>. It forms the basis for algorithms such as
+     * the Metropolis algorithm.
+     *
+     * @param pmax the scale of instrumental distribution (uniform).
+     * @param xmin the lower bound of random variable range.
+     * @param xmax the upper bound of random variable range.
+     * @return a random number.
      */
     protected double rejection(double pmax, double xmin, double xmax) {
         double x;
         double y;
         do {
-            x = xmin + Math.random() * (xmax - xmin);
-            y = Math.random() * pmax;
+            x = xmin + MathEx.random() * (xmax - xmin);
+            y = MathEx.random() * pmax;
         } while (p(x) < y);
 
         return x;
@@ -76,15 +85,23 @@ public abstract class AbstractDistribution implements Distribution {
      * case that, even for simple distributions, the inverse transform
      * sampling method can be improved on, given substantial research
      * effort, e.g. the ziggurat algorithm and rejection sampling.
+     *
+     * @return a random number.
      */
     protected double inverseTransformSampling() {
-        double u = Math.random();
+        double u = MathEx.random();
         return quantile(u);
     }
     
     /**
      * Inversion of CDF by bisection numeric root finding of "cdf(x) = p"
      * for continuous distribution.
+     *
+     * @param p the probability.
+     * @param xmin the lower bound of search range.
+     * @param xmax the upper bound of search range.
+     * @param eps the epsilon close to zero.
+     * @return the quantile.
      */
     protected double quantile(double p, double xmin, double xmax, double eps) {
         if (eps <= 0.0) {
@@ -106,29 +123,12 @@ public abstract class AbstractDistribution implements Distribution {
     /**
      * Inversion of CDF by bisection numeric root finding of "cdf(x) = p"
      * for continuous distribution. The default epsilon is 1E-6.
+     * @param p the probability.
+     * @param xmin the lower bound of search range.
+     * @param xmax the upper bound of search range.
+     * @return the quantile.
      */
     protected double quantile(double p, double xmin, double xmax) {
         return quantile(p, xmin, xmax, 1.0E-6);
-    }
-
-    /**
-     * The likelihood given a sample set following the distribution.
-     */
-    @Override
-    public double likelihood(double[] x) {
-        return Math.exp(logLikelihood(x));
-    }
-    
-    /**
-     * The likelihood given a sample set following the distribution.
-     */
-    @Override
-    public double logLikelihood(double[] x) {
-        double L = 0.0;
-        
-        for (double xi : x)
-            L += logp(xi);
-        
-        return L;
     }
 }

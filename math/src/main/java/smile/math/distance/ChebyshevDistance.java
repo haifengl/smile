@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.distance;
 
@@ -34,15 +35,19 @@ public class ChebyshevDistance implements Metric<double[]> {
 
     @Override
     public String toString() {
-        return "Chebyshev distance";
+        return "Chebyshev Distance";
     }
 
     /**
      * Chebyshev distance between the two arrays of type integer.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public static double d(int[] x, int[] y) {
-        if (x.length != y.length)
+        if (x.length != y.length) {
             throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
+        }
 
         double dist = 0.0;
         for (int i = 0; i < x.length; i++) {
@@ -58,6 +63,9 @@ public class ChebyshevDistance implements Metric<double[]> {
      * Chebyshev distance between the two arrays of type float.
      * NaN will be treated as missing values and will be excluded from the
      * calculation.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     public static double d(float[] x, float[] y) {
         if (x.length != y.length)
@@ -79,6 +87,9 @@ public class ChebyshevDistance implements Metric<double[]> {
      * Chebyshev distance between the two arrays of type double.
      * NaN will be treated as missing values and will be excluded from the
      * calculation.
+     * @param x a vector.
+     * @param y a vector.
+     * @return the distance.
      */
     @Override
     public double d(double[] x, double[] y) {

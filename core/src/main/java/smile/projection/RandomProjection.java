@@ -1,23 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.projection;
 
 import java.io.Serializable;
-import smile.math.Math;
-import smile.math.matrix.DenseMatrix;
+import smile.math.MathEx;
 import smile.math.matrix.Matrix;
 import smile.stat.distribution.GaussianDistribution;
 
@@ -52,42 +53,33 @@ import smile.stat.distribution.GaussianDistribution;
  *
  * @author Haifeng Li
  */
-public class RandomProjection implements Projection<double[]>, Serializable {
-    private static final long serialVersionUID = 1L;
+public class RandomProjection implements LinearProjection, Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Probability distribution to generate random projection.
      */
     private static final double[] prob = {1.0 / 6, 2.0 / 3, 1.0 / 6};
     /**
-     * The dimension of feature space.
-     */
-    private int p;
-    /**
-     * The dimension of input space.
-     */
-    private int n;
-    /**
      * Projection matrix.
      */
-    private DenseMatrix projection;
-
-    /**
-     * Constructor. Generate a non-sparse random projection.
-     * @param n the dimension of input space.
-     * @param p the dimension of feature space.
-     */
-    public RandomProjection(int n, int p) {
-        this(n, p, false);
-    }
+    private final Matrix projection;
 
     /**
      * Constructor.
+     * @param projection the projection matrix.
+     */
+    public RandomProjection(Matrix projection) {
+        this.projection = projection;
+    }
+
+    /**
+     * Generates a non-sparse random projection.
      * @param n the dimension of input space.
      * @param p the dimension of feature space.
-     * @param sparse true to generate a sparse random projection proposed by Achlioptas.
+     * @return the model.
      */
-    public RandomProjection(int n, int p, boolean sparse) {
+    public static RandomProjection of(int n, int p) {
         if (n < 2) {
             throw new IllegalArgumentException("Invalid dimension of input space: " + n);
         }
@@ -96,69 +88,55 @@ public class RandomProjection implements Projection<double[]>, Serializable {
             throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
         }
 
-        this.n = n;
-        this.p = p;
-
-        if (sparse) {
-            projection = Matrix.zeros(p, n);
-            double scale = Math.sqrt(3);
-            for (int i = 0; i < p; i++) {
-                for (int j = 0; j < n; j++) {
-                    projection.set(i, j, scale * (Math.random(prob) - 1));
-                }
+        double[][] projection = new double[p][n];
+        GaussianDistribution gauss = GaussianDistribution.getInstance();
+        for (int i = 0; i < p; i++) {
+            for (int j = 0; j < n; j++) {
+                projection[i][j] = gauss.rand();
             }
-        } else {
-            double[][] proj = new double[p][n];
-            GaussianDistribution gauss = GaussianDistribution.getInstance();
-            for (int i = 0; i < p; i++) {
-                for (int j = 0; j < n; j++) {
-                    proj[i][j] = gauss.rand();
-                }
-            }
-
-            // Make the columns of the projection matrix orthogonal
-            // by modified Gram-Schmidt algorithm.
-            Math.unitize(proj[0]);
-            for (int i = 1; i < p; i++) {
-                for (int j = 0; j < i; j++) {
-                    double t = -Math.dot(proj[i], proj[j]);
-                    Math.axpy(t, proj[j], proj[i]);
-                }
-                Math.unitize(proj[i]);
-            }
-            projection = Matrix.newInstance(proj);
         }
+
+        // Make the columns of the projection matrix orthogonal
+        // by modified Gram-Schmidt algorithm.
+        MathEx.unitize(projection[0]);
+        for (int i = 1; i < p; i++) {
+            for (int j = 0; j < i; j++) {
+                double t = -MathEx.dot(projection[i], projection[j]);
+                MathEx.axpy(t, projection[j], projection[i]);
+            }
+            MathEx.unitize(projection[i]);
+        }
+
+        return new RandomProjection(new Matrix(projection));
     }
 
     /**
-     * Returns the projection matrix. The dimension reduced data can be obtained
-     * by y = W * x.
+     * Generates a sparse random projection.
+     * @param n the dimension of input space.
+     * @param p the dimension of feature space.
+     * @return the model.
      */
-    public DenseMatrix getProjection() {
+    public static RandomProjection sparse(int n, int p) {
+        if (n < 2) {
+            throw new IllegalArgumentException("Invalid dimension of input space: " + n);
+        }
+
+        if (p < 1 || p > n) {
+            throw new IllegalArgumentException("Invalid dimension of feature space: " + p);
+        }
+
+        Matrix projection = new Matrix(p, n);
+        double scale = Math.sqrt(3);
+        for (int i = 0; i < p; i++) {
+            for (int j = 0; j < n; j++) {
+                projection.set(i, j, scale * (MathEx.random(prob) - 1));
+            }
+        }
+        return new RandomProjection(projection);
+    }
+
+    @Override
+    public Matrix projection() {
         return projection;
-    }
-
-    @Override
-    public double[] project(double[] x) {
-        if (x.length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x.length, n));
-        }
-
-        double[] y = new double[p];
-        projection.ax(x, y);
-        return y;
-    }
-
-    @Override
-    public double[][] project(double[][] x) {
-        if (x[0].length != n) {
-            throw new IllegalArgumentException(String.format("Invalid input vector size: %d, expected: %d", x[0].length, n));
-        }
-
-        double[][] y = new double[x.length][p];
-        for (int i = 0; i < x.length; i++) {
-            projection.ax(x[i], y[i]);
-        }
-        return y;
     }
 }

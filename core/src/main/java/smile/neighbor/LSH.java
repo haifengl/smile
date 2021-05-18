@@ -1,31 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.neighbor;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-
-import smile.math.IntArrayList;
-import smile.math.Math;
+import smile.neighbor.lsh.*;
+import smile.util.IntArrayList;
+import smile.math.MathEx;
 import smile.sort.HeapSelect;
-import smile.stat.distribution.GaussianDistribution;
 
 /**
  * Locality-Sensitive Hashing. LSH is an efficient algorithm for
@@ -36,18 +36,6 @@ import smile.stat.distribution.GaussianDistribution;
  * than the universe of possible input items).
  * <p>
  * By default, the query object (reference equality) is excluded from the neighborhood.
- * You may change this behavior with <code>setIdenticalExcluded</code>. Note that
- * you may observe weird behavior with String objects. JVM will pool the string literal
- * objects. So the below variables
- * <code>
- *     String a = "ABC";
- *     String b = "ABC";
- *     String c = "AB" + "C";
- * </code>
- * are actually equal in reference test <code>a == b == c</code>. With toy data that you
- * type explicitly in the code, this will cause problems. Fortunately, the data would be
- * read from secondary storage in production.
- * </p>
  *
  * <h2>References</h2>
  * <ol>
@@ -62,289 +50,33 @@ import smile.stat.distribution.GaussianDistribution;
  * @author Haifeng Li
  */
 public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<double[], E>, RNNSearch<double[], E>, Serializable {
-    private static final long serialVersionUID = 1L;
-    /**
-     * A bucket is a container for points that all have the same value for hash
-     * function g (function g is a vector of k LSH functions). A bucket is specified by a vector in integers of length k.
-     */
-    static class BucketEntry implements Serializable {
+    private static final long serialVersionUID = 2L;
 
-        /**
-         * The bucket numbers given by the universal bucket hashing.
-         * These numbers are used instead of the full k-vector (value of the hash
-         * function g) describing the bucket. With a high probability all
-         * buckets will have different pairs of numbers.
-         */
-        int bucket;
-
-        /**
-         * The indices of points that all have the same value for hash function g.
-         */
-        IntArrayList entry;
-
-        /**
-         * Constructor.
-         * @param bucket the bucket number given by universal hashing.
-         */
-        BucketEntry(int bucket) {
-            this.bucket = bucket;
-            entry = new IntArrayList();
-        }
-
-        /**
-         * Adds a point to bucket.
-         * @param point the index of point.
-         */
-        void add(int point) {
-            entry.add(point);
-        }
-
-        /**
-         * Removes a point from bucket.
-         * @param point the index of point.
-         * @return true if the point was in the bucket.
-         */
-        boolean remove(int point) {
-            int n = entry.size();
-            for (int i = 0; i < n; i++) {
-                if (entry.get(i) == point) {
-                    entry.remove(i);
-                    return true;
-                }
-            }
-
-            return false;
-        }
-    }
-
-    /**
-     * The entry of an universal hash table with collision solved by chaining.
-     */
-    static class HashEntry implements Serializable {
-
-        /**
-         * The chain of buckets in the slot.
-         */
-        List<BucketEntry> entry;
-
-        /**
-         * Constructor.
-         */
-        HashEntry() {
-            entry = new LinkedList<>();
-        }
-
-        /**
-         * Adds a point to given bucket.
-         * @param bucket the bucket number.
-         * @param point the index of point.
-         */
-        void add(int bucket, int point) {
-            for (BucketEntry b : entry) {
-                if (b.bucket == bucket) {
-                    b.add(point);
-                    return;
-                }
-            }
-
-            BucketEntry b = new BucketEntry(bucket);
-            b.add(point);
-            entry.add(b);
-        }
-
-        /**
-         * Removes a point from given bucket.
-         * @param bucket the bucket number.
-         * @param point the index of point.
-         * @return true if the point was in the bucket.
-         */
-        boolean remove(int bucket, int point) {
-            for (BucketEntry b : entry) {
-                if (b.bucket == bucket) {
-                    return b.remove(point);
-                }
-            }
-
-            return false;
-        }
-    }
-
-    /**
-     * The hash function for data in Euclidean spaces.
-     */
-    class Hash implements Serializable {
-
-        /**
-         * The random vectors with entries chosen independently from a Gaussian
-         * distribution.
-         */
-        double[][] a;
-        /**
-         * Real numbers chosen uniformly from the range [0, w].
-         */
-        double[] b;
-        /**
-         * Hash table.
-         */
-        HashEntry[] table;
-
-        /**
-         * Constructor.
-         */
-        Hash() {
-            a = new double[k][d];
-            b = new double[k];
-
-            GaussianDistribution gaussian = GaussianDistribution.getInstance();
-            for (int i = 0; i < k; i++) {
-                for (int j = 0; j < d; j++) {
-                    a[i][j] = gaussian.rand();
-                }
-
-                b[i] = Math.random(0, w);
-            }
-
-            table = new HashEntry[H];
-        }
-
-        /**
-         * Returns the hash value of given vector x.
-         * @param x the vector to be hashed.
-         * @param m the m-<i>th</i> hash function to be employed.
-         * @return the hash value.
-         */
-        int hash(double[] x, int m) {
-            double g = b[m];
-            for (int j = 0; j < d; j++) {
-                g += a[m][j] * x[j];
-            }
-
-            int h = (int) Math.floor(g / w);
-            if (h < 0) {
-                h += 2147483647;
-            }
-
-            return h;
-        }
-
-        /**
-         * Apply hash functions on given vector x.
-         * @param r universal hashing random integers.
-         * @param x the vector to be hashed.
-         * @return the bucket of hash table for given vector x.
-         */
-        int hash(int[] r, double[] x) {
-            long g = 0;
-            for (int i = 0; i < k; i++) {
-                g += r[i] * hash(x, i);
-            }
-
-            int h = (int) (g % P);
-            if (h < 0) {
-                h += P;
-            }
-
-            return h;
-        }
-
-        /**
-         * Insert an item into the hash table.
-         */
-        void add(int index, double[] x) {
-            int bucket = hash(r2, x);
-            int i = hash(r1, x) % H;
-
-            if (table[i] == null) {
-                table[i] = new HashEntry();
-            }
-
-            table[i].add(bucket, index);
-        }
-
-        /**
-         * Returns the bucket entry for the given point.
-         */
-        BucketEntry get(double[] x) {
-            int bucket = hash(r2, x);
-            int i = hash(r1, x) % H;
-
-            HashEntry he = table[i];
-            if (he == null) {
-                return null;
-            }
-
-            for (BucketEntry be : he.entry) {
-                if (bucket == be.bucket) {
-                    return be;
-                }
-            }
-
-            return null;
-        }
-    }
-
-    /**
-     * The prime number in universal bucket hashing.
-     */
-    final int P = 2147483647;
-    /**
-     * The range of universal hashing random integers [0, 2^29).
-     */
-    final int MAX_HASH_RND = 536870912;
     /**
      * The keys of data objects.
      */
-    ArrayList<double[]> keys;
+    protected ArrayList<double[]> keys;
     /**
      * The data objects.
      */
-    ArrayList<E> data;
+    protected ArrayList<E> data;
     /**
      * Hash functions.
      */
-    List<Hash> hash;
+    protected List<Hash> hash;
     /**
      * The size of hash table.
      */
-    int H;
-    /**
-     * The dimensionality of data.
-     */
-    int d;
-    /**
-     * The number of hash tables.
-     */
-    int L;
+    protected int H;
     /**
      * The number of random projections per hash value.
      */
-    int k;
+    protected int k;
     /**
      * The width of projection. The hash function is defined as floor((a * x + b) / w). The value
      * of w determines the bucket interval.
      */
-    double w;
-    /**
-     * The random integer used for universal bucket hashing.
-     */
-    int[] r1;
-    /**
-     * The random integer used for universal hashing for control values.
-     */
-    int[] r2;
-    /**
-     * Whether to exclude query object self from the neighborhood.
-     */
-    boolean identicalExcluded = true;
-
-    /**
-     * Constructor.
-     * @param keys the keys of data objects.
-     * @param data the data objects.
-     */
-    public LSH(double[][] keys, E[] data) {
-        this(keys, data, 4.0);
-    }
+    protected double w;
 
     /**
      * Constructor.
@@ -355,7 +87,7 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
      * will increase the query time.
      */
     public LSH(double[][] keys, E[] data, double w) {
-        this(keys, data, w, keys.length);
+        this(keys, data, w, 1017881);
     }
 
     /**
@@ -363,8 +95,8 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
      * @param keys the keys of data objects.
      * @param data the data objects.
      * @param w the width of random projections. It should be sufficiently
-     * away from 0. But we should not choose an w value that is too large, which
-     * will increase the query time.
+     *          away from 0. But we should not choose an w value that is too
+     *          large, which will increase the query time.
      * @param H the size of universal hash tables.
      */
     public LSH(double[][] keys, E[] data, double w, int H) {
@@ -389,21 +121,10 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
      * @param d the dimensionality of data.
      * @param L the number of hash tables.
      * @param k the number of random projection hash functions, which is usually
-     * set to log(N) where N is the dataset size.
-     */
-    public LSH(int d, int L, int k) {
-        this(d, L, k, 4.0);
-    }
-
-    /**
-     * Constructor.
-     * @param d the dimensionality of data.
-     * @param L the number of hash tables.
-     * @param k the number of random projection hash functions, which is usually
-     * set to log(N) where N is the dataset size.
+     *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently
-     * away from 0. But we should not choose an w value that is too large, which
-     * will increase the query time.
+     *          away from 0. But we should not choose an w value that is too
+     *          large, which will increase the query time.
      */
     public LSH(int d, int L, int k, double w) {
         this(d, L, k, w, 1017881);
@@ -414,10 +135,10 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
      * @param d the dimensionality of data.
      * @param L the number of hash tables.
      * @param k the number of random projection hash functions, which is usually
-     * set to log(N) where N is the dataset size.
+     *          set to log(N) where N is the dataset size.
      * @param w the width of random projections. It should be sufficiently
-     * away from 0. But we should not choose an w value that is too large, which
-     * will increase the query time.
+     *          away from 0. But we should not choose an w value that is too
+     *          large, which will increase the query time.
      * @param H the size of universal hash tables.
      */
     public LSH(int d, int L, int k, double w, int H) {
@@ -441,49 +162,43 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
             throw new IllegalArgumentException("Invalid size of hash tables: " + H);
         }
 
-        this.d = d;
-        this.L = L;
         this.k = k;
         this.w = w;
         this.H = H;
 
         keys = new ArrayList<>();
         data = new ArrayList<>();
-        r1 = new int[k];
-        r2 = new int[k];
-        for (int i = 0; i < k; i++) {
-            r1[i] = Math.randomInt(MAX_HASH_RND);
-            r2[i] = Math.randomInt(MAX_HASH_RND);
-        }
 
+        initHashTable(d, L, k, w, H);
+    }
+
+    /**
+     * Initialize the hash tables.
+     * @param d the dimensionality of data.
+     * @param L the number of hash tables.
+     * @param k the number of random projection hash functions, which is usually
+     *          set to log(N) where N is the dataset size.
+     * @param w the width of random projections. It should be sufficiently
+     *          away from 0. But we should not choose an w value that is too
+     *          large, which will increase the query time.
+     * @param H the size of universal hash tables.
+     */
+    protected void initHashTable(int d, int L, int k, double w, int H) {
         hash = new ArrayList<>(L);
         for (int i = 0; i < L; i++) {
-            hash.add(new Hash());
+            hash.add(new Hash(d, k, w, H));
         }
     }
 
     @Override
     public String toString() {
-        return String.format("LSH (L=%d, k=%d, H=%d, w=%.4f)", hash.size(), k, H, w);
-    }
-
-    /**
-     * Get whether if query object self be excluded from the neighborhood.
-     */
-    public boolean isIdenticalExcluded() {
-        return identicalExcluded;
-    }
-
-    /**
-     * Set if exclude query object self from the neighborhood.
-     */
-    public LSH<E> setIdenticalExcluded(boolean excluded) {
-        identicalExcluded = excluded;
-        return this;
+        return String.format("LSH(L=%d, k=%d, H=%d, w=%.4f)", hash.size(), k, H, w);
     }
 
     /**
      * Insert an item into the hash table.
+     * @param key the key.
+     * @param value the value.
      */
     public void put(double[] key, E value) {
         int index = keys.size();
@@ -496,66 +211,45 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
 
     @Override
     public Neighbor<double[], E> nearest(double[] q) {
-        Set<Integer> candidates = obtainCandidates(q);
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, -1, Double.MAX_VALUE);
-        for (int index : candidates) {
-            double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
-            double distance = Math.distance(q, key);
-            if (distance < neighbor.distance) {
-                neighbor.index = index;
-                neighbor.distance = distance;
-                neighbor.key = key;
-                neighbor.value = data.get(index);
+        int index = -1;
+        double nearest = Double.MAX_VALUE;
+
+        for (int i : getCandidates(q)) {
+            double[] x = keys.get(i);
+            if (q != x) {
+                double distance = MathEx.distance(q, x);
+                if (distance < nearest) {
+                    index = i;
+                    nearest = distance;
+                }
             }
         }
         
-        return neighbor;
+        return index == -1 ? null : new Neighbor<>(keys.get(index), data.get(index), index, nearest);
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public Neighbor<double[], E>[] knn(double[] q, int k) {
         if (k < 1) {
             throw new IllegalArgumentException("Invalid k: " + k);
         }
-        Set<Integer> candidates = obtainCandidates(q);
-        Neighbor<double[], E> neighbor = new Neighbor<>(null, null, 0, Double.MAX_VALUE);
-        @SuppressWarnings("unchecked")
-        Neighbor<double[], E>[] neighbors = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), k);
-        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(neighbors);
-        for (int i = 0; i < k; i++) {
-            heap.add(neighbor);
-        }
 
-        int hit = 0;
+        Set<Integer> candidates = getCandidates(q);
+        k = Math.min(k, candidates.size());
+
+        HeapSelect<Neighbor<double[], E>> heap = new HeapSelect<>(new Neighbor[k]);
+
         for (int index : candidates) {
             double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
-
-            double distance = Math.distance(q, key);
-            if (distance < heap.peek().distance) {
+            if (q != key) {
+                double distance = MathEx.distance(q, key);
                 heap.add(new Neighbor<>(key, data.get(index), index, distance));
-                hit++;
             }
         }
         
         heap.sort();
-
-        if (hit < k) {
-            @SuppressWarnings("unchecked")
-            Neighbor<double[], E>[] n2 = (Neighbor<double[], E>[]) java.lang.reflect.Array.newInstance(neighbor.getClass(), hit);
-            int start = k - hit;
-            for (int i = 0; i < hit; i++) {
-                n2[i] = neighbors[i + start];
-            }
-            neighbors = n2;
-        }
-
-        return neighbors;
+        return heap.toArray();
     }
 
     @Override
@@ -563,33 +257,31 @@ public class LSH <E> implements NearestNeighborSearch<double[], E>, KNNSearch<do
         if (radius <= 0.0) {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
-        Set<Integer> candidates = obtainCandidates(q);
-        for (int index : candidates) {
-            double[] key = keys.get(index);
-            if (q == key && identicalExcluded) {
-                continue;
-            }
 
-            double distance = Math.distance(q, key);
-            if (distance <= radius) {
-                neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
+        for (int index : getCandidates(q)) {
+            double[] key = keys.get(index);
+            if (q != key) {
+                double distance = MathEx.distance(q, key);
+                if (distance <= radius) {
+                    neighbors.add(new Neighbor<>(key, data.get(index), index, distance));
+                }
             }
         }
     }
 
     /**
-     * Obtaining Candidates
+     * Returns the nearest neighbor candidates.
      * @return Indices of Candidates
      */
-    private Set<Integer> obtainCandidates(double[] q) {
+    private Set<Integer> getCandidates(double[] q) {
         Set<Integer> candidates = new LinkedHashSet<>();
         for (Hash h : hash) {
-            BucketEntry bucket = h.get(q);
+            Bucket bucket = h.get(q);
             if (bucket != null) {
-                int m = bucket.entry.size();
-                for (int i = 0; i < m; i++) {
-                    int index = bucket.entry.get(i);
-                    candidates.add(index);
+                IntArrayList points = bucket.points();
+                int n = points.size();
+                for (int i = 0; i < n; i++) {
+                    candidates.add(points.get(i));
                 }
             }
         }

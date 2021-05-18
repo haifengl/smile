@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math;
 
@@ -35,22 +36,17 @@ import java.util.Arrays;
  * 
  * @author Haifeng Li
  */
-public class Histogram {
-    /** Utility classes should not have public constructors. */
-    private Histogram() {
-
-    }
-
+public interface Histogram {
     /**
      * Generate the histogram of given data. The number of bins k is decided by
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(int[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(int[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -58,11 +54,11 @@ public class Histogram {
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(float[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(float[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -70,11 +66,11 @@ public class Histogram {
      * square-root choice.
      * @param data the data points.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(double[] data) {
-        return histogram(data, bins(data.length));
+    static double[][] of(double[] data) {
+        return of(data, bins(data.length));
     }
     
     /**
@@ -82,16 +78,16 @@ public class Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(int[] data, int k) {
+    static double[][] of(int[] data, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        int min = Math.min(data);
-        int max = Math.max(data);
+        int min = MathEx.min(data);
+        int max = MathEx.max(data);
         int span = max - min + 1;
         
         int width = 1;
@@ -116,7 +112,7 @@ public class Histogram {
             breaks[i] = breaks[i - 1] + width;
         }
         
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -125,10 +121,10 @@ public class Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-n bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(int[] data, double[] breaks) {
+    static double[][] of(int[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -165,16 +161,16 @@ public class Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(float[] data, int k) {
+    static double[][] of(float[] data, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
         
-        float min = Math.min(data);
-        float max = Math.max(data);
+        float min = MathEx.min(data);
+        float max = MathEx.max(data);
         float span = max - min;
         if (span == 0) {
             span = k;
@@ -188,7 +184,7 @@ public class Histogram {
         }
         breaks[k] = max;
 
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -197,10 +193,10 @@ public class Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(float[] data, float[] breaks) {
+    static double[][] of(float[] data, float[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -237,12 +233,12 @@ public class Histogram {
      * @param data the data points.
      * @param k the number of bins.
      * @return a 3-by-k array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(double[] data, int k) {
-        double min = Math.min(data);
-        double max = Math.max(data);
+    static double[][] of(double[] data, int k) {
+        double min = MathEx.min(data);
+        double max = MathEx.max(data);
         double span = max - min;
         if (span == 0) {
             span = k;
@@ -256,7 +252,7 @@ public class Histogram {
         }
         breaks[k] = max;
 
-        return histogram(data, breaks);
+        return of(data, breaks);
     }
 
     /**
@@ -265,10 +261,10 @@ public class Histogram {
      * @param breaks an array of size k+1 giving the breakpoints between
      * histogram cells. Must be in ascending order.
      * @return a 3-by-k bins array of which first row is the lower bound of bins,
-     * second row is the upper bound of bins, and the third row is the frequence
+     * second row is the upper bound of bins, and the third row is the frequency
      * count.
      */
-    public static double[][] histogram(double[] data, double[] breaks) {
+    static double[][] of(double[] data, double[] breaks) {
         int k = breaks.length - 1;
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
@@ -307,8 +303,8 @@ public class Histogram {
      * @param h the bin width.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double[] x, double h) {
-        return breaks(Math.min(x), Math.max(x), h);
+    static double[] breaks(double[] x, double h) {
+        return breaks(MathEx.min(x), MathEx.max(x), h);
     }
     
     /**
@@ -319,7 +315,7 @@ public class Histogram {
      * @param h the bin width.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double min, double max, double h) {
+    static double[] breaks(double min, double max, double h) {
         if (h <= 0.0) {
             throw new IllegalArgumentException("Invalid bin width: " + h);
         }
@@ -330,9 +326,10 @@ public class Histogram {
         
         int k = (int) Math.ceil((max-min) / h);
         double[] breaks = new double[k + 1];
-        
-        breaks[0] = min - (h * k - (max - min)) / 2;
-        breaks[k] = max + (h * k - (max - min)) / 2;
+
+        double step = (h * k - (max - min)) / 2;
+        breaks[0] = min - step;
+        breaks[k] = max + step;
         for (int i = 1; i < k; i++) {
             breaks[i] = breaks[i - 1] + h;
         }
@@ -346,8 +343,8 @@ public class Histogram {
      * @param k the number of bins.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double[] x, int k) {
-        return breaks(Math.min(x), Math.max(x), k);
+    static double[] breaks(double[] x, int k) {
+        return breaks(MathEx.min(x), MathEx.max(x), k);
     }
     
     /**
@@ -357,7 +354,7 @@ public class Histogram {
      * @param k the number of bins.
      * @return the breakpoints between histogram cells
      */
-    public static double[] breaks(double min, double max, int k) {
+    static double[] breaks(double min, double max, int k) {
         if (k <= 1) {
             throw new IllegalArgumentException("Invalid number of bins: " + k);
         }
@@ -376,13 +373,13 @@ public class Histogram {
      * @param h the bin width.
      * @return the number of bins k = ceil((max - min) / h)
      */
-    public static int bins(double[] x, double h) {
+    static int bins(double[] x, double h) {
         if (h <= 0.0) {
             throw new IllegalArgumentException("Invalid bin width: " + h);
         }
         
-        double max = Math.max(x);
-        double min = Math.min(x);
+        double max = MathEx.max(x);
+        double min = MathEx.min(x);
         
         return (int) Math.ceil((max-min) / h);
     }
@@ -394,7 +391,7 @@ public class Histogram {
      * @param n the number of data points.
      * @return the number of bins
      */
-    public static int bins(int n) {
+    static int bins(int n) {
         int k = (int) Math.sqrt(n);
         if (k < 5) k = 5;
         return k;
@@ -405,8 +402,8 @@ public class Histogram {
      * @param n the number of data points.
      * @return the number of bins
      */
-    public static int sturges(int n) {
-        int k = (int) Math.ceil(Math.log2(n) + 1);
+    static int sturges(int n) {
+        int k = (int) Math.ceil(MathEx.log2(n) + 1);
         if (k < 5) k = 5;
         return k;
     }
@@ -416,8 +413,8 @@ public class Histogram {
      * @param x the data set.
      * @return the number of bins
      */
-    public static int scott(double[] x) {
-        double h = Math.ceil(3.5 * Math.sd(x) / Math.pow(x.length, 1.0/3));
+    static int scott(double[] x) {
+        double h = Math.ceil(3.5 * MathEx.sd(x) / Math.pow(x.length, 1.0/3));
         return bins(x, h);
     }
 }

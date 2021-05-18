@@ -1,23 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.math.Math;
-import smile.data.Attribute;
+import java.util.DoubleSummaryStatistics;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import smile.data.DataFrame;
+import smile.data.type.StructType;
+import smile.math.MathEx;
 
 /**
  * Standardizes numeric feature to 0 mean and unit variance.
@@ -28,7 +34,13 @@ import smile.data.Attribute;
  *
  * @author Haifeng Li
  */
-public class Standardizer extends FeatureTransform {
+public class Standardizer implements FeatureTransform {
+    private static final long serialVersionUID = 2L;
+
+    /**
+     * The schema of data.
+     */
+    StructType schema;
     /**
      * Mean or median.
      */
@@ -36,68 +48,105 @@ public class Standardizer extends FeatureTransform {
     /**
      * Standard deviation or IQR.
      */
-    double[] std;
+    double[] sd;
 
     /**
      * Constructor.
+     * @param mu mean.
+     * @param sd standard deviation.
      */
-    public Standardizer() {
+    public Standardizer(double[] mu, double[] sd) {
+        if (mu.length != sd.length) {
+            throw new IllegalArgumentException("Scaling factor size don't match");
+        }
 
+        for (int i = 0; i < sd.length; i++) {
+            if (MathEx.isZero(sd[i])) {
+                sd[i] = 1.0;
+            }
+        }
+
+        this.mu = mu;
+        this.sd = sd;
     }
 
     /**
      * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * @param schema the schema of data.
+     * @param mu mean.
+     * @param sd standard deviation.
      */
-    public Standardizer(boolean copy) {
-        super(copy);
+    public Standardizer(StructType schema, double[] mu, double[] sd) {
+        this(mu, sd);
+        if (schema.length() != mu.length) {
+            throw new IllegalArgumentException("Schema and scaling factor size don't match");
+        }
+        this.schema = schema;
     }
 
     @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        mu = Math.colMeans(data);
-        std = Math.colSds(data);
+    public Optional<StructType> schema() {
+        return Optional.ofNullable(schema);
+    }
 
-        for (int i = 0; i < std.length; i++) {
-            if (attributes[i].getType() != Attribute.Type.NUMERIC) {
-                mu[i] = Double.NaN;
-            }
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static Standardizer fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
 
-            if (Math.isZero(std[i])) {
-                std[i] = 1.0;
+        StructType schema = data.schema();
+        int p = schema.length();
+        double[] mu = new double[p];
+        double[] sd = new double[p];
+
+        for (int i = 0; i < p; i++) {
+            if (schema.field(i).isNumeric()) {
+                double[] x = data.column(i).toDoubleArray();
+                mu[i] = MathEx.mean(x);
+                sd[i] = MathEx.sd(x);
             }
         }
+
+        return new Standardizer(schema, mu, sd);
+    }
+
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static Standardizer fit(double[][] data) {
+        double[] mu = MathEx.colMeans(data);
+        double[] sd = MathEx.colSds(data);
+        return new Standardizer(mu, sd);
     }
 
     @Override
-    public double[] transform(double[] x) {
-        if (x.length != mu.length) {
-            throw new IllegalArgumentException(String.format("Invalid vector size %d, expected %d", x.length, mu.length));
-        }
+    public double transform(double x, int i) {
+        return (x - mu[i]) / sd[i];
+    }
 
-        double[] y = copy ? new double[x.length] : x;
-        for (int i = 0; i < x.length; i++) {
-            if (!Double.isNaN(mu[i])) {
-                y[i] = (x[i] - mu[i]) / std[i];
-            } else {
-                y[i] = x[i];
-            }
-        }
+    @Override
+    public double invert(double x, int i) {
+        return x * sd[i] + mu[i];
+    }
 
-        return y;
+    /** Returns the string representation of i-th column scaling factor. */
+    private String toString(int i) {
+        String field = schema == null ? String.format("V%d", i+1) : schema.field(i).name;
+        return String.format("%s[%.4f, %.4f]", field, mu[i], sd[i]);
     }
 
     @Override
     public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("Standardizer(");
-        if (mu != null) {
-            sb.append("\n");
-            for (int i = 0; i < mu.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", mu[i], std[i]));
-            }
-        }
-        sb.append(")");
-        return sb.toString();
+        String className = getClass().getSimpleName();
+        return IntStream.range(0, mu.length)
+                .mapToObj(this::toString)
+                .collect(Collectors.joining(",", className + "(", ")"));
     }
 }

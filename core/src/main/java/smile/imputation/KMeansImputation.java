@@ -1,21 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.imputation;
 
 import smile.clustering.KMeans;
+import smile.clustering.PartitionClustering;
 
 /**
  * Missing value imputation by K-Means clustering. First cluster data by K-Means
@@ -29,18 +32,18 @@ public class KMeansImputation implements MissingValueImputation {
     /**
      * The number of clusters in KMeans clustering.
      */
-    private int k;
+    private final int k;
     /**
      * The number of runs of K-Means algorithm.
      */
-    private int runs;
+    private final int runs;
 
     /**
      * Constructor.
      * @param k the number of clusters in K-Means clustering.
      */
     public KMeansImputation(int k) {
-        this(k, 4);
+        this(k, 8);
     }
 
     /**
@@ -84,54 +87,22 @@ public class KMeansImputation implements MissingValueImputation {
             }
         }
 
-        KMeans kmeans = KMeans.lloyd(data, k, Integer.MAX_VALUE, runs);
+        KMeans kmeans = PartitionClustering.run(runs, () -> KMeans.lloyd(data, k));
 
         for (int i = 0; i < k; i++) {
-            if (kmeans.getClusterSize()[i] > 0) {
-                double[][] d = new double[kmeans.getClusterSize()[i]][];
+            if (kmeans.size[i] > 0) {
+                double[][] d = new double[kmeans.size[i]][];
                 for (int j = 0, m = 0; j < data.length; j++) {
-                    if (kmeans.getClusterLabel()[j] == i) {
+                    if (kmeans.y[j] == i) {
                         d[m++] = data[j];
                     }
                 }
 
-                columnAverageImpute(d);
+                MissingValueImputation.imputeWithColumnAverage(d);
             }
         }
 
         // In case of some clusters miss all values in some columns.
-        columnAverageImpute(data);
-    }
-
-    /**
-     * Impute the missing values with column averages.
-     * @param data data with missing values.
-     * @throws smile.imputation.MissingValueImputationException
-     */
-    static void columnAverageImpute(double[][] data) throws MissingValueImputationException {
-        for (int j = 0; j < data[0].length; j++) {
-            int n = 0;
-            double sum = 0.0;
-
-            for (int i = 0; i < data.length; i++) {
-                if (!Double.isNaN(data[i][j])) {
-                    n++;
-                    sum += data[i][j];
-                }
-            }
-
-            if (n == 0) {
-                continue;
-            }
-
-            if (n < data.length) {
-                double avg = sum / n;
-                for (int i = 0; i < data.length; i++) {
-                    if (Double.isNaN(data[i][j])) {
-                        data[i][j] = avg;
-                    }
-                }
-            }
-        }
+        MissingValueImputation.imputeWithColumnAverage(data);
     }
 }

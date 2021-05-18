@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.interpolation;
 
@@ -23,14 +24,14 @@ import java.util.ArrayList;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Palette;
+import smile.plot.swing.Canvas;
 import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.KrigingInterpolation;
 import smile.interpolation.RBFInterpolation;
 import smile.interpolation.ShepardInterpolation;
 import smile.math.rbf.GaussianRadialBasis;
-import smile.plot.Heatmap;
+import smile.plot.swing.Heatmap;
 
 /**
  *
@@ -59,9 +60,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Heatmap.plot(yy, Palette.jet(256));
+        Canvas canvas = Heatmap.of(yy, Palette.jet(256)).canvas();
         canvas.setTitle("Original");
-        add(canvas);
+        add(canvas.panel());
 
         double[][] ww = new double[26][26];
         ArrayList<double[]> xx = new ArrayList<>();
@@ -90,9 +91,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
             q[i] = zz.get(i);
         }
 
-        canvas = Heatmap.plot(ww, Palette.jet(256));
+        canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
         canvas.setTitle("Missing Values");
-        add(canvas);
+        add(canvas.panel());
 
         KrigingInterpolation kriging = new KrigingInterpolation(p, q);
         double[][] uu = new double[26][26];
@@ -105,9 +106,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(uu, Palette.jet(256));
+        canvas = Heatmap.of(uu, Palette.jet(256)).canvas();
         canvas.setTitle("Kriging");
-        add(canvas);
+        add(canvas.panel());
 
         RBFInterpolation rbf = new RBFInterpolation(p, q, new GaussianRadialBasis(0.25));
         double[][] vv = new double[26][26];
@@ -120,9 +121,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(vv, Palette.jet(256));
+        canvas = Heatmap.of(vv, Palette.jet(256)).canvas();
         canvas.setTitle("RBF");
-        add(canvas);
+        add(canvas.panel());
 
         ShepardInterpolation shepard = new ShepardInterpolation(p, q, 3);
         double[][] rr = new double[26][26];
@@ -135,9 +136,9 @@ public class ScatterDataInterpolationDemo extends JPanel {
                 }
             }
         }
-        canvas = Heatmap.plot(rr, Palette.jet(256));
+        canvas = Heatmap.of(rr, Palette.jet(256)).canvas();
         canvas.setTitle("Shepard");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override
@@ -147,6 +148,7 @@ public class ScatterDataInterpolationDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Scatter Data Interpolation");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new ScatterDataInterpolationDemo());

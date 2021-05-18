@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.classification;
 
@@ -24,6 +25,7 @@ import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 
 import smile.classification.RDA;
+import smile.data.CategoricalEncoder;
 
 /**
  *
@@ -56,10 +58,10 @@ public class RDADemo extends ClassificationDemo {
             return null;
         }
 
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        int[] label = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
+        double[][] data = formula.x(dataset[datasetIndex]).toArray(false, CategoricalEncoder.DUMMY);
+        int[] label = formula.y(dataset[datasetIndex]).toIntArray();
         
-        RDA qda = new RDA(data, label, alpha);
+        RDA qda = RDA.fit(data, label, alpha);
         int[] pred = new int[label.length];
         for (int i = 0; i < label.length; i++) {
             pred[i] = qda.predict(data[i]);
@@ -84,7 +86,7 @@ public class RDADemo extends ClassificationDemo {
         return "Regularized Disiminant Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         ClassificationDemo demo = new RDADemo();
         JFrame f = new JFrame("Regularized Disiminant Analysis");
         f.setSize(new Dimension(1000, 1000));

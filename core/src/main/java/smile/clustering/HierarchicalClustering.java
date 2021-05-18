@@ -1,21 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.clustering;
 
+import java.io.Serializable;
 import java.util.LinkedList;
 import java.util.Queue;
 import smile.clustering.linkage.Linkage;
@@ -51,36 +53,47 @@ import smile.sort.IntHeapSelect;
  * 
  * @author Haifeng Li
  */
-public class HierarchicalClustering {
-    private static final long serialVersionUID = 1L;
+public class HierarchicalClustering implements Serializable {
+    private static final long serialVersionUID = 2L;
 
     /**
      * An n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
      */
-    private int[][] merge;
+    private final int[][] merge;
     /**
      * A set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method
      * for the particular agglomeration.
      */
-    private double[] height;
+    private final double[] height;
 
     /**
      * Constructor.
-     * Learn the Agglomerative Hierarchical Clustering with given linkage
+     * @param tree an n-1 by 2 matrix of which row i describes the merging
+     *             of clusters at step i of the clustering.
+     * @param height the clustering height.
+     */
+    public HierarchicalClustering(int[][] tree, double[] height) {
+        this.merge = tree;
+        this.height = height;
+    }
+
+    /**
+     * Fits the Agglomerative Hierarchical Clustering with given linkage
      * method, which includes proximity matrix.
      * @param linkage a linkage method to merge clusters. The linkage object
      * includes the proximity matrix of data.
+     * @return the model.
      */
-    public HierarchicalClustering(Linkage linkage) {
+    public static HierarchicalClustering fit(Linkage linkage) {
         int n = linkage.size();
 
-        merge = new int[n - 1][2];
+        int[][] merge = new int[n - 1][2];
         int[] id = new int[n];
-        height = new double[n - 1];
+        double[] height = new double[n - 1];
 
         int[] points = new int[n];
         for (int i = 0; i < n; i++) {
@@ -107,15 +120,18 @@ public class HierarchicalClustering {
                 height[i] = Math.sqrt(height[i]);
             }
         }
+
+        return new HierarchicalClustering(merge, height);
     }
 
     /**
      * Returns an n-1 by 2 matrix of which row i describes the merging of clusters at
      * step i of the clustering. If an element j in the row is less than n, then
-     * observation j was merged at this stage. If j &ge; n then the merge
+     * observation j was merged at this stage. If {@code j >= n} then the merge
      * was with the cluster formed at the (earlier) stage j-n of the algorithm.
+     * @return the merge tree.
      */
-    public int[][] getTree() {
+    public int[][] tree() {
         return merge;
     }
 
@@ -123,8 +139,9 @@ public class HierarchicalClustering {
      * Returns a set of n-1 non-decreasing real values, which are the clustering height,
      * i.e., the value of the criterion associated with the clustering method
      * for the particular agglomeration.
+     * @return the tree node height.
      */
-    public double[] getHeight() {
+    public double[] height() {
         return height;
     }
 
