@@ -24,7 +24,7 @@ import smile.math.DifferentiableMultivariateFunction;
 import smile.sort.QuickSort;
 
 /**
- * Kruskal's nonmetric MDS. In non-metric MDS, only the rank order of entries
+ * Kruskal's non-metric MDS. In non-metric MDS, only the rank order of entries
  * in the proximity matrix (not the actual dissimilarities) is assumed to
  * contain the significant information. Hence, the distances of the final
  * configuration should as far as possible be in the same rank order as the

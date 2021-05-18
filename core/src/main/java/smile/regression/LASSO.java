@@ -410,11 +410,6 @@ public class LASSO {
 
         /**
          * Constructor.
-         * @param A
-         * @param d1
-         * @param d2
-         * @param prb
-         * @param prs
          */
         PCG(Matrix A, double[] d1, double[] d2, double[] prb, double[] prs) {
             this.A = A;

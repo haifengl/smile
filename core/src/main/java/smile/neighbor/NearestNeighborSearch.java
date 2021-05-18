@@ -24,7 +24,7 @@ package smile.neighbor;
  * space M and a query point q &isin; M, find the closest point in S to q.
  * <p>
  * In machine learning, we often build a nearest neighbor search data structure,
- * and then search with object in the same dataset. The object itsef is of course
+ * and then search with object in the same dataset. The object itself is of course
  * the nearest one with distance 0. But this is meaningless and we therefore do
  * the reference check during the search and excludes the query object from the
  * results.

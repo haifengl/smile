@@ -141,7 +141,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
     static <T> Regression<T> ensemble(Regression<T>... models) {
         return new Regression<T>() {
             /** The ensemble is an online learner only if all the base models are. */
-            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+            private final boolean online = Arrays.stream(models).allMatch(Regression::online);
 
             @Override
             public boolean online() {

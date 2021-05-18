@@ -61,7 +61,7 @@ import smile.math.matrix.Matrix;
  * the same solution. If we center the columns of <code>X</code>, then
  * the intercept estimate ends up just being the mean of <code>y</code>.
  * <p>
- * Ridge regression doesn’t set coefficients exactly to zero unless
+ * Ridge regression does not set coefficients exactly to zero unless
  * <code>&lambda; = &infin;</code>, in which case they’re all zero.
  * Hence ridge regression cannot perform variable selection, and
  * even though it performs well in terms of prediction accuracy,

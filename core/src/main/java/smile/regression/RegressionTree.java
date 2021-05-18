@@ -126,7 +126,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     @Override
     protected Optional<Split> findBestSplit(LeafNode leaf, int j, double impurity, int lo, int hi) {
         RegressionNode node = (RegressionNode) leaf;
-        BaseVector xj = x.column(j);
+        BaseVector<?, ?, ?> xj = x.column(j);
 
         double sum = Arrays.stream(index, lo, hi).mapToDouble(i -> y[i] * samples[i]).sum();
         double nodeMeanSquared = node.size() * node.mean() * node.mean();
@@ -314,7 +314,7 @@ public class RegressionTree extends CART implements DataFrameRegression {
     public static RegressionTree fit(Formula formula, DataFrame data, int maxDepth, int maxNodes, int nodeSize) {
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector y = formula.y(data);
+        BaseVector<?, ?, ?> y = formula.y(data);
         RegressionTree tree = new RegressionTree(x, Loss.ls(y.toDoubleArray()), y.field(), maxDepth, maxNodes, nodeSize, -1, null, null);
         tree.formula = formula;
         return tree;

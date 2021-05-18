@@ -83,7 +83,7 @@ public interface Poisson {
             }
 
             @Override
-            public double loglikelihood(double[] y, double[] mu) {
+            public double logLikelihood(double[] y, double[] mu) {
                 return IntStream.range(0, y.length).mapToDouble(i -> -mu[i] + y[i] * Math.log(mu[i]) - MathEx.lfactorial((int) y[i])).sum();
             }
         };

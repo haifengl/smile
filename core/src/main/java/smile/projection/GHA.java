@@ -42,7 +42,7 @@ import smile.math.matrix.Matrix;
  * <p>
  * Compared to regular batch PCA algorithm based on eigen decomposition, GHA is
  * an adaptive method and works with an arbitrarily large sample size. The storage
- * requirement is modest. Another attractive feature is that, in a nonstationary
+ * requirement is modest. Another attractive feature is that, in a non-stationary
  * environment, it has an inherent ability to track gradual changes in the
  * optimal solution in an inexpensive way.
  *

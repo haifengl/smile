@@ -213,7 +213,7 @@ public class RandomForest implements DataFrameRegression, TreeSHAP {
 
         formula = formula.expand(data.schema());
         DataFrame x = formula.x(data);
-        BaseVector response = formula.y(data);
+        BaseVector<?, ?, ?> response = formula.y(data);
         StructField field = response.field();
         double[] y = response.toDoubleArray();
 
