@@ -240,7 +240,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -253,7 +253,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -265,12 +265,12 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     public static Maxent fit(int p, int[][] x, int[] y, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
         return fit(p, x, y, lambda, tol, maxIter);
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -292,7 +292,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -305,7 +305,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -317,12 +317,12 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     public static Binomial binomial(int p, int[][] x, int[] y, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
         return binomial(p, x, y, lambda, tol, maxIter);
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -371,7 +371,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -384,7 +384,7 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which
@@ -396,12 +396,12 @@ public abstract class Maxent extends AbstractClassifier<int[]> {
     public static Multinomial multinomial(int p, int[][] x, int[] y, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.maxent.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.maxent.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.max_iterations", "500"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.maxent.iterations", "500"));
         return multinomial(p, x, y, lambda, tol, maxIter);
     }
 
     /**
-     * Learn maximum entropy classifier.
+     * Fits maximum entropy classifier.
      * @param p the dimension of feature space.
      * @param x training samples. Each sample is represented by a set of sparse
      * binary features. The features are stored in an integer array, of which

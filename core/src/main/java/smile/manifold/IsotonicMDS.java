@@ -91,7 +91,7 @@ public class IsotonicMDS {
     public static IsotonicMDS of(double[][] proximity, Properties params) {
         int k = Integer.parseInt(params.getProperty("smile.isotonic_mds.k", "2"));
         double tol = Double.parseDouble(params.getProperty("smile.isotonic_mds.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.isotonic_mds.max_iterations", "200"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.isotonic_mds.iterations", "200"));
         return of(proximity, k, tol, maxIter);
     }
 

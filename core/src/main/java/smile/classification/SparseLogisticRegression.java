@@ -260,9 +260,9 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @return the model.
      */
     public static Binomial binomial(SparseDataset x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return binomial(x, y, lambda, tol, maxIter);
     }
 
@@ -331,9 +331,9 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
      * @return the model.
      */
     public static Multinomial multinomial(SparseDataset x, int[] y, Properties params) {
-        double lambda = Double.parseDouble(params.getProperty("smile.logit.lambda", "0.1"));
-        double tol = Double.parseDouble(params.getProperty("smile.logit.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logit.max_iterations", "500"));
+        double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
+        double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return multinomial(x, y, lambda, tol, maxIter);
     }
 
@@ -411,7 +411,7 @@ public abstract class SparseLogisticRegression extends AbstractClassifier<Sparse
     public static SparseLogisticRegression fit(SparseDataset x, int[] y, Properties params) {
         double lambda = Double.parseDouble(params.getProperty("smile.logistic.lambda", "0.1"));
         double tol = Double.parseDouble(params.getProperty("smile.logistic.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.max_iterations", "500"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.logistic.iterations", "500"));
         return fit(x, y, lambda, tol, maxIter);
     }
 

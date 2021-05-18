@@ -309,7 +309,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
         boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
         double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.max_iterations", "0"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
         return fit(x, y, kernel, noise, normalize, tol, maxIter);
     }
 
@@ -326,7 +326,7 @@ public class GaussianProcessRegression<T> implements Regression<T> {
         double noise = Double.parseDouble(params.getProperty("smile.gaussian_process.noise", "1E-10"));
         boolean normalize = Boolean.parseBoolean(params.getProperty("smile.gaussian_process.normalize", "true"));
         double tol = Double.parseDouble(params.getProperty("smile.gaussian_process.tolerance", "1E-5"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.max_iterations", "0"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.gaussian_process.iterations", "0"));
         return fit(x, y, kernel, noise, normalize, tol, maxIter);
     }
 

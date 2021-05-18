@@ -66,7 +66,7 @@ public class RDA extends QDA {
     }
 
     /**
-     * Learns regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels.
      * @param params the hyper-parameters.
@@ -80,7 +80,7 @@ public class RDA extends QDA {
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models
@@ -92,7 +92,7 @@ public class RDA extends QDA {
     }
 
     /**
-     * Learn regularized discriminant analysis.
+     * Fits regularized discriminant analysis.
      * @param x training samples.
      * @param y training labels in [0, k), where k is the number of classes.
      * @param alpha regularization factor in [0, 1] allows a continuum of models

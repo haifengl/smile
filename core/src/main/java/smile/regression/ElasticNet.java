@@ -58,7 +58,7 @@ public class ElasticNet {
         double lambda1 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda1"));
         double lambda2 = Double.parseDouble(params.getProperty("smile.elastic_net.lambda2"));
         double tol = Double.parseDouble(params.getProperty("smile.elastic_net.tolerance", "1E-4"));
-        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.max_iterations", "1000"));
+        int maxIter = Integer.parseInt(params.getProperty("smile.elastic_net.iterations", "1000"));
         return fit(formula, data, lambda1, lambda2, tol, maxIter);
     }
 

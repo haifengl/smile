@@ -90,7 +90,7 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Learns the class label mapping from samples.
+     * Fits the class label mapping.
      * @param y the sample labels.
      * @return the class label mapping.
      */
@@ -112,7 +112,7 @@ public class ClassLabels implements Serializable {
     }
 
     /**
-     * Learns the class label mapping from samples.
+     * Fits the class label mapping.
      * @param response the sample labels.
      * @return the class label mapping.
      */
