@@ -19,9 +19,9 @@ package smile.shell
 
 import java.util.Properties
 import scopt.OParser
-import smile.data.DataFrame
 import smile.data.formula._
 import smile.io.Read
+import smile.math.MathEx
 import smile.model._
 import smile.validation._
 
@@ -37,20 +37,21 @@ import smile.validation._
   * @param kfold k-fold cross validation.
   * @param round the number of rounds of repeated cross validation.
   * @param ensemble the flag to create the ensemble of cross validation models.
+  * @param seed the random number generator seed.
   * @param params the hyperparameter key-value pairs.
   */
 case class TrainConfig(algorithm: String = "",
-                       formula: String = "",
+                       formula: Option[String] = None,
                        train: String = "",
                        test: Option[String] = None,
                        format: String = "",
                        model: String = "",
-                       transform: String = null,
                        classification: Boolean = true,
                        kfold: Int = 1,
                        round: Int = 1,
                        ensemble: Boolean = false,
-                       params: Map[String, String] = Map())
+                       seed: Option[Long] = None,
+                       params: Properties = new Properties())
 
 /**
   * Trains a supervised learning model.
@@ -66,17 +67,25 @@ object Train {
         val data = Read.data(config.train, config.format)
         val test = config.test.map(Read.data(_, config.format))
 
-        val formula = getFormula(config, data)
-        val props = getHyperparameters(config.algorithm, config.params)
+        val formula: Formula = config.formula.map(Formula.of(_)).getOrElse({
+          // Uses 'class' or 'y' or the first column as the target
+          // and the rest as the predictors.
+          val columns = data.names()
+          val target = if (columns.contains("class")) "class"
+            else if (columns.contains("y")) "y"
+            else columns(0)
+          Formula.lhs(target)
+        })
 
+        config.seed.map(MathEx.setSeed(_))
         if (config.classification) {
-          val model = ClassificationModel(config.algorithm, config.transform, formula, data, props, config.kfold, config.round, config.ensemble, test)
+          val model = ClassificationModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
           model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
           model.test.map(metrics => println(s"Test metrics: ${metrics}"))
           smile.write(model, config.model)
         } else {
-          val model = RegressionModel(config.algorithm, config.transform, formula, data, props, config.kfold, config.round, config.ensemble, test)
+          val model = RegressionModel(config.algorithm, formula, data, config.params, config.kfold, config.round, config.ensemble, test)
           println(s"Training metrics: ${model.train}")
           model.validation.map(metrics => println(s"Validation metrics: ${metrics}"))
           model.test.map(metrics => println(s"Test metrics: ${metrics}"))
@@ -102,15 +111,10 @@ object Train {
       OParser.sequence(
         programName("smile train"),
         head("Smile", "2.x"),
-        opt[String]("algo")
-          .required()
-          .valueName("<random.forest, gradient.boost, ada.boost, cart, logit, mlp, svm, rbf, gaussian.process, fld, lda, qda, rda, ols, lasso, elastic.net, ridge>")
-          .action((x, c) => c.copy(algorithm = x))
-          .text("The algorithm to train the model"),
         opt[String]("formula")
           .optional()
           .valueName("<class ~ .>")
-          .action((x, c) => c.copy(formula = x))
+          .action((x, c) => c.copy(formula = Some(x)))
           .text("The model formula"),
         opt[String]("data")
           .required()
@@ -122,25 +126,16 @@ object Train {
           .valueName("<file>")
           .action((x, c) => c.copy(test = Some(x)))
           .text("The optional test data file"),
-        opt[String]("transform")
-          .optional()
-          .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
-          .action((x, c) => c.copy(transform = x))
-          .text("The optional feature transformation"),
-        opt[String]("format")
-          .optional()
-          .valueName("<csv,header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
-          .action((x, c) => c.copy(format = x))
-          .text("The data file format/schema"),
         opt[String]("model")
           .required()
           .valueName("<file>")
           .action((x, c) => c.copy(model = x))
           .text("The model file to save"),
-        opt[Unit]("regression")
+        opt[String]("format")
           .optional()
-          .action((_, c) => c.copy(classification = false))
-          .text("To train a regression model"),
+          .valueName("<csv,header=true,delimiter=\\t,comment=#,escape=\\,quote=\">")
+          .action((x, c) => c.copy(format = x))
+          .text("The data file format"),
         opt[Int]("kfold")
           .optional()
           .action((x, c) => c.copy(kfold = x))
@@ -152,51 +147,113 @@ object Train {
         opt[Unit]("ensemble")
           .optional()
           .action((_, c) => c.copy(ensemble = true))
-          .text("Ensemble of cross validation models."),
-        opt[Map[String, String]]("params")
-          .valueName("k1=v1,k2=v2...")
-          .action((x, c) => c.copy(params = x))
-          .text("The hyper-parameters"),
+          .text("Ensemble cross validation models"),
+        opt[Long]("seed")
+          .optional()
+          .action((x, c) => c.copy(seed = Some(x)))
+          .text("The random number generator seed"),
+        cmd("random_forest")
+          .action((_, c) => c.copy(algorithm = "random_forest"))
+          .text("Random Forest")
+          .children(
+            opt[Unit]("regression")
+              .optional()
+              .action((_, c) => c.copy(classification = false))
+              .text("To train a regression model"),
+            opt[Int]("trees")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.trees", x.toString); c})
+              .text("The number of trees"),
+            opt[Int]("mtry")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.mtry", x.toString); c})
+              .text("The number of features to train node split"),
+            opt[String]("split")
+              .optional()
+              .valueName("<GINI, ENTROPY, CLASSIFICATION_ERROR>")
+              .action((x, c) => {c.params.setProperty("smile.random_forest.split_rule", x); c})
+              .text("The split rule"),
+            opt[Int]("max_depth")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.max_depth", x.toString); c})
+              .text("The maximum tree depth"),
+            opt[Int]("max_nodes")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.max_nodes", x.toString); c})
+              .text("The maximum number of leaf nodes"),
+            opt[Int]("node_size")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.node_size", x.toString); c})
+              .text("The minimum leaf node size"),
+            opt[Double]("sampling")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.sampling_rate", x.toString); c})
+              .text("The sampling rate"),
+            opt[String]("class_weight")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.random_forest.class_weight", x); c})
+              .text("The class weights"),
+          ),
+        cmd("mlp")
+          .action((_, c) => c.copy(algorithm = "mlp"))
+          .text("Multilayer Perceptron")
+          .children(
+            opt[Unit]("regression")
+              .optional()
+              .action((_, c) => c.copy(classification = false))
+              .text("To train a regression model"),
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
+            opt[String]("layers")
+              .optional()
+              .valueName("<ReLU(100)|Sigmoid(30)>")
+              .action((x, c) => {c.params.setProperty("smile.mlp.layers", x); c})
+              .text("The neural network layers"),
+            opt[Int]("epochs")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.epochs", x.toString); c})
+              .text("The number of training epochs"),
+            opt[Int]("mini_batch")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.mini_batch", x.toString); c})
+              .text("The split rule"),
+            opt[String]("learning_rate")
+              .optional()
+              .valueName("<0.01, linear(0.01, 10000, 0.001), piecewise(...), polynomial(...), inverse(...), exp(...)>")
+              .action((x, c) => {c.params.setProperty("smile.mlp.learning_rate", x); c})
+              .text("The learning rate schedule"),
+            opt[String]("momentum")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.momentum", x); c})
+              .text("The momentum schedule"),
+            opt[Double]("weight_decay")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.weight_decay", x.toString); c})
+              .text("The weight decay"),
+            opt[Double]("clip_norm")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.clip_norm", x.toString); c})
+              .text("The gradient clipping norm"),
+            opt[Double]("clip_value")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.clip_value", x.toString); c})
+              .text("The gradient clipping value"),
+            opt[Double]("rho")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.RMSProp.rho", x.toString); c})
+              .text("RMSProp rho"),
+            opt[Double]("epsilon")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.mlp.RMSProp.epsilon", x.toString); c})
+              .text("RMSProp epsilon"),
+          ),
       )
     }
 
     OParser.parse(parser, args, TrainConfig())
     // If arguments be bad, the error message would have been displayed.
-  }
-
-  /**
-    * Returns the model formula. If the config doesn't specify the formula,
-    * uses 'class' or 'y' or the first column as the target and the rest as
-    * the predictors.
-    * @param config the training configuration.
-    * @param data the training data.
-    * @return the model formula.
-    */
-  def getFormula(config: TrainConfig, data: DataFrame): Formula = {
-    if (config.formula.isEmpty) {
-      val columns = data.names()
-      val target =
-        if (columns.contains("class")) "class"
-        else if (columns.contains("y")) "y"
-        else columns(0)
-      Formula.lhs(target)
-    } else {
-      Formula.of(config.formula)
-    }
-  }
-
-  /**
-    * Returns the the hyper-parameter settings.
-    * @param algo the algorithm name.
-    * @param params the parameter key-value pairs.
-    * @return the hyperparameter settings.
-    */
-  def getHyperparameters(algo: String, params: Map[String, String]): Properties = {
-    val prefix = s"smile.${algo}."
-    val props = new Properties()
-    for ((k, v) <- params) {
-      props.setProperty(prefix + k, v)
-    }
-    props
   }
 }

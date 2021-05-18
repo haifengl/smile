@@ -33,10 +33,10 @@ class ClassificationModelSpec extends Specification {
   "ClassificationModel" should {
     "random.forest" in {
       MathEx.setSeed(19650217) // to get repeatable results.
-      val prop = new Properties()
-      prop.setProperty("smile.random.forest.ntrees", "100")
-      prop.setProperty("smile.random.forest.max.nodes", "100")
-      val model = ClassificationModel("random.forest", formula, train, prop, test = Some(test))
+      val params = new Properties()
+      params.setProperty("smile.random_forest.trees", "100")
+      params.setProperty("smile.random_forest.max_nodes", "100")
+      val model = ClassificationModel("random_forest", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
@@ -45,10 +45,10 @@ class ClassificationModelSpec extends Specification {
     }
     "svm" in {
       MathEx.setSeed(19650217)
-      val prop = new Properties()
-      prop.setProperty("smile.svm.kernel", "Gaussian(6.4)")
-      prop.setProperty("smile.svm.C", "100")
-      val model = ClassificationModel("svm", formula, train, prop, test = Some(test))
+      val params = new Properties()
+      params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
+      params.setProperty("smile.svm.C", "100")
+      val model = ClassificationModel("svm", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
@@ -56,10 +56,10 @@ class ClassificationModelSpec extends Specification {
     }
     "svm with ensemble" in {
       MathEx.setSeed(19650217)
-      val prop = new Properties()
-      prop.setProperty("smile.svm.kernel", "Gaussian(6.4)")
-      prop.setProperty("smile.svm.C", "100")
-      val model = ClassificationModel("svm", formula, train, prop, kfold = 5, round = 3, ensemble = true, test = Some(test))
+      val params = new Properties()
+      params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
+      params.setProperty("smile.svm.C", "100")
+      val model = ClassificationModel("svm", formula, train, params, kfold = 5, round = 3, ensemble = true, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
@@ -68,11 +68,11 @@ class ClassificationModelSpec extends Specification {
     /*
     "mlp" in {
       MathEx.setSeed(19650217)
-      val prop = new Properties()
-      prop.setProperty("smile.mlp.epochs", "30")
-      prop.setProperty("smile.mlp.layers", "ReLU(50)|Sigmoid(30)")
-      prop.setProperty("smile.mlp.learning_rate", "0.2")
-      val model = ClassificationModel("mlp", formula, train, prop, test = Some(test))
+      val params = new Properties()
+      params.setProperty("smile.mlp.epochs", "30")
+      params.setProperty("smile.mlp.layers", "ReLU(50)|Sigmoid(30)")
+      params.setProperty("smile.mlp.learning_rate", "0.2")
+      val model = ClassificationModel("mlp", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
