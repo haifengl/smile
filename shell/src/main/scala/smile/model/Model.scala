@@ -115,9 +115,9 @@ object ClassificationModel {
         AdaBoost.fit(formula, data, params)
       case "cart" =>
         DecisionTree.fit(formula, data, params)
-      case "logit" =>
+      case "logistic" =>
         DataFrameClassifier.of(formula, data, params, LogisticRegression.fit(_, _, _))
-      case "fld" =>
+      case "fisher" =>
         DataFrameClassifier.of(formula, data, params, FLD.fit(_, _, _))
       case "lda" =>
         DataFrameClassifier.of(formula, data, params, LDA.fit(_, _, _))

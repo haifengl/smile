@@ -194,6 +194,159 @@ object Train {
               .action((x, c) => {c.params.setProperty("smile.random_forest.class_weight", x); c})
               .text("The class weights"),
           ),
+        cmd("gradient_boost")
+          .action((_, c) => c.copy(algorithm = "gradient_boost"))
+          .text("Gradient Boosting")
+          .children(
+            opt[Unit]("regression")
+              .optional()
+              .action((_, c) => c.copy(classification = false))
+              .text("To train a regression model"),
+            opt[Int]("trees")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.trees", x.toString); c})
+              .text("The number of trees"),
+            opt[Double]("shrinkage")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.shrinkage", x.toString); c})
+              .text("The shrinkage parameter in (0, 1] controls the learning rate"),
+            opt[Int]("max_depth")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.max_depth", x.toString); c})
+              .text("The maximum tree depth"),
+            opt[Int]("max_nodes")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.max_nodes", x.toString); c})
+              .text("The maximum number of leaf nodes"),
+            opt[Int]("node_size")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.node_size", x.toString); c})
+              .text("The minimum leaf node size"),
+            opt[Double]("sampling")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gradient_boost.sampling_rate", x.toString); c})
+              .text("The sampling rate"),
+          ),
+        cmd("adaboost")
+          .action((_, c) => c.copy(algorithm = "adaboost"))
+          .text("AdaBoost")
+          .children(
+            opt[Int]("trees")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.adaboost.trees", x.toString); c})
+              .text("The number of trees"),
+            opt[Int]("max_depth")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.adaboost.max_depth", x.toString); c})
+              .text("The maximum tree depth"),
+            opt[Int]("max_nodes")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.adaboost.max_nodes", x.toString); c})
+              .text("The maximum number of leaf nodes"),
+            opt[Int]("node_size")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.adaboost.node_size", x.toString); c})
+              .text("The minimum leaf node size"),
+          ),
+        cmd("cart")
+          .action((_, c) => c.copy(algorithm = "cart"))
+          .text("Classification and Regression Tree")
+          .children(
+            opt[Unit]("regression")
+              .optional()
+              .action((_, c) => c.copy(classification = false))
+              .text("To train a regression model"),
+            opt[String]("split")
+              .optional()
+              .valueName("<GINI, ENTROPY, CLASSIFICATION_ERROR>")
+              .action((x, c) => {c.params.setProperty("smile.cart.split_rule", x); c})
+              .text("The split rule"),
+            opt[Int]("max_depth")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.cart.max_depth", x.toString); c})
+              .text("The maximum tree depth"),
+            opt[Int]("max_nodes")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.cart.max_nodes", x.toString); c})
+              .text("The maximum number of leaf nodes"),
+            opt[Int]("node_size")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.cart.node_size", x.toString); c})
+              .text("The minimum leaf node size"),
+          ),
+        cmd("logistic")
+          .action((_, c) => c.copy(algorithm = "logistic"))
+          .text("Logistic Regression")
+          .children(
+            opt[Double]("lambda")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.logistic.lambda", x.toString); c})
+              .text("The regularization on linear weights"),
+            opt[Int]("iterations")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.logistic.iterations", x.toString); c})
+              .text("The maximum number of iterations"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.logistic.tolerance", x.toString); c})
+              .text("The tolerance to stop iterations"),
+          ),
+        cmd("fisher")
+          .action((_, c) => c.copy(algorithm = "fisher"))
+          .text("Fisher's Linear Discriminant")
+          .children(
+            opt[Int]("dimension")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.fisher.dimension", x.toString); c})
+              .text("The dimensionality of mapped space"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.fisher.tolerance", x.toString); c})
+              .text("The tolerance if a covariance matrix is singular"),
+          ),
+        cmd("lda")
+          .action((_, c) => c.copy(algorithm = "lda"))
+          .text("Linear Discriminant Analysis")
+          .children(
+            opt[String]("priori")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.lda.priori", x); c})
+              .text("The priori probability of each class"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.lda.tolerance", x.toString); c})
+              .text("The tolerance if a covariance matrix is singular"),
+          ),
+        cmd("qda")
+          .action((_, c) => c.copy(algorithm = "qda"))
+          .text("Quadratic Discriminant Analysis")
+          .children(
+            opt[String]("priori")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.qda.priori", x); c})
+              .text("The priori probability of each class"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.qda.tolerance", x.toString); c})
+              .text("The tolerance if a covariance matrix is singular"),
+          ),
+        cmd("rda")
+          .action((_, c) => c.copy(algorithm = "rda"))
+          .text("Regularized Discriminant Analysis")
+          .children(
+            opt[Double]("alpha")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.rda.alpha", x.toString); c})
+              .text("The regularization factor in [0, 1] allows a continuum of models between LDA and QDA"),
+            opt[String]("priori")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.rda.priori", x); c})
+              .text("The priori probability of each class"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.rda.tolerance", x.toString); c})
+              .text("The tolerance if a covariance matrix is singular"),
+          ),
         cmd("mlp")
           .action((_, c) => c.copy(algorithm = "mlp"))
           .text("Multilayer Perceptron")
