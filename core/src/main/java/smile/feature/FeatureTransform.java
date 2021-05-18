@@ -146,7 +146,7 @@ public interface FeatureTransform extends Serializable {
             throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
         }
 
-        BaseVector[] vectors = new BaseVector[schema.length()];
+        BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
         IntStream.range(0, schema.length()).parallel().forEach(i -> {
             StructField field = schema.field(i);
             if (field.isNumeric()) {
@@ -228,7 +228,7 @@ public interface FeatureTransform extends Serializable {
             throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
         }
 
-        BaseVector[] vectors = new BaseVector[schema.length()];
+        BaseVector<?, ?, ?>[] vectors = new BaseVector[schema.length()];
         IntStream.range(0, schema.length()).forEach(i -> {
             StructField field = schema.field(i);
             if (field.isNumeric()) {

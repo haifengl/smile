@@ -22,8 +22,8 @@
  * significant effect on the conclusions that can be drawn from the data.
  * <p>
  * Data are missing for many reasons. Missing data can occur because of
- * nonresponse: no information is provided for several items or no information
- * is provided for a whole unit. Some items are more sensitive for nonresponse
+ * non-response: no information is provided for several items or no information
+ * is provided for a whole unit. Some items are more sensitive for non-response
  * than others, for example items about private subjects such as income.
  * <p>
  * Dropout is a type of missingness that occurs mostly when studying

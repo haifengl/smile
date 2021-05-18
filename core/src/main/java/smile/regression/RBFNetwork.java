@@ -46,7 +46,7 @@ import smile.math.rbf.RadialBasisFunction;
  * <p>
  * Popular choices for &phi; comprise the Gaussian function and the so
  * called thin plate splines. The advantage of the thin plate splines is that
- * their conditioning is invariant under scalings. Gaussian, multi-quadric
+ * their conditioning is invariant under scaling. Gaussian, multi-quadric
  * and inverse multi-quadric are infinitely smooth and and involve a scale
  * or shape parameter, r<sub><small>0</small></sub> {@code > 0}. Decreasing
  * r<sub><small>0</small></sub> tends to flatten the basis function. For a

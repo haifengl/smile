@@ -137,7 +137,7 @@ public class LLSImputation implements MissingValueImputation {
                 }
             }
 
-            // this row has no sufficent nearest neighbors with no missing values.
+            // this row has no sufficient nearest neighbors with no missing values.
             if (!sufficient) {
                 continue;
             }

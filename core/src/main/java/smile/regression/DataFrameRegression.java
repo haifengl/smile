@@ -123,7 +123,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
     static DataFrameRegression ensemble(DataFrameRegression... models) {
         return new DataFrameRegression() {
             /** The ensemble is an online learner only if all the base models are. */
-            private boolean online = Arrays.stream(models).allMatch(model -> model.online());
+            private final boolean online = Arrays.stream(models).allMatch(DataFrameRegression::online);
 
             @Override
             public boolean online() {

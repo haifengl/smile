@@ -95,7 +95,6 @@ public class WinsorScaler extends Scaler {
         double[] lo = new double[p];
         double[] hi = new double[p];
 
-        int n = data.size();
         for (int i = 0; i < p; i++) {
             if (schema.field(i).isNumeric()) {
                 IQAgent agent = new IQAgent();
