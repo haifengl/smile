@@ -278,6 +278,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "logistic"))
           .text("Logistic Regression")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[Double]("lambda")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.logistic.lambda", x.toString); c})
@@ -295,6 +300,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "fisher"))
           .text("Fisher's Linear Discriminant")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[Int]("dimension")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.fisher.dimension", x.toString); c})
@@ -308,6 +318,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "lda"))
           .text("Linear Discriminant Analysis")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[String]("priori")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.lda.priori", x); c})
@@ -321,6 +336,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "qda"))
           .text("Quadratic Discriminant Analysis")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[String]("priori")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.qda.priori", x); c})
@@ -334,6 +354,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "rda"))
           .text("Regularized Discriminant Analysis")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[Double]("alpha")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.rda.alpha", x.toString); c})
@@ -407,6 +432,11 @@ object Train {
           .action((_, c) => c.copy(algorithm = "svm"))
           .text("Support Vector Machine")
           .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[String]("kernel")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.svm.kernel", x); c})
@@ -440,6 +470,11 @@ object Train {
               .optional()
               .action((_, c) => c.copy(classification = false))
               .text("To train a regression model"),
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
             opt[Int]("neurons")
               .optional()
               .action((x, c) => {c.params.setProperty("smile.rbf.neurons", x.toString); c})
@@ -448,6 +483,101 @@ object Train {
               .optional()
               .action((_, c) => {c.params.setProperty("smile.rbf.normalize", "true"); c})
               .text("Normalized RBF network"),
+          ),
+        cmd("ols")
+          .action((_, c) => c.copy(algorithm = "ols"))
+          .text("Ordinary Least Squares")
+          .children(
+            opt[String]("method")
+              .optional()
+              .valueName("<qr, svd>")
+              .action((x, c) => {c.params.setProperty("smile.ols.method", x); c})
+              .text("The fitting method"),
+            opt[Unit]("stderr")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.ols.standard_error", "true"); c})
+              .text("Compute the standard errors of the estimate of parameters."),
+            opt[Unit]("recursive")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.rbf.recursive", "true"); c})
+              .text("Recursive least squares"),
+          ),
+        cmd("lasso")
+          .action((_, c) => c.copy(algorithm = "lasso"))
+          .text("LASSO - Least Absolute Shrinkage and Selection Operator")
+          .children(
+            opt[Double]("lambda")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.lasso.lambda", x.toString); c})
+              .text("The regularization on linear weights"),
+            opt[Int]("iterations")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.lasso.iterations", x.toString); c})
+              .text("The maximum number of iterations"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.lasso.tolerance", x.toString); c})
+              .text("The tolerance to stop iterations (relative target duality gap)"),
+          ),
+        cmd("ridge")
+          .action((_, c) => c.copy(algorithm = "ridge"))
+          .text("Ridge Regression")
+          .children(
+            opt[Double]("lambda")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.ridge.lambda", x.toString); c})
+              .text("The regularization on linear weights"),
+          ),
+        cmd("elastic_net")
+          .action((_, c) => c.copy(algorithm = "elastic_net"))
+          .text("Elastic Net")
+          .children(
+            opt[Double]("lambda1")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.elastic_net.lambda1", x.toString); c})
+              .text("The L1 regularization on linear weights"),
+            opt[Double]("lambda2")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.elastic_net.lambda2", x.toString); c})
+              .text("The L2 regularization on linear weights"),
+            opt[Int]("iterations")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.elastic_net.iterations", x.toString); c})
+              .text("The maximum number of iterations"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.elastic_net.tolerance", x.toString); c})
+              .text("The tolerance to stop iterations (relative target duality gap)"),
+          ),
+        cmd("gaussian_process")
+          .action((_, c) => c.copy(algorithm = "gaussian_process"))
+          .text("Gaussian Process Regression")
+          .children(
+            opt[String]("transform")
+              .optional()
+              .valueName("<standardizer, winsor(0.01,0.99), minmax, MaxAbs, L1, L2, Linf>")
+              .action((x, c) => {c.params.setProperty("smile.feature.transform", x); c})
+              .text("The feature transformation"),
+            opt[String]("kernel")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gaussian_process.kernel", x); c})
+              .text("The kernel function"),
+            opt[Double]("noise")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gaussian_process.noise", x.toString); c})
+              .text("The noise variance"),
+            opt[Unit]("normalize")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.gaussian_process.normalize", "true"); c})
+              .text("Normalize the response variable"),
+            opt[Int]("iterations")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gaussian_process.iterations", x.toString); c})
+              .text("The maximum number of HPO iterations"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.gaussian_process.tolerance", x.toString); c})
+              .text("The stopping tolerance for HPO"),
           ),
       )
     }
