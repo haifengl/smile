@@ -1,29 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.wavelet;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.LinePlot;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.Canvas;
 import smile.wavelet.BestLocalizedWavelet;
 import smile.wavelet.Wavelet;
 import smile.wavelet.WaveletShrinkage;
@@ -46,9 +46,9 @@ public class BestLocalizedWaveletDemo extends JPanel {
             Wavelet wavelet = new BestLocalizedWavelet(i);
             wavelet.inverse(x);
 
-            PlotCanvas canvas = LinePlot.plot(x);
+            Canvas canvas = LinePlot.of(x).canvas();
             canvas.setTitle(String.format("BL%d", i));
-            add(canvas);
+            add(canvas.panel());
         }
 
         double[] sp500 = {
@@ -91,12 +91,12 @@ public class BestLocalizedWaveletDemo extends JPanel {
             1242.52, 1241.84, 1241.58, 1236.34
         };
 
-        PlotCanvas canvas = LinePlot.plot(sp500);
+        Canvas canvas = LinePlot.of(sp500).canvas();
         double[] smooth = sp500.clone();
         WaveletShrinkage.denoise(smooth, new BestLocalizedWavelet(14));
-        canvas.line(smooth, Color.BLUE);
+        canvas.add(LinePlot.of(smooth, Color.BLUE));
         canvas.setTitle("S&P 500");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override
@@ -106,6 +106,7 @@ public class BestLocalizedWaveletDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Best Localized Wavelet");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.add(new BestLocalizedWaveletDemo());

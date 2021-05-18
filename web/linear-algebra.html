@@ -1,0 +1,638 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="linear-algebra-top" class="title">Linear Algebra</h1>
+
+    <p>Smile Shell provides an MATLAB like environment.
+        In the simplest case, you can use it as a calculator.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; "Hello, World"
+    res0: String = Hello, World
+
+    smile&gt; 2
+    res1: Int = 2
+
+    smile&gt; 2+3
+    res2: Int = 5
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> "Hello, World"
+    $9 ==> "Hello, World"
+
+    jshell> 2
+    $10 ==> 2
+
+    jshell> 2+3
+    $11 ==> 5
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="functions" class="title">Math Functions</h2>
+
+    <p>Besides <code>java.lang.Math</code> functions, <code>smile.math.MathEx</code>
+        provides many other important mathematical functions such as <code>logistic</code>,
+        <code>factorial</code>, <code>choose</code>, etc.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; logistic(3.0)
+    res7: Double = 0.9525741268224334
+
+    smile&gt; choose(10, 3)
+    res8: Double = 120.0
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import static smile.math.MathEx.*
+
+    jshell> logistic(3.0)
+    $13 ==> 0.9525741268224334
+
+    jshell> choose(10, 3)
+    $14 ==> 120.0
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="special" class="title">Special Functions</h2>
+
+    <p>Special mathematical functions include <code>beta</code>,
+        <code>erf</code>, <code>gamma</code> and their related functions. Special
+        functions are particular mathematical functions which have more or less
+        established names and notations due to their importance in mathematical
+        analysis, functional analysis, physics, or other applications.
+        Many special functions appear as solutions of differential equations or
+        integrals of elementary functions. For example, the error function
+        <code>erf</code> (also called the Gauss error function) is a special
+        function of sigmoid shape which occurs in probability, statistics, materials
+        science, and partial differential equations. The complementary error function,
+        denoted <code>erfc</code>, is defined as <code>erfc(x) = 1 - erf(x)</code>.
+        The error function and complementary error function are special cases of the
+        incomplete gamma function.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; erf(1.0)
+    res0: Double = 0.8427007929497149
+
+    smile&gt; digamma(1.0)
+    res11: Double = -0.5772156649015328
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import smile.math.special.*
+
+    jshell> Erf.erf(1.0)
+    $16 ==> 0.8427007929497149
+
+    jshell> Gamma.digamma(1.0)
+    $17 ==> -0.5772156649015328
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="vector" class="title">Vector Operations</h2>
+
+    <p>Common arithmetic operations on vectors and scalars are similar as in R and Matlab.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val x = c(1.0, 2.0, 3.0, 4.0)
+    smile&gt; val y = c(4.0, 3.0, 2.0, 1.0)
+
+    smile&gt; x + y
+    res22: smile.math.VectorAddVector = Array(5.0, 5.0, 5.0, 5.0)
+
+    smile&gt; 1.5 * x - 3.0 * y
+    res24: smile.math.VectorSubVector = Array(-10.5, -6.0, -1.5, 3.0)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> double[] x = {1.0, 2.0, 3.0, 4.0}
+    x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
+
+    jshell> double[] y = {4.0, 3.0, 2.0, 1.0}
+    y ==> double[4] { 4.0, 3.0, 2.0, 1.0 }
+
+    // vector expression is not supported in Java
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that these operations are lazy. The computation is only performed when
+        the results are needed, e.g. when the expression is used where a vector is expected.
+        In the Shell, the expression is immediately performed because the Shell
+        always prints out the results.</p>
+
+    <p>For a vector, there are multiple functions to calculate its norm such as <code>norm</code> (L2 norm), <code>norm1</code> (L1 norm),
+        <code>norm2</code> (L2 norm), <code>normInf</code> (infinity norm), <code>normFro</code> (Frobenius norm).
+        We can also <code>standardize</code> a vector to mean 0 and variance 1,
+        <code>unitize</code> it so that L2 norm be 1,
+        or <code>unitize1</code> it so that L1 norm be 1.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; norm(x)
+    res13: Double = 5.477225575051661
+
+    smile&gt; unitize(y)
+    smile&gt; y
+    res14: Array[Double] = Array(0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> norm(x)
+    $20 ==> 5.477225575051661
+
+    jshell> unitize(y)
+
+    jshell> y
+    y ==> double[4] { 0.7302967433402214, 0.5477225575051661, 0.3651483716701107, 0.18257418583505536 }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For a pair of vectors, we can calculate the dot product, distance, divergence, covariance,
+        and correlations with <code>dot</code>, <code>distance</code>, <code>kld</code> (Kullback-Leibler Divergence),
+        <code>jsd</code> (Jensen-Shannon Divergence), <code>cov</code>, <code>cor</code> (Pearson Correlation),
+        <code>spearman</code> (Spearman Rank Correlation Coefficient), <code>kendall</code> (Kendall Tau Rank Correlation Coefficient).</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> dot(x, y)
+    res16: Double = 3.651483716701107
+
+    smile&gt; cov(x, y)
+    res17: Double = -0.30429030972509225
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    smile> dot(x, y)
+    res5: Double = 3.651483716701107
+
+    smile> cov(x, y)
+    res6: Double = -0.30429030972509225
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="matrix" class="title">Matrix Operations</h2>
+
+    <p>Like Matlab, we can use <code>eye</code>, <code>zeros</code> and <code>ones</code>
+        to create identity, zero, or all-ones matrix, respectively.
+        To create a matrix from 2-dimensional array, we can use the constructor <code>matrix</code>
+        or the <code>~</code> operator.
+        The <code>~</code> operator can be applied to 1-dimensional array too, which creates
+        a single column matrix.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val a = matrix(
+        c(0.7220180, 0.07121225, 0.6881997),
+        c(-0.2648886, -0.89044952, 0.3700456),
+        c(-0.6391588, 0.44947578, 0.6240573)
+    )
+    val b = matrix(
+        c(0.6881997, -0.07121225, 0.7220180),
+        c(0.3700456, 0.89044952, -0.2648886),
+        c(0.6240573, -0.44947578, -0.6391588)
+    )
+    val C = Array(
+        Array(0.9527204, -0.2973347, 0.06257778),
+        Array(-0.2808735, -0.9403636, -0.19190231),
+        Array(0.1159052, 0.1652528, -0.97941688)
+    )
+
+    val c = ~C // or val c = matrix(C)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    import smile.math.matrix.*
+
+    double[][] A = {
+        {0.7220180, 0.07121225, 0.6881997},
+        {-0.2648886, -0.89044952, 0.3700456},
+        {-0.6391588, 0.44947578, 0.6240573}
+    }
+    double[][] B = {
+        {0.6881997, -0.07121225, 0.7220180},
+        {0.3700456, 0.89044952, -0.2648886},
+        {0.6240573, -0.44947578, -0.6391588}
+    }
+    double[][] C = {
+        {0.9527204, -0.2973347, 0.06257778},
+        {-0.2808735, -0.9403636, -0.19190231},
+        {0.1159052, 0.1652528, -0.97941688}
+    }
+    var a = Matrix.of(A)
+    var b = Matrix.of(B)
+    var c = Matrix.of(C)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In Scala, matrix-vector operations are just like in math formula.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> val x = c(1.0, 2.0, 3.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0)
+
+    smile> val y = c(3.0, 2.0, 1.0)
+    y: Array[Double] = Array(3.0, 2.0, 1.0)
+
+    smile> val res: Array[Double] = a * x + 1.5 * y
+    Mar 08, 2020 11:42:19 AM com.github.fommil.jni.JniLoader liberalLoad
+    INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader2257171274871727108netlib-native_system-osx-x86_64.jnilib
+    res: Array[Double] = Array(7.4290416, 2.06434916, 3.63196466)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> double[]x = {1.0, 2.0, 3.0}
+    x ==> double[3] { 1.0, 2.0, 3.0 }
+
+    jshell> double[] y = {3.0, 2.0, 1.0}
+    y ==> double[3] { 3.0, 2.0, 1.0 }
+
+    jshell> a.axpy(x, y, 1.5)
+    Mar 08, 2020 11:39:34 AM com.github.fommil.jni.JniLoader liberalLoad
+    INFO: successfully loaded /var/folders/cb/577dvd4n2db0ghdn3gn7ss0h0000gn/T/jniloader5115843775479590258netlib-native_system-osx-x86_64.jnilib
+    $48 ==> double[3] { 7.4290416, 2.06434916, 3.63196466 }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Similarly for matrix-matrix operations:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; a + b
+    res27: smile.math.MatrixAddMatrix =
+        1.4102    0.0000    1.4102
+        0.1052    0.0000    0.1052
+       -0.0151    0.0000   -0.0151
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var d = Matrix.zeros(3, 3)
+    d ==> 3 x 3
+      0.0000    0.0000    0.0000
+      0.0000     ... 000    0.0000    0.0000
+
+    jshell> a.add(b, d) // result saved in d, a.add(b) update a directly
+    $44 ==> 3 x 3
+      1.4102    0.0000    1.4102
+      0.1052    0.0000    0.1052
+     -0.0151    0.0000   -0.0151
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that <code>a * b</code> are element-wise:</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; a * b
+    res28: smile.math.MatrixMulMatrix =
+        0.4969   -0.0051    0.4969
+       -0.0980   -0.7929   -0.0980
+       -0.3989   -0.2020   -0.3989
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> a.mul(b, d)
+    $45 ==> 3 x 3
+      0.4969   -0.0051    0.4969
+     -0.0980   -0.7929   -0.0980
+     -0.3989   -0.2020   -0.3989
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For matrix multiplication, the operator is <code>%*%</code>, same as in R</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; a %*% b %*% c
+    [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
+    res29: smile.math.MatrixExpression =
+        0.9984    0.0067    0.0554
+       -0.0257    0.9361    0.3508
+       -0.0495   -0.3517    0.9348
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> a.abmm(b).abmm(c)
+    $49 ==> 3 x 3
+      0.9984    0.0067    0.0554
+     -0.0257    0.9361    0.3508
+     -0.0495   -0.3517    0.9348
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The method <code>DenseMatrix.transpose</code> returns the transpose of matrix,
+        which executes immediately. However, the method <code>t</code> is preferred
+        on <code>MatrixExpression</code> as it is lazy.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; a %*% b.t %*% c
+    [main] INFO smile.math.MatrixOrderOptimization - The minimum cost of matrix multiplication chain: 54
+    res30: smile.math.MatrixExpression =
+        0.8978   -0.4369    0.0543
+        0.4189    0.8856    0.2006
+       -0.1357   -0.1574    0.9782
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> a.abtmm(b).abmm(c)
+    $50 ==> 3 x 3
+      0.8978   -0.4369    0.0543
+      0.4189    0.8856    0.2006
+     -0.1357   -0.1574    0.9782
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Smile has runtime optimization for matrix multiplication chain, which can greatly
+        improve the performance. Note that this optimization is only available in Scala API.
+        In the below we generate several random matrices and multiply them together.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val a = randn( 300,  900)
+    val b = randn( 900,  150)
+    val c = randn( 150, 1800)
+    val d = randn(1800,   30)
+
+    time("matrix multiplication") {(a %*% b %*% c %*% d).toMatrix}
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var a = Matrix.randn( 300,  900)
+    [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
+    a ==> 300 x 900
+     -0.9299   -0.4984    1.3793    1.8589  ... 4842   -0.5907  ...
+      ...
+
+    jshell> var b = Matrix.randn( 900,  150)
+    b ==> 900 x 150
+      0.9851    0.9842    0.7543   -0.6598  ... 9706    0.9420  ...
+      ...
+
+    jshell> var c = Matrix.randn( 150, 1800)
+    c ==> 150 x 1800
+      0.8682   -1.9094   -0.2466    0.1238 ... 2070   -1.1657  ...
+      ...
+
+    jshell> var d = Matrix.randn(1800,   30)
+    d ==> 1800 x 30
+     -0.1421   -0.4016   -1.7960    0.2153  ... 6566   -1.0292  ...
+      ...
+
+    jshell> a.abmm(b).abmm(c).abmm(d)
+    $55 ==> 300 x 30
+    1027.7940  -7083.7899  20850.3728  14316.0928  3122.5039  6656.6392  -14332.0066  ...
+    -15355.3544  18424.0367  3362.8806  1969.2299  -23705.3085  -8948.9324  7468.9138  ...
+    -442.4282  7575.2694  -8070.4564  15107.1986  10726.3271  -170.4820  -19199.5856  ...
+    4155.9123  -11273.9462  4326.8992  -276.7401  22746.9657  23260.6079  -1052.8137  ...
+    27450.9909  -353.9005  26619.2334  -2807.0904  -18675.1774  -7891.4804  9164.3414  ...
+    11257.9267  -12587.2370  -15836.0616  -8085.9522  -1277.4189  -11561.2331  -8508.3348  ...
+    -7136.4159  3785.3912  -15033.8276  9799.7746  -16499.4337  16218.9645  13444.4842  ...
+      ...
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>randn()</code> creates a matrix of normally distributed
+        random numbers. The shell will try to load machine optimized
+        BLAS/LAPACK native libraries for most matrix computation.
+        If BLAS/LAPACK is not available, smile will fall back to pure Java
+        implementation.</p>
+
+    <h2 id="decomposition" class="title">Matrix Decomposition</h2>
+
+    <p>In linear algebra, a matrix decomposition or matrix factorization
+        is a factorization of a matrix into a product of matrices.
+        There are many different matrix decompositions. In Smile, we provide
+        LU, QR, Cholesky, eigen, and SVD decomposition by functions
+        <code>lu</code>, <code>qr</code>, <code>cholesky</code>,
+        <code>eigen</code>, and <code>svd</code>, respectively.</p>
+
+    <p>With these decompositions, many important linear algebra operations
+        can be performed such as calculating matrix rank, determinant, solving
+        linear systems, computing inverse matrix, etc.
+        In fact, Smile has functions <code>det</code>,
+        <code>rank</code>, <code>inv</code> and operator <code>\</code>
+        for these common computation.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val x = Array(1.0, 2.0, 3.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0)
+
+    smile&gt; a \ x
+    res14: Array[Double] = Array(2.9290414582113184, -0.9356509345036078, 2.131964578605774)
+
+    smile&gt; inv(a)
+    res19: smile.math.matrix.DenseMatrix =
+      0.7220   -0.2649   -0.6392
+      0.0712   -0.8904    0.4495
+      0.6882    0.3700    0.6241
+
+    smile&gt; inv(a) %*% a
+    res21: smile.math.MatrixExpression =
+      1.0000    0.0000    0.0000
+     -0.0000    1.0000    0.0000
+     -0.0000    0.0000    1.0000
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> a.inverse()
+    Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
+    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+    $62 ==> 3 x 3
+      0.7220   -0.2649   -0.6392
+      0.0712   -0.8904    0.4495
+      0.6882    0.3700    0.6241
+
+    jshell> var inv = a.inverse()
+    Mar 08, 2020 7:35:37 PM com.github.fommil.jni.JniLoader load
+    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+    inv ==> 3 x 3
+      0.7220   -0.2649   -0.6392
+      0.0712   -0.8904    0.4495
+      0.6882    0.3700    0.6241
+
+    jshell> inv.abmm(a)
+    $67 ==> 3 x 3
+      1.0000   -0.0000    0.0000
+     -0.0000    1.0000    0.0000
+      0.0000    0.0000    1.0000
+
+    jshell> var lu = a.lu()
+    lu ==> smile.netlib.LU@702657cc
+
+    jshell> lu.solve(x)
+
+    jshell> x
+    x ==> double[3] { 2.9290414582113184, -0.9356509345036078, 2.131964578605774 }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="manifold.html" title="Previous Section: Manifold Learning"><span>Manifold Learning</span></a>
+        <a class="btn-next-text" href="statistics.html" title="Next Section: Statistics"><span>Statistics</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

@@ -1,23 +1,26 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.data;
 
-import java.util.Arrays;
-import smile.math.Math;
-import smile.math.matrix.SparseMatrix;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Binary sparse dataset. Each item is stored as an integer array, which
@@ -25,117 +28,31 @@ import smile.math.matrix.SparseMatrix;
  *
  * @author Haifeng Li
  */
-public class BinarySparseDataset extends Dataset<int[]> {
-
+public interface BinarySparseDataset extends Dataset<int[]> {
     /**
-     * The number of nonzero entries.
+     * Returns the number of nonzero entries.
+     * @return the number of nonzero entries.
      */
-    private int n;
-    /**
-     * The number of columns.
-     */
-    private int numColumns;
-    /**
-     * The number of nonzero entries in each column.
-     */
-    private int[] colSize;
-
-    /**
-     * Constructor.
-     */
-    public BinarySparseDataset() {
-        this("Binary Sparse Dataset");
-    }
-    
-    /**
-     * Constructor.
-     * @param name the name of dataset.
-     */
-    public BinarySparseDataset(String name) {
-        super(name);
-        numColumns = 0;
-        colSize = new int[100];
-    }
-
-    /**
-     * Constructor.
-     * @param name the name of dataset.
-     * @param response the attribute type of response variable.
-     */
-    public BinarySparseDataset(String name, Attribute response) {
-        super(name, response);
-        numColumns = 0;
-        colSize = new int[100];
-    }
-
-    /**
-     * Constructor.
-     * @param ncols the number of columns in the matrix.
-     */
-    public BinarySparseDataset(int ncols) {
-        numColumns = ncols;
-        colSize = new int[ncols];
-    }
+    int length();
 
     /**
      * Returns the number of columns.
+     * @return the number of columns.
      */
-    public int ncols() {
-        return numColumns;
-    }
-
-    /**
-     * Add a datum item into the dataset.
-     * @param datum a datum item. The indices of nonzero elements will be sorted
-     * into ascending order.
-     */
-    @Override
-    public Datum<int[]> add(Datum<int[]> datum) {
-        int[] x = datum.x;
-        
-        for (int xi : x) {
-            if (xi < 0) {
-                throw new IllegalArgumentException("Negative index of nonzero element: " + xi);
-            }
-        }
-        
-        Arrays.sort(x);
-        for (int i = 1; i < x.length; i++) {
-            if (x[i] == x[i-1]) {
-                throw new IllegalArgumentException("Duplicated indices of nonzero elements: " + x[i]);
-            }
-        }
-        
-        n += x.length;
-        
-        int max = Math.max(x);
-        if (numColumns <= max) {
-            numColumns = max + 1;
-            if (numColumns > colSize.length) {
-                int[] size = new int[3 * numColumns / 2];
-                System.arraycopy(colSize, 0, size, 0, colSize.length);
-                colSize = size;
-            }
-        }
-        
-        for (int xi : x) {
-            colSize[xi]++;
-        }
-        
-        return super.add(datum);
-    }
+    int ncol();
     
     /**
-     * Returns the value at entry (i, j) by binary search.
+     * Returns the binary value at entry (i, j) by binary search.
      * @param i the row index.
      * @param j the column index.
+     * @return the binary value of cell.
      */
-    public int get(int i, int j) {
+    default int get(int i, int j) {
         if (i < 0 || i >= size()) {
             throw new IllegalArgumentException("Invalid index: i = " + i);
         }
 
-        int[] x = get(i).x;
+        int[] x = get(i);
         if (x.length == 0) {
             return 0;
         }
@@ -160,29 +77,44 @@ public class BinarySparseDataset extends Dataset<int[]> {
     }
 
     /**
-     * Convert into Harwell-Boeing column-compressed sparse matrix format.
+     * Returns the Harwell-Boeing column-compressed sparse matrix.
+     * @return the sparse matrix.
      */
-    public SparseMatrix toSparseMatrix() {
-        int[] pos = new int[numColumns];
-        int[] colIndex = new int[numColumns + 1];
-        for (int i = 0; i < numColumns; i++) {
-            colIndex[i + 1] = colIndex[i] + colSize[i];
+    smile.math.matrix.SparseMatrix toMatrix();
+
+    /**
+     * Returns a default implementation of BinarySparseDataset from a collection.
+     *
+     * @param data Each row is a data item which are the indices of
+     *             nonzero elements. Every row will be sorted into
+     *             ascending order.
+     * @return the sparse dataset.
+     */
+    static BinarySparseDataset of(Collection<int[]> data) {
+        return new BinarySparseDatasetImpl(data);
+    }
+
+    /**
+     * Parse a binary sparse dataset from a file, of which each line is a data
+     * item which are the indices of nonzero elements.
+     *
+     * @param path the input file path.
+     * @exception IOException if stream to file cannot be read or closed.
+     * @exception NumberFormatException if an entry is not an integer.
+     * @return the sparse dataset.
+     */
+    static BinarySparseDataset from(java.nio.file.Path path) throws IOException, NumberFormatException {
+        try (Stream<String> stream = java.nio.file.Files.lines(path)) {
+            List<int[]> rows = stream.map(line -> {
+                String[] s = line.split("\\s+");
+                int[] index = new int[s.length];
+                for (int i = 0; i < s.length; i++) {
+                    index[i] = Integer.parseInt(s[i]);
+                }
+                return index;
+            }).collect(java.util.stream.Collectors.toList());
+
+            return new BinarySparseDatasetImpl(rows);
         }
-
-        int nrows = size();
-        int[] rowIndex = new int[n];
-        double[] x = new double[n];
-
-        for (int i = 0; i < nrows; i++) {
-            for (int j : get(i).x) {
-                int k = colIndex[j] + pos[j];
-
-                rowIndex[k] = i;
-                x[k] = 1;
-                pos[j]++;
-            }
-        }
-
-        return new SparseMatrix(nrows, numColumns, x, rowIndex, colIndex);
     }
 }

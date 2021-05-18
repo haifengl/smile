@@ -1,31 +1,64 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.imputation;
 
 /**
- * Interface to impute missing values in the dataset.
+ * Interface to impute missing values in the data.
  *
  * @author Haifeng
  */
 public interface MissingValueImputation {
     /**
-     * Impute missing values in the dataset.
+     * Impute missing values in the data.
      * @param data a data set with missing values (represented as Double.NaN).
      * On output, missing values are filled with estimated values.
+     * @throws MissingValueImputationException when fails to impute the data.
      */
-    public void impute(double[][] data) throws MissingValueImputationException;
+    void impute(double[][] data) throws MissingValueImputationException;
+
+    /**
+     * Impute the missing values with column averages.
+     * @param data data with missing values.
+     */
+    static void imputeWithColumnAverage(double[][] data) {
+        for (int j = 0; j < data[0].length; j++) {
+            int n = 0;
+            double sum = 0.0;
+
+            for (double[] x : data) {
+                if (!Double.isNaN(x[j])) {
+                    n++;
+                    sum += x[j];
+                }
+            }
+
+            if (n == 0) {
+                continue;
+            }
+
+            if (n < data.length) {
+                double avg = sum / n;
+                for (int i = 0; i < data.length; i++) {
+                    if (Double.isNaN(data[i][j])) {
+                        data[i][j] = avg;
+                    }
+                }
+            }
+        }
+    }
 }

@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.clustering;
 
 import java.awt.BorderLayout;
@@ -31,9 +33,11 @@ import javax.swing.JTextField;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
-import smile.plot.ScatterPlot;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.io.Read;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public abstract class ClusteringDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
@@ -46,6 +50,20 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         "NonConvex/Pie", "NonConvex/Ring", "NonConvex/Sincos",
         "Chameleon/t4.8k", "Chameleon/t5.8k",
         "Chameleon/t7.10k", "Chameleon/t8.8k"
+    };
+
+    private static char[] delimiter = {
+            ' ',  ' ',  ' ',
+            '\t', ' ',  '\t',
+            '\t', '\t', '\t',
+            '\t', '\t', '\t',
+            ' ',  ' ',
+            ' ',  ' ',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t'
     };
 
     private static String[] datasource = {
@@ -67,7 +85,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         "clustering/chameleon/t8.8k.txt"
     };
 
-    static double[][][] dataset = null;
+    static double[][][] dataset = new double[datasetName.length][][];
     static int datasetIndex = 0;
     static int clusterNumber = 2;
     
@@ -76,25 +94,13 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
     private JTextField clusterNumberField;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    char pointLegend = '.';
+    char mark = '.';
 
     /**
      * Constructor.
      */
     public ClusteringDemo() {
-        if (dataset == null) {
-            dataset = new double[datasetName.length][][];
-            DelimitedTextParser parser = new DelimitedTextParser();
-            parser.setDelimiter("[\t ]+");
-            try {
-                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
-                dataset[datasetIndex] = data.toArray(new double[data.size()][]);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                System.err.println(e);
-            }
-        }
-
+        loadData(datasetIndex);
         addAncestorListener(this);
 
         startButton = new JButton("Start");
@@ -122,7 +128,7 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
 
-        canvas = ScatterPlot.plot(dataset[datasetIndex], '.');
+        canvas = ScatterPlot.of(dataset[datasetIndex], '.').canvas().panel();
         add(canvas, BorderLayout.CENTER);
     }
 
@@ -138,15 +144,15 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		remove(canvas);
-        		canvas = plot;
-        		add(canvas, BorderLayout.CENTER);
-        	}
-        	validate();
+            JComponent plot = learn();
+            if (plot != null) {
+                remove(canvas);
+                canvas = plot;
+                add(canvas, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
         }
 
         startButton.setEnabled(true);
@@ -176,26 +182,15 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             thread.start();
         } else if ("datasetBox".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-            
-            if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t ]+");
-                try {
-                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
-                    dataset[datasetIndex] = data.toArray(new double[data.size()][]);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -209,11 +204,11 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
             datasetBox.setSelectedIndex(datasetIndex);
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], mark).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -225,5 +220,18 @@ public abstract class ClusteringDemo extends JPanel implements Runnable, ActionL
 
     @Override
     public void ancestorRemoved(AncestorEvent event) {
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter(delimiter[datasetIndex]).withIgnoreSurroundingSpaces(true);
+        try {
+            DataFrame data = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+            dataset[datasetIndex] = data.toArray(false, CategoricalEncoder.ONE_HOT);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.err.println(e);
+        }
     }
 }

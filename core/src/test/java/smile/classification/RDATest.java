@@ -1,32 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
-import smile.data.NominalAttribute;
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
-import smile.data.parser.ArffParser;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
-import smile.validation.LOOCV;
+import smile.data.BreastCancer;
+import smile.data.Iris;
+import smile.data.PenDigits;
+import smile.data.USPS;
+import smile.math.MathEx;
+import smile.validation.*;
+import smile.validation.metric.Error;
+
 import static org.junit.Assert.*;
 
 /**
@@ -53,191 +56,57 @@ public class RDATest {
     @After
     public void tearDown() {
     }
-
-    /**
-     * Test of learn method, of class RDA.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testIris() {
+        System.out.println("Iris");
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+        int[] expected = {22, 24, 20, 19, 16, 12, 11, 9, 6, 3, 4};
+        for (int i = 0; i <= 10; i++) {
+            double alpha = i * 0.1;
+            ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> RDA.fit(x, y, alpha));
 
-                RDA rda = new RDA(trainx, trainy, 0.0);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.0) error = " + error);
-             assertEquals(22, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.1);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.1) error = " + error);
-             assertEquals(24, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.2);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.2) error = " + error);
-             assertEquals(20, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.3);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.3) error = " + error);
-             assertEquals(19, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.4);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.4) error = " + error);
-             assertEquals(16, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.5);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.5) error = " + error);
-             assertEquals(12, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.6);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.6) error = " + error);
-             assertEquals(11, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.7);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.7) error = " + error);
-             assertEquals(9, error);
-
-            error = 0;
-            double[] posteriori = new double[3];
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.8);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]], posteriori))
-                     error++;
-                
-                //System.out.println(posteriori[0]+"\t"+posteriori[1]+"\t"+posteriori[2]);
-             }
-             System.out.println("RDA (0.8) error = " + error);
-             assertEquals(6, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 0.9);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (0.9) error = " + error);
-             assertEquals(3, error);
-
-            error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
-
-                RDA rda = new RDA(trainx, trainy, 1.0);
-                if (y[loocv.test[i]] != rda.predict(x[loocv.test[i]]))
-                     error++;
-             }
-             System.out.println("RDA (1.0) error = " + error);
-             assertEquals(4, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+            System.out.format("alpha = %.1f, metrics = %s%n", alpha, metrics);
+            assertEquals(1.0 - expected[i]/150.0, metrics.accuracy, 1E-4);
         }
     }
 
-    /**
-     * Test of learn method, of class RDA.
-     */
     @Test
-    public void testUSPS() {
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<RDA> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RDA.fit(x, y, 0.9));
+
+        System.out.println(result);
+        assertEquals(0.9863, result.avg.accuracy, 1E-4);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<RDA> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RDA.fit(x, y, 0.9));
+
+        System.out.println(result);
+        assertEquals(0.9461, result.avg.accuracy, 1E-4);
+    }
+
+    @Test
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            RDA rda = new RDA(x, y, 0.7);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (rda.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        RDA model = RDA.fit(USPS.x, USPS.y, 0.7);
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertEquals(235, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        int[] prediction = model.predict(USPS.testx);
+        int error = Error.of(USPS.testy, prediction);
+
+        System.out.println("Error = " + error);
+        assertEquals(235, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

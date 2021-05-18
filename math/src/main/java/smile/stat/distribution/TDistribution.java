@@ -1,23 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
-import smile.math.Math;
 
 /**
  * Student's t-distribution (or simply the t-distribution) is a probability
@@ -34,12 +35,16 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class TDistribution extends AbstractDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private int nu;
-    private double entropy;
-    private double np;
-    private double fac;
+    /** The degree of freedom. */
+    public  final int nu;
+    /** Shannon entropy. */
+    private final double entropy;
+    /** The constant factor in PDF. */
+    private final double np;
+    /** The constant factor in PDF. */
+    private final double fac;
 
     /**
      * Constructor.
@@ -58,7 +63,7 @@ public class TDistribution extends AbstractDistribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -72,7 +77,7 @@ public class TDistribution extends AbstractDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return nu / (nu - 2.0);
     }
 
@@ -130,8 +135,10 @@ public class TDistribution extends AbstractDistribution {
 
     /**
      * Two-tailed cdf.
+     * @param x a real number.
+     * @return the two-tailed cdf.
      */
-    public double cdf2tiled(double x) {
+    public double cdf2tailed(double x) {
         if (x < 0) {
             throw new IllegalArgumentException("Invalid x: " + x);
         }
@@ -141,8 +148,10 @@ public class TDistribution extends AbstractDistribution {
 
     /**
      * Two-tailed quantile.
+     * @param p a probability.
+     * @return the two-tailed quantile.
      */
-    public double quantile2tiled(double p) {
+    public double quantile2tailed(double p) {
         if (p < 0.0 || p > 1.0) {
             throw new IllegalArgumentException("Invalid p: " + p);
         }

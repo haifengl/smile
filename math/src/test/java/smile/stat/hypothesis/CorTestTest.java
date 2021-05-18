@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.hypothesis;
 
@@ -90,29 +91,5 @@ public class CorTestTest {
         CorTest result = CorTest.kendall(x, y);
         assertEquals(0.4444444, result.cor, 1E-7);
         assertEquals(0.0953, result.pvalue, 1E-4);
-    }
-
-    /**
-     * Test of chisq method, of class CorTest.
-     */
-    @Test
-    public void testChisqTest() {
-        System.out.println("chisq");
-        int[][] x = {{12, 7}, {5, 7}};
-        CorTest result = CorTest.chisq(x);
-        assertEquals(0.1438, result.cor, 1E-4);
-        assertEquals(1, result.df, 1E-7);
-        assertEquals(0.6411, result.t, 1E-4);
-        assertEquals(0.4233, result.pvalue, 1E-4);
-
-        int[][] y = {
-            {8, 13, 16, 10, 3},
-            {4,  9, 14, 16, 7}
-        };
-        result = CorTest.chisq(y);
-        assertEquals(0.2275644, result.cor, 1E-7);
-        assertEquals(4, result.df, 1E-7);
-        assertEquals(5.179, result.t, 1E-3);
-        assertEquals(0.2695, result.pvalue, 1E-4);
     }
 }

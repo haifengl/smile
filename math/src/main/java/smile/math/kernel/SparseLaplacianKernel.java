@@ -1,56 +1,80 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.kernel;
 
-import smile.math.Math;
-import smile.math.SparseArray;
+import smile.math.MathEx;
+import smile.util.SparseArray;
 
 /**
- * The Laplacian Kernel. k(u, v) = e<sup>-||u-v|| / &sigma;</sup>,
- * where &sigma; &gt; 0 is the scale parameter of the kernel.
+ * Laplacian kernel, also referred as exponential kernel.
+ * <p>
+ *     k(u, v) = exp(-||u-v|| / &sigma;)
+ * <p>
+ * where &sigma; {@code > 0} is the scale parameter of the kernel.
 
  * @author Haifeng Li
  */
-public class SparseLaplacianKernel implements MercerKernel<SparseArray> {
-    private static final long serialVersionUID = 1L;
-
+public class SparseLaplacianKernel extends Laplacian implements MercerKernel<SparseArray> {
     /**
-     * The width of the kernel.
+     * Constructor.
+     * @param sigma The length scale of kernel.
      */
-    private double gamma;
+    public SparseLaplacianKernel(double sigma) {
+        this(sigma, 1E-05, 1E5);
+    }
 
     /**
      * Constructor.
-     * @param sigma the smooth/width parameter of Laplacian kernel.
+     * @param sigma The length scale of kernel.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public SparseLaplacianKernel(double sigma) {
-        if (sigma <= 0)
-            throw new IllegalArgumentException("sigma is not positive.");
-
-        this.gamma = 1.0 / sigma;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("Sparse Laplacian kernel (\u02E0 = %.4f)", 1.0/gamma);
+    public SparseLaplacianKernel(double sigma, double lo, double hi) {
+        super(sigma, lo, hi);
     }
 
     @Override
     public double k(SparseArray x, SparseArray y) {
-        return Math.exp(-gamma * Math.distance(x, y));
+        return k(MathEx.distance(x, y));
+    }
+
+    @Override
+    public double[] kg(SparseArray x, SparseArray y) {
+        return kg(MathEx.distance(x, y));
+    }
+
+    @Override
+    public SparseLaplacianKernel of(double[] params) {
+        return new SparseLaplacianKernel(params[0], lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

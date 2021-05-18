@@ -1,29 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 package smile.association;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
-
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -31,7 +26,6 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import static org.junit.Assert.*;
-import smile.math.Math;
 
 /**
  *
@@ -72,15 +66,11 @@ public class ARMTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ARM instance = new ARM(itemsets, 3);
-        instance.learn(0.5, System.out);
-        List<AssociationRule> rules = instance.learn(0.5);
+    public void test() {
+        System.out.println("ARM");
+        FPTree tree = FPTree.of(3, itemsets);
+        List<AssociationRule> rules = ARM.apply(0.5, tree).collect(Collectors.toList());
         assertEquals(9, rules.size());
         
         assertEquals(0.6, rules.get(0).support, 1E-2);
@@ -107,94 +97,21 @@ public class ARMTest {
         assertEquals(2, rules.get(8).consequent[1]);
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test
-    public void testLearnPima() {
+    public void testPima() {
         System.out.println("pima");
 
-        List<int[]> dataList = new ArrayList<>(1000);
-
-        try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/pima.D38.N768.C2");
-
-            String line;
-            for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                String[] s = line.split(" ");
-
-                int[] point = new int[s.length];
-                for (int i = 0; i < s.length; i++) {
-                    point[i] = Integer.parseInt(s[i]);
-                }
-
-                dataList.add(point);
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        int[][] data = dataList.toArray(new int[dataList.size()][]);
-
-        int n = Math.max(data);
-        System.out.format("%d transactions, %d items%n", data.length, n);
-        
-        ARM instance = new ARM(data, 20);
-        long numRules = instance.learn(0.9, System.out);
-        System.out.format("%d association rules discovered%n", numRules);
-        assertEquals(6803, numRules);
-        assertEquals(6803, instance.learn(0.9).size());
+        FPTree tree = FPTree.of(20, () -> ItemSetTestData.read("transaction/pima.D38.N768.C2"));
+        Stream<AssociationRule> rules = ARM.apply(0.9, tree);
+        assertEquals(6803, rules.count());
     }
 
-    /**
-     * Test of learn method, of class ARM.
-     */
     @Test
-    public void testLearnKosarak() {
+    public void testKosarak() {
         System.out.println("kosarak");
 
-        List<int[]> dataList = new ArrayList<>(1000);
-
-        try {
-            BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("transaction/kosarak.dat");
-
-            String line;
-            for (int nrow = 0; (line = input.readLine()) != null; nrow++) {
-                if (line.trim().isEmpty()) {
-                    continue;
-                }
-
-                String[] s = line.split(" ");
-
-                Set<Integer> items = new HashSet<>();
-                for (int i = 0; i < s.length; i++) {
-                    items.add(Integer.parseInt(s[i]));
-                }
-
-                int j = 0;
-                int[] point = new int[items.size()];
-                for (int i : items) {
-                    point[j++] = i;
-                }
-
-                dataList.add(point);
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        int[][] data = dataList.toArray(new int[dataList.size()][]);
-
-        int n = Math.max(data);
-        System.out.format("%d transactions, %d items%n", data.length, n);
-        
-        ARM instance = new ARM(data, 0.003);
-        long numRules = instance.learn(0.5, System.out);
-        System.out.format("%d association rules discovered%n", numRules);
-        assertEquals(17932, numRules);
+        FPTree tree = FPTree.of(0.003, ()-> ItemSetTestData.read("transaction/kosarak.dat"));
+        Stream<AssociationRule> rules = ARM.apply(0.5, tree);
+        assertEquals(17954, rules.count());
     }
 }

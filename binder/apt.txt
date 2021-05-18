@@ -1,0 +1,3 @@
+openjdk-8-jdk
+maven
+graphviz

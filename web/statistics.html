@@ -1,0 +1,920 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+
+    <h1 id="statistics-top" class="title">Statistics</h1>
+
+    <p>In Smile, there are many statistical functions to describe and analyze data.</p>
+
+    <h2 id="basic" class="title">Basic Statistic Functions</h2>
+
+    <p>Use the following functions to calculate the descriptive statistics for your data:
+        <code>sum</code>, <code>mean</code>,
+        <code>median</code>, <code>q1</code>, <code>q3</code>,
+        <code>variance</code>, <code>sd</code>, <code>mad</code> (median absolute deviation),
+        <code>min</code>, <code>max</code>, <code>whichMin</code>, <code>whichMax</code>, etc.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> val x = Array(1.0, 2.0, 3.0, 4.0)
+    x: Array[Double] = Array(1.0, 2.0, 3.0, 4.0)
+
+    smile> mean(x)
+    res1: Double = 2.5
+
+    smile> sd(x)
+    res2: Double = 1.2909944487358054
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import static smile.math.MathEx.*
+
+    jshell> import smile.stat.*
+
+    jshell> double[] x = {1.0, 2.0, 3.0, 4.0}
+    x ==> double[4] { 1.0, 2.0, 3.0, 4.0 }
+
+    jshell> mean(x)
+    $4 ==> 2.5
+
+    jshell> sd(x)
+    $5 ==> 1.2909944487358054
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="distribution" class="title">Distributions</h2>
+
+    <p>Probability distributions are theoretical distributions based on assumptions
+        about a source population. The distributions assign probability to the event
+        that a random variable has a specific, discrete value, or falls within a
+        specified range of continuous values.</p>
+
+    <p>All univariate distributions in Smile implements the interface <code>smile.math.stat.distribution.Distribution</code>.
+        We support Bernoulli, beta, binomial, &chi;<sup>2</sup>, exponential, F, gamma, Gaussian, geometric,
+        hyper geometric, logistic, log normal, negative binomial, Possion, shift geometric, t, and Weibull distribution.
+        In additional, multivariate Gaussian distribution is supported. In fact, we also support finite mixture models
+        and can estimate the exponential family mixture models from data.</p>
+
+    <p>A <code>Distribution</code> object can be created with given parameters. Meanwhile they can be created by estimating parameters
+        from a given data set. With a <code>Distribution</code> object, we may access its distribution parameter(s), mean,
+        variance, standard deviation, entropy, generates a random number following the distribution,
+        call its probability density function (the method <code>p</code> or cumulative distribution function (<code>cdf</code>).
+        The reverse function of <code>cdf</code> is <code>quantile</code>. We can also calculate the likelihood or
+        log likelihood of a sample set.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val e = new ExponentialDistribution(1.0)
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(1.0000)
+
+    smile&gt; e.mean
+    res3: Double = 1.0
+
+    smile&gt; e.variance
+    res4: Double = 1.0
+
+    smile&gt; e.sd
+    res5: Double = 1.0
+
+    smile&gt; e.entropy
+    res6: Double = 1.0
+
+    // generate a random number
+    smile&gt; e.rand
+    res7: Double = 0.3155668608029686
+
+    // PDF
+    smile&gt; e.p(2.0)
+    res8: Double = 0.1353352832366127
+
+    smile&gt; e.cdf(2.0)
+    res9: Double = 0.8646647167633873
+
+    smile&gt; e.quantile(0.1)
+    res10: Double = 0.10536051565782628
+
+    smile&gt; e.logLikelihood(Array(1.0, 1.1, 0.9, 1.5))
+    res12: Double = -4.5
+
+    // estimate a distribution from data
+    smile&gt; val e = ExponentialDistribution.fit(Array(1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5))
+    e: smile.stat.distribution.ExponentialDistribution = Exponential Distribution(0.7477)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import smile.stat.distribution.*
+
+    jshell> var e = new ExponentialDistribution(1.0)
+    e ==> Exponential Distribution(1.0000)
+
+    jshell> e.mean()
+    $8 ==> 1.0
+
+    jshell> e.variance()
+    $9 ==> 1.0
+
+    jshell> e.sd()
+    $10 ==> 1.0
+
+    jshell> e.entropy()
+    $11 ==> 1.0
+
+    jshell> e.rand()
+    [main] INFO smile.math.MathEx - Set RNG seed 19650218 for thread main
+    $12 ==> 0.38422274023788616
+
+    jshell> e.p(2)
+    $13 ==> 0.1353352832366127
+
+    jshell> e.cdf(2)
+    $14 ==> 0.8646647167633873
+
+    jshell> e.quantile(0.1)
+    $15 ==> 0.10536051565782628
+
+    jshell> double[] samples = {1.0, 1.1, 0.9, 1.5}
+    samples ==> double[4] { 1.0, 1.1, 0.9, 1.5 }
+
+    jshell> e.logLikelihood(samples)
+    $17 ==> -4.5
+
+    jshell> double[] data = {1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5}
+    data ==> double[8] { 1.0, 1.1, 0.9, 1.5, 1.8, 1.9, 2.0, 0.5 }
+
+    jshell> var d = ExponentialDistribution.fit(data)
+    d ==> Exponential Distribution(0.7477)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The below is a more advanced example of estimating a mixture model of Gaussian, exponential and gamma distribution.
+        The result is quite accurate for this complicated case.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val gaussian = new GaussianDistribution(-2.0, 1.0)
+    smile&gt; val exp = new ExponentialDistribution(0.8)
+    smile&gt; val gamma = new GammaDistribution(2.0, 3.0)
+
+    // generate the samples
+    smile&gt; val data = Array.fill(500)(gaussian.rand()) ++ Array.fill(500)(exp.rand()) ++ Array.fill(1000)(gamma.rand())
+
+    // define the initial guess of the components in the mixture model
+    smile&gt; val a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
+    smile&gt; val b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
+    smile&gt; val c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
+
+    // estimate the model
+    smile&gt; val mixture = ExponentialFamilyMixture.fit(data, a, b, c)
+    mixture: smile.stat.distribution.ExponentialFamilyMixture = Mixture[3]:{ (Gaussian Distribution(-2.0135, 0.9953):0.2478) (Exponential Distribution(0.7676):0.2882) (Gamma Distribution(2.7008, 2.4051):0.4640)}
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var gaussian = new GaussianDistribution(-2.0, 1.0)
+    gaussian ==> Gaussian Distribution(-2.0000, 1.0000)
+
+    jshell> var exp = new ExponentialDistribution(0.8)
+    exp ==> Exponential Distribution(0.8000)
+
+    jshell> var gamma = new GammaDistribution(2.0, 3.0)
+    gamma ==> Gamma Distribution(3.0000, 2.0000)
+
+    jshell>     import java.util.stream.*
+
+    jshell> var data = DoubleStream.concat(
+       ...>     DoubleStream.concat(
+       ...>         DoubleStream.generate(gaussian::rand).limit(500),
+       ...>         DoubleStream.generate(exp::rand).limit(500)),
+       ...>     DoubleStream.generate(gamma::rand).limit(1000)).toArray()
+    data ==> double[2000] { -2.396693222610913, -3.11796309434 ... 0928, 2.995037488374675, 1
+
+    jshell> var a = new Mixture.Component(0.3, new GaussianDistribution(0.0, 1.0))
+    a ==> smile.stat.distribution.Mixture$Component@32a068d1
+
+    jshell> var b = new Mixture.Component(0.3, new ExponentialDistribution(1.0))
+    b ==> smile.stat.distribution.Mixture$Component@365c30cc
+
+    jshell> var c = new Mixture.Component(0.4, new GammaDistribution(1.0, 2.0))
+    c ==> smile.stat.distribution.Mixture$Component@4148db48
+
+    jshell> var mixture = ExponentialFamilyMixture.fit(data, a, b, c)
+    mixture ==> Mixture(3)[0.31 x Gaussian Distribution(-1.3630, 1.5056) + 0.17 x Exponential Distribution(0.5566) + 0.52 x Gamma Distribution(3.7170, 1.5014)]
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>If the distribution family is not known, nonparametric methods such as
+        kernel density estimation can be used. Kernel density estimation
+        is a fundamental data smoothing problem where inferences about the population
+        are made, based on a finite data sample. It is also known as the
+        Parzen window method.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val k = new KernelDensity(data)
+    k: smile.stat.distribution.KernelDensity = smile.stat.distribution.KernelDensity@69724abb
+
+    smile&gt; k.p(1.0)
+    res2: Double = 0.11397721599552492
+
+    smile&gt; mixture.p(1.0)
+    res3: Double = 0.1272572973513569
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var k = new KernelDensity(data)
+    k ==> smile.stat.distribution.KernelDensity@146044d7
+
+    jshell> k.p(1)
+    $32 ==> 0.11955905354604122
+
+    jshell> mixture.p(1)
+    $33 ==> 0.14009430199392497
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="test" class="title">Hypothesis Test</h2>
+
+    <p>A statistical hypothesis test is a method of making decisions using data,
+        whether from a controlled experiment or an observational study (not controlled).
+        In statistics, a result is called statistically significant if it is unlikely
+        to have occurred by chance alone, according to a pre-determined threshold
+        probability, the significance level.</p>
+
+    <h3 id="chisq-test" class="title">&chi;<sup>2</sup> Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>Given the array x containing the observed numbers of events,
+        and an array prob containing the expected probabilities of events, and given
+        the number of constraints (normally one), a small value of p-value
+        indicates a significant difference between the distributions.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> val bins = Array(20, 22, 13, 22, 10, 13)
+    bins: Array[Int] = Array(20, 22, 13, 22, 10, 13)
+
+    smile> val prob = Array(1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6)
+    prob: Array[Double] = Array(0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666, 0.16666666666666666)
+
+    smile> chisqtest(bins, prob)
+    res8: stat.hypothesis.ChiSqTest = One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> import smile.stat.hypothesis.*
+
+    jshell> int[] bins = {20, 22, 13, 22, 10, 13}
+    bins ==> int[6] { 20, 22, 13, 22, 10, 13 }
+
+    jshell> double[] prob = {1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6, 1.0/6}
+    prob ==> double[6] { 0.16666666666666666, 0.16666666666666 ... 666, 0.16666666666666666 }
+
+    jshell> ChiSqTest.test(bins, prob)
+    $37 ==> One Sample Chi-squared Test(t = 8.3600, df = 5.000, p-value = 0.137480)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="title">Two-Sample Test</h4>
+    <p>Two-sample chisq test. Given the arrays x and y, containing two
+        sets of binned data, and given one constraint, a small value of
+        p-value indicates a significant difference between two distributions.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val bins1 = Array(8, 13, 16, 10, 3)
+    bins1: Array[Int] = Array(8, 13, 16, 10, 3)
+
+    smile> val bins2 = Array(4,  9, 14, 16, 7)
+    bins2: Array[Int] = Array(4, 9, 14, 16, 7)
+
+    smile> chisqtest2(bins1, bins2)
+    res11: stat.hypothesis.ChiSqTest = Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> int[] bins1 = {8, 13, 16, 10, 3}
+    bins1 ==> int[5] { 8, 13, 16, 10, 3 }
+
+    jshell> int[] bins2 = {4,  9, 14, 16, 7}
+    bins2 ==> int[5] { 4, 9, 14, 16, 7 }
+
+    jshell> ChiSqTest.test(bins1, bins2)
+    $40 ==> Two Sample Chi-squared Test(t = 5.1786, df = 4.000, p-value = 0.269462)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="title">Independence Test</h4>
+
+    <p>Independence test on a two-dimensional contingency table in the form of an array of
+        integers. The rows of contingency table
+        are labels by the values of one nominal variable, the columns are labels
+        by the values of the other nominal variable, and whose entries are
+        non-negative integers giving the number of observed events for each
+        combination of row and column. Continuity correction
+        will be applied when computing the test statistic for 2x2 tables: one half
+        is subtracted from all |O-E| differences. The correlation coefficient is
+        calculated as Cramer's V.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val x = Array(Array(12, 7), Array(5, 7))
+    x: Array[Array[Int]] = Array(Array(12, 7), Array(5, 7))
+
+    smile> chisqtest(x)
+    res13: stat.hypothesis.ChiSqTest = Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> int[][] x = { {12, 7}, {5, 7} }
+    x ==> int[2][] { int[2] { 12, 7 }, int[2] { 5, 7 } }
+
+    jshell> ChiSqTest.test(x)
+    $42 ==> Pearson's Chi-squared Test(t = 0.6411, df = 1.000, p-value = 0.423305)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="f-test" class="title">F Test</h3>
+
+    <p>Test if the arrays x and y have significantly different variances.
+        Small values of p-value indicate that the two arrays have significantly
+        different variances.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val x = Array(0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
+                   1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
+                   2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
+                   1.28461394, -0.02906355)
+    x: Array[Double] = Array(
+      0.48074284,
+      -0.52975023,
+      1.28590721,
+      0.63456079,
+      -0.41761197,
+      2.76072411,
+      1.30321095,
+      -1.16454533,
+      2.27210509,
+      1.46394553,
+      -0.31713164,
+      1.26247543,
+      2.6588643,
+      0.4077345,
+      1.1805544,
+      -0.39611251,
+      2.13557687,
+      0.4087886,
+      1.28461394,
+      -0.02906355
+    )
+
+    smile> val y = Array(1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
+                   -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
+                   1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592)
+    y: Array[Double] = Array(
+      1.7495879,
+      1.9359727,
+      3.1294928,
+      0.0861894,
+      2.1643415,
+      0.1913219,
+      -0.3947444,
+      1.6910837,
+      1.1548294,
+      0.2763955,
+      0.4794719,
+      3.1805501,
+      1.5700497,
+      2.686019,
+      -0.4410879,
+      1.8900183,
+      1.3422381,
+      -0.1701592
+    )
+
+    smile> ftest(x, y)
+    res16: stat.hypothesis.FTest = F-test(f = 1.0958, df1 = 17, df2 = 19, p-value = 0.841464)
+
+    smile> val z = Array(0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
+                   2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
+                   0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096)
+    z: Array[Double] = Array(
+      0.6621329,
+      0.4688975,
+      -0.1553013,
+      0.4564548,
+      2.2776146,
+      2.1543678,
+      2.8555142,
+      1.5852899,
+      0.909129,
+      1.6060025,
+      1.0111968,
+      1.2479493,
+      0.9407034,
+      1.7167572,
+      0.5380608,
+      2.1290007,
+      1.8695506,
+      1.2139096
+    )
+
+    smile> ftest(x, z)
+    res18: stat.hypothesis.FTest = F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> double[] x = {0.48074284, -0.52975023, 1.28590721, 0.63456079, -0.41761197, 2.76072411,
+       ...>             1.30321095, -1.16454533, 2.27210509, 1.46394553, -0.31713164, 1.26247543,
+       ...>             2.65886430, 0.40773450, 1.18055440, -0.39611251, 2.13557687, 0.40878860,
+       ...>             1.28461394, -0.02906355}
+    x ==> double[20] { 0.48074284, -0.52975023, 1.28590721, ...  1.28461394, -0.02906355 }
+
+    jshell> double[] y = {1.7495879, 1.9359727, 3.1294928, 0.0861894, 2.1643415, 0.1913219,
+       ...>             -0.3947444, 1.6910837, 1.1548294, 0.2763955, 0.4794719, 3.1805501,
+       ...>             1.5700497, 2.6860190, -0.4410879, 1.8900183, 1.3422381, -0.1701592}
+    y ==> double[18] { 1.7495879, 1.9359727, 3.1294928, 0.0 ... 3, 1.3422381, -0.1701592 }
+
+    jshell> FTest.test(x, y)
+    $45 ==> F-test(f = 1.0958, df1 = 17, df2 = 19, p-value = 0.841464)
+
+    jshell> double[] z = {0.6621329, 0.4688975, -0.1553013, 0.4564548, 2.2776146, 2.1543678,
+       ...>             2.8555142, 1.5852899, 0.9091290, 1.6060025, 1.0111968, 1.2479493,
+       ...>             0.9407034, 1.7167572, 0.5380608, 2.1290007, 1.8695506, 1.2139096}
+    z ==> double[18] { 0.6621329, 0.4688975, -0.1553013, 0. ... 07, 1.8695506, 1.2139096 }
+
+    jshell> FTest.test(x, z)
+    $47 ==> F-test(f = 2.0460, df1 = 19, df2 = 17, p-value = 0.143778)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="t-test" class="title">t Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>Independent one-sample t-test whether the mean of a normally distributed
+        population has a value specified in a null hypothesis. Small values of
+        p-value indicate that the array has significantly different mean.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> ttest(x, 1.0)
+    res19: stat.hypothesis.TTest = One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
+
+    smile> ttest(x, 1.1)
+    res20: stat.hypothesis.TTest = One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> TTest.test(x, 1.0)
+    $48 ==> One Sample t-test(t = -0.6641, df = 19.000, p-value = 0.514609)
+
+    jshell> TTest.test(x, 1.1)
+    $49 ==> One Sample t-test(t = -1.0648, df = 19.000, p-value = 0.300300)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="title">Paired Two-Sample Test</h4>
+    <p>Given the paired arrays x and y, test if they have significantly
+        different means. Small values of p-value indicate that the two arrays
+        have significantly different means.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> ttest(y, z)
+    res21: stat.hypothesis.TTest = Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> TTest.testPaired(y, z)
+    $53 ==> Paired t-test(t = -0.1502, df = 17.000, p-value = 0.882382)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="title">Independent (Unpaired) Two-Sample Test</h4>
+    <p>Test if the arrays x and y have significantly different means. Small
+     values of p-value indicate that the two arrays have significantly
+      different means. If the parameter equalVariance is true, the data arrays are assumed to be
+      drawn from populations with the same true variance. Otherwise, The data
+      arrays are allowed to be drawn from populations with unequal variances.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> ttest2(x, y)
+    res22: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
+
+    smile> ttest2(x, y, true)
+    res23: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.1247, df = 36.000, p-value = 0.268153)
+
+    smile> ttest2(x, z)
+    res24: stat.hypothesis.TTest = Unequal Variance Two Sample t-test(t = -1.5180, df = 34.025, p-value = 0.138243)
+
+    smile> ttest2(x, z, true)
+    res25: stat.hypothesis.TTest = Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> TTest.test(x, y, false)
+    $54 ==> Unequal Variance Two Sample t-test(t = -1.1219, df = 35.167, p-value = 0.269491)
+
+    jshell> TTest.test(x, y, true)
+    $55 ==> Equal Variance Two Sample t-test(t = -1.1247, df = 36.000, p-value = 0.268153)
+
+    jshell> TTest.test(x, z, false)
+    $56 ==> Unequal Variance Two Sample t-test(t = -1.5180, df = 34.025, p-value = 0.138243)
+
+    jshell> TTest.test(x, z, true)
+    $57 ==> Equal Variance Two Sample t-test(t = -1.4901, df = 36.000, p-value = 0.144906)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="ks-test" class="title">Kolmogorov–Smirnov Test</h3>
+
+    <h4 class="title">One-Sample Test</h4>
+    <p>The one-sample K-S test for the null hypothesis that the data set x
+        is drawn from the given distribution. Small values of p-value show that
+        the cumulative distribution function of x is significantly different from
+        the given distribution. The array x is modified by being sorted into
+        ascending order.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val x = Array(
+                   0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
+                   -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
+                   2.75342248, -0.90675303, -1.05971929, 0.49922388, -1.23214498, 0.79284888,
+                   0.85309580, 0.17903487, 0.39894754, -0.52744720, 0.08516943, -1.93817962,
+                   0.25042913, -0.56311389, -1.08608388, 0.11912253, 2.87961007, -0.72674865,
+                   1.11510699, 0.39970074, 0.50060532, -0.82531807, 0.14715616, -0.96133601,
+                   -0.95699473, -0.71471097, -0.50443258, 0.31690224, 0.04325009, 0.85316056,
+                   0.83602606, 1.46678847, 0.46891827, 0.69968175, 0.97864326, 0.66985742,
+                   -0.20922486, -0.15265994)
+    x: Array[Double] = Array(
+      0.53236606,
+      -1.36750258,
+      -1.47239199,
+      -0.12517888,
+      -1.24040594,
+      1.90357309,
+      -0.54429527,
+      2.2208414,
+      -1.17209146,
+      -0.68824211,
+      -1.75068914,
+      0.48505896,
+      2.75342248,
+      -0.90675303,
+      -1.05971929,
+      0.49922388,
+      -1.23214498,
+      0.79284888,
+      0.8530958,
+      0.17903487,
+      0.39894754,
+      -0.5274472,
+      0.08516943,
+      -1.93817962,
+    ...
+
+    smile> kstest(x, new GaussianDistribution(0, 1))
+    res27: stat.hypothesis.KSTest = Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> double[] x = {0.53236606, -1.36750258, -1.47239199, -0.12517888, -1.24040594, 1.90357309,
+       ...>             -0.54429527, 2.22084140, -1.17209146, -0.68824211, -1.75068914, 0.48505896,
+       ...>             2.75342248, -0.90675303, -1.05971929, 0.49922388, -1.23214498, 0.79284888,
+       ...>             0.85309580, 0.17903487, 0.39894754, -0.52744720, 0.08516943, -1.93817962,
+       ...>             0.25042913, -0.56311389, -1.08608388, 0.11912253, 2.87961007, -0.72674865,
+       ...>             1.11510699, 0.39970074, 0.50060532, -0.82531807, 0.14715616, -0.96133601,
+       ...>             -0.95699473, -0.71471097, -0.50443258, 0.31690224, 0.04325009, 0.85316056,
+       ...>             0.83602606, 1.46678847, 0.46891827, 0.69968175, 0.97864326, 0.66985742,
+       ...>             -0.20922486, -0.15265994}
+    x ==> double[50] { 0.53236606, -1.36750258, -1.47239199 ... -0.20922486, -0.15265994 }
+
+    jshell> KSTest.test(x, new GaussianDistribution(0, 1))
+    $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 class="title">Two-Sample Test</h4>
+    <p>The two-sample K–S for the null hypothesis that the data sets
+        are drawn from the same distribution. Small values of p-value show that
+        the cumulative distribution function of x is significantly different from
+        that of y. The arrays x and y are modified by being sorted into
+        ascending order.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val y = Array(
+                   0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
+                   0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
+                   0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
+                   0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
+                   0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694)
+    y: Array[Double] = Array(
+      0.95791391,
+      0.16203847,
+      0.56622013,
+      0.39252941,
+      0.99126354,
+      0.65639108,
+      0.07903248,
+      0.84124582,
+      0.76718719,
+      0.80756577,
+      0.12263981,
+      0.8473336,
+      0.85190907,
+      0.77896244,
+      0.84915723,
+      0.78225903,
+      0.95788055,
+      0.01849366,
+      0.21000365,
+      0.97951772,
+      0.6007852,
+      0.80534223,
+      0.77144013,
+      0.28495121,
+    ...
+
+    smile> kstest(x, y)
+    res29: stat.hypothesis.KSTest = Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> KSTest.test(x, new GaussianDistribution(0, 1))
+    $59 ==> Gaussian Distribution(0.0000, 1.0000) Kolmogorov-Smirnov Test(d = 0.0930, p-value = 0.759824)
+
+    jshell> double[] y = {0.95791391, 0.16203847, 0.56622013, 0.39252941, 0.99126354, 0.65639108,
+       ...>               0.07903248, 0.84124582, 0.76718719, 0.80756577, 0.12263981, 0.84733360,
+       ...>               0.85190907, 0.77896244, 0.84915723, 0.78225903, 0.95788055, 0.01849366,
+       ...>               0.21000365, 0.97951772, 0.60078520, 0.80534223, 0.77144013, 0.28495121,
+       ...>               0.41300867, 0.51547517, 0.78775718, 0.07564151, 0.82871088, 0.83988694}
+    y ==> double[30] { 0.95791391, 0.16203847, 0.56622013,  ... , 0.82871088, 0.83988694 }
+
+    jshell> KSTest.test(x, y)
+    $61 ==> Two Sample Kolmogorov-Smirnov Test(d = 0.4600, p-value = 0.000416466)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="correlation-test" class="title">Correlation Test</h3>
+
+    <h4 class="title">Pearson Correlation</h4>
+
+    <p>The t-test is used to establish if the correlation coefficient is
+        significantly different from zero, and, hence that there is evidence
+        of an association between the two variables. There is then the
+        underlying assumption that the data is from a normal distribution
+        sampled randomly. If this is not true, then it is better to use
+        Spearman's coefficient of rank correlation (for non-parametric variables).</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> val x = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+    x: Array[Double] = Array(44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1)
+
+    smile> val y  = Array(2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8)
+    y: Array[Double] = Array(2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8)
+
+    smile> pearsontest(x, y)
+    res32: stat.hypothesis.CorTest = Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> double[] x = {44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1}
+    x ==> double[9] { 44.4, 45.9, 41.9, 53.3, 44.7, 44.1, 50.7, 45.2, 60.1 }
+
+    jshell> double[] y = {2.6,  3.1,  2.5,  5.0,  3.6,  4.0,  5.2,  2.8,  3.8}
+    y ==> double[9] { 2.6, 3.1, 2.5, 5.0, 3.6, 4.0, 5.2, 2.8, 3.8 }
+
+    jshell> CorTest.pearson(x, y)
+    $64 ==> Pearson Correlation Test(cor = 0.57, t = 1.8411, df = 7.000, p-value = 0.108173)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 id="spearman-test" class="title">Spearman Rank Correlation</h4>
+
+    <p>The Spearman Rank Correlation
+        Coefficient is a form of the Pearson coefficient with the data converted
+        to rankings (i.e. when variables are ordinal). It can be used when there
+        is non-parametric data and hence Pearson cannot be used.</p>
+
+    <p>The raw scores are converted to ranks and the differences between
+        the ranks of each observation on the two variables are calculated.</p>
+
+    <p>The p-value is calculated by approximation, which is good for n &gt; 10.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> spearmantest(x, y)
+    res33: stat.hypothesis.CorTest = Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> CorTest.spearman(x, y)
+    $65 ==> Spearman Correlation Test(cor = 0.60, t = 1.9843, df = 7.000, p-value = 0.0876228)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h4 id="kendall-test" class="title">Kendall Rank Correlation</h4>
+
+    <p>The Kendall Tau Rank Correlation
+        Coefficient is used to measure the degree of correspondence
+        between sets of rankings where the measures are not equidistant.
+        It is used with non-parametric data. The p-value is calculated by
+        approximation, which is good for n &gt; 10.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+    smile> kendalltest(x, y)
+    res34: stat.hypothesis.CorTest = Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> CorTest.kendall(x, y)
+    $66 ==> Kendall Correlation Test(cor = 0.44, t = 1.6681, df = 0.000, p-value = 0.0952928)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="linear-algebra.html" title="Previous Section: Linear Algebra"><span>Linear Algebra</span></a>
+        <a class="btn-next-text" href="wavelet.html" title="Next Section: Wavelet"><span>Wavelet</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

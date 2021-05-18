@@ -1,25 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.feature;
 
 import java.io.IOException;
-import java.io.BufferedReader;
-import java.util.ArrayList;
-import java.util.Arrays;
-
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -52,43 +50,21 @@ public class BagTest {
     public void tearDown() {
     }
 
-
-    @Test
-    /**
-     * Test of the uniqueness of features in the class Bag
-     */
+    @Test(expected = IllegalArgumentException.class)
     public void testUniquenessOfFeatures() {
         System.out.println("unique features");
-        String[] featuresForBirdStories = {"crane", "sparrow", "hawk", "owl", "kiwi"};
-        String[] featuresForBuildingStories = {"truck", "concrete", "foundation", "steel", "crane"};
-        String testMessage = "This story is about a crane and a sparrow";
-
-        ArrayList<String> mergedFeatureLists = new ArrayList<>();
-        mergedFeatureLists.addAll(Arrays.asList(featuresForBirdStories));
-        mergedFeatureLists.addAll(Arrays.asList(featuresForBuildingStories));
-
-        Bag<String> bag = new Bag<>(mergedFeatureLists.toArray(new String[featuresForBirdStories.length + featuresForBuildingStories.length]));
-
-        double[] result = bag.feature(testMessage.split(" "));
-        assertEquals(9, result.length);
+        String[] features = {"crane", "sparrow", "hawk", "owl", "kiwi", "kiwi"};
+        Bag bag = new Bag(features);
     }
 
-    /**
-     * Test of feature method, of class Bag.
-     */
     @Test
-    public void testFeature() {
+    public void testFeature() throws IOException {
         System.out.println("feature");
-        String[][] text = new String[2000][];
-
-        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/movie.txt")) {
-            for (int i = 0; i < text.length; i++) {
-                String[] words = input.readLine().trim().split("\\s+");
-                text[i] = words;
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
+        String[][] text = smile.util.Paths.getTestDataLines("text/movie.txt")
+                .map(String::trim)
+                .filter(line -> !line.isEmpty())
+                .map(line -> line.split("\\s+"))
+                .toArray(String[][]::new);
 
         String[] feature = {
             "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",
@@ -98,14 +74,14 @@ public class BagTest {
             "perfectly", "masterpiece", "realistic", "flaws"
         };
         
-        Bag<String> bag = new Bag<>(feature);
+        Bag bag = new Bag(feature);
         
-        double[][] x = new double[text.length][];
+        int[][] x = new int[text.length][];
         for (int i = 0; i < text.length; i++) {
-            x[i] = bag.feature(text[i]);
+            x[i] = bag.apply(text[i]);
             assertEquals(feature.length, x[i].length);
         }
         
-        assertEquals(1.0, x[0][15], 1E-7);
+        assertEquals(1, x[0][15]);
     }
 }

@@ -1,21 +1,22 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.manifold;
 
-import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridLayout;
 
@@ -23,10 +24,10 @@ import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.graph.Graph;
-import smile.plot.PlotCanvas;
+import smile.data.CategoricalEncoder;
+import smile.plot.swing.Canvas;
 import smile.manifold.IsoMap;
-import smile.math.Math;
+import smile.plot.swing.Wireframe;
 
 /**
  *
@@ -41,7 +42,7 @@ public class IsoMapDemo extends ManifoldDemo {
     @Override
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);        
+        double[][] data = dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT);
         if (data.length > 1000) {
             double[][] x = new double[1000][];
             for (int i = 0; i < 1000; i++)
@@ -50,26 +51,15 @@ public class IsoMapDemo extends ManifoldDemo {
         }
 
         long clock = System.currentTimeMillis();
-        IsoMap isomap = new IsoMap(data, 2, k);
+        IsoMap isomap = IsoMap.of(data, k);
         System.out.format("Learn IsoMap from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        double[][] y = isomap.getCoordinates();
+        double[][] vertices = isomap.coordinates;
+        int[][] edges = isomap.graph.getEdges().stream().map(edge -> new int[]{edge.v1, edge.v2}).toArray(int[][]::new);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
-        plot.points(y, 'o', Color.RED);
-
-        int n = y.length;
-        Graph graph = isomap.getNearestNeighborGraph();
-        for (int i = 0; i < n; i++) {
-            for (int j = 0; j < i; j++) {
-                if (graph.hasEdge(i, j)) {
-                    plot.line(y[i], y[j]);
-                }
-            }
-        }
-
+        Canvas plot = Wireframe.of(vertices, edges).canvas();
         plot.setTitle("IsoMap");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }
@@ -79,7 +69,7 @@ public class IsoMapDemo extends ManifoldDemo {
         return "IsoMap";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         IsoMapDemo demo = new IsoMapDemo();
         JFrame f = new JFrame("IsoMap");
         f.setSize(new Dimension(1000, 1000));

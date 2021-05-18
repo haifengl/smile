@@ -1,25 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.hypothesis;
 
+import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.math.special.Erf;
-import smile.math.special.Gamma;
-import smile.math.Math;
 import smile.sort.QuickSort;
 
 /**
@@ -32,94 +32,74 @@ import smile.sort.QuickSort;
  * is calculated as a value of -1. A values of zero shows no correlation at all.
  * <p>
  * Three common types of correlation are Pearson, Spearman (for ranked data)
- * and Kendall (for uneven or multiple rankings), and can be selected using
- * the table below.
- * <table summary="" border="1" style="border-collapse: collapse" width="95%" cellspacing="0" id="table3">
- *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">
- *     Parametric variables follow normal distribution and linear
- *     relationship between x and y)</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">Pearson correlation</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
- * <table summary="" border="1" style="border-collapse: collapse" width="100%" cellspacing="0" id="table4">
- *   <tr>
- *     <td align="center" colspan="2" width="100%" bgcolor="#FFFF99">
- *     <p align="left" style="margin-top: 0; margin-bottom: 0">Equidistant
- *     positions on variables measured?</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#99FF99">
- *     <p style="margin-top: 0; margin-bottom: 0">Y</td>
- *     <td>
- *     <p style="margin-left: 2px; margin-right: 2px">
- *     Spearman correlation</td>
- *   </tr>
- *   <tr>
- *     <td width="5%" align="center" bgcolor="#FF66FF">
- *     <p style="margin-top: 0; margin-bottom: 0">N</td>
- *     <td width="*" align="left">
- *     <p style="margin-left: 2px; margin-right: 2px">Kendall correlation</td>
- *   </tr>
- * </table>
- *     </td>
- *   </tr>
- * </table>
+ * and Kendall (for uneven or multiple rankings).
  * <p>
  * To deal with measures of association between nominal variables, we can use Chi-square
  * test for independence. For any pair of nominal variables, the data can be
  * displayed as a contingency table, whose rows are labels by the values of one
  * nominal variable, whose columns are labels by the values of the other nominal
- * variable, and whose entries are nonnegative integers giving the number of
+ * variable, and whose entries are non-negative integers giving the number of
  * observed events for each combination of row and column.
  * 
  * @author Haifeng Li
  */
 public class CorTest {
     /**
-     * Correlation coefficient
+     * The type of test.
      */
-    public double cor;
+    public final String method;
 
     /**
-     * Degree of freedom
+     * The correlation coefficient.
      */
-    public double df;
+    public final double cor;
 
     /**
-     * test statistic
+     * The test statistic.
      */
-    public double t;
+    public final double t;
 
     /**
-     * (two-sided) p-value of test
+     * The degree of freedom of test statistic.
+     * It is set to 0 in case of Kendall test as the test is non-parametric.
      */
-    public double pvalue;
+    public final double df;
+
+    /**
+     * Two-sided p-value.
+     */
+    public final double pvalue;
 
     /**
      * Constructor.
+     * @param method the type of correlation.
+     * @param cor the correlation coefficient.
+     * @param t the t-statistic.
+     * @param df the degree of freedom.
+     * @param pvalue the p-value.
      */
-    private CorTest(double cor, double df, double t, double pvalue) {
+    public CorTest(String method, double cor, double t, double df, double pvalue) {
+        this.method = method;
         this.cor = cor;
-        this.df = df;
         this.t = t;
+        this.df = df;
         this.pvalue = pvalue;
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s Correlation Test(cor = %.2f, t = %.4f, df = %.3f, p-value = %G)", method, cor, t, df, pvalue);
     }
 
     /**
      * Pearson correlation coefficient test.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest pearson(double[] x, double[] y) {
-        final double TINY = 1.0e-20;
+        final double TINY = 1.0e-16;
 
         int n = x.length;
         double syy = 0.0, sxy = 0.0, sxx = 0.0, ay = 0.0, ax = 0.0;
@@ -143,9 +123,9 @@ public class CorTest {
         double r = sxy / (Math.sqrt(sxx * syy) + TINY);
         int df = n - 2;
         double t = r * Math.sqrt(df / ((1.0 - r + TINY) * (1.0 + r + TINY)));
-        double prob = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+        double pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
 
-        return new CorTest(r, df, t, prob);
+        return new CorTest("Pearson", r, t, df, pvalue);
     }
 
     /**
@@ -194,7 +174,11 @@ public class CorTest {
      * The raw scores are converted to ranks and the differences between
      * the ranks of each observation on the two variables are calculated.
      * <p>
-     *  The p-value is calculated by approximation, which is good for n &gt; 10.
+     * The p-value is calculated by approximation, which is good for {@code n > 10}.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest spearman(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -216,23 +200,22 @@ public class CorTest {
 
         double d = 0.0;
         for (int j = 0; j < n; j++) {
-            d += Math.sqr(wksp1[j] - wksp2[j]);
+            d += MathEx.pow2(wksp1[j] - wksp2[j]);
         }
 
-        int en = n;
-        double  en3n = en * en * en - en;
+        double en3n = n * n * n - n;
         double fac = (1.0 - sf / en3n) * (1.0 - sg / en3n);
         double rs = (1.0 - (6.0 / en3n) * (d + (sf + sg) / 12.0)) / Math.sqrt(fac);
         fac = (rs + 1.0) * (1.0 - rs);
 
-        double probrs = 0.0;
-        double t = rs * Math.sqrt((en - 2.0) / fac);
-        int df = en - 2;
+        double pvalue = 0.0;
+        double t = rs * Math.sqrt((n - 2.0) / fac);
+        int df = n - 2;
         if (fac > 0.0) {
-            probrs = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
+            pvalue = Beta.regularizedIncompleteBetaFunction(0.5 * df, 0.5, df / (df + t * t));
         }
 
-        return new CorTest(rs, df, t, probrs);
+        return new CorTest("Spearman", rs, t, df, pvalue);
     }
 
     /**
@@ -240,7 +223,11 @@ public class CorTest {
      * Coefficient is used to measure the degree of correspondence
      * between sets of rankings where the measures are not equidistant.
      * It is used with non-parametric data. The p-value is calculated by
-     * approximation, which is good for n &gt; 10.
+     * approximation, which is good for {@code n > 10}.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static CorTest kendall(double[] x, double[] y) {
         if (x.length != y.length) {
@@ -270,74 +257,22 @@ public class CorTest {
         }
 
         double tau = is / (Math.sqrt(n1) * Math.sqrt(n2));
-        double svar = (4.0 * n + 10.0) / (9.0 * n * (n - 1.0));
-        double z = tau / Math.sqrt(svar);
-        double prob = Erf.erfcc(Math.abs(z) / 1.4142136);
-        return new CorTest(tau, 0, z, prob);
-    }
 
-    /**
-     * Given a two-dimensional contingency table in the form of an array of
-     * integers, returns Chi-square test for independence. The rows of contingency table
-     * are labels by the values of one nominal variable, the columns are labels
-     * by the values of the other nominal variable, and whose entries are
-     * nonnegative integers giving the number of observed events for each
-     * combination of row and column. Continuity correction
-     * will be applied when computing the test statistic for 2x2 tables: one half
-     * is subtracted from all |O-E| differences. The correlation coefficient is
-     * calculated as Cramer's V.
-     */
-    public static CorTest chisq(int[][] table) {
-        final double TINY = 1.0e-30;
+        // Kendall test is non-parametric as it does not rely on any
+        // assumptions on the distributions of X or Y or the distribution
+        // of (X,Y).
 
-        int ni = table.length;
-        int nj = table[0].length;
+        // Under the null hypothesis of independence of X and Y, the sampling
+        // distribution of tau has an expected value of zero. The precise
+        // distribution cannot be characterized in terms of common distributions,
+        // but may be calculated exactly for small samples. For larger samples,
+        // it is common to use an approximation to the normal distribution,
+        // with mean zero and variance sqrt(2(2n+5)/9n(n-1)).
+        double var = (4.0 * n + 10.0) / (9.0 * n * (n - 1.0));
+        double z = tau / Math.sqrt(var);
+        double pvalue = Erf.erfcc(Math.abs(z) / 1.4142136);
 
-        boolean correct = false;
-        if (ni == 2 && nj == 2) {
-            correct = true;
-        }
-
-        double sum = 0.0;
-
-        int nni = ni;
-        double[] sumi = new double[ni];
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                sumi[i] += table[i][j];
-                sum += table[i][j];
-            }
-            if (sumi[i] == 0.0) {
-                --nni;
-            }
-        }
-        
-        int nnj = nj;
-        double[] sumj = new double[nj];
-        for (int j = 0; j < nj; j++) {
-            for (int i = 0; i < ni; i++) {
-                sumj[j] += table[i][j];
-            }
-            if (sumj[j] == 0.0) {
-                --nnj;
-            }
-        }
-
-        int df = nni * nnj - nni - nnj + 1;
-        double chisq = 0.0;
-        for (int i = 0; i < ni; i++) {
-            for (int j = 0; j < nj; j++) {
-                double expctd = sumj[j] * sumi[i] / sum;
-                double temp = table[i][j] - expctd;
-                if (correct) temp = Math.abs(temp) - 0.5;
-                chisq += temp * temp / (expctd + TINY);
-            }
-        }
-
-        double prob = Gamma.regularizedUpperIncompleteGamma(0.5 * df, 0.5 * chisq);
-        int minij = nni < nnj ? nni-1 : nnj-1;
-        double v = Math.sqrt(chisq/(sum*minij));
-
-        return new CorTest(v, df, chisq, prob);
+        // Set the degree of freedom to 0 as the test is non-parametric.
+        return new CorTest("Kendall", tau, z, 0, pvalue);
     }
 }

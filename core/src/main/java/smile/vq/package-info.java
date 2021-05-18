@@ -1,33 +1,28 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 /**
- * Originally used for data compression, Vector quantization (VQ)
- * allows the modeling of probability density functions by
- * the distribution of prototype vectors. It works by dividing a large set of points
- * (vectors) into groups having approximately the same number of
- * points closest to them. Each group is represented by its centroid
- * point, as in K-Means and some other clustering algorithms.
- * <p>
- * Vector quantization is is based on the competitive learning paradigm,
- * and also closely related to sparse coding models
- * used in deep learning algorithms such as autoencoder.
- * <p>
- * Algorithms in this package also support the <code>partition</code>
- * method for clustering purpose.
+ * Vector quantization is a lossy compression technique used in speech
+ * and image coding. In vector quantization, a vector is selected from
+ * a finite list of possible vectors to represent an input vector of
+ * samples. Each input vector can be viewed as a point in an n-dimensional
+ * space. The vector quantizer is defined by a partition of this space
+ * into a set of non-overlapping regions. The vector is encoded by
+ * the nearest reference vector (known as codevector) in the codebook.
  *
  * @author Haifeng Li
  */

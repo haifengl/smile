@@ -1,22 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Erf;
 
 /**
@@ -28,15 +29,18 @@ import smile.math.special.Erf;
  * to cluster around the mean.
  * <p>
  * The family of normal distributions is closed under linear transformations.
- * That is, if X is normally distributed, then a linear transform aX + b
- * (for some real numbers a &ne; 0 and b) is also normally distributed.
- * If X<sub>1</sub>, X<sub>2</sub> are two independent normal random variables,
- * then their linear combination will also be normally distributed.
- * The converse is also true: if X<sub>1</sub> and X<sub>2</sub> are independent and their sum X<sub>1</sub> + X<sub>2</sub>
- * is distributed normally, then both X<sub>1</sub> and X<sub>2</sub> must also be normal, which is
- * known as the Cramer's theorem. Of all probability distributions over the
- * reals with mean &mu; and variance &sigma;<sup>2</sup>, the normal
- * distribution N(&mu;, &sigma;<sup>2</sup>) is the one with the maximum entropy.
+ * That is, if X is normally distributed, then a linear transform <code>aX + b</code>
+ * (for some real numbers <code>a &ne; 0 and b</code>) is also normally distributed.
+ * If <code>X<sub>1</sub></code>, <code>X<sub>2</sub></code> are two
+ * independent normal random variables, then their linear combination
+ * will also be normally distributed. The converse is also true: if
+ * <code>X<sub>1</sub></code> and <code>X<sub>2</sub></code> are independent
+ * and their sum <code>X<sub>1</sub> + X<sub>2</sub></code> is distributed
+ * normally, then both <code>X<sub>1</sub></code> and <code>X<sub>2</sub></code>
+ * must also be normal, which is known as the Cramer's theorem. Of all
+ * probability distributions over the real domain with mean <code>&mu;</code>
+ * and variance <code>&sigma;<sup>2</sup></code>, the normal
+ * distribution <code>N(&mu;, &sigma;<sup>2</sup>)</code> is the one with the maximum entropy.
  * <p>
  * The central limit theorem states that under certain, fairly common conditions,
  * the sum of a large number of random variables will have approximately normal
@@ -45,35 +49,44 @@ import smile.math.special.Erf;
  * but otherwise distributions of X<sub>i</sub>'s can be arbitrary, then the
  * central limit theorem states that
  * <p>
- * &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n <big>&Sigma;</big> X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
+ *     &radic;<span style="text-decoration:overline;">n</span> (1&frasl;n &Sigma; X<sub>i</sub> - &mu;) &rarr; N(0, &sigma;<sup>2</sup>).
  * <p>
- * The theorem will hold even if the summands X<sub>i</sub> are not iid,
+ * The theorem will hold even if the summands <code>X<sub>i</sub></code> are not iid,
  * although some constraints on the degree of dependence and the growth rate
  * of moments still have to be imposed.
  * <p>
- * Therefore, certain other distributions can be approximated by the normal distribution, for example:
+ * Therefore, certain other distributions can be approximated by the normal
+ * distribution, for example:
  * <ul>
- * <li> The binomial distribution B(n, p) is approximately normal N(np, np(1-p)) for large n and for p not too close to zero or one.
- * <li> The Poisson(&lambda;) distribution is approximately normal N(&lambda;, &lambda;) for large values of &lambda;.
- * <li> The chi-squared distribution &Chi;<sup>2</sup>(k) is approximately normal N(k, 2k) for large k.
- * <li> The Student's t-distribution t(&nu;) is approximately normal N(0, 1) when &nu; is large.
+ * <li> The binomial distribution <code>B(n, p)</code> is approximately normal
+ * <code>N(np, np(1-p))</code> for large n and for p not too close to zero or one.
+ * <li> The <code>Poisson(&lambda;)</code> distribution is approximately normal
+ * <code>N(&lambda;, &lambda;)</code> for large values of &lambda;.
+ * <li> The chi-squared distribution <code>&Chi;<sup>2</sup>(k)</code> is
+ * approximately normal <code>N(k, 2k)</code> for large k.
+ * <li> The Student's t-distribution <code>t(&nu;)</code> is approximately normal
+ * <code>N(0, 1)</code> when &nu; is large.
  * </ul>
  * 
  * @author Haifeng Li
  */
 public class GaussianDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private static final double LOG2PIE_2 = Math.log(2 * Math.PI * Math.E) / 2;
     private static final double LOG2PI_2 = Math.log(2 * Math.PI) / 2;
     private static final GaussianDistribution singleton = new GaussianDistribution(0.0, 1.0);
 
-    private double mu;
-    private double sigma;
-    private double variance;
-
-    private double entropy;
-    private double pdfConstant;
+    /** The mean. */
+    public final double mu;
+    /** The standard deviation. */
+    public final double sigma;
+    /** The variance. */
+    private final double variance;
+    /** Shannon entropy. */
+    private final double entropy;
+    /** The constant factor in PDF. */
+    private final double pdfConstant;
 
     /**
      * Constructor
@@ -90,23 +103,26 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     /**
-     * Constructor. Mean and standard deviation will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
-    public GaussianDistribution(double[] data) {
-        mu = Math.mean(data);
-        sigma = Math.sd(data);
-        variance = sigma * sigma;
-
-        entropy = Math.log(sigma) + LOG2PIE_2;
-        pdfConstant = Math.log(sigma) + LOG2PI_2;
+    public static GaussianDistribution fit(double[] data) {
+        double mu = MathEx.mean(data);
+        double sigma = MathEx.sd(data);
+        return new GaussianDistribution(mu, sigma);
     }
 
+    /**
+     * Returns the standard normal distribution.
+     * @return the standard normal distribution.
+     */
     public static GaussianDistribution getInstance() {
         return singleton;
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -116,7 +132,7 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return variance;
     }
 
@@ -136,40 +152,41 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
     }
 
     /**
-     * Cache the generated random number in Box-Muller algorithm.
+     * The Box-Muller algorithm generate a pair of random numbers.
+     * z1 is to cache the second one.
      */
-    private Double boxMuller;
+    private double z1 = Double.NaN;
 
     /**
-     * Uses the Box-Muller algorithm to transform Random.random()'s into Gaussian deviates.
+     * Generates a Gaussian random number with the Box-Muller algorithm.
      */
     @Override
     public double rand() {
-        double out, x, y, r, z;
+        double z0, x, y, r, z;
 
-        if (boxMuller != null) {
-            out = boxMuller.doubleValue();
-            boxMuller = null;
-
-        } else {
+        if (Double.isNaN(z1)) {
             do {
-                x = Math.random(-1, 1);
-                y = Math.random(-1, 1);
+                x = MathEx.random(-1, 1);
+                y = MathEx.random(-1, 1);
                 r = x * x + y * y;
             } while (r >= 1.0);
 
             z = Math.sqrt(-2.0 * Math.log(r) / r);
-            boxMuller = new Double(x * z);
-            out = y * z;
+            z1 = x * z;
+            z0 = y * z;
+        } else {
+            z0 = z1;
+            z1 = Double.NaN;
         }
 
-        return mu + sigma * out;
+        return mu + sigma * z0;
     }
     
     /**
-     * Uses Inverse CDF method to generate a Gaussian deviate.
+     * Generates a Gaussian random number with the inverse CDF method.
+     * @return a random number.
      */
-    public double randInverseCDF() {
+    public double inverseCDF() {
         final double a0 = 2.50662823884;
         final double a1 = -18.61500062529;
         final double a2 = 41.39119773534;
@@ -190,9 +207,9 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
         double y, r, x;
 
-        double u = Math.random();
+        double u = MathEx.random();
         while (u == 0.0) {
-            u = Math.random();
+            u = MathEx.random();
         }
         
         y = u - 0.5;
@@ -300,10 +317,6 @@ public class GaussianDistribution extends AbstractDistribution implements Expone
 
         sd = Math.sqrt(sd / alpha);
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = alpha;
-        c.distribution = new GaussianDistribution(mean, sd);
-
-        return c;
+        return new Mixture.Component(alpha, new GaussianDistribution(mean, sd));
     }
 }

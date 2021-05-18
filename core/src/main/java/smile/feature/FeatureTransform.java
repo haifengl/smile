@@ -1,24 +1,40 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.data.Attribute;
-import smile.data.NumericAttribute;
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+
+import smile.data.DataFrame;
+import smile.data.Tuple;
+import smile.data.type.StructField;
+import smile.data.type.StructType;
+import smile.data.vector.BaseVector;
+import smile.data.vector.DoubleVector;
+
+import static smile.util.Regex.BOOLEAN_REGEX;
+import static smile.util.Regex.DOUBLE_REGEX;
 
 /**
  * Feature transformation. In general, learning algorithms benefit from
@@ -27,68 +43,256 @@ import java.io.Serializable;
  *
  * @author Haifeng Li
  */
-public abstract class FeatureTransform implements Serializable {
-    private static final long serialVersionUID = 1L;
+public interface FeatureTransform extends Serializable {
     /**
-     * If false, try to avoid a copy and do inplace transformation instead.
+     * Returns the optional schema of data.
+     * @return the optional schema of data.
      */
-    protected boolean copy;
-
-    /** Constructor. Inplace transformation. */
-    public FeatureTransform() {
-        this(false);
-    }
+    Optional<StructType> schema();
 
     /**
-     * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * Scales a value with i-th column parameters.
+     * @param x a feature value.
+     * @param i the column index.
+     * @return the transformed feature value.
      */
-    public FeatureTransform(boolean copy) {
-        this.copy = copy;
-    }
+    double transform(double x, int i);
 
     /**
-     * Learns transformation parameters from a dataset.
-     * All features are assumed numeric.
-     * @param data The training data.
+     * Inverse scales a value with i-th column parameters.
+     * @param x a feature value.
+     * @param i the column index.
+     * @return the transformed feature value.
      */
-    public void learn(double[][] data) {
-        int p = data[0].length;
-        Attribute[] attributes = new Attribute[p];
-        for (int i = 0; i < p; i++) {
-            attributes[i] = new NumericAttribute("V"+i);
+    double invert(double x, int i);
+
+    /**
+     * Transform a feature vector.
+     * @param x the feature vector.
+     * @return the transformed feature value.
+     */
+    default double[] transform(double[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = transform(x[i], i);
         }
-        learn(attributes, data);
+        return y;
     }
 
     /**
-     * Learns transformation parameters from a dataset.
-     * @param attributes The variable attributes. Of which, numeric variables
-     *                   will be standardized.
-     * @param data The training data to learn scaling parameters.
-     *             The data will not be modified.
+     * Transform a feature vector.
+     * @param x the input feature vector.
+     * @param y the output feature vector.
      */
-    public abstract void learn(Attribute[] attributes, double[][] data);
+    default void transform(double[] x, double[] y) {
+        for (int i = 0; i < y.length; i++) {
+            y[i] = transform(x[i], i);
+        }
+    }
+
+    /**
+     * Transform a data frame.
+     * @param data a data frame.
+     * @return the transformed data frame.
+     */
+    default double[][] transform(double[][] data) {
+        return Arrays.stream(data).parallel().map(this::transform).toArray(double[][]::new);
+    }
 
     /**
      * Transform a feature vector.
      * @param x a feature vector.
      * @return the transformed feature value.
      */
-    public abstract double[] transform(double[] x);
-
-    /**
-     * Transform an array of feature vectors.
-     * @param x an array of feature vectors. The feature
-     *         vectors may be modified on output if copy is false.
-     * @return the transformed feature vectors.
-     */
-    public double[][] transform(double[][] x) {
-        double[][] y = copy ? new double[x.length][] : x;
-        for (int i = 0; i < y.length; i++) {
-            y[i] = transform(x[i]);
+    default Tuple transform(Tuple x) {
+        if (!schema().isPresent()) {
+            throw new UnsupportedOperationException("Schema is not available");
         }
 
+        StructType schema = schema().get();
+        if (!schema.equals(x.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", x.schema(), schema));
+        }
+
+        return new smile.data.AbstractTuple() {
+            @Override
+            public Object get(int i) {
+                if (schema.field(i).isNumeric()) {
+                    return transform(x.getDouble(i), i);
+                } else {
+                    return x.get(i);
+                }
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
+    }
+
+    /**
+     * Transform a data frame.
+     * @param data a data frame.
+     * @return the transformed data frame.
+     */
+    default DataFrame transform(DataFrame data) {
+        if (!schema().isPresent()) {
+            throw new UnsupportedOperationException("Schema is not available");
+        }
+
+        StructType schema = schema().get();
+        if (!schema.equals(data.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
+        }
+
+        BaseVector[] vectors = new BaseVector[schema.length()];
+        IntStream.range(0, schema.length()).parallel().forEach(i -> {
+            StructField field = schema.field(i);
+            if (field.isNumeric()) {
+                DoubleStream stream = data.stream().mapToDouble(t -> transform(t.getDouble(i), i));
+                vectors[i] = DoubleVector.of(field, stream);
+            } else {
+                vectors[i] = data.column(i);
+            }
+        });
+        return DataFrame.of(vectors);
+    }
+
+    /**
+     * Inverse transform a feature vector.
+     * @param x a feature vector.
+     * @return the inverse transformed feature value.
+     */
+    default double[] invert(double[] x) {
+        double[] y = new double[x.length];
+        for (int i = 0; i < y.length; i++) {
+            y[i] = invert(x[i], i);
+        }
         return y;
+    }
+
+    /**
+     * Inverse transform a data frame.
+     * @param data a data frame.
+     * @return the inverse transformed data frame.
+     */
+    default double[][] invert(double[][] data) {
+        return Arrays.stream(data).parallel().map(this::invert).toArray(double[][]::new);
+    }
+
+    /**
+     * Inverse transform a feature vector.
+     * @param x a feature vector.
+     * @return the inverse transformed feature value.
+     */
+    default Tuple invert(Tuple x) {
+        if (!schema().isPresent()) {
+            throw new UnsupportedOperationException("Schema is not available");
+        }
+
+        StructType schema = schema().get();
+        if (!schema.equals(x.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", x.schema(), schema));
+        }
+
+        return new smile.data.AbstractTuple() {
+            @Override
+            public Object get(int i) {
+                if (schema.field(i).isNumeric()) {
+                    return invert(x.getDouble(i), i);
+                } else {
+                    return x.get(i);
+                }
+            }
+
+            @Override
+            public StructType schema() {
+                return schema;
+            }
+        };
+    }
+
+    /**
+     * Inverse transform a data frame.
+     * @param data a data frame.
+     * @return the inverse transformed data frame.
+     */
+    default DataFrame invert(DataFrame data) {
+        if (!schema().isPresent()) {
+            throw new UnsupportedOperationException("Schema is not available");
+        }
+
+        StructType schema = schema().get();
+        if (!schema.equals(data.schema())) {
+            throw new IllegalArgumentException(String.format("Invalid schema %s, expected %s", data.schema(), schema));
+        }
+
+        BaseVector[] vectors = new BaseVector[schema.length()];
+        IntStream.range(0, schema.length()).forEach(i -> {
+            StructField field = schema.field(i);
+            if (field.isNumeric()) {
+                DoubleStream stream = data.stream().parallel().mapToDouble(t -> invert(t.getDouble(i), i));
+                vectors[i] = DoubleVector.of(field, stream);
+            } else {
+                vectors[i] = data.column(i);
+            }
+        });
+        return DataFrame.of(vectors);
+    }
+
+    /**
+     * Returns the feature transformer. If the parameter {@code transformer} is null or empty,
+     * return {@code null}.
+     *
+     * @param transformer the feature transformation algorithm.
+     * @param data the training data.
+     * @return the feature transformer.
+     */
+    static FeatureTransform of(String transformer, double[][] data) {
+        if (transformer == null|| transformer.isEmpty()) return null;
+
+        transformer = transformer.trim().toLowerCase(Locale.ROOT);
+        if (transformer.equals("l1")) {
+            return Normalizer.L1;
+        }
+
+        if (transformer.equals("l2")) {
+            return Normalizer.L2;
+        }
+
+        if (transformer.equals("linf")) {
+            return Normalizer.L_INF;
+        }
+
+        if (transformer.equals("minmax")) {
+            return Scaler.fit(data);
+        }
+
+        if (transformer.equals("maxabs")) {
+            return MaxAbsScaler.fit(data);
+        }
+
+        Pattern winsor = Pattern.compile(
+                String.format("winsor\\((%s),\\s*(%s)\\)", DOUBLE_REGEX, DOUBLE_REGEX));
+        Matcher m = winsor.matcher(transformer);
+        if (m.matches()) {
+            double lower = Double.parseDouble(m.group(1));
+            double upper = Double.parseDouble(m.group(2));
+            return WinsorScaler.fit(data, lower, upper);
+        }
+
+        Pattern standardizer = Pattern.compile(
+                String.format("standardizer(\\(\\s*(%s)\\))?", BOOLEAN_REGEX));
+        m = standardizer.matcher(transformer);
+        if (m.matches()) {
+            boolean robust = false;
+            if (m.group(1) != null) {
+                robust = Boolean.parseBoolean(m.group(2));
+            }
+            return robust ? RobustStandardizer.fit(data) : Standardizer.fit(data);
+        }
+
+        throw new IllegalArgumentException("Unsupported feature transform: " + transformer);
     }
 }

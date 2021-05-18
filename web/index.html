@@ -1,0 +1,668 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+<div class="col-md-3 col-md-push-9 hidden-xs hidden-sm">
+  <div class="news" style="margin-bottom: 20px;">
+    <h5>Latest News</h5>
+    <ul class="list-unstyled">
+      <li><a href="https://github.com/haifengl/smile/releases/tag/v2.6.0">Smile 2.6.0 Released!</a>
+        <span class="small">(Dec 5, 2020)</span></li>
+
+      <li><a href="https://sudonull.com/post/28015-ML-on-Scala-with-a-smile-for-those-who-are-not-afraid-of-experiments-Yulas-blog">ML on Scala with a Smile</a>
+        <span class="small">(May 22, 2019)</span></li>
+
+      <li><a href="https://www.youtube.com/watch?v=aqT_0qFOBUI">Dex Machine Learning with SMILE ML</a>
+        <span class="small">(Mar 28, 2018, by Patrick Martin)</span></li>
+
+      <li><a href="https://activewizards.com/blog/top-15-scala-libraries-for-data-science/">Top 15 Scala Libraries for Data Science in 2018</a>
+        <span class="small">(Jan 10, 2018, by ActiveWizards)</span></li>
+
+      <li><a href="https://www.infoworld.com/article/3220428/machine-learning/3-projects-lighting-a-fire-under-machine-learning.html">3 projects lighting a fire under machine learning</a>
+        <span class="small">(Aug 30, 2017, by InfoWorld)</span></li>
+
+      <li><a href="http://www.kdnuggets.com/2017/04/five-machine-learning-projects-cant-overlook-april.html">5 Machine Learning Projects You Can No Longer Overlook</a>
+        <span class="small">(Apr 19, 2017, by KDnuggets)</span></li>
+    </ul>
+  </div>
+
+  <div>
+    <!--
+    <div align="center">
+    <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+        <input type="hidden" name="cmd" value="_s-xclick" />
+        <input type="hidden" name="hosted_button_id" value="XKU5BZX7XHPQ6" />
+        <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_donateCC_LG.gif" border="0" name="submit" title="PayPal - The safer, easier way to pay online!" alt="Donate with PayPal button" />
+        <img alt="" border="0" src="https://www.paypal.com/en_US/i/scr/pixel.gif" width="1" height="1" />
+    </form>
+    </div>
+    -->
+    <a href="https://github.com/haifengl/smile/releases" class="btn btn-primary btn-lg btn-block" style="margin-bottom: 30px;">
+      Download
+    </a>
+  </div>
+
+  <!--
+  <div class="community" style="margin-bottom: 20px;">
+    <h5>Please Join Smilers</h5>
+    <ul class="list-unstyled">
+      <li>Put a &starf; on <a href="https://github.com/haifengl/smile">GitHub</a></li>
+
+      <li>Request new features or give your feedback in the <a href="https://github.com/haifengl/smile/issues">GitHub issues</a></li>
+
+      <li>Fork the project on <a href="https://github.com/haifengl/smile/">GitHub</a>
+          and create a <a href="https://github.com/haifengl/smile">Pull Request</a>.</li>
+
+      <li>Discuss live with other community members on
+          <a href="https://gitter.im/haifengl/smile?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge"><img src="https://badges.gitter.im/haifengl/smile.svg" alt="Gitter" style="max-width:100%;"></a></li>
+    </ul>
+  </div>
+  -->
+
+  <div>
+    <p style="font-size: 16px; font-weight: 500; color: #555;">
+      Built-in Algorithms:
+    </p>
+    <dl>
+      <dt><a href="api/java/smile/classification/package-summary.html">Classification</a></dt>
+      <dd><p>
+        <a href="api/java/smile/classification/DecisionTree.html">Decision Trees</a>,
+        <a href="api/java/smile/classification/AdaBoost.html">AdaBoost</a>,
+        <a href="api/java/smile/classification/GradientTreeBoost.html">Gradient Boosting</a>,
+        <a href="api/java/smile/classification/RandomForest.html">Random Forest</a>,
+        <a href="api/java/smile/classification/LogisticRegression.html">Logistic Regression</a>,
+        <a href="api/java/smile/classification/MLP.html">Neural Networks</a>,
+        <a href="api/java/smile/classification/SVM.html">Support Vector Machines</a>,
+        <a href="api/java/smile/classification/RBFNetwork.html">RBF Networks</a>,
+        <a href="api/java/smile/classification/Maxent.html">Maximum Entropy Classifier</a>,
+        <a href="api/java/smile/classification/NaiveBayes.html">Generic Naïve Bayes Classifier</a>,
+        <a href="api/java/smile/classification/DiscreteNaiveBayes.html">Naïve Bayes Document Classfier</a>,
+        <a href="api/java/smile/classification/FLD.html">Fisher</a> /
+        <a href="api/java/smile/classification/LDA.html">Linear</a> /
+        <a href="api/java/smile/classification/QDA.html">Quadratic</a> /
+        <a href="api/java/smile/classification/RDA.html">Regularized Discriminant Analysis</a>,
+        <a href="api/java/smile/classification/PlattScaling.html">Platt Scaling</a>,
+        <a href="api/java/smile/classification/IsotonicRegressionScaling.html">Isotonic Regression Scaling</a>,
+        <a href="api/java/smile/classification/OneVersusOne.html">One vs. One</a>,
+        <a href="api/java/smile/classification/OneVersusRest.html">One vs. Rest</a>
+      </p></dd>
+
+      <dt><dt><a href="api/java/smile/regression/package-summary.html">Regression</a></dt>
+      <dd><p>
+        <a href="api/java/smile/regression/OLS.html">Linear Regression</a>,
+        <a href="api/java/smile/regression/LASSO.html">LASSO</a>,
+        <a href="api/java/smile/regression/ElasticNet.html">ElasticNet</a>,
+        <a href="api/java/smile/regression/RidgeRegression.html">Ridge Regression</a>,
+        <a href="api/java/smile/regression/RegressionTree.html">Regression Trees</a>,
+        <a href="api/java/smile/regression/GradientTreeBoost.html">Gradient Boosting</a>,
+        <a href="api/java/smile/regression/RandomForest.html">Random Forest</a>,
+        <a href="api/java/smile/regression/RBFNetwork.html">RBF Networks</a>,
+        <a href="api/java/smile/regression/MLP.html">Neural Networks</a>,
+        <a href="api/java/smile/regression/SVR.html">Support Vector Regression</a>,
+        <a href="api/java/smile/regression/GaussianProcessRegression.html">Gaussian Process</a>,
+        <a href="api/java/smile/glm/GLM.html">Generalized Linear Model</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/feature/package-summary.html">Feature Engineering and Selection</a></dt>
+      <dd><p>
+        <a href="api/java/smile/feature/Bag.html">Bag of Words</a>,
+        <a href="api/java/smile/feature/SparseOneHotEncoder.html">Sparse One Hot Encoding</a>,
+        <a href="api/java/smile/feature/Standardizer.html">Standardizer</a>,
+        <a href="api/java/smile/feature/RobustStandardizer.html">Robust Standardizer</a>,
+        <a href="api/java/smile/feature/MaxAbsScaler.html">Maximum Absolute Value Scaler</a>,
+        <a href="api/java/smile/feature/WinsorScaler.html">Winsor Scaler</a>,
+        <a href="api/java/smile/feature/Normalizer.html">Normalizer</a>,
+        <a href="api/java/smile/feature/GAFE.html">Genetic Algorithm based Feature Selection</a>,
+        <a href="api/java/smile/classification/RandomForest.html#importance--">Ensemble Learning based Feature Selection</a>,
+        <a href="api/java/smile/feature/TreeSHAP.html">TreeSHAP</a>,
+        <a href="api/java/smile/feature/SignalNoiseRatio.html">Signal Noise ratio</a>,
+        <a href="api/java/smile/feature/SumSquaresRatio.html">Sum Squares ratio</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/projection/package-summary.html">Dimension Reduction</a></dt>
+      <dd><p>
+        <a href="api/java/smile/projection/PCA.html">PCA</a>,
+        <a href="api/java/smile/projection/KPCA.html">Kernel PCA</a>,
+        <a href="api/java/smile/projection/PPCA.html">Probabilistic PCA</a>,
+        <a href="api/java/smile/projection/GHA.html">Generalized Hebbian Algorithm</a>,
+        <a href="api/java/smile/projection/RandomProjection.html">Random Project</a>,
+        <a href="api/java/smile/projection/ICA.html">ICA</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/validation/package-summary.html">Model Validation</a></dt>
+      <dd><p>
+        <a href="api/java/smile/validation/CrossValidation.html">Cross Validation</a>,
+        <a href="api/java/smile/validation/LOOCV.html">Leave-One-Out Validation</a>,
+        <a href="api/java/smile/validation/Bootstrap.html">Bootstrap</a>,
+        <a href="api/java/smile/validation/ConfusionMatrix.html">Confusion Matrix</a>,
+        <a href="api/java/smile/validation/Hyperparameters.html">Hyperparameter Tuning</a>,
+        <a href="api/java/smile/validation/metric/AUC.html">AUC</a>,
+        <a href="api/java/smile/validation/metric/LogLoss.html">LogLoss</a>,
+        <a href="api/java/smile/validation/metric/CrossEntropy.html">CrossEntropy</a>,
+        <a href="api/java/smile/validation/metric/Accuracy.html">Accuracy</a>,
+        <a href="api/java/smile/validation/metric/Error.html">Error</a>,
+        <a href="api/java/smile/validation/metric/Fallout.html">Fallout</a>,
+        <a href="api/java/smile/validation/metric/FDR.html">FDR</a>,
+        <a href="api/java/smile/validation/metric/FScore.html">F-Score</a>,
+        <a href="api/java/smile/validation/metric/Precision.html">Precision</a>,
+        <a href="api/java/smile/validation/metric/Recall.html">Recall</a>,
+        <a href="api/java/smile/validation/metric/Sensitivity.html">Sensitivity</a>,
+        <a href="api/java/smile/validation/metric/Specificity.html">Specificity</a>,
+        <a href="api/java/smile/validation/metric/MatthewsCorrelation.html">Matthews Correlation Coefficient</a>,
+        <a href="api/java/smile/validation/metric/MSE.html">MSE</a>,
+        <a href="api/java/smile/validation/metric/RMSE.html">RMSE</a>,
+        <a href="api/java/smile/validation/metric/RSS.html">RSS</a>,
+        <a href="api/java/smile/validation/metric/R2.html">R2</a>,
+        <a href="api/java/smile/validation/metric/MeanAbsoluteDeviation.html">Mean Absolute Deviation</a>,
+        <a href="api/java/smile/validation/metric/RandIndex.html">Rand Index</a>,
+        <a href="api/java/smile/validation/metric/AdjustedRandIndex.html">Adjusted Rand Index</a>,
+        <a href="api/java/smile/validation/metric/MutualInformation.html">Mutual Information Score</a>,
+      </p></dd>
+
+      <dt><a href="api/java/smile/clustering/package-summary.html">Clustering</a></dt>
+      <dd><p>
+        <a href="api/java/smile/clustering/HierarchicalClustering.html">Hierarchical Clustering</a>,
+        <a href="api/java/smile/clustering/CLARANS.html">CLARANS</a>,
+        <a href="api/java/smile/clustering/DBSCAN.html">DBSCAN</a>,
+        <a href="api/java/smile/clustering/DENCLUE.html">DENCLUE</a>,
+        <a href="api/java/smile/clustering/KMeans.html">K-Means</a>,
+        <a href="api/java/smile/clustering/XMeans.html">X-Means</a>,
+        <a href="api/java/smile/clustering/GMeans.html">G-Means</a>,
+        <a href="api/java/smile/clustering/KModes.html">K-Modes</a>,
+        <a href="api/java/smile/clustering/DeterministicAnnealing.html">Deterministic Annealing</a>,
+        <a href="api/java/smile/clustering/SIB.html">Sequential Information Bottleneck</a>,
+        <a href="api/java/smile/clustering/SpectralClustering.html">Spectral Clustering</a>,
+        <a href="api/java/smile/clustering/MEC.html">Minimum Entropy Clustering</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/vq/package-summary.html">Vector Quantization</a></dt>
+      <dd><p>
+        <a href="api/java/smile/vq/BIRCH.html">BIRCH</a>,
+        <a href="api/java/smile/vq/SOM.html">Self-Organizing Maps</a>,
+        <a href="api/java/smile/vq/NeuralGas.html">Neural Gas</a>,
+        <a href="api/java/smile/vq/GrowingNeuralGas.html">Growing Neural Gas</a>,
+        <a href="api/java/smile/vq/NeuralMap.html">Neural Map</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/association/package-summary.html">Association Rules</a></dt>
+      <dd><p>
+        <a href="api/java/smile/association/FPGrowth.html">Frequent Itemset Mining</a>,
+        <a href="api/java/smile/association/ARM.html">Association Rule Mining</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/manifold/package-summary.html">Manifold learning</a></dt>
+      <dd><p>
+        <a href="api/java/smile/manifold/IsoMap.html">IsoMap</a>,
+        <a href="api/java/smile/manifold/LLE.html">LLE</a>,
+        <a href="api/java/smile/manifold/LaplacianEigenmap.html">Laplacian Eigenmap</a>,
+        <a href="api/java/smile/manifold/TSNE.html">t-SNE</a>,
+        <a href="api/java/smile/manifold/UMAP.html">UMAP</a>,
+        <a href="api/java/smile/manifold/MDS.html">Classical MDS</a>,
+        <a href="api/java/smile/manifold/IsotonicMDS.html">Isotonic MDS</a>,
+        <a href="api/java/smile/manifold/SammonMapping.html">Sammon Mapping</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/neighbor/package-summary.html">Nearest Neighbor Search</a></dt>
+      <dd><p>
+        <a href="api/java/smile/neighbor/LinearSearch.html">Linear Search</a>,
+        <a href="api/java/smile/neighbor/BKTree.html">BK-Tree</a>,
+        <a href="api/java/smile/neighbor/CoverTree.html">Cover Tree</a>,
+        <a href="api/java/smile/neighbor/KDTree.html">KD-Tree</a>,
+        <a href="api/java/smile/neighbor/LSH.html">LSH</a>,
+        <a href="api/java/smile/neighbor/MPLSH.html">Multi-Probe LSH</a>,
+        <a href="api/java/smile/hash/SimHash.html">SimHash</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/sequence/package-summary.html">Sequence Learning</a></dt>
+      <dd><p>
+        <a href="api/java/smile/sequence/HMM.html">Hidden Markov Model</a>,
+        <a href="api/java/smile/sequence/CRF.html">Conditional Random Field</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/timeseries/package-summary.html">Time Series</a></dt>
+      <dd><p>
+        <a href="api/java/smile/timeseries/TimeSeries.html#acf-double:A-int-">ACF</a>,
+        <a href="api/java/smile/timeseries/TimeSeries.html#pacf-double:A-int-">PACF</a>,
+        <a href="api/java/smile/timeseries/BoxTest.html">Box-Pierce and Ljung-Box Test</a>,
+        <a href="api/java/smile/timeseries/AR.html">AR</a>,
+        <a href="api/java/smile/timeseries/ARMA.html">ARMA</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/nlp/package-summary.html">Natural Language Processing</a></dt>
+      <dd><p>
+        <a href="api/java/smile/nlp/tokenizer/SimpleSentenceSplitter.html">Sentence Splitter</a>,
+        <a href="api/java/smile/nlp/tokenizer/SimpleTokenizer.html">Tokenizer</a>,
+        <a href="api/java/smile/nlp/collocation/Bigram.html">Bigram Extractor</a>,
+        <a href="api/java/smile/nlp/collocation/NGram.html">Phrase Extractor</a>,
+        <a href="api/java/smile/nlp/keyword/CooccurrenceKeywords.html">Keyword Extractor</a>,
+        <a href="api/java/smile/nlp/stemmer/PorterStemmer.html">Porter Stemmer</a>,
+        <a href="api/java/smile/nlp/stemmer/LancasterStemmer.html">Lancaster Stemmer</a>,
+        <a href="api/java/smile/nlp/pos/HMMPOSTagger.html">POS Tagging</a>,
+        <a href="api/java/smile/nlp/relevance/BM25.html">Relevance Ranking</a>,
+        <a href="api/java/smile/nlp/embedding/Word2Vec.html">Word2Vec</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/math/package-summary.html">Mathematics</a></dt>
+      <dd><p>
+        <a href="api/java/smile/gap/package-summary.html">Genetic Algorithms</a>,
+        <a href="api/java/smile/graph/package-summary.html">Graph</a>,
+        <a href="api/java/smile/hash/package-summary.html">Hash Functions</a>,
+        <a href="api/java/smile/interpolation/package-summary.html">Interpolation</a>,
+        <a href="api/java/smile/sort/package-summary.html">Sort Algorithms</a>,
+        <a href="api/java/smile/taxonomy/package-summary.html">Taxonomy</a>,
+        <a href="api/java/smile/wavelet/package-summary.html">Wavelet</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/math/matrix/package-summary.html">Linear Algebra</a></dt>
+      <dd><p>
+        <a href="api/java/smile/math/matrix/Matrix.html">Dense Matrix</a>,
+        <a href="api/java/smile/math/matrix/BandMatrix.html">Band Matrix</a>,
+        <a href="api/java/smile/math/matrix/SparseMatrix.html">Sparse Matrix</a>,
+        <a href="api/java/smile/math/matrix/Matrix.LU.html">LU</a>,
+        <a href="api/java/smile/math/matrix/Matrix.Cholesky.html">Cholesky</a>,
+        <a href="api/java/smile/math/matrix/Matrix.QR.html">QR</a>,
+        <a href="api/java/smile/math/matrix/Matrix.EVD.html">EVD</a>,
+        <a href="api/java/smile/math/matrix/Matrix.SVD.html">SVD</a>,
+        <a href="api/java/smile/math/matrix/BiconjugateGradient.html">Biconjugate Gradient</a>,
+        <a href="api/java/smile/math/BFGS.html">BFGS</a>,
+        <a href="api/scala/smile/cas/index.html">Computer Algebra System</a>
+      </p></dd>
+
+      <dt><a href="api/java/smile/stat/package-summary.html">Statistics</a></dt>
+      <dd><p>
+        <a href="api/java/smile/stat/distribution/package-summary.html">Distributions</a>,
+        <a href="api/java/smile/math/random/package-summary.html">Random Number Generators</a>,
+        <a href="api/java/smile/stat/Hypothesis.html">Hypothesis Tests</a>
+      </p></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="col-md-9 col-md-pull-3">
+  <div class="jumbotron">
+    <p><b>Smile</b> is a fast and comprehensive machine learning engine.</p>
+    <div id="testimonial-slider" class="owl-carousel">
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            Smile now seems to be the go-to general-purpose machine learning library
+            for those working in the Java and Scala worlds &mdash; a JVM Scikit-learn, if you will.
+            I would actually find it hard to believe that you are working in that ecosystem
+            and are unaware of the project.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - KDnuggets
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            Smile gives you a broad range of algorithms out of the box, ranging from simple
+            functions like classification and regression to sophisticated offerings like
+            natural language processing. And all you need is Java, or any JVM language.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - InfoWorld
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            Smile will amaze you with fast and extensive applications,
+            efficient memory usage and a large set of machine learning algorithms for Classification,
+            Regression, Nearest Neighbor Search, Feature Selection, etc.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - ActiveWizards
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            To say that I am satisfied with SMILE would be an understatement. It's truly one of the
+            hidden gems in the Java framework ecosystem today.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Patrick Martin,
+              <small>Principal Architect at Citi</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            LinkedIn used Smile to train its workforce on machine learning for its AI Academy.
+            Smile was chosen because it's a Java library with a friendly open source license
+            and supports a wide range of common algorithms.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Ben McCann, <small>Head of Hire Matching at LinkedIn</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            We leverage Smile's impressive capability in various machine
+            learning tasks: feature engineering, modeling, visualization,
+            benchmark test, etc. Thanks Smile and strongly recommend it
+            to every engineer who is interested in machine learning.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Ray Ma,
+              <small>Technology Manager at moKredit</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+
+      <div class="testimonial">
+        <div class="testimonial-content">
+          <p class="testimonial-description">
+            SMILE is a great Java library for a wide range of AI tasks. Building bespoke methods atop
+            SMILE run considerably faster than implementations in other languages more
+            associated with data science.
+          </p>
+          <div class="testimonial-review">
+            <h3 class="testimonial-title">
+              - Shantanu Lodh,
+              <small>Senior Data Scientist at Hidden Depth AI, UK</small>
+            </h3>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="github-buttons-wrapper" style="margin-top: 30px;">
+      <a class="github-button" href="https://github.com/haifengl/smile" data-icon="octicon-star" data-size="large" data-show-count="true" aria-label="Star haifengl/smile on GitHub">Star</a>
+      <a class="github-button" href="https://github.com/haifengl" data-size="large" aria-label="Follow @haifengl on GitHub">Follow @haifengl</a>
+      <a class="github-button" href="https://github.com/haifengl/smile/fork" data-icon="octicon-repo-forked" data-size="large" data-show-count="true" aria-label="Fork haifengl/smile on GitHub">Fork</a>
+    </div>
+  </div>
+
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Speed</h2>
+
+      <p class="lead">
+        With advanced data structures and algorithms, Smile delivers the state-of-art performance.
+      </p>
+
+      <p>Compared to this third-party <a href="https://github.com/szilard/benchm-ml">benchmark</a>,
+        Smile outperforms R, Python, Spark, H2O, xgboost significantly. Smile is a couple of times
+        faster than the closest competitor. The memory usage is also very efficient. If we can train
+        advanced machine learning models on a PC, why buy a cluster?
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/benchm-ml.png" style="width: 100%;" />
+        <div class="caption" style="min-width: 272px;">Training Time (seconds)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Ease of Use</h2>
+
+      <p class="lead">
+        Write applications quickly in Java, Scala, or any JVM languages.
+        Data scientists and developers can speak the same language now!
+      </p>
+
+      <p>Smile provides hundreds advanced algorithms with clean interface. Scala API also offers
+        high-level operators that make it easy to build machine learning apps.
+        And you can use it interactively from the shell, embedded in Scala.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+        <li><a href="#clojure_1" data-toggle="tab">Clojure</a></li>
+        <li><a href="#groovy_1" data-toggle="tab">Groovy</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane" id="java_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+var iris = Read.arff("iris.arff");
+
+var model = RandomForest.fit(Formula.lhs("class"), iris);
+
+println(model.metrics());
+          </code></pre>
+          </div>
+          <div class="caption">DataFrame, Model Fitting, and Metrics</div>
+        </div>
+        <div class="tab-pane active" id="scala_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val iris = read.arff("iris.arff")
+
+val model = randomForest("class" ~, iris)
+
+println(model.metrics)
+
+          </code></pre>
+          </div>
+          <div class="caption">DataFrame, Model Fitting, and Metrics</div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+val iris = read.arff("iris.arff")
+
+val model = randomForest(Formula.lhs("class"), iris)
+
+println(model.metrics())
+          </code></pre>
+          </div>
+          <div class="caption">DataFrame, Model Fitting, and Metrics</div>
+        </div>
+        <div class="tab-pane" id="clojure_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-clj"><code>
+(let [iris (read-arff
+            "data/weka/iris.arff")
+      model (random-forest
+             (Formula/lhs "class") iris)]
+  (.metrics model))
+
+          </code></pre>
+          </div>
+          <div class="caption">DataFrame, Model Fitting, and Metrics</div>
+        </div>
+        <div class="tab-pane" id="groovy_1">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-groovy"><code>
+var iris = Read.arff("iris.arff")
+
+var model = RandomForest.fit(Formula.lhs("class"), iris)
+
+println model.metrics()
+          </code></pre>
+          </div>
+          <div class="caption">DataFrame, Model Fitting, and Metrics</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Comprehensive</h2>
+
+      <p class="lead">
+        The most complete machine learning engine. Smile covers every aspect of machine learning.
+      </p>
+      <p>Classification, regression, clustering, association rule mining, feature selection,
+        manifold learning, multidimensional scaling, genetic algorithm, missing value imputation,
+        efficient nearest neighbor search, etc. See the sidebar for a list of available algorithms.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/brain.png" style="width: 100%;" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Natural Language Processing</h2>
+
+      <p class="lead">
+        Understanding human language, and the intent behind our words.
+      </p>
+      <p>Tokenizers, stemming, word2vec, phrase detection, part-of-speech tagging, keyword extraction,
+        named entity recognition, sentiment analysis, relevance ranking, taxomony.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/ml-word-cloud.jpg" style="width: 100%;" />
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Mathematics and Statistics</h2>
+
+      <p class="lead">
+        Hidden gems in Smile.
+      </p>
+      <p>From special functions, linear algebra, to random number generators,
+          statistical distributions and hypothesis tests, Smile provides an
+          advanced numerical computing environment. In additions, graph,
+          wavlets, and a variety of interpolation algorithms are implemented.
+          Smile even includes a computer algerbra system.
+      </p>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Matrix</a></li>
+        <li><a href="#scala_3" data-toggle="tab">Statistics</a></li>
+        <li><a href="#scala_4" data-toggle="tab">CAS</a></li>
+      </ul>
+      <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+var A = Matrix.randn(3, 3);
+double[] x = {1.0, 2.0, 3.0};
+var lu = A.lu();
+lu.solve(x);
+lu.inverse().mm(A);
+          </code></pre>
+          </div>
+          <div class="caption">Linear Algebra</div>
+        </div>
+        <div class="tab-pane" id="scala_3">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+int[] bins1 = {8, 13, 16, 10, 3};
+
+int[] bins2 = {4,  9, 14, 16, 7};
+
+Hypothesis.chisq.test(bins1, bins2);
+          </code></pre>
+          </div>
+          <div class="caption">Statistics</div>
+        </div>
+        <div class="tab-pane" id="scala_4">
+          <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-scala"><code>
+val x = Var("x")
+val y = Var("y")
+val e = x**2 + y**3 + x**2 * cot(y**3)
+val dx = e.d(x)
+println(dx)
+          </code></pre>
+          </div>
+          <div class="caption">Computer Algebra System</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row row-padded">
+    <div class="col-md-7 col-sm-7">
+      <h2>Data Visualization</h2>
+
+      <p class="lead">
+        Interactive 2D/3D math plot.
+      </p>
+      <p>Scatter plot, line plot, staircase plot, bar plot, box plot, heatmap, hexmap, histogram, qq plot, surface,
+        grid, contour, dendrogram, sparse matrix visualization, wireframe, etc. Smile also supports declarative
+        data visualization that compiles to <a href="https://vega.github.io/vega-lite/">Vega-Lite</a>.
+      </p>
+    <div id="vegalite"></div>
+    <script type="text/javascript">
+      var spec = {
+  "$schema": "https://vega.github.io/schema/vega-lite/v4.json",
+  "width": 400,
+  "height": 300,
+  "title": "Choropleth of Unemployment Rate per County",
+  "data": {
+    "url": "https://vega.github.io/vega-lite/examples/data/us-10m.json",
+    "format": {
+      "type": "topojson",
+      "feature": "counties"
+    }
+  },
+  "transform": [{
+    "lookup": "id",
+    "from": {
+      "data": {
+        "url": "https://vega.github.io/vega-lite/examples/data/unemployment.tsv"
+      },
+      "key": "id",
+      "fields": ["rate"]
+    }
+  }],
+  "projection": {
+    "type": "albersUsa"
+  },
+  "mark": "geoshape",
+  "encoding": {
+    "color": {
+      "field": "rate",
+      "type": "quantitative"
+    }
+  }
+};
+      vegaEmbed('#vegalite', spec);
+    </script>
+    </div>
+    <div class="col-md-5 col-sm-5 col-padded-top col-center">
+      <div style="width: 100%; display: inline-block; text-align: center;">
+        <img src="images/math.png" style="width: 100%;" />
+        <img src="gallery/smile-demo-ann.png" style="width: 100%;" />
+      </div>
+    </div>
+  </div>
+</div>

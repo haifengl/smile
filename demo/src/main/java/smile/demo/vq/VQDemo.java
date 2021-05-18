@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.vq;
 
 import java.awt.BorderLayout;
@@ -31,25 +33,39 @@ import javax.swing.JTextField;
 import javax.swing.event.AncestorEvent;
 import javax.swing.event.AncestorListener;
 
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
-import smile.plot.ScatterPlot;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.io.Read;
+import smile.plot.swing.ScatterPlot;
 
 @SuppressWarnings("serial")
 public abstract class VQDemo extends JPanel implements Runnable, ActionListener, AncestorListener {
 
     private static String[] datasetName = {
         "Gaussian/One", "Gaussian/Two", "Gaussian/Three",
-        "Gaussian/Five", "Gaussian/Six", "Gaussian/Elongate",
-        "NonConvex/Cross", "NonConvex/D4", "NonConvex/Face",
-        "NonConvex/Pie", "NonConvex/Ring", "NonConvex/Sincos",
+        "Gaussian/Five", "Gaussian/Six",
+        "NonConvex/Cross", "NonConvex/Pie",
         "Chameleon/t4.8k", "Chameleon/t5.8k",
         "Chameleon/t7.10k", "Chameleon/t8.8k",
-        "Neural Gas/Dscrete", "Neural Gas/Rectangle",
+        "Neural Gas/Discrete", "Neural Gas/Rectangle",
         "Neural Gas/Circle", "Neural Gas/Ring",
         "Neural Gas/Complex1", "Neural Gas/Complex2",
         "Neural Gas/Complex3", "Neural Gas/Complex4",
         "Neural Gas/HiLoDensity"
+    };
+
+    private static char[] delimiter = {
+            ' ',  ' ',  ' ',
+            '\t', ' ',
+            '\t', '\t',
+            ' ',  ' ',
+            ' ',  ' ',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t',  '\t',
+            '\t'
     };
 
     private static String[] datasource = {
@@ -58,13 +74,8 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         "clustering/gaussian/three.txt",
         "clustering/gaussian/five.txt",
         "clustering/gaussian/six.txt",
-        "clustering/gaussian/elongate.txt",
         "clustering/nonconvex/cross.txt",
-        "clustering/nonconvex/d4.txt",
-        "clustering/nonconvex/face.txt",
         "clustering/nonconvex/pie.txt",
-        "clustering/nonconvex/ring.txt",
-        "clustering/nonconvex/sincos.txt",
         "clustering/chameleon/t4.8k.txt",
         "clustering/chameleon/t5.8k.txt",
         "clustering/chameleon/t7.10k.txt",
@@ -80,13 +91,19 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         "clustering/neuralgas/HiLoDensity.txt"
     };
 
-    static double[][][] dataset = null;
+    static double[][][] dataset = new double[datasetName.length][][];
     static int datasetIndex = 0;
     static int clusterNumber = 2;
+    static int epochs = 20;
+    static double learningRate = 0.85;
+    static double neighborhood = 5;
 
     JPanel optionPane;
     JComponent canvas;
-    private JTextField clusterNumberField;
+    private JTextField clusterNumberField = new JTextField(Integer.toString(clusterNumber), 5);
+    private JTextField epochField = new JTextField(Integer.toString(epochs), 5);
+    private JTextField learningRateField = new JTextField(Double.toString(learningRate), 5);
+    private JTextField neighborhoodField = new JTextField(Double.toString(neighborhood), 5);
     private JButton startButton;
     private JComboBox<String> datasetBox;
     char pointLegend = '.';
@@ -95,19 +112,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
      * Constructor.
      */
     public VQDemo() {
-        if (dataset == null) {
-            dataset = new double[datasetName.length][][];
-            DelimitedTextParser parser = new DelimitedTextParser();
-            parser.setDelimiter("[\t ]+");
-            try {
-                AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
-                dataset[datasetIndex] = data.toArray(new double[data.size()][]);
-            } catch (Exception e) {
-                JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                System.out.println(e);
-            }
-        }
-
+        loadData(datasetIndex);
         addAncestorListener(this);
 
         startButton = new JButton("Start");
@@ -122,20 +127,22 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         datasetBox.setActionCommand("datasetBox");
         datasetBox.addActionListener(this);
 
-        clusterNumberField = new JTextField(Integer.toString(clusterNumber), 5);
-
         optionPane = new JPanel(new FlowLayout(FlowLayout.LEFT));
         optionPane.setBorder(BorderFactory.createRaisedBevelBorder());
         optionPane.add(startButton);
         optionPane.add(new JLabel("Dataset:"));
         optionPane.add(datasetBox);
-        optionPane.add(new JLabel("K:"));
-        optionPane.add(clusterNumberField);
+        optionPane.add(new JLabel("Epochs:"));
+        optionPane.add(epochField);
+        optionPane.add(new JLabel("Learning Rate:"));
+        optionPane.add(learningRateField);
+        optionPane.add(new JLabel("Neighborhood:"));
+        optionPane.add(neighborhoodField);
 
         setLayout(new BorderLayout());
         add(optionPane, BorderLayout.NORTH);
 
-        canvas = ScatterPlot.plot(dataset[datasetIndex], '.');
+        canvas = ScatterPlot.of(dataset[datasetIndex], '.').canvas().panel();
         add(canvas, BorderLayout.CENTER);
     }
 
@@ -151,15 +158,16 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		remove(canvas);
-        		canvas = plot;
-        		add(canvas, BorderLayout.CENTER);
-        	}
-        	validate();
+            JComponent plot = learn();
+            if (plot != null) {
+                remove(canvas);
+                canvas = plot;
+                add(canvas, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
+            ex.printStackTrace();
         }
 
         startButton.setEnabled(true);
@@ -180,8 +188,26 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
                     JOptionPane.showMessageDialog(this, "Too large K: " + clusterNumber, "Error", JOptionPane.ERROR_MESSAGE);
                     return;
                 }
+
+                epochs = Integer.parseInt(epochField.getText().trim());
+                if (epochs < 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid epochs: " + epochs, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                learningRate = Double.parseDouble(learningRateField.getText().trim());
+                if (learningRate <= 0.0) {
+                    JOptionPane.showMessageDialog(this, "Invalid learning rate: " + learningRate, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+
+                neighborhood = Double.parseDouble(neighborhoodField.getText().trim());
+                if (neighborhood < 1) {
+                    JOptionPane.showMessageDialog(this, "Invalid neighborhood radius: " + neighborhood, "Error", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "Invalid K: " + clusterNumberField.getText(), "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
                 return;
             }
 
@@ -189,18 +215,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
             thread.start();
         } else if ("datasetBox".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-
-            if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t ]+");
-                try {
-                    AttributeDataset data = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
-                    dataset[datasetIndex] = data.toArray(new double[data.size()][]);
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.err.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             remove(canvas);
             if (dataset[datasetIndex].length < 500) {
@@ -208,7 +223,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
             } else {
                 pointLegend = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -226,7 +241,7 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
             } else {
                 pointLegend = '.';
             }
-            canvas = ScatterPlot.plot(dataset[datasetIndex], pointLegend);
+            canvas = ScatterPlot.of(dataset[datasetIndex], pointLegend).canvas().panel();
             add(canvas, BorderLayout.CENTER);
             validate();
         }
@@ -238,5 +253,18 @@ public abstract class VQDemo extends JPanel implements Runnable, ActionListener,
 
     @Override
     public void ancestorRemoved(AncestorEvent event) {
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter(delimiter[datasetIndex]).withIgnoreSurroundingSpaces(true);
+        try {
+            DataFrame data = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+            dataset[datasetIndex] = data.toArray(false, CategoricalEncoder.ONE_HOT);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.err.println(e);
+        }
     }
 }

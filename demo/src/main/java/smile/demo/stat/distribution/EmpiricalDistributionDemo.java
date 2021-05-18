@@ -1,30 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.stat.distribution;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.StaircasePlot;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.StaircasePlot;
 import smile.stat.distribution.EmpiricalDistribution;
 
 /**
@@ -46,9 +47,9 @@ public class EmpiricalDistributionDemo extends JPanel {
             data[i] = emp.rand();
         }
 
-        PlotCanvas canvas = Histogram.plot(data, 10);
+        Canvas canvas = Histogram.of(data, 10, true).canvas();
         canvas.setTitle("Equal Probabilities");
-        add(canvas);
+        add(canvas.panel());
 
         double[][] p = new double[10][2];
         for (int i = 0; i < p.length; i++) {
@@ -56,17 +57,17 @@ public class EmpiricalDistributionDemo extends JPanel {
             p[i][1] = emp.p(p[i][0]);
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
         p = new double[11][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = i;
-            p[i][1] = emp.cdf(p[i][0]);
+            p[i][1] = emp.cdf(i);
         }
 
-        canvas = StaircasePlot.plot(p);
+        canvas = StaircasePlot.of(p).canvas();
         canvas.setTitle("CDF");
-        add(canvas);
+        add(canvas.panel());
 
         prob = new double[10];
         for (int i = 0; i < prob.length; i++)
@@ -82,9 +83,9 @@ public class EmpiricalDistributionDemo extends JPanel {
             data[i] = emp.rand();
         }
 
-        canvas = Histogram.plot(data, 10);
+        canvas = Histogram.of(data, 10, true).canvas();
         canvas.setTitle("Non-Equal Probabilities");
-        add(canvas);
+        add(canvas.panel());
 
         p = new double[10][2];
         for (int i = 0; i < p.length; i++) {
@@ -92,7 +93,7 @@ public class EmpiricalDistributionDemo extends JPanel {
             p[i][1] = emp.p(p[i][0]);
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
         p = new double[11][2];
         for (int i = 0; i < p.length; i++) {
@@ -100,9 +101,9 @@ public class EmpiricalDistributionDemo extends JPanel {
             p[i][1] = emp.cdf(p[i][0]);
         }
 
-        canvas = StaircasePlot.plot(p);
+        canvas = StaircasePlot.of(p).canvas();
         canvas.setTitle("CDF");
-        add(canvas);
+        add(canvas.panel());
     }
     
     @Override
@@ -112,6 +113,7 @@ public class EmpiricalDistributionDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Empirical Distribution");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new EmpiricalDistributionDemo());

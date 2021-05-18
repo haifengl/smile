@@ -1,34 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.projection;
 
 import java.awt.Dimension;
 import java.awt.GridLayout;
-
 import javax.swing.JComboBox;
 import javax.swing.JComponent;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.ScatterPlot;
+import smile.plot.swing.ScreePlot;
+import smile.plot.swing.TextPlot;
 import smile.projection.PCA;
-import smile.math.Math;
 
 /**
  *
@@ -49,40 +50,32 @@ public class PCADemo extends ProjectionDemo {
     }
 
     @Override
-    public JComponent learn() {
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        String[] names = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
-        if (names[0] == null) {
-            names = null;
-        }
+    public JComponent learn(double[][] data, int[] labels, String[] names) {
         boolean cor = corBox.getSelectedIndex() != 0;
 
         long clock = System.currentTimeMillis();
-        PCA pca = new PCA(data, cor);
+        PCA pca = cor ? PCA.cor(data) : PCA.fit(data);
         System.out.format("Learn PCA from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        PlotCanvas scree = PlotCanvas.screeplot(pca);
+        Canvas scree = new ScreePlot(pca).canvas();
         scree.setTitle("Variance");
-        pane.add(scree);
+        pane.add(scree.panel());
 
         pca.setProjection(3);
         double[][] y = pca.project(data);
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        Canvas plot;
         if (names != null) {
-            plot.points(y, names);
-        } else if (dataset[datasetIndex].responseAttribute() != null) {
-            int[] labels = dataset[datasetIndex].toArray(new int[dataset[datasetIndex].size()]);
-            for (int i = 0; i < y.length; i++) {
-                plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-            }
+            plot = TextPlot.of(names, y).canvas();
+        } else if (labels != null) {
+            plot = ScatterPlot.of(y, labels, mark).canvas();
         } else {
-            plot.points(y, pointLegend);
+            plot = ScatterPlot.of(y).canvas();
         }
 
         plot.setTitle("Scatter Plot");
-        pane.add(plot);
+        pane.add(plot.panel());
         return pane;
     }
 
@@ -91,7 +84,7 @@ public class PCADemo extends ProjectionDemo {
         return "Principal Component Analysis";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         PCADemo demo = new PCADemo();
         JFrame f = new JFrame("Principal Component Analysis");
         f.setSize(new Dimension(1000, 1000));

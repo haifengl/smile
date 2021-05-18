@@ -1,23 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.hypothesis;
 
+import smile.math.MathEx;
 import smile.math.special.Beta;
-import smile.math.Math;
 
 /**
  * F test of the hypothesis that two independent samples come from normal
@@ -31,41 +32,54 @@ import smile.math.Math;
  */
 public class FTest {
     /**
-     * The degree of freedom of f-statistic.
+     * The degree of freedom of F-statistic.
      */
-    public int df1, df2;
+    public final int df1, df2;
 
     /**
-     * f-statistic
+     * F-statistic.
      */
-    public double f;
+    public final double f;
 
     /**
-     * p-value
+     * p-value.
      */
-    public double pvalue;
+    public final double pvalue;
 
     /**
      * Constructor.
+     * @param f the F-statistic.
+     * @param df1 the first degree of freedom of F-statistic.
+     * @param df2 the scoend degree of freedom of F-statistic.
+     * @param pvalue the p-value.
      */
-    private FTest(double f, int df1, int df2, double pvalue) {
+    public FTest(double f, int df1, int df2, double pvalue) {
         this.f = f;
         this.df1 = df1;
         this.df2 = df2;
         this.pvalue = pvalue;
     }
 
+    @Override
+    public String toString() {
+        return String.format("F-test(f = %.4f, df1 = %d, df2 = %d, p-value = %G)", f, df1, df2, pvalue);
+    }
+
     /**
      * Test if the arrays x and y have significantly different variances.
      * Small values of p-value indicate that the two arrays have significantly
      * different variances.
+     *
+     * @param x the sample values.
+     * @param y the sample values.
+     * @return the test results.
      */
     public static FTest test(double[] x, double[] y) {
         int n1 = x.length;
         int n2 = y.length;
 
-        double var1 = Math.var(x);
-        double var2 = Math.var(y);
+        double var1 = MathEx.var(x);
+        double var2 = MathEx.var(y);
 
         int df1, df2;
         double f;

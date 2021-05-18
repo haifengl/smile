@@ -1,38 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
+import smile.base.rbf.RBF;
+import smile.clustering.KMeans;
+import smile.data.*;
 import smile.math.distance.EuclideanDistance;
-import smile.math.rbf.RadialBasisFunction;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
-
+import smile.math.MathEx;
+import smile.math.rbf.GaussianRadialBasis;
+import smile.validation.*;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import smile.math.Math;
-import smile.math.rbf.GaussianRadialBasis;
-import smile.util.SmileUtils;
-import smile.validation.LOOCV;
 import static org.junit.Assert.*;
 
 /**
@@ -61,108 +58,108 @@ public class RBFNetworkTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class RBFNetwork.
-     */
     @Test
-    public void testLearn() {
-        System.out.println("learn");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testIris() {
+        System.out.println("Iris");
 
-            int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int i = 0; i < n; i++) {
-                double[][] trainx = Math.slice(x, loocv.train[i]);
-                int[] trainy = Math.slice(y, loocv.train[i]);
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-                double[][] centers = new double[10][];
-                RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(trainx, centers, 5.0);
-                RBFNetwork<double[]> rbf = new RBFNetwork<>(trainx, trainy, new EuclideanDistance(), basis, centers);
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10)));
 
-                if (y[loocv.test[i]] != rbf.predict(x[loocv.test[i]]))
-                    error++;
-            }
+        System.out.println("RBF Network: " + metrics);
+        assertEquals(0.9667, metrics.accuracy, 1E-4);
 
-            System.out.println("RBF network error = " + error);
-            assertTrue(error <= 6);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        metrics = LOOCV.classification(Iris.x, Iris.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 10), true));
+
+        System.out.println("Normalized RBF Network: " + metrics);
+        assertEquals(0.9733, metrics.accuracy, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class RBFNetwork.
-     */
+    @Test
+    public void testPenDigits() {
+        System.out.println("Pen Digits");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<RBFNetwork<double[]>> result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50)));
+
+        System.out.println("RBF Network: " + result);
+        assertEquals(0.9162, result.avg.accuracy, 1E-4);
+
+        result = CrossValidation.classification(10, PenDigits.x, PenDigits.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 50), true));
+
+        System.out.println("Normalized RBF Network: " + result);
+        assertEquals(0.9190, result.avg.accuracy, 1E-4);
+    }
+
+    @Test
+    public void testBreastCancer() {
+        System.out.println("Breast Cancer");
+
+        MathEx.setSeed(19650218); // to get repeatable results.
+        ClassificationValidations<RBFNetwork<double[]>> result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30)));
+
+        System.out.println("RBF Network: " + result);
+        assertEquals(0.9438, result.avg.accuracy, 1E-4);
+
+        result = CrossValidation.classification(10, BreastCancer.x, BreastCancer.y,
+                (x, y) -> RBFNetwork.fit(x, y, RBF.fit(x, 30), true));
+
+        System.out.println("Normalized RBF Network: " + result);
+        assertEquals(0.9333, result.avg.accuracy, 1E-4);
+    }
+
     @Test
     public void testSegment() {
         System.out.println("Segment");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(19);
-        try {
-            AttributeDataset train = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
-            AttributeDataset test = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-test.arff"));
 
-            double[][] x = train.toArray(new double[0][]);
-            int[] y = train.toArray(new int[0]);
-            double[][] testx = test.toArray(new double[0][]);
-            int[] testy = test.toArray(new int[0]);
-            
-            double[][] centers = new double[100][];
-            RadialBasisFunction[] basis = SmileUtils.learnGaussianRadialBasis(x, centers, 5.0);
-            RBFNetwork<double[]> rbf = new RBFNetwork<>(x, y, new EuclideanDistance(), basis, centers);
-            
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (rbf.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            System.out.format("Segment error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error <= 210);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        double[][] x = MathEx.clone(Segment.x);
+        double[][] testx = MathEx.clone(Segment.testx);
+        MathEx.standardize(x);
+        MathEx.standardize(testx);
+
+        RBFNetwork<double[]> model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30));
+        int[] prediction = model.predict(testx);
+        int error = Error.of(Segment.testy, prediction);
+        System.out.println("RBF Network Error = " + error);
+        assertEquals(123, error);
+
+        model = RBFNetwork.fit(x, Segment.y, RBF.fit(x, 30), true);
+        prediction = model.predict(testx);
+        error = Error.of(Segment.testy, prediction);
+        System.out.println("Normalized RBF Network Error = " + error);
+        assertEquals(110, error);
     }
 
-    /**
-     * Test of learn method, of class RBFNetwork.
-     */
     @Test
-    public void testUSPS() {
+    public void testUSPS() throws Exception {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            double[][] centers = new double[200][];
-            RadialBasisFunction basis = SmileUtils.learnGaussianRadialBasis(x, centers);
-            RBFNetwork<double[]> rbf = new RBFNetwork<>(x, y, new EuclideanDistance(), new GaussianRadialBasis(8.0), centers);
-                
-            int error = 0;
-            for (int i = 0; i < testx.length; i++) {
-                if (rbf.predict(testx[i]) != testy[i]) {
-                    error++;
-                }
-            }
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            System.out.format("USPS error rate = %.2f%%%n", 100.0 * error / testx.length);
-            assertTrue(error <= 150);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        KMeans kmeans = KMeans.fit(USPS.x, 200);
+        EuclideanDistance distance = new EuclideanDistance();
+        RBF<double[]>[] neurons = RBF.of(kmeans.centroids, new GaussianRadialBasis(8.0), distance);
+
+        RBFNetwork<double[]> model = RBFNetwork.fit(USPS.x, USPS.y, neurons);
+        int[] prediction = model.predict(USPS.testx);
+        int error = Error.of(USPS.testy, prediction);
+        System.out.println("RBF Network Error = " + error);
+        assertEquals(142, error);
+
+        model = RBFNetwork.fit(USPS.x, USPS.y, neurons, true);
+        prediction = model.predict(USPS.testx);
+        error = Error.of(USPS.testy, prediction);
+        System.out.println("Normalized RBF Network Error = " + error);
+        assertEquals(143, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 }

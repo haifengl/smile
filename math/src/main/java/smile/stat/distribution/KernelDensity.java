@@ -1,23 +1,24 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.stat.distribution;
 
 import java.util.Arrays;
-import smile.math.Math;
+import smile.math.MathEx;
 
 /**
  * Kernel density estimation is a non-parametric way of estimating the
@@ -29,33 +30,33 @@ import smile.math.Math;
  * @author Haifeng Li
  */
 public class KernelDensity implements Distribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * The samples to estimate the density function.
      */
-    private double[] x;
+    private final double[] x;
     /**
      * The kernel -- a symmetric but not necessarily positive function that
-     * integrates to one. Here we just Gaussian density function.
+     * integrates to one. Here we just use Gaussian density function.
      */
-    private GaussianDistribution gaussian;
+    private final GaussianDistribution gaussian;
     /**
-     * h > 0 is a smoothing parameter called the bandwidth.
+     * {@code h > 0} is a smoothing parameter called the bandwidth.
      */
-    private double h;
+    private final double h;
     /**
      * The mean value.
      */
-    private double mean;
+    private final double mean;
     /**
      * The standard deviation.
      */
-    private double sd;
+    private final double sd;
     /**
      * The variance.
      */
-    private double var;
+    private final double variance;
 
     /**
      * Constructor. The bandwidth of kernel will be estimated by the rule of thumb.
@@ -63,15 +64,20 @@ public class KernelDensity implements Distribution {
      */
     public KernelDensity(double[] x) {
         this.x = x;
-        this.mean = Math.mean(x);
-        this.var = Math.var(x);
-        this.sd = Math.sqrt(var);
+        this.mean = MathEx.mean(x);
+        this.variance = MathEx.var(x);
+        this.sd = Math.sqrt(variance);
+        if (sd == 0.0) {
+            throw new IllegalArgumentException("Samples has no variance.");
+        }
 
         Arrays.sort(x);
 
         int n = x.length;
         double iqr = x[n*3/4] - x[n/4];
-        h = 1.06 * Math.min(sd, iqr/1.34) / Math.pow(x.length, 0.2);
+        // safeguard iqr == 0
+        double spread = iqr > 0 ? Math.min(sd, iqr/1.34) : sd;
+        h = 1.06 * spread * Math.pow(x.length, -0.2);
         gaussian = new GaussianDistribution(0, h);
     }
 
@@ -87,9 +93,9 @@ public class KernelDensity implements Distribution {
 
         this.x = x;
         this.h = h;
-        this.mean = Math.mean(x);
-        this.var = Math.var(x);
-        this.sd = Math.sqrt(var);
+        this.mean = MathEx.mean(x);
+        this.variance = MathEx.var(x);
+        this.sd = Math.sqrt(variance);
         gaussian = new GaussianDistribution(0, h);
 
         Arrays.sort(x);
@@ -104,7 +110,7 @@ public class KernelDensity implements Distribution {
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 0;
     }
 
@@ -114,8 +120,8 @@ public class KernelDensity implements Distribution {
     }
 
     @Override
-    public double var() {
-        return var;
+    public double variance() {
+        return variance;
     }
 
     @Override

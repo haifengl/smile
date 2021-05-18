@@ -1,24 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
-import smile.data.Attribute;
-import smile.math.Math;
-import smile.sort.QuickSelect;
+import smile.data.DataFrame;
+import smile.data.type.StructType;
+import smile.sort.IQAgent;
 
 /**
  * Robustly standardizes numeric feature by subtracting
@@ -27,59 +28,84 @@ import smile.sort.QuickSelect;
  * @author Haifeng Li
  */
 public class RobustStandardizer extends Standardizer {
+    private static final long serialVersionUID = 2L;
 
     /**
      * Constructor.
+     * @param median median.
+     * @param iqr IQR.
      */
-    public RobustStandardizer() {
-
+    public RobustStandardizer(double[] median, double[] iqr) {
+        super(median, iqr);
     }
 
     /**
      * Constructor.
-     * @param copy  If false, try to avoid a copy and do inplace scaling instead.
+     * @param schema the schema of data.
+     * @param median median.
+     * @param iqr IQR.
      */
-    public RobustStandardizer(boolean copy) {
-        super(copy);
+    public RobustStandardizer(StructType schema, double[] median, double[] iqr) {
+        super(schema, median, iqr);
     }
 
-    @Override
-    public void learn(Attribute[] attributes, double[][] data) {
-        int n = data.length;
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static RobustStandardizer fit(DataFrame data) {
+        if (data.isEmpty()) {
+            throw new IllegalArgumentException("Empty data frame");
+        }
+
+        StructType schema = data.schema();
+        int p = schema.length();
+        double[] median = new double[p];
+        double[] iqr = new double[p];
+
+        for (int i = 0; i < p; i++) {
+            if (schema.field(i).isNumeric()) {
+                IQAgent agent = new IQAgent();
+                double[] x = data.column(i).toDoubleArray();
+                for (double xi : x) {
+                    agent.add(xi);
+                }
+                median[i] = agent.quantile(0.5);
+                iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
+            }
+        }
+
+        return new RobustStandardizer(schema, median, iqr);
+    }
+
+    /**
+     * Fits the transformation parameters.
+     * @param data The training data.
+     * @return the model.
+     */
+    public static RobustStandardizer fit(double[][] data) {
         int p = data[0].length;
+        double[] median = new double[p];
+        double[] iqr = new double[p];
 
-        mu = new double[p];
-        std = new double[p];
-        double[] x = new double[n];
+        IQAgent[] agents = new IQAgent[p];
+        for (int i = 0; i < p; i++) {
+            agents[i] = new IQAgent();
+        }
 
-        for (int j = 0; j < p; j++) {
-            if (attributes[j].getType() != Attribute.Type.NUMERIC) {
-                mu[j] = Double.NaN;
-            } else {
-                for (int i = 0; i < n; i++) {
-                    x[i] = data[i][j];
-                }
-
-                mu[j] = QuickSelect.median(x);
-                std[j] = QuickSelect.q3(x) - QuickSelect.q1(x);
-                if (Math.isZero(std[j])) {
-                    throw new IllegalArgumentException("Column " + j + " has constant values between Q1 and Q3.");
-                }
+        for (double[] x : data) {
+            for (int i = 0; i < p; i++) {
+                agents[i].add(x[i]);
             }
         }
-    }
 
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        sb.append("RobustStandardizer(");
-        if (mu != null) {
-            sb.append("\n");
-            for (int i = 0; i < mu.length; i++) {
-                sb.append(String.format("  [%.4f, %.4f]%n", mu[i], std[i]));
-            }
+        for (int i = 0; i < p; i++) {
+            IQAgent agent = agents[i];
+            median[i] = agent.quantile(0.5);
+            iqr[i] = agent.quantile(0.75) - agent.quantile(0.25);
         }
-        sb.append(")");
-        return sb.toString();
+
+        return new RobustStandardizer(median, iqr);
     }
 }

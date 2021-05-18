@@ -1,36 +1,38 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.classification;
 
+import java.util.stream.IntStream;
+import smile.data.Iris;
+import smile.data.WeatherNominal;
+import smile.stat.distribution.EmpiricalDistribution;
+import smile.util.IntSet;
+import smile.validation.ClassificationMetrics;
 import smile.validation.LOOCV;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
+
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
-import smile.feature.Bag;
+import smile.math.MathEx;
 import smile.stat.distribution.Distribution;
 import smile.stat.distribution.GaussianMixture;
-import smile.validation.CrossValidation;
 import static org.junit.Assert.*;
 
 /**
@@ -39,45 +41,7 @@ import static org.junit.Assert.*;
  */
 public class NaiveBayesTest {
 
-    String[] feature = {
-        "outstanding", "wonderfully", "wasted", "lame", "awful", "poorly",
-        "ridiculous", "waste", "worst", "bland", "unfunny", "stupid", "dull",
-        "fantastic", "laughable", "mess", "pointless", "terrific", "memorable",
-        "superb", "boring", "badly", "subtle", "terrible", "excellent",
-        "perfectly", "masterpiece", "realistic", "flaws"
-    };
-    double[][] moviex;
-    int[] moviey;
-
     public NaiveBayesTest() {
-        String[][] x = new String[2000][];
-        int[] y = new int[2000];
-
-        try(BufferedReader input = smile.data.parser.IOUtils.getTestDataReader("text/movie.txt")) {
-            for (int i = 0; i < x.length; i++) {
-                String[] words = input.readLine().trim().split(" ");
-
-                if (words[0].equalsIgnoreCase("pos")) {
-                    y[i] = 1;
-                } else if (words[0].equalsIgnoreCase("neg")) {
-                    y[i] = 0;
-                } else {
-                    System.err.println("Invalid class label: " + words[0]);
-                }
-
-                x[i] = words;
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        moviex = new double[x.length][];
-        moviey = new int[y.length];
-        Bag<String> bag = new Bag<>(feature);
-        for (int i = 0; i < x.length; i++) {
-            moviex[i] = bag.feature(x[i]);
-            moviey[i] = y[i];
-        }
     }
 
     @BeforeClass
@@ -96,296 +60,76 @@ public class NaiveBayesTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of predict method, of class NaiveBayes.
-     */
     @Test
-    public void testPredict() {
-        System.out.println("---predict---");
-        ArffParser arffParser = new ArffParser();
-        arffParser.setResponseIndex(4);
-        try {
-            AttributeDataset iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-            double[][] x = iris.toArray(new double[iris.size()][]);
-            int[] y = iris.toArray(new int[iris.size()]);
+    public void testIris() throws Exception {
+        System.out.println("Iris");
 
+        int p = Iris.x[0].length;
+        int k = MathEx.max(Iris.y) + 1;
+
+        ClassificationMetrics metrics = LOOCV.classification(Iris.x, Iris.y, (x, y) -> {
             int n = x.length;
-            LOOCV loocv = new LOOCV(n);
-            int error = 0;
-            for (int l = 0; l < n; l++) {
-                double[][] trainx = Math.slice(x, loocv.train[l]);
-                int[] trainy = Math.slice(y, loocv.train[l]);
-
-                int p = trainx[0].length;
-                int k = Math.max(trainy) + 1;
-
-                double[] priori = new double[k];
-                Distribution[][] condprob = new Distribution[k][p];
-                for (int i = 0; i < k; i++) {
-                    priori[i] = 1.0 / k;
-                    for (int j = 0; j < p; j++) {
-                        ArrayList<Double> axi = new ArrayList<>();
-                        for (int m = 0; m < trainx.length; m++) {
-                            if (trainy[m] == i) {
-                                axi.add(trainx[m][j]);
-                            }
-                        }
-
-                        double[] xi = new double[axi.size()];
-                        for (int m = 0; m < xi.length; m++) {
-                            xi[m] = axi.get(m);
-                        }
-
-                        condprob[i][j] = new GaussianMixture(xi, 3);
-                    }
+            double[] priori = new double[k];
+            Distribution[][] condprob = new Distribution[k][p];
+            for (int i = 0; i < k; i++) {
+                priori[i] = 1.0 / k;
+                final int c = i;
+                for (int j = 0; j < p; j++) {
+                    final int f = j;
+                    double[] xi = IntStream.range(0, n).filter(l -> y[l] == c).mapToDouble(l -> x[l][f]).toArray();
+                    condprob[i][j] = GaussianMixture.fit(3, xi);
                 }
-
-                NaiveBayes bayes = new NaiveBayes(priori, condprob);
-
-                if (y[loocv.test[l]] != bayes.predict(x[loocv.test[l]]))
-                    error++;
             }
 
-            System.out.format("Iris error rate = %.2f%%%n", 100.0 * error / x.length);
-            assertEquals(8, error);
-        } catch (Exception ex) {
-            System.err.println(ex);
+            return new NaiveBayes(priori, condprob);
+        });
+
+        System.out.println(metrics);
+        assertEquals(0.9533, metrics.accuracy, 1E-4);
+
+        double[] priori = new double[k];
+        Distribution[][] condprob = new Distribution[k][p];
+        for (int i = 0; i < k; i++) {
+            priori[i] = 1.0 / k;
+            final int c = i;
+            for (int j = 0; j < p; j++) {
+                final int f = j;
+                double[] xi = IntStream.range(0, Iris.x.length).filter(l -> Iris.y[l] == c).mapToDouble(l -> Iris.x[l][f]).toArray();
+                condprob[i][j] = GaussianMixture.fit(3, xi);
+            }
         }
+        NaiveBayes model = new NaiveBayes(priori, condprob);
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
     @Test
-    public void testLearnMultinomial() {
-        System.out.println("---batch learn Multinomial---");
+    public void testWeather() {
+        System.out.println("Weather");
 
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.MULTINOMIAL, 2, feature.length);
+        int p = WeatherNominal.level[0].length;
+        int k = MathEx.max(WeatherNominal.y) + 1;
 
-            bayes.learn(trainx, trainy);
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
+        ClassificationMetrics metrics = LOOCV.classification(WeatherNominal.level, WeatherNominal.y, (x, y) -> {
+            int n = x.length;
+            double[] priori = new double[k];
+            Distribution[][] condprob = new Distribution[k][p];
+            for (int i = 0; i < k; i++) {
+                priori[i] = 1.0 / k;
+                final int c = i;
+                for (int j = 0; j < p; j++) {
+                    final int f = j;
+                    int[] xij = IntStream.range(0, n).filter(l -> y[l] == c).map(l -> (int) x[l][f]).toArray();
+                    int[] xj = IntStream.range(0, n).map(l -> (int) x[l][f]).toArray();
+                    // xij may miss some valid values after filtering. Use xj to capture all the values.
+                    condprob[i][j] = EmpiricalDistribution.fit(xij, IntSet.of(xj));
                 }
             }
-        }
 
-        System.out.format("Batch Multinomial error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 265);
-    }
+            return new NaiveBayes(priori, condprob);
+        });
 
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
-    @Test
-    public void testLearnMultinomial2() {
-        System.out.println("---online learn Multinomial---");
-
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.MULTINOMIAL, 2, feature.length);
-
-            for (int j = 0; j < trainx.length; j++) {
-                bayes.learn(trainx[j], trainy[j]);
-            }
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
-                }
-            }
-        }
-
-        System.out.format("Online Multinomial error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 265);
-    }
-    
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
-    @Test
-    public void testLearnPolyaUrn() {
-        System.out.println("---batch learn PolyaUrn---");
-
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
-
-            bayes.learn(trainx, trainy);
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
-                }
-            }
-        }
-
-        System.out.format("Batch PolyaUrn error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 265);
-    }
-
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
-    @Test
-    public void testLearnPolyaUrn2() {
-        System.out.println("---online learn PolyaUrn---");
-
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.POLYAURN, 2, feature.length);
-
-            for (int j = 0; j < trainx.length; j++) {
-                bayes.learn(trainx[j], trainy[j]);
-            }
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
-                }
-            }
-        }
-
-        System.out.format("Online PolyaUrn error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 265);
-    }
-
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
-    @Test
-    public void testLearnBernoulli() {
-        System.out.println("---batch learn Bernoulli---");
-
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.BERNOULLI, 2, feature.length);
-
-            bayes.learn(trainx, trainy);
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
-                }
-            }
-        }
-
-        System.out.format("Batch Bernoulli error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 270);
-    }
-
-    /**
-     * Test of learn method, of class SequenceNaiveBayes.
-     */
-    @Test
-    public void testLearnBernoulli2() {
-        System.out.println("---online learn Bernoulli---");
-
-        double[][] x = moviex;
-        int[] y = moviey;
-        int n = x.length;
-        int k = 10;
-        CrossValidation cv = new CrossValidation(n, k);
-        int error = 0;
-        int total = 0;
-        for (int i = 0; i < k; i++) {
-            double[][] trainx = Math.slice(x, cv.train[i]);
-            int[] trainy = Math.slice(y, cv.train[i]);
-            NaiveBayes bayes = new NaiveBayes(NaiveBayes.Model.BERNOULLI, 2, feature.length);
-
-            for (int j = 0; j < trainx.length; j++) {
-                bayes.learn(trainx[j], trainy[j]);
-            }
-
-            double[][] testx = Math.slice(x, cv.test[i]);
-            int[] testy = Math.slice(y, cv.test[i]);
-
-            for (int j = 0; j < testx.length; j++) {
-                int label = bayes.predict(testx[j]);
-                if (label != -1) {
-                    total++;
-                    if (testy[j] != label) {
-                        error++;
-                    }
-                }
-            }
-        }
-
-        System.out.format("Online Bernoulli error = %d of %d, error rate = %.2f%% %n", error, total, 100.0 * error / total);
-        assertTrue(error < 270);
+        System.out.println(metrics);
+        assertEquals(0.7857, metrics.accuracy, 1E-4);
     }
 }

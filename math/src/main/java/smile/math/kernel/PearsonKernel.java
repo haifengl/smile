@@ -1,108 +1,128 @@
-/*******************************************************************************
- * Copyright (c) 2015 Diego Catalano
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.kernel;
 
-import java.lang.Math;
+import smile.math.MathEx;
 
 /**
- * The Pearson Mercer Kernel.
-
+ * Pearson VII universal kernel. The Pearson VII function
+ * is often used for curve fitting of X-ray diffraction
+ * scans and single bands in infrared spectra.
+ *
+ * <h2>References</h2>
+ * <ol>
+ * <li> B. Üstün, W.J. Melssen, and L. Buydens. Facilitating the Application of Support Vector Regression by Using a Universal Pearson VII Function Based Kernel, 2006.</li>
+ * </ol>
+ *
  * @author Diego Catalano
  */
 public class PearsonKernel implements MercerKernel<double[]> {
-    private static final long serialVersionUID = 1L;
-    
-    private double omega;
-    private double sigma;
-    private double constant;
-    
+    private static final long serialVersionUID = 2L;
+
+    /** The tailing factor of the peak. */
+    private final double omega;
+    /** Pearson width. */
+    private final double sigma;
+    /** The coefficient 4 * (2 ^ (1/omega) - 1) / (sigma^2). */
+    private final double C;
+    /** The lower bound of sigma. */
+    private final double lo;
+    /** The upper bound of sigma. */
+    private final double hi;
+
     /**
-     * Get the omega parameter.
-     * @return Omega parameter.
+     * Constructor.
+     * @param sigma Pearson width.
+     * @param omega The tailing factor of the peak.
      */
-    public double getOmega() {
-        return omega;
+    public PearsonKernel(double sigma, double omega) {
+        this(sigma, omega, 1E-5, 1E5);
     }
 
     /**
-     * Set the omega parameter.
-     * @param omega Omega parameter.
+     * Constructor.
+     * @param sigma Pearson width.
+     * @param omega The tailing factor of the peak. The tailing factor is
+     *              fixed during hyperparameter tuning.
+     * @param lo The lower bound of length scale for hyperparameter tuning.
+     * @param hi The upper bound of length scale for hyperparameter tuning.
      */
-    public void setOmega(double omega) {
+    public PearsonKernel(double sigma, double omega, double lo, double hi) {
         this.omega = omega;
-        this.constant = 2 * Math.sqrt(Math.pow(2, (1 / omega)) - 1) / sigma;
+        this.sigma = sigma;
+        this.C = 4.0 * (Math.pow(2.0, 1.0 / omega) - 1.0) / (sigma * sigma);
+        this.lo = lo;
+        this.hi = hi;
     }
 
     /**
-     * Get the sigma parameter.
-     * @return Sigma parameter.
+     * Returns Pearson width.
+     * @return Pearson width.
      */
-    public double getSigma() {
+    public double sigma() {
         return sigma;
     }
 
     /**
-     * Set the sigma parameter.
-     * @param sigma Sigma parameter.
+     * Returns the tailing factor of the peak.
+     * @return the tailing factor of the peak.
      */
-    public void setSigma(double sigma) {
-        this.sigma = sigma;
-        this.constant = 2 * Math.sqrt(Math.pow(2, (1 / omega)) - 1) / sigma;
-    }
-    
-    /**
-     * Constructor.
-     */
-    public PearsonKernel() {
-        this(1,1);
-    }
-
-    /**
-     * Constructor.
-     * @param omega Omega value.
-     * @param sigma Sigma value.
-     */
-    public PearsonKernel(double omega, double sigma) {
-        this.omega = omega;
-        this.sigma = sigma;
+    public double omega() {
+        return omega;
     }
 
     @Override
     public String toString() {
-        return "Pearson Kernel";
+        return String.format("PearsonKernel(%.4f, %.4f)", sigma, omega);
     }
 
     @Override
     public double k(double[] x, double[] y) {
-        if (x.length != y.length)
-            throw new IllegalArgumentException(String.format("Arrays have different length: x[%d], y[%d]", x.length, y.length));
-        
-        //Inner product
-        double xx = 0;
-        double yy = 0;
-        double xy = 0;
-        for (int i = 0; i < x.length; i++){
-            xx += x[i] * x[i];
-            yy += y[i] * y[i];
-            xy += x[i] * y[i];
-        }
-        
-        double m = constant * Math.sqrt(-2.0 * xy + xx + yy);
-        return 1.0 / Math.pow(1.0 + m * m, omega);
+        double d = MathEx.squaredDistance(x, y);
+        return Math.pow(1.0 + C * d, -omega);
+    }
 
+    @Override
+    public double[] kg(double[] x, double[] y) {
+        double d = MathEx.squaredDistance(x, y);
+        double[] g = new double[2];
+        g[0] = Math.pow(1.0 + C * d, -omega);
+        g[1] = -2 * C * d * Math.pow(1.0 + C * d, -omega-1) / sigma;
+        return g;
+    }
+
+    @Override
+    public PearsonKernel of(double[] params) {
+        return new PearsonKernel(params[0], omega, lo, hi);
+    }
+
+    @Override
+    public double[] hyperparameters() {
+        return new double[] { sigma };
+    }
+
+    @Override
+    public double[] lo() {
+        return new double[] { lo };
+    }
+
+    @Override
+    public double[] hi() {
+        return new double[] { hi };
     }
 }

@@ -1,29 +1,40 @@
+# class and package Files
 *.class
-
-# Intellij
-.idea
-
-# javadoc
-shell/src/universal/doc/api/
-
-# Mobile Tools for Java (J2ME)
-.mtj.tmp/
-
-# Package Files #
 *.jar
 *.war
 *.ear
 
-# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+# Intellij
+.idea
+
+# Eclipse
+.project
+.settings
+.cache-main
+.cache-tests
+.classpath
+
+# jupyter
+.ipynb_checkpoints
+
+# javadoc
+doc/api
+web/node_modules/
+web/_site/
+shell/src/universal/data/nlp
+
+#clojure
+.lein-repl-*
+clojure/pom.xml*
+
+#gradle
+.gradle
+build
+
+# JVM crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
 hs_err_pid*
 
 .DS_Store
 *.iml
 **/target
 
-.project
-.settings
-.cache-main
-.cache-tests
-.classpath
-*/.gitignore

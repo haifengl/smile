@@ -1,35 +1,40 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Beta;
+
+import static java.lang.Math.*;
+import static smile.math.MathEx.lfactorial;
 
 /**
  * The binomial distribution is the discrete probability distribution of
  * the number of successes in a sequence of n independent yes/no experiments,
  * each of which yields success with probability p. Such a success/failure
  * experiment is also called a Bernoulli experiment or Bernoulli trial.
- * In fact, when n = 1, the binomial distribution is a Bernoulli distribution.
- * The probability of getting exactly k successes in n trials is given by the
- * probability mass function:
+ * In fact, when <code>n = 1</code>, the binomial distribution is a Bernoulli
+ * distribution. The probability of getting exactly k successes in n trials
+ * is given by the probability mass function:
  * <p>
- * Pr(K = k) = <sub>n</sub>C<sub>k</sub> p<sup>k</sup> (1-p)<sup>n-k</sup>
+ *     Pr(K = k) = <sub>n</sub>C<sub>k</sub> p<sup>k</sup> (1-p)<sup>n-k</sup>
  * <p>
- * where <sub>n</sub>C<sub>k</sub> is n choose k.
+ * where <code><sub>n</sub>C<sub>k</sub></code> is n choose k.
  * <p>
  * It is frequently used to model number of successes in a sample of size
  * n from a population of size N. Since the samples are not independent
@@ -39,10 +44,10 @@ import smile.math.special.Beta;
  * widely used.
  * <p>
  * Binomial distribution describes the number of successes for draws with
- * replacement. In constrast, the hypergeometric distribution describes the
+ * replacement. In contrast, the hypergeometric distribution describes the
  * number of successes for draws without replacement.
  * <p>
- * Although Binomial distribtuion belongs to exponential family, we don't
+ * Although Binomial distribution belongs to exponential family, we don't
  * implement DiscreteExponentialFamily interface here since it is impossible
  * and meaningless to estimate a mixture of Binomial distributions.
  *
@@ -51,11 +56,15 @@ import smile.math.special.Beta;
  * @author Haifeng Li
  */
 public class BinomialDistribution extends DiscreteDistribution {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double p;
-    private int n;
-    private double entropy;
+    /** The probability of success. */
+    public final double p;
+    /** The number of experiments. */
+    public final int n;
+    /** The entropy. */
+    private final double entropy;
+    /** The random number generator. */
     private RandomNumberGenerator rng;
 
     /**
@@ -75,25 +84,11 @@ public class BinomialDistribution extends DiscreteDistribution {
         this.n = n;
         this.p = p;
 
-        entropy = Math.log(2 * Math.PI * Math.E * n * p * (1 - p)) / 2;
-    }
-
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
-    }
-
-    /**
-     * Returns the parameter n, the number of experiments.
-     */
-    public int getN() {
-        return n;
+        entropy = log(2 * PI * E * n * p * (1 - p)) / 2;
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -103,7 +98,7 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return n * p * (1 - p);
     }
 
@@ -127,7 +122,7 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return 0.0;
         } else {
-            return Math.floor(0.5 + Math.exp(Math.logFactorial(n) - Math.logFactorial(k) - Math.logFactorial(n - k))) * Math.pow(p, k) * Math.pow(1.0 - p, n - k);
+            return Math.floor(0.5 + exp(lfactorial(n) - lfactorial(k) - lfactorial(n - k))) * Math.pow(p, k) * Math.pow(1.0 - p, n - k);
         }
     }
 
@@ -136,8 +131,8 @@ public class BinomialDistribution extends DiscreteDistribution {
         if (k < 0 || k > n) {
             return Double.NEGATIVE_INFINITY;
         } else {
-            return Math.logFactorial(n) - Math.logFactorial(k)
-                    - Math.logFactorial(n - k) + k * Math.log(p) + (n - k) * Math.log(1.0 - p);
+            return lfactorial(n) - lfactorial(k)
+                 - lfactorial(n - k) + k * log(p) + (n - k) * log(1.0 - p);
         }
     }
 
@@ -192,10 +187,10 @@ public class BinomialDistribution extends DiscreteDistribution {
     /**
      * This function generates a random variate with the binomial distribution.
      *
-     * Uses down/up search from the mode by chop-down technique for n*p &lt; 55,
-     * and patchwork rejection method for n*p &ge; 55.
+     * Uses down/up search from the mode by chop-down technique for {@code n*p < 55},
+     * and patchwork rejection method for {@code n*p >= 55}.
      *
-     * For n*p &lt; 1.E-6 numerical inaccuracy is avoided by poisson approximation.
+     * For {@code n*p < 1E-6} numerical inaccuracy is avoided by poisson approximation.
      */
     @Override
     public double rand() {
@@ -237,15 +232,14 @@ public class BinomialDistribution extends DiscreteDistribution {
     }
 
     interface RandomNumberGenerator {
-
-        public int rand();
+        int rand();
     }
 
     class Patchwork implements RandomNumberGenerator {
 
-        private int mode;
-        private int k1, k2, k4, k5;
-        private double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
+        private final int mode;
+        private final int k1, k2, k4, k5;
+        private final double dl, dr, r1, r2, r4, r5, ll, lr, l_pq, c_pm, f1, f2, f4, f5, p1, p2, p3, p4, p5, p6;
 
         public Patchwork(double p) {
             double nu = (n + 1) * p;
@@ -263,8 +257,8 @@ public class BinomialDistribution extends DiscreteDistribution {
             k5 = k4 + k4 - mode;
 
             // range width of the critical left and right centre region
-            dl = (double) (k2 - k1);
-            dr = (double) (k5 - k4);
+            dl = k2 - k1;
+            dr = k5 - k4;
 
             // recurrence constants r(k) = p(k)/p(k-1) at k = k1, k2, k4+1, k5+1
             nu = nu / q;
@@ -275,12 +269,12 @@ public class BinomialDistribution extends DiscreteDistribution {
             r5 = nu / (double) (k5 + 1) - p;
 
             // reciprocal values of the scale parameters of expon. tail envelopes
-            ll = Math.log(r1);                     // expon. tail left
-            lr = -Math.log(r5);                     // expon. tail right
+            ll = log(r1);                     // expon. tail left
+            lr = -log(r5);                     // expon. tail right
 
             // binomial constants, necessary for computing function values f(k)
-            l_pq = Math.log(p);
-            c_pm = mode * l_pq - Math.logFactorial(mode) - Math.logFactorial(n - mode);
+            l_pq = log(p);
+            c_pm = mode * l_pq - lfactorial(mode) - lfactorial(n - mode);
 
             // function values f(k) = p(k)/p(mode) at k = k2, k4, k1, k5
             f2 = f(k2, n, l_pq, c_pm);
@@ -310,7 +304,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                 // generate uniform number U -- U(0, p6)
                 // case distinction corresponding to U
 
-                if ((U = Math.random() * p6) < p2) {         // centre left
+                if ((U = MathEx.random() * p6) < p2) {         // centre left
                     // immediate acceptance region R2 = [k2, mode) *[0, f2),  X = k2, ... mode -1
                     if ((V = U - p1) < 0.) {
                         return (k2 + (int) (U / f2));
@@ -322,7 +316,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
                     // computation of candidate X < k2, and its counterpart Y > k2
                     // either squeeze-acceptance of X or acceptance-rejection of Y
-                    Dk = (int) (dl * Math.random()) + 1;
+                    Dk = (int) (dl * MathEx.random()) + 1;
                     if (W <= f2 - Dk * (f2 - f2 / r2)) {     // quick accept of
                         return (k2 - Dk);
                     }                                   // X = k2 - Dk
@@ -348,7 +342,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
                     // computation of candidate X > k4, and its counterpart Y < k4
                     // either squeeze-acceptance of X or acceptance-rejection of Y
-                    Dk = (int) (dr * Math.random()) + 1;
+                    Dk = (int) (dr * MathEx.random()) + 1;
                     if (W <= f4 - Dk * (f4 - f4 * r4)) {     // quick accept of
                         return (k4 + Dk);
                     }                                   // X = k4 + Dk
@@ -363,9 +357,9 @@ public class BinomialDistribution extends DiscreteDistribution {
                     }
                     X = k4 + Dk;
                 } else {
-                    W = Math.random();
+                    W = MathEx.random();
                     if (U < p5) {                                   // expon. tail left
-                        Dk = (int) (1. - Math.log(W) / ll);
+                        Dk = (int) (1. - log(W) / ll);
                         if ((X = k1 - Dk) < 0) {
                             continue;              // 0 <= X <= k1 - 1
                         }
@@ -374,7 +368,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                             return X;                                       // quick accept of X
                         }
                     } else {                                               // expon. tail right
-                        Dk = (int) (1. - Math.log(W) / lr);
+                        Dk = (int) (1. - log(W) / lr);
                         if ((X = k5 + Dk) > n) {
                             continue;             // k5 + 1 <= X <= n
                         }
@@ -389,7 +383,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                 // acceptance-rejection test of candidate X from the original area
                 // test, whether  W <= BinomialF(k),    with  W = U*h(x)  and  U -- U(0, 1)
                 // log BinomialF(X) = (X - mode)*log(p/q) - log X!(n - X)! + log mode!(n - mode)!
-                if (Math.log(W) <= X * l_pq - Math.logFactorial(X) - Math.logFactorial(n - X) - c_pm) {
+                if (log(W) <= X * l_pq - lfactorial(X) - lfactorial(n - X) - c_pm) {
                     return X;
                 }
             }
@@ -397,7 +391,7 @@ public class BinomialDistribution extends DiscreteDistribution {
 
         // used by BinomialPatchwork
         private double f(int k, int n, double l_pq, double c_pm) {
-            return Math.exp(k * l_pq - Math.logFactorial(k) - Math.logFactorial(n - k) - c_pm);
+            return exp(k * l_pq - lfactorial(k) - lfactorial(n - k) - c_pm);
         }
     }
 
@@ -405,8 +399,8 @@ public class BinomialDistribution extends DiscreteDistribution {
 
         private int mode;                                  // mode
         private int bound;                                 // upper bound
-        private double modeValue;                          // value at mode
-        private double r1;
+        private final double modeValue;                    // value at mode
+        private final double r1;
 
         public ModeSearch(double p) {
             double nu = (n + 1) * p;
@@ -422,7 +416,7 @@ public class BinomialDistribution extends DiscreteDistribution {
                 mode--;    // mode
             }
             r1 = p / (1.0 - p);
-            modeValue = Math.exp(Math.logFactorial(n) - Math.logFactorial(mode) - Math.logFactorial(n - mode) + mode * Math.log(p) + (n - mode) * Math.log(1. - p));
+            modeValue = exp(lfactorial(n) - lfactorial(mode) - lfactorial(n - mode) + mode * log(p) + (n - mode) * log(1. - p));
         }
 
         /**
@@ -438,7 +432,7 @@ public class BinomialDistribution extends DiscreteDistribution {
             double U, c, d, divisor;
 
             while (true) {
-                U = Math.random();
+                U = MathEx.random();
                 if ((U -= modeValue) <= 0.0) {
                     return (mode);
                 }

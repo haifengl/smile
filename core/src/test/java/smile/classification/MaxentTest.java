@@ -1,31 +1,30 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.util.ArrayList;
-
+import smile.data.Hyphen;
+import smile.data.Protein;
+import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
 import static org.junit.Assert.*;
 
 /**
@@ -33,55 +32,6 @@ import static org.junit.Assert.*;
  * @author Haifeng Li
  */
 public class MaxentTest {
-
-    class Dataset {
-        int[][] x;
-        int[] y;
-        int p;
-    }
-
-    @SuppressWarnings("unused")
-    Dataset load(String resource) {
-        int p = 0;
-        ArrayList<int[]> x = new ArrayList<>();
-        ArrayList<Integer> y = new ArrayList<>();
-
-        try (BufferedReader input = smile.data.parser.IOUtils.getTestDataReader(resource)) {
-            String[] words = input.readLine().split(" ");
-            int nseq = Integer.parseInt(words[0]);
-            int k = Integer.parseInt(words[1]);
-            p = Integer.parseInt(words[2]);
-
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                words = line.split(" ");
-                int seqid = Integer.parseInt(words[0]);
-                int pos = Integer.parseInt(words[1]);
-                int len = Integer.parseInt(words[2]);
-
-                int[] feature = new int[len];
-                for (int i = 0; i < len; i++) {
-                    feature[i] = Integer.parseInt(words[i+3]);
-                }
-
-                x.add(feature);
-                y.add(Integer.valueOf(words[len+3]));
-            }
-        } catch (IOException ex) {
-            System.err.println(ex);
-        }
-
-        Dataset dataset = new Dataset();
-        dataset.p = p;
-        dataset.x = new int[x.size()][];
-        dataset.y = new int[y.size()];
-        for (int i = 0; i < dataset.x.length; i++) {
-            dataset.x[i] = x.get(i);
-            dataset.y[i] = y.get(i);
-        }
-        
-        return dataset;
-    }
 
     public MaxentTest() {
         
@@ -103,49 +53,32 @@ public class MaxentTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class Maxent.
-     */
     @Test
-    public void testLearnProtein() {
-        System.out.println("learn protein");
-        Dataset train = load("sequence/sparse.protein.11.train");
-        Dataset test = load("sequence/sparse.protein.11.test");
+    public void testProtein() throws Exception {
+        System.out.println("protein");
 
-        Maxent maxent = new Maxent(train.p, train.x, train.y, 0.1, 1E-5, 500);
-        
-        int error = 0;
-        for (int i = 0; i < test.x.length; i++) {
-            if (test.y[i] != maxent.predict(test.x[i])) {
-                error++;
-            }
-        }
+        Maxent model = Maxent.fit(Protein.p, Protein.x, Protein.y);
 
-        System.out.format("Protein error is %d of %d%n", error, test.x.length);
-        System.out.format("Protein error rate = %.2f%%%n", 100.0 * error / test.x.length);
-        assertEquals(1338, error);
+        int[] prediction = model.predict(Protein.testx);
+        int error = Error.of(prediction, Protein.testy);
+
+        System.out.format("The error is %d of %d%n", error, Protein.testx.length);
+        assertEquals(1339, error);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
     }
 
-    /**
-     * Test of learn method, of class Maxent.
-     */
     @Test
-    public void testLearnHyphen() {
-        System.out.println("learn hyphen");
-        Dataset train = load("sequence/sparse.hyphen.6.train");
-        Dataset test = load("sequence/sparse.hyphen.6.test");
+    public void testHyphen() {
+        System.out.println("hyphen");
 
-        Maxent maxent = new Maxent(train.p, train.x, train.y, 0.1, 1E-5, 500);
+        Maxent model = Maxent.fit(Hyphen.p, Hyphen.x, Hyphen.y);
 
-        int error = 0;
-        for (int i = 0; i < test.x.length; i++) {
-            if (test.y[i] != maxent.predict(test.x[i])) {
-                error++;
-            }
-        }
+        int[] prediction = model.predict(Hyphen.testx);
+        int error = Error.of(prediction, Hyphen.testy);
 
-        System.out.format("Protein error is %d of %d%n", error, test.x.length);
-        System.out.format("Hyphen error rate = %.2f%%%n", 100.0 * error / test.x.length);
-        assertEquals(765, error);
+        System.out.format("The error is %d of %d%n", error, Hyphen.testx.length);
+        assertEquals(762, error);
     }
 }

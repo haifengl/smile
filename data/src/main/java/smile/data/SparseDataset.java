@@ -1,27 +1,35 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.data;
 
+import java.io.IOException;
+import java.io.LineNumberReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.text.ParseException;
+import java.util.Collection;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-
-import smile.math.Math;
-import smile.math.SparseArray;
+import java.util.Scanner;
+import java.util.stream.Stream;
+import smile.math.MathEx;
 import smile.math.matrix.SparseMatrix;
+import smile.util.SparseArray;
 
 /**
  * List of Lists sparse matrix format. LIL stores one list per row,
@@ -36,286 +44,46 @@ import smile.math.matrix.SparseMatrix;
  *
  * @author Haifeng Li
  */
-public class SparseDataset implements Iterable<Datum<SparseArray>> {
-
-    /**
-     * The name of dataset.
-     */
-    private String name;
-    /**
-     * The optional detailed description of dataset.
-     */
-    private String description;
-    /**
-     * The attribute property of response variable. null means no response variable.
-     */
-    private Attribute response = null;
-    /**
-     * The data objects.
-     */
-    private List<Datum<SparseArray>> data = new ArrayList<>();
-    /**
-     * The number of nonzero entries.
-     */
-    private int n;
-    /**
-     * The number of columns.
-     */
-    private int numColumns;
-    /**
-     * The number of nonzero entries in each column.
-     */
-    private int[] colSize;
-
-    /**
-     * Constructor.
-     */
-    public SparseDataset() {
-        this("Sparse Dataset");
-    }
-
-    /**
-     * Constructor.
-     * @param name the name of dataset.
-     */
-    public SparseDataset(String name) {
-        this(name, null);
-    }
-
-    /**
-     * Constructor.
-     * @param response the attribute type of response variable.
-     */
-    public SparseDataset(Attribute response) {
-        this("SparseDataset", response);
-    }
-
-    /**
-     * Constructor.
-     * @param name the name of dataset.
-     * @param response the attribute type of response variable.
-     */
-    public SparseDataset(String name, Attribute response) {
-        this.name = name;
-        this.response = response;
-        numColumns = 0;
-        colSize = new int[100];
-    }
-
-    /**
-     * Constructor.
-     * @param ncols the number of columns in the matrix.
-     */
-    public SparseDataset(int ncols) {
-        numColumns = ncols;
-        colSize = new int[ncols];
-    }
-
-    /**
-     * Constructor.
-     * @param ncols the number of columns in the matrix.
-     * @param response the attribute type of response variable.
-     */
-    public SparseDataset(int ncols, Attribute response) {
-        this.numColumns = ncols;
-        this.colSize = new int[ncols];
-        this.response = response; 
-    }
-
-    /**
-     * Returns the dataset name.
-     */
-    public String getName() {
-        return name;
-    }
-
-    /**
-     * Sets the dataset name.
-     */
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    /**
-     * Sets the detailed dataset description.
-     */
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    /**
-     * Returns the detailed dataset description.
-     */
-    public String getDescription() {
-        return description;
-    }
-
-    /**
-     * Returns the attribute of the response variable. null means no response
-     * variable in this dataset.
-     * @return the attribute of the response variable. null means no response
-     * variable in this dataset.
-     */
-    public Attribute response() {
-        return response;
-    }
-    
-    /**
-     * Returns the size of dataset that is the number of rows.
-     */
-    public int size() {
-        return data.size();
-    }
-    
-    /**
-     * Returns the number of columns.
-     */
-    public int ncols() {
-        return numColumns;
-    }
-
+public interface SparseDataset extends Dataset<SparseArray> {
     /**
      * Returns the number of nonzero entries.
+     * @return the number of nonzero entries.
      */
-    public int length() {
-        return n;
-    }
-    
+    int nz();
+
     /**
-     * Set the class label of a datum. If the index
-     * exceeds the current matrix size, the matrix will resize itself.
-     * @param i the row index of entry.
-     * @param y the class label or real-valued response of the datum.
+     * Returns the number of nonzero entries in column j.
+     * @param j the column index.
+     * @return the number of nonzero entries in column j.
      */
-    public void set(int i, int y) {
-        if (response == null) {
-            throw new IllegalArgumentException("The dataset has no response values.");            
-        }
-        
-        if (response.getType() != Attribute.Type.NOMINAL) {
-            throw new IllegalArgumentException("The response variable is not nominal.");
-        }
-        
-        if (i < 0) {
-            throw new IllegalArgumentException("Invalid index: i = " + i);
-        }
+    int nz(int j);
 
-        int nrows = size();
-        if (i >= nrows) {
-            for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<>(new SparseArray()));
-            }
-        }
-
-        get(i).y = y;
+    /**
+     * Returns the number of rows.
+     * @return the number of rows.
+     */
+    default int nrow() {
+        return size();
     }
 
     /**
-     * Set the real-valued response of a datum. If the index
-     * exceeds the current matrix size, the matrix will resize itself.
-     * @param i the row index of entry.
-     * @param y the class label or real-valued response of the datum.
+     * Returns the number of columns.
+     * @return the number of columns.
      */
-    public void set(int i, double y) {
-        if (response == null) {
-            throw new IllegalArgumentException("The dataset has no response values.");            
-        }
-        
-        if (response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException("The response variable is not numeric.");
-        }
-        
-        if (i < 0) {
-            throw new IllegalArgumentException("Invalid index: i = " + i);
-        }
+    int ncol();
 
-        int nrows = size();
-        if (i >= nrows) {
-            for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<>(new SparseArray()));
-            }
-        }
-
-        get(i).y = y;
-    }
-
-    /**
-     * Set the class label of real-valued response of a datum. If the index
-     * exceeds the current matrix size, the matrix will resize itself.
-     * @param i the row index of entry.
-     * @param y the class label or real-valued response of the datum.
-     * @param weight the optional weight of the datum.
-     */
-    public void set(int i, double y, double weight) {
-        if (i < 0) {
-            throw new IllegalArgumentException("Invalid index: i = " + i);
-        }
-
-        int nrows = size();
-        if (i >= nrows) {
-            for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<>(new SparseArray()));
-            }
-        }
-
-        Datum<SparseArray> datum = get(i);
-        datum.y = y;
-        datum.weight = weight;
-    }
-
-    /**
-     * Set a nonzero entry into the matrix. If the index exceeds the current
-     * matrix size, the matrix will resize itself.
-     * @param i the row index of entry.
-     * @param j the column index of entry.
-     * @param x the value of entry.
-     */
-    public void set(int i, int j, double x) {
-        if (i < 0 || j < 0) {
-            throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
-        }
-
-        int nrows = size();
-        if (i >= nrows) {
-            for (int k = nrows; k <= i; k++) {
-                data.add(new Datum<>(new SparseArray()));
-            }
-        }
-
-        if (j >= ncols()) {
-            numColumns = j + 1;
-            if (numColumns > colSize.length) {
-                int[] size = new int[3 * numColumns / 2];
-                System.arraycopy(colSize, 0, size, 0, colSize.length);
-                colSize = size;
-            }
-        }
-
-        if (get(i).x.set(j, x)) {
-            colSize[j]++;
-            n++;            
-        }
-    }
-
-    /**
-     * Returns the element at the specified position in this dataset.
-     * @param i the index of the element to be returned.
-     */
-    public Datum<SparseArray> get(int i) {
-        return data.get(i);
-    }
-    
     /**
      * Returns the value at entry (i, j).
      * @param i the row index.
      * @param j the column index.
+     * @return the cell value.
      */
-    public double get(int i, int j) {
-        if (i < 0 || i >= size() || j < 0 || j >= ncols()) {
+    default double get(int i, int j) {
+        if (i < 0 || i >= size() || j < 0 || j >= ncol()) {
             throw new IllegalArgumentException("Invalid index: i = " + i + " j = " + j);
         }
 
-        for (SparseArray.Entry e : get(i).x) {
+        for (SparseArray.Entry e : get(i)) {
             if (e.i == j) {
                 return e.x;
             }
@@ -325,73 +93,61 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
     }
 
     /**
-     * Removes the element at the specified position in this dataset.
-     * @param i the index of the element to be removed.
-     * @return the element previously at the specified position.
-     */
-    public Datum<SparseArray> remove(int i) {
-        Datum<SparseArray> datum = data.remove(i);
-
-        n -= datum.x.size();
-        for (SparseArray.Entry item : datum.x) {
-            colSize[item.i]--;
-        }
-        
-        return datum;
-    }
-
-    /**
      * Unitize each row so that L2 norm of x = 1.
      */
-    public void unitize() {
-        for (Datum<SparseArray> row : this) {
+    default void unitize() {
+        stream().forEach(x -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : row.x) {
-                sum += Math.sqr(e.x);
+            for (SparseArray.Entry e : x) {
+                sum += MathEx.pow2(e.x);
             }
 
             sum = Math.sqrt(sum);
 
-            for (SparseArray.Entry e : row.x) {
-                e.x /= sum;
+            for (SparseArray.Entry e : x) {
+                e.update(e.x / sum);
             }
-        }
+        });
     }
 
     /**
      * Unitize each row so that L1 norm of x is 1.
      */
-    public void unitize1() {
-        for (Datum<SparseArray> row : this) {
+    default void unitize1() {
+        stream().forEach(x -> {
             double sum = 0.0;
 
-            for (SparseArray.Entry e : row.x) {
+            for (SparseArray.Entry e : x) {
                 sum += Math.abs(e.x);
             }
 
-            for (SparseArray.Entry e : row.x) {
-                e.x /= sum;
+            for (SparseArray.Entry e : x) {
+                e.update(e.x / sum);
             }
-        }
+        });
     }
 
     /**
      * Convert into Harwell-Boeing column-compressed sparse matrix format.
+     * @return the sparse matrix.
      */
-    public SparseMatrix toSparseMatrix() {
-        int[] pos = new int[numColumns];
-        int[] colIndex = new int[numColumns + 1];
-        for (int i = 0; i < numColumns; i++) {
-            colIndex[i + 1] = colIndex[i] + colSize[i];
+    default SparseMatrix toMatrix() {
+        int nz = nz();
+        int ncol = ncol();
+
+        int[] pos = new int[ncol];
+        int[] colIndex = new int[ncol + 1];
+        for (int i = 0; i < ncol; i++) {
+            colIndex[i + 1] = colIndex[i] + nz(i);
         }
 
-        int nrows = size();
-        int[] rowIndex = new int[n];
-        double[] x = new double[n];
+        int nrow = size();
+        int[] rowIndex = new int[nz];
+        double[] x = new double[nz];
 
-        for (int i = 0; i < nrows; i++) {
-            for (SparseArray.Entry e : get(i).x) {
+        for (int i = 0; i < nrow; i++) {
+            for (SparseArray.Entry e : get(i)) {
                 int j = e.i;
                 int k = colIndex[j] + pos[j];
 
@@ -401,176 +157,129 @@ public class SparseDataset implements Iterable<Datum<SparseArray>> {
             }
         }
 
-        return new SparseMatrix(nrows, numColumns, x, rowIndex, colIndex);
+        return new SparseMatrix(nrow, ncol, x, rowIndex, colIndex);
     }
-    
+
     /**
-     * Returns an iterator over the elements in this dataset in proper sequence. 
-     * @return an iterator over the elements in this dataset in proper sequence
+     * Returns a default implementation of SparseDataset from a collection.
+     *
+     * @param data sparse arrays.
+     * @return the sparse dataset.
      */
-    @Override
-    public Iterator<Datum<SparseArray>> iterator() {
-        return new Iterator<Datum<SparseArray>>() {
-
-            /**
-             * Current position.
-             */
-            int i = 0;
-
-            @Override
-            public boolean hasNext() {
-                return i < data.size();
-            }
-
-            @Override
-            public Datum<SparseArray> next() {
-                return get(i++);
-            }
-
-            @Override
-            public void remove() {
-                SparseDataset.this.remove(i);
-            }
-        };
-    }    
-    
-    /**
-     * Returns a dense two-dimensional array containing the whole matrix in
-     * this dataset in proper sequence. 
-     * 
-     * @return a dense two-dimensional array containing the whole matrix in
-     * this dataset in proper sequence. 
-     */
-    public double[][] toArray() {
-        int m = data.size();
-        double[][] a = new double[m][ncols()];
-        
-        for (int i = 0; i < m; i++) {
-            for (SparseArray.Entry item : get(i).x) {
-                a[i][item.i] = item.x;
-            }
-        }
-        
-        return a;
+    static SparseDataset of(Stream<SparseArray> data) {
+        return of(data.collect(java.util.stream.Collectors.toList()));
     }
-    
+
     /**
-     * Returns an array containing all of the elements in this dataset in
-     * proper sequence (from first to last element); the runtime type of the
-     * returned array is that of the specified array. If the dataset fits in
-     * the specified array, it is returned therein. Otherwise, a new array
-     * is allocated with the runtime type of the specified array and the size
-     * of this dataset.
+     * Returns a default implementation of SparseDataset from a collection.
+     *
+     * @param data sparse arrays.
+     * @return the sparse dataset.
+     */
+    static SparseDataset of(Collection<SparseArray> data) {
+        return new SparseDatasetImpl(data);
+    }
+
+    /**
+     * Returns a default implementation of SparseDataset from a collection.
+     *
+     * @param data sparse arrays.
+     * @param ncol the number of columns.
+     * @return the sparse dataset.
+     */
+    static SparseDataset of(Collection<SparseArray> data, int ncol) {
+        return new SparseDatasetImpl(data, ncol);
+    }
+
+    /**
+     * Strips the response variable and returns a SparseDataset.
+     * @param data the dataset of sparse arrays.
+     * @return the sparse dataset.
+     */
+    static SparseDataset of(Dataset<Instance<SparseArray>> data) {
+        return of(data.stream().map(Instance::x).collect(java.util.stream.Collectors.toList()));
+    }
+
+    /**
+     * Parses spare dataset in coordinate triple tuple list format.
+     * Coordinate file stores a list of (row, column, value) tuples.
+     *
+     * @param path the input file path.
+     * @throws IOException when fails to read file.
+     * @throws ParseException when fails to parse data.
+     * @return the sparse dataset.
+     */
+    static SparseDataset from(Path path) throws IOException, ParseException {
+        return from(path, 0);
+    }
+
+    /**
+     * Reads spare dataset in coordinate triple tuple list format.
+     * Coordinate file stores a list of (row, column, value) tuples:
+     * <pre>
+     * instanceID attributeID value
+     * instanceID attributeID value
+     * instanceID attributeID value
+     * instanceID attributeID value
+     * ...
+     * instanceID attributeID value
+     * instanceID attributeID value
+     * instanceID attributeID value
+     * </pre>
+     * Ideally, the entries are sorted (by row index, then column index) to
+     * improve random access times. This format is good for incremental matrix
+     * construction.
      * <p>
-     * If the dataset fits in the specified array with room to spare (i.e., the
-     * array has more elements than the dataset), the element in the array
-     * immediately following the end of the dataset is set to null. 
-     * 
-     * @param a the array into which the elements of this dataset are to be
-     * stored, if it is big enough; otherwise, a new array of the same runtime
-     * type is allocated for this purpose. 
-     * @return an array containing the elements of this dataset.
+     * In addition, there may a header line
+     * <pre>
+     * D W N   // The number of rows, columns and nonzero entries.
+     * </pre>
+     * or 3 header lines
+     * <pre>
+     * D    // The number of rows
+     * W    // The number of columns
+     * N    // The total number of nonzero entries in the dataset.
+     * </pre>
+     *
+     * @param path the input file path.
+     * @param arrayIndexOrigin the starting index of array. By default, it is
+     * 0 as in C/C++ and Java. But it could be 1 to parse data produced
+     * by other programming language such as Fortran.
+     *
+     * @exception IOException if stream to file cannot be read or closed.
+     * @exception ParseException if an index is not an integer or the value is not a double.
+     * @return the sparse dataset.
      */
-    public SparseArray[] toArray(SparseArray[] a) {
-        int m = data.size();
-        if (a.length < m) {
-            a = new SparseArray[m];
-        }
-        
-        for (int i = 0; i < m; i++) {
-            a[i] = get(i).x;
-        }
-        
-        for (int i = m; i < a.length; i++) {
-            a[i] = null;
-        }
-        
-        return a;
-    }
-    
-    /**
-     * Returns an array containing the class labels of the elements in this
-     * dataset in proper sequence (from first to last element). Unknown labels
-     * will be saved as Integer.MIN_VALUE. If the dataset fits in the specified
-     * array, it is returned therein. Otherwise, a new array is allocated with
-     * the size of this dataset.
-     * <p>
-     * If the dataset fits in the specified array with room to spare (i.e., the
-     * array has more elements than the dataset), the element in the array
-     * immediately following the end of the dataset is set to Integer.MIN_VALUE. 
-     * 
-     * @param a the array into which the class labels of this dataset are to be
-     * stored, if it is big enough; otherwise, a new array is allocated for
-     * this purpose. 
-     * @return an array containing the class labels of this dataset.
-     */
-    public int[] toArray(int[] a) {
-        if (response == null) {
-            throw new IllegalArgumentException("The dataset has no response values.");            
-        }
-        
-        if (response.getType() != Attribute.Type.NOMINAL) {
-            throw new IllegalArgumentException("The response variable is not nominal.");
-        }
-        
-        int m = data.size();
-        if (a.length < m) {
-            a = new int[m];
-        }
-        
-        for (int i = 0; i < m; i++) {
-            Datum<SparseArray> datum = get(i);
-            if (Double.isNaN(datum.y)) {
-                a[i] = Integer.MIN_VALUE;
-            } else {
-                a[i] = (int) get(i).y;
+    static SparseDataset from(Path path, int arrayIndexOrigin) throws IOException, ParseException {
+        try (LineNumberReader reader = new LineNumberReader(Files.newBufferedReader(path));
+             Scanner scanner = new Scanner(reader)) {
+            int nrow = scanner.nextInt();
+            int ncol = scanner.nextInt();
+            int nz = scanner.nextInt();
+            List<SparseArray> rows = new ArrayList<>(nrow);
+            for (int i = 0; i < nrow; i++) {
+                rows.add(new SparseArray());
             }
-        }
-        
-        for (int i = m; i < a.length; i++) {
-            a[i] = Integer.MIN_VALUE;
-        }
-        
-        return a;
-    }
 
-    /**
-     * Returns an array containing the response variable of the elements in this
-     * dataset in proper sequence (from first to last element). If the dataset
-     * fits in the specified array, it is returned therein. Otherwise, a new array
-     * is allocated with the size of this dataset.
-     * <p>
-     * If the dataset fits in the specified array with room to spare (i.e., the
-     * array has more elements than the dataset), the element in the array
-     * immediately following the end of the dataset is set to Double.NaN.
-     * 
-     * @param a the array into which the response variable of this dataset are
-     * to be stored, if it is big enough; otherwise, a new array is allocated
-     * for this purpose. 
-     * @return an array containing the response variable of this dataset.
-     */
-    public double[] toArray(double[] a) {
-        if (response == null) {
-            throw new IllegalArgumentException("The dataset has no response values.");            
+            // read the EOL of header line(s).
+            scanner.nextLine();
+            do {
+                String line = scanner.nextLine();
+
+                String[] tokens = line.trim().split("\\s+");
+                if (tokens.length != 3) {
+                    throw new ParseException("Invalid line: " + line, reader.getLineNumber());
+                }
+
+                int i = Integer.parseInt(tokens[0]) - arrayIndexOrigin;
+                int j = Integer.parseInt(tokens[1]) - arrayIndexOrigin;
+                double x = Double.parseDouble(tokens[2]);
+
+                SparseArray row = rows.get(i);
+                row.set(j, x);
+            } while (scanner.hasNextLine());
+
+            return of(rows);
         }
-        
-        if (response.getType() != Attribute.Type.NUMERIC) {
-            throw new IllegalArgumentException("The response variable is not numeric.");
-        }
-        
-        int m = data.size();
-        if (a.length < m) {
-            a = new double[m];
-        }
-        
-        for (int i = 0; i < m; i++) {
-            a[i] = get(i).y;
-        }
-        
-        for (int i = m; i < a.length; i++) {
-            a[i] = Double.NaN;
-        }
-        
-        return a;
     }
 }

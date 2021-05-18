@@ -1,26 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.nlp.tokenizer;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.Iterator;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * A concise dictionary of common abbreviations (e.g. Mr., Mrs., etc.) in English.
@@ -28,51 +31,40 @@ import java.util.Iterator;
  *
  * @author Haifeng Li
  */
-class EnglishAbbreviations {
-    /** Utility classes should not have public constructors. */
-    private EnglishAbbreviations() {
-
-    }
-
+interface EnglishAbbreviations {
     /**
      * A list of abbreviations.
      */
-    private static final HashSet<String> DICTIONARY;
+    Set<String> dictionary = dictionary();
 
-    static {
-        DICTIONARY = new HashSet<>();
-
+    static Set<String> dictionary() {
         try (BufferedReader input = new BufferedReader(new InputStreamReader(EnglishAbbreviations.class.getResourceAsStream("/smile/nlp/tokenizer/abbreviations_en.txt")))) {
-            String line = null;
-            while ((line = input.readLine()) != null) {
-                line = line.trim();
-                if (!line.isEmpty()) {
-                    DICTIONARY.add(line);
-                }
-            }
+            return input.lines().map(String::trim).filter(line -> !line.isEmpty()).collect(Collectors.toSet());
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+
+        return Collections.emptySet();
     }
 
     /**
      * Returns true if this abbreviation dictionary contains the specified element.
      */
-    public static boolean contains(String s) {
-        return DICTIONARY.contains(s);
+    static boolean contains(String s) {
+        return dictionary.contains(s);
     }
 
     /**
      * Returns the number of elements in this abbreviation dictionary.
      */
-    public static int size() {
-        return DICTIONARY.size();
+    static int size() {
+        return dictionary.size();
     }
 
     /**
      * Returns an iterator over the elements in this abbreviation dictionary.
      */
-    public static Iterator<String> iterator() {
-        return DICTIONARY.iterator();
+    static Iterator<String> iterator() {
+        return dictionary.iterator();
     }
 }

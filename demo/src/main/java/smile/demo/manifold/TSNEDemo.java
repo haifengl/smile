@@ -1,30 +1,36 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.manifold;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import javax.swing.*;
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+
+import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.io.Read;
+import smile.plot.swing.Palette;
+import smile.plot.swing.Canvas;
 import smile.manifold.TSNE;
-import smile.math.Math;
+import smile.math.MathEx;
+import smile.plot.swing.ScatterPlot;
 import smile.projection.PCA;
 
 /**
@@ -80,23 +86,19 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
 
-        PCA pca = new PCA(data);
+        PCA pca = PCA.fit(data);
         pca.setProjection(50);
         double[][] X = pca.project(data);
         long clock = System.currentTimeMillis();
         TSNE tsne = new TSNE(X, 2, perplexity, 200, 1000);
         System.out.format("Learn t-SNE from %d samples in %dms\n", data.length, System.currentTimeMillis() - clock);
 
-        double[][] y = tsne.getCoordinates();
+        double[][] y = tsne.coordinates;
 
-        PlotCanvas plot = new PlotCanvas(Math.colMin(y), Math.colMax(y));
+        Canvas plot = ScatterPlot.of(y, labels, '@').canvas();
 
-        for (int i = 0; i < y.length; i++) {
-            plot.point(pointLegend, Palette.COLORS[labels[i]], y[i]);
-        }
-
-        plot.setTitle("tSNE");
-        pane.add(plot);
+        plot.setTitle("t-SNE");
+        pane.add(plot.panel());
 
         return pane;
     }
@@ -128,17 +130,14 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         if ("startButton".equals(e.getActionCommand())) {
-            DelimitedTextParser parser = new DelimitedTextParser();
 
             try {
-                AttributeDataset dataset = parser.parse(smile.data.parser.IOUtils.getTestDataFile("mnist/mnist2500_X.txt"));
-                data = dataset.toArray(new double[dataset.size()][]);
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter(' ').withIgnoreSurroundingSpaces(true);
+                DataFrame dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_X.txt"), format);
+                data = dataset.toArray(false, CategoricalEncoder.ONE_HOT);
 
-                dataset = parser.parse(smile.data.parser.IOUtils.getTestDataFile("mnist/mnist2500_labels.txt"));
-                labels = new int[dataset.size()];
-                for (int i = 0; i < labels.length; i++) {
-                    labels[i] = (int) dataset.get(i).x[0];
-                }
+                dataset = Read.csv(smile.util.Paths.getTestData("mnist/mnist2500_labels.txt"));
+                labels = dataset.column(0).toIntArray();
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                 System.err.println(ex);
@@ -165,7 +164,7 @@ public class TSNEDemo extends JPanel implements Runnable, ActionListener {
         return "t-SNE";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         TSNEDemo demo = new TSNEDemo();
         JFrame f = new JFrame("t-SNE");
         f.setSize(new Dimension(1000, 1000));

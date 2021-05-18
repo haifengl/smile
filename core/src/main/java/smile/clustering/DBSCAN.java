@@ -1,30 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.clustering;
 
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Arrays;
 import smile.neighbor.Neighbor;
-import smile.neighbor.RNNSearch;
+import smile.neighbor.KDTree;
 import smile.neighbor.LinearSearch;
-import smile.neighbor.CoverTree;
-import smile.math.Math;
+import smile.neighbor.RNNSearch;
+import smile.math.MathEx;
 import smile.math.distance.Distance;
-import smile.math.distance.Metric;
 
 /**
  * Density-Based Spatial Clustering of Applications with Noise.
@@ -87,58 +88,73 @@ import smile.math.distance.Metric;
  * 
  * @author Haifeng Li
  */
-public class DBSCAN<T> extends PartitionClustering<T> {
-    private static final long serialVersionUID = 1L;
+public class DBSCAN<T> extends PartitionClustering {
+    private static final long serialVersionUID = 2L;
 
-    /**
-     * Label for unclassified data samples.
-     */
-    private static final int UNCLASSIFIED = -1;
     /**
      * The minimum number of points required to form a cluster
      */
-    private double minPts;
+    public final double minPts;
     /**
-     * The range of neighborhood.
+     * The neighborhood radius.
      */
-    private double radius;
+    public final double radius;
     /**
      * Data structure for neighborhood search.
      */
-    private RNNSearch<T,T> nns;
+    private final RNNSearch<T,T> nns;
 
     /**
-     * Constructor. Clustering the data. Note that this one could be very
-     * slow because of brute force nearest neighbor search.
-     * @param data the dataset for clustering.
-     * @param distance the distance measure for neighborhood search.
+     * Constructor.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param nns the data structure for neighborhood search.
+     * @param k the number of clusters.
+     * @param y the cluster labels.
      */
-    public DBSCAN(T[] data, Distance<T> distance, int minPts, double radius) {
-        this(data, new LinearSearch<>(data, distance), minPts, radius);
+    public DBSCAN(int minPts, double radius, RNNSearch<T,T> nns, int k, int[] y) {
+        super(k, y);
+        this.minPts = minPts;
+        this.radius = radius;
+        this.nns = nns;
     }
 
     /**
-     * Constructor. Clustering the data. Using cover tree for nearest neighbor
-     * search.
-     * @param data the dataset for clustering.
-     * @param distance the distance measure for neighborhood search.
+     * Clustering the data with KD-tree. DBSCAN is generally applied on
+     * low-dimensional data. Therefore, KD-tree can speed up the nearest
+     * neighbor search a lot.
+     * @param data the observations.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @return the model.
      */
-    public DBSCAN(T[] data, Metric<T> distance, int minPts, double radius) {
-        this(data, new CoverTree<>(data, distance), minPts, radius);
+    public static DBSCAN<double[]> fit(double[][] data, int minPts, double radius) {
+        return fit(data, new KDTree<>(data, data), minPts, radius);
     }
 
     /**
      * Clustering the data.
-     * @param data the dataset for clustering.
+     * @param data the observations.
+     * @param distance the distance function.
+     * @param minPts the minimum number of neighbors for a core data point.
+     * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
+     */
+    public static <T> DBSCAN<T> fit(T[] data, Distance<T> distance, int minPts, double radius) {
+        return fit(data, new LinearSearch<>(data, distance), minPts, radius);
+    }
+
+    /**
+     * Clustering the data.
+     * @param data the observations.
      * @param nns the data structure for neighborhood search.
      * @param minPts the minimum number of neighbors for a core data point.
      * @param radius the neighborhood radius.
+     * @param <T> the data type.
+     * @return the model.
      */
-    public DBSCAN(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
+    public static <T> DBSCAN<T> fit(T[] data, RNNSearch<T,T> nns, int minPts, double radius) {
         if (minPts < 1) {
             throw new IllegalArgumentException("Invalid minPts: " + minPts);
         }
@@ -147,75 +163,73 @@ public class DBSCAN<T> extends PartitionClustering<T> {
             throw new IllegalArgumentException("Invalid radius: " + radius);
         }
 
-        this.nns = nns;
-        this.minPts = minPts;
-        this.radius = radius;
-        
-        k = 0;
+        // The label for data samples in BFS queue.
+        final int QUEUED = -2;
+        // The label for unclassified data samples.
+        final int UNDEFINED = -1;
 
+        int k = 0;
         int n = data.length;
-        y = new int[n];
-        Arrays.fill(y, UNCLASSIFIED);
+        int[] y = new int[n];
+        Arrays.fill(y, UNDEFINED);
 
         for (int i = 0; i < data.length; i++) {
-            if (y[i] == UNCLASSIFIED) {
+            if (y[i] == UNDEFINED) {
                 List<Neighbor<T,T>> neighbors = new ArrayList<>();
                 nns.range(data[i], radius, neighbors);
                 if (neighbors.size() < minPts) {
                     y[i] = OUTLIER;
                 } else {
                     y[i] = k;
+
+                    for (Neighbor<T, T> neighbor : neighbors) {
+                        if (y[neighbor.index] == UNDEFINED) {
+                            y[neighbor.index] = QUEUED;
+                        }
+                    }
+
                     for (int j = 0; j < neighbors.size(); j++) {
-                        if (y[neighbors.get(j).index] == UNCLASSIFIED) {
-                            y[neighbors.get(j).index] = k;
-                            Neighbor<T,T> neighbor = neighbors.get(j);
+                        Neighbor<T,T> neighbor = neighbors.get(j);
+                        int index = neighbor.index;
+
+                        if (y[index] == OUTLIER) {
+                            y[index] = k;
+                        }
+
+                        if (y[index] == UNDEFINED || y[index] == QUEUED) {
+                            y[index] = k;
+
                             List<Neighbor<T,T>> secondaryNeighbors = new ArrayList<>();
                             nns.range(neighbor.key, radius, secondaryNeighbors);
 
                             if (secondaryNeighbors.size() >= minPts) {
-                                neighbors.addAll(secondaryNeighbors);
+                                for (Neighbor<T, T> sn : secondaryNeighbors) {
+                                    int label = y[sn.index];
+                                    if (label == UNDEFINED) {
+                                        y[sn.index] = QUEUED;
+                                    }
+
+                                    if (label == UNDEFINED || label == OUTLIER) {
+                                        neighbors.add(sn);
+                                    }
+                                }
                             }
                         }
-
-                        if (y[neighbors.get(j).index] == OUTLIER) {
-                            y[neighbors.get(j).index] = k;
-                        }
                     }
+
                     k++;
                 }
             }
         }
 
-        size = new int[k + 1];
-        for (int i = 0; i < n; i++) {
-            if (y[i] == OUTLIER) {
-                size[k]++;
-            } else {
-                size[y[i]]++;
-            }
-        }
-    }
-    
-    /**
-     * Returns the parameter of minimum number of neighbors.
-     */
-    public double getMinPts() {
-        return minPts;
+        return new DBSCAN<>(minPts, radius, nns, k, y);
     }
 
     /**
-     * Returns the radius of neighborhood.
-     */
-    public double getRadius() {
-        return radius;
-    }
-
-    /**
-     * Cluster a new instance.
-     * @param x a new instance.
+     * Classifies a new observation.
+     * @param x a new observation.
      * @return the cluster label. Note that it may be {@link #OUTLIER}.
      */
-    @Override
     public int predict(T x) {
         List<Neighbor<T,T>> neighbors = new ArrayList<>();
         nns.range(x, radius, neighbors);
@@ -224,31 +238,14 @@ public class DBSCAN<T> extends PartitionClustering<T> {
             return OUTLIER;
         }
         
-        int[] label = new int[k + 1];
+        int[] count = new int[k + 1];
         for (Neighbor<T,T> neighbor : neighbors) {
             int yi = y[neighbor.index];
             if (yi == OUTLIER) yi = k;
-            label[yi]++;
+            count[yi]++;
         }
         
-        int c = Math.whichMax(label);
-        if (c == k) c = OUTLIER;
-        return c;
-    }
-
-    @Override
-    public String toString() {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append(String.format("DBSCAN clusters of %d data points:%n", y.length));
-        for (int i = 0; i < k; i++) {
-            int r = (int) Math.round(1000.0 * size[i] / y.length);
-            sb.append(String.format("%3d\t%5d (%2d.%1d%%)%n", i, size[i], r / 10, r % 10));
-        }
-
-        int r = (int) Math.round(1000.0 * size[k] / y.length);
-        sb.append(String.format("Noise\t%5d (%2d.%1d%%)%n", size[k], r / 10, r % 10));
-        
-        return sb.toString();
+        int y = MathEx.whichMax(count);
+        return y == k ? OUTLIER : y;
     }
 }

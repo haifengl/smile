@@ -1,0 +1,6 @@
+{"color": "black",  "category": "hue",  "type": "primary",  "code": {    "rgba": "[255,255,255,1]",    "hex": "#000"  },"other":{"type":"good"}}
+{"color": "white","category": "value","code": {"rgba": "[0,0,0,1]","hex": "#FFF"},"other":{"type":"good"}}
+{"color": "red","category": "hue","type": "primary","code": {"rgba": "[255,0,0,1]","hex": "#FF0"},"other":{"type":"ok"}}
+{"color": "blue","category": "hue","type": "primary","code": {"rgba": "[0,0,255,1]","hex": "#00F"},"other":{"type":"good"}}
+{"color": "yellow","category": "hue","type": "primary","code": {"rgba": "[255,255,0,1]","hex": "#FF0"},"other":{"type":"ok"}}
+{"color": "green","category": "hue","type": "secondary","code": {"rgba": "[0,255,0,1]","hex": "#0F0"},"other":{"type":"good"}}

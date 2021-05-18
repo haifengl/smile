@@ -1,20 +1,25 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.clustering.linkage;
+
+import java.util.stream.IntStream;
+import smile.math.MathEx;
+import smile.math.distance.Distance;
 
 /**
  * A measure of dissimilarity between clusters (i.e. sets of observations).
@@ -42,20 +47,22 @@ public abstract class Linkage {
      */
     float[] proximity;
 
-    /** Initialize the linkage with the lower triangular proximity matrix. */
-    void init(double[][] proximity) {
-        size = proximity.length;
+    /**
+     * Constructor.
+     * @param proximity the proximity matrix. Only the lower half will
+     *                  be referred.
+     */
+    public Linkage(double[][] proximity) {
+        this.size = proximity.length;
         this.proximity = new float[size * (size+1) / 2];
 
         // row wise
-        /*
-        for (int i = 0, k = 0; i < size; i++) {
-            double[] pi = proximity[i];
-            for (int j = 0; j <= i; j++, k++) {
-                this.proximity[k] = (float) pi[j];
-            }
-        }
-        */
+        //for (int i = 0, k = 0; i < size; i++) {
+        //    double[] pi = proximity[i];
+        //    for (int j = 0; j <= i; j++, k++) {
+        //        this.proximity[k] = (float) pi[j];
+        //    }
+        //}
 
         // column wise
         for (int j = 0, k = 0; j < size; j++) {
@@ -65,6 +72,31 @@ public abstract class Linkage {
         }
     }
 
+    /**
+     * Constructor.
+     * @param size the data size.
+     * @param proximity the column-wise linearized proximity matrix that stores
+     *                  only the lower half. The length of proximity should be
+     *                  size * (size+1) / 2.
+     *                  To save space, Linkage will use this argument directly
+     *                  without copy. The elements may be modified.
+     */
+    public Linkage(int size, float[] proximity) {
+        if (proximity.length != size * (size+1) / 2) {
+            throw new IllegalArgumentException(String.format("The length of proximity is %d, expected %d", proximity.length, size * (size+1) / 2));
+        }
+
+        this.size = size;
+        this.proximity = proximity;
+    }
+
+    /**
+     * Returns the linearized index of proximity matrix.
+     *
+     * @param i the row index.
+     * @param j the column index.
+     * @return the linearized index.
+     */
     int index(int i, int j) {
         // row wise
         // return i > j ? i*(i+1)/2 + j : j*(j+1)/2 + i;
@@ -72,23 +104,65 @@ public abstract class Linkage {
         return i > j ? proximity.length - (size-j)*(size-j+1)/2 + i - j : proximity.length - (size-i)*(size-i+1)/2 + j - i;
     }
 
-    /** Returns the proximity matrix size. */
+    /**
+     * Returns the proximity matrix size.
+     * @return the proximity matrix size.
+     */
     public int size() {
         return size;
     }
 
     /**
-     * Returns the distance/dissimilarity between two clusters/objects, which
-     * are indexed by integers.
+     * Returns the distance/dissimilarity between two clusters/objects,
+     * which are indexed by integers.
+     *
+     * @param i the row index of proximity matrix.
+     * @param j the column index of proximity matrix.
+     * @return the distance/dissimilarity.
      */
     public float d(int i, int j) {
         return proximity[index(i, j)];
     }
 
     /**
-     * Merge two clusters into one and update the proximity matrix.
+     * Merges two clusters into one and update the proximity matrix.
+     *
      * @param i cluster id.
      * @param j cluster id.
      */
     public abstract void merge(int i, int j);
+
+    /**
+     * Computes the proximity matrix (linearized in column major)
+     * based on Euclidean distance.
+     *
+     * @param data the data points.
+     * @return the linearized proximity matrix based on Eulidean distance.
+     */
+    public static float[] proximity(double[][] data) {
+        return proximity(data, MathEx::distance);
+    }
+
+    /**
+     * Computes the proximity matrix (linearized in column major).
+     *
+     * @param data the data points.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the linearized proximity matrix.
+     */
+    public static <T> float[] proximity(T[] data, Distance<T> distance) {
+        int n = data.length;
+        int length = n * (n+1) / 2;
+
+        float[] proximity = new float[length];
+        IntStream.range(0, n).parallel().forEach(i -> {
+            for (int j = 0; j < i; j++) {
+                int k = length - (n-j)*(n-j+1)/2 + i - j;
+                proximity[k] = (float) distance.d(data[i], data[j]);
+            }
+        });
+
+        return proximity;
+    }
 }

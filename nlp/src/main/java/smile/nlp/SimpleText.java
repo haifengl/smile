@@ -1,23 +1,26 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.nlp;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import smile.util.MutableInt;
+import smile.util.Strings;
 
 /**
  * A list-of-words representation of documents.
@@ -33,11 +36,11 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * The list of words.
      */
-    private String[] words;
+    private final String[] words;
     /**
      * The term frequency.
      */
-    private HashMap<String, Integer> freq = new HashMap<>();
+    private final HashMap<String, MutableInt> freq = new HashMap<>();
     /**
      * The maximum term frequency over all terms in the documents;
      */
@@ -46,25 +49,26 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     /**
      * Constructor.
      * @param id the id of document.
+     * @param title the title of document.
+     * @param body the text body of document.
      * @param words the word list of document.
      */
     public SimpleText(String id, String title, String body, String[] words) {
-    	super(id, title, body);
+        super(id, title, body);
 
         this.words = words;
 
         for (String w : words) {
-            Integer f = freq.get(w);
-            if (f == null) {
-                f = 1;
+            MutableInt count = freq.get(w);
+            if (count == null) {
+                count = new MutableInt(1);
+                freq.put(w, count);
             } else {
-                f = f + 1;
+                count.increment();
             }
 
-            freq.put(w, f);
-
-            if (f > maxtf) {
-                maxtf = f;
+            if (count.value > maxtf) {
+                maxtf = count.value;
             }
         }
     }
@@ -86,13 +90,8 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
     
     @Override
     public int tf(String term) {
-        Integer f = freq.get(term);
-        
-        if (f == null) {
-            return 0;
-        }
-        
-        return f;
+        MutableInt count = freq.get(term);
+        return count == null ? 0 : count.value;
     }
 
     @Override
@@ -106,7 +105,7 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * anchor text in the corpus pointing to this text.
      */
     public String getAnchor() {
-    	return anchor;
+        return anchor;
     }
     
     /**
@@ -114,22 +113,22 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
      * pointing to this text. So addAnchor is more appropriate in most cases.
      */
     public SimpleText setAnchor(String anchor) {
-    	this.anchor = anchor;
+        this.anchor = anchor;
         return this;
     }
     
     public SimpleText addAnchor(String linkLabel) {
-    	if (anchor == null) {
-    		anchor = linkLabel;
-    	} else {
-    		anchor = anchor + " " + linkLabel;
-    	}
+        if (anchor == null) {
+            anchor = linkLabel;
+        } else {
+            anchor = anchor + "\n" + linkLabel;
+        }
         return this;
     }
     
     @Override
     public String toString() {
-        return String.format("Document[%s%s]", getID(), getTitle() == null ? "" : " -- "+ getTitle());
+        return String.format("Document[%s]", Strings.isNullOrEmpty(title) ? id : title);
     }
 
     @Override
@@ -143,11 +142,11 @@ public class SimpleText extends Text implements TextTerms, AnchorText {
         }
 
         final SimpleText other = (SimpleText) obj;
-        return getID().equals(other.getID());
+        return id.equals(other.id);
     }
 
     @Override
     public int hashCode() {
-    	return getID().hashCode();
+        return id.hashCode();
     }
 }

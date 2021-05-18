@@ -1,27 +1,29 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
 /**
  * The geometric distribution is a discrete probability distribution of the
  * number X of Bernoulli trials needed to get one success, supported on the set
- * {1, 2, 3, &hellip;}. Sometimes, people define that the probability distribution
- * of the number Y = X - 1 of failures before the first success, supported on
- * the set {0, 1, 2, 3, &hellip;}. To reduce the confusion, we denote the later as
- * shifted geometric distribution.
+ * <code>{1, 2, 3, &hellip;}</code>. Sometimes, people define that the probability
+ * distribution of the number <code>Y = X - 1</code> of failures before the first
+ * success, supported on the set <code>{0, 1, 2, 3, &hellip;}</code>. To reduce
+ * the confusion, we denote the later as shifted geometric distribution.
  * If the probability of success on each trial is p, then the probability that
  * the k-<i>th</i> trial (out of k trials) is the first success is
  * Pr(X = k) = (1 - p)<sup>k-1</sup> p.
@@ -34,26 +36,27 @@ package smile.stat.distribution;
  * observed. The geometric distribution is in fact the only memoryless
  * discrete distribution.
  * <p>
- * Among all discrete probability distributions supported on {1, 2, 3, &hellip;}
- * with given expected value &mu;, the geometric distribution X with parameter
- * p = 1/&mu; is the one with the largest entropy.
+ * Among all discrete probability distributions supported on
+ * <code>{1, 2, 3, &hellip;}</code> with given expected value &mu;,
+ * the geometric distribution X with parameter
+ * <code>p = 1/&mu;</code> is the one with the largest entropy.
 
  * @see ShiftedGeometricDistribution
  *
  * @author Haifeng Li
  */
 public class GeometricDistribution extends DiscreteDistribution implements DiscreteExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     /**
      * Probability of success on each trial.
      */
-    private double p;
+    public final double p;
     /**
      * The exponential distribution to generate Geometric distributed
      * random number.
      */
-    ExponentialDistribution expDist;
+    private ExponentialDistribution expDist;
 
     /**
      * Constructor.
@@ -68,9 +71,11 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
     }
 
     /**
-     * Constructor. Parameter will be estimated from the data by MLE.
+     * Estimates the distribution parameters by MLE.
+     * @param data the training data.
+     * @return the distribution.
      */
-    public GeometricDistribution(int[] data) {
+    public static GeometricDistribution fit(int[] data) {
         double sum = 0.0;
         for (int x : data) {
             if (x <= 0) {
@@ -80,18 +85,12 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
             sum += x;
         }
 
-        p = data.length / sum;
-    }
-
-    /**
-     * Returns the probability of success.
-     */
-    public double getProb() {
-        return p;
+        double p = data.length / sum;
+        return new GeometricDistribution(p);
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 1;
     }
 
@@ -101,7 +100,7 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
     }
 
     @Override
-    public double var() {
+    public double variance() {
         return (1 - p) / (p * p);
     }
 
@@ -200,10 +199,6 @@ public class GeometricDistribution extends DiscreteDistribution implements Discr
 
         mean /= alpha;
 
-        DiscreteMixture.Component c = new DiscreteMixture.Component();
-        c.priori = alpha;
-        c.distribution = new GeometricDistribution(1 / mean);
-
-        return c;
+        return new DiscreteMixture.Component(alpha, new GeometricDistribution(1 / mean));
     }
 }

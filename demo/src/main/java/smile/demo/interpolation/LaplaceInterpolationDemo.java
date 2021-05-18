@@ -1,32 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.interpolation;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import smile.interpolation.BicubicInterpolation;
 import smile.interpolation.LaplaceInterpolation;
-import smile.plot.Heatmap;
-import smile.plot.Palette;
-import smile.plot.PlotCanvas;
+import smile.plot.swing.Heatmap;
+import smile.plot.swing.Palette;
+import smile.plot.swing.Canvas;
 
 /**
  *
@@ -55,9 +55,9 @@ public class LaplaceInterpolationDemo extends JPanel {
             }
         }
 
-        PlotCanvas canvas = Heatmap.plot(yy, Palette.jet(256));
+        Canvas canvas = Heatmap.of(yy, Palette.jet(256)).canvas();
         canvas.setTitle("Original");
-        add(canvas);
+        add(canvas.panel());
 
         double[][] zz = new double[101][101];
         double[][] ww = new double[101][101];
@@ -72,14 +72,14 @@ public class LaplaceInterpolationDemo extends JPanel {
             }
         }
 
-        canvas = Heatmap.plot(ww, Palette.jet(256));
+        canvas = Heatmap.of(ww, Palette.jet(256)).canvas();
         canvas.setTitle("Missing Values");
-        add(canvas);
+        add(canvas.panel());
 
         LaplaceInterpolation.interpolate(zz);
-        canvas = Heatmap.plot(zz, Palette.jet(256));
+        canvas = Heatmap.of(zz, Palette.jet(256)).canvas();
         canvas.setTitle("Laplace");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override
@@ -89,6 +89,7 @@ public class LaplaceInterpolationDemo extends JPanel {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Laplace Interpolation");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new LaplaceInterpolationDemo());

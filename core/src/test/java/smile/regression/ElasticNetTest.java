@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.regression;
 
@@ -22,12 +23,13 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import smile.data.AttributeDataset;
-import smile.data.NumericAttribute;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
-import smile.validation.CrossValidation;
+import smile.data.*;
+import smile.data.formula.Formula;
+import smile.data.vector.DoubleVector;
+import smile.math.MathEx;
+import smile.validation.*;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  *
@@ -53,154 +55,102 @@ public class ElasticNetTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
+    @Test
+    public void testToy() {
+        double[][] A = {
+                {1, 0, 0, 0.5},
+                {0, 1, 0.2, 0.3},
+                {1, 0.5, 0.2, 0.3},
+                {0, 0.1, 0, 0.2},
+                {0, 0.1, 1, 0.2}
+        };
+
+        double[] y = {6, 5.2, 6.2, 5, 6};
+
+        DataFrame df = DataFrame.of(A).merge(DoubleVector.of("y", y));
+        RegressionValidation<LinearModel> result = RegressionValidation.of(Formula.lhs("y"), df, df,
+                (formula, data) -> ElasticNet.fit(formula, data, 0.1, 0.001));
+
+        System.out.println(result.model);
+        System.out.println(result);
+
+        assertEquals(5.1486, result.model.intercept(), 1E-4);
+        double[] w = {0.8978, -0.0873, 0.8416, -0.1121};
+        for (int i = 0; i < w.length; i++) {
+            assertEquals(w[i], result.model.coefficients()[i], 1E-4);
+        }
+    }
+
+    @Test
+    public void testLongley() throws Exception {
+        System.out.println("longley");
+
+        LinearModel model = ElasticNet.fit(Longley.formula, Longley.data, 0.1, 0.1);
+        System.out.println(model);
+
+        RegressionMetrics metrics = LOOCV.regression(Longley.formula, Longley.data,
+                (f, x) -> ElasticNet.fit(f, x, 0.1, 0.1));
+
+        System.out.println(metrics);
+        assertEquals(4.2299, metrics.rmse, 1E-4);
+
+        java.nio.file.Path temp = smile.data.Serialize.write(model);
+        smile.data.Serialize.read(temp);
+    }
+
     @Test
     public void testCPU() {
         System.out.println("CPU");
-        ArffParser parser = new ArffParser();
-        parser.setResponseIndex(6);
-        try {
-            AttributeDataset data = parser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/cpu.arff"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
 
-            int n = datax.length;
-            int k = 10;
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+        LinearModel model = ElasticNet.fit(CPU.formula, CPU.data, 0.8, 0.2);
+        System.out.println(model);
 
-                ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, CPU.formula, CPU.data,
+                (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - elasticnet.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("CPU 10-CV RMSE = " + Math.sqrt(rss / n));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        System.out.println(result);
+        assertEquals(50.9618, result.avg.rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesProstate() {
-        System.out.println("---ProStateCancer---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("lpsa"), 8);
-        parser.setColumnNames(true);
-        try {
-            AttributeDataset train = parser.parse("prostate Train",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/prostate-train.csv"));
-            AttributeDataset test = parser.parse("prostate Test",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/prostate-test.csv"));
+        System.out.println("Prostate");
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            double[] y = train.toArray(new double[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            double[] testy = test.toArray(new double[test.size()]);
+        RegressionValidation<LinearModel> result = RegressionValidation.of(Prostate.formula, Prostate.train, Prostate.test,
+                (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
-            ElasticNet elasticnet = new ElasticNet(x, y, 0.8, 0.2);
-
-            double testrss = 0;
-            int n = testx.length;
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - elasticnet.predict(testx[j]);
-                testrss += r * r;
-            }
-
-            System.out.println("Prostate Test MSE = " + testrss / n);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        System.out.println(result.model);
+        System.out.println(result);
+        assertEquals(0.7076, result.metrics.rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesAbalone() {
-        System.out.println("---Abalone---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("ring"), 8);
-        parser.setColumnNames(false);
-        parser.setDelimiter(",");
-        parser.addIgnoredColumn(0);
-        try {
-            AttributeDataset train = parser.parse("abalone Train",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/abalone-train.data"));
-            AttributeDataset test = parser.parse("abalone Test",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/abalone-test.data"));
+        System.out.println("Abalone");
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            double[] y = train.toArray(new double[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            double[] testy = test.toArray(new double[test.size()]);
+        RegressionValidation<LinearModel> result = RegressionValidation.of(Abalone.formula, Abalone.train, Abalone.test,
+                (formula, data) -> ElasticNet.fit(formula, data, 0.8, 0.2));
 
-            ElasticNet elasticnet = new ElasticNet(x, y, 0.8, 0.2);
-
-            double testrss = 0;
-            int n = testx.length;
-            for (int j = 0; j < testx.length; j++) {
-                double r = testy[j] - elasticnet.predict(testx[j]);
-                testrss += r * r;
-            }
-
-            System.out.println("Abalone Test MSE = " + testrss / n);
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        System.out.println(result.model);
+        System.out.println(result);
+        assertEquals(2.1263, result.metrics.rmse, 1E-4);
     }
 
-    /**
-     * Test of learn method, of class LinearRegression.
-     */
     @Test
     public void tesDiabetes() {
-        System.out.println("---Diabetes---");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NumericAttribute("y"), 0);
-        parser.setColumnNames(true);
-        parser.setDelimiter(",");
-        try {
-            AttributeDataset data = parser.parse("diabetes",
-                    smile.data.parser.IOUtils.getTestDataFile("regression/diabetes.csv"));
-            double[][] datax = data.toArray(new double[data.size()][]);
-            double[] datay = data.toArray(new double[data.size()]);
+        System.out.println("Diabetes");
 
-            int n = datax.length;
-            int k = 40;
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            CrossValidation cv = new CrossValidation(n, k);
-            double rss = 0.0;
-            for (int i = 0; i < k; i++) {
-                double[][] trainx = Math.slice(datax, cv.train[i]);
-                double[] trainy = Math.slice(datay, cv.train[i]);
-                double[][] testx = Math.slice(datax, cv.test[i]);
-                double[] testy = Math.slice(datay, cv.test[i]);
+        LinearModel model = ElasticNet.fit(Diabetes.formula, Diabetes.data, 0.8, 0.2);
+        System.out.println(model);
 
-                ElasticNet elasticnet = new ElasticNet(trainx, trainy, 0.8, 0.2);
+        RegressionValidations<LinearModel> result = CrossValidation.regression(10, Diabetes.formula, Diabetes.data,
+                (f, x) -> ElasticNet.fit(f, x, 0.8, 0.2));
 
-                for (int j = 0; j < testx.length; j++) {
-                    double r = testy[j] - elasticnet.predict(testx[j]);
-                    rss += r * r;
-                }
-            }
-
-            System.out.println("Diabetes 40-CV RMSE = " + Math.sqrt(rss / n));
-        } catch (Exception ex) {
-            System.err.println(ex);
-        }
+        System.out.println(result);
+        assertEquals(59.4332, result.avg.rmse, 1E-4);
     }
 }

@@ -1,24 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.imputation;
 
 import smile.math.matrix.Matrix;
-import smile.math.matrix.LU;
-import smile.math.matrix.DenseMatrix;
 import smile.sort.QuickSort;
 
 /**
@@ -33,7 +32,7 @@ public class LLSImputation implements MissingValueImputation {
     /**
      * The number of nearest neighbors used for imputation.
      */
-    private int k;
+    private final int k;
 
     /**
      * Constructor.
@@ -80,8 +79,8 @@ public class LLSImputation implements MissingValueImputation {
         for (int i = 0; i < data.length; i++) {
             double[] x = data[i];
             int missing = 0;
-            for (int j = 0; j < x.length; j++) {
-                if (Double.isNaN(x[j])) {
+            for (double v : x) {
+                if (Double.isNaN(v)) {
                     missing++;
                 }
             }
@@ -108,25 +107,24 @@ public class LLSImputation implements MissingValueImputation {
             }
 
             double[][] dat = new double[data.length][];
-            for (int j = 0; j < data.length; j++) {
-                dat[j] = data[j];
-            }
+            System.arraycopy(data, 0, dat, 0, data.length);
 
             QuickSort.sort(dist, dat);
 
-            DenseMatrix A = Matrix.zeros(d - missing, k);
+            Matrix A = new Matrix(d - missing, k);
             double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
-                if (!Double.isNaN(data[i][j])) {
-                    for (int l = 0; l < k; l++)
+                if (!Double.isNaN(x[j])) {
+                    for (int l = 0; l < k; l++) {
                         A.set(m, l, dat[l][j]);
+                    }
                     b[m++] = dat[i][j];
                 }
             }
 
             boolean sufficient = true;
-            for (int m = 0; m < A.nrows(); m++) {
+            for (int m = 0; m < A.nrow(); m++) {
                 for (int n = 0; n < k; n++) {
                     if (Double.isNaN(A.get(m, n))) {
                         sufficient = false;
@@ -134,15 +132,17 @@ public class LLSImputation implements MissingValueImputation {
                     }
                 }
 
-                if (!sufficient)
+                if (!sufficient) {
                     break;
+                }
             }
 
             // this row has no sufficent nearest neighbors with no missing values.
-            if (!sufficient)
+            if (!sufficient) {
                 continue;
+            }
 
-            LU lu = A.lu();
+            Matrix.LU lu = A.lu(true);
             lu.solve(b);
 
             for (int j = 0; j < d; j++) {

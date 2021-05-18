@@ -1,21 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.stat.distribution;
 
-import smile.math.Math;
+import smile.math.MathEx;
 import smile.math.special.Beta;
 import smile.math.special.Gamma;
 
@@ -35,13 +37,19 @@ import smile.math.special.Gamma;
  * @author Haifeng Li
  */
 public class BetaDistribution extends AbstractDistribution implements ExponentialFamily {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private double alpha;
-    private double beta;
-    private double mean;
-    private double var;
-    private double entropy;
+    /** The shape parameter. */
+    public final double alpha;
+    /** The shape parameter. */
+    public final double beta;
+    /** The mean. */
+    private final double mean;
+    /** The variance. */
+    private final double variance;
+    /** The entropy. */
+    private final double entropy;
+    /** The random number generator. */
     private RejectionLogLogistic rng;
 
     /**
@@ -62,40 +70,39 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         this.beta = beta;
 
         mean = alpha / (alpha + beta);
-        var = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
+        variance = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
         entropy = Math.log(Beta.beta(alpha, beta)) - (alpha - 1) * Gamma.digamma(alpha) - (beta - 1) * Gamma.digamma(beta) + (alpha + beta - 2) * Gamma.digamma(alpha + beta);
     }
 
     /**
-     * Construct an Beta from the given samples. Parameter
-     * will be estimated from the data by the moment method.
+     * Estimates the distribution parameters by the moment method.
+     * @param data the samples.
+     * @return the distribution.
      */
-    public BetaDistribution(double[] data) {
-        for (int i = 0; i < data.length; i++) {
-            if (data[i] < 0 || data[i] > 1) {
+    public static BetaDistribution fit(double[] data) {
+        for (double datum : data) {
+            if (datum < 0 || datum > 1) {
                 throw new IllegalArgumentException("Samples are not in range [0, 1].");
             }
         }
 
-        mean = Math.mean(data);
-        var = Math.var(data);
+        double mean = MathEx.mean(data);
+        double var = MathEx.var(data);
 
-        alpha = mean * (mean * (1 - mean) / var - 1);
-        beta = (1 - mean) * (mean * (1 - mean) / var - 1);
+        double alpha = mean * (mean * (1 - mean) / var - 1);
+        double beta = (1 - mean) * (mean * (1 - mean) / var - 1);
         if (alpha <= 0 || beta <= 0) {
             throw new IllegalArgumentException("Samples don't follow Beta Distribution.");
         }
 
-        mean = alpha / (alpha + beta);
-        var = alpha * beta / ((alpha + beta) * (alpha + beta) * (alpha + beta + 1));
-        entropy = Math.log(Beta.beta(alpha, beta)) - (alpha - 1) * Gamma.digamma(alpha) - (beta - 1) * Gamma.digamma(beta) + (alpha + beta - 2) * Gamma.digamma(alpha + beta);
+        return new BetaDistribution(alpha, beta);
     }
 
     /**
      * Returns the shape parameter alpha.
      * @return the shape parameter alpha
      */
-    public double getAlpha() {
+    public double alpha() {
         return alpha;
     }
 
@@ -103,12 +110,12 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
      * Returns the shape parameter beta.
      * @return the shape parameter beta
      */
-    public double getBeta() {
+    public double beta() {
         return beta;
     }
 
     @Override
-    public int npara() {
+    public int length() {
         return 2;
     }
 
@@ -118,13 +125,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
     }
 
     @Override
-    public double var() {
-        return var;
-    }
-
-    @Override
-    public double sd() {
-        return Math.sqrt(var);
+    public double variance() {
+        return variance;
     }
 
     @Override
@@ -198,11 +200,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         double a = mu * (mu * (1 - mu) / v - 1);
         double b = (1 - mu) * (mu * (1 - mu) / v - 1);
 
-        Mixture.Component c = new Mixture.Component();
-        c.priori = weight;
-        c.distribution = new BetaDistribution(a, b);
-
-        return c;
+        return new Mixture.Component(weight, new BetaDistribution(a, b));
     }
 
     @Override
@@ -226,12 +224,12 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
 
         private static final int BB = 0;
         private static final int BC = 1;
-        private int method;
-        private double am;
-        private double bm;
-        private double al;
+        private final int method;
+        private final double am;
+        private final double bm;
+        private final double al;
         private double alnam;
-        private double be;
+        private final double be;
         private double ga;
         private double si;
         private double rk1;
@@ -243,15 +241,15 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
         public RejectionLogLogistic() {
             if (alpha > 1.0 && beta > 1.0) {
                 method = BB;
-                am = (alpha < beta) ? alpha : beta;
-                bm = (alpha > beta) ? alpha : beta;
+                am = Math.min(alpha, beta);
+                bm = Math.max(alpha, beta);
                 al = am + bm;
                 be = Math.sqrt((al - 2.0) / (2.0 * alpha * beta - al));
                 ga = am + 1.0 / be;
             } else {
                 method = BC;
-                am = (alpha > beta) ? alpha : beta;
-                bm = (alpha < beta) ? alpha : beta;
+                am = Math.max(alpha, beta);
+                bm = Math.min(alpha, beta);
                 al = am + bm;
                 alnam = al * Math.log(al / am) - 1.386294361;
                 be = 1.0 / bm;
@@ -269,8 +267,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                     /* -X- generator code -X- */
                     while (true) {
                         /* Step 1 */
-                        u1 = Math.random();
-                        u2 = Math.random();
+                        u1 = MathEx.random();
+                        u2 = MathEx.random();
                         v = be * Math.log(u1 / (1.0 - u1));
                         w = am * Math.exp(v);
                         z = u1 * u1 * u2;
@@ -289,7 +287,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                         }
 
                         /* Step 5 */
-                        X = Math.equals(am, alpha) ? w / (bm + w) : bm / (bm + w);
+                        X = MathEx.equals(am, alpha) ? w / (bm + w) : bm / (bm + w);
                         break;
                     }
                     /* -X- end of generator code -X- */
@@ -298,8 +296,8 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                 case BC:
                     while (true) {
                         /* Step 1 */
-                        u1 = Math.random();
-                        u2 = Math.random();
+                        u1 = MathEx.random();
+                        u2 = MathEx.random();
 
                         if (u1 < 0.5) {
                             /* Step 2 */
@@ -316,17 +314,16 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 if (alnam < Math.log(z)) {
                                     continue;
                                 }
-                                X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                 break;
                             } else {
                                 w = am * Math.exp(v);
-                                if ((al * (Math.log(al / (bm + w)) + v) - 1.386294361) <
-                                        Math.log(z)) {
+                                if ((al * (Math.log(al / (bm + w)) + v) - 1.386294361) < Math.log(z)) {
                                     continue;  /* goto 1 */
                                 }
 
                                 /* Step 6_a */
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             }
                         } else {
@@ -336,12 +333,12 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 /* Step 5 */
                                 v = be * Math.log(u1 / (1.0 - u1));
                                 if (v > 80.0) {
-                                    X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                    X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                     break;
                                 }
 
                                 w = am * Math.exp(v);
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             } else {
                                 if (z >= rk2) {
@@ -352,7 +349,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                     if (alnam < Math.log(z)) {
                                         continue;
                                     }
-                                    X = Math.equals(am, alpha) ? 1.0 : 0.0;
+                                    X = MathEx.equals(am, alpha) ? 1.0 : 0.0;
                                     break;
                                 }
                                 w = am * Math.exp(v);
@@ -362,7 +359,7 @@ public class BetaDistribution extends AbstractDistribution implements Exponentia
                                 }
 
                                 /* Step 6_b */
-                                X = !Math.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
+                                X = !MathEx.equals(am, alpha) ? bm / (bm + w) : w / (bm + w);
                                 break;
                             }
                         }

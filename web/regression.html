@@ -1,0 +1,1436 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="regression-top" class="title">Regression</h1>
+
+    <p>Different from classification, the output variable takes continuous values in regression analysis.
+        Smile's regression algorithms are in the package
+        <a href="api/java/smile/regression/package-summary.html"><code>smile.regression</code></a>
+        and all algorithms implement the interface
+        <a href="api/java/smile/regression/Regression.html"><code>Regression</code></a>
+        that has a single method <code>predict</code> to apply the model
+        to an instance. For all algorithms, the model can be trained through
+        the constructor. Meanwhile, each algorithm has a <code>Trainer</code> companion
+        class that can hold model hyper-parameters and be applied to multiple training
+        datasets.</p>
+
+    <p>The high-level operators are defined in Scala trait
+        <a href="api/scala/index.html#smile.regression.Operators"><code>smile.regression.Operators</code></a>
+        and also in the package object of <a href="api/scala/index.html#smile.regression.package"><code>smile.regression</code></a>.
+        In what follows, we will discuss each algorithm, their high-level
+        Scala API, and examples.</p>
+
+    <h2 id="ols">Ordinary Least Squares</h2>
+
+    <p>In linear regression, the model specification is that the dependent variable is a linear
+        combination of the parameters. The residual is the difference between the value of the
+        dependent variable predicted by the model, and the true value of the
+        dependent variable. Ordinary least squares obtains parameter estimates
+        that minimize the sum of squared residuals, SSE (also denoted RSS).</p>
+        
+    <p>The ordinary least squares (OLS) estimator is consistent when the independent variables are
+        exogenous and there is no multicollinearity, and optimal in the class
+        of linear unbiased estimators when the errors are homoscedastic and
+        serially uncorrelated. Under these conditions, the method of OLS provides
+        minimum-variance mean-unbiased estimation when the errors have finite
+        variances.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_1" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def lm(formula: Formula,
+           data: DataFrame,
+           method: String = "qr",
+           stderr: Boolean = true,
+           recursive: Boolean = true): LinearModel
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class OLS {
+        public static LinearModel fit(Formula formula,
+                                      DataFrame data,
+                                      String method,
+                                      boolean stderr,
+                                      boolean recursive);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lm(formula: Formula,
+           data: DataFrame,
+           method: String = "qr",
+           stderr: Boolean = true,
+           recursive: Boolean = true): LinearModel
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>There are several different frameworks in which the linear regression
+        model can be cast in order to make the OLS technique applicable. Each
+        of these settings produces the same formulas and same results, the only
+        difference is the interpretation and the assumptions which have to be
+        imposed in order for the method to give meaningful results. The choice
+        of the applicable framework depends mostly on the nature of data at hand,
+        and on the inference task which has to be performed.</p>
+        
+    <p>Least squares corresponds to the maximum likelihood criterion if the
+        experimental errors have a normal distribution and can also be derived
+        as a method of moments estimator.</p>
+        
+    <p>In what follows, we apply the ordinary least squares to an artificial
+        data set by Breiman. The predictor
+        attributes are generated independently using the following probabilities:</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    P(X<sub>1</sub> = -1) = P(X<sub>1</sub> = 1) = 1/2
+
+    P(X<sub>m</sub> = -1) = P(X<sub>m</sub> = 0) = P(X<sub>m</sub> = 1) = 1/3, m = 2,...,10
+    </code></pre>
+
+    <p>The value of the response variable <code>Y</code> is:</p>
+
+    <pre class="prettyprint lang-scala"><code>
+    Y =  3 + 3X<sub>2</sub> + 2X<sub>3</sub> + X<sub>4</sub> + &sigma;(0,1)  if X_1 =  1
+
+    Y = -3 + 3X<sub>5</sub> + 2X<sub>6</sub> + X<sub>7</sub> + &sigma;(0,1)  if X_1 = -1
+    </code></pre>
+
+    <p>It is straightforward to fit an OLS model.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_2" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> val planes = read.arff("data/weka/regression/2dplanes.arff")
+    smile> val model = lm("y" ~, planes)
+    [main] INFO smile.util.package$ - Least Squares runtime: 0:00:00.189432
+    model: regression.LinearModel = Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402
+    x9                  0.0024     0.0145     0.1649     0.8690
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var planes = Read.arff("data/weka/regression/2dplanes.arff")
+    jshell> var model = OLS.fit(Formula.lhs("y"), planes)
+    jshell> System.out.println(model)
+    Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+           -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402
+    x9                  0.0024     0.0145     0.1649     0.8690
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+          </code></pre>
+            </div>
+        </div>
+    <div class="tab-pane" id="kotlin_2">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> import smile.regression.*
+    >>> val planes = read.arff("data/weka/regression/2dplanes.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation 2dplanes
+    >>> val model = lm(Formula.lhs("y"), planes)
+    >>> model
+    res165: smile.regression.LinearModel = Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	   -8.5260	   -1.6514	   -0.0049	    1.6755	    7.8116
+
+    Coefficients:
+                      Estimate Std. Error    t value   Pr(>|t|)
+    Intercept          -0.0148     0.0118    -1.2503     0.2112 
+    x1                  2.9730     0.0118   251.7998     0.0000 ***
+    x2                  1.5344     0.0145   105.8468     0.0000 ***
+    x3                  1.0357     0.0144    71.7815     0.0000 ***
+    x4                  0.5281     0.0145    36.4827     0.0000 ***
+    x5                  1.4766     0.0144   102.2472     0.0000 ***
+    x6                  1.0044     0.0144    69.5380     0.0000 ***
+    x7                  0.5238     0.0145    36.1696     0.0000 ***
+    x8                 -0.0011     0.0145    -0.0750     0.9402 
+    x9                  0.0024     0.0145     0.1649     0.8690 
+    x10                -0.0278     0.0145    -1.9239     0.0544 .
+    ---------------------------------------------------------------------
+    Significance codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+
+    Residual standard error: 2.3838 on 40757 degrees of freedom
+    Multiple R-squared: 0.7056,    Adjusted R-squared: 0.7055
+    F-statistic: 9766.9504 on 10 and 40757 DF,  p-value: 0.000
+    </code></pre>
+    </div>
+    </div>
+    </div>
+
+    <p>We then can apply the regression model on a new data point.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_3" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> model.predict(planes(0))
+    res1: Double = 5.073347387304475
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> model.predict(planes.get(0))
+    $238 ==> 5.073347388203141
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    >>> model.predict(planes[0])
+    res166: kotlin.Double = 5.073347388203141
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Once a regression model has been constructed, it may be important to
+        confirm the goodness of fit of the model and the statistical significance
+        of the estimated parameters. Commonly used checks of goodness of fit
+        include the R-squared, analysis of the pattern of residuals and hypothesis
+        testing. Statistical significance can be checked by an F-test of the overall
+        fit, followed by t-tests of individual parameters.</p>
+
+    <p>Simply print out the model, we can inspect R-squared, the statistics and p-values of
+        the t-test of parameter significance, and the F-test of goodness-of-fit.
+        Interpretations of these diagnostic tests rest heavily on the model
+        assumptions. Although examination of the residuals can be used to
+        invalidate a model, the results of a t-test or F-test are sometimes more
+        difficult to interpret if the model's assumptions are violated.
+        For example, if the error term does not have a normal distribution,
+        in small samples the estimated parameters will not follow normal
+        distributions and complicate inference. With relatively large samples,
+        however, a central limit theorem can be invoked such that hypothesis
+        testing may proceed using asymptotic approximations.</p>
+
+    <h2 id="ridge">Ridge Regression</h2>
+
+    <p>Coefficient estimates for multiple linear regression models rely on
+        the independence of the model terms. When terms are correlated and
+        the columns of the design matrix X have an approximate linear dependence,
+        the matrix <code>X'X</code> becomes close to singular. As a result, the least-squares estimate
+        becomes highly sensitive to random errors in the observed response <code>Y</code>,
+        producing a large variance.</p>
+
+    <p>Ridge regression is one method to address these issues. In ridge regression,
+        the matrix <code>X'X</code> is perturbed so as to make its determinant appreciably
+        different from 0.</p>
+
+    <p>Ridge regression is a kind of Tikhonov regularization, which is the most
+        commonly used method of regularization of ill-posed problems.
+        Ridge regression shrinks the regression coefficients by imposing a penalty
+        on their size. By allowing a small amount of bias in the estimates, more
+        reasonable coefficients may often be obtained. Often, small amounts of bias lead to
+        dramatic reductions in the variance of the estimated model coefficients.</p>
+
+    <p>Another interpretation of ridge regression is available through Bayesian estimation.
+        In this setting the belief that weight should be small is coded into a prior
+        distribution.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_4" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RidgeRegression {
+        public static LinearModel fit(Formula formula, DataFrame data, double lambda);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun ridge(formula: Formula, data: DataFrame, lambda: Double): LinearModel
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
+        <code>y</code> is the response values, and <code>lambda</code> is
+        the shrinkage/regularization parameter. Large <code>lambda</code> means more shrinkage.
+        Choosing an appropriate value of <code>lambda</code> is important, and also difficult.</p>
+
+    <p>Longley's macroeconomic regression data has 7 economical variables,
+        observed yearly from 1947 to 1962. It is a well-known example for a highly
+        collinear regression.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_5" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_5" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile> val longley = read.arff("data/weka/regression/longley.arff")
+    smile> val model = ridge("employed" ~, longley, 0.0057)
+    model: regression.LinearModel = Linear Model:
+
+    Residuals:
+               Min	        1Q	    Median	        3Q	       Max
+         -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_5">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var longley = Read.arff("data/weka/regression/longley.arff")
+    jshell> var model = RidgeRegression.fit(Formula.lhs("employed"), longley, 0.0057)
+    jshell> System.out.println(model)
+    Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+          </code></pre>
+            </div>
+        </div>
+            <div class="tab-pane" id="kotlin_5">
+    <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    >>> val longley = read.arff("data/weka/regression/longley.arff")
+    [main] INFO smile.io.Arff - Read ARFF relation longley
+    >>> val model = ridge(Formula.lhs("employed"), longley, 0.0057)
+    >>> model
+    res169: smile.regression.LinearModel = Linear Model:
+
+    Residuals:
+    	       Min	        1Q	    Median	        3Q	       Max
+    	 -410.9399	  -97.3097	   23.8665	  126.4536	  567.7757
+
+    Coefficients:
+    Intercept       -2623118.1327
+    deflator           -4.3322
+    GNP                -0.0091
+    unemployed         -1.6211
+    armed_forces       -0.9161
+    population         -0.1425
+    year             1389.9691
+
+    Residual standard error: 320.2543 on 9 degrees of freedom
+    Multiple R-squared: 0.9950,    Adjusted R-squared: 0.9917
+    F-statistic: 299.1430 on 6 and 9 DF,  p-value: 7.760e-10
+    </code></pre>
+    </div>
+    </div>
+    </div>
+
+    <p>When including an intercept term in the regression, we usually leave
+        this coefficient unpenalized. Otherwise we could add some constant amount
+        to the vector <code>y</code>, and this would not result in the same solution.
+        If we center the columns of <code>X</code>, then the intercept estimate
+        ends up just being the mean of <code>y</code>.</p>
+
+    <p>The penalty term is unfair is the predictor variables are not on the
+        same scale. Therefore, if we know that the variables are not measured
+        in the same units, we typically scale the columns of X (to have sample
+        variance 1), and then we perform ridge regression.</p>
+
+    <p>It can be shown that ridge regression doesn’t set coefficients exactly to zero
+        unless <code>&lambda; = &infin;</code>, in which case they’re all zero.
+        Hence ridge regression cannot perform variable selection, and even though
+        it performs well in terms of prediction accuracy, it does poorly in terms
+        of offering a clear interpretation.</p>
+
+    <h2 id="lasso">Lasso Regression</h2>
+
+    <p>Lasso (least absolute shrinkage and selection operator) regression
+        is a shrinkage and selection method for linear regression.
+        It minimizes the usual sum of squared errors, with a bound on the sum
+        of the absolute values of the coefficients (i.e. L<sub>1</sub>-regularized).
+        It has connections to soft-thresholding of wavelet coefficients, forward
+        stage-wise regression, and boosting methods.</p>
+        
+    <p>The Lasso typically yields a sparse solution, of which the parameter
+        vector &beta; has relatively few nonzero coefficients. In contrast, the
+        solution of L<sub>2</sub>-regularized least squares (i.e. ridge regression)
+        typically has all coefficients nonzero. Because it effectively
+        reduces the number of variables, the Lasso is useful in some contexts.</p>
+
+    <p>There is no analytic formula or expression for the optimal solution to the
+        L<sub>1</sub>-regularized least squares problems. Therefore, its solution
+        must be computed numerically. The objective function in the
+        L<sub>1</sub>-regularized least squares is convex but not differentiable,
+        so solving it is more of a computational challenge than solving the
+        L<sub>2</sub>-regularized least squares. The Lasso may be solved using
+        quadratic programming or more general convex optimization methods, as well
+        as by specific algorithms such as the least angle regression algorithm.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_6" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def lasso(formula: Formula,
+              data: DataFrame,
+              lambda: Double,
+              tol: Double = 1E-3,
+              maxIter: Int = 5000): LinearModel
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LASSO {
+        public static LinearModel fit(Formula formula,
+                                      DataFrame data,
+                                      double lambda,
+                                      double tol,
+                                      int maxIter);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun lasso(formula: Formula,
+              data: DataFrame,
+              lambda: Double,
+              tol: Double = 1E-3,
+              maxIter: Int = 5000): LinearModel
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is a matrix containing the explanatory variables,
+        <code>y</code> is the response values,
+        <code>lambda</code> is the shrinkage/regularization parameter,
+        <code>tol</code> is the tolerance for stopping iterations (relative target duality gap),
+        and <code>maxIter</code> is the maximum number of iterations.</p>
+
+    <p>For over-determined systems (more instances than variables, commonly in
+        machine learning), we normalize variables with mean 0 and standard deviation
+        1. For under-determined systems (less instances than variables, e.g.
+        compressed sensing), we assume white noise (i.e. no intercept in the linear
+        model) and do not perform normalization. Note that the solution
+        is not unique in this case.</p>
+
+    <p>In what follows, we will apply Lasso to the diabetes data
+        used in the "Least Angle Regression" paper. The basic data has 10 columns
+        standardized to have unit L2 norm in each column and zero mean.
+        The data used in the below example has 64 columns that consists of basic
+        data plus certain interactions.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_7" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val diabetes = read.csv("data/regression/diabetes.csv")
+    lasso("y" ~, diabetes, 10)
+    lasso("y" ~, diabetes, 100)
+    lasso("y" ~, diabetes, 500)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var diabetes = Read.csv("data/regression/diabetes.csv", CSVFormat.DEFAULT.withFirstRecordAsHeader());
+    var formula = Formula.lhs("y");
+    LASSO.fit(formula, diabetes, 10);
+    LASSO.fit(formula, diabetes, 100);
+    LASSO.fit(formula, diabetes, 500);
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    val diabetes = read.csv("data/regression/diabetes.csv")
+    val formula = Formula.lhs("y")
+    lasso(formula, diabetes, 10)
+    lasso(formula, diabetes, 100)
+    lasso(formula, diabetes, 500)
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>With large <code>lambda</code> values, we can observe that more and more
+        parameters are regularized towards to 0.</p>
+
+    <h2 id="rbf">Radial Basis Function Networks</h2>
+
+    <p>A radial basis function network is an
+        artificial neural network that uses radial basis functions as activation
+        functions. It is a linear combination of radial basis functions. They are
+        used in function approximation, time series prediction, and control.</p>
+
+    <p>In its basic form, radial basis function network is in the form</p>
+
+    <pre class="prettyprint lang-html"><code>
+    y(x) = &Sigma; w<sub>i</sub> &phi;(||x-c<sub>i</sub>||)
+    </code></pre>
+
+    <p>where the approximating function y(x) is represented as a sum of N radial
+        basis functions &phi;, each associated with a different center c<sub>i</sub>,
+        and weighted by an appropriate coefficient w<sub>i</sub>. For distance,
+        one usually chooses Euclidean distance. The weights w<sub>i</sub> can
+        be estimated using the matrix methods of linear least squares, because
+        the approximating function is linear in the weights.</p>
+
+    <p>RBF networks are typically trained by a two-step algorithm.
+        In the first step, the center vectors <code>c<sub>i</sub></code>
+        of the RBF functions in the hidden layer are chosen.
+        This step can be performed in several ways; centers can be randomly
+        sampled from some set of examples, or they can be determined
+        using k-means clustering. Note that this step is unsupervised.</p>
+
+    <p>The second step simply fits a linear model with coefficients <code>w<sub>i</sub></code> to
+        the hidden layer's outputs with respect to some objective function.
+        A common objective function, at least for regression/function estimation,
+        is the least squares function.</p>
+
+    <p>A optional third backpropagation step can be performed to fine-tune all of the RBF
+        network's parameters.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_8" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def rbfnet[T](x: Array[T], y: Array[Double], neurons: Array[RBF[T]], normalized: Boolean): RBFNetwork[T]
+
+    def rbfnet(x: Array[Array[Double]], y: Array[Double], k: Int, normalized: Boolean = false): RBFNetwork[Array[Double]]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RBFNetwork {
+        public static RBFNetwork&lt;T&gt; fit(T[] x, int[] y, RBF&lt;T&gt;[] rbf, boolean normalized);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; rbfnet(x: Array&lt;T&gt;, y: DoubleArray, neurons: Array&lt;RBF&lt;T&gt;&gt;, normalized: Boolean = false): RBFNetwork&lt;T&gt;
+
+    fun rbfnet(x: Array&lt;DoubleArray&gt;, y: DoubleArray, k: Int, normalized: Boolean = false): RBFNetwork&lt;DoubleArray&gt;
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The popular choices for &phi; comprise the Gaussian function and the so
+        called thin plate splines. The advantage of the thin plate splines is that
+        their conditioning is invariant under scalings. Gaussian, multi-quadric
+        and inverse multi-quadric are infinitely smooth and and involve a scale
+        or shape parameter, r<sub><small>0</small></sub> &gt; 0. Decreasing
+        r<sub><small>0</small></sub> tends to flatten the basis function. For a
+        given function, the quality of approximation may strongly depend on this
+        parameter. In particular, increasing r<sub><small>0</small></sub> has the
+        effect of better conditioning (the separation distance of the scaled points
+        increases).</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_9" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val y = diabetes("y").toDoubleArray
+    val x = diabetes.select(1 until 11).toArray // use only the primary attributes
+    cv.regression(10, x, y) { case (x, y) => smile.regression.rbfnet(x, y, 10) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var y = diabetes.column("y").toDoubleArray();
+    var x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray(); // use only the primary attributes
+    CrossValidation.regression(10, x, y, (x, y) -> smile.regression.RBFNetwork.fit(x, y, RBF.fit(x, 10), false));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    val y = diabetes.column("y").toDoubleArray()
+    val x = diabetes.select(1, 2, 3, 4, 5, 6, 7, 8, 9, 10).toArray() // use only the primary attributes
+    CrossValidation.regression(10, x, y, { x, y -> rbfnet(x, y, RBF.fit(x, 10), false) })
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Note that we use the fully qualified name <code>smile.regression.rbfnet</code>
+        in above example.
+        The reason is that we import both <code>smile.regression._</code> and
+        <code>smile.classification._</code> in the shell. And by Scala's scope rule,
+        the later imported names shadow the same ones in earlier imported packages.
+        If you work only on regression problems in a shell session, just import
+        <code>smile.regression._</code> again to avoid using the fully qualified names.</p>
+
+    <p>A variant on RBF networks is normalized radial basis function (NRBF)
+        networks, in which we require the sum of the basis functions to be unity.
+        NRBF arises more naturally from a Bayesian statistical perspective. However,
+        there is no evidence that either the NRBF method is consistently superior
+        to the RBF method, or vice versa.</p>
+
+    <h2 id="svr">Support Vector Regression</h2>
+
+    <p>Support vector machine can be used as a regression method, maintaining
+        all the main features of the algorithm. In the case of regression, a margin
+        of tolerance &epsilon; is set in approximation. The goal of SVR is to find
+        a function that has at most &epsilon; deviation from the response variable
+        for all the training data, and at the same time is as flat as possible.
+        In other words, we do not care about errors as long as they are less than &epsilon;,
+        but will not accept any deviation larger than this.</p>
+
+    <p>Like SVM for classification, nonlinear SVR employs kernel trick for implict mapping.
+        And the model produced by SVR depends only on a subset of the training data, because the cost
+        function ignores any training data close to the model prediction (within
+        the &epsilon; threshold).</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_10" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def svr[T](x: Array[T],
+               y: Array[Double],
+               kernel: MercerKernel[T],
+               eps: Double,
+               C: Double,
+               tol: Double = 1E-3): KernelMachine[T]
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class SVR {
+        public static KernelMachine&lt;T&gt; fit(T[] x,
+                                                 double[] y,
+                                                 MercerKernel&lt;T&gt; kernel,
+                                                 double eps,
+                                                 double C,
+                                                 double tol);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun &lt;T&gt; svr(x: Array&lt;T&gt;,
+               y: DoubleArray,
+               kernel: MercerKernel&lt;T&gt;,
+               eps: Double,
+               C: Double,
+               tol: Double = 1E-3): KernelMachine&lt;T&gt;
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>kernel</code> is the kernel function,
+        <code>eps</code> is the loss function error threshold,
+        <code>C</code> is the soft margin penalty parameter,
+        <code>weight</code> is the optional positive instance weight so that the soft margin penalty
+        parameter for instance <i>i</i> will be <code>weight(i) * C</code>,
+        and <code>tol</code> the tolerance of convergence test.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_11" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    cv.regression(10, x, y) { case (x, y) => svr(x, y, new GaussianKernel(0.06), 20, 10) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, x, y, (x, y) -> SVR.fit(x, y, new GaussianKernel(0.06), 20, 10, 1E-3));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, x, y, { x, y -> svr(x, y, GaussianKernel(0.06), 20.0, 10.0, 1E-3) })
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Applying SVR to the diabetes data, we observe a smaller RMSE by 10-fold cross validation
+        compared to the RBF networks in previous section. Note that we have not optimized the hyperparameters in both cases.</p>
+
+    <h2 id="tree">Regression Tree</h2>
+
+    <p>Similar to decision trees, regression trees can be learned by
+        splitting the training set into subsets based on an attribute value
+        test. This process is repeated on each derived subset in a recursive
+        manner called recursive partitioning. The recursion is completed when
+        the subset at a node all has the same value of the target variable,
+        or when splitting no longer adds value to the predictions.</p>
+        
+    <p>The algorithms that are used for constructing decision trees usually
+        work top-down by choosing a variable at each step that is the next best
+        variable to use in splitting the set of items. "Best" is defined by how
+        well the variable splits the set into homogeneous subsets that have
+        the same value of the target variable. Different algorithms use different
+        formulae for measuring "best". Used by the CART algorithm, Gini impurity
+        is a measure of how often a randomly chosen element from the set would
+        be incorrectly labeled if it were randomly labeled according to the
+        distribution of labels in the subset. Gini impurity can be computed by
+        summing the probability of each item being chosen times the probability
+        of a mistake in categorizing that item. It reaches its minimum (zero) when
+        all cases in the node fall into a single target category. Information gain
+        is another popular measure, used by the ID3, C4.5 and C5.0 algorithms.
+        Information gain is based on the concept of entropy used in information
+        theory. For categorical variables with different number of levels, however,
+        information gain are biased in favor of those attributes with more levels.
+        Instead, one may employ the information gain ratio, which solves the drawback
+        of information gain.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_12" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def cart(formula: Formula,
+             data: DataFrame,
+             splitRule: SplitRule = SplitRule.GINI,
+             maxDepth: Int = 20,
+             maxNodes: Int = 0,
+             nodeSize: Int = 5): RegressionTree
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RegressionTree {
+         public static RegressionTree fit(Formula formula,
+                                          DataFrame data,
+                                          SplitRule rule,
+                                          int maxDepth,
+                                          int maxNodes,
+                                          int nodeSize);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun cart(formula: Formula,
+             data: DataFrame,
+             splitRule: SplitRule = SplitRule.GINI,
+             maxDepth: Int = 20,
+             maxNodes: Int = 0,
+             nodeSize: Int = 5): RegressionTree
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>maxNodes</code> is the maximum number of leaf nodes in the tree as a regularization,
+        and The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
+        <code>smile.regression.randomForest</code> in the shell for regression.</p>
+
+    <p>Applying to the diabetes data, we get RMSE 67.9 for 10-fold cross validation
+        with regression trees of 200 nodes.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_13" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_13" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_13" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.cart(formula, data, 200) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> RegressionTree.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_13">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> cart(formula, data) })
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Classification and Regression Tree techniques have a number of advantages
+        over many of those alternative techniques.</p>
+
+    <dl>
+        <dt>Simple to understand and interpret:</dt>
+        <dd><p>In most cases, the interpretation of results summarized in a tree is
+            very simple. This simplicity is useful not only for purposes of rapid
+            classification of new observations, but can also often yield a much simpler
+            "model" for explaining why observations are classified or predicted in a
+            particular manner.</p></dd>
+
+        <dt>Able to handle both numerical and categorical data:</dt>
+        <dd><p>Other techniques are usually specialized in analyzing datasets that
+            have only one type of variable.</p></dd>
+
+        <dt>Nonparametric and nonlinear:</dt>
+        <dd><p>The final results of using tree methods for classification or regression
+            can be summarized in a series of (usually few) logical if-then conditions
+            (tree nodes). Therefore, there is no implicit assumption that the underlying
+            relationships between the predictor variables and the dependent variable
+            are linear, follow some specific non-linear link function, or that they
+            are even monotonic in nature. Thus, tree methods are particularly well
+            suited for data mining tasks, where there is often little a priori
+            knowledge nor any coherent set of theories or predictions regarding which
+            variables are related and how. In those types of data analytics, tree
+            methods can often reveal simple relationships between just a few variables
+            that could have easily gone unnoticed using other analytic techniques.</p></dd>
+    </dl>
+
+    <p>One major problem with classification and regression trees is their high
+        variance. Often a small change in the data can result in a very different
+        series of splits, making interpretation somewhat precarious. Besides,
+        decision-tree learners can create over-complex trees that cause over-fitting.
+        Mechanisms such as pruning are necessary to avoid this problem.
+        Another limitation of trees is the lack of smoothness of the prediction
+        surface.</p>
+        
+    <p>Some techniques such as bagging, boosting, and random forest use more than
+        one decision tree for their analysis.</p>
+
+    <h2 id="forest">Random Forest</h2>
+
+    <p>Random forest is an ensemble classifier
+        that consists of many decision trees and outputs the majority vote of
+        individual trees. The method combines bagging idea and the random
+        selection of features.</p>
+        
+    <p>Each tree is constructed using the following algorithm:</p>
+        
+    <ol>
+        <li>If the number of cases in the training set is N, randomly sample N cases
+        with replacement from the original data. This sample will
+        be the training set for growing the tree.</li>
+
+        <li> If there are M input variables, a number m &lt;&lt; M is specified such
+        that at each node, m variables are selected at random out of the M and
+        the best split on these m is used to split the node. The value of m is
+        held constant during the forest growing.</li>
+
+        <li>Each tree is grown to the largest extent possible. There is no pruning.</li>
+    </ol>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_14" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_14" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_14" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def randomForest(formula: Formula,
+                     data: DataFrame,
+                     ntrees: Int = 500,
+                     mtry: Int = 0,
+                     maxDepth: Int = 20,
+                     maxNodes: Int = 0,
+                     nodeSize: Int = 5,
+                     subsample: Double = 1.0): RandomForest
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_14">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class RandomForest {
+         public static RandomForest fit(Formula formula,
+                                        DataFrame data,
+                                        int ntrees,
+                                        int mtry,
+                                        int maxDepth,
+                                        int maxNodes,
+                                        int nodeSize,
+                                        double subsample,
+                                        LongStream seeds);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun randomForest(formula: Formula,
+                     data: DataFrame,
+                     ntrees: Int = 500,
+                     mtry: Int = 0,
+                     maxDepth: Int = 20,
+                     maxNodes: Int = 0,
+                     nodeSize: Int = 5,
+                     subsample: Double = 1.0): RandomForest
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where <code>ntrees</code> is the number of trees,
+        <code>nodeSize</code> is the number of instances in a node below which the tree will
+        not split, setting nodeSize = 5 generally gives good results,
+        and <code>maxNodes</code> is the maximum number of leaf nodes.
+        The parameter <code>mtry</code> is the number of input variables to be used to determine the decision
+        at a node of the tree. The default value p/3 seems to give generally good performance,
+        where p is the number of variables.
+        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
+        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
+        sampling without replacement.
+        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
+        <code>smile.regression.randomForest</code> in the shell for regression.</p>
+
+    <p>Applying to the diabetes data, we get RMSE 56.4 for 10-fold cross validation
+        with 500 regression trees of 200 nodes, which significantly smaller than
+        a single regression tree.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_15" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_15" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_15" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_15">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.randomForest(formula, data, maxNodes = 100) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.RandomForest.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_15">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> randomForest(formula, data) })
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The advantages of random forest are:</p>
+        
+    <ul>
+        <li>For many data sets, it produces a highly accurate classifier.</li>
+        <li>It runs efficiently on large data sets.</li>
+        <li>It can handle thousands of input variables without variable deletion.</li>
+        <li>It gives estimates of what variables are important in the classification.</li>
+        <li>It generates an internal unbiased estimate of the generalization error
+        as the forest building progresses.</li>
+        <li>It has an effective method for estimating missing data and maintains
+        accuracy when a large proportion of the data are missing.</li>
+    </ul>
+        
+    <p>The disadvantages are</p>
+        
+    <ul>
+        <li>Random forests are prone to over-fitting for some datasets. This is
+        even more pronounced on noisy data.</li>
+
+        <li>For data including categorical variables with different number of
+        levels, random forests are biased in favor of those attributes with more
+        levels. Therefore, the variable importance scores from random forest are
+        not reliable for this type of data.</li>
+    </ul>
+
+    <h2 id="gbm">Gradient Boosting</h2>
+
+    <p>Gradient boosting is typically used
+        with decision trees (especially CART regression trees) of a fixed size as
+        base learners. For this special case Friedman proposes a modification to
+        gradient boosting method which improves the quality of fit of each base
+        learner.</p>
+        
+    <p>Generic gradient boosting at the <i>t</i>-th step would fit a regression tree to
+        pseudo-residuals. Let J be the number of its leaves. The tree partitions
+        the input space into J disjoint regions and predicts a constant value in
+        each region. The parameter J controls the maximum allowed
+        level of interaction between variables in the model. With J = 2 (decision
+        stumps), no interaction between variables is allowed. With J = 3 the model
+        may include effects of the interaction between up to two variables, and
+        so on. Hastie et al. comment that typically 4 &le; J &le; 8 work well
+        for boosting and results are fairly insensitive to the choice of in
+        this range, J = 2 is insufficient for many applications, and J &gt; 10 is
+        unlikely to be required.</p>
+        
+    <p>Fitting the training set too closely can lead to degradation of the model's
+        generalization ability. Several so-called regularization techniques reduce
+        this over-fitting effect by constraining the fitting procedure.
+        One natural regularization parameter is the number of gradient boosting
+        iterations T (i.e. the number of trees in the model when the base learner
+        is a decision tree). Increasing T reduces the error on training set,
+        but setting it too high may lead to over-fitting. An optimal value of T
+        is often selected by monitoring prediction error on a separate validation
+        data set.</p>
+        
+    <p>Another regularization approach is the shrinkage which times a parameter
+        &eta; (called the "learning rate") to update term.
+        Empirically it has been found that using small learning rates (such as
+        &eta; &lt; 0.1) yields dramatic improvements in model's generalization ability
+        over gradient boosting without shrinking (&eta; = 1). However, it comes at
+        the price of increasing computational time both during training and
+        prediction: lower learning rate requires more iterations.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_16" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_16" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_16" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    def gbm(formula: Formula,
+            data: DataFrame,
+            loss: Loss = Loss.ls(),
+            ntrees: Int = 500,
+            maxDepth: Int = 20,
+            maxNodes: Int = 6,
+            nodeSize: Int = 5,
+            shrinkage: Double = 0.05,
+            subsample: Double = 0.7): GradientTreeBoost
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_16">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GradientTreeBoost {
+         public static GradientTreeBoost fit(Formula formula,
+                                             DataFrame data,
+                                             Loss loss,
+                                             int ntrees,
+                                             int maxDepth,
+                                             int maxNodes,
+                                             int nodeSize,
+                                             double shrinkage,
+                                             double subsample);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_16">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    fun gbm(formula: Formula,
+            data: DataFrame,
+            loss: Loss = Loss.ls(),
+            ntrees: Int = 500,
+            maxDepth: Int = 20,
+            maxNodes: Int = 6,
+            nodeSize: Int = 5,
+            shrinkage: Double = 0.05,
+            subsample: Double = 0.7): GradientTreeBoost
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>ntrees</code> is the number of trees,
+        and <code>maxNodes</code> is the maximum number of leaf nodes.
+        The parameter <code>loss</code> is the loss function for regression. By default, least absolute
+        deviation is employed for robust regression.
+        The parameter <code>shrinkage</code> is the shrinkage parameter in (0, 1] controls the learning rate of procedure.
+        Besides, <code>subsample</code> is the sampling rate for training tree. The default value
+        1.0 means sampling with replacement. Otherwise, the value &lt; 1.0 means
+        sampling without replacement.
+        The optional <code>attributes</code> is the attribute properties. If not provided, all attributes
+        are treated as numeric values.</p>
+
+    <p>Similar to <code>rbfnet</code>, we have to use the fully qualified name
+        <code>smile.regression.gbm</code> in the shell for regression.</p>
+
+    <p>Applying to the diabetes data, we get RMSE 58.8 for 10-fold cross validation
+        with 500 iterations. This is comparable to the result of random forest but
+        uses only 6 nodes for each regression tree.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_17" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_17" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_17" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_17">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    cv.regression(10, "y"~, diabetes) { (formula, data) => smile.regression.gbm(formula, data) }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, (formula, data) -> smile.regression.GradientTreeBoost.fit(formula, data));
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_17">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, Formula.lhs("y"), diabetes, { formula, data -> gbm(formula, data) })
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Soon after the introduction of gradient boosting Friedman proposed a
+        minor modification to the algorithm, motivated by Breiman's bagging method.
+        Specifically, he proposed that at each iteration of the algorithm, a base
+        learner should be fit on a subsample of the training set drawn at random
+        without replacement. Friedman observed a substantial improvement in
+        gradient boosting's accuracy with this modification.</p>
+        
+    <p>Subsample size is some constant fraction f of the size of the training set.
+        When f = 1, the algorithm is deterministic and identical to the one
+        described above. Smaller values of f introduce randomness into the
+        algorithm and help prevent over-fitting, acting as a kind of regularization.
+        The algorithm also becomes faster, because regression trees have to be fit
+        to smaller datasets at each iteration. Typically, f is set to 0.5, meaning
+        that one half of the training set is used to build each base learner.</p>
+        
+    <p>Also, like in bagging, sub-sampling allows one to define an out-of-bag
+        estimate of the prediction performance improvement by evaluating predictions
+        on those observations which were not used in the building of the next
+        base learner. Out-of-bag estimates help avoid the need for an independent
+        validation dataset, but often underestimate actual performance improvement
+        and the optimal number of iterations.</p>
+        
+    <p>Gradient tree boosting implementations often also use regularization by
+        limiting the minimum number of observations in trees' terminal nodes.
+        It's used in the tree building process by ignoring any splits that lead
+        to nodes containing fewer than this number of training set instances.
+        Imposing this limit helps to reduce variance in predictions at leaves.</p>
+
+    <h2 id="gp">Gaussian Process</h2>
+
+    <p>A Gaussian process is a stochastic process
+        whose realizations consist of random values associated with every point in
+        a range of times (or of space) such that each such random variable has
+        a normal distribution. Moreover, every finite collection of those random
+        variables has a multivariate normal distribution.</p>
+        
+    <p>A Gaussian process can be used as a prior probability distribution over
+        functions in Bayesian inference. Given any set of N points in the desired
+        domain of your functions, take a multivariate Gaussian whose covariance
+        matrix parameter is the Gram matrix of N points with some desired kernel,
+        and sample from that Gaussian. Inference of continuous values with a
+        Gaussian process prior is known as Gaussian process regression.</p>
+        
+    <p>The fitting is performed in the reproducing kernel Hilbert space with
+        the "kernel trick". The loss function is squared-error. This also arises
+        as the kriging estimate of a Gaussian random field in spatial statistics.</p>
+
+    <p>A significant problem with Gaussian process prediction is that it typically
+        scales as O(n<sup>3</sup>). For large problems (e.g. n &gt; 10,000) both
+        storing the Gram matrix and solving the associated linear systems are
+        prohibitive on modern workstations. An extensive range of proposals have
+        been suggested to deal with this problem. A popular approach is the
+        reduced-rank Approximations of the Gram Matrix, known as Nystrom approximation.
+        Greedy approximation is another popular approach that uses an active set of
+        training points of size m selected from the training set of size n &gt; m.
+        We assume that it is impossible to search for the optimal subset of size m
+        due to combinatorics. The points in the active set could be selected
+        randomly, but in general we might expect better performance if the points
+        are selected greedily w.r.t. some criterion. Recently, researchers had
+        proposed relaxing the constraint that the inducing variables must be a
+        subset of training/test cases, turning the discrete selection problem
+        into one of continuous optimization.</p>
+
+    <p>This function fits a regular Gaussian process model.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_18" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_18" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_18" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    object gpr {
+        // regular Gaussian process model
+        def apply[T](x: Array[T], y: Array[Double], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+        // approximate Gaussian process model
+        def approx[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+        // Nystrom approximation
+        def nystrom[T](x: Array[T], y: Array[Double], t: Array[T], kernel: MercerKernel[T], lambda: Double): KernelMachine[T]
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_18">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class GaussianProcessRegression {
+        // regular Gaussian process model
+         public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, MercerKernel&lt;T&gt; kernel, double lambda);
+        // approximate Gaussian process model
+        public static KernelMachine&lt;T&gt; fit(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
+        // Nystrom approximation
+        public static KernelMachine&lt;T&gt; nystrom(T[] x, double[] y, T[] t, MercerKernel&lt;T&gt; kernel, double lambda);
+    }
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_18">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-kotlin"><code>
+    // regular Gaussian process model
+    fun &lt;T&gt; gpr(x: Array&lt;T&gt;, y: DoubleArray, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+
+    object gpr {
+        // approximate Gaussian process model
+        def &lt;T&gt; approx(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+        // Nystrom approximation
+        def &lt;T&gt; nystrom(x: Array&lt;T&gt;, y: DoubleArray, t: Array&lt;T&gt;, kernel: MercerKernel&lt;T&gt;, lambda: Double): KernelMachine&lt;T&gt;
+    }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>where the parameter <code>x</code> is the training data,
+        <code>y</code> is the response variable,
+        <code>kernel</code> is the Mercer kernel function,
+        and <code>lambda</code> is the shrinkage/regularization parameter.
+        The last two methods fit approximate models.
+        For approximation models, the parameter <code>t</code> is the inducing input,
+        which are pre-selected or inducing samples
+        acting as active set of regressors. In simple case, these can be chosen
+        randomly from the training set or as the centers of k-means clustering.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_19" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_19" data-toggle="tab">Java</a></li>
+        <li><a href="#kotlin_19" data-toggle="tab">Kotlin</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_19">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    cv.regression(10, x, y) { (x, y) =>
+        val t = kmeans(x, 20).centroids
+        gpr.approx(x, y, t, new GaussianKernel(0.06), 0.01)
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    CrossValidation.regression(10, x, y, (x, y) -> {
+        var t = KMeans.fit(x, 20).centroids;
+        return GaussianProcessRegression.fit(x, y, t, new GaussianKernel(0.06), 0.01);
+    });
+          </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="kotlin_19">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-kotlin"><code>
+    CrossValidation.regression(10, x, y, { x, y ->
+        val t = kmeans(x, 20).centroids
+        gpr.approx(x, y, t, GaussianKernel(0.06), 0.01)
+    })
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the above example, we train the approximate Gaussian Process models
+        with inducing samples by k-means clustering. The hyperparameters are not
+        optimized yet though.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="classification.html" title="Previous Section: Classification"><span>Classification</span></a>
+        <a class="btn-next-text" href="feature.html" title="Next Section: Features"><span>Features</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

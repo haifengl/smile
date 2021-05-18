@@ -1,19 +1,27 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.projection;
+
+import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.data.formula.Formula;
+import smile.io.Read;
 
 import java.awt.BorderLayout;
 import java.awt.FlowLayout;
@@ -28,10 +36,6 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-
 @SuppressWarnings("serial")
 public abstract class ProjectionDemo extends JPanel implements Runnable, ActionListener {
 
@@ -42,25 +46,34 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
 
     private static String[] datasource = {
         "classification/iris.txt",
-        "projection/USArrests.txt",
-        "projection/food.txt",
+        "clustering/USArrests.txt",
+        "clustering/food.txt",
         "classification/pendigits.txt",
-        "projection/COMBO17.dat"
+        "clustering/COMBO17.dat"
     };
 
-    protected static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    protected static DataFrame[] dataset = new DataFrame[datasetName.length];
+    protected static Formula[] formula = {
+            Formula.lhs("Species"),
+            Formula.rhs("Murder", "Assault", "UrbanPop", "Rape"),
+            null,
+            Formula.lhs("V17"),
+            null,
+    };
     protected static int datasetIndex = 0;
     
     JPanel optionPane;
     JComponent canvas;
     private JButton startButton;
     private JComboBox<String> datasetBox;
-    protected char pointLegend = '.';
+    protected char mark = '.';
 
     /**
      * Constructor.
      */
     public ProjectionDemo() {
+        loadData(datasetIndex);
+
         startButton = new JButton("Start");
         startButton.setActionCommand("startButton");
         startButton.addActionListener(this);
@@ -87,7 +100,7 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
      * Execute the projection algorithm and return a swing JComponent representing
      * the clusters.
      */
-    public abstract JComponent learn();
+    public abstract JComponent learn(double[][] data, int[] labels, String[] names);
 
     @Override
     public void run() {
@@ -95,16 +108,33 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		if (canvas != null)
-        			remove(canvas);
-        		canvas = plot;
-        		add(plot, BorderLayout.CENTER);
-        	}
-        	validate();
+            double[][] data;
+            int[] labels = null;
+            String[] names = null;
+
+            if (formula[datasetIndex] == null) {
+                data = dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT);
+            } else {
+                DataFrame datax = formula[datasetIndex].x(dataset[datasetIndex]);
+                data = datax.toArray(false, CategoricalEncoder.ONE_HOT);
+                if (datasetIndex == 1) {
+                    names = dataset[datasetIndex].stringVector(0).toArray();
+                } else {
+                    labels = formula[datasetIndex].y(dataset[datasetIndex]).toIntArray();
+                }
+            }
+
+            JComponent plot = learn(data, labels, names);
+            if (plot != null) {
+                if (canvas != null)
+                    remove(canvas);
+                canvas = plot;
+                add(plot, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
+            ex.printStackTrace();
         }
         
         startButton.setEnabled(true);
@@ -115,42 +145,32 @@ public abstract class ProjectionDemo extends JPanel implements Runnable, ActionL
     public void actionPerformed(ActionEvent e) {
         if ("startButton".equals(e.getActionCommand())) {
             datasetIndex = datasetBox.getSelectedIndex();
-            
-            if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-                if (datasetIndex < 5 && datasetIndex != 3) {
-                    parser.setColumnNames(true);
-                }
-                if (datasetIndex == 1) {
-                    parser.setRowNames(true);
-                }
-                if (datasetIndex == 0) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 4);
-                }
-                if (datasetIndex == 3) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 16);
-                }
-                if (datasetIndex >= 5) {
-                    parser.setResponseIndex(new NominalAttribute("class"), 4);
-                }
-
-                try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
-                } catch (Exception ex) {
-                    JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
-                    System.out.println(ex);
-                }
-            }
+            loadData(datasetIndex);
 
             if (dataset[datasetIndex].size() < 500) {
-                pointLegend = 'o';
+                mark = 'o';
             } else {
-                pointLegend = '.';
+                mark = '.';
             }
             
             Thread thread = new Thread(this);
             thread.start();
+        }
+    }
+
+    private void loadData(int datasetIndex) {
+        if (dataset[datasetIndex] != null) return;
+
+        CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+        if (datasetIndex != 3) {
+            format = format.withFirstRecordAsHeader();
+        }
+
+        try {
+            dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(null, String.format("Failed to load dataset %s", datasetName[datasetIndex]), "ERROR", JOptionPane.ERROR_MESSAGE);
+            System.out.println(ex);
         }
     }
 }

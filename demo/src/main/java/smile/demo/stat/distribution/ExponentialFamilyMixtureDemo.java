@@ -1,33 +1,32 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.demo.stat.distribution;
 
 import java.awt.Color;
 import java.awt.GridLayout;
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
-import smile.math.Math;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.QQPlot;
+import smile.math.MathEx;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.ExponentialDistribution;
 import smile.stat.distribution.ExponentialFamilyMixture;
 import smile.stat.distribution.GammaDistribution;
@@ -58,40 +57,28 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        List<Mixture.Component> m = new ArrayList<>();
-        Mixture.Component c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new GaussianDistribution(0.0, 1.0);
-        m.add(c);
+        ExponentialFamilyMixture mixture = ExponentialFamilyMixture.fit(data,
+                new Mixture.Component(0.25, new GaussianDistribution(0.0, 1.0)),
+                new Mixture.Component(0.25, new ExponentialDistribution(1.0)),
+                new Mixture.Component(0.5, new GammaDistribution(1.0, 2.0))
+                );
 
-        c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new ExponentialDistribution(1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.5;
-        c.distribution = new GammaDistribution(1.0, 2.0);
-        m.add(c);
-
-        ExponentialFamilyMixture mixture = new ExponentialFamilyMixture(m, data);
-
-        PlotCanvas canvas = Histogram.plot(data, 50);
+        Canvas canvas = Histogram.of(data, 50, true).canvas();
         canvas.setTitle("Mixture of Gaussian, Exponential, and Gamma");
-        add(canvas);
+        add(canvas.panel());
 
-        double width = (Math.max(data) - Math.min(data)) / 50;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 50;
         double[][] p = new double[400][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
+        canvas.add(LinePlot.of(p, Color.RED));
 
-        canvas = QQPlot.plot(data, mixture);
+        canvas = QQPlot.of(data, mixture).canvas();
         canvas.setTitle("Q-Q Plot");
-        add(canvas);
+        add(canvas.panel());
     }
 
     @Override
@@ -115,40 +102,27 @@ public class ExponentialFamilyMixtureDemo extends JPanel {
         for (int i = 1000; i < 2000; i++)
             data[i] = gamma.rand();
 
-        List<Mixture.Component> m = new ArrayList<>();
-        Mixture.Component c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new GaussianDistribution(0.0, 1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new ExponentialDistribution(1.0);
-        m.add(c);
-
-        c = new Mixture.Component();
-        c.priori = 0.25;
-        c.distribution = new GammaDistribution(1.0, 2.0);
-        m.add(c);
-
-        ExponentialFamilyMixture mixture = new ExponentialFamilyMixture(m, data);
+        ExponentialFamilyMixture mixture = ExponentialFamilyMixture.fit(data,
+                new Mixture.Component(0.25, new GaussianDistribution(0.0, 1.0)),
+                new Mixture.Component(0.25, new ExponentialDistribution(1.0)),
+                new Mixture.Component(0.5, new GammaDistribution(1.0, 2.0))
+        );
         System.out.println(mixture);
 
         JFrame frame = new JFrame("Mixture of Exponential Family Distributions");
-        PlotCanvas canvas = Histogram.plot(data, 50);
-        frame.add(canvas);
+        frame.setSize(1000, 1000);
+        Canvas canvas = Histogram.of(data, 50, true).canvas();
+        frame.add(canvas.panel());
 
-        double width = (Math.max(data) - Math.min(data)) / 50;
+        double width = (MathEx.max(data) - MathEx.min(data)) / 50;
         double[][] p = new double[400][2];
         for (int i = 0; i < p.length; i++) {
             p[i][0] = -10 + i*0.1;
             p[i][1] = mixture.p(p[i][0]) * width;
         }
 
-        canvas.line(p, Color.RED);
-
-        frame.add(QQPlot.plot(data, mixture));
-
+        canvas.add(LinePlot.of(p, Color.RED));
+        frame.add(QQPlot.of(data, mixture).canvas().panel());
         frame.setVisible(true);
     }
 }

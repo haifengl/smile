@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.math.matrix;
 
@@ -21,6 +22,7 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import smile.math.blas.UPLO;
 import static org.junit.Assert.*;
 
 /**
@@ -48,43 +50,149 @@ public class BandMatrixTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of solve method, of class BandMatrix.
-     */
     @Test
-    public void testSolve() {
-        System.out.println("solve");
+    public void testFloatBandMatrix() {
+        System.out.println("FloatBandMatrix");
+        float[][] A = {
+            {0.9000f, 0.4000f, 0.0000f},
+            {0.4000f, 0.5000f, 0.3000f},
+            {0.0000f, 0.3000f, 0.8000f}
+        };
+        float[] b = {0.5f, 0.5f, 0.5f};
+
+        FloatMatrix a = new FloatMatrix(A);
+        FloatMatrix.LU lu = a.lu();
+        float[] x = lu.solve(b);
+
+        FloatBandMatrix band = new FloatBandMatrix(3, 3, 1, 1);
+        for (int i = 0; i < A.length; i++) {
+            for (int j = 0; j < A[i].length; j++) {
+                if (A[i][j] != 0.0f) {
+                    band.set(i, j, A[i][j]);
+                }
+            }
+        }
+
+        float[] y = a.mv(x);
+        float[] y2 = band.mv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
+        }
+
+        y = a.tv(x);
+        y2 = band.tv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
+        }
+
+        FloatBandMatrix.LU bandlu = band.lu();
+        float[] lux = bandlu.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), bandlu.det(), 1E-7f);
+        // solution vector
+        assertEquals(x.length, lux.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], lux[i], 1E-7f);
+        }
+
+        // Upper band matrix
+        band.uplo(UPLO.UPPER);
+        FloatBandMatrix.Cholesky cholesky = band.cholesky();
+        float[] choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-6f);
+        }
+
+        // Lower band matrix
+        band.uplo(UPLO.LOWER);
+        cholesky = band.cholesky();
+        choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-6f);
+        }
+    }
+
+    @Test
+    public void testBandMatrix() {
+        System.out.println("BandMatrix");
         double[][] A = {
-            {0.9000, 0.4000, 0.0000},
-            {0.4000, 0.5000, 0.3000},
-            {0.0000, 0.3000, 0.8000}
+                {0.9000, 0.4000, 0.0000},
+                {0.4000, 0.5000, 0.3000},
+                {0.0000, 0.3000, 0.8000}
         };
         double[] b = {0.5, 0.5, 0.5};
 
-        DenseMatrix a = Matrix.newInstance(A);
-        LU lu = a.lu();
-        double[] x = b.clone();
-        lu.solve(x);
+        Matrix a = new Matrix(A);
+        Matrix.LU lu = a.lu();
+        double[] x = lu.solve(b);
 
-        BandMatrix instance = new BandMatrix(3, 1, 1);
+        BandMatrix band = new BandMatrix(3, 3, 1, 1);
         for (int i = 0; i < A.length; i++) {
-            for (int j = 0; j < A[i].length; j++)
-                if (A[i][j] != 0.0)
-                    instance.set(i, j, A[i][j]);
+            for (int j = 0; j < A[i].length; j++) {
+                if (A[i][j] != 0.0f) {
+                    band.set(i, j, A[i][j]);
+                }
+            }
         }
 
-        instance.decompose();
-        double[] result = new double[b.length];
-        instance.solve(b, result);
-
-        assertEquals(result.length, x.length);
-        for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-7);
+        double[] y = a.mv(x);
+        double[] y2 = band.mv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
         }
 
-        instance.improve(b, result);
+        y = a.tv(x);
+        y2 = band.tv(x);
+        for (int i = 0; i < y.length; i++) {
+            assertEquals(y[i], y2[i], 1E-7f);
+        }
+
+        BandMatrix.LU bandlu = band.lu();
+        double[] lux = bandlu.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), bandlu.det(), 1E-7f);
+        // solution vector
+        assertEquals(x.length, lux.length);
         for (int i = 0; i < x.length; i++) {
-            assertEquals(result[i], x[i], 1E-15);
+            assertEquals(x[i], lux[i], 1E-7f);
+        }
+
+        // Upper band matrix
+        band.uplo(UPLO.UPPER);
+        BandMatrix.Cholesky cholesky = band.cholesky();
+        double[] choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-6f);
+        }
+
+        // Lower band matrix
+        band.uplo(UPLO.LOWER);
+        cholesky = band.cholesky();
+        choleskyx = cholesky.solve(b);
+
+        // determinant
+        assertEquals(lu.det(), cholesky.det(), 1E-7f);
+        // solution vector
+        assertEquals(choleskyx.length, x.length);
+        for (int i = 0; i < x.length; i++) {
+            assertEquals(x[i], choleskyx[i], 1E-6f);
         }
     }
 }

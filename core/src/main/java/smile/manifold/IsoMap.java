@@ -1,34 +1,31 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.manifold;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import java.io.Serializable;
 import smile.graph.AdjacencyList;
-import smile.graph.Graph;
 import smile.graph.Graph.Edge;
+import smile.math.MathEx;
+import smile.math.blas.UPLO;
+import smile.math.distance.Distance;
 import smile.math.distance.EuclideanDistance;
-import smile.math.Math;
+import smile.math.matrix.ARPACK;
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.EVD;
-import smile.neighbor.CoverTree;
-import smile.neighbor.KDTree;
-import smile.neighbor.KNNSearch;
-import smile.neighbor.Neighbor;
 
 /**
  * Isometric feature mapping. Isomap is a widely used low-dimensional embedding methods,
@@ -65,6 +62,7 @@ import smile.neighbor.Neighbor;
  * 
  * @see LLE
  * @see LaplacianEigenmap
+ * @see UMAP
  * 
  * <h2>References</h2>
  * <ol>
@@ -73,93 +71,105 @@ import smile.neighbor.Neighbor;
  * 
  * @author Haifeng Li
  */
-public class IsoMap {
-    private static final Logger logger = LoggerFactory.getLogger(IsoMap.class);
+public class IsoMap implements Serializable {
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(IsoMap.class);
 
     /**
      * The original sample index.
      */
-    private int[] index;
+    public final int[] index;
     /**
-     * Coordinate matrix.
+     * The coordinate matrix in embedding space.
      */
-    private double[][] coordinates;
+    public final double[][] coordinates;
     /**
-     * Nearest neighbor graph.
+     * The nearest neighbor graph.
      */
-    private Graph graph;
+    public final AdjacencyList graph;
 
     /**
-     * Constructor. C-Isomap algorithm by default.
-     * @param data the dataset.
+     * Constructor.
+     * @param index the original sample index.
+     * @param coordinates the coordinates.
+     * @param graph the nearest neighbor graph.
+     */
+    public IsoMap(int[] index, double[][] coordinates, AdjacencyList graph) {
+        this.index = index;
+        this.coordinates = coordinates;
+        this.graph = graph;
+    }
+
+    /**
+     * Runs the C-Isomap algorithm with Euclidean distance.
+     * @param data the input data.
+     * @param k k-nearest neighbor.
+     * @return the model.
+     */
+    public static IsoMap of(double[][] data, int k) {
+        return of(data, k, 2, true);
+    }
+
+    /**
+     * Runs the Isomap algorithm.
+     * @param data the input data.
      * @param d the dimension of the manifold.
      * @param k k-nearest neighbor.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @return the model.
      */
-    public IsoMap(double[][] data, int d, int k) {
-        this(data, d, k, true);
+    public static IsoMap of(double[][] data, int k, int d, boolean conformal) {
+        return of(data, new EuclideanDistance(), k, d, conformal);
+    }
+
+    /**
+     * Runs the C-Isomap algorithm.
+     * @param data the input data.
+     * @param k k-nearest neighbor.
+     * @param distance the distance function.
+     * @param <T> the data type of points.
+     * @return the model.
+     */
+    public static <T> IsoMap of(T[] data, Distance<T> distance, int k) {
+        return of(data, distance, k, 2, true);
     }
     
     /**
-     * Constructor.
-     * @param data the dataset.
-     * @param d the dimension of the manifold.
+     * Runs the Isomap algorithm.
+     * @param data the input data.
+     * @param distance the distance function.
      * @param k k-nearest neighbor.
-     * @param CIsomap C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param d the dimension of the manifold.
+     * @param conformal C-Isomap algorithm if true, otherwise standard algorithm.
+     * @param <T> the data type of points.
+     * @return the model.
      */
-    public IsoMap(double[][] data, int d, int k, boolean CIsomap) {
-        int n = data.length;
-
-        KNNSearch<double[], double[]> knn = null;
-        if (data[0].length < 10) {
-            knn = new KDTree<>(data, data);
+    public static <T> IsoMap of(T[] data, Distance<T> distance, int k, int d, boolean conformal) {
+        AdjacencyList graph;
+        if (!conformal) {
+            graph = NearestNeighborGraph.of(data, distance, k, false, null);
         } else {
-            knn = new CoverTree<>(data, new EuclideanDistance());
-        }
+            int n = data.length;
+            double[] M = new double[n];
+            graph = NearestNeighborGraph.of(data, distance, k, false, (v1, v2, weight, j) -> M[v1] += weight);
 
-        graph = new AdjacencyList(n);
-        double[] M = new double[n];
-        for (int i = 0; i < n; i++) {
-            Neighbor<double[], double[]>[] neighbors = knn.knn(data[i], k);
-
-            for (int j = 0; j < neighbors.length; j++) {
-                graph.setWeight(i, neighbors[j].index, neighbors[j].distance);
-                M[i] += neighbors[j].distance;
+            for (int i = 0; i < n; i++) {
+                M[i] = Math.sqrt(M[i] / k);
             }
-            M[i] = Math.sqrt(M[i] / neighbors.length);
-        }
 
-        // C-Isomap
-        if (CIsomap) {
             for (Edge edge : graph.getEdges()) {
                 edge.weight /= (M[edge.v1] * M[edge.v2]);
             }
         }
-        
-        // Use largest connected component.
-        int[][] cc = graph.bfs();
-        if (cc.length == 1) {
-            index = new int[n];
-            for (int i = 0; i < n; i++) {
-                index[i] = i;
-            }
-        } else {
-            n = 0;
-            int component = 0;
-            for (int i = 0; i < cc.length; i++) {
-                if (cc[i].length > n) {
-                    component = i;
-                    n = cc[i].length;
-                }
-            }
 
-            logger.info("IsoMap: {} connected components, largest one has {} samples.", cc.length, n);
+        // Use largest connected component of nearest neighbor graph.
+        NearestNeighborGraph nng = NearestNeighborGraph.largest(graph);
 
-            index = cc[component];
-            graph = graph.subgraph(index);
-        }
+        int[] index = nng.index;
+        int n = index.length;
+        graph = nng.graph;
 
         double[][] D = graph.dijkstra();
-
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
                 D[i][j] = -0.5 * D[i][j] * D[i][j];
@@ -167,10 +177,10 @@ public class IsoMap {
             }
         }
 
-        double[] mean = Math.rowMeans(D);
-        double mu = Math.mean(mean);
+        double[] mean = MathEx.rowMeans(D);
+        double mu = MathEx.mean(mean);
 
-        DenseMatrix B = Matrix.zeros(n, n);
+        Matrix B = new Matrix(n, n);
         for (int i = 0; i < n; i++) {
             for (int j = 0; j <= i; j++) {
                 double b = D[i][j] - mean[i] - mean[j] + mu;
@@ -179,49 +189,27 @@ public class IsoMap {
             }
         }
 
-        B.setSymmetric(true);
+        B.uplo(UPLO.LOWER);
+        Matrix.EVD eigen = ARPACK.syev(B, ARPACK.SymmOption.LA, d);
 
-        EVD eigen = B.eigen(d);
-
-        if (eigen.getEigenValues().length < d) {
-            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.getEigenValues().length);
-            d = eigen.getEigenValues().length;
+        if (eigen.wr.length < d) {
+            logger.warn("eigen({}) returns only {} eigen vectors", d, eigen.wr.length);
+            d = eigen.wr.length;
         }
 
-        DenseMatrix V = eigen.getEigenVectors();
-        coordinates = new double[n][d];
+        Matrix V = eigen.Vr;
+        double[][] coordinates = new double[n][d];
         for (int j = 0; j < d; j++) {
-            if (eigen.getEigenValues()[j] < 0) {
+            if (eigen.wr[j] < 0) {
                 throw new IllegalArgumentException(String.format("Some of the first %d eigenvalues are < 0.", d));
             }
 
-            double scale = Math.sqrt(eigen.getEigenValues()[j]);
+            double scale = Math.sqrt(eigen.wr[j]);
             for (int i = 0; i < n; i++) {
                 coordinates[i][j] = V.get(i, j) * scale;
             }
-        }        
-    }
+        }
 
-    /**
-     * Returns the original sample index. Because IsoMap is applied to the largest
-     * connected component of k-nearest neighbor graph, we record the the original
-     * indices of samples in the largest component.
-     */
-    public int[] getIndex() {
-        return index;
-    }
-
-    /**
-     * Returns the coordinates of projected data.
-     */
-    public double[][] getCoordinates() {
-        return coordinates;
-    }
-
-    /**
-     * Returns the nearest neighbor graph.
-     */
-    public Graph getNearestNeighborGraph() {
-        return graph;
+        return new IsoMap(index, coordinates, graph);
     }
 }

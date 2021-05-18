@@ -1,24 +1,23 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.imputation;
 
 import smile.math.matrix.Matrix;
-import smile.math.matrix.DenseMatrix;
-import smile.math.matrix.QR;
-import smile.math.matrix.SVD;
 
 /**
  * Missing value imputation with singular value decomposition. Given SVD
@@ -47,7 +46,7 @@ public class SVDImputation implements MissingValueImputation {
     /**
      * The number of eigenvectors used for imputation.
      */
-    private int k;
+    private final int k;
 
     /**
      * Constructor.
@@ -71,6 +70,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data a data set with missing values (represented as Double.NaN).
      * On output, missing values are filled with estimated values.
      * @param maxIter the maximum number of iterations.
+     * @throws MissingValueImputationException when the whole row or column is missing.
      */
     public void impute(double[][] data, int maxIter) throws MissingValueImputationException {
         if (maxIter < 1) {
@@ -103,7 +103,7 @@ public class SVDImputation implements MissingValueImputation {
             full[i] = data[i].clone();
         }
 
-        KMeansImputation.columnAverageImpute(full);
+        MissingValueImputation.imputeWithColumnAverage(full);
 
         for (int iter = 0; iter < maxIter; iter++) {
             svdImpute(data, full);
@@ -120,7 +120,7 @@ public class SVDImputation implements MissingValueImputation {
      * @param data the data with current imputations.
      */
     private void svdImpute(double[][] raw, double[][] data) {
-        SVD svd = Matrix.newInstance(data).svd();
+        Matrix.SVD svd = new Matrix(data).svd(true, true);
 
         int d = data[0].length;
 
@@ -138,27 +138,26 @@ public class SVDImputation implements MissingValueImputation {
                 continue;
             }
 
-            DenseMatrix A = Matrix.zeros(d - missing, k);
+            Matrix A = new Matrix(d - missing, k);
             double[] b = new double[d - missing];
 
             for (int j = 0, m = 0; j < d; j++) {
                 if (!Double.isNaN(raw[i][j])) {
                     for (int l = 0; l < k; l++) {
-                        A.set(m, l, svd.getV().get(j, l));
+                        A.set(m, l, svd.V.get(j, l));
                     }
                     b[m++] = raw[i][j];
                 }
             }
 
-            double[] s = new double[k];
-            QR qr = A.qr();
-            qr.solve(b, s);
+            Matrix.QR qr = A.qr(true);
+            double[] s = qr.solve(b);
 
             for (int j = 0; j < d; j++) {
                 if (Double.isNaN(raw[i][j])) {
                     data[i][j] = 0;
                     for (int l = 0; l < k; l++) {
-                        data[i][j] += s[l] * svd.getV().get(j, l);
+                        data[i][j] += s[l] * svd.V.get(j, l);
                     }
                 }
             }

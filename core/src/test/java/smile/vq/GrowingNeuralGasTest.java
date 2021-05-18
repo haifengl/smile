@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.vq;
 
@@ -21,12 +22,8 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.math.Math;
-import smile.data.AttributeDataset;
-import smile.data.NominalAttribute;
-import smile.data.parser.DelimitedTextParser;
-import smile.validation.AdjustedRandIndex;
-import smile.validation.RandIndex;
+import smile.data.USPS;
+import smile.math.MathEx;
 import static org.junit.Assert.*;
 
 /**
@@ -54,59 +51,39 @@ public class GrowingNeuralGasTest {
     public void tearDown() {
     }
 
-    /**
-     * Test of learn method, of class GrowingNeuralGas.
-     */
     @Test
     public void testUSPS() {
         System.out.println("USPS");
-        DelimitedTextParser parser = new DelimitedTextParser();
-        parser.setResponseIndex(new NominalAttribute("class"), 0);
-        try {
-            AttributeDataset train = parser.parse("USPS Train", smile.data.parser.IOUtils.getTestDataFile("usps/zip.train"));
-            AttributeDataset test = parser.parse("USPS Test", smile.data.parser.IOUtils.getTestDataFile("usps/zip.test"));
+        MathEx.setSeed(19650218); // to get repeatable results.
 
-            double[][] x = train.toArray(new double[train.size()][]);
-            int[] y = train.toArray(new int[train.size()]);
-            double[][] testx = test.toArray(new double[test.size()][]);
-            int[] testy = test.toArray(new int[test.size()]);
-            
-            GrowingNeuralGas gng = new GrowingNeuralGas(x[0].length);
-            for (int i = 0; i < 10; i++) {
-                int[] index = Math.permutate(x.length);
-                for (int j = 0; j < x.length; j++) {
-                    gng.update(x[index[j]]);
-                }
-            }
-            
-            gng.partition(10);
-            
-            AdjustedRandIndex ari = new AdjustedRandIndex();
-            RandIndex rand = new RandIndex();
+        double[][] x = USPS.x;
+        double[][] testx = USPS.testx;
 
-            int[] p = new int[x.length];
-            for (int i = 0; i < x.length; i++) {
-                p[i] = gng.predict(x[i]);
+        GrowingNeuralGas model = new GrowingNeuralGas(x[0].length);
+        for (int i = 1; i <= 10; i++) {
+            for (int j : MathEx.permutate(x.length)) {
+                model.update(x[j]);
             }
-            
-            double r = rand.measure(y, p);
-            double r2 = ari.measure(y, p);
-            System.out.format("Training rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.85);
-            assertTrue(r2 > 0.40);
-            
-            p = new int[testx.length];
-            for (int i = 0; i < testx.length; i++) {
-                p[i] = gng.predict(testx[i]);
-            }
-            
-            r = rand.measure(testy, p);
-            r2 = ari.measure(testy, p);
-            System.out.format("Testing rand index = %.2f%%\tadjusted rand index = %.2f%%%n", 100.0 * r, 100.0 * r2);
-            assertTrue(r > 0.85);
-            assertTrue(r2 > 0.40);
-        } catch (Exception ex) {
-            System.err.println(ex);
+            System.out.format("%d neurons after %d epochs%n", model.neurons().length, i);
         }
+
+        double error = 0.0;
+        for (double[] xi : x) {
+            double[] yi = model.quantize(xi);
+            error += MathEx.distance(xi, yi);
+        }
+        error /= x.length;
+        System.out.format("Training Quantization Error = %.4f%n", error);
+        assertEquals(5.6185, error, 1E-4);
+
+        error = 0.0;
+        for (double[] xi : testx) {
+            double[] yi = model.quantize(xi);
+            error += MathEx.distance(xi, yi);
+        }
+        error /= testx.length;
+
+        System.out.format("Test Quantization Error = %.4f%n", error);
+        assertEquals(6.4506, error, 1E-4);
     }
 }

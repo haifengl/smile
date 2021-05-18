@@ -1,25 +1,26 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.classification;
 
 import java.io.Serializable;
-import static java.lang.Math.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import static java.lang.Math.abs;
+import static java.lang.Math.exp;
+import static java.lang.Math.log;
 
 /**
  * Platt scaling or Platt calibration is a way of transforming the outputs
@@ -28,7 +29,7 @@ import org.slf4j.LoggerFactory;
  * machines, but can be applied to other classification models.
  * Platt scaling works by fitting a logistic regression model to
  * a classifier's scores.
- *
+ * <p>
  * Platt suggested using the Levenberg–Marquardt algorithm to optimize
  * the parameters, but a Newton algorithm was later proposed that should
  * be more numerically stable, which is implemented in this class.
@@ -41,20 +42,47 @@ import org.slf4j.LoggerFactory;
  * @author Haifeng Li
  */
 public class PlattScaling implements Serializable {
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(PlattScaling.class);
 
-    /** The scalar parameters to be learned by the algorithm. */
-    private double alpha;
-    private double beta;
-    private static final Logger logger = LoggerFactory.getLogger(PlattScaling.class);
+    /** The scaling parameter. */
+    private final double alpha;
+    /** The scaling parameter. */
+    private final double beta;
+
+    /**
+     * Constructor. P(y = 1 | x) = 1 / (1 + exp(alpha * f(x) + beta))
+     * @param alpha The scaling parameter.
+     * @param beta The scaling parameter.
+     */
+    public PlattScaling(double alpha, double beta) {
+        this.alpha = alpha;
+        this.beta = beta;
+    }
+
+    /**
+     * Returns the posterior probability estimate P(y = 1 | x).
+     *
+     * @param y the binary classifier output score.
+     * @return the estimated probability.
+     */
+    public double scale(double y) {
+        double fApB = y * alpha + beta;
+
+        if (fApB >= 0)
+            return exp(-fApB) / (1.0 + exp(-fApB));
+        else
+            return 1.0 / (1 + exp(fApB));
+    }
 
     /**
      * Trains the Platt scaling.
      * @param scores The predicted scores.
      * @param y The training labels.
+     * @return the model.
      */
-    public PlattScaling(double[] scores, int[] y) {
-        this(scores, y, 100);
+    public static PlattScaling fit(double[] scores, int[] y) {
+        return fit(scores, y, 100);
     }
 
     /**
@@ -62,8 +90,9 @@ public class PlattScaling implements Serializable {
      * @param scores The predicted scores.
      * @param y The training labels.
      * @param maxIters The maximal number of iterations.
+     * @return the model.
      */
-    public PlattScaling(double[] scores, int[] y, int maxIters) {
+    public static PlattScaling fit(double[] scores, int[] y, int maxIters) {
         int l = scores.length;
         double prior1 = 0, prior0 = 0;
         int i;
@@ -73,7 +102,7 @@ public class PlattScaling implements Serializable {
             else prior0 += 1;
         }
 
-        double min_step = 1e-10;    // Minimal step taken in line search
+        double minStep = 1e-10;    // Minimal step taken in line search
         double sigma = 1e-12;    // For numerically strict PD of Hessian
         double eps = 1e-5;
         double hiTarget = (prior1 + 1.0) / (prior1 + 2.0);
@@ -81,8 +110,8 @@ public class PlattScaling implements Serializable {
         double[] t = new double[l];
 
         // Initial Point and Initial Fun Value
-        alpha = 0.0;
-        beta = Math.log((prior0 + 1.0) / (prior1 + 1.0));
+        double alpha = 0.0;
+        double beta = Math.log((prior0 + 1.0) / (prior1 + 1.0));
         double fval = 0.0;
 
         for (i = 0; i < l; i++) {
@@ -135,10 +164,10 @@ public class PlattScaling implements Serializable {
             double gd = g1 * dA + g2 * dB;
 
 
-            double stepsize = 1;        // Line Search
-            while (stepsize >= min_step) {
-                double newA = alpha + stepsize * dA;
-                double newB = beta + stepsize * dB;
+            double stepSize = 1.0;        // Line Search
+            while (stepSize >= minStep) {
+                double newA = alpha + stepSize * dA;
+                double newB = beta + stepSize * dB;
 
                 // New function value
                 double newf = 0.0;
@@ -150,16 +179,16 @@ public class PlattScaling implements Serializable {
                         newf += (t[i] - 1) * fApB + log(1 + exp(fApB));
                 }
                 // Check sufficient decrease
-                if (newf < fval + 0.0001 * stepsize * gd) {
+                if (newf < fval + 0.0001 * stepSize * gd) {
                     alpha = newA;
                     beta = newB;
                     fval = newf;
                     break;
                 } else
-                    stepsize = stepsize / 2.0;
+                    stepSize = stepSize / 2.0;
             }
 
-            if (stepsize < min_step) {
+            if (stepSize < minStep) {
                 logger.error("Line search fails.");
                 break;
             }
@@ -168,76 +197,26 @@ public class PlattScaling implements Serializable {
         if (iter >= maxIters) {
             logger.warn("Reaches maximal iterations");
         }
+
+        return new PlattScaling(alpha, beta);
     }
 
     /**
-     * Returns the posterior probability estimate P(y = 1 | x).
+     * Fits Platt Scaling to estimate posteriori probabilities.
      *
-     * @param y the binary classifier output score.
-     * @return the estimated probability.
+     * @param model the binary-class model to fit Platt scaling.
+     * @param x training samples.
+     * @param y training labels.
+     * @param <T> the data type.
+     * @return the model.
      */
-    public double predict(double y) {
-        double fApB = y * alpha + beta;
-
-        if (fApB >= 0)
-            return exp(-fApB) / (1.0 + exp(-fApB));
-        else
-            return 1.0 / (1 + exp(fApB));
-    }
-
-    /**
-     * Estimates the multiclass probabilies.
-     */
-    public static void multiclass(int k, double[][] r, double[] p) {
-        double[][] Q = new double[k][k];
-        double[] Qp = new double[k];
-        double pQp, eps = 0.005 / k;
-
-        for (int t = 0; t < k; t++) {
-            p[t] = 1.0 / k;  // Valid if k = 1
-            Q[t][t] = 0;
-            for (int j = 0; j < t; j++) {
-                Q[t][t] += r[j][t] * r[j][t];
-                Q[t][j] = Q[j][t];
-            }
-            for (int j = t + 1; j < k; j++) {
-                Q[t][t] += r[j][t] * r[j][t];
-                Q[t][j] = -r[j][t] * r[t][j];
-            }
+    public  static <T> PlattScaling fit(Classifier<T> model, T[] x, int[] y) {
+        int n = y.length;
+        double[] scores = new double[n];
+        for (int i = 0; i < n; i++) {
+            scores[i] = model.score(x[i]);
         }
 
-        int iter = 0;
-        int maxIter = max(100, k);
-        for (; iter < maxIter; iter++) {
-            // stopping condition, recalculate QP,pQP for numerical accuracy
-            pQp = 0;
-            for (int t = 0; t < k; t++) {
-                Qp[t] = 0;
-                for (int j = 0; j < k; j++)
-                    Qp[t] += Q[t][j] * p[j];
-                pQp += p[t] * Qp[t];
-            }
-            double max_error = 0;
-            for (int t = 0; t < k; t++) {
-                double error = abs(Qp[t] - pQp);
-                if (error > max_error)
-                    max_error = error;
-            }
-            if (max_error < eps) break;
-
-            for (int t = 0; t < k; t++) {
-                double diff = (-Qp[t] + pQp) / Q[t][t];
-                p[t] += diff;
-                pQp = (pQp + diff * (diff * Q[t][t] + 2 * Qp[t])) / (1 + diff) / (1 + diff);
-                for (int j = 0; j < k; j++) {
-                    Qp[j] = (Qp[j] + diff * Q[t][j]) / (1 + diff);
-                    p[j] /= (1 + diff);
-                }
-            }
-        }
-
-        if (iter >= maxIter) {
-            logger.warn("Reaches maximal iterations");
-        }
+        return fit(scores, y);
     }
 }

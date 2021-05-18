@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.mds;
 
 import java.awt.BorderLayout;
@@ -31,12 +33,13 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 
-import smile.data.Attribute;
-import smile.data.AttributeDataset;
-import smile.data.parser.DelimitedTextParser;
-import smile.mds.MDS;
-import smile.plot.PlotCanvas;
-import smile.plot.ScatterPlot;
+import org.apache.commons.csv.CSVFormat;
+import smile.data.CategoricalEncoder;
+import smile.data.DataFrame;
+import smile.io.Read;
+import smile.manifold.MDS;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.TextPlot;
 
 @SuppressWarnings("serial")
 public class MDSDemo extends JPanel implements Runnable, ActionListener {
@@ -46,15 +49,15 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
     };
 
     private static final String[] datasource = {
-        "projection/BritishTowns.txt",
-        "projection/eurodist.txt",
-        "projection/morsecode.txt",
-        "projection/colorstimuli.txt",
-        "projection/bank05d.txt",
-        "projection/bank25d.txt"
+        "mds/BritishTowns.txt",
+        "mds/eurodist.txt",
+        "mds/morsecode.txt",
+        "mds/colorstimuli.txt",
+        "mds/bank05d.txt",
+        "mds/bank25d.txt"
     };
 
-    static AttributeDataset[] dataset = new AttributeDataset[datasetName.length];
+    static DataFrame[] dataset = new DataFrame[datasetName.length];
     static int datasetIndex = 0;
 
     JPanel optionPane;
@@ -94,31 +97,24 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
      */
     public JComponent learn() {
         JPanel pane = new JPanel(new GridLayout(1, 2));
-        double[][] data = dataset[datasetIndex].toArray(new double[dataset[datasetIndex].size()][]);
-        String[] labels = dataset[datasetIndex].toArray(new String[dataset[datasetIndex].size()]);
-        if (labels[0] == null) {
-            Attribute[] attr = dataset[datasetIndex].attributes();
-            labels = new String[attr.length];
-            for (int i = 0; i < labels.length; i++) {
-                labels[i] = attr[i].getName();
-            }
-        }
+        double[][] data = datasetIndex == 2 || datasetIndex == 3 ? dataset[datasetIndex].toArray(false, CategoricalEncoder.ONE_HOT) : dataset[datasetIndex].drop(0).toArray(false, CategoricalEncoder.ONE_HOT);
+        String[] labels = datasetIndex == 0 || datasetIndex == 1 ? dataset[datasetIndex].stringVector(0).toArray() : dataset[datasetIndex].names();
 
         long clock = System.currentTimeMillis();
-        MDS mds = new MDS(data, 2);
+        MDS mds = MDS.of(data, 2);
         System.out.format("Learn MDS (k=2) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        PlotCanvas plot = ScatterPlot.plot(mds.getCoordinates(), labels);
+        Canvas plot = TextPlot.of(labels, mds.coordinates).canvas();
         plot.setTitle("MDS (k = 2)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         clock = System.currentTimeMillis();
-        mds = new MDS(data, 3);
+        mds = MDS.of(data, 3);
         System.out.format("Learn MDS (k=3) from %d samples in %dms\n", data.length, System.currentTimeMillis()-clock);
 
-        plot = ScatterPlot.plot(mds.getCoordinates(), labels);
+        plot = TextPlot.of(labels, mds.coordinates).canvas();
         plot.setTitle("MDS (k = 3)");
-        pane.add(plot);
+        pane.add(plot.panel());
 
         return pane;
     }
@@ -129,16 +125,15 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         datasetBox.setEnabled(false);
 
         try {
-        	JComponent plot = learn();
-        	if (plot != null) {
-        		if (canvas != null)
-        			remove(canvas);
-        		canvas = plot;
-        		add(plot, BorderLayout.CENTER);
-        	}
-        	validate();
+            JComponent plot = learn();
+            if (plot != null) {
+                if (canvas != null) remove(canvas);
+                canvas = plot;
+                add(plot, BorderLayout.CENTER);
+            }
+            validate();
         } catch (Exception ex) {
-        	System.err.println(ex);
+            System.err.println(ex);
         }
         
         startButton.setEnabled(true);
@@ -151,16 +146,13 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
             datasetIndex = datasetBox.getSelectedIndex();
 
             if (dataset[datasetIndex] == null) {
-                DelimitedTextParser parser = new DelimitedTextParser();
-                parser.setDelimiter("[\t]+");
-                parser.setRowNames(true);
-                parser.setColumnNames(true);
-                if (datasetIndex == 2 || datasetIndex == 3) {
-                    parser.setRowNames(false);
+                CSVFormat format = CSVFormat.DEFAULT.withDelimiter('\t');
+                if (datasetIndex > 1) {
+                    format = format.withFirstRecordAsHeader();
                 }
 
                 try {
-                    dataset[datasetIndex] = parser.parse(datasetName[datasetIndex], smile.data.parser.IOUtils.getTestDataFile(datasource[datasetIndex]));
+                    dataset[datasetIndex] = Read.csv(smile.util.Paths.getTestData(datasource[datasetIndex]), format);
                 } catch (Exception ex) {
                     JOptionPane.showMessageDialog(null, "Failed to load dataset.", "ERROR", JOptionPane.ERROR_MESSAGE);
                     System.err.println(ex);
@@ -177,7 +169,7 @@ public class MDSDemo extends JPanel implements Runnable, ActionListener {
         return "Classical Multi-Dimensional Scaling";
     }
 
-    public static void main(String argv[]) {
+    public static void main(String[] args) {
         MDSDemo demo = new MDSDemo();
         JFrame f = new JFrame("Classical Multi-Dimensional Scaling");
         f.setSize(new Dimension(1000, 1000));

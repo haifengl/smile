@@ -1,111 +1,89 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.feature;
 
 import java.util.HashMap;
 import java.util.Map;
-import smile.data.Attribute;
-import smile.data.NominalAttribute;
-import smile.data.NumericAttribute;
 
 /**
  * The bag-of-words feature of text used in natural language
  * processing and information retrieval. In this model, a text (such as a
  * sentence or a document) is represented as an unordered collection of words,
- * disregarding grammar and even word order. This is a generic implementations.
- * Thus, it can be used for sequences of any (discrete) data types with limited
- * number of values.
+ * disregarding grammar and even word order.
  * 
  * @author Haifeng Li
  */
-public class Bag<T> implements FeatureGenerator<T[]> {
-    /**
-     * The attributes of generated features.
-     */
-    private Attribute[] attributes;
+public class Bag {
     /**
      * The mapping from feature words to indices.
      */
-    private Map<T, Integer> features;
+    private final Map<String, Integer> words;
 
     /**
      * True to check if feature words appear in a document instead of their
      * frequencies.
      */
-    private boolean binary;
+    private final boolean binary;
 
     /**
      * Constructor.
-     * @param features the list of feature objects.
+     * @param words the list of feature words.
      */
-    public Bag(T[] features) {
-        this(features, false);
+    public Bag(String[] words) {
+        this(words, false);
     }
 
     /**
      * Constructor.
-     * @param features the list of feature objects. The feature objects should be unique in the list.
+     * @param words the list of feature words. The feature words should be unique in the list.
      * Note that the Bag class doesn't learn the features, but just use them as attributes.
      * @param binary true to check if feature object appear in a collection
      * instead of their frequencies.
      */
-    public Bag(T[] features, boolean binary) {
+    public Bag(String[] words, boolean binary) {
         this.binary = binary;
-        this.features = new HashMap<>();
-        for (int i = 0, k = 0; i < features.length; i++) {
-            if (!this.features.containsKey(features[i])) {
-                this.features.put(features[i], k++);
+        this.words = new HashMap<>();
+        for (int i = 0; i < words.length; i++) {
+            if (this.words.containsKey(words[i])) {
+                throw new IllegalArgumentException("Duplicated word:" + words[i]);
             }
+            this.words.put(words[i], i);
         }
-
-        attributes = new Attribute[this.features.size()];
-        for (Map.Entry<T, Integer> entry : this.features.entrySet()) {
-            if (binary) {
-                attributes[entry.getValue()] = new NominalAttribute(entry.getKey().toString(), new String[]{"No", "Yes"});
-            } else {
-                attributes[entry.getValue()] = new NumericAttribute(entry.getKey().toString());
-            }
-        }
-    }
-
-    @Override
-    public Attribute[] attributes() {
-        return attributes;
     }
 
     /**
-     * Returns the bag-of-words features of a document. The features are real-valued
-     * in convenience of most learning algorithms although they take only integer
-     * or binary values.
+     * Returns the bag-of-words features of a document.
+     * @param x a bag of words.
+     * @return the feature vector.
      */
-    @Override
-    public double[] feature(T[] x) {
-        double[] bag = new double[features.size()];
+    public int[] apply(String[] x) {
+        int[] bag = new int[words.size()];
 
         if (binary) {
-            for (T word : x) {
-                Integer f = features.get(word);
+            for (String word : x) {
+                Integer f = words.get(word);
                 if (f != null) {
-                    bag[f] = 1.0;
+                    bag[f] = 1;
                 }
             }
         } else {
-            for (T word : x) {
-                Integer f = features.get(word);
+            for (String word : x) {
+                Integer f = words.get(word);
                 if (f != null) {
                     bag[f]++;
                 }

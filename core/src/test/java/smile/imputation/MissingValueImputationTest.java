@@ -1,18 +1,19 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
 
 package smile.imputation;
 
@@ -21,24 +22,15 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import smile.data.AttributeDataset;
-import smile.data.parser.ArffParser;
-import smile.data.parser.DelimitedTextParser;
-import smile.math.Math;
+import smile.data.SyntheticControl;
+import smile.math.MathEx;
+import static org.junit.Assert.*;
 
 /**
  *
  * @author Haifeng Li
  */
 public class MissingValueImputationTest {
-
-    ArffParser arffParser = new ArffParser();
-    DelimitedTextParser csvParser = new DelimitedTextParser();
-    AttributeDataset movement;
-    AttributeDataset control;
-    AttributeDataset segment;
-    AttributeDataset iris;
-    AttributeDataset soybean;
 
     public MissingValueImputationTest() {
     }
@@ -53,38 +45,20 @@ public class MissingValueImputationTest {
 
     @Before
     public void setUp() {
-        try {
-            arffParser.setResponseIndex(4);
-            iris = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/iris.arff"));
-
-            arffParser.setResponseIndex(35);
-            soybean = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/soybean.arff"));
-
-            arffParser.setResponseIndex(19);
-            segment = arffParser.parse(smile.data.parser.IOUtils.getTestDataFile("weka/segment-challenge.arff"));
-
-            csvParser.setDelimiter(",");
-            movement = csvParser.parse("Movement", smile.data.parser.IOUtils.getTestDataFile("uci/movement_libras.data"));
-
-            csvParser.setDelimiter(" +");
-            control = csvParser.parse("Control", smile.data.parser.IOUtils.getTestDataFile("uci/synthetic_control.data"));
-        } catch (Exception e) {
-            System.err.println(e);
-        }
     }
 
     @After
     public void tearDown() {
     }
 
-    private double impute(AttributeDataset dataset, MissingValueImputation imputation, double rate) throws Exception {
+    private void impute(double[][] data, MissingValueImputation imputation, double rate, double expected) throws Exception {
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         int n = 0;
-        double[][] data = dataset.toArray(new double[dataset.size()][]);
         double[][] dat = new double[data.length][data[0].length];
         for (int i = 0; i < dat.length; i++) {
             for (int j = 0; j < dat[i].length; j++) {
-                if (Math.random() < rate) {
+                if (MathEx.random() < rate) {
                     n++;
                     dat[i][j] = Double.NaN;
                 } else {
@@ -95,80 +69,65 @@ public class MissingValueImputationTest {
 
         imputation.impute(dat);
 
-        double rmse = 0.0;
+        double error = 0.0;
         for (int i = 0; i < dat.length; i++) {
             for (int j = 0; j < dat[i].length; j++) {
-                double d = (data[i][j] - dat[i][j]);
-                rmse += d * d;
+                error += Math.abs(data[i][j] - dat[i][j]) / data[i][j];
             }
         }
 
-        rmse = Math.sqrt(rmse / n);
-        return rmse;
+        error = 100 * error / n;
+        System.out.format("The error of %d%% missing values = %.2f%n", (int) (100 * rate),  error);
+        assertEquals(expected, error, 1E-2);
     }
 
-    void impute(AttributeDataset data) throws Exception {
-        int p = data.attributes().length;        
-        System.out.println("----------- " + data.getName() + " ----------------");
-        System.out.println("----------- " + data.size() + " x " + p + " ----------------");
-        System.out.println("MeanImputation");
+    @Test(expected = Test.None.class)
+    public void testSyntheticControl() throws Exception {
+        double[][] data = SyntheticControl.x;
+        int p = data[0].length;
+        System.out.println("----------- Synthetic Control ----------------");
+        System.out.println("----------- " + data.length + " x " + p + " ----------------");
+        System.out.println("AverageImputation");
         MissingValueImputation instance = new AverageImputation();
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        impute(data, instance, 0.01, 25.91);
+        impute(data, instance, 0.05, 31.17);
+        impute(data, instance, 0.10, 29.31);
+        impute(data, instance, 0.15, 29.21);
+        impute(data, instance, 0.20, 27.81);
+        impute(data, instance, 0.25, 29.38);
 
         System.out.println("KMeansImputation");
-        instance = new KMeansImputation(10, 5);
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        instance = new KMeansImputation(10, 8);
+        impute(data, instance, 0.01, 15.50);
+        impute(data, instance, 0.05, 17.14);
+        impute(data, instance, 0.10, 17.05);
+        impute(data, instance, 0.15, 16.82);
+        impute(data, instance, 0.20, 16.01);
+        impute(data, instance, 0.25, 16.33);
 
         System.out.println("KNNImputation");
         instance = new KNNImputation(10);
-        System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-        System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-        System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-        System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-        System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-        System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
+        impute(data, instance, 0.01, 14.66);
+        impute(data, instance, 0.05, 16.35);
+        impute(data, instance, 0.10, 15.50);
+        impute(data, instance, 0.15, 15.55);
+        impute(data, instance, 0.20, 15.26);
+        impute(data, instance, 0.25, 15.86);
 
-        if (p > 15) {
-            System.out.println("SVDImputation");
-            instance = new SVDImputation(p / 5);
-            System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-            System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-            System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-            // Matrix will be rank deficient.
-            // System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-            // System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-            // System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
-        }
+        System.out.println("SVDImputation");
+        instance = new SVDImputation(p / 5);
+        impute(data, instance, 0.01, 13.50);
+        impute(data, instance, 0.05, 15.84);
+        impute(data, instance, 0.10, 14.94);
+        // Matrix will be rank deficient with higher missing rate.
 
-        if (p > 15) {
-            System.out.println("LLSImputation");
-            instance = new LLSImputation(10);
-            System.out.println("RMSE of 1% missing values = " + impute(data, instance, 0.01));
-            System.out.println("RMSE of 5% missing values = " + impute(data, instance, 0.05));
-            System.out.println("RMSE of 10% missing values = " + impute(data, instance, 0.10));
-            System.out.println("RMSE of 15% missing values = " + impute(data, instance, 0.15));
-            System.out.println("RMSE of 20% missing values = " + impute(data, instance, 0.20));
-            System.out.println("RMSE of 25% missing values = " + impute(data, instance, 0.25));
-        }
-    }
-
-    /**
-     * Test of impute method.
-     */
-    @Test
-    public void testImpute() throws Exception {
-        impute(segment);
-        impute(movement);
-        impute(control);
+        System.out.println("LLSImputation");
+        instance = new LLSImputation(10);
+        impute(data, instance, 0.01, 14.66);
+        impute(data, instance, 0.05, 16.35);
+        impute(data, instance, 0.10, 15.50);
+        impute(data, instance, 0.15, 15.55);
+        impute(data, instance, 0.20, 15.26);
+        impute(data, instance, 0.25, 15.86);
     }
 }

@@ -1,0 +1,915 @@
+---
+layout: layout.njk
+permalink: "{{ page.filePathStem }}.html"
+---
+{% include "toc.njk" %}
+
+<div class="col-md-9 col-md-pull-3">
+    <h1 id="validation-top" class="title">Model Validation</h1>
+
+    <p>When training a supervised model, we should always evaluate the goodness of fit of
+        the model. This helps on model selection and also hyperparameter tuning.
+        First of all, we should note that the error of the model as measured
+        on the training data is likely to be lower than the actual generalization error.</p>
+
+    <h2 id="metrics">Evaluation Metrics</h2>
+
+    <p>Although most supervised learning algorithms try to minimize the empirical error
+        (regularized or not), we should not use only error rate or accuracy as the objective
+        measure. For example, if a highly unbalanced data contains 99% positive sample, a naive
+        algorithm that classifies everything as positive will have 99% accuracy. However,
+        it is useless.</p>
+
+    <p>For classification, Smile has the following evaluation metrics:</p>
+
+    <ul>
+        <li>The <b>accuracy</b> is the proportion of true results (both true positives and
+            true negatives) in the population.</li>
+        <li>The <b>sensitivity</b> or <b>true positive rate</b> (TPR) (also called <b>hit rate</b>, <b>recall</b>)
+            is a statistical measures of the performance of a binary classification test.
+            Sensitivity is the proportion of actual positives which are correctly identified as such.
+    <pre class="prettyprint lang-html"><code>
+    TPR = TP / P = TP / (TP + FN)
+    </code></pre>
+        </li>
+        <li>The <b>specificity</b> (SPC) or <b>true negative rate</b> is a statistical measures of the performance
+            of a binary classification test. Specificity measures the proportion
+            of negatives which are correctly identified.
+    <pre class="prettyprint lang-html"><code>
+    SPC = TN / N = TN / (FP + TN) = 1 - FPR
+    </code></pre>
+        </li>
+        <li>The <b>precision</b> or <b>positive predictive value</b> (PPV) is ratio of true positives
+            to combined true and false positives, which is different from sensitivity.
+    <pre class="prettyprint lang-html"><code>
+    PPV = TP / (TP + FP)
+    </code></pre>
+        </li>
+        <li>The <b>false discovery rate</b> (FDR) is ratio of false positives
+            to combined true and false positives, which is actually 1 - precision.
+    <pre class="prettyprint lang-html"><code>
+    FDR = FP / (TP + FP)
+    </code></pre>
+        </li>
+        <li><b>Fall-out, false alarm rate, or false positive rate</b> (FPR) is
+    <pre class="prettyprint lang-html"><code>
+    FPR = FP / N = FP / (FP + TN)
+    </code></pre>
+            Fall-out is actually Type I error and closely related to specificity (1 - specificity).</li>
+        <li><p>The <b>F-score</b> (or <b>F-score</b>) considers both the precision and the recall of the test
+            to compute the score. The traditional or balanced F-score (F1 score) is the harmonic mean of
+            precision and recall, where an F1 score reaches its best value at 1 and worst at 0.</p>
+
+            <p>The general formula involves a positive real &beta; so that F-score measures
+            the effectiveness of retrieval with respect to a user who attaches &beta; times
+            as much importance to recall as precision.</p></li>
+    </ul>
+
+    <p>In Smile, the class label 1 is regarded as positive while 0 as negative. Note that
+        not all metrics can be applied to multi-class data. If one applies such a metric
+        (e.g. specificity and sensitivity) on multi-class data regardlessly, the results may
+        not make sense and all others are regarded as negative. Note that in these situations,
+        only label 1 is regarded as positive and any other values are treated as negative class.</p>
+
+    <p>The below example shows how to calculate the accuracy of a multi-class model.</p>
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_1" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_1" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_1">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val segTrain = read.arff("data/weka/segment-challenge.arff")
+    val segTest = read.arff("data/weka/segment-test.arff")
+
+    val model = randomForest("class" ~, segTrain)
+    val pred = model.predict(segTest)
+
+    smile&gt; accuracy(segTest("class").toIntArray, pred)
+    res5: Double = 0.9728395061728395
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_1">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var segTrain = Read.arff("data/weka/segment-challenge.arff");
+    var segTest = Read.arff("data/weka/segment-test.arff");
+
+    var model = RandomForest.fit(Formula.lhs("class"), segTrain);
+    var pred = model.predict(segTest);
+
+    jshell> Accuracy.of(segTest.column("class").toIntArray(), pred)
+    $161 ==> 0.9617283950617284
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Sensitivity and specificity are closely related to the concepts of type I and type II errors.
+        For any test, there is usually a trade-off between the metrics. This trade-off
+        can be represented graphically using an ROC curve. When using normalized units, the area under
+        the ROC curve is equal to the probability that a classifier will rank a
+        randomly chosen positive instance higher than a randomly chosen negative
+        one (assuming 'positive' ranks higher than 'negative').</p>
+
+    <p>The following example calculates various metrics for a binary classification problem.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_2" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_2" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_2">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
+
+    val x = toyTrain.select(1, 2).toArray
+    val y = toyTrain.column(0).toIntArray
+    val model = logit(x, y, 0.1, 0.001)
+
+    val testx = toyTest.select(1, 2).toArray
+    val testy = toyTest.column(0).toIntArray
+    val pred = testx.map(model.predict(_))
+
+    smile&gt; accuracy(testy, pred)
+    res7: Double = 0.81435
+
+    smile&gt; recall(testy, pred)
+    res8: Double = 0.7828
+
+    smile&gt; sensitivity(testy, pred)
+    res9: Double = 0.7828
+
+    smile&gt; specificity(testy, pred)
+    res10: Double = 0.8459
+
+    smile&gt; fallout(testy, pred)
+    res11: Double = 0.15410000000000001
+
+    smile&gt; fdr(testy, pred)
+    res12: Double = 0.16447859963710107
+
+    smile&gt; f1(testy, pred)
+    res13: Double = 0.808301925757654
+
+    // Calculate posteriori probability for AUC computation.
+    val posteriori = new Array[Double](2)
+    val prob = testx.map { x =>
+            model.predict(x, posteriori)
+            posteriori(1)
+        }
+
+    smile&gt; auc(testy, prob)
+    res17: Double = 0.8650958
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_2">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var toyTrain = Read.csv("data/classification/toy200.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+    var toyTest = Read.csv("data/classification/toy20000.txt", CSVFormat.DEFAULT.withDelimiter('\t'));
+
+    var x = toyTrain.select(1, 2).toArray();
+    var y = toyTrain.column(0).toIntArray();
+    var model = LogisticRegression.fit(x, y, 0.1, 0.001, 100);
+
+    var testx = toyTest.select(1, 2).toArray();
+    var testy = toyTest.column(0).toIntArray();
+    var pred = Arrays.stream(testx).mapToInt(xi -> model.predict(xi)).toArray();
+
+    jshell>     Accuracy.of(testy, pred)
+    $171 ==> 0.81435
+
+    jshell>     Recall.of(testy, pred)
+    $172 ==> 0.7828
+
+    jshell>     Sensitivity.of(testy, pred)
+    $173 ==> 0.7828
+
+    jshell>     Specificity.of(testy, pred)
+    $174 ==> 0.8459
+
+    jshell>     Fallout.of(testy, pred)
+    $175 ==> 0.15410000000000001
+
+    jshell>     FDR.of(testy, pred)
+    $176 ==> 0.16447859963710107
+
+    jshell> FScore.of(testy, pred)
+    $177 ==> 0.808301925757654
+
+    // Calculate posteriori probability for AUC computation.
+    var posteriori = new double[2];
+    var prob = Arrays.stream(testx).mapToDouble(xi -> {
+            model.predict(xi, posteriori);
+            return posteriori[1];
+        }).toArray();
+
+    jshell> AUC.of(testy, prob)
+    $180 ==> 0.8650958
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>For regression, Smile has the following evaluation metrics:</p>
+
+    <ul>
+        <li>MSE (mean squared error) and RMSE (root mean squared error).</li>
+        <li>MAD (mean absolute deviation error).</li>
+        <li>RSS (residual sum of squares).</li>
+    </ul>
+
+    <h2 id="out-of-sample">Out-of-sample Evaluation</h2>
+
+    <p>The generalization error (also known as the out-of-sample error) is
+        a measure of how accurately an algorithm is able to predict outcome
+        values for previously unseen data. Ideally, test data should be
+        statistically independent from training data.
+        But in practice, we usually have only one historical dataset and
+        the evaluation of a learning algorithm may be sensitive to sampling error.
+        In what follows, we discuss various testing mechanisms.</p>
+
+    <p>We provide both Java and Scala helper functions for testing. The Java helper
+        functions are the static methods of the class <a href="api/java/smile/validation/Validation.html"><code>smile.validation.Validation</code></a>.
+        The Scala one are in the package object of <a href="api/scala/smile/validation/index.html"><code>smile.validation</code></a> and
+        can be accessed directly in the Shell.</p>
+
+    <h3 id="hold-out">Hold-out Testing</h3>
+
+    <p>Hold-out testing assume that all data
+        samples are independently and identically distributed (this is also
+        the basic assumption of most learning algorithms).
+        A part of the data is held out for testing. Many benchmark data
+        contain a separate test dataset.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_3" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_3" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_3">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    object validate {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]]
+            (x: Array[T], y: Array[Int], testx: Array[T], testy: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidation[M]
+
+        def classification[M &lt;: DataFrameClassifier]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidation[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]]
+            (x: Array[T], y: Array[Double], testx: Array[T], testy: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidation[M]
+
+        def regression[M &lt;: DataFrameRegression]
+            (formula: Formula, train: DataFrame, test: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidation[M]
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_3">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class ClassificationValidation {
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidation&lt;M&gt;
+            of(T[] x, int[] y, T[] testx, int[] testy,
+               BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidation&lt;M&gt;
+            of(Formula formula, DataFrame train, DataFrame test,
+               BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+
+    public class RegressionValidation {
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidation&lt;M&gt;
+            of(T[] x, double[] y, T[] testx, double[] testy,
+               BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidation&lt;M&gt;
+            of(Formula formula, DataFrame train, DataFrame test,
+               BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The above Scala methods takes a code block to train the model and apply it on the test data.
+        These methods return the trained model and print out various metrics.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_4" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_4" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_4">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val segTrain = read.arff("data/weka/segment-challenge.arff")
+    val segTest = read.arff("data/weka/segment-test.arff")
+
+    smile&gt; test("class" ~, segTrain, segTest) { case (formula, data) => smile.classification.randomForest(formula, data) }
+    [main] INFO smile.util.package$ - testing runtime: 0:00:00.103314
+    Accuracy = 97.65%
+    Confusion Matrix: ROW=truth and COL=predicted
+    class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
+    class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
+    class  2 |       3 |       0 |     117 |       1 |       1 |       0 |       0 |
+    class  3 |       1 |       0 |       0 |     109 |       0 |       0 |       0 |
+    class  4 |       1 |       0 |       6 |       2 |     117 |       0 |       0 |
+    class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
+    class  6 |       0 |       0 |       1 |       2 |       0 |       0 |     120 |
+    res21: RandomForest = smile.classification.RandomForest@77f95e19
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_4">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var segTrain = Read.arff("data/weka/segment-challenge.arff");
+    var segTest = Read.arff("data/weka/segment-test.arff");
+    var formula = Formula.lhs("class");
+    var model = RandomForest.fit(formula, segTrain);
+    var pred = model.predict(segTest);
+
+    jshell> ConfusionMatrix.of(formula.y(segTest).toIntArray(), pred)
+    $187 ==> ROW=truth and COL=predicted
+    class  0 |     124 |       0 |       0 |       0 |       1 |       0 |       0 |
+    class  1 |       0 |     110 |       0 |       0 |       0 |       0 |       0 |
+    class  2 |       3 |       0 |     115 |       1 |       3 |       0 |       0 |
+    class  3 |       2 |       0 |       0 |     106 |       2 |       0 |       0 |
+    class  4 |       2 |       0 |      10 |       6 |     108 |       0 |       0 |
+    class  5 |       0 |       0 |       0 |       0 |       0 |      94 |       0 |
+    class  6 |       2 |       0 |       1 |       0 |       0 |       0 |     120 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_5" data-toggle="tab">Scala</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_5">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val toyTrain = read.csv("data/classification/toy200.txt", delimiter='\t', header=false)
+    val toyTest = read.csv("data/classification/toy20000.txt", delimiter='\t', header=false)
+
+    val x = toyTrain.select(1, 2).toArray
+    val y = toyTrain.column(0).toIntArray
+
+    val testx = toyTest.select(1, 2).toArray
+    val testy = toyTest.column(0).toIntArray
+
+    smile&gt; test2(x, y, testx, testy) { case (x, y) => lda(x, y) }
+    training...
+    testing...
+    [main] INFO smile.util.package$ - runtime: 78.653061 ms
+    Accuracy = 81.23%
+    Sensitivity/Recall = 78.28%
+    Specificity = 84.17%
+    Precision = 83.18%
+    F1-Score = 80.66%
+    F2-Score = 79.21%
+    F0.5-Score = 82.15%
+    Confusion Matrix: ROW=truth and COL=predicted
+    class 0	: 8417	| 1583	|
+    class 1	: 2172	| 7828	|
+    res5: LDA = smile.classification.LDA@5a524a19
+
+    smile&gt; test2(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
+    training...
+    testing...
+    Accuracy = 81.44%
+    Sensitivity/Recall = 78.28%
+    Specificity = 84.59%
+    Precision = 83.55%
+    F1-Score = 80.83%
+    F2-Score = 79.28%
+    F0.5-Score = 82.44%
+    Confusion Matrix: ROW=truth and COL=predicted
+    class  0 |    8459 |    1541 |
+    class  1 |    2172 |    7828 |
+    res29: LogisticRegression = smile.classification.LogisticRegression@6b0bcea5
+
+    // AUC will be reported in binary classification
+    test2soft(x, y, testx, testy) { case (x, y) => lda(x, y) }
+    test2soft(x, y, testx, testy) { case (x, y) => logit(x, y, 0.1, 0.001) }
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h3 id="out-of-bag">Out-of-bag Error</h3>
+
+    <p>Out-of-bag (OOB) error, also called out-of-bag estimate, is a method of measuring
+        the prediction error of random forests, boosted decision trees, and other machine
+        learning models utilizing bootstrap aggregating to sub-sample data sampled used
+        for training. OOB is the mean prediction error on each training sample <code>x<sub>i</sub></code>, using
+        only the trees that did not have <code>x<sub>i</sub></code> in their bootstrap sample.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_6" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_6" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_6">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    val rf = smile.classification.randomForest("class" ~, iris)
+    println(s"OOB metrics = ${rf.metrics}")
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_6">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    var rf = smile.classification.RandomForest.fit(Formula.lhs("class"), iris);
+    System.out.println("OOB metrics = " + rf.metrics());
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>Subsampling allows one to define an out-of-bag estimate of the prediction performance
+        improvement by evaluating predictions on those observations which were not used
+        in the building of the next base learner. Out-of-bag estimates help avoid the
+        need for an independent validation dataset, but often underestimate actual
+        performance improvement and the optimal number of iterations.</p>
+
+    <h2 id="cross-validation">Cross Validation</h2>
+
+    <p>In <code>k</code>-fold cross validation, the dataset is divided into <code>k</code> random partitions.
+        We treat each of the <code>k</code> partition like a hold-out set, train a model on
+        the rest of data, and measure the quality of the model on the held-out.
+        The overall performance is taken to be the average of the performance
+        on all <code>k</code> partitions.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_7" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_7" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_7">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    object cv {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
+
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_7">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class CrossValidation {
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidations&lt;M&gt;
+            regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidations&lt;M&gt;
+            regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>When no metrics are provided, the methods use accuracy or R2 by default
+        for classification or regression, respectively.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_8" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_8" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_8">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; val iris = read.arff("data/weka/iris.arff")
+    smile> cv.classification(10, "class" ~, iris) { case (formula, data) => smile.classification.cart(formula, data) }
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.4392
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1187
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1340
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1120
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.876
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1105
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1570
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.818
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.1013
+    [main] INFO smile.util.package$ - Decision Tree runtime: 0:00:00.929
+    Confusion Matrix: ROW=truth and COL=predicted
+    class  0 |      50 |       0 |       0 |
+    class  1 |       0 |      45 |       5 |
+    class  2 |       0 |       5 |      45 |
+    Accuracy: 93.33%
+    res35: Array[Double] = Array(0.9333333333333333)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_8">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var iris = Read.arff("data/weka/iris.arff");
+    [main] INFO smile.io.Arff - Read ARFF relation iris
+    iris ==> [sepallength: float, sepalwidth: float, petalleng ... -------+
+    140 more rows...
+
+    jshell> var pred = CrossValidation.classification(10, Formula.lhs("class"), iris, (formula, data) -> DecisionTree.fit(formula, data));
+    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 1, 2, 1, 1, 1, 1, 1, 2, 1, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 2, 2, 2, 2, 2, 1, 2, 2, 2, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2 }
+
+    jshell> var y = iris.column("class").toIntArray()
+    y ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 2, 2, 2, 2 }
+
+    jshell> Accuracy.of(y, pred)
+    $193 ==> 0.9266666666666666
+
+    jshell> ConfusionMatrix.of(y, pred)
+    $194 ==> ROW=truth and COL=predicted
+    class  0 |      50 |       0 |       0 |
+    class  1 |       0 |      45 |       5 |
+    class  2 |       0 |       6 |      44 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>On the Iris data, the accuracy estimation of 10-fold cross validation
+        is about 84.7%. You may get different number because of the random partitions.</p>
+
+    <p>A special case is the leave-one-out cross validation that uses a single observation
+        from the original sample as the validation data, and the remaining
+        observations as the training data. This is repeated such that each
+        observation in the sample is used once as the validation data.
+        Leave-one-out cross-validation is
+        usually very expensive from a computational point of view because of the
+        large number of times the training process is repeated.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_9" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_9" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_9">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    object loocv {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationMetrics
+
+        def classification[M &lt;: DataFrameClassifier](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationMetrics
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionMetrics
+
+        def regression[M &lt;: DataFrameRegression](formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionMetrics
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_9">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class LOOCV {
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationMetrics
+            classification(T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationMetrics
+            classification(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionMetrics
+            regression(T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionMetrics
+            regression(Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>On the Iris data, the accuracy estimation of LOOCV is 85.33%,
+        which is higher than that of 10-fold cross validation. This
+        is because more data is used for training and less for testing.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_10" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_10" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_10">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; loocv.classification(x, y) { case (x, y) => lda(x, y) }
+    Confusion Matrix: ROW=truth and COL=predicted
+    class  0 |      80 |      20 |
+    class  1 |      19 |      81 |
+    Accuracy: 80.50%
+    res41: Array[Double] = Array(0.805)
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_10">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> var x = iris.drop("class").toArray();
+    x ==> double[150][] { double[4] { 5.099999904632568, 3. ... 68, 1.7999999523162842 } }
+
+    jshell> var pred = LOOCV.classification(x, y, (x, y) -> LDA.fit(x, y));
+    Mar 11, 2020 10:14:52 AM com.github.fommil.jni.JniLoader load
+    INFO: already loaded netlib-native_system-osx-x86_64.jnilib
+    pred ==> int[150] { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ... , 2, 2, 2, 2, 1, 2, 2, 2 }
+
+    jshell> Accuracy.of(y, pred)
+    $197 ==> 0.8533333333333334
+
+    jshell> ConfusionMatrix.of(y, pred)
+    $198 ==> ROW=truth and COL=predicted
+    class  0 |      49 |       1 |       0 |
+    class  1 |       0 |      41 |       9 |
+    class  2 |       0 |      12 |      38 |
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <h2 id="bootstrap">Bootstrap</h2>
+
+    <p>Bootstrap is a general tool for assessing statistical accuracy. The basic
+        idea is to randomly draw data with replacement from the training data,
+        each bootstrap sample set has the same size as the original training set.
+        In the bootstrap set, the expected ratio of unique instances is
+        approximately <code>1 − 1/e ≈ 63.2%</code>. This process is done many
+        times (say <code>k = 100</code>), producing <code>k</code> bootstrap datasets.
+        Then we fit the model to each of the bootstrap datasets and examine
+        the behavior of the fits over the <code>k</code> replications.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_11" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_11" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_11">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    object bootstrap {
+        def classification[T &lt;: AnyRef, M &lt;: Classifier[T]](k: Int, x: Array[T], y: Array[Int])
+            (trainer: =&gt; (Array[T], Array[Int]) =&gt; M): ClassificationValidations[M]
+
+        def classification[M &lt;: DataFrameClassifier](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): ClassificationValidations[M]
+
+        def regression[T &lt;: AnyRef, M &lt;: Regression[T]](k: Int, x: Array[T], y: Array[Double])
+            (trainer: =&gt; (Array[T], Array[Double]) =&gt; M): RegressionValidations[M]
+
+        def regression[M &lt;: DataFrameRegression](k: Int, formula: Formula, data: DataFrame)
+            (trainer: =&gt; (Formula, DataFrame) =&gt; M): RegressionValidations[M]
+    }
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_11">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    public class Bootstrap {
+        public static &lt;T, M extends Classifier&lt;T&gt;&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, T[] x, int[] y, BiFunction&lt;T[], int[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameClassifier&gt; ClassificationValidations&lt;M&gt;
+            classification(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+
+        public static &lt;T, M extends Regression&lt;T&gt;&gt; RegressionValidations&lt;M&gt;
+            regression(int k, T[] x, double[] y, BiFunction&lt;T[], double[], M&gt; trainer);
+
+        public static &lt;M extends DataFrameRegression&gt; RegressionValidations&lt;M&gt;
+            regression(int k, Formula formula, DataFrame data, BiFunction&lt;Formula, DataFrame, M&gt; trainer);
+    }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>On the Iris data, the accuracy estimation of 100 bootstraps
+        is about 83.7%, which is slightly lower than that of 10-fold cross validation.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#scala_12" data-toggle="tab">Scala</a></li>
+        <li><a href="#java_12" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="scala_12">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-scala"><code>
+    smile&gt; bootstrap.classification(100, x, y) { case (x, y) => lda(x, y) }
+    res40: Array[Double] = Array(
+      0.21212121212121215,
+      0.22499999999999998,
+      0.16901408450704225,
+      0.16666666666666663,
+      0.25,
+      0.19480519480519476,
+      0.19999999999999996,
+      0.273972602739726,
+      0.125,
+      0.1842105263157895,
+      0.16129032258064513,
+      0.17808219178082196,
+      0.18461538461538463,
+      0.23750000000000004,
+      0.22972972972972971,
+      0.14864864864864868,
+      0.17808219178082196,
+      0.17333333333333334,
+      0.2777777777777778,
+      0.16666666666666663,
+      0.18666666666666665,
+      0.22388059701492535,
+    ...
+    </code></pre>
+            </div>
+        </div>
+        <div class="tab-pane" id="java_12">
+            <div class="code" style="text-align: left;">
+          <pre class="prettyprint lang-java"><code>
+    jshell> Bootstrap.classification(100, x, y, (x, y) -> LDA.fit(x, y))
+    $199 ==> double[100] { 0.11111111111111116, 0.18867924528301883, 0.09090909090909094, 0.2068965517241379, 0.1428571428571429, 0.19999999999999996, 0.16981132075471694, 0.21153846153846156, 0.1785714285714286, 0.109375, 0.16666666666666663, 0.2142857142857143, 0.1071428571428571, 0.11764705882352944, 0.2545454545454545, 0.21568627450980393, 0.25806451612903225, 0.06382978723404253, 0.14814814814814814, 0.2222222222222222, 0.1578947368421053, 0.15517241379310343, 0.25, 0.18965517241379315, 0.17543859649122806, 0.18333333333333335, 0.12765957446808507, 0.0892857142857143, 0.17307692307692313, 0.16666666666666663, 0.17647058823529416, 0.2142857142857143, 0.12, 0.1818 ... 615, 0.1724137931034483, 0.11111111111111116, 0.1071428571428571, 0.1228070175438597, 0.2142857142857143, 0.23076923076923073, 0.07843137254901966, 0.13793103448275867, 0.06896551724137934, 0.17021276595744683, 0.1578947368421053, 0.2075471698113207, 0.1568627450980392, 0.1636363636363637, 0.18518518518518523, 0.15384615384615385 }
+          </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>The bootstrap distribution of a parameter-estimator has been used to
+        calculate confidence intervals for its population-parameter.
+        If the bootstrap distribution of an estimator
+        is symmetric, then percentile confidence-interval are often used;
+        such intervals are appropriate especially for median-unbiased estimators
+        of minimum risk (with respect to an absolute loss function).
+        Otherwise, if the bootstrap distribution is non-symmetric, then percentile
+        confidence-intervals are often inappropriate.</p>
+
+    <p>The bootstrap distribution and the sample may disagree systematically,
+        in which case bias may occur. Bias in the
+        bootstrap distribution will lead to bias in the confidence-interval.</p>
+
+    <h2 id="hyperparameter-tuning">Hyperparameter Tuning</h2>
+
+    <p>A hyperparameter is a parameter whose value is set before the
+        learning process begins. By contrast, the values of other
+        parameters are derived via training. Hyperparameters can be
+        classified as model hyperparameters, that cannot be inferred
+        while fitting the machine to the training set because they
+        refer to the model selection task, or algorithm hyperparameters, that
+        in principle have no influence on the performance of the model but
+        affect the speed and quality of the learning process. For example,
+        the topology and size of a neural network are model hyperparameters,
+        while learning rate and mini-batch size are algorithm hyperparameters.</p>
+
+    <p>In Smile, <code>Hyperparameters</code> class provides two generic
+        approaches to sampling search candidates. With <code>add()</code>
+        methods, the user can define a parameter space with a specified
+        distribution (a fixed value, an array of values, or a range).
+        The method <code>grid()</code> exhaustively considers all parameter
+        combinations, while <code>random()</code> generates a stream of
+        random candidates.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_13" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_13">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    import smile.io.*;
+    import smile.data.formula.Formula;
+    import smile.validation.*;
+    import smile.classification.RandomForest;
+
+    var hp = new Hyperparameters()
+        .add("smile.random.forest.trees", 100) // a fixed value
+        .add("smile.random.forest.mtry", new int[] {2, 3, 4}) // an array of values to choose
+        .add("smile.random.forest.max.nodes", 100, 500, 50); // range [100, 500] with step 50
+
+
+    var train = Read.arff("data/weka/segment-challenge.arff");
+    var test = Read.arff("data/weka/segment-test.arff");
+    var formula = Formula.lhs("class");
+    var testy = formula.y(test).toIntArray();
+
+    hp.grid().forEach(prop -&gt; {
+        var model = RandomForest.fit(formula, train, prop);
+        var pred = model.predict(test);
+        System.out.println(prop);
+        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+        System.out.println(ConfusionMatrix.of(testy, pred));
+    });
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>While grid search is popular, random search has the benefit to choose
+        a budget independent of the number of parameters and possible values.
+        Note that <code>rand()</code> returns a stream that never ends.
+        Therefore, one should use the <code>limit()</code> method to decide
+        how many configurations to test.</p>
+
+    <ul class="nav nav-tabs">
+        <li class="active"><a href="#java_14" data-toggle="tab">Java</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="java_14">
+            <div class="code" style="text-align: left;">
+    <pre class="prettyprint lang-java"><code>
+    hp.random().limit(20).forEach(prop -&gt; {
+        var model = RandomForest.fit(formula, train, prop);
+        var pred = model.predict(test);
+        System.out.println(prop);
+        System.out.format("Accuracy = %.2f%%%n", (100.0 * Accuracy.of(testy, pred)));
+        System.out.println(ConfusionMatrix.of(testy, pred));
+    });
+    </code></pre>
+            </div>
+        </div>
+    </div>
+
+    <p>In the lambda of hyperparameter tuning, the user is free to train any
+        model (or even multiple algorithms), to evaluate with one or more
+        metrics. The evaluation approach can also be cross validation and
+        boosting besides on the test data as in above examples.</p>
+
+    <p>Both grid search and random search evaluate each parameter setting
+        independently. Therefore, computations may be run in parallel with
+        parallel stream (enable with <code>parallel()</code>). Note that
+        some algorithms already run in parallel (e.g. random forest, logistic
+        regression, etc.). In those cases, we should NOT use parallel stream
+        to avoid potential deadlock.</p>
+
+    <h2 id="model-selection">Model Selection Criteria</h2>
+    <p>Model selection is the task of selecting a statistical model from
+        a set of candidate models, given data. In the simplest cases,
+        a pre-existing set of data is considered. Given candidate models
+        of similar predictive or explanatory power, the simplest model is
+        most likely to be the best choice (Occam's razor).</p>
+ 
+    <p>A good model selection technique will balance goodness of fit with
+        simplicity. More complex models will be better able to adapt their
+        shape to fit the data, but the additional parameters may not represent
+        anything useful. Goodness of fit is generally determined using
+        a likelihood ratio approach, or an approximation of this, leading
+        to a chi-squared test. The complexity is generally measured by
+        counting the number of parameters in the model.</p>
+ 
+    <p>The most commonly used criteria are the Akaike information criterion
+        and the Bayesian information criterion, which are implemented in
+        <code>ModelSelection</code>. The formula for BIC is similar
+        to the formula for AIC, but with a different penalty for the number of
+        parameters. With AIC the penalty is <code>2k</code>, whereas with BIC
+        the penalty is <code>log(n) * k</code>.</p>
+ 
+    <p>AIC and BIC are both approximately correct according to a different goal
+        and a different set of asymptotic assumptions. Both sets of assumptions
+        have been criticized as unrealistic.</p>
+ 
+    <p>AIC is better in situations when a false negative finding would be
+        considered more misleading than a false positive, and BIC is better
+        in situations where a false positive is as misleading as, or more
+        misleading than, a false negative.</p>
+
+    <div id="btnv">
+        <span class="btn-arrow-left">&larr; &nbsp;</span>
+        <a class="btn-prev-text" href="feature.html" title="Previous Section: Features"><span>Features</span></a>
+        <a class="btn-next-text" href="missing-value-imputation.html" title="Next Section: Missing Value Imputation"><span>Missing Value Imputation</span></a>
+        <span class="btn-arrow-right">&nbsp;&rarr;</span>
+    </div>
+</div>
+
+<script type="text/javascript">
+    $('#toc').toc({exclude: 'h1, h5, h6', context: '', autoId: true, numerate: false});
+</script>

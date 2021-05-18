@@ -1,18 +1,20 @@
-/*******************************************************************************
- * Copyright (c) 2010 Haifeng Li
- *   
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *  
- *     http://www.apache.org/licenses/LICENSE-2.0
+/*
+ * Copyright (c) 2010-2020 Haifeng Li. All rights reserved.
  *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
+ * Smile is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as
+ * published by the Free Software Foundation, either version 3 of
+ * the License, or (at your option) any later version.
+ *
+ * Smile is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Smile.  If not, see <https://www.gnu.org/licenses/>.
+ */
+
 package smile.demo.stat.distribution;
 
 import java.awt.BorderLayout;
@@ -29,12 +31,11 @@ import javax.swing.JSlider;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-import smile.math.Math;
-import smile.plot.Histogram;
-import smile.plot.PlotCanvas;
-import smile.plot.Line;
-import smile.plot.LinePlot;
-import smile.plot.QQPlot;
+import smile.plot.swing.Histogram;
+import smile.plot.swing.Canvas;
+import smile.plot.swing.Line;
+import smile.plot.swing.LinePlot;
+import smile.plot.swing.QQPlot;
 import smile.stat.distribution.BetaDistribution;
 
 /**
@@ -46,10 +47,10 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
 
     private JPanel optionPane;
     private JPanel canvas;
-    private PlotCanvas pdf;
-    private PlotCanvas cdf;
-    private PlotCanvas histogram;
-    private PlotCanvas qqplot;
+    private Canvas pdf;
+    private Canvas cdf;
+    private Canvas histogram;
+    private Canvas qqplot;
     private JSlider alphaSlider;
     private JSlider betaSlider;
     private double alpha = 2;
@@ -60,7 +61,7 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
 
         Hashtable<Integer, JLabel> labelTable = new Hashtable<>();
         for (int i = 0; i <= 100; i+=20) {
-            labelTable.put(new Integer(i), new JLabel(String.valueOf(i / 10)));
+            labelTable.put(i, new JLabel(String.valueOf(i / 10)));
         }
 
         alphaSlider = new JSlider(0, 100, (int) Math.round(alpha * 10));
@@ -102,26 +103,26 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
             q[i][1] = dist.cdf(p[i][0]);
         }
 
-        pdf = LinePlot.plot(p, Line.Style.SOLID, Color.BLUE);
+        pdf = LinePlot.of(p, Color.BLUE).canvas();
         pdf.setTitle("PDF");
-        canvas.add(pdf);
+        canvas.add(pdf.panel());
 
-        cdf = LinePlot.plot(q, Line.Style.SOLID, Color.BLUE);
+        cdf = LinePlot.of(q, Color.BLUE).canvas();
         cdf.setTitle("CDF");
-        canvas.add(cdf);
+        canvas.add(cdf.panel());
 
         double[] data = new double[500];
         for (int i = 0; i < data.length; i++) {
             data[i] = dist.rand();
         }
 
-        histogram = Histogram.plot(data, 20);
+        histogram = Histogram.of(data, 20, true).canvas();
         histogram.setTitle("Histogram");
-        canvas.add(histogram);
+        canvas.add(histogram.panel());
 
-        qqplot = QQPlot.plot(data, dist);
+        qqplot = QQPlot.of(data, dist).canvas();
         qqplot.setTitle("Q-Q Plot");
-        canvas.add(qqplot);
+        canvas.add(qqplot.panel());
     }
 
     @Override
@@ -144,10 +145,10 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
             }
 
             pdf.clear();
-            pdf.line(p, Line.Style.SOLID, Color.BLUE);
+            pdf.add(LinePlot.of(p, Color.BLUE));
 
             cdf.clear();
-            cdf.line(q, Line.Style.SOLID, Color.BLUE);
+            cdf.add(LinePlot.of(q, Color.BLUE));
 
             double[] data = new double[500];
             for (int i = 0; i < data.length; i++) {
@@ -155,10 +156,10 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
             }
 
             histogram.clear();
-            histogram.histogram(data, 20, Color.BLUE);
+            histogram.add(Histogram.of(data, 20, true));
 
             qqplot.clear();
-            qqplot.add(new QQPlot(data, dist));
+            qqplot.add(QQPlot.of(data, dist));
             canvas.repaint();
         }
     }
@@ -170,6 +171,7 @@ public class BetaDistributionDemo extends JPanel implements ChangeListener {
 
     public static void main(String[] args) {
         JFrame frame = new JFrame("Beta Distribution");
+        frame.setSize(1000, 1000);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setLocationRelativeTo(null);
         frame.getContentPane().add(new BetaDistributionDemo());
