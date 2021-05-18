@@ -88,7 +88,7 @@ public class LASSO {
      * <li><code>smile.lasso.lambda</code> is the shrinkage/regularization parameter. Large lambda means more shrinkage.
      *               Choosing an appropriate value of lambda is important, and also difficult.
      * <li><code>smile.lasso.tolerance</code> is the tolerance for stopping iterations (relative target duality gap).
-     * <li><code>smile.lasso.max.iterations</code> is the maximum number of IPM (Newton) iterations.
+     * <li><code>smile.lasso.iterations</code> is the maximum number of IPM (Newton) iterations.
      * </ul>
      * @param formula a symbolic description of the model to be fitted.
      * @param data the data frame of the explanatory and response variables.
@@ -121,7 +121,7 @@ public class LASSO {
      * @param data the data frame of the explanatory and response variables.
      *             NO NEED to include a constant column of 1s for bias.
      * @param lambda the shrinkage/regularization parameter.
-     * @param tol the tolerance for stopping iterations (relative target duality gap).
+     * @param tol the tolerance to stop iterations (relative target duality gap).
      * @param maxIter the maximum number of IPM (Newton) iterations.
      * @return the model.
      */
