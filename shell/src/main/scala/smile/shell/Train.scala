@@ -403,6 +403,52 @@ object Train {
               .action((x, c) => {c.params.setProperty("smile.mlp.RMSProp.epsilon", x.toString); c})
               .text("RMSProp epsilon"),
           ),
+        cmd("svm")
+          .action((_, c) => c.copy(algorithm = "svm"))
+          .text("Support Vector Machine")
+          .children(
+            opt[String]("kernel")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.svm.kernel", x); c})
+              .text("The kernel function"),
+            opt[Double]("C")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.svm.C", x.toString); c})
+              .text("The soft margin penalty parameter"),
+            opt[Double]("epsilon")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.svm.epsilon", x.toString); c.copy(classification = false)})
+              .text("The parameter of epsilon-insensitive hinge loss"),
+            opt[Unit]("ovr")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.svm.strategy", "ovr"); c})
+              .text("One vs Rest strategy for multiclass classification"),
+            opt[Unit]("ovo")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.svm.strategy", "ovo"); c})
+              .text("One vs One strategy for multiclass classification"),
+            opt[Double]("tolerance")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.svm.tolerance", x.toString); c})
+              .text("The tolerance of convergence test"),
+          ),
+        cmd("rbf")
+          .action((_, c) => c.copy(algorithm = "rbf"))
+          .text("Radial Basis Function Network")
+          .children(
+            opt[Unit]("regression")
+              .optional()
+              .action((_, c) => c.copy(classification = false))
+              .text("To train a regression model"),
+            opt[Int]("neurons")
+              .optional()
+              .action((x, c) => {c.params.setProperty("smile.rbf.neurons", x.toString); c})
+              .text("The number of neurons (radial basis functions)"),
+            opt[Unit]("normalize")
+              .optional()
+              .action((_, c) => {c.params.setProperty("smile.rbf.normalize", "true"); c})
+              .text("Normalized RBF network"),
+          ),
       )
     }
 
