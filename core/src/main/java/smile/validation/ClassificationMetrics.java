@@ -22,7 +22,6 @@ import java.util.Arrays;
 import smile.classification.Classifier;
 import smile.classification.DataFrameClassifier;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.validation.metric.*;
@@ -320,7 +319,6 @@ public class ClassificationMetrics implements Serializable {
      * @param <M> the model type.
      * @return the validation results.
      */
-    @SuppressWarnings("unchecked")
     public static <M extends DataFrameClassifier> ClassificationMetrics of(double fitTime, M model, Formula formula, DataFrame test) {
         int[] testy = formula.y(test).toIntArray();
 

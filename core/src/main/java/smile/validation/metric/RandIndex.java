@@ -81,8 +81,7 @@ public class RandIndex implements ClusteringMetric {
         }
         randQ -= n;
 
-        double rand = (randT - 0.5 * randP - 0.5 * randQ + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
-        return rand;
+        return (randT - 0.5 * randP - 0.5 * randQ + MathEx.choose(n, 2)) / MathEx.choose(n, 2);
     }
 
     @Override

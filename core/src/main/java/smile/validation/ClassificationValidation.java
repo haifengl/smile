@@ -26,7 +26,6 @@ import smile.classification.DataFrameClassifier;
 import smile.data.formula.Formula;
 import smile.math.MathEx;
 import smile.data.DataFrame;
-import smile.data.Tuple;
 import smile.validation.metric.ConfusionMatrix;
 
 /**
@@ -158,7 +157,6 @@ public class ClassificationValidation<M> implements Serializable {
      * @param <M> the model type.
      * @return the validation results.
      */
-    @SuppressWarnings("unchecked")
     public static <M extends DataFrameClassifier> ClassificationValidation<M> of(Formula formula, DataFrame train, DataFrame test, BiFunction<Formula, DataFrame, M> trainer) {
         int[] y = formula.y(train).toIntArray();
         int[] testy = formula.y(test).toIntArray();

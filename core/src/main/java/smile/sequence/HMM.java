@@ -152,7 +152,7 @@ public class HMM implements Serializable {
 
     /**
      * Returns the logarithm probability of an observation sequence given this
-     * HMM. A scaling procedure is used in order to avoid underflows when
+     * HMM. A scaling procedure is used in order to avoid underflow when
      * computing the probability of long sequences.
      *
      * @param o an observation sequence.
@@ -557,10 +557,10 @@ public class HMM implements Serializable {
         sb.append(Arrays.toString(pi));
 
         sb.append("\nState transition probability:\n");
-        sb.append(a.toString());
+        sb.append(a);
 
         sb.append("Symbol emission probability:\n");
-        sb.append(b.toString());
+        sb.append(b);
 
         return sb.toString();
     }

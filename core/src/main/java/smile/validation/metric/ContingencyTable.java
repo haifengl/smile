@@ -19,9 +19,6 @@ package smile.validation.metric;
 
 import smile.math.MathEx;
 
-import java.util.HashSet;
-import java.util.Set;
-
 /**
  * The contingency table. A contingency table (aka a cross tabulation) is
  * a type of table in a matrix format that displays the (multivariate)

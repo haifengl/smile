@@ -52,7 +52,7 @@ public class MatthewsCorrelation implements ClassificationMetric {
         int[][] matrix = confusion.matrix;
 
         if (matrix.length != 2 || matrix[0].length != 2) {
-            throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusion.toString());
+            throw new IllegalArgumentException("MCC can only be applied to binary classification: " + confusion);
         }
 
         int tp = matrix[0][0];
