@@ -19,7 +19,6 @@ package smile.regression;
 
 import java.util.Arrays;
 import java.util.Properties;
-import java.util.function.BiFunction;
 import smile.data.CategoricalEncoder;
 import smile.data.DataFrame;
 import smile.data.Tuple;
@@ -33,6 +32,32 @@ import smile.feature.FeatureTransform;
  * @author Haifeng Li
  */
 public interface DataFrameRegression extends Regression<Tuple> {
+    /**
+     * The regression trainer.
+     * @param <M> the type of model.
+     */
+    interface Trainer<M extends DataFrameRegression> {
+        /**
+         * Fits a regression model with the default hyper-parameters.
+         * @param formula a symbolic description of the model to be fitted.
+         * @param data the data frame of the explanatory and response variables.
+         * @return the model
+         */
+        default M fit(Formula formula, DataFrame data) {
+            Properties params = new Properties();
+            return fit(formula, data, params);
+        }
+
+        /**
+         * Fits a regression model.
+         * @param formula a symbolic description of the model to be fitted.
+         * @param data the data frame of the explanatory and response variables.
+         * @param params the hyper-parameters.
+         * @return the model
+         */
+        M fit(Formula formula, DataFrame data, Properties params);
+    }
+
     /**
      * Returns the model formula.
      * @return the model formula.
@@ -67,7 +92,7 @@ public interface DataFrameRegression extends Regression<Tuple> {
      * @param trainer the training lambda.
      * @return the model.
      */
-    static DataFrameRegression of(Formula formula, DataFrame data, Properties params, Trainer<double[]> trainer) {
+    static DataFrameRegression of(Formula formula, DataFrame data, Properties params, Regression.Trainer<double[], ?> trainer) {
         DataFrame X = formula.x(data);
         StructType schema = X.schema();
         double[][] x = X.toArray(false, CategoricalEncoder.DUMMY);
