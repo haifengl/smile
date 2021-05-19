@@ -579,11 +579,16 @@ public abstract class Layer implements Serializable {
                     dropout = Double.parseDouble(m.group(4));
                 }
 
-                if (i == 0 && !activation.equalsIgnoreCase("input")) {
-                    builders.add(Layer.input(p));
+                if (i == 0) {
+                    if (activation.equalsIgnoreCase("input")) {
+                        builders.add(Layer.input(neurons, dropout));
+                    } else {
+                        builders.add(Layer.input(p));
+                        builders.add(Layer.builder(activation, neurons, dropout));
+                    }
+                } else {
+                    builders.add(Layer.builder(activation, neurons, dropout));
                 }
-
-                builders.add(Layer.builder(activation, neurons, dropout));
             } else {
                 throw new IllegalArgumentException("Invalid layer: " + layers[i]);
             }
