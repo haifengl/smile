@@ -32,7 +32,7 @@ class RegressionModelSpec extends Specification {
 
   "RegressionModel" should {
     "random.forest" in {
-      MathEx.setSeed(19650217) // to get repeatable results.
+      MathEx.setSeed(19650218) // to get repeatable results.
       val params = new Properties()
       params.setProperty("smile.random_forest.trees", "100")
       params.setProperty("smile.random_forest.max.nodes", "100")
@@ -43,7 +43,7 @@ class RegressionModelSpec extends Specification {
       model.test.get.r2 must beCloseTo(0.746 +/- 0.01)
     }
     "svm" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
       params.setProperty("smile.svm.kernel", "Gaussian(6.0)")
       params.setProperty("smile.svm.C", "5")
@@ -55,7 +55,7 @@ class RegressionModelSpec extends Specification {
       model.test.get.r2 must beCloseTo(0.738 +/- 0.01)
     }
     "svm with ensemble" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
       params.setProperty("smile.svm.kernel", "Gaussian(6.0)")
       params.setProperty("smile.svm.C", "5")
@@ -68,7 +68,7 @@ class RegressionModelSpec extends Specification {
     }
     /*
     "mlp" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
       params.setProperty("smile.mlp.epochs", "30")
       params.setProperty("smile.mlp.activation", "sigmoid(30)")

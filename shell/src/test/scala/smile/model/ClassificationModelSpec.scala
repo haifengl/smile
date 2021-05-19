@@ -32,7 +32,7 @@ class ClassificationModelSpec extends Specification {
 
   "ClassificationModel" should {
     "random.forest" in {
-      MathEx.setSeed(19650217) // to get repeatable results.
+      MathEx.setSeed(19650218) // to get repeatable results.
       val params = new Properties()
       params.setProperty("smile.random_forest.trees", "100")
       params.setProperty("smile.random_forest.max_nodes", "100")
@@ -44,30 +44,34 @@ class ClassificationModelSpec extends Specification {
       model.test.get.error must beCloseTo(33 +/- 3)
     }
     "svm" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
+      params.setProperty("smile.feature.transform", "Standardizer")
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
+      params.setProperty("smile.svm.type", "ovo")
       val model = ClassificationModel("svm", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 93
+      model.test.get.error mustEqual 33
     }
     "svm with ensemble" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
+      params.setProperty("smile.feature.transform", "Standardizer")
       params.setProperty("smile.svm.kernel", "Gaussian(6.4)")
       params.setProperty("smile.svm.C", "100")
+      params.setProperty("smile.svm.type", "ovo")
       val model = ClassificationModel("svm", formula, train, params, kfold = 5, round = 3, ensemble = true, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 89
+      model.test.get.error mustEqual 31
     }
     /*
     "mlp" in {
-      MathEx.setSeed(19650217)
+      MathEx.setSeed(19650218)
       val params = new Properties()
       params.setProperty("smile.mlp.epochs", "30")
       params.setProperty("smile.mlp.layers", "ReLU(50)|Sigmoid(30)")
