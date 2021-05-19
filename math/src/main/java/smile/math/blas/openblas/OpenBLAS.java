@@ -1010,6 +1010,16 @@ public class OpenBLAS implements BLAS, LAPACK {
     }
 
     @Override
+    public int orgqr(Layout layout, int m, int n, int k, float[] A, int lda, float[] tau) {
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
+    public int orgqr(Layout layout, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau) {
+        return LAPACKE_sorgqr(layout.lapack(), m, n, k, A, lda, tau);
+    }
+
+    @Override
     public int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, double[] A, int lda, double[] tau, double[] C, int ldc) {
         return LAPACKE_dormqr(layout.lapack(), side.lapack(), trans.lapack(), m, n, k, A, lda, tau, C, ldc);
     }

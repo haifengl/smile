@@ -21,6 +21,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.DoubleBuffer;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.Arrays;
@@ -2713,7 +2714,7 @@ public class FloatMatrix extends SMatrix {
             int n = qr.n;
             FloatMatrix R = FloatMatrix.diag(tau);
             for (int i = 0; i < n; i++) {
-                for (int j = i+1; j < n; j++) {
+                for (int j = i; j < n; j++) {
                     R.set(i, j, qr.get(i, j));
                 }
             }
@@ -2728,21 +2729,12 @@ public class FloatMatrix extends SMatrix {
         public FloatMatrix Q() {
             int m = qr.m;
             int n = qr.n;
-            FloatMatrix Q = new FloatMatrix(m, n);
-            for (int k = n - 1; k >= 0; k--) {
-                Q.set(k, k, 1.0f);
-                for (int j = k; j < n; j++) {
-                    if (qr.get(k, k) != 0) {
-                        float s = 0.0f;
-                        for (int i = k; i < m; i++) {
-                            s += qr.get(i, k) * Q.get(i, j);
-                        }
-                        s = -s / qr.get(k, k);
-                        for (int i = k; i < m; i++) {
-                            Q.add(i, j, s * qr.get(i, k));
-                        }
-                    }
-                }
+            int k = Math.min(m, n);
+            FloatMatrix Q = qr.clone();
+            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, FloatBuffer.wrap(tau));
+            if (info != 0) {
+                logger.error("LAPACK ORGRQ error code: {}", info);
+                throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
             }
             return Q;
         }
