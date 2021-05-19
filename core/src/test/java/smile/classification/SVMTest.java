@@ -149,7 +149,7 @@ public class SVMTest {
     public void testSegment() {
         System.out.println("Segment");
 
-        MathEx.setSeed(19650217); // to get repeatable results.
+        MathEx.setSeed(19650218); // to get repeatable results.
 
         Standardizer scaler = Standardizer.fit(Segment.x);
         double[][] x = scaler.transform(Segment.x);
