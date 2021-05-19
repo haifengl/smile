@@ -2717,7 +2717,7 @@ public class Matrix extends DMatrix {
             int n = qr.n;
             Matrix R = Matrix.diag(tau);
             for (int i = 0; i < n; i++) {
-                for (int j = i+1; j < n; j++) {
+                for (int j = i; j < n; j++) {
                     R.set(i, j, qr.get(i, j));
                 }
             }
@@ -2732,21 +2732,12 @@ public class Matrix extends DMatrix {
         public Matrix Q() {
             int m = qr.m;
             int n = qr.n;
-            Matrix Q = new Matrix(m, n);
-            for (int k = n - 1; k >= 0; k--) {
-                Q.set(k, k, 1.0f);
-                for (int j = k; j < n; j++) {
-                    if (qr.get(k, k) != 0) {
-                        double s = 0.0f;
-                        for (int i = k; i < m; i++) {
-                            s += qr.get(i, k) * Q.get(i, j);
-                        }
-                        s = -s / qr.get(k, k);
-                        for (int i = k; i < m; i++) {
-                            Q.add(i, j, s * qr.get(i, k));
-                        }
-                    }
-                }
+            int k = Math.min(m, n);
+            Matrix Q = qr.clone();
+            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, DoubleBuffer.wrap(tau));
+            if (info != 0) {
+                logger.error("LAPACK ORGRQ error code: {}", info);
+                throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
             }
             return Q;
         }
