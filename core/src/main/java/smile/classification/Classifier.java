@@ -49,8 +49,20 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
     /**
      * The classifier trainer.
      * @param <T> the type of model input object.
+     * @param <M> the type of model.
      */
-    interface Trainer<T> {
+    interface Trainer<T, M extends Classifier<T>> {
+        /**
+         * Fits a classification model with the default hyper-parameters.
+         * @param x the training samples.
+         * @param y the training labels.
+         * @return the model
+         */
+        default M fit(T[] x, int[] y) {
+            Properties params = new Properties();
+            return fit(x, y, params);
+        }
+
         /**
          * Fits a classification model.
          * @param x the training samples.
@@ -58,7 +70,7 @@ public interface Classifier<T> extends ToIntFunction<T>, ToDoubleFunction<T>, Se
          * @param params the hyper-parameters.
          * @return the model
          */
-        Classifier<T> fit(T[] x, int[] y, Properties params);
+        M fit(T[] x, int[] y, Properties params);
     }
 
     /**

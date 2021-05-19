@@ -41,8 +41,20 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
     /**
      * The regression trainer.
      * @param <T> the type of model input object.
+     * @param <M> the type of model.
      */
-    interface Trainer<T> {
+    interface Trainer<T, M extends Regression<T>> {
+        /**
+         * Fits a regression model with the default hyper-parameters.
+         * @param x the training samples.
+         * @param y the response variables.
+         * @return the model
+         */
+        default M fit(T[] x, double[] y) {
+            Properties params = new Properties();
+            return fit(x, y, params);
+        }
+
         /**
          * Fits a regression model.
          * @param x the training samples.
@@ -50,7 +62,7 @@ public interface Regression<T> extends ToDoubleFunction<T>, Serializable {
          * @param params the hyper-parameters.
          * @return the model
          */
-        Regression<T> fit(T[] x, double[] y, Properties params);
+        M fit(T[] x, double[] y, Properties params);
     }
 
     /**
