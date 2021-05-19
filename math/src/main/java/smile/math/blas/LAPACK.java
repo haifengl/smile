@@ -5815,6 +5815,62 @@ public interface LAPACK {
     int ormqr(Layout layout, Side side, Transpose trans, int m, int n, int k, FloatBuffer A, int lda, FloatBuffer tau, FloatBuffer C, int ldc);
 
     /**
+     * Generates an M-by-N real matrix Q with orthonormal columns.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param k The minimum number of rows and columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the elements on and above the diagonal of the array
+     *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
+     *          with the array TAU, represent the orthogonal matrix Q as a
+     *          product of min(m,n) elementary reflectors.
+     *
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
+     *
+     * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     */
+    int orgqr(Layout layout, int m, int n, int k, double[] A, int lda, double[] tau);
+
+    /**
+     * Generates an M-by-N real matrix Q with orthonormal columns.
+     *
+     * @param layout The matrix layout.
+     *
+     * @param m The number of rows of the matrix A.
+     *
+     * @param n The number of columns of the matrix A.
+     *
+     * @param k The minimum number of rows and columns of the matrix A.
+     *
+     * @param A The matrix of dimension (LDA, N).
+     *          On exit, the elements on and above the diagonal of the array
+     *          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+     *          upper triangular if {@code m >= n}); the elements below the diagonal,
+     *          with the array TAU, represent the orthogonal matrix Q as a
+     *          product of min(m,n) elementary reflectors.
+     *
+     * @param lda The leading dimension of the matrix A. {@code LDA >= max(1,N)}.
+     *
+     * @param tau The scalar factors of the elementary reflectors. Dimension min(M,N).
+     *
+     * @return INFO flag.
+     *         {@code = 0}:  successful exit
+     *         {@code < 0}:  if {@code INFO = -i}, the i-th argument had an illegal value
+     */
+    int orgqr(Layout layout, int m, int n, int k, DoubleBuffer A, int lda, DoubleBuffer tau);
+
+    /**
      * Solves a triangular system of the form
      * <pre>{@code
      *     A * X = B
