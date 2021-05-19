@@ -76,7 +76,7 @@ public class MLPTest {
         ClassificationValidations<MLP> result = CrossValidation.classification(10, x, PenDigits.y, (xi, yi) -> {
             MLP model = new MLP(Layer.input(p),
                     Layer.sigmoid(50),
-                    Layer.mle(k, OutputFunction.SIGMOID)
+                    Layer.mle(k, OutputFunction.SOFTMAX)
             );
 
             model.setLearningRate(TimeFunction.linear(0.2, 10000, 0.1));
@@ -93,7 +93,7 @@ public class MLPTest {
         });
 
         System.out.println(result);
-        assertEquals(0.9867, result.avg.accuracy, 1E-4);
+        assertEquals(0.9847, result.avg.accuracy, 1E-4);
     }
 
     @Test
@@ -214,7 +214,7 @@ public class MLPTest {
                 Layer.rectifier(768),
                 Layer.rectifier(192),
                 Layer.rectifier(30),
-                Layer.mle(k, OutputFunction.SIGMOID)
+                Layer.mle(k, OutputFunction.SOFTMAX)
         );
 
         model.setLearningRate(TimeFunction.linear(0.01, 20000, 0.001));
@@ -232,7 +232,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(115, error);
+        assertEquals(116, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
@@ -253,7 +253,7 @@ public class MLPTest {
                 Layer.sigmoid(768),
                 Layer.sigmoid(192),
                 Layer.sigmoid(30),
-                Layer.mle(k, OutputFunction.SIGMOID)
+                Layer.mle(k, OutputFunction.SOFTMAX)
         );
 
         model.setLearningRate(
@@ -264,11 +264,11 @@ public class MLPTest {
         );
         model.setRMSProp(0.9, 1E-7);
 
-        int batch = 20;
+        int batch = 32;
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         int error = 0;
-        for (int epoch = 1; epoch <= 5; epoch++) {
+        for (int epoch = 1; epoch <= 10; epoch++) {
             System.out.format("----- epoch %d -----%n", epoch);
             int[] permutation = MathEx.permutate(x.length);
             int i = 0;
@@ -289,6 +289,6 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(133, error);
+        assertEquals(115, error);
     }
 }
