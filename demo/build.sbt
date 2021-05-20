@@ -1,3 +1,3 @@
 name := "smile-demo"
 
-mainClass in Compile := Some("smile.demo.SmileDemo")
+Compile / mainClass := Some("smile.demo.SmileDemo")
