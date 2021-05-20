@@ -93,12 +93,12 @@ public class SVMTest {
         }
 
         GaussianKernel kernel = new GaussianKernel(90);
-        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+        SVM<double[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(134, error);
+        assertEquals(136, error);
     }
 
     @Test
@@ -110,7 +110,7 @@ public class SVMTest {
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
         Dataset<Instance<SparseArray>> test  = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.tst"));
 
-        int n = train.size();
+        int n = Math.min(20000, train.size()); // to avoid OOM
         int[][] x = new int[n][];
         int[] y = new int[n];
         for (int i = 0; i < n; i++) {
@@ -137,12 +137,12 @@ public class SVMTest {
         }
 
         BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31.6);
-        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3);
+        Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2451, error);
+        assertEquals(2485, error);
     }
 
     @Test
@@ -156,12 +156,12 @@ public class SVMTest {
         double[][] testx = scaler.transform(Segment.testx);
 
         GaussianKernel kernel = new GaussianKernel(6.4);
-        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3));
+        OneVersusOne<double[]> model = OneVersusOne.fit(x, Segment.y, (xi, y) -> SVM.fit(xi, y, kernel, 100, 1E-3, 1));
 
         int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(33, error);
+        assertEquals(35, error);
     }
 
     @Test
@@ -171,12 +171,12 @@ public class SVMTest {
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GaussianKernel kernel = new GaussianKernel(8.0);
-        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3));
+        OneVersusRest<double[]> model = OneVersusRest.fit(USPS.x, USPS.y, (x, y) -> SVM.fit(x, y, kernel, 5, 1E-3, 1));
 
         int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(87, error);
+        assertEquals(86, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
