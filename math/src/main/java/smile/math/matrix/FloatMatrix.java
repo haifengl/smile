@@ -460,7 +460,7 @@ public class FloatMatrix extends SMatrix {
      * @throws ClassNotFoundException when fails to load the class.
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        //read default properties
+        // read default properties
         in.defaultReadObject();
 
         // read buffer data
