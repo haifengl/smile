@@ -224,6 +224,8 @@ package object math {
   def eye(n: Int): Matrix = Matrix.eye(n)
   /** Returns an m-by-n identity matrix. */
   def eye(m: Int, n: Int): Matrix = Matrix.eye(m, n)
+  /** Returns an m-by-n matrix of uniform distributed random numbers. */
+  def rand(m: Int, n: Int, lo: Double = 0.0, hi: Double = 1.0): Matrix = Matrix.rand(m, n, lo, hi)
   /** Returns an m-by-n matrix of normally distributed random numbers. */
   def randn(m: Int, n: Int, mu: Double = 0.0, sigma: Double = 1.0): Matrix = Matrix.rand(m, n, new GaussianDistribution(mu, sigma))
   /** Returns the trace of matrix. */
