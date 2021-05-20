@@ -40,7 +40,7 @@ class RegressionModelSpec extends Specification {
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.r2 must beCloseTo(0.746 +/- 0.01)
+      model.test.get.r2 must beCloseTo(0.746 +/- 0.02)
     }
     "svm" in {
       MathEx.setSeed(19650218)
@@ -66,19 +66,18 @@ class RegressionModelSpec extends Specification {
       println(s"Test metrics: ${model.test}")
       model.test.get.r2 must beCloseTo(0.697 +/- 0.01)
     }
-    /*
     "mlp" in {
       MathEx.setSeed(19650218)
       val params = new Properties()
+      params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
       params.setProperty("smile.mlp.epochs", "30")
-      params.setProperty("smile.mlp.activation", "sigmoid(30)")
-      params.setProperty("smile.mlp.learning_rate", "0.1")
+      params.setProperty("smile.mlp.activation", "ReLU(50)|Sigmoid(30)")
+      params.setProperty("smile.mlp.learning_rate", "0.2")
       val model = RegressionModel("mlp", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.rmse must beCloseTo(0.9909 +/- 0.01)
+      model.test.get.rmse must beCloseTo(0.7474 +/- 0.01)
     }
-    */
   }
 }

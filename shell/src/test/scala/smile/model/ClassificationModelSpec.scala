@@ -41,7 +41,7 @@ class ClassificationModelSpec extends Specification {
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
       model.validation.isDefined must beFalse
-      model.test.get.error must beCloseTo(33 +/- 3)
+      model.test.get.error must beCloseTo(34 +/- 3)
     }
     "svm" in {
       MathEx.setSeed(19650218)
@@ -69,19 +69,20 @@ class ClassificationModelSpec extends Specification {
       println(s"Test metrics: ${model.test}")
       model.test.get.error mustEqual 31
     }
-    /*
     "mlp" in {
       MathEx.setSeed(19650218)
       val params = new Properties()
-      params.setProperty("smile.mlp.epochs", "30")
-      params.setProperty("smile.mlp.layers", "ReLU(50)|Sigmoid(30)")
-      params.setProperty("smile.mlp.learning_rate", "0.2")
+      params.setProperty("smile.feature.transform", "winsor(0.01, 0.99)")
+      params.setProperty("smile.mlp.epochs", "13")
+      params.setProperty("smile.mlp.mini_batch", "20")
+      params.setProperty("smile.mlp.layers", "Sigmoid(50)")
+      params.setProperty("smile.mlp.learning_rate", "linear(0.1, 10000, 0.01)")
+      params.setProperty("smile.mlp.RMSProp.rho", "0.9")
       val model = ClassificationModel("mlp", formula, train, params, test = Some(test))
       println(s"Training metrics: ${model.train}")
       println(s"Validation metrics: ${model.validation}")
       println(s"Test metrics: ${model.test}")
-      model.test.get.error mustEqual 89
+      model.test.get.error mustEqual 32
     }
-    */
   }
 }
