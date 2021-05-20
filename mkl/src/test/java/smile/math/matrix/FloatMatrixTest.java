@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,9 +26,6 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-
-import java.util.Arrays;
-
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
@@ -495,7 +493,7 @@ public class FloatMatrixTest {
         FloatMatrix a = new FloatMatrix(A);
         a.uplo(UPLO.LOWER);
         FloatMatrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-6f));
+        assertArrayEquals(eigenValues, eig.wr, 1E-6f);
 
         assertEquals(eigenVectors.length, eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -532,7 +530,7 @@ public class FloatMatrixTest {
 
         FloatMatrix a = new FloatMatrix(A);
         FloatMatrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-6f));
+        assertArrayEquals(eigenValues, eig.wr, 1E-6f);
 
         assertEquals(eigenVectors.length,    eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -553,7 +551,7 @@ public class FloatMatrixTest {
         assertNull(eig.Vl);
         assertNull(eig.Vr);
     }
-
+    
     @Test
     public void testSVD1() {
         System.out.println("SVD symm");
@@ -580,7 +578,7 @@ public class FloatMatrixTest {
         FloatMatrix matrix = new FloatMatrix(A);
         matrix.uplo(UPLO.LOWER);
         FloatMatrix.SVD svd = matrix.svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -635,7 +633,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-4f));
+        assertArrayEquals(s, svd.s, 1E-4f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -689,7 +687,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -742,7 +740,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-4f));
+        assertArrayEquals(s, svd.s, 1E-4f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -794,7 +792,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-5f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -847,7 +845,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -896,7 +894,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -943,7 +941,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6f);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -1005,7 +1003,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-5f));
+        assertArrayEquals(s, svd.s, 1E-5f);
 
         assertEquals(Ut[0].length, svd.U.nrow());
         assertEquals(Ut.length, svd.U.ncol());
@@ -1056,9 +1054,9 @@ public class FloatMatrixTest {
     public void testSVDSolve() {
         System.out.println("SVD solve");
         float[][] A = {
-                {0.9000f, 0.4000f, 0.7000f},
-                {0.4000f, 0.5000f, 0.3000f},
-                {0.7000f, 0.3000f, 0.8000f}
+            {0.9000f, 0.4000f, 0.7000f},
+            {0.4000f, 0.5000f, 0.3000f},
+            {0.7000f, 0.3000f, 0.8000f}
         };
         float[] b = {0.5f, 0.5f, 0.5f};
         float[] x = {-0.2027027f, 0.8783784f, 0.4729730f};

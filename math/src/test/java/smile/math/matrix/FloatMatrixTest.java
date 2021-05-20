@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,9 +26,6 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-
-import java.util.Arrays;
-
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
