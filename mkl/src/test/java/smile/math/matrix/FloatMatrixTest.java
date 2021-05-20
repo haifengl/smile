@@ -792,7 +792,7 @@ public class FloatMatrixTest {
         };
 
         FloatMatrix.SVD svd = new FloatMatrix(A).svd();
-        assertArrayEquals(s, svd.s, 1E-6f);
+        assertArrayEquals(s, svd.s, 1E-5f);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
