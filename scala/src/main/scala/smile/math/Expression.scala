@@ -930,11 +930,10 @@ private[math] abstract class PimpedArrayLike[T: ClassTag] {
 private[math] class PimpedArray[T](override val a: Array[T])(implicit val tag: ClassTag[T]) extends PimpedArrayLike[T]
 
 private[math] class PimpedArray2D(override val a: Array[Array[Double]])(implicit val tag: ClassTag[Array[Double]]) extends PimpedArrayLike[Array[Double]] {
-
+  def toMatrix = new Matrix(a)
   def unary_~ = new Matrix(a)
 
   def nrow: Int = a.length
-
   def ncol: Int = a(0).length
 
   /** Returns a submatrix. */
@@ -986,6 +985,7 @@ private[math] case class PimpedDouble(a: Double) {
 }
 
 private[math] class PimpedDoubleArray(override val a: Array[Double]) extends PimpedArray[Double](a) {
+  def toMatrix = new Matrix(a)
   def unary_~ = new Matrix(a)
 
   def += (b: Double): Array[Double] = a.mapInPlace(_ + b)
