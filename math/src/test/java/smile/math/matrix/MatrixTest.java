@@ -17,6 +17,7 @@
 
 package smile.math.matrix;
 
+import java.util.Arrays;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -25,14 +26,11 @@ import org.junit.Test;
 import smile.math.MathEx;
 import smile.math.blas.Layout;
 import smile.math.blas.UPLO;
-
-import java.util.Arrays;
-
 import static smile.math.blas.Transpose.*;
 import static org.junit.Assert.*;
 
 /**
- * Test Matrix with MKL.
+ * Test Matrix.
  *
  * @author Haifeng Li
  */
@@ -495,7 +493,9 @@ public class MatrixTest {
         Matrix a = new Matrix(A);
         a.uplo(UPLO.LOWER);
         Matrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-7f));
+        for (int i = 0; i < eigenValues.length; i++) {
+            assertEquals(eigenValues[i], eig.wr[i], 1E-7f);
+        }
 
         assertEquals(eigenVectors.length, eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -532,7 +532,9 @@ public class MatrixTest {
 
         Matrix a = new Matrix(A);
         Matrix.EVD eig = a.eigen().sort();
-        assertTrue(MathEx.equals(eigenValues, eig.wr, 1E-7f));
+        for (int i = 0; i < eigenValues.length; i++) {
+            assertEquals(eigenValues[i], eig.wr[i], 1E-7f);
+        }
 
         assertEquals(eigenVectors.length,    eig.Vr.nrow());
         assertEquals(eigenVectors[0].length, eig.Vr.ncol());
@@ -580,7 +582,7 @@ public class MatrixTest {
         Matrix matrix = new Matrix(A);
         matrix.uplo(UPLO.LOWER);
         Matrix.SVD svd = matrix.svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-7f));
+        assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -635,7 +637,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-7f));
+        assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -689,7 +691,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-7f));
+        assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -742,7 +744,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-7f));
+        assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -794,7 +796,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-7f));
+        assertArrayEquals(s, svd.s, 1E-7);
 
         assertEquals(U.length, svd.U.nrow());
         assertEquals(U[0].length, svd.U.ncol());
@@ -847,7 +849,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -896,7 +898,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -943,7 +945,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-6f));
+        assertArrayEquals(s, svd.s, 1E-6);
 
         assertEquals(U.length, svd.U.nrow());
         for (int i = 0; i < U.length; i++) {
@@ -1005,7 +1007,7 @@ public class MatrixTest {
         };
 
         Matrix.SVD svd = new Matrix(A).svd();
-        assertTrue(MathEx.equals(s, svd.s, 1E-5f));
+        assertArrayEquals(s, svd.s, 1E-5);
 
         assertEquals(Ut[0].length, svd.U.nrow());
         assertEquals(Ut.length, svd.U.ncol());
