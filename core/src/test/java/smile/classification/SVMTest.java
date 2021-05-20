@@ -64,7 +64,6 @@ public class SVMTest {
     @Test
     public void testSVMGuide1() throws IOException {
         System.out.println("svmguide1");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/svmguide1"));
@@ -104,7 +103,6 @@ public class SVMTest {
     @Test
     public void testAdult() throws IOException {
         System.out.println("adult");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Dataset<Instance<SparseArray>> train = Read.libsvm(smile.util.Paths.getTestData("libsvm/data_lasvm_adult_adult.trn"));
@@ -136,19 +134,18 @@ public class SVMTest {
             testy[i] = sample.label();
         }
 
-        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(31.6);
+        BinarySparseGaussianKernel kernel = new BinarySparseGaussianKernel(28);
         Classifier<int[]> model = SVM.fit(x, y, kernel, 100, 1E-3, 1);
 
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2485, error);
+        assertEquals(2467, error);
     }
 
     @Test
     public void testSegment() {
         System.out.println("Segment");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         Standardizer scaler = Standardizer.fit(Segment.x);
@@ -161,13 +158,12 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(35, error);
+        assertEquals(37, error);
     }
 
     @Test
     public void testUSPS() throws Exception {
         System.out.println("USPS");
-
         MathEx.setSeed(19650218); // to get repeatable results.
 
         GaussianKernel kernel = new GaussianKernel(8.0);
@@ -176,7 +172,7 @@ public class SVMTest {
         int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(86, error);
+        assertEquals(88, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
