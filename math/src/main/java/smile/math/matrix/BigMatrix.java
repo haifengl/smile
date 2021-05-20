@@ -783,7 +783,7 @@ public class BigMatrix extends DMatrix {
      * @return the linearized index.
      */
     protected long index(int i , int j) {
-        return j * ld + i + A.position();
+        return j * ld + i;
     }
 
     @Override
