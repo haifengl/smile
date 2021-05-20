@@ -126,20 +126,10 @@ public class LASVM<T> implements Serializable {
      * Trains the model.
      * @param x training samples.
      * @param y training labels.
+     * @param epochs the number of epochs, usually 1 or 2 is sufficient.
      * @return the model.
      */
-    public KernelMachine<T> fit(T[] x, int[] y) {
-        return fit(x, y, 2);
-    }
-
-    /**
-     * Trains the model.
-     * @param x training samples.
-     * @param y training labels.
-     * @param epoch the number of epochs, usually 1 or 2 is sufficient.
-     * @return the model.
-     */
-    public KernelMachine<T>  fit(T[] x, int[] y, int epoch) {
+    public KernelMachine<T>  fit(T[] x, int[] y, int epochs) {
         this.x = x;
         this.K = new double[x.length][];
 
@@ -148,7 +138,7 @@ public class LASVM<T> implements Serializable {
 
         // stochastic training
         int phase = Math.min(x.length, 1000);
-        for (int e = 0, iter = 0; e < epoch; e++) {
+        for (int epoch = 0, iter = 0; epoch < epochs; epoch++) {
             for (int i : MathEx.permutate(x.length)) {
                 process(i, x[i], y[i]);
 

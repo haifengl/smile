@@ -127,7 +127,7 @@ public class SVR {
     }
 
     /**
-     * Fits a epsilon-SVR.
+     * Fits an epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
      * @param eps the parameter of epsilon-insensitive hinge loss.
@@ -147,7 +147,7 @@ public class SVR {
     }
 
     /**
-     * Fits a epsilon-SVR.
+     * Fits an epsilon-SVR.
      * @param x training samples.
      * @param y response variable.
      * @param params the hyper-parameters.
