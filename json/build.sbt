@@ -1,7 +1,7 @@
 name := "smile-json"
 
-scalacOptions in (Compile, doc) ++= Seq(
+Compile / doc / scalacOptions ++= Seq(
   "-doc-root-content", baseDirectory.value + "/root-doc.txt",
   "-doc-title", "Smile - JSON"
 )
-target in Compile in doc := baseDirectory.value / "../doc/api/json"
+Compile / doc / target := baseDirectory.value / "../doc/api/json"

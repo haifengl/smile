@@ -1,6 +1,6 @@
 name := "smile-shell"
 
-mainClass in Compile := Some("smile.shell.Main")
+Compile / mainClass := Some("smile.shell.Main")
 // workaround the class loader failure with reflection
 Test / classLoaderLayeringStrategy := ClassLoaderLayeringStrategy.Flat
 
@@ -19,9 +19,9 @@ packageDescription :=
     |""".stripMargin
 
 // Filter data files in universal
-mappings in Universal := {
+Universal / mappings := {
   // universalMappings: Seq[(File,String)]
-  val universalMappings = (mappings in Universal).value
+  val universalMappings = (Universal / mappings).value
 
   // removing means filtering
   universalMappings filter {
