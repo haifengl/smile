@@ -78,7 +78,7 @@ public class Matrix extends DMatrix {
      * @param n the number of columns.
      */
     public Matrix(int m, int n) {
-        this(m, n, 0.0f);
+        this(m, n, 0.0);
     }
 
     /**
@@ -459,7 +459,7 @@ public class Matrix extends DMatrix {
      * @throws ClassNotFoundException when fails to load the class.
      */
     private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
-        //read default properties
+        // read default properties
         in.defaultReadObject();
 
         // read buffer data
@@ -880,7 +880,6 @@ public class Matrix extends DMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-
     public Matrix mul(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -896,7 +895,6 @@ public class Matrix extends DMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-
     public Matrix div(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -2123,7 +2121,7 @@ public class Matrix extends DMatrix {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
-            return (s[0] <= 0.0f || s[s.length - 1] <= 0.0f) ? Float.POSITIVE_INFINITY : s[0] / s[s.length - 1];
+            return (s[0] <= 0.0f || s[s.length - 1] <= 0.0f) ? Double.POSITIVE_INFINITY : s[0] / s[s.length - 1];
         }
 
         /**

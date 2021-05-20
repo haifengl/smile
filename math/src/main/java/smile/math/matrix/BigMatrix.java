@@ -21,11 +21,9 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.DoubleBuffer;
-import java.nio.FloatBuffer;
-import java.nio.IntBuffer;
-import java.util.Arrays;
 
+import org.bytedeco.javacpp.DoublePointer;
+import org.bytedeco.javacpp.IntPointer;
 import smile.math.MathEx;
 import smile.math.blas.*;
 import smile.sort.QuickSort;
@@ -39,18 +37,19 @@ import static smile.math.blas.Transpose.*;
 import static smile.math.blas.UPLO.*;
 
 /**
- * Dense matrix of single precision values.
+ * Big dense matrix of double precision values for more than
+ * 2 billion elements.
  *
  * @author Haifeng Li
  */
-public class FloatMatrix extends SMatrix {
+public class BigMatrix extends DMatrix {
     private static final long serialVersionUID = 2L;
-    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(FloatMatrix.class);
+    private static final org.slf4j.Logger logger = org.slf4j.LoggerFactory.getLogger(BigMatrix.class);
 
     /**
      * The matrix storage.
      */
-    transient FloatBuffer A;
+    transient DoublePointer A;
     /**
      * The leading dimension.
      */
@@ -78,8 +77,8 @@ public class FloatMatrix extends SMatrix {
      * @param m the number of rows.
      * @param n the number of columns.
      */
-    public FloatMatrix(int m, int n) {
-        this(m, n, 0.0f);
+    public BigMatrix(int m, int n) {
+        this(m, n, 0.0);
     }
 
     /**
@@ -88,7 +87,7 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of columns.
      * @param a the initial value.
      */
-    public FloatMatrix(int m, int n, float a) {
+    public BigMatrix(int m, int n, double a) {
         if (m <= 0 || n <= 0) {
             throw new IllegalArgumentException(String.format("Invalid matrix size: %d x %d", m, n));
         }
@@ -97,9 +96,15 @@ public class FloatMatrix extends SMatrix {
         this.n = n;
         this.ld = ld(m);
 
-        float[] array = new float[ld * n];
-        if (a != 0.0) Arrays.fill(array, a);
-        A = FloatBuffer.wrap(array);
+        long size = ld * n;
+        A = new DoublePointer(size);
+        if (a == 0.0) {
+            DoublePointer.memset(A, 0, size);
+        } else {
+            for (long i = 0; i < size; i++) {
+                A.put(i, a);
+            }
+        }
     }
 
     /**
@@ -108,7 +113,7 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of columns.
      * @param A the array of matrix.
      */
-    public FloatMatrix(int m, int n, float[][] A) {
+    public BigMatrix(int m, int n, double[][] A) {
         this(m, n);
 
         for (int i = 0; i < m; i++) {
@@ -122,7 +127,7 @@ public class FloatMatrix extends SMatrix {
      * Constructor.
      * @param A the array of matrix.
      */
-    public FloatMatrix(float[][] A) {
+    public BigMatrix(double[][] A) {
         this(A.length, A[0].length, A);
     }
 
@@ -130,7 +135,7 @@ public class FloatMatrix extends SMatrix {
      * Constructor of a column vector/matrix with given array as the internal storage.
      * @param A The array of column vector.
      */
-    public FloatMatrix(float[] A) {
+    public BigMatrix(double[] A) {
         this(A, 0, A.length);
     }
 
@@ -142,11 +147,14 @@ public class FloatMatrix extends SMatrix {
      * @param length The length of the subarray to be used; must be non-negative and
      *               no larger than array.length - offset.
      */
-    public FloatMatrix(float[] A, int offset, int length) {
+    public BigMatrix(double[] A, int offset, int length) {
         this.m = length;
         this.n = 1;
         this.ld = length;
-        this.A = FloatBuffer.wrap(A, offset, length);
+        this.A = new DoublePointer(length);
+        for (int i = 0; i < length; i++) {
+            this.A.put(i, A[offset+i]);
+        }
     }
 
     /**
@@ -156,7 +164,7 @@ public class FloatMatrix extends SMatrix {
      * @param ld the leading dimension.
      * @param A the matrix storage.
      */
-    public FloatMatrix(int m, int n, int ld, FloatBuffer A) {
+    public BigMatrix(int m, int n, int ld, DoublePointer A) {
         if (layout() == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
@@ -178,15 +186,15 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of columns.
      * @return the matrix.
      */
-    public static FloatMatrix of(Layout layout, int m, int n) {
+    public static BigMatrix of(Layout layout, int m, int n) {
         if (layout == COL_MAJOR) {
             int ld = ld(m);
-            int size = ld * n;
-            return of(layout, m, n, ld, FloatBuffer.allocate(size));
+            long size = ld * n;
+            return of(layout, m, n, ld, new DoublePointer(size));
         } else {
             int ld = ld(n);
-            int size = ld * m;
-            return of(layout, m, n, ld, FloatBuffer.allocate(size));
+            long size = ld * m;
+            return of(layout, m, n, ld, new DoublePointer(size));
         }
     }
 
@@ -199,7 +207,7 @@ public class FloatMatrix extends SMatrix {
      * @param A the matrix storage.
      * @return the matrix.
      */
-    public static FloatMatrix of(Layout layout, int m, int n, int ld, FloatBuffer A) {
+    public static BigMatrix of(Layout layout, int m, int n, int ld, DoublePointer A) {
         if (layout == COL_MAJOR && ld < m) {
             throw new IllegalArgumentException(String.format("Invalid leading dimension for COL_MAJOR: %d < %d", ld, m));
         }
@@ -209,22 +217,22 @@ public class FloatMatrix extends SMatrix {
         }
 
         if (layout == COL_MAJOR) {
-            return new FloatMatrix(m, n, ld, A);
+            return new BigMatrix(m, n, ld, A);
         } else {
-            return new FloatMatrix(m, n, ld, A) {
+            return new BigMatrix(m, n, ld, A) {
                 @Override
                 public Layout layout() {
                     return ROW_MAJOR;
                 }
 
                 @Override
-                protected int index(int i , int j) {
+                protected long index(int i , int j) {
                     return i * ld + j + A.position();
                 }
 
                 @Override
-                public FloatMatrix transpose() {
-                    return new FloatMatrix(n, m, ld, A);
+                public BigMatrix transpose() {
+                    return new BigMatrix(n, m, ld, A);
                 }
             };
         }
@@ -236,7 +244,7 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of columns.
      * @return the matrix.
      */
-    public static FloatMatrix randn(int m, int n) {
+    public static BigMatrix randn(int m, int n) {
         return rand(m, n, GaussianDistribution.getInstance());
     }
 
@@ -248,12 +256,12 @@ public class FloatMatrix extends SMatrix {
      * @param distribution the distribution of random number.
      * @return the matrix.
      */
-    public static FloatMatrix rand(int m, int n, Distribution distribution) {
-        FloatMatrix matrix = new FloatMatrix(m, n);
+    public static BigMatrix rand(int m, int n, Distribution distribution) {
+        BigMatrix matrix = new BigMatrix(m, n);
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                matrix.set(i, j, (float) distribution.rand());
+                matrix.set(i, j, distribution.rand());
             }
         }
 
@@ -269,12 +277,12 @@ public class FloatMatrix extends SMatrix {
      * @param hi the upper bound of uniform distribution.
      * @return the matrix.
      */
-    public static FloatMatrix rand(int m, int n, float lo, float hi) {
-        FloatMatrix matrix = new FloatMatrix(m, n);
+    public static BigMatrix rand(int m, int n, double lo, double hi) {
+        BigMatrix matrix = new BigMatrix(m, n);
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                matrix.set(i, j, (float) MathEx.random(lo, hi));
+                matrix.set(i, j, MathEx.random(lo, hi));
             }
         }
 
@@ -286,8 +294,8 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of rows/columns.
      * @return the matrix.
      */
-    public static FloatMatrix eye(int n) {
-        return diag(n, 1.0f);
+    public static BigMatrix eye(int n) {
+        return diag(n, 1.0);
     }
 
     /**
@@ -296,8 +304,8 @@ public class FloatMatrix extends SMatrix {
      * @param n the number of columns.
      * @return the matrix.
      */
-    public static FloatMatrix eye(int m, int n) {
-        return diag(m, n, 1.0f);
+    public static BigMatrix eye(int m, int n) {
+        return diag(m, n, 1.0);
     }
 
     /**
@@ -307,7 +315,7 @@ public class FloatMatrix extends SMatrix {
      * @param diag the diagonal value.
      * @return the matrix.
      */
-    public static FloatMatrix diag(int n, float diag) {
+    public static BigMatrix diag(int n, double diag) {
         return diag(n, n, diag);
     }
 
@@ -319,8 +327,8 @@ public class FloatMatrix extends SMatrix {
      * @param diag the diagonal value.
      * @return the matrix.
      */
-    public static FloatMatrix diag(int m, int n, float diag) {
-        FloatMatrix D = new FloatMatrix(m, n);
+    public static BigMatrix diag(int m, int n, double diag) {
+        BigMatrix D = new BigMatrix(m, n);
         int k = Math.min(m, n);
         for (int i = 0; i < k; i++) {
             D.set(i, i, diag);
@@ -334,11 +342,26 @@ public class FloatMatrix extends SMatrix {
      * @param diag the diagonal elements.
      * @return the matrix.
      */
-    public static FloatMatrix diag(float[] diag) {
+    public static BigMatrix diag(double[] diag) {
         int n = diag.length;
-        FloatMatrix D = new FloatMatrix(n, n);
+        BigMatrix D = new BigMatrix(n, n);
         for (int i = 0; i < n; i++) {
             D.set(i, i, diag[i]);
+        }
+        return D;
+    }
+
+    /**
+     * Returns a square diagonal matrix.
+     *
+     * @param diag the diagonal elements.
+     * @return the matrix.
+     */
+    public static BigMatrix diag(DoublePointer diag) {
+        int n = (int) diag.limit();
+        BigMatrix D = new BigMatrix(n, n);
+        for (int i = 0; i < n; i++) {
+            D.set(i, i, diag.get(i));
         }
         return D;
     }
@@ -350,9 +373,9 @@ public class FloatMatrix extends SMatrix {
      * @param a A[i, j] = a[i - j] for {@code i >= j} (or a[j - i] when {@code j > i})
      * @return the matrix.
      */
-    public static FloatMatrix toeplitz(float[] a) {
+    public static BigMatrix toeplitz(double[] a) {
         int n = a.length;
-        FloatMatrix toeplitz = new FloatMatrix(n, n);
+        BigMatrix toeplitz = new BigMatrix(n, n);
         toeplitz.uplo(LOWER);
 
         for (int i = 0; i < n; i++) {
@@ -376,13 +399,13 @@ public class FloatMatrix extends SMatrix {
      * @param ku {@code A[i, j] = ku[j - i]} for {@code i <= j}
      * @return the matrix.
      */
-    public static FloatMatrix toeplitz(float[] kl, float[] ku) {
+    public static BigMatrix toeplitz(double[] kl, double[] ku) {
         if (kl.length != ku.length - 1) {
             throw new IllegalArgumentException(String.format("Invalid subdiagonals and superdiagonals size: %d != %d - 1", kl.length, ku.length));
         }
 
         int n = kl.length;
-        FloatMatrix toeplitz = new FloatMatrix(n, n);
+        BigMatrix toeplitz = new BigMatrix(n, n);
 
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < i; j++) {
@@ -441,13 +464,13 @@ public class FloatMatrix extends SMatrix {
         if (layout() == COL_MAJOR) {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    out.writeFloat(get(i, j));
+                    out.writeDouble(get(i, j));
                 }
             }
         } else {
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
-                    out.writeFloat(get(i, j));
+                    out.writeDouble(get(i, j));
                 }
             }
         }
@@ -464,20 +487,20 @@ public class FloatMatrix extends SMatrix {
         in.defaultReadObject();
 
         // read buffer data
-        this.A = FloatBuffer.wrap(new float[m * n]);
+        this.A = new DoublePointer(new double[m * n]);
 
         if (layout() == COL_MAJOR) {
             this.ld = m;
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
-                    set(i, j, in.readFloat());
+                    set(i, j, in.readDouble());
                 }
             }
         } else {
             this.ld = n;
             for (int i = 0; i < m; i++) {
                 for (int j = 0; j < n; j++) {
-                    set(i, j, in.readFloat());
+                    set(i, j, in.readDouble());
                 }
             }
         }
@@ -535,7 +558,7 @@ public class FloatMatrix extends SMatrix {
      * @param uplo the format of packed matrix..
      * @return this matrix.
      */
-    public FloatMatrix uplo(UPLO uplo) {
+    public BigMatrix uplo(UPLO uplo) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -557,7 +580,7 @@ public class FloatMatrix extends SMatrix {
      * @param diag if not null, it specifies if the triangular matrix has unit diagonal elements.
      * @return this matrix.
      */
-    public FloatMatrix triangular(Diag diag) {
+    public BigMatrix triangular(Diag diag) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -577,8 +600,8 @@ public class FloatMatrix extends SMatrix {
 
     /** Returns a deep copy of matrix. */
     @Override
-    public FloatMatrix clone() {
-        FloatMatrix matrix = new FloatMatrix(m, n);
+    public BigMatrix clone() {
+        BigMatrix matrix = new BigMatrix(m, n);
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 matrix.set(i, j, get(i, j));
@@ -597,8 +620,8 @@ public class FloatMatrix extends SMatrix {
      * Return the two-dimensional array of matrix.
      * @return the two-dimensional array of matrix.
      */
-    public float[][] toArray() {
-        float[][] array = new float[m][n];
+    public double[][] toArray() {
+        double[][] array = new double[m][n];
         for (int i = 0; i < m; i++) {
             for (int j = 0; j < n; j++) {
                 array[i][j] = get(i, j);
@@ -642,8 +665,8 @@ public class FloatMatrix extends SMatrix {
      * @param rows the row indices.
      * @return the submatrix.
      */
-    public FloatMatrix row(int... rows) {
-        FloatMatrix x = new FloatMatrix(rows.length, n);
+    public BigMatrix row(int... rows) {
+        BigMatrix x = new BigMatrix(rows.length, n);
 
         for (int i = 0; i < rows.length; i++) {
             int row = rows[i];
@@ -660,8 +683,8 @@ public class FloatMatrix extends SMatrix {
      * @param cols the column indices.
      * @return the submatrix.
      */
-    public FloatMatrix col(int... cols) {
-        FloatMatrix x = new FloatMatrix(m, cols.length);
+    public BigMatrix col(int... cols) {
+        BigMatrix x = new BigMatrix(m, cols.length);
 
         for (int j = 0; j < cols.length; j++) {
             int col = cols[j];
@@ -684,14 +707,15 @@ public class FloatMatrix extends SMatrix {
      * @param l the ending column, inclusive.
      * @return the submatrix.
      */
-    public FloatMatrix submatrix(int i, int j, int k, int l) {
+    public BigMatrix submatrix(int i, int j, int k, int l) {
         if (i < 0 || i >= m || k < i || k >= m || j < 0 || j >= n || l < j || l >= n) {
             throw new IllegalArgumentException(String.format("Invalid submatrix range (%d:%d, %d:%d) of %d x %d", i, k, j, l, m, n));
         }
 
-        int offset = index(i, j);
-        int length = index(k, l) - offset + 1;
-        FloatBuffer B = FloatBuffer.wrap(A.array(), offset, length);
+        long offset = index(i, j);
+        long length = index(k, l) - offset + 1;
+        DoublePointer B = A.getPointer(offset);
+        B.limit(length);
 
         return of(layout(),k - i + 1, l - j + 1, ld, B);
     }
@@ -700,15 +724,15 @@ public class FloatMatrix extends SMatrix {
      * Fill the matrix with a value.
      * @param x the value.
      */
-    public void fill(float x) {
-        if (isSubmatrix()) {
+    public void fill(double x) {
+        if (x == 0.0) {
+            DoublePointer.memset(A, 0, A.limit());
+        } else {
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     set(i, j, x);
                 }
             }
-        } else {
-            Arrays.fill(A.array(), x);
         }
     }
 
@@ -716,17 +740,17 @@ public class FloatMatrix extends SMatrix {
      * Returns the transpose of matrix.
      * @return the transpose of matrix.
      */
-    public FloatMatrix transpose() {
+    public BigMatrix transpose() {
         return of(ROW_MAJOR, n, m, ld, A);
     }
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FloatMatrix)) {
+        if (!(o instanceof BigMatrix)) {
             return false;
         }
 
-        return equals((FloatMatrix) o, 1E-7f);
+        return equals((BigMatrix) o, 1E-7f);
     }
 
     /**
@@ -736,7 +760,7 @@ public class FloatMatrix extends SMatrix {
      * @param epsilon a number close to zero.
      * @return true if two matrices equal in given precision.
      */
-    public boolean equals(FloatMatrix o, float epsilon) {
+    public boolean equals(BigMatrix o, double epsilon) {
         if (m != o.m || n != o.n) {
             return false;
         }
@@ -758,17 +782,17 @@ public class FloatMatrix extends SMatrix {
      * @param j the column index.
      * @return the linearized index.
      */
-    protected int index(int i , int j) {
+    protected long index(int i , int j) {
         return j * ld + i + A.position();
     }
 
     @Override
-    public float get(int i, int j) {
+    public double get(int i, int j) {
         return A.get(index(i, j));
     }
 
     @Override
-    public FloatMatrix set(int i, int j, float x) {
+    public BigMatrix set(int i, int j, double x) {
         A.put(index(i, j), x);
         return this;
     }
@@ -780,7 +804,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the right-hand-side submatrix.
      * @return this matrix.
      */
-    public FloatMatrix set(int i, int j, FloatMatrix B) {
+    public BigMatrix set(int i, int j, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 set(i+ii, j+jj, B.get(ii, jj));
@@ -796,9 +820,9 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return the updated cell value.
      */
-    public float add(int i, int j, float b) {
-        int k = index(i, j);
-        float y = A.get(k) + b;
+    public double add(int i, int j, double b) {
+        long k = index(i, j);
+        double y = A.get(k) + b;
         A.put(k, y);
         return y;
     }
@@ -810,9 +834,9 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return the updated cell value.
      */
-    public float sub(int i, int j, float b) {
-        int k = index(i, j);
-        float y = A.get(k) - b;
+    public double sub(int i, int j, double b) {
+        long k = index(i, j);
+        double y = A.get(k) - b;
         A.put(k, y);
         return y;
     }
@@ -824,9 +848,9 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return the updated cell value.
      */
-    public float mul(int i, int j, float b) {
-        int k = index(i, j);
-        float y = A.get(k) * b;
+    public double mul(int i, int j, double b) {
+        long k = index(i, j);
+        double y = A.get(k) * b;
         A.put(k, y);
         return y;
     }
@@ -838,9 +862,9 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return the updated cell value.
      */
-    public float div(int i, int j, float b) {
-        int k = index(i, j);
-        float y = A.get(k) / b;
+    public double div(int i, int j, double b) {
+        long k = index(i, j);
+        double y = A.get(k) / b;
         A.put(k, y);
         return y;
     }
@@ -850,7 +874,7 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-    public FloatMatrix add(float b) {
+    public BigMatrix add(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 add(i, j, b);
@@ -865,7 +889,7 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-    public FloatMatrix sub(float b) {
+    public BigMatrix sub(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 sub(i, j, b);
@@ -880,7 +904,7 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-    public FloatMatrix mul(float b) {
+    public BigMatrix mul(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 mul(i, j, b);
@@ -895,7 +919,7 @@ public class FloatMatrix extends SMatrix {
      * @param b the operand.
      * @return this matrix.
      */
-    public FloatMatrix div(float b) {
+    public BigMatrix div(double b) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 div(i, j, b);
@@ -913,7 +937,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the submatrix operand.
      * @return this matrix.
      */
-    public FloatMatrix add(int i, int j, float alpha, FloatMatrix B) {
+    public BigMatrix add(int i, int j, double alpha, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 add(i+ii, j+jj, alpha * B.get(ii, jj));
@@ -930,7 +954,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the submatrix operand.
      * @return this matrix.
      */
-    public FloatMatrix sub(int i, int j, float alpha, FloatMatrix B) {
+    public BigMatrix sub(int i, int j, double alpha, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 sub(i+ii, j+jj, alpha * B.get(ii, jj));
@@ -947,7 +971,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the submatrix operand.
      * @return this matrix.
      */
-    public FloatMatrix mul(int i, int j, float alpha, FloatMatrix B) {
+    public BigMatrix mul(int i, int j, double alpha, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 mul(i+ii, j+jj, alpha * B.get(ii, jj));
@@ -964,7 +988,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the submatrix operand.
      * @return this matrix.
      */
-    public FloatMatrix div(int i, int j, float alpha, FloatMatrix B) {
+    public BigMatrix div(int i, int j, double alpha, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 div(i+ii, j+jj, alpha * B.get(ii, jj));
@@ -978,8 +1002,8 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix add(FloatMatrix B) {
-        return add(1.0f, B);
+    public BigMatrix add(BigMatrix B) {
+        return add(1.0, B);
     }
 
     /**
@@ -987,8 +1011,8 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix sub(FloatMatrix B) {
-        return sub(1.0f, B);
+    public BigMatrix sub(BigMatrix B) {
+        return sub(1.0, B);
     }
 
     /**
@@ -996,8 +1020,8 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix mul(FloatMatrix B) {
-        return mul(1.0f, B);
+    public BigMatrix mul(BigMatrix B) {
+        return mul(1.0, B);
     }
 
     /**
@@ -1005,8 +1029,8 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix div(FloatMatrix B) {
-        return div(1.0f, B);
+    public BigMatrix div(BigMatrix B) {
+        return div(1.0, B);
     }
 
     /**
@@ -1015,7 +1039,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix add(float alpha, FloatMatrix B) {
+    public BigMatrix add(double alpha, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1034,7 +1058,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix sub(float alpha, FloatMatrix B) {
+    public BigMatrix sub(double alpha, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1053,7 +1077,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix mul(float alpha, FloatMatrix B) {
+    public BigMatrix mul(double alpha, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1072,7 +1096,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix div(float alpha, FloatMatrix B) {
+    public BigMatrix div(double alpha, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
@@ -1093,7 +1117,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix add(float alpha, FloatMatrix A, float beta, FloatMatrix B) {
+    public BigMatrix add(double alpha, BigMatrix A, double beta, BigMatrix B) {
         if (m != A.m || n != A.n) {
             throw new IllegalArgumentException("Matrix A is not of same size.");
         }
@@ -1118,7 +1142,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix sub(float alpha, FloatMatrix A, float beta, FloatMatrix B) {
+    public BigMatrix sub(double alpha, BigMatrix A, double beta, BigMatrix B) {
         return add(alpha, A, -beta, B);
     }
 
@@ -1129,7 +1153,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix mul(float alpha, FloatMatrix A, FloatMatrix B) {
+    public BigMatrix mul(double alpha, BigMatrix A, BigMatrix B) {
         if (m != A.m || n != A.n) {
             throw new IllegalArgumentException("Matrix A is not of same size.");
         }
@@ -1153,7 +1177,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix div(float alpha, FloatMatrix A, FloatMatrix B) {
+    public BigMatrix div(double alpha, BigMatrix A, BigMatrix B) {
         if (m != A.m || n != A.n) {
             throw new IllegalArgumentException("Matrix A is not of same size.");
         }
@@ -1178,9 +1202,9 @@ public class FloatMatrix extends SMatrix {
      * @param beta the operand.
      * @return the updated A[i,j]
      */
-    public double add(int i, int j, float alpha, float beta) {
-        int k = index(i, j);
-        float y = alpha * A.get(k) + beta;
+    public double add(int i, int j, double alpha, double beta) {
+        long k = index(i, j);
+        double y = alpha * A.get(k) + beta;
         A.put(k, y);
         return y;
     }
@@ -1194,7 +1218,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the submatrix operand.
      * @return this matrix.
      */
-    public FloatMatrix add(int i, int j, float alpha, float beta, FloatMatrix B) {
+    public BigMatrix add(int i, int j, double alpha, double beta, BigMatrix B) {
         for (int jj = 0; jj < B.n; jj++) {
             for (int ii = 0; ii < B.m; ii++) {
                 add(i+ii, j+jj, alpha, beta * B.get(ii, jj));
@@ -1210,7 +1234,7 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return this matrix.
      */
-    public FloatMatrix add(float alpha, float beta, FloatMatrix B) {
+    public BigMatrix add(double alpha, double beta, BigMatrix B) {
         if (m != B.m || n != B.n) {
             throw new IllegalArgumentException("Matrix B is not of same size.");
         }
@@ -1231,15 +1255,15 @@ public class FloatMatrix extends SMatrix {
      * @param y the row vector.
      * @return this matrix.
      */
-    public FloatMatrix add(float alpha, float[] x, float[] y) {
+    public BigMatrix add(double alpha, double[] x, double[] y) {
         if (m != x.length || n != y.length) {
             throw new IllegalArgumentException("Matrix is not of same size.");
         }
 
         if (isSymmetric() && x == y) {
-            BLAS.engine.syr(layout(), uplo, m, alpha, FloatBuffer.wrap(x), 1, A, ld);
+            BLAS.engine.syr(layout(), uplo, m, alpha, new DoublePointer(x), 1, A, ld);
         } else {
-            BLAS.engine.ger(layout(), m, n, alpha, FloatBuffer.wrap(x), 1, FloatBuffer.wrap(y), 1, A, ld);
+            BLAS.engine.ger(layout(), m, n, alpha, new DoublePointer(x), 1, new DoublePointer(x), 1, A, ld);
         }
 
         return this;
@@ -1250,10 +1274,10 @@ public class FloatMatrix extends SMatrix {
      * @param x a real number.
      * @return this matrix.
      */
-    public FloatMatrix replaceNaN(float x) {
+    public BigMatrix replaceNaN(double x) {
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                if (Float.isNaN(get(i, j))) {
+                if (Double.isNaN(get(i, j))) {
                     set(i, j, x);
                 }
             }
@@ -1266,8 +1290,8 @@ public class FloatMatrix extends SMatrix {
      * Returns the sum of all elements.
      * @return the sum of all elements.
      */
-    public float sum() {
-        float s = 0.0f;
+    public double sum() {
+        double s = 0.0f;
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 s += get(i, j);
@@ -1281,10 +1305,10 @@ public class FloatMatrix extends SMatrix {
      * L<sub>1</sub> matrix norm that is the maximum of column sums.
      * @return L<sub>1</sub> matrix norm.
      */
-    public float norm1() {
-        float f = 0.0f;
+    public double norm1() {
+        double f = 0.0f;
         for (int j = 0; j < n; j++) {
-            float s = 0.0f;
+            double s = 0.0f;
             for (int i = 0; i < m; i++) {
                 s += Math.abs(get(i, j));
             }
@@ -1298,15 +1322,15 @@ public class FloatMatrix extends SMatrix {
      * L<sub>2</sub> matrix norm that is the maximum singular value.
      * @return L<sub>2</sub> matrix norm.
      */
-    public float norm2() {
-        return svd(false, false).s[0];
+    public double norm2() {
+        return svd(false, false).s.get(0);
     }
 
     /**
      * L<sub>2</sub> matrix norm that is the maximum singular value.
      * @return L<sub>2</sub> matrix norm.
      */
-    public float norm() {
+    public double norm() {
         return norm2();
     }
 
@@ -1314,8 +1338,8 @@ public class FloatMatrix extends SMatrix {
      * L<sub>&infin;</sub> matrix norm that is the maximum of row sums.
      * @return L<sub>&infin;</sub> matrix norm.
      */
-    public float normInf() {
-        float[] f = new float[m];
+    public double normInf() {
+        double[] f = new double[m];
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
                 f[i] += Math.abs(get(i, j));
@@ -1329,7 +1353,7 @@ public class FloatMatrix extends SMatrix {
      * Frobenius matrix norm that is the square root of sum of squares of all elements.
      * @return Frobenius matrix norm.
      */
-    public float normFro() {
+    public double normFro() {
         double f = 0.0;
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -1337,7 +1361,7 @@ public class FloatMatrix extends SMatrix {
             }
         }
 
-        return (float) f;
+        return f;
     }
 
     /**
@@ -1347,7 +1371,7 @@ public class FloatMatrix extends SMatrix {
      * @param x the vector.
      * @return the quadratic form.
      */
-    public float xAx(float[] x) {
+    public double xAx(double[] x) {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
@@ -1357,7 +1381,7 @@ public class FloatMatrix extends SMatrix {
         }
 
         int n = x.length;
-        float s = 0.0f;
+        double s = 0.0f;
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < n; i++) {
                 s += get(i, j) * x[i] * x[j];
@@ -1371,8 +1395,8 @@ public class FloatMatrix extends SMatrix {
      * Returns the sum of each row.
      * @return the sum of each row.
      */
-    public float[] rowSums() {
-        float[] x = new float[m];
+    public double[] rowSums() {
+        double[] x = new double[m];
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -1387,8 +1411,8 @@ public class FloatMatrix extends SMatrix {
      * Returns the mean of each row.
      * @return the mean of each row.
      */
-    public float[] rowMeans() {
-        float[] x = new float[m];
+    public double[] rowMeans() {
+        double[] x = new double[m];
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -1407,21 +1431,21 @@ public class FloatMatrix extends SMatrix {
      * Returns the standard deviations of each row.
      * @return the standard deviations of each row.
      */
-    public float[] rowSds() {
-        float[] x = new float[m];
-        float[] x2 = new float[m];
+    public double[] rowSds() {
+        double[] x = new double[m];
+        double[] x2 = new double[m];
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
-                float a = get(i, j);
+                double a = get(i, j);
                 x[i] += a;
                 x2[i] += a * a;
             }
         }
 
         for (int i = 0; i < m; i++) {
-            float mu = x[i] / n;
-            x[i] = (float) Math.sqrt(x2[i] / n - mu * mu);
+            double mu = x[i] / n;
+            x[i] = Math.sqrt(x2[i] / n - mu * mu);
         }
 
         return x;
@@ -1431,8 +1455,8 @@ public class FloatMatrix extends SMatrix {
      * Returns the sum of each column.
      * @return the sum of each column.
      */
-    public float[] colSums() {
-        float[] x = new float[n];
+    public double[] colSums() {
+        double[] x = new double[n];
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -1446,9 +1470,9 @@ public class FloatMatrix extends SMatrix {
     /**
      * Returns the mean of each column.
      * @return the mean of each column.
-    */
-    public float[] colMeans() {
-        float[] x = new float[n];
+     */
+    public double[] colMeans() {
+        double[] x = new double[n];
 
         for (int j = 0; j < n; j++) {
             for (int i = 0; i < m; i++) {
@@ -1464,19 +1488,19 @@ public class FloatMatrix extends SMatrix {
      * Returns the standard deviations of each column.
      * @return the standard deviations of each column.
      */
-    public float[] colSds() {
-        float[] x = new float[n];
+    public double[] colSds() {
+        double[] x = new double[n];
 
         for (int j = 0; j < n; j++) {
-            float mu = 0.0f;
-            float sumsq = 0.0f;
+            double mu = 0.0f;
+            double sumsq = 0.0f;
             for (int i = 0; i < m; i++) {
-                float a = get(i, j);
+                double a = get(i, j);
                 mu += a;
                 sumsq += a * a;
             }
             mu /= m;
-            x[j] = (float) Math.sqrt(sumsq / m - mu * mu);
+            x[j] = Math.sqrt(sumsq / m - mu * mu);
         }
 
         return x;
@@ -1486,9 +1510,9 @@ public class FloatMatrix extends SMatrix {
      * Centers and scales the columns of matrix.
      * @return a new matrix with zero mean and unit variance for each column.
      */
-    public FloatMatrix scale() {
-        float[] center = colMeans();
-        float[] scale = colSds();
+    public BigMatrix scale() {
+        double[] center = colMeans();
+        double[] scale = colSds();
         return scale(center, scale);
     }
 
@@ -1498,12 +1522,12 @@ public class FloatMatrix extends SMatrix {
      * @param scale column scale. If null, no scaling.
      * @return a new matrix with zero mean and unit variance for each column.
      */
-    public FloatMatrix scale(float[] center, float[] scale) {
+    public BigMatrix scale(double[] center, double[] scale) {
         if (center == null && scale == null) {
             throw new IllegalArgumentException("Both center and scale are null");
         }
 
-        FloatMatrix matrix = new FloatMatrix(m, n);
+        BigMatrix matrix = new BigMatrix(m, n);
 
         if (center == null) {
             for (int j = 0; j < n; j++) {
@@ -1532,21 +1556,21 @@ public class FloatMatrix extends SMatrix {
      * Returns the inverse of matrix.
      * @return the inverse of matrix.
      */
-    public FloatMatrix inverse() {
+    public BigMatrix inverse() {
         if (m != n) {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        FloatMatrix lu = clone();
-        FloatMatrix inv = eye(n);
-        int[] ipiv = new int[n];
+        BigMatrix lu = clone();
+        BigMatrix inv = eye(n);
+        IntPointer ipiv = new IntPointer(n);
         if (isSymmetric()) {
-            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, IntBuffer.wrap(ipiv), inv.A, inv.ld);
+            int info = LAPACK.engine.sysv(lu.layout(), uplo,  n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("SYSV fails: " + info);
             }
         } else {
-            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, IntBuffer.wrap(ipiv), inv.A, inv.ld);
+            int info = LAPACK.engine.gesv(lu.layout(), n, n, lu.A, lu.ld, ipiv, inv.A, inv.ld);
             if (info != 0) {
                 throw new ArithmeticException("GESV fails: " + info);
             }
@@ -1567,7 +1591,7 @@ public class FloatMatrix extends SMatrix {
      * @param beta the scalar beta.
      * @param y the operand.
      */
-    public void mv(Transpose trans, float alpha, FloatBuffer x, float beta, FloatBuffer y) {
+    public void mv(Transpose trans, double alpha, DoublePointer x, double beta, DoublePointer y) {
         if (uplo != null) {
             if (diag != null) {
                 if (alpha == 1.0 && beta == 0.0 && x == y) {
@@ -1584,22 +1608,29 @@ public class FloatMatrix extends SMatrix {
     }
 
     @Override
-    public void mv(Transpose trans, float alpha, float[] x, float beta, float[] y) {
-        mv(trans, alpha, FloatBuffer.wrap(x), beta, FloatBuffer.wrap(y));
+    public void mv(Transpose trans, double alpha, double[] x, double beta, double[] y) {
+        DoublePointer xp = new DoublePointer(x);
+        DoublePointer yp = new DoublePointer(y);
+        mv(trans, alpha, xp, beta, yp);
+        yp.get(y);
     }
 
     @Override
-    public void mv(float[] work, int inputOffset, int outputOffset) {
-        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, n);
-        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, m);
+    public void mv(double[] work, int inputOffset, int outputOffset) {
+        DoublePointer pointer = new DoublePointer(work);
+        DoublePointer xb = pointer.getPointer(inputOffset).limit(n);
+        DoublePointer yb = pointer.getPointer(outputOffset).limit(m);
         mv(NO_TRANSPOSE, 1.0f, xb, 0.0f, yb);
+        pointer.get(work);
     }
 
     @Override
-    public void tv(float[] work, int inputOffset, int outputOffset) {
-        FloatBuffer xb = FloatBuffer.wrap(work, inputOffset, m);
-        FloatBuffer yb = FloatBuffer.wrap(work, outputOffset, n);
+    public void tv(double[] work, int inputOffset, int outputOffset) {
+        DoublePointer pointer = new DoublePointer(work);
+        DoublePointer xb = pointer.getPointer(inputOffset).limit(m);
+        DoublePointer yb = pointer.getPointer(outputOffset).limit(n);
         mv(TRANSPOSE, 1.0f, xb, 0.0f, yb);
+        pointer.get(work);
     }
 
     /** Flips the transpose operation. */
@@ -1621,7 +1652,7 @@ public class FloatMatrix extends SMatrix {
      * @param beta the scalar beta.
      * @param C the operand.
      */
-    public void mm(Transpose transA, Transpose transB, float alpha, FloatMatrix B, float beta, FloatMatrix C) {
+    public void mm(Transpose transA, Transpose transB, double alpha, BigMatrix B, double beta, BigMatrix C) {
         if (isSymmetric() && transB == NO_TRANSPOSE && B.layout() == C.layout()) {
             BLAS.engine.symm(C.layout(), LEFT, uplo, C.m, C.n, alpha, A, ld, B.A, B.ld, beta, C.A, C.ld);
         } else if (B.isSymmetric() && transA == NO_TRANSPOSE && layout() == C.layout()) {
@@ -1639,8 +1670,8 @@ public class FloatMatrix extends SMatrix {
      * Returns {@code A' * A}.
      * @return {@code A' * A}.
      */
-    public FloatMatrix ata() {
-        FloatMatrix C = new FloatMatrix(n, n);
+    public BigMatrix ata() {
+        BigMatrix C = new BigMatrix(n, n);
         mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
@@ -1650,8 +1681,8 @@ public class FloatMatrix extends SMatrix {
      * Returns {@code A * A'}.
      * @return {@code A * A'}.
      */
-    public FloatMatrix aat() {
-        FloatMatrix C = new FloatMatrix(m, m);
+    public BigMatrix aat() {
+        BigMatrix C = new BigMatrix(m, m);
         mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, this, 0.0f, C);
         C.uplo(LOWER);
         return C;
@@ -1667,17 +1698,17 @@ public class FloatMatrix extends SMatrix {
      * @param diag the diagonal matrix.
      * @return the multiplication.
      */
-    public FloatMatrix adb(Transpose transA, Transpose transB, FloatMatrix B, float[] diag) {
-        FloatMatrix C;
+    public BigMatrix adb(Transpose transA, Transpose transB, BigMatrix B, double[] diag) {
+        BigMatrix C;
         if (transA == NO_TRANSPOSE) {
-            C = new FloatMatrix(m, n);
+            C = new BigMatrix(m, n);
             for (int j = 0; j < n; j++) {
                 for (int i = 0; i < m; i++) {
                     C.set(i, j, diag[j] * get(i, j));
                 }
             }
         } else {
-            C = new FloatMatrix(n, m);
+            C = new BigMatrix(n, m);
             for (int j = 0; j < m; j++) {
                 for (int i = 0; i < n; i++) {
                     C.set(i, j, diag[j] * get(j, i));
@@ -1693,12 +1724,12 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return the multiplication.
      */
-    public FloatMatrix mm(FloatMatrix B) {
+    public BigMatrix mm(BigMatrix B) {
         if (n != B.m) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B: %d x %d vs %d x %d", m, n, B.m, B.n));
         }
 
-        FloatMatrix C = new FloatMatrix(m, B.n);
+        BigMatrix C = new BigMatrix(m, B.n);
         mm(NO_TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
@@ -1708,12 +1739,12 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return the multiplication.
      */
-    public FloatMatrix mt(FloatMatrix B) {
+    public BigMatrix mt(BigMatrix B) {
         if (n != B.n) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A * B': %d x %d vs %d x %d", m, n, B.m, B.n));
         }
 
-        FloatMatrix C = new FloatMatrix(m, B.m);
+        BigMatrix C = new BigMatrix(m, B.m);
         mm(NO_TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
@@ -1723,12 +1754,12 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return the multiplication.
      */
-    public FloatMatrix tm(FloatMatrix B) {
+    public BigMatrix tm(BigMatrix B) {
         if (m != B.m) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B: %d x %d vs %d x %d", m, n, B.m, B.n));
         }
 
-        FloatMatrix C = new FloatMatrix(n, B.n);
+        BigMatrix C = new BigMatrix(n, B.n);
         mm(TRANSPOSE, NO_TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
@@ -1738,12 +1769,12 @@ public class FloatMatrix extends SMatrix {
      * @param B the operand.
      * @return the multiplication.
      */
-    public FloatMatrix tt(FloatMatrix B) {
+    public BigMatrix tt(BigMatrix B) {
         if (m != B.n) {
             throw new IllegalArgumentException(String.format("Matrix multiplication A' * B': %d x %d vs %d x %d", m, n, B.m, B.n));
         }
 
-        FloatMatrix C = new FloatMatrix(n, B.m);
+        BigMatrix C = new BigMatrix(n, B.m);
         mm(TRANSPOSE, TRANSPOSE, 1.0f, B, 0.0f, C);
         return C;
     }
@@ -1763,9 +1794,9 @@ public class FloatMatrix extends SMatrix {
      * @return LU decomposition.
      */
     public LU lu(boolean overwrite) {
-        FloatMatrix lu = overwrite ? this : clone();
-        int[] ipiv = new int[Math.min(m, n)];
-        int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, IntBuffer.wrap(ipiv));
+        BigMatrix lu = overwrite ? this : clone();
+        IntPointer ipiv = new IntPointer(Math.min(m, n));
+        int info = LAPACK.engine.getrf(lu.layout(), lu.m, lu.n, lu.A, lu.ld, ipiv);
         if (info < 0) {
             logger.error("LAPACK GETRF error code: {}", info);
             throw new ArithmeticException("LAPACK GETRF error code: " + info);
@@ -1796,7 +1827,7 @@ public class FloatMatrix extends SMatrix {
             throw new IllegalArgumentException("The matrix is not symmetric");
         }
 
-        FloatMatrix lu = overwrite ? this : clone();
+        BigMatrix lu = overwrite ? this : clone();
         int info = LAPACK.engine.potrf(lu.layout(), lu.uplo, lu.n, lu.A, lu.ld);
         if (info != 0) {
             logger.error("LAPACK GETRF error code: {}", info);
@@ -1821,9 +1852,9 @@ public class FloatMatrix extends SMatrix {
      * @return QR decomposition.
      */
     public QR qr(boolean overwrite) {
-        FloatMatrix qr = overwrite ? this : clone();
-        float[] tau = new float[Math.min(m, n)];
-        int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, FloatBuffer.wrap(tau));
+        BigMatrix qr = overwrite ? this : clone();
+        DoublePointer tau = new DoublePointer(Math.min(m, n));
+        int info = LAPACK.engine.geqrf(qr.layout(), qr.m, qr.n, qr.A, qr.ld, tau);
         if (info != 0) {
             logger.error("LAPACK GEQRF error code: {}", info);
             throw new ArithmeticException("LAPACK GEQRF error code: " + info);
@@ -1871,14 +1902,14 @@ public class FloatMatrix extends SMatrix {
      */
     public SVD svd(boolean vectors, boolean overwrite) {
         int k = Math.min(m, n);
-        float[] s = new float[k];
+        DoublePointer s = new DoublePointer(k);
 
-        FloatMatrix W = overwrite ? this : clone();
+        BigMatrix W = overwrite ? this : clone();
         if (vectors) {
-            FloatMatrix U = new FloatMatrix(m, k);
-            FloatMatrix VT = new FloatMatrix(k, n);
+            BigMatrix U = new BigMatrix(m, k);
+            BigMatrix VT = new BigMatrix(k, n);
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.COMPACT, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
                 logger.error("LAPACK GESDD error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
@@ -1886,10 +1917,10 @@ public class FloatMatrix extends SMatrix {
 
             return new SVD(s, U, VT.transpose());
         } else {
-            FloatMatrix U = new FloatMatrix(1, 1);
-            FloatMatrix VT = new FloatMatrix(1, 1);
+            BigMatrix U = new BigMatrix(1, 1);
+            BigMatrix VT = new BigMatrix(1, 1);
 
-            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, FloatBuffer.wrap(s), U.A, U.ld, VT.A, VT.ld);
+            int info = LAPACK.engine.gesdd(W.layout(), SVDJob.NO_VECTORS, W.m, W.n, W.A, W.ld, s, U.A, U.ld, VT.A, VT.ld);
             if (info != 0) {
                 logger.error("LAPACK GESDD error code: {}", info);
                 throw new ArithmeticException("LAPACK GESDD error code: " + info);
@@ -1907,7 +1938,7 @@ public class FloatMatrix extends SMatrix {
      * and eigenvectors in sorted order. Use the <code>EVD.sort</code> function
      * to put the eigenvalues in descending order and reorder the corresponding
      * eigenvectors.
-     * @return eigen value decomposition.
+     * @return eign value decomposition.
      */
     public EVD eigen() {
         return eigen(false, true, false);
@@ -1932,21 +1963,21 @@ public class FloatMatrix extends SMatrix {
             throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", m, n));
         }
 
-        FloatMatrix eig = overwrite ? this : clone();
+        BigMatrix eig = overwrite ? this : clone();
         if (isSymmetric()) {
-            float[] w = new float[n];
-            int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, FloatBuffer.wrap(w));
+            DoublePointer w = new DoublePointer(n);
+            int info = LAPACK.engine.syevd(eig.layout(), vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, eig.uplo, n, eig.A, eig.ld, w);
             if (info != 0) {
                 logger.error("LAPACK SYEV error code: {}", info);
                 throw new ArithmeticException("LAPACK SYEV error code: " + info);
             }
             return new EVD(w, vr ? eig : null);
         } else {
-            float[] wr = new float[n];
-            float[] wi = new float[n];
-            FloatMatrix Vl = vl ? new FloatMatrix(n, n) : new FloatMatrix(1, 1);
-            FloatMatrix Vr = vr ? new FloatMatrix(n, n) : new FloatMatrix(1, 1);
-            int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, FloatBuffer.wrap(wr), FloatBuffer.wrap(wi), Vl.A, Vl.ld, Vr.A, Vr.ld);
+            DoublePointer wr = new DoublePointer(n);
+            DoublePointer wi = new DoublePointer(n);
+            BigMatrix Vl = vl ? new BigMatrix(n, n) : new BigMatrix(1, 1);
+            BigMatrix Vr = vr ? new BigMatrix(n, n) : new BigMatrix(1, 1);
+            int info = LAPACK.engine.geev(eig.layout(), vl ? EVDJob.VECTORS : EVDJob.NO_VECTORS, vr ? EVDJob.VECTORS : EVDJob.NO_VECTORS, n, eig.A, eig.ld, wr, wi, Vl.A, Vl.ld, Vr.A, Vr.ld);
             if (info != 0) {
                 logger.error("LAPACK GEEV error code: {}", info);
                 throw new ArithmeticException("LAPACK GEEV error code: " + info);
@@ -2000,15 +2031,15 @@ public class FloatMatrix extends SMatrix {
         /**
          * The singular values in descending order.
          */
-        public final float[] s;
+        public final DoublePointer s;
         /**
          * The left singular vectors U.
          */
-        public final FloatMatrix U;
+        public final BigMatrix U;
         /**
          * The right singular vectors V.
          */
-        public final FloatMatrix V;
+        public final BigMatrix V;
 
         /**
          * Constructor.
@@ -2016,7 +2047,7 @@ public class FloatMatrix extends SMatrix {
          * @param n the number of columns of matrix.
          * @param s the singular values in descending order.
          */
-        public SVD(int m, int n, float[] s) {
+        public SVD(int m, int n, DoublePointer s) {
             this.m = m;
             this.n = n;
             this.s = s;
@@ -2030,7 +2061,7 @@ public class FloatMatrix extends SMatrix {
          * @param U the left singular vectors
          * @param V the right singular vectors.
          */
-        public SVD(float[] s, FloatMatrix U, FloatMatrix V) {
+        public SVD(DoublePointer s, BigMatrix U, BigMatrix V) {
             this.m = U.m;
             this.n = V.m;
             this.s = s;
@@ -2042,11 +2073,12 @@ public class FloatMatrix extends SMatrix {
          * Returns the diagonal matrix of singular values.
          * @return the diagonal matrix of singular values.
          */
-        public FloatMatrix diag() {
-            FloatMatrix S = new FloatMatrix(U.m, V.m);
+        public BigMatrix diag() {
+            BigMatrix S = new BigMatrix(U.m, V.m);
 
-            for (int i = 0; i < s.length; i++) {
-                S.set(i, i, s[i]);
+            long limit = s.limit();
+            for (int i = 0; i < limit; i++) {
+                S.set(i, i, s.get(i));
             }
 
             return S;
@@ -2057,7 +2089,7 @@ public class FloatMatrix extends SMatrix {
          * @return L<sub>2</sub> matrix norm.
          */
         public double norm() {
-            return s[0];
+            return s.get(0);
         }
 
         /**
@@ -2065,8 +2097,8 @@ public class FloatMatrix extends SMatrix {
          * Singular values S(i) <= RCOND are treated as zero.
          * @return the threshold to determine the effective rank.
          */
-        private float rcond() {
-            return 0.5f * (float) Math.sqrt(m + n + 1) * s[0] * MathEx.FLOAT_EPSILON;
+        private double rcond() {
+            return 0.5 * Math.sqrt(m + n + 1) * s.get(0) * MathEx.EPSILON;
         }
 
         /**
@@ -2075,14 +2107,16 @@ public class FloatMatrix extends SMatrix {
          * @return the effective numerical matrix rank.
          */
         public int rank() {
-            if (s.length != Math.min(m, n)) {
+            if (s.limit() != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
             int r = 0;
-            float tol = rcond();
+            double tol = rcond();
 
-            for (float si : s) {
+            long limit = s.limit();
+            for (int i = 0; i < limit; i++) {
+                double si = s.get(i);
                 if (si > tol) {
                     r++;
                 }
@@ -2116,12 +2150,13 @@ public class FloatMatrix extends SMatrix {
          *
          * @return L<sub>2</sub> norm condition number.
          */
-        public float condition() {
-            if (s.length != Math.min(m, n)) {
+        public double condition() {
+            int k = Math.min(m, n);
+            if (s.limit() != k) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
-            return (s[0] <= 0.0f || s[s.length - 1] <= 0.0f) ? Float.POSITIVE_INFINITY : s[0] / s[s.length - 1];
+            return (s.get(0) <= 0.0f || s.get(k-1) <= 0.0f) ? Double.POSITIVE_INFINITY : s.get(0) / s.get(k-1);
         }
 
         /**
@@ -2129,8 +2164,8 @@ public class FloatMatrix extends SMatrix {
          * Returns null if the rank is zero (if and only if zero matrix).
          * @return the range space span matrix.
          */
-        public FloatMatrix range() {
-            if (s.length != Math.min(m, n)) {
+        public BigMatrix range() {
+            if (s.limit() != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
@@ -2144,7 +2179,7 @@ public class FloatMatrix extends SMatrix {
                 return null;
             }
 
-            FloatMatrix R = new FloatMatrix(m, r);
+            BigMatrix R = new BigMatrix(m, r);
             for (int j = 0; j < r; j++) {
                 for (int i = 0; i < m; i++) {
                     R.set(i, j, U.get(i, j));
@@ -2159,8 +2194,8 @@ public class FloatMatrix extends SMatrix {
          * Returns null if the matrix is of full rank.
          * @return the null space span matrix.
          */
-        public FloatMatrix nullspace() {
-            if (s.length != Math.min(m, n)) {
+        public BigMatrix nullspace() {
+            if (s.limit() != Math.min(m, n)) {
                 throw new UnsupportedOperationException("The operation cannot be called on a partial SVD.");
             }
 
@@ -2174,11 +2209,11 @@ public class FloatMatrix extends SMatrix {
                 return null;
             }
 
-            FloatMatrix N = new FloatMatrix(n, nr);
+            BigMatrix N = new BigMatrix(n, nr);
             for (int j = 0; j < nr; j++) {
-                    for (int i = 0; i < n; i++) {
-                        N.set(i, j, V.get(i, n - j - 1));
-                    }
+                for (int i = 0; i < n; i++) {
+                    N.set(i, j, V.get(i, n - j - 1));
+                }
             }
             return N;
         }
@@ -2187,12 +2222,12 @@ public class FloatMatrix extends SMatrix {
          * Returns the pseudo inverse.
          * @return the pseudo inverse.
          */
-        public FloatMatrix pinv() {
-            int k = s.length;
-            float[] sigma = new float[k];
+        public BigMatrix pinv() {
+            int k = (int) s.limit();
+            double[] sigma = new double[k];
             int r = rank();
             for (int i = 0; i < r; i++) {
-                sigma[i] = 1.0f / s[i];
+                sigma[i] = 1.0f / s.get(i);
             }
 
             return V.adb(NO_TRANSPOSE, TRANSPOSE, U, sigma);
@@ -2204,7 +2239,7 @@ public class FloatMatrix extends SMatrix {
          * @throws RuntimeException when matrix is rank deficient.
          * @return the solution vector beta that minimizes ||Y - X*beta||.
          */
-        public float[] solve(float[] b) {
+        public double[] solve(double[] b) {
             if (U == null || V == null) {
                 throw new IllegalStateException("The singular vectors are not available.");
             }
@@ -2214,10 +2249,10 @@ public class FloatMatrix extends SMatrix {
             }
 
             int r = rank();
-            float[] Utb = new float[s.length];
+            double[] Utb = new double[(int) s.limit()];
             U.submatrix(0, 0, m-1, r-1).tv(b, Utb);
             for (int i = 0; i < r; i++) {
-                Utb[i] /= s[i];
+                Utb[i] /= s.get(i);
             }
             return V.mv(Utb);
         }
@@ -2293,19 +2328,19 @@ public class FloatMatrix extends SMatrix {
          * sorted order. The <code>sort</code> function puts the eigenvalues
          * in descending order and reorder the corresponding eigenvectors.
          */
-        public final float[] wr;
+        public final DoublePointer wr;
         /**
          * The imaginary part of eigenvalues.
          */
-        public final float[] wi;
+        public final DoublePointer wi;
         /**
          * The left eigenvectors.
          */
-        public final FloatMatrix Vl;
+        public final BigMatrix Vl;
         /**
          * The right eigenvectors.
          */
-        public final FloatMatrix Vr;
+        public final BigMatrix Vr;
 
         /**
          * Constructor.
@@ -2313,7 +2348,7 @@ public class FloatMatrix extends SMatrix {
          * @param w eigenvalues.
          * @param V eigenvectors.
          */
-        public EVD(float[] w, FloatMatrix V) {
+        public EVD(DoublePointer w, BigMatrix V) {
             this.wr = w;
             this.wi = null;
             this.Vl = V;
@@ -2328,7 +2363,7 @@ public class FloatMatrix extends SMatrix {
          * @param Vl the left eigenvectors.
          * @param Vr the right eigenvectors.
          */
-        public EVD(float[] wr, float[] wi, FloatMatrix Vl, FloatMatrix Vr) {
+        public EVD(DoublePointer wr, DoublePointer wi, BigMatrix Vl, BigMatrix Vr) {
             this.wr = wr;
             this.wi = wi;
             this.Vl = Vl;
@@ -2341,16 +2376,16 @@ public class FloatMatrix extends SMatrix {
          * upper subdiagonal are negative imaginary parts.
          * @return the diagonal eigenvalue matrix.
          */
-        public FloatMatrix diag() {
-            FloatMatrix D = FloatMatrix.diag(wr);
+        public BigMatrix diag() {
+            BigMatrix D = BigMatrix.diag(wr);
 
             if (wi != null) {
-                int n = wr.length;
+                int n = (int) wr.limit();
                 for (int i = 0; i < n; i++) {
-                    if (wi[i] > 0) {
-                        D.set(i, i + 1, wi[i]);
-                    } else if (wi[i] < 0) {
-                        D.set(i, i - 1, wi[i]);
+                    if (wi.get(i) > 0) {
+                        D.set(i, i + 1, wi.get(i));
+                    } else if (wi.get(i) < 0) {
+                        D.set(i, i - 1, wi.get(i));
                     }
                 }
             }
@@ -2364,36 +2399,36 @@ public class FloatMatrix extends SMatrix {
          * @return sorted eigen decomposition.
          */
         public EVD sort() {
-            int n = wr.length;
-            float[] w = new float[n];
+            int n = (int) wr.limit();
+            double[] w = new double[n];
             if (wi != null) {
                 for (int i = 0; i < n; i++) {
-                    w[i] = -(wr[i] * wr[i] + wi[i] * wi[i]);
+                    w[i] = -(wr.get(i) * wr.get(i) + wi.get(i) * wi.get(i));
                 }
             } else {
                 for (int i = 0; i < n; i++) {
-                    w[i] = -(wr[i] * wr[i]);
+                    w[i] = -(wr.get(i) * wr.get(i));
                 }
             }
 
             int[] index = QuickSort.sort(w);
-            float[] wr2 = new float[n];
+            DoublePointer wr2 = new DoublePointer(n);
             for (int j = 0; j < n; j++) {
-                wr2[j] = wr[index[j]];
+                wr2.put(j, wr.get(index[j]));
             }
 
-            float[] wi2 = null;
+            DoublePointer wi2 = null;
             if (wi != null) {
-                wi2 = new float[n];
+                wi2 = new DoublePointer(n);
                 for (int j = 0; j < n; j++) {
-                    wi2[j] = wi[index[j]];
+                    wi2.put(j, wi.get(index[j]));
                 }
             }
 
-            FloatMatrix Vl2 = null;
+            BigMatrix Vl2 = null;
             if (Vl != null) {
                 int m = Vl.m;
-                Vl2 = new FloatMatrix(m, n);
+                Vl2 = new BigMatrix(m, n);
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
                         Vl2.set(i, j, Vl.get(i, index[j]));
@@ -2401,10 +2436,10 @@ public class FloatMatrix extends SMatrix {
                 }
             }
 
-            FloatMatrix Vr2 = null;
+            BigMatrix Vr2 = null;
             if (Vr != null) {
                 int m = Vr.m;
-                Vr2 = new FloatMatrix(m, n);
+                Vr2 = new BigMatrix(m, n);
                 for (int j = 0; j < n; j++) {
                     for (int i = 0; i < m; i++) {
                         Vr2.set(i, j, Vr.get(i, index[j]));
@@ -2434,12 +2469,12 @@ public class FloatMatrix extends SMatrix {
         /**
          * The LU decomposition.
          */
-        public final FloatMatrix lu;
+        public final BigMatrix lu;
 
         /**
          * The pivot vector.
          */
-        public final int[] ipiv;
+        public final IntPointer ipiv;
 
         /**
          * If {@code info = 0}, the LU decomposition was successful.
@@ -2456,14 +2491,14 @@ public class FloatMatrix extends SMatrix {
          * @param ipiv the pivot vector.
          * @param info {@code info > 0} if the matrix is singular.
          */
-        public LU(FloatMatrix lu, int[] ipiv, int info) {
+        public LU(BigMatrix lu, IntPointer ipiv, int info) {
             this.lu = lu;
             this.ipiv = ipiv;
             this.info = info;
         }
 
         /**
-         * Returns if the matrix is singular.
+         * Returns true if the matrix is singular.
          * @return true if the matrix is singular.
          */
         public boolean isSingular() {
@@ -2474,7 +2509,7 @@ public class FloatMatrix extends SMatrix {
          * Returns the matrix determinant.
          * @return the matrix determinant.
          */
-        public float det() {
+        public double det() {
             int m = lu.m;
             int n = lu.n;
 
@@ -2488,20 +2523,20 @@ public class FloatMatrix extends SMatrix {
             }
 
             for (int j = 0; j < n; j++){
-                if (j+1 != ipiv[j]) {
+                if (j+1 != ipiv.get(j)) {
                     d = -d;
                 }
             }
 
-            return (float) d;
+            return d;
         }
 
         /**
          * Returns the inverse of matrix. For pseudo inverse, use QRDecomposition.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public BigMatrix inverse() {
+            BigMatrix inv = BigMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -2512,10 +2547,12 @@ public class FloatMatrix extends SMatrix {
          * @throws RuntimeException when the matrix is singular.
          * @return the solution vector.
          */
-        public float[] solve(float[] b) {
-            float[] x = b.clone();
-            solve(new FloatMatrix(x));
-            return x;
+        public double[] solve(double[] b) {
+            BigMatrix x = new BigMatrix(b);
+            solve(x);
+            double[] y = new double[b.length];
+            x.A.get(y);
+            return y;
         }
 
         /**
@@ -2524,7 +2561,7 @@ public class FloatMatrix extends SMatrix {
          *          On output, B will be overwritten with the solution matrix.
          * @throws RuntimeException when the matrix is singular.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(BigMatrix B) {
             if (lu.m != lu.n) {
                 throw new IllegalArgumentException(String.format("The matrix is not square: %d x %d", lu.m, lu.n));
             }
@@ -2541,7 +2578,7 @@ public class FloatMatrix extends SMatrix {
                 throw new RuntimeException("The matrix is singular.");
             }
 
-            int ret = LAPACK.engine.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, IntBuffer.wrap(ipiv), B.A, B.ld);
+            int ret = LAPACK.engine.getrs(lu.layout(), NO_TRANSPOSE, lu.n, B.n, lu.A, lu.ld, ipiv, B.A, B.ld);
             if (ret != 0) {
                 logger.error("LAPACK GETRS error code: {}", ret);
                 throw new ArithmeticException("LAPACK GETRS error code: " + ret);
@@ -2577,14 +2614,14 @@ public class FloatMatrix extends SMatrix {
         /**
          * The Cholesky decomposition.
          */
-        public final FloatMatrix lu;
+        public final BigMatrix lu;
 
         /**
          * Constructor.
          * @param lu the lower/upper triangular part of matrix contains the Cholesky
          *           factorization.
          */
-        public Cholesky(FloatMatrix lu) {
+        public Cholesky(BigMatrix lu) {
             if (lu.nrow() != lu.ncol()) {
                 throw new UnsupportedOperationException("Cholesky constructor on a non-square matrix");
             }
@@ -2595,35 +2632,36 @@ public class FloatMatrix extends SMatrix {
          * Returns the matrix determinant.
          * @return the matrix determinant.
          */
-        public float det() {
+        public double det() {
+            int n = lu.n;
             double d = 1.0;
-            for (int i = 0; i < lu.n; i++) {
+            for (int i = 0; i < n; i++) {
                 d *= lu.get(i, i);
             }
 
-            return (float) (d * d);
+            return d * d;
         }
 
         /**
          * Returns the log of matrix determinant.
          * @return the log of matrix determinant.
          */
-        public float logdet() {
+        public double logdet() {
             int n = lu.n;
             double d = 0.0;
             for (int i = 0; i < n; i++) {
                 d += Math.log(lu.get(i, i));
             }
 
-            return (float) (2.0 * d);
+            return 2.0 * d;
         }
 
         /**
          * Returns the inverse of matrix.
          * @return the inverse of matrix.
          */
-        public FloatMatrix inverse() {
-            FloatMatrix inv = FloatMatrix.eye(lu.n);
+        public BigMatrix inverse() {
+            BigMatrix inv = BigMatrix.eye(lu.n);
             solve(inv);
             return inv;
         }
@@ -2633,10 +2671,12 @@ public class FloatMatrix extends SMatrix {
          * @param b the right hand side of linear systems.
          * @return the solution vector.
          */
-        public float[] solve(float[] b) {
-            float[] x = b.clone();
-            solve(new FloatMatrix(x));
-            return x;
+        public double[] solve(double[] b) {
+            BigMatrix x = new BigMatrix(b);
+            solve(x);
+            double[] y = new double[b.length];
+            x.A.get(y);
+            return y;
         }
 
         /**
@@ -2644,7 +2684,7 @@ public class FloatMatrix extends SMatrix {
          * @param B the right hand side of linear systems. On output, B will
          *          be overwritten with the solution matrix.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(BigMatrix B) {
             if (B.m != lu.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", lu.m, lu.n, B.m, B.n));
             }
@@ -2673,18 +2713,18 @@ public class FloatMatrix extends SMatrix {
         /**
          * The QR decomposition.
          */
-        public final FloatMatrix qr;
+        public final BigMatrix qr;
         /**
-         * The scalar factors of the elementary reflectors.
+         * The scalar factors of the elementary reflectors
          */
-        public final float[] tau;
+        public final DoublePointer tau;
 
         /**
          * Constructor.
          * @param qr the QR decomposition.
          * @param tau the scalar factors of the elementary reflectors
          */
-        public QR(FloatMatrix qr, float[] tau) {
+        public QR(BigMatrix qr, DoublePointer tau) {
             this.qr = qr;
             this.tau = tau;
         }
@@ -2695,7 +2735,7 @@ public class FloatMatrix extends SMatrix {
          */
         public Cholesky CholeskyOfAtA() {
             int n = qr.n;
-            FloatMatrix L = new FloatMatrix(n, n);
+            BigMatrix L = new BigMatrix(n, n);
             for (int i = 0; i < n; i++) {
                 for (int j = 0; j <= i; j++) {
                     L.set(i, j, qr.get(j, i));
@@ -2710,9 +2750,9 @@ public class FloatMatrix extends SMatrix {
          * Returns the upper triangular factor.
          * @return the upper triangular factor.
          */
-        public FloatMatrix R() {
+        public BigMatrix R() {
             int n = qr.n;
-            FloatMatrix R = FloatMatrix.diag(tau);
+            BigMatrix R = BigMatrix.diag(tau);
             for (int i = 0; i < n; i++) {
                 for (int j = i; j < n; j++) {
                     R.set(i, j, qr.get(i, j));
@@ -2726,12 +2766,12 @@ public class FloatMatrix extends SMatrix {
          * Returns the orthogonal factor.
          * @return the orthogonal factor.
          */
-        public FloatMatrix Q() {
+        public BigMatrix Q() {
             int m = qr.m;
             int n = qr.n;
             int k = Math.min(m, n);
-            FloatMatrix Q = qr.clone();
-            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, FloatBuffer.wrap(tau));
+            BigMatrix Q = qr.clone();
+            int info = LAPACK.engine.orgqr(qr.layout(), m, n, k, Q.A, qr.ld, tau);
             if (info != 0) {
                 logger.error("LAPACK ORGRQ error code: {}", info);
                 throw new ArithmeticException("LAPACK ORGRQ error code: " + info);
@@ -2745,16 +2785,16 @@ public class FloatMatrix extends SMatrix {
          * @throws RuntimeException when the matrix is rank deficient.
          * @return the solution vector beta that minimizes ||Y - X*beta||.
          */
-        public float[] solve(float[] b) {
+        public double[] solve(double[] b) {
             if (b.length != qr.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x 1", qr.m, qr.n, b.length));
             }
 
-            float[] y = b.clone();
-            solve(new FloatMatrix(y));
-            float[] x = new float[qr.n];
-            System.arraycopy(y, 0, x, 0, x.length);
-            return x;
+            BigMatrix x = new BigMatrix(b);
+            solve(x);
+            double[] y = new double[qr.n];
+            x.A.get(y);
+            return y;
         }
 
         /**
@@ -2763,7 +2803,7 @@ public class FloatMatrix extends SMatrix {
          *          B will be overwritten with the solution matrix on output.
          * @throws RuntimeException when the matrix is rank deficient.
          */
-        public void solve(FloatMatrix B) {
+        public void solve(BigMatrix B) {
             if (B.m != qr.m) {
                 throw new IllegalArgumentException(String.format("Row dimensions do not agree: A is %d x %d, but B is %d x %d", qr.nrow(), qr.nrow(), B.nrow(), B.ncol()));
             }
@@ -2772,7 +2812,7 @@ public class FloatMatrix extends SMatrix {
             int n = qr.n;
             int k = Math.min(m, n);
 
-            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, FloatBuffer.wrap(tau), B.A, B.ld);
+            int info = LAPACK.engine.ormqr(qr.layout(), LEFT, TRANSPOSE, B.nrow(), B.ncol(), k, qr.A, qr.ld, tau, B.A, B.ld);
             if (info != 0) {
                 logger.error("LAPACK ORMQR error code: {}", info);
                 throw new IllegalArgumentException("LAPACK ORMQR error code: " + info);
