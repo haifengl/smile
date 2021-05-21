@@ -105,7 +105,7 @@ public class LogisticRegressionTest {
                 LogisticRegression::fit);
 
         System.out.println(result);
-        assertEquals(0.9495, result.avg.accuracy, 1E-4);
+        assertEquals(0.9495, result.avg.accuracy, 1E-3);
     }
 
     @Test
