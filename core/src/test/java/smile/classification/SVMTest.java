@@ -97,7 +97,7 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(136, error);
+        assertEquals(125, error);
     }
 
     @Test
@@ -140,7 +140,7 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / testx.length);
-        assertEquals(2467, error);
+        assertEquals(2479, error);
     }
 
     @Test
@@ -158,7 +158,7 @@ public class SVMTest {
         int[] prediction = model.predict(testx);
         int error = Error.of(Segment.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / Segment.testx.length);
-        assertEquals(37, error);
+        assertEquals(35, error, 2);
     }
 
     @Test
@@ -172,7 +172,7 @@ public class SVMTest {
         int[] prediction = model.predict(USPS.testx);
         int error = Error.of(USPS.testy, prediction);
         System.out.format("Test Error = %d, Accuracy = %.2f%%%n", error, 100.0 - 100.0 * error / USPS.testx.length);
-        assertEquals(88, error);
+        assertEquals(86, error, 3);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
