@@ -218,7 +218,7 @@ public class MLPTest {
         int k = MathEx.max(USPS.y) + 1;
 
         MLP model = new MLP(Layer.input(p),
-                Layer.rectifier(768),
+                Layer.leaky(768, 0.5, 0.02),
                 Layer.rectifier(192),
                 Layer.rectifier(30),
                 Layer.mle(k, OutputFunction.SOFTMAX)
@@ -239,7 +239,7 @@ public class MLPTest {
             System.out.println("Test Error = " + error);
         }
 
-        assertEquals(116, error);
+        assertEquals(109, error);
 
         java.nio.file.Path temp = smile.data.Serialize.write(model);
         smile.data.Serialize.read(temp);
