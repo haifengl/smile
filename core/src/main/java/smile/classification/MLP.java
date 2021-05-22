@@ -262,7 +262,7 @@ public class MLP extends MultilayerPerceptron implements Classifier<double[]>, S
         model.setParameters(params);
 
         int epochs = Integer.parseInt(params.getProperty("smile.mlp.epochs", "100"));
-        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "256"));
+        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "32"));
         double[][] batchx = new double[batch][];
         int[] batchy = new int[batch];
         for (int epoch = 1; epoch <= epochs; epoch++) {

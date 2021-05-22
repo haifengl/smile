@@ -142,7 +142,7 @@ import smile.util.Strings;
         model.setParameters(params);
 
         int epochs = Integer.parseInt(params.getProperty("smile.mlp.epochs", "100"));
-        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "256"));
+        int batch = Integer.parseInt(params.getProperty("smile.mlp.mini_batch", "32"));
         double[][] batchx = new double[batch][];
         double[] batchy = new double[batch];
         for (int epoch = 1; epoch <= epochs; epoch++) {
