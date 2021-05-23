@@ -113,7 +113,7 @@ object RegressionModel {
             case "mlp" =>
                 DataFrameRegression.of(formula, data, params, MLP.fit(_, _, _));
             case "svm" =>
-                DataFrameRegression.of(formula, data, params, SVR.fit(_, _, _))
+                DataFrameRegression.of(formula, data, params, SVM.fit(_, _, _))
             case "rbf" =>
                 DataFrameRegression.of(formula, data, params, RBFNetwork.fit(_, _, _))
             case _ =>
