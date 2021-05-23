@@ -39,6 +39,7 @@ import smile.plot.swing.*;
 import smile.interpolation.*;
 import smile.validation.*;
 import smile.validation.metric.*;
+import smile.anomaly.*;
 import smile.association.*;
 import smile.base.cart.SplitRule;
 import smile.base.mlp.*;
