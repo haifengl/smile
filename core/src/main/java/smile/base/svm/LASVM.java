@@ -115,6 +115,18 @@ public class LASVM<T> implements Serializable {
      * @param tol the tolerance of convergence test.
      */
     public LASVM(MercerKernel<T> kernel, double Cp, double Cn, double tol) {
+        if (Cp < 0) {
+            throw new IllegalArgumentException("Invalid C: " + Cp);
+        }
+
+        if (Cn < 0) {
+            throw new IllegalArgumentException("Invalid C: " + Cn);
+        }
+
+        if (tol <= 0) {
+            throw new IllegalArgumentException("Invalid tol: " + tol);
+        }
+
         this.kernel = kernel;
         this.Cp = Cp;
         this.Cn = Cn;
