@@ -492,11 +492,11 @@ public class RandomForest extends AbstractClassifier<Tuple> implements DataFrame
     public double[] importance() {
         return importance;
     }
-    
+
     /**
      * Returns the number of trees in the model.
      * 
-     * @return the number of trees in the model 
+     * @return the number of trees in the model.
      */
     public int size() {
         return models.length;
