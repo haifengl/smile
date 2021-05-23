@@ -17,24 +17,14 @@
 
 package smile.anomaly;
 
-import java.util.Arrays;
-
 import org.apache.commons.csv.CSVFormat;
-import smile.base.cart.SplitRule;
-import smile.data.*;
 import smile.io.CSV;
-import smile.math.MathEx;
 import smile.util.Paths;
-import smile.validation.*;
-import smile.validation.metric.Accuracy;
-import smile.validation.metric.Error;
 import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 /**
  *
