@@ -23,10 +23,10 @@ import smile.math.kernel.*;
 import smile.util.SparseArray;
 
 /**
- * Epsilon support vector regression. Like SVMs for classification, the model produced
- * by SVR depends only on a subset of the training data, because the cost
- * function ignores any training data close to the model prediction (within
- * a threshold &epsilon;).
+ * Epsilon support vector regression. Like SVMs for classification, the model
+ * produced by SVR depends only on a subset of the training data, because
+ * the cost function ignores any training data close to the model prediction
+ * (within a threshold &epsilon;).
  *
  * <h2>References</h2>
  * <ol>
@@ -42,7 +42,7 @@ import smile.util.SparseArray;
  * 
  * @author Haifeng Li
  */
-public class SVR {
+public class SVM {
     /**
      * Fits a linear epsilon-SVR.
      * @param x training samples.
@@ -160,9 +160,9 @@ public class SVR {
         double tol = Double.parseDouble(params.getProperty("smile.svm.tolerance", "1E-3"));
 
         if (kernel instanceof LinearKernel) {
-            return SVR.fit(x, y, eps, C, tol);
+            return SVM.fit(x, y, eps, C, tol);
         } else {
-            return SVR.fit(x, y, kernel, eps, C, tol);
+            return SVM.fit(x, y, kernel, eps, C, tol);
         }
     }
 }
