@@ -40,6 +40,13 @@ import smile.math.kernel.*;
  * that splits the instances as cleanly as possible, while still maximizing
  * the distance to the nearest cleanly split instances.
  * <p>
+ * The soft margin parameter {@code C} trades off correct classification
+ * of training examples against maximization of the decision function's
+ * margin. For larger values of C, a smaller margin will be accepted if
+ * the decision function is better at classifying all training points
+ * correctly. A lower C will encourage a larger margin, therefore a
+ * simpler decision function, at the cost of training accuracy.
+ * <p>
  * The nonlinear SVMs are created by applying the kernel trick to
  * maximum-margin hyperplanes. The resulting algorithm is formally similar,
  * except that every dot product is replaced by a nonlinear kernel function.
@@ -53,7 +60,7 @@ import smile.math.kernel.*;
  * the results.
  * <p>
  * The effectiveness of SVM depends on the selection of kernel, the kernel's
- * parameters, and soft margin parameter C. Given a kernel, best combination
+ * parameters, and the soft margin parameter C. Given a kernel, best combination
  * of C and kernel's parameters is often selected by a grid-search with
  * cross validation.
  * <p>

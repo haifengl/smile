@@ -24,10 +24,10 @@ import smile.math.kernel.MercerKernel;
 import smile.regression.KernelMachine;
 
 /**
- * Epsilon support vector regression. Like SVMs for classification, the model produced
- * by SVR depends only on a subset of the training data, because the cost
- * function ignores any training data close to the model prediction (within
- * a threshold &epsilon;).
+ * Epsilon support vector regression. Like SVMs for classification, the model
+ * produced by SVR depends only on a subset of the training data, because
+ * the cost function ignores any training data close to the model prediction
+ * (within a threshold &epsilon;).
  *
  * <h2>References</h2>
  * <ol>
